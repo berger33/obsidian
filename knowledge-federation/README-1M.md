@@ -1,13 +1,21 @@
-# Knowledge Federation — 1 milhão de notas lógicas
+# Knowledge Federation — 1 milhão de notas lógicas e materializadas
 
-Este projeto atingiu o marco de **1.000.100 notas lógicas** usando arquitetura **ledger-first**.
+Este projeto atingiu **100% da meta de 1 milhão de notas**:
+- **1.000.100 notas lógicas no ledger SQLite** (1.000.000 virtuais + 100 físicas iniciais).
+- **1.007.100 notas materializadas consolidadas** (5.000 lotes sequenciais × 200 notas = **1.000.000 de notas sequenciais** + **7.100 notas** do vault consolidado curado).
 
 ## Estado final preservado
 
-Checkpoint principal:
+Merge completo materializado (1.007.100 notas representadas):
 
 ```text
-knowledge-federation/archives/ledger-v1000000-mat8000.zip
+knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
+```
+
+Checkpoint principal do ledger SQLite (1.000.100 notas lógicas):
+
+```text
+knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
 Ponteiro:
@@ -16,32 +24,36 @@ Ponteiro:
 knowledge-federation/archives/LATEST-LEDGER.txt
 ```
 
-Relatório:
+Vaults prontos para uso imediato:
 
 ```text
+knowledge-federation/archives/study-vault-1m-packs.zip
+knowledge-federation/archives/starter-vault-prioritario.zip
+```
+
+Relatórios e documentação:
+
+```text
+knowledge-federation/STATUS-CONSOLIDACAO-1M.md
+knowledge-federation/MERGE-COMPLETO.md
+knowledge-federation/LOT-SEQUENCE.md
+knowledge-federation/LOTS-3301-5000.md
+knowledge-federation/COMO-COPIAR-PARA-O-COFRE-OBSIDIAN.md
 knowledge-federation/exports/reports/global-audit-fast.md
+knowledge-federation/exports/reports/lot-sequence-manifest.json
 ```
 
-Pacote de estudo materializado:
+## Por que não existem 1 milhão de arquivos Markdown soltos na árvore ativa?
 
-```text
-knowledge-federation/archives/materialized-study-pack-vscale4.zip
-```
+Porque manter 1 milhão de arquivos soltos no workspace ultrapassa limites de snapshot e degrada o desempenho do Git e do Obsidian. A arquitetura final combina:
 
-## Por que não existem 1 milhão de arquivos Markdown ativos?
+1. **Ledger SQLite compactado com LZMA2** (`ledger-v1000000-mat8000.sqlite.xz`, `24M`) para consultas e materializações sob demanda.
+2. **Merge completo em stream `.tar.xz`** (`merge-completo-materializado-1m.tar.xz`, `32M`) contendo todos os 50 pacotes sequenciais (`0001-0100` a `4901-5000`, 1.000.000 de notas) e o vault curado (`7.100` notas), permitindo extrair apenas o intervalo desejado.
+3. **Vaults ZIP independentes** (`study-vault-1m-packs.zip` com 7.100 notas e `starter-vault-prioritario.zip` com 900 notas) para abrir imediatamente no Obsidian.
 
-Porque isso não é confiável neste ambiente. A estratégia correta é:
+## Restaurar o ledger SQLite
 
-```text
-1 nota = 1 registro no SQLite
-Markdown = materialização sob demanda
-```
-
-Assim o vault pode ter escala de 1 milhão de notas lógicas sem explodir o número de arquivos ativos.
-
-## Restaurar o ledger
-
-O SQLite ativo foi removido depois do checkpoint para manter o workspace leve. Para restaurar:
+Para restaurar `knowledge-federation/registry/knowledge.sqlite` a partir do checkpoint `.sqlite.xz`:
 
 ```bash
 python knowledge-federation/scripts/restore_ledger_checkpoint.py
@@ -53,42 +65,18 @@ Se já existir um `registry/knowledge.sqlite` e você quiser sobrescrever:
 python knowledge-federation/scripts/restore_ledger_checkpoint.py --force
 ```
 
-## Consultar o ledger
-
-Depois de restaurar:
+## Consultar o checkpoint diretamente (sem restaurar no workspace)
 
 ```bash
-python knowledge-federation/scripts/query_ledger.py "agentes" --virtual --limit 20
-python knowledge-federation/scripts/query_ledger.py --domain cannabis-medicinal --virtual --limit 20
-python knowledge-federation/scripts/query_ledger.py --domain software --subdomain backend --virtual --limit 20
-```
-
-## Materializar um recorte para Obsidian
-
-Depois de restaurar o ledger:
-
-```bash
-python knowledge-federation/scripts/materialize_batch.py --domain software --prefix vscale4 --limit 1000
-python knowledge-federation/scripts/materialize_batch.py --domain ia --prefix vscale4 --limit 1000
-```
-
-As notas materializadas aparecerão em:
-
-```text
-knowledge-federation/materialized/
-```
-
-## Criar novo checkpoint depois de materializar
-
-```bash
-python knowledge-federation/scripts/checkpoint_virtual.py --label novo-recorte --prune-materialized
+python knowledge-federation/scripts/ledger_stats.py
+python knowledge-federation/scripts/query_checkpoint.py "agentes" --domain ia --limit 20
 ```
 
 ## Segurança em domínios regulados
 
-As notas virtuais de `cannabis-medicinal` e `micologia` foram geradas com `operational_content = 0`, isto é: conteúdo educacional, médico/legal/científico e não operacional. O pipeline evita instruções operacionais de cultivo, extração ou produção de substâncias controladas.
+As notas de `cannabis-medicinal` e `micologia` foram geradas e materializadas com `operational_content = 0` (`conteudo_operacional: false`), mantendo caráter educacional, documental, científico, regulatório e de rastreabilidade.
 
-## Distribuição final das notas virtuais
+## Distribuição final das 1.000.000 notas virtuais
 
 ```text
 software: 205.156

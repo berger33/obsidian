@@ -1,120 +1,55 @@
-# Status de consolidação rumo a 1 milhão materializado
+# Status de consolidação rumo a 1 milhão materializado — CONCLUÍDO (100%)
 
 Data: 2026-10-01
 
-## Estado atual
+## Estado final alcançado
 
-A federação já possui **1.000.000 notas virtuais no ledger** e **1.000.100 notas lógicas** ao considerar as 100 notas físicas iniciais.
-
-O que ainda está em progresso é a **consolidação materializada**: transformar partes do ledger em vaults/arquivos navegáveis compactados para uso no Obsidian.
-
-## Materialização já consolidada
-
-### Sequência de lotes
+A federação atingiu **100% da meta de 1 milhão de notas** tanto no **ledger SQLite** quanto na **consolidação materializada em pacotes/vaults para Obsidian**.
 
 ```text
-Pacotes sequenciais: 33
-Lotes sequenciais: 3.300
+Notas virtuais no ledger: 1.000.000
+Notas físicas iniciais: 100
+Total lógico no ledger: 1.000.100 notas
+
+Pacotes sequenciais materializados: 50 (0001-0100 até 4901-5000)
+Lotes sequenciais materializados: 5.000
 Notas por lote: 200
-Notas sequenciais materializadas: 660.000
+Notas sequenciais materializadas: 1.000.000
+Notas do vault consolidado curado: 7.100
+Total materializado representado no merge completo: 1.007.100 notas
+Lotes em domínios regulados: 1.288
+Conteúdo operacional regulado: 0
 ```
 
-### Vault curado adicional
+## O que foi finalizado na última rodada
 
-```text
-Vault curado: 7.100 notas
-```
+Foram executados os **1.700 lotes restantes** (`lote-3301` a `lote-5000`), distribuídos em **17 pacotes de 100 lotes** (`340.000 notas materializadas`):
 
-### Total materializado representado
+- Intervalos: `3301-3400` até `4901-5000`
+- Relatórios individuais: `exports/reports/lotes-3301-3400-report.md` até `exports/reports/lotes-4901-5000-report.md`
+- Resumo da rodada: `knowledge-federation/LOTS-3301-5000.md`
+- Sequência completa (50 pacotes / 5.000 lotes): `knowledge-federation/LOT-SEQUENCE.md`
+- Manifesto JSON completo: `knowledge-federation/exports/reports/lot-sequence-manifest.json`
 
-```text
-660.000 + 7.100 = 667.100 notas
-```
+## Artefatos principais consolidados
 
-## Quanto falta?
+1. **Merge completo materializado (1.007.100 notas representadas)**
+   - Arquivo reconstruído/direto: `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (ou via `split-assets/`)
+   - Contém:
+     - `MERGE-COMPLETO/00-vault-consolidado/` (7.100 notas curadas em 36 packs + trilhas + playbooks + canvas)
+     - `MERGE-COMPLETO/10-lotes/0001-0100/` até `MERGE-COMPLETO/10-lotes/4901-5000/` (5.000 lotes = 1.000.000 notas)
+     - `MERGE-COMPLETO/90-ledger/` (checkpoint do ledger `ledger-v1000000-mat8000.sqlite.xz` + `LATEST-LEDGER.txt`)
+     - `MERGE-COMPLETO/99-relatorios/` (manifestos, relatórios e índices)
 
-Existem duas formas úteis de contar.
+2. **Ledger completo compactado (1.000.000 notas virtuais + 100 físicas)**
+   - `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz`
 
-### 1. Para chegar a 1.000.000 somente na sequência de lotes
+3. **Vault consolidado curado pronto para abrir (7.100 notas, 36 study packs)**
+   - `knowledge-federation/archives/study-vault-1m-packs.zip`
 
-```text
-1.000.000 - 660.000 = 340.000 notas faltantes
-```
-
-Como cada lote tem 200 notas:
-
-```text
-340.000 / 200 = 1.700 lotes faltantes
-```
-
-Intervalo lógico sugerido:
-
-```text
-lote-3301 a lote-5000
-```
-
-### 2. Para chegar a 1.000.000 contando também o vault curado
-
-```text
-1.000.000 - 667.100 = 332.900 notas faltantes
-```
-
-Isso equivale a:
-
-```text
-1.664 lotes completos de 200 notas = 332.800 notas
-+ 100 notas adicionais
-```
-
-Na prática operacional, para manter lotes uniformes, o ideal seria rodar:
-
-```text
-1.665 lotes adicionais = 333.000 notas
-```
-
-Isso levaria o total materializado representado para:
-
-```text
-667.100 + 333.000 = 1.000.100 notas
-```
-
-## Recomendação operacional
-
-Para manter simplicidade e alinhamento com o ledger de 1 milhão, a melhor próxima meta é consolidar a sequência de lotes até:
-
-```text
-lote-5000
-```
-
-Isso adiciona:
-
-```text
-1.700 lotes
-340.000 notas
-```
-
-e completa:
-
-```text
-5.000 lotes sequenciais × 200 notas = 1.000.000 notas materializadas sequenciais
-```
-
-## Atenção ao tamanho
-
-A rodada anterior de 500.000 notas gerou cerca de 636,7M antes do merge/poda. Para os 340.000 restantes, uma estimativa proporcional é:
-
-```text
-340.000 / 500.000 × 636,7M ≈ 433M antes do merge/poda
-```
-
-Portanto, a próxima etapa deve continuar usando:
-
-- geração em pacotes compactados;
-- merge completo incremental;
-- poda dos zips intermediários depois da validação;
-- checksums;
-- evitar criar centenas de milhares de Markdown ativos no workspace.
+4. **Starter Vault prioritário (900 notas)**
+   - `knowledge-federation/archives/starter-vault-prioritario.zip`
 
 ## Segurança
 
-Os domínios `cannabis-medicinal` e `micologia` continuam restritos a conteúdo educacional, documental, científico, regulatório, rastreabilidade e perguntas para profissionais habilitados. Conteúdo operacional regulado deve permanecer `0`.
+Os domínios `cannabis-medicinal` e `micologia` permanecem restritos a conteúdo educacional, documental, científico, regulatório, rastreabilidade e perguntas para profissionais habilitados (`conteudo_operacional: false`, `0` ocorrências operacionais).

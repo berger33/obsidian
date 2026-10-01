@@ -1,17 +1,17 @@
-# Sequência de lotes materializados
+# Sequência de lotes materializados (Completa — 1 Milhão de Notas)
 
 Data: 2026-10-01
 
 ## Totais sequenciais
 
 ```text
-Pacotes sequenciais: 33
-Lotes: 3.300
-Notas: 660.000
+Pacotes sequenciais: 50
+Lotes: 5.000
+Notas: 1.000.000
 Notas por lote: 200
-Arquivos internos nos zips: 663.465
-Tamanho somado dos zips sequenciais: 840.1M
-Lotes em domínios regulados: 851
+Arquivos internos nos zips: 1.005.250
+Tamanho somado dos zips sequenciais: 1273.4M
+Lotes em domínios regulados: 1.288
 Conteúdo operacional regulado: 0
 ```
 
@@ -52,6 +52,23 @@ Conteúdo operacional regulado: 0
 | 3001-3100 | `archives/study-vault-lotes-3001-3100.zip` | 25.6M | `exports/reports/lotes-3001-3100-report.md` |
 | 3101-3200 | `archives/study-vault-lotes-3101-3200.zip` | 25.4M | `exports/reports/lotes-3101-3200-report.md` |
 | 3201-3300 | `archives/study-vault-lotes-3201-3300.zip` | 25.6M | `exports/reports/lotes-3201-3300-report.md` |
+| 3301-3400 | `archives/study-vault-lotes-3301-3400.zip` | 25.6M | `exports/reports/lotes-3301-3400-report.md` |
+| 3401-3500 | `archives/study-vault-lotes-3401-3500.zip` | 25.3M | `exports/reports/lotes-3401-3500-report.md` |
+| 3501-3600 | `archives/study-vault-lotes-3501-3600.zip` | 25.7M | `exports/reports/lotes-3501-3600-report.md` |
+| 3601-3700 | `archives/study-vault-lotes-3601-3700.zip` | 25.1M | `exports/reports/lotes-3601-3700-report.md` |
+| 3701-3800 | `archives/study-vault-lotes-3701-3800.zip` | 25.7M | `exports/reports/lotes-3701-3800-report.md` |
+| 3801-3900 | `archives/study-vault-lotes-3801-3900.zip` | 25.3M | `exports/reports/lotes-3801-3900-report.md` |
+| 3901-4000 | `archives/study-vault-lotes-3901-4000.zip` | 25.6M | `exports/reports/lotes-3901-4000-report.md` |
+| 4001-4100 | `archives/study-vault-lotes-4001-4100.zip` | 25.5M | `exports/reports/lotes-4001-4100-report.md` |
+| 4101-4200 | `archives/study-vault-lotes-4101-4200.zip` | 25.4M | `exports/reports/lotes-4101-4200-report.md` |
+| 4201-4300 | `archives/study-vault-lotes-4201-4300.zip` | 25.7M | `exports/reports/lotes-4201-4300-report.md` |
+| 4301-4400 | `archives/study-vault-lotes-4301-4400.zip` | 25.2M | `exports/reports/lotes-4301-4400-report.md` |
+| 4401-4500 | `archives/study-vault-lotes-4401-4500.zip` | 25.7M | `exports/reports/lotes-4401-4500-report.md` |
+| 4501-4600 | `archives/study-vault-lotes-4501-4600.zip` | 25.3M | `exports/reports/lotes-4501-4600-report.md` |
+| 4601-4700 | `archives/study-vault-lotes-4601-4700.zip` | 25.7M | `exports/reports/lotes-4601-4700-report.md` |
+| 4701-4800 | `archives/study-vault-lotes-4701-4800.zip` | 25.5M | `exports/reports/lotes-4701-4800-report.md` |
+| 4801-4900 | `archives/study-vault-lotes-4801-4900.zip` | 25.4M | `exports/reports/lotes-4801-4900-report.md` |
+| 4901-5000 | `archives/study-vault-lotes-4901-5000.zip` | 25.6M | `exports/reports/lotes-4901-5000-report.md` |
 
 ## Vault consolidado adicional
 
@@ -61,8 +78,16 @@ archives/study-vault-1m-packs.zip
 
 Contém 7.100 notas de estudo curadas em 36 packs temáticos, trilhas, playbooks, canvas e auditoria.
 
+## Merge completo
+
+```text
+archives/merge-completo-materializado-1m.tar.xz
+```
+
+Contém os 50 pacotes sequenciais (1.000.000 de notas) + o vault consolidado curado (7.100 notas) = 1.007.100 notas materializadas representadas.
+
 ## Ledger completo
 
 ```text
-archives/ledger-v1000000-mat8000.zip
+archives/ledger-v1000000-mat8000.sqlite.xz
 ```

@@ -1,105 +1,75 @@
-# Como copiar para o cofre Obsidian
+# Como copiar para o cofre Obsidian (Consolidação Final — 1 Milhão de Notas)
 
 Data: 2026-10-01
 
-Este guia é para baixar a entrega do GitHub, reconstruir os arquivos grandes e copiar o conteúdo para seu cofre Obsidian.
+Este guia explica como baixar a entrega completa do GitHub, validar os arquivos e abrir ou copiar o conteúdo para seu cofre Obsidian.
 
-## 1. Baixar a branch atual
+## 1. Baixar a branch atual (ou `main` após merge)
 
-O PR ainda está aberto. Enquanto ele não for mergeado, baixe a branch de trabalho:
+Baixe o ZIP completo da branch consolidada com 1 milhão de notas materializadas:
 
 ```text
-https://github.com/berger33/obsidian/archive/refs/heads/arena/01a0f4eb-obsidian.zip
+https://github.com/berger33/obsidian/archive/refs/heads/arena/01a0f8f9-obsidian.zip
 ```
 
-Depois que o PR for mergeado em `main`, o link equivalente será:
+Depois que o PR for mergeado em `main`, o link principal será:
 
 ```text
 https://github.com/berger33/obsidian/archive/refs/heads/main.zip
 ```
 
-PR:
-
-```text
-https://github.com/berger33/obsidian/pull/1
-```
-
 ## 2. Descompactar o ZIP baixado
 
-Ao descompactar, você terá uma pasta parecida com:
+Ao descompactar, entre na pasta do repositório pelo terminal:
 
-```text
-obsidian-arena-01a0f4eb-obsidian/
+```bash
+cd obsidian-arena-01a0f8f9-obsidian
 ```
 
-Entre nessa pasta pelo terminal.
+## 3. Arquivos prontos para uso direto (sem necessidade de juntar partes)
 
-## 3. Reconstruir os arquivos grandes
+Graças à compressão LZMA2 (`.tar.xz` e `.sqlite.xz`), todos os arquivos principais têm menos de 35 MB cada e já estão completos diretamente em `knowledge-federation/archives/`:
 
-Os arquivos maiores que 100 MiB foram divididos porque o GitHub não aceita arquivos grandes diretamente no Git.
+- `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`32M` — contém **1.007.100 notas materializadas**: 7.100 notas do vault curado + 5.000 lotes / 1.000.000 de notas sequenciais)
+- `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` (`24M` — banco SQLite completo com 1.000.000 de notas virtuais + 100 físicas)
+- `knowledge-federation/archives/study-vault-1m-packs.zip` (`8.4M` — vault curado com 7.100 notas, 36 packs, trilhas, playbooks e canvas)
+- `knowledge-federation/archives/starter-vault-prioritario.zip` (`1.1M` — vault rápido com 900 notas prioritárias)
 
-Rode:
+Se quiser validar os checksums SHA-256 (e opcionalmente espelhar em `archives/reconstructed/`):
 
 ```bash
 bash knowledge-federation/scripts/reconstruct_split_assets.sh
 ```
 
-Isso reconstrói:
+## 4. Opção A (Recomendada para começar já): Abrir o Vault Curado (7.100 notas)
 
-```text
-knowledge-federation/archives/reconstructed/merge-completo-materializado-1m.tar.xz
-knowledge-federation/archives/reconstructed/ledger-v1000000-mat8000.zip
-```
-
-O script também valida o checksum SHA-256.
-
-## 4. Extrair o merge completo
-
-Rode:
+Descompacte:
 
 ```bash
-tar -xJf knowledge-federation/archives/reconstructed/merge-completo-materializado-1m.tar.xz
+unzip knowledge-federation/archives/study-vault-1m-packs.zip -d study-vault-1m-packs
 ```
 
-Será criada uma pasta:
+No Obsidian, clique em **Open folder as vault** e selecione a pasta `study-vault-1m-packs`. Comece por `00-Inicio/Home.md`.
 
-```text
-MERGE-COMPLETO/
+## 5. Opção B: Extrair do Merge Completo de 1 Milhão de Notas
+
+Para extrair apenas um intervalo específico de 100 lotes (20.000 notas) sem criar 1 milhão de arquivos de uma vez no seu disco:
+
+```bash
+# Exemplo: extrair os lotes 0001-0100
+tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz MERGE-COMPLETO/10-lotes/0001-0100
+
+# Exemplo: extrair os últimos lotes 4901-5000
+tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz MERGE-COMPLETO/10-lotes/4901-5000
 ```
 
-## 5. Abrir o vault principal no Obsidian
+Se quiser extrair absolutamente tudo (1.007.100 notas / 1.012.505 arquivos):
 
-No Obsidian, use:
-
-```text
-Open folder as vault
+```bash
+tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
 ```
 
-E selecione:
-
-```text
-MERGE-COMPLETO/00-vault-consolidado/study-vault-1m-packs/
-```
-
-Esse é o vault curado, mais amigável para começar.
-
-## 6. Copiar lotes específicos para seu cofre existente
-
-Se você já tem um cofre e quer copiar partes específicas, copie pastas de:
-
-```text
-MERGE-COMPLETO/10-lotes/
-```
-
-Exemplos:
-
-```text
-MERGE-COMPLETO/10-lotes/0001-0100/
-MERGE-COMPLETO/10-lotes/0101-0200/
-MERGE-COMPLETO/10-lotes/3201-3300/
-```
-
-Cada intervalo tem:
+Cada intervalo em `MERGE-COMPLETO/10-lotes/0001-0100/` até `MERGE-COMPLETO/10-lotes/4901-5000/` é um vault Obsidian completo com:
 
 ```text
 00-Inicio/Home.md
@@ -110,27 +80,15 @@ _meta/
 README.md
 ```
 
-## 7. Opção leve: Starter Vault
+## 6. Resumo dos pacotes disponíveis
 
-Também existe um pacote menor para começar sem extrair tudo:
+| Pacote | Tamanho | Conteúdo |
+|---|---:|---|
+| `study-vault-1m-packs.zip` | 8.4M | Vault curado com trilhas, MOCs, playbooks, canvas e 7.100 notas (36 study packs). |
+| `starter-vault-prioritario.zip` | 1.1M | Pacote leve com 900 notas prioritárias para início imediato. |
+| `merge-completo-materializado-1m.tar.xz` | 32M | Merge completo com vault curado (7.100 notas) + todos os 5.000 lotes sequenciais (1.000.000 de notas) = **1.007.100 notas**. |
+| `ledger-v1000000-mat8000.sqlite.xz` | 24M | Checkpoint do ledger SQLite com 1.000.000 de notas virtuais + 100 notas físicas. |
 
-```text
-knowledge-federation/archives/starter-vault-prioritario.zip
-```
+## 7. Segurança
 
-Ele contém uma seleção prioritária de cerca de 900 notas focadas em IA, RAG, backend, orquestração e MVP.
-
-## 8. O que significam os principais pacotes
-
-| Pacote | Uso recomendado |
-|---|---|
-| `study-vault-1m-packs.zip` | Vault curado com trilhas, MOCs, playbooks e 7.100 notas. |
-| `merge-completo-materializado-1m.tar.xz` | Merge completo com vault curado + 660.000 notas em lotes. |
-| `ledger-v1000000-mat8000.zip` | Checkpoint do ledger SQLite com 1 milhão de notas virtuais. |
-| `starter-vault-prioritario.zip` | Pacote menor para começar rápido. |
-
-## 9. Segurança
-
-Os conteúdos de cannabis medicinal e micologia são educacionais, documentais e não operacionais. Eles foram estruturados para estudo, rastreabilidade, documentação e perguntas qualificadas para profissionais habilitados.
-
-Não use o material como prescrição, parecer jurídico, instrução de cultivo, instrução de extração ou guia operacional para substâncias controladas.
+Os conteúdos de cannabis medicinal e micologia são educacionais, documentais e não operacionais (`conteudo_operacional: false`). Eles foram estruturados para estudo, rastreabilidade, documentação e perguntas qualificadas para profissionais habilitados.
