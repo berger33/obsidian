@@ -1,44 +1,84 @@
 # Links de download da entrega completa
 
-Release GitHub:
+Os arquivos grandes foram enviados ao GitHub como **partes divididas** dentro da branch, porque o GitHub bloqueia arquivos Git maiores que 100 MiB.
+
+## Link para baixar tudo do GitHub
+
+Baixe a branch inteira como ZIP:
 
 ```text
-https://github.com/berger33/obsidian/releases/tag/arena-01a0f4eb-merge-completo
+https://github.com/berger33/obsidian/archive/refs/heads/arena/01a0f4eb-obsidian.zip
 ```
 
-## Baixar para copiar os arquivos para o cofre
-
-Arquivo principal:
+Ou veja a branch no GitHub:
 
 ```text
-https://github.com/berger33/obsidian/releases/download/arena-01a0f4eb-merge-completo/merge-completo-materializado-1m.tar.xz
+https://github.com/berger33/obsidian/tree/arena/01a0f4eb-obsidian
 ```
 
-Checksum:
+## Onde estão os arquivos para reconstruir
+
+Depois de baixar/descompactar o ZIP da branch, abra:
 
 ```text
-https://github.com/berger33/obsidian/releases/download/arena-01a0f4eb-merge-completo/merge-completo-materializado-1m.tar.xz.sha256
+knowledge-federation/archives/split-assets/
 ```
 
-Ledger/checkpoint:
+Arquivos do merge completo:
 
 ```text
-https://github.com/berger33/obsidian/releases/download/arena-01a0f4eb-merge-completo/ledger-v1000000-mat8000.zip
+merge-completo-materializado-1m.tar.xz.part-000
+merge-completo-materializado-1m.tar.xz.part-001
+merge-completo-materializado-1m.tar.xz.part-002
 ```
 
-## Como usar
+Arquivos do ledger/checkpoint:
+
+```text
+ledger-v1000000-mat8000.zip.part-000
+ledger-v1000000-mat8000.zip.part-001
+ledger-v1000000-mat8000.zip.part-002
+```
+
+## Reconstruir manualmente
+
+Dentro de `knowledge-federation/archives/split-assets/`:
 
 ```bash
-tar -xJf merge-completo-materializado-1m.tar.xz
+cat merge-completo-materializado-1m.tar.xz.part-* > merge-completo-materializado-1m.tar.xz
+cat ledger-v1000000-mat8000.zip.part-* > ledger-v1000000-mat8000.zip
+sha256sum -c SHA256SUMS.txt --ignore-missing
 ```
 
-Depois, no Obsidian, abra como vault:
+## Reconstruir com script
+
+No root do repositório:
+
+```bash
+bash knowledge-federation/scripts/reconstruct_split_assets.sh
+```
+
+Os arquivos reconstruídos ficarão em:
+
+```text
+knowledge-federation/archives/reconstructed/
+```
+
+## Copiar para o cofre Obsidian
+
+Depois de reconstruir e extrair:
+
+```bash
+tar -xJf knowledge-federation/archives/reconstructed/merge-completo-materializado-1m.tar.xz
+```
+
+Abra no Obsidian ou copie para seu cofre:
 
 ```text
 MERGE-COMPLETO/00-vault-consolidado/study-vault-1m-packs/
 ```
 
-Ou copie para seu cofre os intervalos desejados em:
+Ou copie lotes específicos de:
 
 ```text
 MERGE-COMPLETO/10-lotes/
