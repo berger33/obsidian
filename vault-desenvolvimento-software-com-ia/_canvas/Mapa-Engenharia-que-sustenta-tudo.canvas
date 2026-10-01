@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "05-Engenharia/MOC-Engenharia.md",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "05-Engenharia/Arquitetura-limpa.md",
+      "x": -720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "05-Engenharia/Arquitetura-hexagonal.md",
+      "x": -360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "05-Engenharia/Arquitetura-orientada-a-eventos.md",
+      "x": 0,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "05-Engenharia/DDD-Domain-Driven-Design.md",
+      "x": 360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "05-Engenharia/CQRS.md",
+      "x": 720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n12",
+      "type": "file",
+      "file": "05-Engenharia/Event-sourcing.md",
+      "x": -720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n14",
+      "type": "file",
+      "file": "05-Engenharia/Monolito-modular-engenharia.md",
+      "x": -360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n16",
+      "type": "file",
+      "file": "05-Engenharia/Microsservicos-engenharia.md",
+      "x": 0,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n18",
+      "type": "file",
+      "file": "05-Engenharia/API-design.md",
+      "x": 360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n20",
+      "type": "file",
+      "file": "05-Engenharia/OpenAPI.md",
+      "x": 720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n22",
+      "type": "file",
+      "file": "05-Engenharia/Autenticacao.md",
+      "x": -720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n24",
+      "type": "file",
+      "file": "05-Engenharia/Autorizacao-RBAC.md",
+      "x": -360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n26",
+      "type": "file",
+      "file": "05-Engenharia/OAuth-2.md",
+      "x": 0,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n28",
+      "type": "file",
+      "file": "05-Engenharia/OpenID-Connect.md",
+      "x": 360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n30",
+      "type": "file",
+      "file": "05-Engenharia/Passkeys.md",
+      "x": 720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n32",
+      "type": "file",
+      "file": "05-Engenharia/JWT.md",
+      "x": -720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n34",
+      "type": "file",
+      "file": "05-Engenharia/Sessao-e-cookies.md",
+      "x": -360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n36",
+      "type": "file",
+      "file": "05-Engenharia/Seguranca-web.md",
+      "x": 0,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n38",
+      "type": "file",
+      "file": "05-Engenharia/OWASP-Top-10.md",
+      "x": 360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n40",
+      "type": "file",
+      "file": "05-Engenharia/Seguranca-em-apps-com-LLM.md",
+      "x": 720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n42",
+      "type": "file",
+      "file": "05-Engenharia/Banco-relacional.md",
+      "x": -720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n44",
+      "type": "file",
+      "file": "05-Engenharia/PostgreSQL.md",
+      "x": -360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n46",
+      "type": "file",
+      "file": "05-Engenharia/MySQL.md",
+      "x": 0,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n48",
+      "type": "file",
+      "file": "05-Engenharia/SQLite.md",
+      "x": 360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n50",
+      "type": "file",
+      "file": "05-Engenharia/Banco-NoSQL.md",
+      "x": 720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n52",
+      "type": "file",
+      "file": "05-Engenharia/MongoDB.md",
+      "x": -720,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n54",
+      "type": "file",
+      "file": "05-Engenharia/Redis.md",
+      "x": -360,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n56",
+      "type": "file",
+      "file": "05-Engenharia/Vector-database.md",
+      "x": 0,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n58",
+      "type": "file",
+      "file": "05-Engenharia/pgvector.md",
+      "x": 360,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n60",
+      "type": "file",
+      "file": "05-Engenharia/Pinecone.md",
+      "x": 720,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    }
+  ],
+  "edges": [
+    {
+      "id": "n3",
+      "fromNode": "n1",
+      "toNode": "n2"
+    },
+    {
+      "id": "n5",
+      "fromNode": "n1",
+      "toNode": "n4"
+    },
+    {
+      "id": "n7",
+      "fromNode": "n1",
+      "toNode": "n6"
+    },
+    {
+      "id": "n9",
+      "fromNode": "n1",
+      "toNode": "n8"
+    },
+    {
+      "id": "n11",
+      "fromNode": "n1",
+      "toNode": "n10"
+    },
+    {
+      "id": "n13",
+      "fromNode": "n1",
+      "toNode": "n12"
+    },
+    {
+      "id": "n15",
+      "fromNode": "n1",
+      "toNode": "n14"
+    },
+    {
+      "id": "n17",
+      "fromNode": "n1",
+      "toNode": "n16"
+    },
+    {
+      "id": "n19",
+      "fromNode": "n1",
+      "toNode": "n18"
+    },
+    {
+      "id": "n21",
+      "fromNode": "n1",
+      "toNode": "n20"
+    },
+    {
+      "id": "n23",
+      "fromNode": "n1",
+      "toNode": "n22"
+    },
+    {
+      "id": "n25",
+      "fromNode": "n1",
+      "toNode": "n24"
+    },
+    {
+      "id": "n27",
+      "fromNode": "n1",
+      "toNode": "n26"
+    },
+    {
+      "id": "n29",
+      "fromNode": "n1",
+      "toNode": "n28"
+    },
+    {
+      "id": "n31",
+      "fromNode": "n1",
+      "toNode": "n30"
+    },
+    {
+      "id": "n33",
+      "fromNode": "n1",
+      "toNode": "n32"
+    },
+    {
+      "id": "n35",
+      "fromNode": "n1",
+      "toNode": "n34"
+    },
+    {
+      "id": "n37",
+      "fromNode": "n1",
+      "toNode": "n36"
+    },
+    {
+      "id": "n39",
+      "fromNode": "n1",
+      "toNode": "n38"
+    },
+    {
+      "id": "n41",
+      "fromNode": "n1",
+      "toNode": "n40"
+    },
+    {
+      "id": "n43",
+      "fromNode": "n1",
+      "toNode": "n42"
+    },
+    {
+      "id": "n45",
+      "fromNode": "n1",
+      "toNode": "n44"
+    },
+    {
+      "id": "n47",
+      "fromNode": "n1",
+      "toNode": "n46"
+    },
+    {
+      "id": "n49",
+      "fromNode": "n1",
+      "toNode": "n48"
+    },
+    {
+      "id": "n51",
+      "fromNode": "n1",
+      "toNode": "n50"
+    },
+    {
+      "id": "n53",
+      "fromNode": "n1",
+      "toNode": "n52"
+    },
+    {
+      "id": "n55",
+      "fromNode": "n1",
+      "toNode": "n54"
+    },
+    {
+      "id": "n57",
+      "fromNode": "n1",
+      "toNode": "n56"
+    },
+    {
+      "id": "n59",
+      "fromNode": "n1",
+      "toNode": "n58"
+    },
+    {
+      "id": "n61",
+      "fromNode": "n1",
+      "toNode": "n60"
+    }
+  ]
+}

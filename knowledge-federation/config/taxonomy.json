@@ -1,0 +1,53 @@
+{
+  "version": "2026-09-30.1",
+  "target_notes": 1000000,
+  "batch_defaults": {
+    "small": 100,
+    "normal": 500,
+    "large": 1000,
+    "max_per_run": 2000,
+    "checkpoint_every": 50
+  },
+  "domains": {
+    "software": {
+      "target_notes": 450000,
+      "subdomains": ["fundamentos", "arquitetura", "frontend", "backend", "mobile", "desktop", "dados", "devops", "seguranca", "testes", "produto", "jogos", "sistemas-empresariais", "low-code", "automacao", "apis"]
+    },
+    "ia": {
+      "target_notes": 220000,
+      "subdomains": ["fundamentos", "llms", "agentes", "rag", "fine-tuning", "modelos-locais", "avaliacao", "seguranca", "custos", "ferramentas", "multimodal", "mlops"]
+    },
+    "vibe-coding": {
+      "target_notes": 120000,
+      "subdomains": ["conceitos", "ferramentas", "workflows", "prompts", "context-engineering", "spec-driven-dev", "qualidade", "riscos", "estudos", "orquestracao"]
+    },
+    "jogos": {
+      "target_notes": 90000,
+      "subdomains": ["2d", "3d", "engines", "netcode", "mmo", "game-design", "level-design", "arte", "audio", "ui-ux", "publicacao", "live-ops"]
+    },
+    "cannabis-medicinal": {
+      "target_notes": 60000,
+      "safety_profile": "regulated-medical-cannabis",
+      "subdomains": ["legal-regulatorio", "paciente-documentacao", "botanica-geral", "farmacologia", "canabinoides", "terpenos", "formas-de-uso-legais", "riscos-e-interacoes", "estudos-clinicos", "qualidade-e-rastreabilidade", "glossario"]
+    },
+    "micologia": {
+      "target_notes": 40000,
+      "safety_profile": "mixed-legal-mycology",
+      "subdomains": ["fundamentos", "taxonomia", "ecologia", "cogumelos-comestiveis-legais", "cogumelos-medicinais-legais", "psilocybe-historia-taxonomia-legislacao", "psilocibina-pesquisa-clinica", "riscos-e-reducao-de-danos", "glossario"]
+    },
+    "negocio-carreira-produto": {
+      "target_notes": 20000,
+      "subdomains": ["mvp", "validacao", "monetizacao", "portfolio", "carreira", "mercado", "distribuicao", "produto"]
+    }
+  },
+  "safety_rules": {
+    "cannabis-medicinal": {
+      "allowed": ["informacao legal", "documentacao de paciente", "uso medicinal em acompanhamento medico", "riscos e interacoes", "farmacologia", "botanica descritiva", "qualidade e rastreabilidade nao operacional", "perguntas para profissionais licenciados"],
+      "blocked": ["passo a passo de cultivo", "parametros operacionais", "formula de substrato", "sais e dosagens para cultivo", "extracao operacional", "otimizacao de rendimento ou potencia", "ocultacao ou evasao fiscalizatoria"]
+    },
+    "micologia": {
+      "allowed": ["micologia geral", "taxonomia", "legislacao", "pesquisa clinica", "riscos", "cultivo de especies legais nao controladas em alto nivel"],
+      "blocked": ["cultivo de psilocybe cubensis", "tek", "substrato para psilocybe", "inoculacao", "frutificacao", "extracao", "otimizacao de potencia"]
+    }
+  }
+}

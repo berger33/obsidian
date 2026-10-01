@@ -1,0 +1,151 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-micologia.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "1"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### Micologia — Cogumelos Comestíveis Legais\nSubdomínio: `cogumelos-comestiveis-legais`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-cogumelos-comestiveis-legais.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### Micologia — Cogumelos Medicinais Legais\nSubdomínio: `cogumelos-medicinais-legais`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-cogumelos-medicinais-legais.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### Micologia — Ecologia\nSubdomínio: `ecologia`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-ecologia.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### Micologia — Fundamentos\nSubdomínio: `fundamentos`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-fundamentos.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### Micologia — Glossário\nSubdomínio: `glossario`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-glossario.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### Micologia — Psilocibina: Pesquisa Clínica\nSubdomínio: `psilocibina-pesquisa-clinica`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-psilocibina-pesquisa-clinica.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### Micologia — Psilocybe: História. Taxonomia e Legislação\nSubdomínio: `psilocybe-historia-taxonomia-legislacao`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-psilocybe-historia-taxonomia-legislacao.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### Micologia — Riscos e Redução de Danos\nSubdomínio: `riscos-e-reducao-de-danos`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-riscos-reducao-danos.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "sub-8",
+      "type": "text",
+      "text": "### Micologia — Taxonomia\nSubdomínio: `taxonomia`\nLedger: **12.820** notas\nPack: `archives/study-pack-micologia-taxonomia.zip` (200 notas)",
+      "x": -720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "dom",
+      "toNode": "sub-8"
+    }
+  ]
+}

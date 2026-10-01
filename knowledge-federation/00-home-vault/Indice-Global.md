@@ -1,0 +1,113 @@
+---
+tipo: indice-global
+ultima_verificacao: 2026-09-30
+tags: [indice, global, ledger-1m]
+---
+# Índice Global — Knowledge Federation (1 Milhão de Notas)
+
+Atualizado em: 2026-10-01T20:22:44
+
+## Resumo Executivo
+
+- **Notas virtuais no ledger:** 1.000.000
+- **Notas físicas iniciais:** 100
+- **Total lógico no ledger:** 1.000.100
+- **Lotes sequenciais materializados:** 5.000 lotes (50 pacotes de 100 lotes = **1.000.000 de notas**)
+- **Study Packs por subdomínio:** 78 packs × 200 notas = **15.600 notas curadas**
+- **Total materializado representado no merge completo:** **1.015.600 notas**
+- **Conteúdo operacional em domínios regulados:** **0**
+
+## Distribuição por Domínio no Ledger
+
+| Domínio | Notas Virtuais | Subdomínios | Study Packs (200 notas) | MOC Global |
+|---|---:|---:|---:|---|
+| `software` | 205.156 | 16 | 16 (3.200 notas) | [[MOC-software]] |
+| `ia` | 153.844 | 12 | 12 (2.400 notas) | [[MOC-ia]] |
+| `jogos` | 153.840 | 12 | 12 (2.400 notas) | [[MOC-jogos]] |
+| `cannabis-medicinal` | 141.020 | 11 | 11 (2.200 notas) | [[MOC-cannabis-medicinal]] |
+| `vibe-coding` | 128.200 | 10 | 10 (2.000 notas) | [[MOC-vibe-coding]] |
+| `micologia` | 115.380 | 9 | 9 (1.800 notas) | [[MOC-micologia]] |
+| `negocio-carreira-produto` | 102.560 | 8 | 8 (1.600 notas) | [[MOC-negocio-carreira-produto]] |
+
+## Contagem por Domínio / Subdomínio (78 Subdomínios)
+
+| # | Domínio | Subdomínio | Notas no Ledger |
+|---:|---|---|---:|
+| 1 | `cannabis-medicinal` | `botanica-geral` | 12.820 |
+| 2 | `cannabis-medicinal` | `canabinoides` | 12.820 |
+| 3 | `cannabis-medicinal` | `estudos-clinicos` | 12.820 |
+| 4 | `cannabis-medicinal` | `farmacologia` | 12.820 |
+| 5 | `cannabis-medicinal` | `formas-de-uso-legais` | 12.820 |
+| 6 | `cannabis-medicinal` | `glossario` | 12.820 |
+| 7 | `cannabis-medicinal` | `legal-regulatorio` | 12.820 |
+| 8 | `cannabis-medicinal` | `paciente-documentacao` | 12.820 |
+| 9 | `cannabis-medicinal` | `qualidade-e-rastreabilidade` | 12.820 |
+| 10 | `cannabis-medicinal` | `riscos-e-interacoes` | 12.820 |
+| 11 | `cannabis-medicinal` | `terpenos` | 12.820 |
+| 12 | `ia` | `agentes` | 12.821 |
+| 13 | `ia` | `avaliacao` | 12.820 |
+| 14 | `ia` | `custos` | 12.820 |
+| 15 | `ia` | `ferramentas` | 12.820 |
+| 16 | `ia` | `fine-tuning` | 12.820 |
+| 17 | `ia` | `fundamentos` | 12.821 |
+| 18 | `ia` | `llms` | 12.821 |
+| 19 | `ia` | `mlops` | 12.820 |
+| 20 | `ia` | `modelos-locais` | 12.820 |
+| 21 | `ia` | `multimodal` | 12.820 |
+| 22 | `ia` | `rag` | 12.821 |
+| 23 | `ia` | `seguranca` | 12.820 |
+| 24 | `jogos` | `2d` | 12.820 |
+| 25 | `jogos` | `3d` | 12.820 |
+| 26 | `jogos` | `arte` | 12.820 |
+| 27 | `jogos` | `audio` | 12.820 |
+| 28 | `jogos` | `engines` | 12.820 |
+| 29 | `jogos` | `game-design` | 12.820 |
+| 30 | `jogos` | `level-design` | 12.820 |
+| 31 | `jogos` | `live-ops` | 12.820 |
+| 32 | `jogos` | `mmo` | 12.820 |
+| 33 | `jogos` | `netcode` | 12.820 |
+| 34 | `jogos` | `publicacao` | 12.820 |
+| 35 | `jogos` | `ui-ux` | 12.820 |
+| 36 | `micologia` | `cogumelos-comestiveis-legais` | 12.820 |
+| 37 | `micologia` | `cogumelos-medicinais-legais` | 12.820 |
+| 38 | `micologia` | `ecologia` | 12.820 |
+| 39 | `micologia` | `fundamentos` | 12.820 |
+| 40 | `micologia` | `glossario` | 12.820 |
+| 41 | `micologia` | `psilocibina-pesquisa-clinica` | 12.820 |
+| 42 | `micologia` | `psilocybe-historia-taxonomia-legislacao` | 12.820 |
+| 43 | `micologia` | `riscos-e-reducao-de-danos` | 12.820 |
+| 44 | `micologia` | `taxonomia` | 12.820 |
+| 45 | `negocio-carreira-produto` | `carreira` | 12.820 |
+| 46 | `negocio-carreira-produto` | `distribuicao` | 12.820 |
+| 47 | `negocio-carreira-produto` | `mercado` | 12.820 |
+| 48 | `negocio-carreira-produto` | `monetizacao` | 12.820 |
+| 49 | `negocio-carreira-produto` | `mvp` | 12.820 |
+| 50 | `negocio-carreira-produto` | `portfolio` | 12.820 |
+| 51 | `negocio-carreira-produto` | `produto` | 12.820 |
+| 52 | `negocio-carreira-produto` | `validacao` | 12.820 |
+| 53 | `software` | `apis` | 12.821 |
+| 54 | `software` | `arquitetura` | 12.824 |
+| 55 | `software` | `automacao` | 12.821 |
+| 56 | `software` | `backend` | 12.824 |
+| 57 | `software` | `dados` | 12.822 |
+| 58 | `software` | `desktop` | 12.823 |
+| 59 | `software` | `devops` | 12.822 |
+| 60 | `software` | `frontend` | 12.824 |
+| 61 | `software` | `fundamentos` | 12.824 |
+| 62 | `software` | `jogos` | 12.821 |
+| 63 | `software` | `low-code` | 12.821 |
+| 64 | `software` | `mobile` | 12.823 |
+| 65 | `software` | `produto` | 12.821 |
+| 66 | `software` | `seguranca` | 12.822 |
+| 67 | `software` | `sistemas-empresariais` | 12.821 |
+| 68 | `software` | `testes` | 12.822 |
+| 69 | `vibe-coding` | `conceitos` | 12.820 |
+| 70 | `vibe-coding` | `context-engineering` | 12.820 |
+| 71 | `vibe-coding` | `estudos` | 12.820 |
+| 72 | `vibe-coding` | `ferramentas` | 12.820 |
+| 73 | `vibe-coding` | `orquestracao` | 12.820 |
+| 74 | `vibe-coding` | `prompts` | 12.820 |
+| 75 | `vibe-coding` | `qualidade` | 12.820 |
+| 76 | `vibe-coding` | `riscos` | 12.820 |
+| 77 | `vibe-coding` | `spec-driven-dev` | 12.820 |
+| 78 | `vibe-coding` | `workflows` | 12.820 |

@@ -1,0 +1,3 @@
+Arquivos antigos removidos antes de gerar o marco de 1M para reduzir tamanho do workspace.
+Checkpoints removidos eram intermediários: v100k, v250k e study packs antigos.
+O checkpoint v500k foi mantido até o v1M ser criado.

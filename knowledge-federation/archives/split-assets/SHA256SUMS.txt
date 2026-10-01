@@ -1,0 +1,4 @@
+ae692de0c8d48683de2d26a3b0ad638ea9bb0b47aa7b36ca7ae9940e5537217c  merge-completo-materializado-1m.tar.xz
+b824467e32b188b7cf7aad57161938fa2417f8a46193524cc26a5d0c7e460c85  ledger-v1000000-mat8000.sqlite.xz
+36861d71866d59b1aa4e4fb227f36fe004b81aff2f90765dd4d7652d3dc5e17a  study-vault-1m-packs.zip
+a60001c716653916ff5d87a357c57d4cdc403a6eb992f063a02b3ffbf3198fd7  starter-vault-prioritario.zip

@@ -1,0 +1,4 @@
+# Caches locais de ferramentas
+__pycache__/
+*.pyc
+knowledge-federation/archives/reconstructed/

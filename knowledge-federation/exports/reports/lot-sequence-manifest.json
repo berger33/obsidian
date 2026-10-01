@@ -1,0 +1,502 @@
+[
+  {
+    "start": 1,
+    "end": 100,
+    "zip": "archives/study-vault-next-100-lotes.zip",
+    "report": "exports/reports/next-100-lotes-report.md",
+    "size_bytes": 26779026,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 101,
+    "end": 200,
+    "zip": "archives/study-vault-lotes-101-200.zip",
+    "report": "exports/reports/lotes-101-200-report.md",
+    "size_bytes": 26688055,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 201,
+    "end": 300,
+    "zip": "archives/study-vault-lotes-201-300.zip",
+    "report": "exports/reports/lotes-201-300-report.md",
+    "size_bytes": 26503246,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 301,
+    "end": 400,
+    "zip": "archives/study-vault-lotes-301-400.zip",
+    "report": "exports/reports/lotes-301-400-report.md",
+    "size_bytes": 26867048,
+    "regulated_lots": 30,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 401,
+    "end": 500,
+    "zip": "archives/study-vault-lotes-401-500.zip",
+    "report": "exports/reports/lotes-401-500-report.md",
+    "size_bytes": 26294603,
+    "regulated_lots": 21,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 501,
+    "end": 600,
+    "zip": "archives/study-vault-lotes-501-600.zip",
+    "report": "exports/reports/lotes-501-600-report.md",
+    "size_bytes": 26873434,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 601,
+    "end": 700,
+    "zip": "archives/study-vault-lotes-601-700.zip",
+    "report": "exports/reports/lotes-601-700-report.md",
+    "size_bytes": 26451231,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 701,
+    "end": 800,
+    "zip": "archives/study-vault-lotes-701-800.zip",
+    "report": "exports/reports/lotes-701-800-report.md",
+    "size_bytes": 26814182,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 801,
+    "end": 900,
+    "zip": "archives/study-vault-lotes-801-900.zip",
+    "report": "exports/reports/lotes-801-900-report.md",
+    "size_bytes": 26609886,
+    "regulated_lots": 27,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 901,
+    "end": 1000,
+    "zip": "archives/study-vault-lotes-901-1000.zip",
+    "report": "exports/reports/lotes-901-1000-report.md",
+    "size_bytes": 26579101,
+    "regulated_lots": 22,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1001,
+    "end": 1100,
+    "zip": "archives/study-vault-lotes-1001-1100.zip",
+    "report": "exports/reports/lotes-1001-1100-report.md",
+    "size_bytes": 26856822,
+    "regulated_lots": 28,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1101,
+    "end": 1200,
+    "zip": "archives/study-vault-lotes-1101-1200.zip",
+    "report": "exports/reports/lotes-1101-1200-report.md",
+    "size_bytes": 26479638,
+    "regulated_lots": 23,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1201,
+    "end": 1300,
+    "zip": "archives/study-vault-lotes-1201-1300.zip",
+    "report": "exports/reports/lotes-1201-1300-report.md",
+    "size_bytes": 26908446,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1301,
+    "end": 1400,
+    "zip": "archives/study-vault-lotes-1301-1400.zip",
+    "report": "exports/reports/lotes-1301-1400-report.md",
+    "size_bytes": 26514621,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1401,
+    "end": 1500,
+    "zip": "archives/study-vault-lotes-1401-1500.zip",
+    "report": "exports/reports/lotes-1401-1500-report.md",
+    "size_bytes": 26900719,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1501,
+    "end": 1600,
+    "zip": "archives/study-vault-lotes-1501-1600.zip",
+    "report": "exports/reports/lotes-1501-1600-report.md",
+    "size_bytes": 26532631,
+    "regulated_lots": 25,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1601,
+    "end": 1700,
+    "zip": "archives/study-vault-lotes-1601-1700.zip",
+    "report": "exports/reports/lotes-1601-1700-report.md",
+    "size_bytes": 26778262,
+    "regulated_lots": 24,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1701,
+    "end": 1800,
+    "zip": "archives/study-vault-lotes-1701-1800.zip",
+    "report": "exports/reports/lotes-1701-1800-report.md",
+    "size_bytes": 26780032,
+    "regulated_lots": 26,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1801,
+    "end": 1900,
+    "zip": "archives/study-vault-lotes-1801-1900.zip",
+    "report": "exports/reports/lotes-1801-1900-report.md",
+    "size_bytes": 26593542,
+    "regulated_lots": 25,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 1901,
+    "end": 2000,
+    "zip": "archives/study-vault-lotes-1901-2000.zip",
+    "report": "exports/reports/lotes-1901-2000-report.md",
+    "size_bytes": 26908014,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2001,
+    "end": 2100,
+    "zip": "archives/study-vault-lotes-2001-2100.zip",
+    "report": "exports/reports/lotes-2001-2100-report.md",
+    "size_bytes": 26548442,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2101,
+    "end": 2200,
+    "zip": "archives/study-vault-lotes-2101-2200.zip",
+    "report": "exports/reports/lotes-2101-2200-report.md",
+    "size_bytes": 26939195,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2201,
+    "end": 2300,
+    "zip": "archives/study-vault-lotes-2201-2300.zip",
+    "report": "exports/reports/lotes-2201-2300-report.md",
+    "size_bytes": 26481812,
+    "regulated_lots": 23,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2301,
+    "end": 2400,
+    "zip": "archives/study-vault-lotes-2301-2400.zip",
+    "report": "exports/reports/lotes-2301-2400-report.md",
+    "size_bytes": 26831239,
+    "regulated_lots": 26,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2401,
+    "end": 2500,
+    "zip": "archives/study-vault-lotes-2401-2500.zip",
+    "report": "exports/reports/lotes-2401-2500-report.md",
+    "size_bytes": 26677117,
+    "regulated_lots": 24,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2501,
+    "end": 2600,
+    "zip": "archives/study-vault-lotes-2501-2600.zip",
+    "report": "exports/reports/lotes-2501-2600-report.md",
+    "size_bytes": 26673384,
+    "regulated_lots": 27,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2601,
+    "end": 2700,
+    "zip": "archives/study-vault-lotes-2601-2700.zip",
+    "report": "exports/reports/lotes-2601-2700-report.md",
+    "size_bytes": 26852625,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2701,
+    "end": 2800,
+    "zip": "archives/study-vault-lotes-2701-2800.zip",
+    "report": "exports/reports/lotes-2701-2800-report.md",
+    "size_bytes": 26546040,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2801,
+    "end": 2900,
+    "zip": "archives/study-vault-lotes-2801-2900.zip",
+    "report": "exports/reports/lotes-2801-2900-report.md",
+    "size_bytes": 26931249,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 2901,
+    "end": 3000,
+    "zip": "archives/study-vault-lotes-2901-3000.zip",
+    "report": "exports/reports/lotes-2901-3000-report.md",
+    "size_bytes": 26411187,
+    "regulated_lots": 21,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3001,
+    "end": 3100,
+    "zip": "archives/study-vault-lotes-3001-3100.zip",
+    "report": "exports/reports/lotes-3001-3100-report.md",
+    "size_bytes": 26889335,
+    "regulated_lots": 28,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3101,
+    "end": 3200,
+    "zip": "archives/study-vault-lotes-3101-3200.zip",
+    "report": "exports/reports/lotes-3101-3200-report.md",
+    "size_bytes": 26623960,
+    "regulated_lots": 22,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3201,
+    "end": 3300,
+    "zip": "archives/study-vault-lotes-3201-3300.zip",
+    "report": "exports/reports/lotes-3201-3300-report.md",
+    "size_bytes": 26798105,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3301,
+    "end": 3400,
+    "zip": "archives/study-vault-lotes-3301-3400.zip",
+    "report": "exports/reports/lotes-3301-3400-report.md",
+    "size_bytes": 26832466,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3401,
+    "end": 3500,
+    "zip": "archives/study-vault-lotes-3401-3500.zip",
+    "report": "exports/reports/lotes-3401-3500-report.md",
+    "size_bytes": 26553416,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3501,
+    "end": 3600,
+    "zip": "archives/study-vault-lotes-3501-3600.zip",
+    "report": "exports/reports/lotes-3501-3600-report.md",
+    "size_bytes": 26954997,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3601,
+    "end": 3700,
+    "zip": "archives/study-vault-lotes-3601-3700.zip",
+    "report": "exports/reports/lotes-3601-3700-report.md",
+    "size_bytes": 26336590,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3701,
+    "end": 3800,
+    "zip": "archives/study-vault-lotes-3701-3800.zip",
+    "report": "exports/reports/lotes-3701-3800-report.md",
+    "size_bytes": 26944779,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3801,
+    "end": 3900,
+    "zip": "archives/study-vault-lotes-3801-3900.zip",
+    "report": "exports/reports/lotes-3801-3900-report.md",
+    "size_bytes": 26528377,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 3901,
+    "end": 4000,
+    "zip": "archives/study-vault-lotes-3901-4000.zip",
+    "report": "exports/reports/lotes-3901-4000-report.md",
+    "size_bytes": 26889963,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4001,
+    "end": 4100,
+    "zip": "archives/study-vault-lotes-4001-4100.zip",
+    "report": "exports/reports/lotes-4001-4100-report.md",
+    "size_bytes": 26775819,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4101,
+    "end": 4200,
+    "zip": "archives/study-vault-lotes-4101-4200.zip",
+    "report": "exports/reports/lotes-4101-4200-report.md",
+    "size_bytes": 26594196,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4201,
+    "end": 4300,
+    "zip": "archives/study-vault-lotes-4201-4300.zip",
+    "report": "exports/reports/lotes-4201-4300-report.md",
+    "size_bytes": 26957904,
+    "regulated_lots": 30,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4301,
+    "end": 4400,
+    "zip": "archives/study-vault-lotes-4301-4400.zip",
+    "report": "exports/reports/lotes-4301-4400-report.md",
+    "size_bytes": 26393361,
+    "regulated_lots": 21,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4401,
+    "end": 4500,
+    "zip": "archives/study-vault-lotes-4401-4500.zip",
+    "report": "exports/reports/lotes-4401-4500-report.md",
+    "size_bytes": 26956585,
+    "regulated_lots": 29,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4501,
+    "end": 4600,
+    "zip": "archives/study-vault-lotes-4501-4600.zip",
+    "report": "exports/reports/lotes-4501-4600-report.md",
+    "size_bytes": 26541188,
+    "regulated_lots": 20,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4601,
+    "end": 4700,
+    "zip": "archives/study-vault-lotes-4601-4700.zip",
+    "report": "exports/reports/lotes-4601-4700-report.md",
+    "size_bytes": 26903999,
+    "regulated_lots": 31,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4701,
+    "end": 4800,
+    "zip": "archives/study-vault-lotes-4701-4800.zip",
+    "report": "exports/reports/lotes-4701-4800-report.md",
+    "size_bytes": 26698105,
+    "regulated_lots": 27,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4801,
+    "end": 4900,
+    "zip": "archives/study-vault-lotes-4801-4900.zip",
+    "report": "exports/reports/lotes-4801-4900-report.md",
+    "size_bytes": 26672456,
+    "regulated_lots": 22,
+    "lots": 100,
+    "notes": 20000
+  },
+  {
+    "start": 4901,
+    "end": 5000,
+    "zip": "archives/study-vault-lotes-4901-5000.zip",
+    "report": "exports/reports/lotes-4901-5000-report.md",
+    "size_bytes": 26805638,
+    "regulated_lots": 28,
+    "lots": 100,
+    "notes": 20000
+  }
+]

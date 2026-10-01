@@ -1,0 +1,77 @@
+{
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "colorGroups": [
+    {
+      "query": "tag:#dominio/fundamentos",
+      "color": {
+        "a": 1,
+        "rgb": 16755200
+      }
+    },
+    {
+      "query": "tag:#dominio/ferramentas-ia",
+      "color": {
+        "a": 1,
+        "rgb": 3447003
+      }
+    },
+    {
+      "query": "tag:#dominio/tipos-dev",
+      "color": {
+        "a": 1,
+        "rgb": 10181046
+      }
+    },
+    {
+      "query": "tag:#dominio/jogos",
+      "color": {
+        "a": 1,
+        "rgb": 3066993
+      }
+    },
+    {
+      "query": "tag:#dominio/engenharia",
+      "color": {
+        "a": 1,
+        "rgb": 15105570
+      }
+    },
+    {
+      "query": "tag:#dominio/riscos",
+      "color": {
+        "a": 1,
+        "rgb": 15158332
+      }
+    },
+    {
+      "query": "tag:#dominio/negocio",
+      "color": {
+        "a": 1,
+        "rgb": 10038562
+      }
+    },
+    {
+      "query": "tag:#tipo/arvore-decisao",
+      "color": {
+        "a": 1,
+        "rgb": 16776960
+      }
+    },
+    {
+      "query": "tag:#tipo/moc",
+      "color": {
+        "a": 1,
+        "rgb": 16737792
+      }
+    }
+  ],
+  "nodeSizeMultiplier": 1.1,
+  "lineSizeMultiplier": 1.0,
+  "centerStrength": 0.35,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250
+}

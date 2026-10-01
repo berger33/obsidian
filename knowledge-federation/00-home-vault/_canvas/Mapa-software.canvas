@@ -1,0 +1,256 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-software.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "3"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### Software — APIs\nSubdomínio: `apis`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-apis.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### Software — Arquitetura\nSubdomínio: `arquitetura`\nLedger: **12.824** notas\nPack: `archives/study-pack-software-arquitetura.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### Software — Automação\nSubdomínio: `automacao`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-automacao.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### Software — Backend\nSubdomínio: `backend`\nLedger: **12.824** notas\nPack: `archives/study-pack-software-backend.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### Software — Dados\nSubdomínio: `dados`\nLedger: **12.822** notas\nPack: `archives/study-pack-software-dados.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### Software — Desktop\nSubdomínio: `desktop`\nLedger: **12.823** notas\nPack: `archives/study-pack-software-desktop.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### Software — DevOps\nSubdomínio: `devops`\nLedger: **12.822** notas\nPack: `archives/study-pack-software-devops.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### Software — Frontend\nSubdomínio: `frontend`\nLedger: **12.824** notas\nPack: `archives/study-pack-software-frontend.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-8",
+      "type": "text",
+      "text": "### Software — Fundamentos\nSubdomínio: `fundamentos`\nLedger: **12.824** notas\nPack: `archives/study-pack-software-fundamentos.zip` (200 notas)",
+      "x": -720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-9",
+      "type": "text",
+      "text": "### Software — Jogos (Engenharia)\nSubdomínio: `jogos`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-jogos.zip` (200 notas)",
+      "x": -240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-10",
+      "type": "text",
+      "text": "### Software — Low-Code\nSubdomínio: `low-code`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-low-code.zip` (200 notas)",
+      "x": 240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-11",
+      "type": "text",
+      "text": "### Software — Mobile\nSubdomínio: `mobile`\nLedger: **12.823** notas\nPack: `archives/study-pack-software-mobile.zip` (200 notas)",
+      "x": 720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-12",
+      "type": "text",
+      "text": "### Software — Produto\nSubdomínio: `produto`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-produto.zip` (200 notas)",
+      "x": -720.0,
+      "y": 920,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-13",
+      "type": "text",
+      "text": "### Software — Segurança\nSubdomínio: `seguranca`\nLedger: **12.822** notas\nPack: `archives/study-pack-software-seguranca.zip` (200 notas)",
+      "x": -240.0,
+      "y": 920,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-14",
+      "type": "text",
+      "text": "### Software — Sistemas Empresariais\nSubdomínio: `sistemas-empresariais`\nLedger: **12.821** notas\nPack: `archives/study-pack-software-sistemas-empresariais.zip` (200 notas)",
+      "x": 240.0,
+      "y": 920,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-15",
+      "type": "text",
+      "text": "### Software — Testes\nSubdomínio: `testes`\nLedger: **12.822** notas\nPack: `archives/study-pack-software-testes.zip` (200 notas)",
+      "x": 720.0,
+      "y": 920,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "dom",
+      "toNode": "sub-8"
+    },
+    {
+      "id": "e-9",
+      "fromNode": "dom",
+      "toNode": "sub-9"
+    },
+    {
+      "id": "e-10",
+      "fromNode": "dom",
+      "toNode": "sub-10"
+    },
+    {
+      "id": "e-11",
+      "fromNode": "dom",
+      "toNode": "sub-11"
+    },
+    {
+      "id": "e-12",
+      "fromNode": "dom",
+      "toNode": "sub-12"
+    },
+    {
+      "id": "e-13",
+      "fromNode": "dom",
+      "toNode": "sub-13"
+    },
+    {
+      "id": "e-14",
+      "fromNode": "dom",
+      "toNode": "sub-14"
+    },
+    {
+      "id": "e-15",
+      "fromNode": "dom",
+      "toNode": "sub-15"
+    }
+  ]
+}
