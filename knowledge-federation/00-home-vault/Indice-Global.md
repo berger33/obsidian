@@ -16,7 +16,7 @@ Atualizado em: 2026-10-01T20:22:44
 - **Total de entradas no inventário:** 1.000.100
 - **Arquivos sequenciais materializados:** 5.000 lotes / **1.000.000 arquivos**; não equivalem a notas válidas
 - **Study Packs históricos:** 78 × 200 = **15.600 arquivos de nota**; não validados
-- **Total de arquivos representados no merge:** **1.015.600** (sem MOCs/relatórios)
+- **Arquivos de nota representados no TAR atual:** **1.015.608** (1.000.000 placeholders + 15.600 arquivos dos Study Packs + 8 candidatas; sem MOCs/relatórios; não são notas válidas)
 - **Notas com revisão humana registrada:** 0 no checkpoint legado
 - **Conteúdo operacional em domínios regulados:** **0**
 

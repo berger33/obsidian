@@ -13,7 +13,7 @@ aliases: [Confiabilidade e contratos de software]
 
 > **Este MOC é apenas navegação e está fora do gate de qualidade.** Sua existência não aprova o lote; cada nota listada é avaliada individualmente.
 
-Este mapa aponta para o primeiro lote de oito notas autorais. As oito passaram pelo gate estrutural automatizado; **a revisão humana/factual ainda está pendente**, portanto nenhuma entra como nota plenamente validada.
+Este mapa aponta para o primeiro lote de oito notas autorais. As oito passaram pelo gate estrutural e tiveram uma checagem assistida de fontes registrada; **a revisão humana/factual continua pendente**, portanto nenhuma entra como nota plenamente validada.
 
 ## Backend e integrações
 

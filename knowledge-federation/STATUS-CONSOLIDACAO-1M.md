@@ -29,7 +29,7 @@ A sequência de lotes no TAR e os 78 Study Packs continuam disponíveis como **a
 1. Adicionado um gate reproduzível em `scripts/note_quality.py` e `scripts/audit_note_quality.py`.
 2. Atualizado `audit_batch.py`: links/frontmatter sem conteúdo não bastam para marcar um lote como concluído; `complete` requer gate automatizado e revisão humana identificada.
 3. Criadas 8 notas autorais, com exemplos, limites, métodos de verificação e fontes primárias/especializadas, nos subdomínios software/backend, APIs, testes, dados e DevOps.
-4. As 8 passaram pelo gate estrutural de conteúdo; revisão humana e checagem final das afirmações seguem pendentes.
+4. As 8 candidatas passaram pelo gate estrutural e tiveram suas fontes comparadas em uma checagem assistida por agente; a revisão humana continua pendente e nenhuma foi promovida a nota válida.
 5. Acrescentados 9 testes automatizados cobrindo notas completas, placeholders, bloqueio de materialização, fontes genéricas, wikilinks com alias/fragmento, estado de revisão e esquema do ledger.
 
 Relatório executável: [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md).

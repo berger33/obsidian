@@ -23,7 +23,7 @@ Os pacotes continuam disponíveis para inspeção e recuperação. Seus números
 
 | Pacote | Tamanho aproximado | Uso / ressalva |
 |---|---:|---|
-| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 34 MB | Merge histórico com lotes e vaults materializados; o conteúdo-template não entra na meta de validade |
+| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 33,1 MB | Merge reconstruído e testado: lotes e vaults históricos + 8 notas candidatas ainda sem aprovação humana |
 | `knowledge-federation/archives/study-vault-1m-packs.zip` | 19 MB | 78 Study Packs / arquivos gerados do ledger; não assumir que sejam 15.600 notas validadas |
 | `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | 24 MB | Checkpoint compacto do catálogo SQLite; 1.000.000 de registros virtuais |
 | `knowledge-federation/archives/starter-vault-prioritario.zip` | 1,1 MB | Recorte de entrada; a quantidade de arquivos não é selo de qualidade |

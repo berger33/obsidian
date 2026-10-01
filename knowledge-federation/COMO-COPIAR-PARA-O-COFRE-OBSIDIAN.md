@@ -16,7 +16,7 @@ https://github.com/berger33/obsidian/archive/refs/heads/main.zip
 
 | Pacote | Tamanho aprox. | Descrição / ressalva |
 |---|---:|---|
-| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 34 MB | Merge histórico de arquivos de catálogo, packs, lotes e relatórios. Não são 1.015.600 notas validadas. |
+| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 33,1 MB | Merge de catálogo, packs, lotes e 8 notas candidatas. São 1.015.608 arquivos de nota representados, não notas válidas aprovadas. |
 | `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | 24 MB | Checkpoint com 1.000.000 de registros virtuais e 100 registros físicos iniciais; entradas virtuais têm marcadores de template. |
 | `knowledge-federation/archives/study-vault-1m-packs.zip` | 19 MB | 78 packs estruturais / 15.600 arquivos materializados; a auditoria de links não certifica conteúdo. |
 | `knowledge-federation/archives/starter-vault-prioritario.zip` | 1,1 MB | Recorte leve de inspeção; a quantidade de arquivos não é selo de qualidade. |

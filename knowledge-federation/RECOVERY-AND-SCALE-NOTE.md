@@ -39,7 +39,7 @@ python3 knowledge-federation/scripts/audit_note_quality.py \
 
 ## Próximo ciclo recomendado
 
-1. Revisar as 8 notas candidatas e confirmar as referências.
+1. Fazer revisão humana factual das 8 candidatas, usando a checagem assistida como ponto de partida e resolvendo as ressalvas registradas.
 2. Registrar revisão humana somente depois da conferência efetiva.
 3. Criar novos lotes pequenos, com conceitos específicos e fontes adequadas ao subdomínio.
 4. Auditar conteúdo, fontes, links, duplicatas e segurança antes de materializar/exportar.

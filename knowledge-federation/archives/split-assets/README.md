@@ -4,7 +4,7 @@
 
 Graças à otimização com compressão LZMA2 (`.tar.xz` e `.sqlite.xz`), os artefatos principais ficaram abaixo do limite de 100 MiB por arquivo do GitHub e agora residem diretamente em `knowledge-federation/archives/`:
 
-- `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`34M` — arquivos de catálogo, packs, lotes e relatórios; não são notas validadas)
+- `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`33,1 MB` — catálogo, packs, lotes, Home Vault atual e 8 notas candidatas; as candidatas aguardam revisão humana)
 - `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` (`24M` — checkpoint com 1.000.000 de registros virtuais e 100 físicos)
 - `knowledge-federation/archives/study-vault-1m-packs.zip` (`19M` — vault estrutural com 15.600 arquivos de nota derivados do catálogo)
 - `knowledge-federation/archives/starter-vault-prioritario.zip` (`1.1M` — starter vault de inspeção; arquivos não aprovados pelo gate atual)

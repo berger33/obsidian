@@ -87,7 +87,7 @@ O artefato versionado contém 15.600 arquivos de estudo em 78 packs temáticos, 
 archives/merge-completo-materializado-1m.tar.xz
 ```
 
-Contém 1.000.000 arquivos-placeholder sequenciais e 15.600 arquivos dos packs = 1.015.600 arquivos, além de artefatos auxiliares. A soma não representa 1.015.600 notas válidas.
+O TAR atual contém 1.000.000 arquivos-placeholder sequenciais, 15.600 arquivos dos packs e 8 notas candidatas = 1.015.608 arquivos de nota representados, além de artefatos auxiliares. As 8 candidatas aguardam revisão humana; a soma não representa notas válidas.
 
 ## Ledger completo
 

@@ -27,7 +27,7 @@ Com a otimização LZMA2 (`.tar.xz` e `.sqlite.xz`), nenhum arquivo excede 100 M
 
 | Arquivo | Tamanho | SHA-256 | Descrição |
 |---|---:|---|---|
-| `merge-completo-materializado-1m.tar.xz` | `34M` | `ae692de0c8d48683de2d26a3b0ad638ea9bb0b47aa7b36ca7ae9940e5537217c` | Merge histórico com arquivos dos 78 packs e 5.000 lotes. Contagens são de arquivo/registro, não de conteúdo validado. |
+| `merge-completo-materializado-1m.tar.xz` | `33.1 MB` | `2712e91e13e6f9d3a828ca37eb4092c0d5dd0d403120cbcf7367da805f5e4eeb` | Merge reconstruído e testado: 78 packs, 5.000 lotes, 8 notas candidatas e 0 aprovações humanas. Contagens de arquivos não equivalem a notas válidas. |
 | `ledger-v1000000-mat8000.sqlite.xz` | `24M` | `b824467e32b188b7cf7aad57161938fa2417f8a46193524cc26a5d0c7e460c85` | SQLite com 1.000.000 de registros virtuais de catálogo + 100 registros físicos iniciais; auditoria detectou template nos registros virtuais. |
 | `study-vault-1m-packs.zip` | `19M` | `36861d71866d59b1aa4e4fb227f36fe004b81aff2f90765dd4d7652d3dc5e17a` | Pacote Obsidian com 15.600 arquivos distribuídos em 78 packs; estrutura e links não certificam validade editorial. |
 | `starter-vault-prioritario.zip` | `1.1M` | `a60001c716653916ff5d87a357c57d4cdc403a6eb992f063a02b3ffbf3198fd7` | Starter vault prioritário leve (900 notas). |

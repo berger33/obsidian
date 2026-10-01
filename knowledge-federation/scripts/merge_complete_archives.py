@@ -79,6 +79,24 @@ def main():
     seq_manifest_path = ROOT / "exports" / "reports" / "lot-sequence-manifest.json"
     seq_manifest = json.loads(seq_manifest_path.read_text(encoding="utf-8")) if seq_manifest_path.exists() else []
 
+    curated_manifest_path = ROOT / "registry" / "curated-batch-000001.manifest.json"
+    curated_state_path = ROOT / "registry" / "curated-batch-000001.state.json"
+    curated_manifest = json.loads(curated_manifest_path.read_text(encoding="utf-8")) if curated_manifest_path.exists() else {}
+    curated_notes = []
+    for item in curated_manifest.get("notes", []):
+        note_path = ROOT / item["path"]
+        if not note_path.is_file():
+            raise SystemExit(f"Nota candidata ausente no manifesto do lote: {note_path}")
+        curated_notes.append((item, note_path))
+    expected_curated = int(curated_manifest.get("generated_count", len(curated_notes)))
+    if curated_manifest and len(curated_notes) != expected_curated:
+        raise SystemExit(f"Manifesto curated-batch-000001 declara {expected_curated} notas, mas só {len(curated_notes)} existem")
+    curated_archive_paths = {f"MERGE-COMPLETO/{item['path']}" for item, _ in curated_notes}
+
+    home_root = ROOT / "00-home-vault"
+    home_files = sorted(path for path in home_root.rglob("*") if path.is_file())
+    report_markdown = sorted((ROOT / "exports" / "reports").glob("*.md"))
+
     docs = [
         ROOT / "README-1M.md",
         ROOT / "STUDY-VAULT-README.md",
@@ -134,6 +152,17 @@ def main():
         "quality_validation": "not_performed_by_archive_aggregator",
         "ledger_included": bool(args.include_ledger and ledger.exists()),
         "ledger_archive": ledger.name if ledger.exists() else "ledger-v1000000-mat8000.sqlite.xz",
+        "current_home_vault_files": len(home_files),
+        "curated_batch_id": curated_manifest.get("batch_id"),
+        "curated_candidate_note_files": len(curated_notes),
+        "curated_human_review": curated_manifest.get("human_review", "not_recorded"),
+        "curated_valid_notes": int(curated_manifest.get("valid_count", 0)),
+        "curated_note_paths": [item["path"] for item, _ in curated_notes],
+        "curated_source_review_status": curated_manifest.get("source_review", {}).get("status", "not_recorded"),
+        "curated_source_review_report": "99-relatorios/reports/curated-batch-000001-source-review.md" if (ROOT / "exports" / "reports" / "curated-batch-000001-source-review.md").is_file() else None,
+        "curated_manifest_path": "99-relatorios/curated-batch-000001.manifest.json" if curated_manifest_path.is_file() else None,
+        "curated_state_path": "99-relatorios/curated-batch-000001.state.json" if curated_state_path.is_file() else None,
+        "markdown_reports_included": [f"99-relatorios/reports/{path.name}" for path in report_markdown],
     }
 
     with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as tar:
@@ -145,10 +174,12 @@ Gerado em: {manifest['generated_at']}
 
 ## Conteúdo
 
+- `00-home-vault/`: Home Vault de navegação atual, incluindo MOCs (navegação, não aprovação).
 - `00-vault-consolidado/`: Study Vault com packs estruturais, MOCs, trilhas, playbooks, canvas e auditoria de navegação. Seus arquivos derivados do ledger não são conteúdo validado.
+- `domains/software-0002/`: notas candidatas do lote curado; permanecem separadas da contagem de notas válidas.
 - `10-lotes/`: lotes de arquivos-placeholder gerados a partir do catálogo.
 - `90-ledger/`: metadados do checkpoint (`archives/ledger-v1000000-mat8000.sqlite.xz`).
-- `99-relatorios/`: índices, manifestos e relatórios históricos.
+- `99-relatorios/`: índices, manifestos, auditorias e relatórios de checagem de fontes.
 
 ## Inventário (não é contagem editorial)
 
@@ -157,6 +188,8 @@ Pacotes de lotes: {manifest['lot_archive_count']}
 Lotes sequenciais: {manifest['lots_count']}
 Arquivos-placeholder esperados nos lotes: {manifest['expected_catalog_placeholder_files_from_lots']}
 Arquivos Markdown no Study Vault: {manifest['consolidated_vault_markdown_files']}
+Notas candidatas no lote {manifest['curated_batch_id']}: {manifest['curated_candidate_note_files']}
+Notas do lote aprovadas por revisão humana: {manifest['curated_valid_notes']}
 Notas aprovadas por este agregador: {manifest['notes_validated_by_this_aggregator']}
 Validação de qualidade: {manifest['quality_validation']}
 ```
@@ -175,6 +208,10 @@ Extraia este `.tar.xz` para inspecionar os artefatos históricos. Para retomar a
                     name = member.name
                     if name == "MERGE-COMPLETO/README.md":
                         continue
+                    if name.startswith("MERGE-COMPLETO/00-home-vault/"):
+                        continue
+                    if name in curated_archive_paths:
+                        continue
                     if name.startswith("MERGE-COMPLETO/90-ledger/") or name.startswith("MERGE-COMPLETO/99-relatorios/"):
                         continue
                     if any(name.startswith(pref) for pref in new_lot_prefixes):
@@ -190,6 +227,13 @@ Extraia este `.tar.xz` para inspecionar os artefatos históricos. Para retomar a
             if consolidated.exists():
                 add_zip_expanded(tar, consolidated, "MERGE-COMPLETO/00-vault-consolidado")
 
+        for path in home_files:
+            relative = path.relative_to(home_root).as_posix()
+            add_file(tar, path, f"MERGE-COMPLETO/00-home-vault/{relative}")
+
+        for item, note_path in curated_notes:
+            add_file(tar, note_path, f"MERGE-COMPLETO/{item['path']}")
+
         for a, b, p in lots:
             prefix = f"MERGE-COMPLETO/10-lotes/{a:04d}-{b:04d}"
             add_zip_expanded(tar, p, prefix)
@@ -204,7 +248,11 @@ Extraia este `.tar.xz` para inspecionar os artefatos históricos. Para retomar a
             if d.exists():
                 add_file(tar, d, f"MERGE-COMPLETO/99-relatorios/{d.name}")
 
-        for rep in sorted((ROOT / "exports" / "reports").glob("*report.md")):
+        for metadata in (curated_manifest_path, curated_state_path):
+            if metadata.exists():
+                add_file(tar, metadata, f"MERGE-COMPLETO/99-relatorios/{metadata.name}")
+
+        for rep in report_markdown:
             add_file(tar, rep, f"MERGE-COMPLETO/99-relatorios/reports/{rep.name}")
 
 
