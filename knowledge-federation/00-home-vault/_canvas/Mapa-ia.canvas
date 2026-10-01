@@ -1,0 +1,196 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-ia.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "2"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### IA — Agentes\nSubdomínio: `agentes`\nLedger: **12.821** notas\nPack: `archives/study-pack-ia-agentes-from-1m.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### IA — Avaliação\nSubdomínio: `avaliacao`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-avaliacao.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### IA — Custos\nSubdomínio: `custos`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-custos.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### IA — Ferramentas\nSubdomínio: `ferramentas`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-ferramentas.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### IA — Fine-Tuning\nSubdomínio: `fine-tuning`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-fine-tuning.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### IA — Fundamentos\nSubdomínio: `fundamentos`\nLedger: **12.821** notas\nPack: `archives/study-pack-ia-fundamentos.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### IA — LLMs\nSubdomínio: `llms`\nLedger: **12.821** notas\nPack: `archives/study-pack-ia-llms.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### IA — MLOps\nSubdomínio: `mlops`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-mlops.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-8",
+      "type": "text",
+      "text": "### IA — Modelos Locais\nSubdomínio: `modelos-locais`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-modelos-locais.zip` (200 notas)",
+      "x": -720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-9",
+      "type": "text",
+      "text": "### IA — Multimodal\nSubdomínio: `multimodal`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-multimodal.zip` (200 notas)",
+      "x": -240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-10",
+      "type": "text",
+      "text": "### IA — RAG\nSubdomínio: `rag`\nLedger: **12.821** notas\nPack: `archives/study-pack-ia-rag.zip` (200 notas)",
+      "x": 240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "sub-11",
+      "type": "text",
+      "text": "### IA — Segurança\nSubdomínio: `seguranca`\nLedger: **12.820** notas\nPack: `archives/study-pack-ia-seguranca.zip` (200 notas)",
+      "x": 720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "2"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "dom",
+      "toNode": "sub-8"
+    },
+    {
+      "id": "e-9",
+      "fromNode": "dom",
+      "toNode": "sub-9"
+    },
+    {
+      "id": "e-10",
+      "fromNode": "dom",
+      "toNode": "sub-10"
+    },
+    {
+      "id": "e-11",
+      "fromNode": "dom",
+      "toNode": "sub-11"
+    }
+  ]
+}

@@ -1,59 +1,56 @@
-# Study packs materializados do ledger de 1M
+# Study packs materializados do ledger de 1M (78 Subdomínios Completos)
 
 Data: 2026-10-01
 
-Este diretório contém recortes materializados do checkpoint de 1 milhão de notas lógicas. Cada study pack é pequeno o suficiente para abrir/copiar no Obsidian sem precisar restaurar ou abrir o ledger completo.
+Este diretório contém os **78 recortes temáticos (100% dos subdomínios da taxonomia)** materializados a partir do checkpoint de 1 milhão de notas lógicas, com **200 notas por subdomínio = 15.600 notas curadas**.
 
 ## Checkpoint-fonte
 
 ```text
-knowledge-federation/archives/ledger-v1000000-mat8000.zip
+knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-## Study packs criados
+## Cobertura completa por domínio (78 Study Packs)
 
-| Tema | Notas | Zip |
-|---|---:|---|
-| IA — agentes | 100 | `archives/study-pack-ia-agentes-from-1m.zip` |
-| IA — RAG | 200 | `archives/study-pack-ia-rag.zip` |
-| Software — backend | 200 | `archives/study-pack-software-backend.zip` |
-| Vibe coding — orquestração | 200 | `archives/study-pack-vibe-coding-orquestracao.zip` |
-| Jogos — MMO | 200 | `archives/study-pack-jogos-mmo.zip` |
-| Cannabis medicinal — documentação do paciente | 200 | `archives/study-pack-cannabis-documentacao-paciente.zip` |
-| Micologia — riscos e redução de danos | 200 | `archives/study-pack-micologia-riscos-reducao-danos.zip` |
+| Domínio | Subdomínios / Packs | Notas por Pack | Notas Totais |
+|---|---:|---:|---:|
+| `software` | 16 | 200 | 3.200 |
+| `ia` | 12 | 200 | 2.400 |
+| `jogos` | 12 | 200 | 2.400 |
+| `cannabis-medicinal` | 11 | 200 | 2.200 |
+| `vibe-coding` | 10 | 200 | 2.000 |
+| `micologia` | 9 | 200 | 1.800 |
+| `negocio-carreira-produto` | 8 | 200 | 1.600 |
+| **Total** | **78** | **200** | **15.600** |
 
-Total materializado em pastas ativas nesta rodada: 1.300 notas.
-
-## Pastas materializadas ativas
-
-As pastas intermediárias em `knowledge-federation/checkpoint-materialized/` foram removidas após a geração do vault consolidado para manter o workspace abaixo do limite de arquivos ativos. Os recortes continuam preservados em:
+A lista completa dos 78 arquivos `.zip` individuais está em:
 
 ```text
-knowledge-federation/archives/study-pack-*.zip
-knowledge-federation/study-vault-1m-packs/
+knowledge-federation/PACK-INVENTORY.md
+knowledge-federation/00-home-vault/MOCs/MOC-78-Study-Packs.md
+```
+
+## Vault consolidado com todos os 78 packs
+
+Todos os 78 study packs estão reunidos e interligados em:
+
+```text
 knowledge-federation/archives/study-vault-1m-packs.zip
 ```
 
-## Como criar outro pack
+E também dentro do merge completo (`MERGE-COMPLETO/00-vault-consolidado/study-vault-1m-packs/`):
 
-Exemplo:
-
-```bash
-python knowledge-federation/scripts/materialize_from_checkpoint.py \
-  --domain software \
-  --subdomain arquitetura \
-  --limit 500 \
-  --out checkpoint-materialized/software-arquitetura \
-  --zip archives/study-pack-software-arquitetura.zip \
-  --clean
+```text
+knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
 ```
 
-Consulta antes de materializar:
+## Como regerar todos os 78 packs e o Study Vault
 
 ```bash
-python knowledge-federation/scripts/query_checkpoint.py "arquitetura" --domain software --limit 20
+python knowledge-federation/scripts/build_all_78_study_packs.py
+python knowledge-federation/scripts/build_pack_inventory.py
 ```
 
 ## Segurança
 
-Os packs de `cannabis-medicinal` e `micologia` são educacionais e não operacionais. Eles foram gerados com `conteudo_operacional: false` e devem ser usados para estudo, documentação, rastreabilidade, leitura crítica e perguntas a profissionais habilitados.
+Os packs de `cannabis-medicinal` (11 packs) e `micologia` (9 packs) são educacionais, científicos, regulatórios e não operacionais (`conteudo_operacional: false`). Devem ser usados para estudo, documentação, rastreabilidade, leitura crítica e formulação de perguntas a profissionais habilitados.

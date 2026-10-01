@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-negocio-carreira-produto.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "3"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### Negócio — Carreira\nSubdomínio: `carreira`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-carreira.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### Negócio — Distribuição\nSubdomínio: `distribuicao`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-distribuicao.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### Negócio — Mercado\nSubdomínio: `mercado`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-mercado.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### Negócio — Monetização\nSubdomínio: `monetizacao`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-monetizacao.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### Negócio — MVP\nSubdomínio: `mvp`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-mvp.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### Negócio — Portfólio\nSubdomínio: `portfolio`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-portfolio.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### Negócio — Produto\nSubdomínio: `produto`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-produto.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### Negócio — Validação\nSubdomínio: `validacao`\nLedger: **12.820** notas\nPack: `archives/study-pack-negocio-validacao.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "nodes": [
+    {
+      "id": "home",
+      "type": "file",
+      "file": "Home.md",
+      "x": 0,
+      "y": 0,
+      "width": 420,
+      "height": 160,
+      "color": "1"
+    },
+    {
+      "id": "idx",
+      "type": "file",
+      "file": "Indice-Global.md",
+      "x": -520,
+      "y": 0,
+      "width": 420,
+      "height": 160,
+      "color": "2"
+    },
+    {
+      "id": "packs",
+      "type": "file",
+      "file": "MOCs/MOC-78-Study-Packs.md",
+      "x": 520,
+      "y": 0,
+      "width": 420,
+      "height": 160,
+      "color": "4"
+    },
+    {
+      "id": "lots",
+      "type": "file",
+      "file": "MOCs/MOC-5000-Lotes-Sequenciais.md",
+      "x": 0,
+      "y": -240,
+      "width": 460,
+      "height": 160,
+      "color": "5"
+    },
+    {
+      "id": "dom-0",
+      "type": "file",
+      "file": "MOCs/MOC-software.md",
+      "x": -780.0,
+      "y": 280,
+      "width": 440,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "dom-1",
+      "type": "file",
+      "file": "MOCs/MOC-ia.md",
+      "x": -260.0,
+      "y": 280,
+      "width": 440,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "dom-2",
+      "type": "file",
+      "file": "MOCs/MOC-vibe-coding.md",
+      "x": 260.0,
+      "y": 280,
+      "width": 440,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "dom-3",
+      "type": "file",
+      "file": "MOCs/MOC-jogos.md",
+      "x": 780.0,
+      "y": 280,
+      "width": 440,
+      "height": 150,
+      "color": "5"
+    },
+    {
+      "id": "dom-4",
+      "type": "file",
+      "file": "MOCs/MOC-cannabis-medicinal.md",
+      "x": -780.0,
+      "y": 520,
+      "width": 440,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "dom-5",
+      "type": "file",
+      "file": "MOCs/MOC-micologia.md",
+      "x": -260.0,
+      "y": 520,
+      "width": 440,
+      "height": 150,
+      "color": "1"
+    },
+    {
+      "id": "dom-6",
+      "type": "file",
+      "file": "MOCs/MOC-negocio-carreira-produto.md",
+      "x": 260.0,
+      "y": 520,
+      "width": 440,
+      "height": 150,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-idx",
+      "fromNode": "home",
+      "toNode": "idx"
+    },
+    {
+      "id": "e-packs",
+      "fromNode": "home",
+      "toNode": "packs"
+    },
+    {
+      "id": "e-lots",
+      "fromNode": "home",
+      "toNode": "lots"
+    },
+    {
+      "id": "ed-0",
+      "fromNode": "home",
+      "toNode": "dom-0"
+    },
+    {
+      "id": "ed-1",
+      "fromNode": "home",
+      "toNode": "dom-1"
+    },
+    {
+      "id": "ed-2",
+      "fromNode": "home",
+      "toNode": "dom-2"
+    },
+    {
+      "id": "ed-3",
+      "fromNode": "home",
+      "toNode": "dom-3"
+    },
+    {
+      "id": "ed-4",
+      "fromNode": "home",
+      "toNode": "dom-4"
+    },
+    {
+      "id": "ed-5",
+      "fromNode": "home",
+      "toNode": "dom-5"
+    },
+    {
+      "id": "ed-6",
+      "fromNode": "home",
+      "toNode": "dom-6"
+    }
+  ]
+}

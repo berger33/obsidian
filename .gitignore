@@ -1,7 +1,4 @@
-# Artefatos grandes publicados em GitHub Releases
-knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
-knowledge-federation/archives/ledger-v1000000-mat8000.zip
-
 # Caches locais de ferramentas
 __pycache__/
 *.pyc
+knowledge-federation/archives/reconstructed/

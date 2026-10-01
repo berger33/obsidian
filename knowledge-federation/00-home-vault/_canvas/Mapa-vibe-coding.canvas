@@ -1,0 +1,166 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-vibe-coding.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "4"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### Vibe Coding — Conceitos\nSubdomínio: `conceitos`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-conceitos.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### Vibe Coding — Context Engineering\nSubdomínio: `context-engineering`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-context-engineering.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### Vibe Coding — Estudos\nSubdomínio: `estudos`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-estudos.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### Vibe Coding — Ferramentas\nSubdomínio: `ferramentas`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-ferramentas.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### Vibe Coding — Orquestração\nSubdomínio: `orquestracao`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-orquestracao.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### Vibe Coding — Prompts\nSubdomínio: `prompts`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-prompts.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### Vibe Coding — Qualidade\nSubdomínio: `qualidade`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-qualidade.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### Vibe Coding — Riscos\nSubdomínio: `riscos`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-riscos.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-8",
+      "type": "text",
+      "text": "### Vibe Coding — Spec-Driven Dev\nSubdomínio: `spec-driven-dev`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-spec-driven-dev.zip` (200 notas)",
+      "x": -720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "sub-9",
+      "type": "text",
+      "text": "### Vibe Coding — Workflows\nSubdomínio: `workflows`\nLedger: **12.820** notas\nPack: `archives/study-pack-vibe-coding-workflows.zip` (200 notas)",
+      "x": -240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "4"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "dom",
+      "toNode": "sub-8"
+    },
+    {
+      "id": "e-9",
+      "fromNode": "dom",
+      "toNode": "sub-9"
+    }
+  ]
+}

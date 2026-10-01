@@ -1,0 +1,181 @@
+{
+  "nodes": [
+    {
+      "id": "dom",
+      "type": "file",
+      "file": "MOCs/MOC-cannabis-medicinal.md",
+      "x": 0,
+      "y": 0,
+      "width": 440,
+      "height": 160,
+      "color": "6"
+    },
+    {
+      "id": "sub-0",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Botânica Geral\nSubdomínio: `botanica-geral`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-botanica-geral.zip` (200 notas)",
+      "x": -720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-1",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Canabinoides\nSubdomínio: `canabinoides`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-canabinoides.zip` (200 notas)",
+      "x": -240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-2",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Estudos Clínicos\nSubdomínio: `estudos-clinicos`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-estudos-clinicos.zip` (200 notas)",
+      "x": 240.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-3",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Farmacologia\nSubdomínio: `farmacologia`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-farmacologia.zip` (200 notas)",
+      "x": 720.0,
+      "y": 260,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-4",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Formas de Uso Legais\nSubdomínio: `formas-de-uso-legais`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-formas-de-uso-legais.zip` (200 notas)",
+      "x": -720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-5",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Glossário\nSubdomínio: `glossario`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-glossario.zip` (200 notas)",
+      "x": -240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-6",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Legal e Regulatório\nSubdomínio: `legal-regulatorio`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-legal-regulatorio.zip` (200 notas)",
+      "x": 240.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-7",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Documentação do Paciente\nSubdomínio: `paciente-documentacao`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-documentacao-paciente.zip` (200 notas)",
+      "x": 720.0,
+      "y": 480,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-8",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Qualidade e Rastreabilidade\nSubdomínio: `qualidade-e-rastreabilidade`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-qualidade-rastreabilidade.zip` (200 notas)",
+      "x": -720.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-9",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Riscos e Interações\nSubdomínio: `riscos-e-interacoes`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-riscos-interacoes.zip` (200 notas)",
+      "x": -240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "sub-10",
+      "type": "text",
+      "text": "### Cannabis Medicinal — Terpenos\nSubdomínio: `terpenos`\nLedger: **12.820** notas\nPack: `archives/study-pack-cannabis-terpenos.zip` (200 notas)",
+      "x": 240.0,
+      "y": 700,
+      "width": 420,
+      "height": 150,
+      "color": "6"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "dom",
+      "toNode": "sub-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "dom",
+      "toNode": "sub-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "dom",
+      "toNode": "sub-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "dom",
+      "toNode": "sub-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "dom",
+      "toNode": "sub-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "dom",
+      "toNode": "sub-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "dom",
+      "toNode": "sub-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "dom",
+      "toNode": "sub-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "dom",
+      "toNode": "sub-8"
+    },
+    {
+      "id": "e-9",
+      "fromNode": "dom",
+      "toNode": "sub-9"
+    },
+    {
+      "id": "e-10",
+      "fromNode": "dom",
+      "toNode": "sub-10"
+    }
+  ]
+}
