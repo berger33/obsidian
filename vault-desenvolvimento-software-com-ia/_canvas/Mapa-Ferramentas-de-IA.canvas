@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "02-Ferramentas-IA/MOC-Ferramentas-IA.md",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Cursor.md",
+      "x": -720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "02-Ferramentas-IA/GitHub-Copilot.md",
+      "x": -360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Claude-Code.md",
+      "x": 0,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "02-Ferramentas-IA/OpenAI-Codex.md",
+      "x": 360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Gemini-CLI.md",
+      "x": 720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n12",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Windsurf.md",
+      "x": -720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n14",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Devin.md",
+      "x": -360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n16",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Zed-AI.md",
+      "x": 0,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n18",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Aider.md",
+      "x": 360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n20",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Cline.md",
+      "x": 720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n22",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Roo-Code.md",
+      "x": -720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n24",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Continue.md",
+      "x": -360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n26",
+      "type": "file",
+      "file": "02-Ferramentas-IA/OpenCode.md",
+      "x": 0,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n28",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Goose.md",
+      "x": 360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n30",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Qwen-Code.md",
+      "x": 720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n32",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Amazon-Q-Developer.md",
+      "x": -720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n34",
+      "type": "file",
+      "file": "02-Ferramentas-IA/JetBrains-AI-Assistant.md",
+      "x": -360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n36",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Visual-Studio-IntelliCode-e-Copilot.md",
+      "x": 0,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n38",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Replit-Agent.md",
+      "x": 360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n40",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Lovable.md",
+      "x": 720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n42",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Bolt-new.md",
+      "x": -720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n44",
+      "type": "file",
+      "file": "02-Ferramentas-IA/v0-by-Vercel.md",
+      "x": -360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n46",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Base44.md",
+      "x": 0,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n48",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Firebase-Studio.md",
+      "x": 360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n50",
+      "type": "file",
+      "file": "02-Ferramentas-IA/GitHub-Spark.md",
+      "x": 720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n52",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Create-xyz.md",
+      "x": -720,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n54",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Framer-AI.md",
+      "x": -360,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n56",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Webflow-AI.md",
+      "x": 0,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n58",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Figma-AI.md",
+      "x": 360,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n60",
+      "type": "file",
+      "file": "02-Ferramentas-IA/Galileo-AI.md",
+      "x": 720,
+      "y": 1320,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    }
+  ],
+  "edges": [
+    {
+      "id": "n3",
+      "fromNode": "n1",
+      "toNode": "n2"
+    },
+    {
+      "id": "n5",
+      "fromNode": "n1",
+      "toNode": "n4"
+    },
+    {
+      "id": "n7",
+      "fromNode": "n1",
+      "toNode": "n6"
+    },
+    {
+      "id": "n9",
+      "fromNode": "n1",
+      "toNode": "n8"
+    },
+    {
+      "id": "n11",
+      "fromNode": "n1",
+      "toNode": "n10"
+    },
+    {
+      "id": "n13",
+      "fromNode": "n1",
+      "toNode": "n12"
+    },
+    {
+      "id": "n15",
+      "fromNode": "n1",
+      "toNode": "n14"
+    },
+    {
+      "id": "n17",
+      "fromNode": "n1",
+      "toNode": "n16"
+    },
+    {
+      "id": "n19",
+      "fromNode": "n1",
+      "toNode": "n18"
+    },
+    {
+      "id": "n21",
+      "fromNode": "n1",
+      "toNode": "n20"
+    },
+    {
+      "id": "n23",
+      "fromNode": "n1",
+      "toNode": "n22"
+    },
+    {
+      "id": "n25",
+      "fromNode": "n1",
+      "toNode": "n24"
+    },
+    {
+      "id": "n27",
+      "fromNode": "n1",
+      "toNode": "n26"
+    },
+    {
+      "id": "n29",
+      "fromNode": "n1",
+      "toNode": "n28"
+    },
+    {
+      "id": "n31",
+      "fromNode": "n1",
+      "toNode": "n30"
+    },
+    {
+      "id": "n33",
+      "fromNode": "n1",
+      "toNode": "n32"
+    },
+    {
+      "id": "n35",
+      "fromNode": "n1",
+      "toNode": "n34"
+    },
+    {
+      "id": "n37",
+      "fromNode": "n1",
+      "toNode": "n36"
+    },
+    {
+      "id": "n39",
+      "fromNode": "n1",
+      "toNode": "n38"
+    },
+    {
+      "id": "n41",
+      "fromNode": "n1",
+      "toNode": "n40"
+    },
+    {
+      "id": "n43",
+      "fromNode": "n1",
+      "toNode": "n42"
+    },
+    {
+      "id": "n45",
+      "fromNode": "n1",
+      "toNode": "n44"
+    },
+    {
+      "id": "n47",
+      "fromNode": "n1",
+      "toNode": "n46"
+    },
+    {
+      "id": "n49",
+      "fromNode": "n1",
+      "toNode": "n48"
+    },
+    {
+      "id": "n51",
+      "fromNode": "n1",
+      "toNode": "n50"
+    },
+    {
+      "id": "n53",
+      "fromNode": "n1",
+      "toNode": "n52"
+    },
+    {
+      "id": "n55",
+      "fromNode": "n1",
+      "toNode": "n54"
+    },
+    {
+      "id": "n57",
+      "fromNode": "n1",
+      "toNode": "n56"
+    },
+    {
+      "id": "n59",
+      "fromNode": "n1",
+      "toNode": "n58"
+    },
+    {
+      "id": "n61",
+      "fromNode": "n1",
+      "toNode": "n60"
+    }
+  ]
+}

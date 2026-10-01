@@ -1,0 +1,556 @@
+{
+  "nodes": [
+    {
+      "id": "home",
+      "type": "file",
+      "file": "00-Inicio/Home.md",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 140,
+      "color": "1"
+    },
+    {
+      "id": "pack-0",
+      "type": "file",
+      "file": "00-Mapas/MOC-cannabis-documentacao-paciente.md",
+      "x": -750.0,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-1",
+      "type": "file",
+      "file": "00-Mapas/MOC-cannabis-estudos-clinicos.md",
+      "x": -250.0,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-2",
+      "type": "file",
+      "file": "00-Mapas/MOC-cannabis-qualidade-rastreabilidade.md",
+      "x": 250.0,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-3",
+      "type": "file",
+      "file": "00-Mapas/MOC-cannabis-riscos-interacoes.md",
+      "x": 750.0,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-4",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-agentes.md",
+      "x": -750.0,
+      "y": 520,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-5",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-avaliacao.md",
+      "x": -250.0,
+      "y": 520,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    },
+    {
+      "id": "pack-6",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-custos.md",
+      "x": 250.0,
+      "y": 520,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-7",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-ferramentas.md",
+      "x": 750.0,
+      "y": 520,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-8",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-modelos-locais.md",
+      "x": -750.0,
+      "y": 760,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-9",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-rag.md",
+      "x": -250.0,
+      "y": 760,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-10",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-seguranca.md",
+      "x": 250.0,
+      "y": 760,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-11",
+      "type": "file",
+      "file": "00-Mapas/MOC-jogos-2d.md",
+      "x": 750.0,
+      "y": 760,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    },
+    {
+      "id": "pack-12",
+      "type": "file",
+      "file": "00-Mapas/MOC-jogos-engines.md",
+      "x": -750.0,
+      "y": 1000,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-13",
+      "type": "file",
+      "file": "00-Mapas/MOC-jogos-game-design.md",
+      "x": -250.0,
+      "y": 1000,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-14",
+      "type": "file",
+      "file": "00-Mapas/MOC-jogos-mmo.md",
+      "x": 250.0,
+      "y": 1000,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-15",
+      "type": "file",
+      "file": "00-Mapas/MOC-jogos-netcode.md",
+      "x": 750.0,
+      "y": 1000,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-16",
+      "type": "file",
+      "file": "00-Mapas/MOC-micologia-cogumelos-medicinais-legais.md",
+      "x": -750.0,
+      "y": 1240,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-17",
+      "type": "file",
+      "file": "00-Mapas/MOC-micologia-riscos-reducao-danos.md",
+      "x": -250.0,
+      "y": 1240,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    },
+    {
+      "id": "pack-18",
+      "type": "file",
+      "file": "00-Mapas/MOC-micologia-taxonomia.md",
+      "x": 250.0,
+      "y": 1240,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-19",
+      "type": "file",
+      "file": "00-Mapas/MOC-negocio-carreira.md",
+      "x": 750.0,
+      "y": 1240,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-20",
+      "type": "file",
+      "file": "00-Mapas/MOC-negocio-mvp.md",
+      "x": -750.0,
+      "y": 1480,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-21",
+      "type": "file",
+      "file": "00-Mapas/MOC-negocio-portfolio.md",
+      "x": -250.0,
+      "y": 1480,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-22",
+      "type": "file",
+      "file": "00-Mapas/MOC-negocio-validacao.md",
+      "x": 250.0,
+      "y": 1480,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-23",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-apis.md",
+      "x": 750.0,
+      "y": 1480,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    },
+    {
+      "id": "pack-24",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-arquitetura.md",
+      "x": -750.0,
+      "y": 1720,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-25",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-backend.md",
+      "x": -250.0,
+      "y": 1720,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-26",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-dados.md",
+      "x": 250.0,
+      "y": 1720,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-27",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-devops.md",
+      "x": 750.0,
+      "y": 1720,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-28",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-frontend.md",
+      "x": -750.0,
+      "y": 1960,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-29",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-seguranca.md",
+      "x": -250.0,
+      "y": 1960,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    },
+    {
+      "id": "pack-30",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-testes.md",
+      "x": 250.0,
+      "y": 1960,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-31",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-context-engineering.md",
+      "x": 750.0,
+      "y": 1960,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-32",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-orquestracao.md",
+      "x": -750.0,
+      "y": 2200,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-33",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-prompts.md",
+      "x": -250.0,
+      "y": 2200,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-34",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-qualidade.md",
+      "x": 250.0,
+      "y": 2200,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "pack-35",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-workflows.md",
+      "x": 750.0,
+      "y": 2200,
+      "width": 420,
+      "height": 130,
+      "color": "6"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "home",
+      "toNode": "pack-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "home",
+      "toNode": "pack-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "home",
+      "toNode": "pack-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "home",
+      "toNode": "pack-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "home",
+      "toNode": "pack-4"
+    },
+    {
+      "id": "e-5",
+      "fromNode": "home",
+      "toNode": "pack-5"
+    },
+    {
+      "id": "e-6",
+      "fromNode": "home",
+      "toNode": "pack-6"
+    },
+    {
+      "id": "e-7",
+      "fromNode": "home",
+      "toNode": "pack-7"
+    },
+    {
+      "id": "e-8",
+      "fromNode": "home",
+      "toNode": "pack-8"
+    },
+    {
+      "id": "e-9",
+      "fromNode": "home",
+      "toNode": "pack-9"
+    },
+    {
+      "id": "e-10",
+      "fromNode": "home",
+      "toNode": "pack-10"
+    },
+    {
+      "id": "e-11",
+      "fromNode": "home",
+      "toNode": "pack-11"
+    },
+    {
+      "id": "e-12",
+      "fromNode": "home",
+      "toNode": "pack-12"
+    },
+    {
+      "id": "e-13",
+      "fromNode": "home",
+      "toNode": "pack-13"
+    },
+    {
+      "id": "e-14",
+      "fromNode": "home",
+      "toNode": "pack-14"
+    },
+    {
+      "id": "e-15",
+      "fromNode": "home",
+      "toNode": "pack-15"
+    },
+    {
+      "id": "e-16",
+      "fromNode": "home",
+      "toNode": "pack-16"
+    },
+    {
+      "id": "e-17",
+      "fromNode": "home",
+      "toNode": "pack-17"
+    },
+    {
+      "id": "e-18",
+      "fromNode": "home",
+      "toNode": "pack-18"
+    },
+    {
+      "id": "e-19",
+      "fromNode": "home",
+      "toNode": "pack-19"
+    },
+    {
+      "id": "e-20",
+      "fromNode": "home",
+      "toNode": "pack-20"
+    },
+    {
+      "id": "e-21",
+      "fromNode": "home",
+      "toNode": "pack-21"
+    },
+    {
+      "id": "e-22",
+      "fromNode": "home",
+      "toNode": "pack-22"
+    },
+    {
+      "id": "e-23",
+      "fromNode": "home",
+      "toNode": "pack-23"
+    },
+    {
+      "id": "e-24",
+      "fromNode": "home",
+      "toNode": "pack-24"
+    },
+    {
+      "id": "e-25",
+      "fromNode": "home",
+      "toNode": "pack-25"
+    },
+    {
+      "id": "e-26",
+      "fromNode": "home",
+      "toNode": "pack-26"
+    },
+    {
+      "id": "e-27",
+      "fromNode": "home",
+      "toNode": "pack-27"
+    },
+    {
+      "id": "e-28",
+      "fromNode": "home",
+      "toNode": "pack-28"
+    },
+    {
+      "id": "e-29",
+      "fromNode": "home",
+      "toNode": "pack-29"
+    },
+    {
+      "id": "e-30",
+      "fromNode": "home",
+      "toNode": "pack-30"
+    },
+    {
+      "id": "e-31",
+      "fromNode": "home",
+      "toNode": "pack-31"
+    },
+    {
+      "id": "e-32",
+      "fromNode": "home",
+      "toNode": "pack-32"
+    },
+    {
+      "id": "e-33",
+      "fromNode": "home",
+      "toNode": "pack-33"
+    },
+    {
+      "id": "e-34",
+      "fromNode": "home",
+      "toNode": "pack-34"
+    },
+    {
+      "id": "e-35",
+      "fromNode": "home",
+      "toNode": "pack-35"
+    }
+  ]
+}

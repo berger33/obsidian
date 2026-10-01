@@ -1,0 +1,151 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "00-Inicio/Home.md",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "01-Fundamentos/MOC-Fundamentos.md",
+      "x": -480,
+      "y": 260,
+      "width": 340,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "02-Ferramentas-IA/MOC-Ferramentas-IA.md",
+      "x": 0,
+      "y": 260,
+      "width": 340,
+      "height": 120,
+      "color": "2"
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "03-Tipos-de-Desenvolvimento/MOC-Tipos-de-Desenvolvimento.md",
+      "x": 480,
+      "y": 260,
+      "width": 340,
+      "height": 120,
+      "color": "3"
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "04-Jogos/MOC-Jogos.md",
+      "x": -480,
+      "y": 520,
+      "width": 340,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "05-Engenharia/MOC-Engenharia.md",
+      "x": 0,
+      "y": 520,
+      "width": 340,
+      "height": 120,
+      "color": "5"
+    },
+    {
+      "id": "n12",
+      "type": "file",
+      "file": "06-Riscos-e-Realidade/MOC-Riscos-e-Realidade.md",
+      "x": 480,
+      "y": 520,
+      "width": 340,
+      "height": 120,
+      "color": "6"
+    },
+    {
+      "id": "n14",
+      "type": "file",
+      "file": "07-Negocio-e-Carreira/MOC-Negocio-e-Carreira.md",
+      "x": -480,
+      "y": 780,
+      "width": 340,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n16",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/MOC-Trilhas-de-Estudo.md",
+      "x": 0,
+      "y": 780,
+      "width": 340,
+      "height": 120,
+      "color": "2"
+    },
+    {
+      "id": "n18",
+      "type": "file",
+      "file": "10-Glossario/MOC-Glossario.md",
+      "x": 480,
+      "y": 780,
+      "width": 340,
+      "height": 120,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "n3",
+      "fromNode": "n1",
+      "toNode": "n2"
+    },
+    {
+      "id": "n5",
+      "fromNode": "n1",
+      "toNode": "n4"
+    },
+    {
+      "id": "n7",
+      "fromNode": "n1",
+      "toNode": "n6"
+    },
+    {
+      "id": "n9",
+      "fromNode": "n1",
+      "toNode": "n8"
+    },
+    {
+      "id": "n11",
+      "fromNode": "n1",
+      "toNode": "n10"
+    },
+    {
+      "id": "n13",
+      "fromNode": "n1",
+      "toNode": "n12"
+    },
+    {
+      "id": "n15",
+      "fromNode": "n1",
+      "toNode": "n14"
+    },
+    {
+      "id": "n17",
+      "fromNode": "n1",
+      "toNode": "n16"
+    },
+    {
+      "id": "n19",
+      "fromNode": "n1",
+      "toNode": "n18"
+    }
+  ]
+}

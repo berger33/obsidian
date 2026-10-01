@@ -1,0 +1,5 @@
+label=v1000000-mat8000
+notes=100
+virtual_notes=1000000
+archive=ledger-v1000000-mat8000.zip
+created_at=2026-10-01T12:24:30

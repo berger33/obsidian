@@ -1,0 +1,391 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/MOC-Trilhas-de-Estudo.md",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 120,
+      "color": "1"
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-zero-a-app-web.md",
+      "x": -720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-zero-a-SaaS.md",
+      "x": -360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-zero-a-jogo-2D.md",
+      "x": 0,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-zero-a-jogo-online.md",
+      "x": 360,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-zero-a-MMO-realista.md",
+      "x": 720,
+      "y": 220,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n12",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-orquestrador-de-IA.md",
+      "x": -720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n14",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-backend-com-IA.md",
+      "x": -360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n16",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-frontend-com-IA.md",
+      "x": 0,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n18",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-mobile-com-IA.md",
+      "x": 360,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n20",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-seguranca-para-apps-IA.md",
+      "x": 720,
+      "y": 440,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n22",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-prompt-e-contexto.md",
+      "x": -720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n24",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-agentes-CLI.md",
+      "x": -360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n26",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Cursor-e-Copilot.md",
+      "x": 0,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n28",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Claude-Code.md",
+      "x": 360,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n30",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Codex.md",
+      "x": 720,
+      "y": 660,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n32",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Godot-2D.md",
+      "x": -720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n34",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Phaser-web-games.md",
+      "x": -360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n36",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-Unity-mobile.md",
+      "x": 0,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n38",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-dados-e-RAG.md",
+      "x": 360,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    },
+    {
+      "id": "n40",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-CI-CD-e-deploy.md",
+      "x": 720,
+      "y": 880,
+      "width": 300,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "n42",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-validacao-MVP.md",
+      "x": -720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "n44",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-portfolio.md",
+      "x": -360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "n46",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-game-design.md",
+      "x": 0,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "n48",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-netcode.md",
+      "x": 360,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "6"
+    },
+    {
+      "id": "n50",
+      "type": "file",
+      "file": "08-Trilhas-de-Estudo/Trilha-arquitetura-para-solo-dev.md",
+      "x": 720,
+      "y": 1100,
+      "width": 300,
+      "height": 100,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "n3",
+      "fromNode": "n1",
+      "toNode": "n2"
+    },
+    {
+      "id": "n5",
+      "fromNode": "n1",
+      "toNode": "n4"
+    },
+    {
+      "id": "n7",
+      "fromNode": "n1",
+      "toNode": "n6"
+    },
+    {
+      "id": "n9",
+      "fromNode": "n1",
+      "toNode": "n8"
+    },
+    {
+      "id": "n11",
+      "fromNode": "n1",
+      "toNode": "n10"
+    },
+    {
+      "id": "n13",
+      "fromNode": "n1",
+      "toNode": "n12"
+    },
+    {
+      "id": "n15",
+      "fromNode": "n1",
+      "toNode": "n14"
+    },
+    {
+      "id": "n17",
+      "fromNode": "n1",
+      "toNode": "n16"
+    },
+    {
+      "id": "n19",
+      "fromNode": "n1",
+      "toNode": "n18"
+    },
+    {
+      "id": "n21",
+      "fromNode": "n1",
+      "toNode": "n20"
+    },
+    {
+      "id": "n23",
+      "fromNode": "n1",
+      "toNode": "n22"
+    },
+    {
+      "id": "n25",
+      "fromNode": "n1",
+      "toNode": "n24"
+    },
+    {
+      "id": "n27",
+      "fromNode": "n1",
+      "toNode": "n26"
+    },
+    {
+      "id": "n29",
+      "fromNode": "n1",
+      "toNode": "n28"
+    },
+    {
+      "id": "n31",
+      "fromNode": "n1",
+      "toNode": "n30"
+    },
+    {
+      "id": "n33",
+      "fromNode": "n1",
+      "toNode": "n32"
+    },
+    {
+      "id": "n35",
+      "fromNode": "n1",
+      "toNode": "n34"
+    },
+    {
+      "id": "n37",
+      "fromNode": "n1",
+      "toNode": "n36"
+    },
+    {
+      "id": "n39",
+      "fromNode": "n1",
+      "toNode": "n38"
+    },
+    {
+      "id": "n41",
+      "fromNode": "n1",
+      "toNode": "n40"
+    },
+    {
+      "id": "n43",
+      "fromNode": "n1",
+      "toNode": "n42"
+    },
+    {
+      "id": "n45",
+      "fromNode": "n1",
+      "toNode": "n44"
+    },
+    {
+      "id": "n47",
+      "fromNode": "n1",
+      "toNode": "n46"
+    },
+    {
+      "id": "n49",
+      "fromNode": "n1",
+      "toNode": "n48"
+    },
+    {
+      "id": "n51",
+      "fromNode": "n1",
+      "toNode": "n50"
+    }
+  ]
+}

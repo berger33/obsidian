@@ -1,0 +1,35 @@
+Podado em 2026-10-01 após criação de archives/merge-completo-materializado-1m.tar.xz
+Arquivos removidos porque seus conteúdos foram expandidos dentro do merge completo:
+knowledge-federation/archives/study-vault-lotes-1001-1100.zip
+knowledge-federation/archives/study-vault-lotes-101-200.zip
+knowledge-federation/archives/study-vault-lotes-1101-1200.zip
+knowledge-federation/archives/study-vault-lotes-1201-1300.zip
+knowledge-federation/archives/study-vault-lotes-1301-1400.zip
+knowledge-federation/archives/study-vault-lotes-1401-1500.zip
+knowledge-federation/archives/study-vault-lotes-1501-1600.zip
+knowledge-federation/archives/study-vault-lotes-1601-1700.zip
+knowledge-federation/archives/study-vault-lotes-1701-1800.zip
+knowledge-federation/archives/study-vault-lotes-1801-1900.zip
+knowledge-federation/archives/study-vault-lotes-1901-2000.zip
+knowledge-federation/archives/study-vault-lotes-2001-2100.zip
+knowledge-federation/archives/study-vault-lotes-201-300.zip
+knowledge-federation/archives/study-vault-lotes-2101-2200.zip
+knowledge-federation/archives/study-vault-lotes-2201-2300.zip
+knowledge-federation/archives/study-vault-lotes-2301-2400.zip
+knowledge-federation/archives/study-vault-lotes-2401-2500.zip
+knowledge-federation/archives/study-vault-lotes-2501-2600.zip
+knowledge-federation/archives/study-vault-lotes-2601-2700.zip
+knowledge-federation/archives/study-vault-lotes-2701-2800.zip
+knowledge-federation/archives/study-vault-lotes-2801-2900.zip
+knowledge-federation/archives/study-vault-lotes-2901-3000.zip
+knowledge-federation/archives/study-vault-lotes-3001-3100.zip
+knowledge-federation/archives/study-vault-lotes-301-400.zip
+knowledge-federation/archives/study-vault-lotes-3101-3200.zip
+knowledge-federation/archives/study-vault-lotes-3201-3300.zip
+knowledge-federation/archives/study-vault-lotes-401-500.zip
+knowledge-federation/archives/study-vault-lotes-501-600.zip
+knowledge-federation/archives/study-vault-lotes-601-700.zip
+knowledge-federation/archives/study-vault-lotes-701-800.zip
+knowledge-federation/archives/study-vault-lotes-801-900.zip
+knowledge-federation/archives/study-vault-lotes-901-1000.zip
+knowledge-federation/archives/study-vault-next-100-lotes.zip
