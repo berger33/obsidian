@@ -1,89 +1,66 @@
-# Biblioteca e Federação de Conhecimento Obsidian — 1 Milhão de Notas
+# Biblioteca e Federação de Conhecimento Obsidian
 
-Repositório oficial da **Federação de Conhecimento em formato Obsidian** (português do Brasil) cobrindo **Engenharia de Software, Inteligência Artificial, Vibe Coding & Orquestração Agêntica, Desenvolvimento de Jogos, Negócio/Carreira/Produto, Cannabis Medicinal (educacional/regulatório) e Micologia Segura**.
+Repositório de vaults em português brasileiro, com taxonomia para Engenharia de Software, IA, Vibe Coding, Jogos, Negócio/Produto, Cannabis Medicinal em abordagem educacional/regulatória e Micologia segura.
 
----
+## Estado da meta: 1 milhão de notas válidas
 
-## Marco Consolidado (100% Concluído)
+O merge trouxe um checkpoint com **1.000.000 de registros virtuais de catálogo**. Isso não significa 1.000.000 de notas válidas: a auditoria do SQLite identificou texto-template em todos os 1.000.000 registros. A contagem de arquivos e links dos pacotes antigos também não certifica conteúdo.
 
-| Métrica | Total |
-|---|---:|
-| **Notas virtuais no ledger SQLite** (`ledger-v1000000-mat8000.sqlite.xz`) | **1.000.000** |
-| **Notas físicas iniciais** (`knowledge-federation/domains/`) | **100** |
-| **Total lógico no ledger** | **1.000.100** |
-| **Lotes sequenciais materializados** (`50 pacotes × 100 lotes × 200 notas`) | **1.000.000** |
-| **Study Packs curados por subdomínio** (`78 subdomínios × 200 notas`) | **15.600** |
-| **Total materializado representado no Merge Completo** | **1.015.600** |
-| **Entradas totais no arquivo `merge-completo-materializado-1m.tar.xz`** | **1.021.127** |
-| **Links quebrados no Study Vault Curado (`93.894` links auditados)** | **0** |
-| **Conteúdo operacional em domínios regulados (`cannabis-medicinal` / `micologia`)** | **0** |
-
----
-
-## Principais Entregas e Pacotes Prontos para Abrir no Obsidian
-
-| Pacote / Pasta | Tamanho | Descrição |
+| Métrica auditada | Total | O que representa |
 |---|---:|---|
-| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | `34M` | **Merge Completo (1.015.600 notas):** inclui `00-home-vault/`, `00-vault-consolidado/` (78 study packs / 15.600 notas), `10-lotes/` (`0001-0100` a `4901-5000` = 5.000 lotes / 1.000.000 de notas), `90-ledger/` e `99-relatorios/`. |
-| `knowledge-federation/archives/study-vault-1m-packs.zip` | `19M` | **Study Vault Curado Completo (15.600 notas):** 78 study packs cobrindo 100% dos subdomínios, 85 MOCs, 5 trilhas guiadas, 6 playbooks/matrizes e 9 Canvases. |
-| `knowledge-federation/archives/starter-vault-prioritario.zip` | `1.1M` | **Starter Vault Prioritário (900 notas):** pacote leve para início imediato (IA, RAG, Backend, Orquestração e MVP). |
-| `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | `24M` | **Ledger SQLite Completo (`885 MB` descompactado):** 1.000.000 de notas virtuais + 100 físicas para consulta e materialização sob demanda. |
-| `knowledge-federation/00-home-vault/` | Ativo | **Home Vault Mestre:** `Home.md`, `Indice-Global.md`, 9 MOCs globais (`MOCs/`) e 8 Canvases (`_canvas/`). |
-| `vault-desenvolvimento-software-com-ia/` | Ativo | **Vault Autoral Amplo (~660 notas profundas):** engenharia de software com IA, ferramentas, jogos, árvores de decisão, trilhas e glossário (`vault-desenvolvimento-software-com-ia.zip`). |
+| Registros virtuais no ledger | 1.000.000 | Inventário de IDs; não contar como conteúdo válido |
+| Registros virtuais com marcadores de template | 1.000.000 | Sumários e sementes genéricos |
+| Arquivos Markdown ativos em `knowledge-federation/domains/` | 108 | 100 sementes antigas + 8 notas autorais recentes |
+| Candidatas aprovadas no gate automatizado | 8 | Aguardam revisão factual humana |
+| Notas com revisão humana registrada | 0 | Nenhuma plenamente validada ainda |
+| Registros do checkpoint marcados como materializados | 8.000 | Materialização não é validação editorial |
 
----
+**A meta de 1.000.000 de notas válidas ainda não foi atingida.** O projeto está migrando de contagem por volume para lotes menores, auditáveis e com fontes específicas. Veja [`knowledge-federation/STATUS-CONSOLIDACAO-1M.md`](knowledge-federation/STATUS-CONSOLIDACAO-1M.md) e o [relatório de qualidade](knowledge-federation/exports/reports/note-quality-audit.md).
 
-## Como Baixar e Usar no Obsidian
+## Artefatos históricos do merge
 
-### 1. Abrir o Study Vault Curado de 78 Subdomínios (15.600 notas)
+Os pacotes continuam disponíveis para inspeção e recuperação. Seus números indicam entradas/arquivos gerados a partir do ledger, não notas editorialmente validadas.
 
-```bash
-unzip knowledge-federation/archives/study-vault-1m-packs.zip -d study-vault-1m-packs
-```
+| Pacote | Tamanho aproximado | Uso / ressalva |
+|---|---:|---|
+| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 33,1 MB | Merge reconstruído e testado: lotes e vaults históricos + 8 notas candidatas ainda sem aprovação humana |
+| `knowledge-federation/archives/study-vault-1m-packs.zip` | 19 MB | 78 Study Packs / arquivos gerados do ledger; não assumir que sejam 15.600 notas validadas |
+| `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | 24 MB | Checkpoint compacto do catálogo SQLite; 1.000.000 de registros virtuais |
+| `knowledge-federation/archives/starter-vault-prioritario.zip` | 1,1 MB | Recorte de entrada; a quantidade de arquivos não é selo de qualidade |
+| `vault-desenvolvimento-software-com-ia/` | ativo | Vault autoral amplo, mantido separadamente do ledger da meta de 1 milhão |
 
-No Obsidian, clique em **Open folder as vault**, selecione `study-vault-1m-packs` e abra `00-Inicio/Home.md`.
-
-### 2. Extrair Lotes do Merge Completo (1.015.600 notas)
-
-Para extrair um intervalo específico de 100 lotes (20.000 notas) sem criar 1 milhão de arquivos de uma só vez no disco:
-
-```bash
-# Exemplo: extrair os lotes 0001-0100
-tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz MERGE-COMPLETO/10-lotes/0001-0100
-
-# Exemplo: extrair os lotes 4901-5000
-tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz MERGE-COMPLETO/10-lotes/4901-5000
-```
-
-Para extrair o merge completo inteiro:
+### Extrair lotes históricos sem criar 1 milhão de arquivos de uma vez
 
 ```bash
-tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
+# Exemplo: extrair apenas um intervalo de lotes
+mkdir -p /tmp/merge-parcial
+tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz \
+  -C /tmp/merge-parcial MERGE-COMPLETO/10-lotes/0001-0100
 ```
 
-### 3. Consultar o Ledger de 1 Milhão de Notas via CLI
+### Consultar o catálogo SQLite
 
 ```bash
 python3 knowledge-federation/scripts/ledger_stats.py
 python3 knowledge-federation/scripts/query_checkpoint.py "agentes" --domain ia --limit 20
 ```
 
----
+## Retomada com gate de qualidade
 
-## Documentação Detalhada
+O primeiro lote de retomada adiciona 8 notas de software sobre confiabilidade, contratos de API, observabilidade, SLOs, migrações e checks de merge. Todas passaram por verificações automatizadas de estrutura e fontes; a revisão humana/factual ainda está pendente.
 
-- [`knowledge-federation/STATUS-CONSOLIDACAO-1M.md`](knowledge-federation/STATUS-CONSOLIDACAO-1M.md) — Status final da consolidação de 1 milhão de notas
-- [`knowledge-federation/COMO-COPIAR-PARA-O-COFRE-OBSIDIAN.md`](knowledge-federation/COMO-COPIAR-PARA-O-COFRE-OBSIDIAN.md) — Passo a passo para abrir e copiar para seu cofre Obsidian
-- [`knowledge-federation/MERGE-COMPLETO.md`](knowledge-federation/MERGE-COMPLETO.md) — Estrutura, integridade e checksums do merge completo
-- [`knowledge-federation/STUDY-VAULT-README.md`](knowledge-federation/STUDY-VAULT-README.md) — Detalhes do Study Vault curado com os 78 subdomínios
-- [`knowledge-federation/LOT-SEQUENCE.md`](knowledge-federation/LOT-SEQUENCE.md) — Tabela dos 50 pacotes / 5.000 lotes sequenciais (`0001-0100` a `4901-5000`)
-- [`knowledge-federation/PACK-INVENTORY.md`](knowledge-federation/PACK-INVENTORY.md) — Inventário dos 78 study packs individuais em `.zip`
-- [`knowledge-federation/RELEASE-DOWNLOADS.md`](knowledge-federation/RELEASE-DOWNLOADS.md) — Links de download e hashes SHA-256
+```bash
+# Testes do gate de qualidade
+python3 -m unittest discover -s knowledge-federation/tests -v
 
----
+# Reauditar notas ativas e o checkpoint compactado
+python3 knowledge-federation/scripts/audit_note_quality.py \
+  --path knowledge-federation/domains \
+  --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
+```
 
-## Segurança e Conformidade em Domínios Regulados
+O passe automatizado exige também wikilinks resolvidos e significa **pronta para revisão**, não “fato verificado”. A nota só deve ser promovida após checagem das fontes por pessoa revisora identificada no frontmatter. O fluxo e os critérios estão em [`knowledge-federation/README.md`](knowledge-federation/README.md).
 
-Os domínios `cannabis-medicinal` e `micologia` seguem política estrita de segurança (`conteudo_operacional: false`, `0` notas operacionais):
-- Foco exclusivo em **legislação, regulação, documentação de paciente, farmacologia descritiva, botânica/taxonomia, estudos clínicos, redução de danos, rastreabilidade e perguntas para profissionais habilitados**.
-- **Nenhuma** instrução operacional de cultivo, extração, produção ou otimização de substâncias controladas.
+## Segurança em domínios regulados
+
+`cannabis-medicinal` e `micologia` permanecem restritos a conteúdo legal, educacional, científico, documental e de redução de danos. Não gerar instruções operacionais de cultivo, produção, extração, otimização de potência/rendimento ou evasão de fiscalização.

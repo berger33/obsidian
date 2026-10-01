@@ -2,3 +2,8 @@
 __pycache__/
 *.pyc
 knowledge-federation/archives/reconstructed/
+
+# Ledger runtime restored/generated locally; checkpoints are versioned as compressed archives
+knowledge-federation/registry/knowledge.sqlite
+knowledge-federation/registry/knowledge.sqlite-wal
+knowledge-federation/registry/knowledge.sqlite-shm

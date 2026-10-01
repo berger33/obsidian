@@ -498,13 +498,15 @@ Parar o lote e marcar `needs_review` se ocorrer:
 - tempo de auditoria acima de limite definido;
 - vault/sub-vault acima do tamanho planejado.
 
-## 15. Próxima ação recomendada
+## 15. Próxima ação recomendada — atualização pós-merge
 
-Implementar o sistema de geração federada antes de gerar novos conteúdos em massa:
+A infraestrutura de geração e o inventário de 1 milhão já existem, mas a auditoria demonstrou que os registros virtuais são seeds/template, não conteúdo válido. Não usar o plano histórico para gerar mais volume sem gate editorial.
 
-1. `registry/notes.sqlite`;
-2. `scripts/plan_batches.py`;
-3. `scripts/generate_seed_manifest.py`;
-4. `scripts/generate_batch.py`;
-5. `scripts/audit_batch.py`;
-6. primeiro lote real de 500 notas.
+Ordem de execução atual:
+
+1. Revisar as notas candidatas já criadas e conferir afirmações contra as fontes específicas;
+2. executar `python3 -m unittest discover -s knowledge-federation/tests -v`;
+3. executar `scripts/audit_note_quality.py` e manter separados inventário, candidatas e notas aprovadas;
+4. atualizar `revisao_humana` e `revisor` apenas após revisão factual real;
+5. redigir lotes editoriais pequenos e completos antes de expandir a escala;
+6. substituir ou reclassificar progressivamente os registros-template, sem promovê-los por contagem.

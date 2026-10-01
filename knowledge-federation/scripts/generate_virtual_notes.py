@@ -44,12 +44,17 @@ def ensure_virtual_schema(con):
       prefix TEXT NOT NULL,
       created_at TEXT NOT NULL,
       materialized_path TEXT,
-      materialized_at TEXT
+      materialized_at TEXT,
+      quality_status TEXT NOT NULL DEFAULT 'catalog_only'
     );
     CREATE INDEX IF NOT EXISTS idx_virtual_domain ON virtual_notes(domain, subdomain);
     CREATE INDEX IF NOT EXISTS idx_virtual_prefix ON virtual_notes(prefix);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_virtual_slug_prefix ON virtual_notes(prefix, slug);
     """)
+    columns = {row[1] for row in con.execute("PRAGMA table_info(virtual_notes)")}
+    if "quality_status" not in columns:
+        con.execute("ALTER TABLE virtual_notes ADD COLUMN quality_status TEXT NOT NULL DEFAULT 'catalog_only'")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_virtual_quality_status ON virtual_notes(quality_status)")
     con.commit()
 
 
@@ -87,11 +92,12 @@ def main():
         slug = slugify(title)
         note_id = f"virtual.{args.prefix}.{slugify(domain)}.{slugify(sub)}.{i:09d}"
         regulated = domain in ["cannabis-medicinal", "micologia"]
-        summary = f"Nota virtual sobre {title}, para estudo incremental em {domain}/{sub}."
+        summary = f"Registro de catálogo para {title} em {domain}/{sub}; conteúdo substantivo ainda não produzido."
         body_seed = (
-            f"Esta nota foi criada como registro virtual ledger-first. "
-            f"Ao materializar, expanda com fontes primárias, conexões e perguntas de verificação. "
-            f"Foco: {SOURCE_HINTS.get(domain, 'fontes confiáveis e verificação crítica')}."
+            f"Entrada de inventário ledger-first para {domain}/{sub}. "
+            f"Este registro é apenas uma referência planejada e não deve ser materializado ou contado como nota válida. "
+            f"Antes da publicação, redigir conteúdo original, registrar fontes verificáveis e passar pelo gate editorial. "
+            f"Pista de pesquisa: {SOURCE_HINTS.get(domain, 'fontes confiáveis e verificação crítica')}."
         )
         batch.append((note_id, slug, title, domain, sub, "conceito", "iniciante" if i % 3 else "intermediario", "media", "volatil", "alto" if regulated else "baixo", "alto" if regulated else "baixo", 0, summary, body_seed, SOURCE_HINTS.get(domain, "fontes confiáveis"), args.prefix, t))
         if len(batch) >= args.commit_every:

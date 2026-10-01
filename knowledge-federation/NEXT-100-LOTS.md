@@ -1,6 +1,8 @@
-# Próximos 100 lotes executados
+# Próximos 100 lotes — relatório histórico de arquivos gerados
 
 Data: 2026-10-01
+
+> Estes totais descrevem arquivos-placeholder derivados do ledger, não notas válidas. A auditoria encontrou texto-template nos 1.000.000 registros virtuais do checkpoint; veja [`STATUS-CONSOLIDACAO-1M.md`](STATUS-CONSOLIDACAO-1M.md).
 
 ## Entrega
 
@@ -11,8 +13,8 @@ knowledge-federation/archives/study-vault-next-100-lotes.zip
 ## Resultado
 
 - Lotes executados: **100**
-- Notas por lote: **200**
-- Notas materializadas no zip: **20.000**
+- Arquivos-placeholder por lote: **200**
+- Arquivos-placeholder materializados no zip: **20.000**
 - Arquivos dentro do zip: **20.105**
 - Tamanho do zip: **25.5M**
 - Lotes em domínios regulados: **31**

@@ -2,17 +2,19 @@
 
 Gerado em: 2026-10-01T12:52:06
 
+> **Relatório histórico:** estas contagens descrevem arquivos-placeholder derivados do ledger, não notas válidas. Consulte [o status editorial](../../STATUS-CONSOLIDACAO-1M.md) e [a auditoria atual](note-quality-audit.md).
+
 Arquivo: `archives/study-vault-lotes-901-1000.zip`
 Tamanho: 25.3M
 Lotes: **100**
-Notas por lote: **200**
-Notas totais: **20000**
+Arquivos-placeholder por lote: **200**
+Arquivos-placeholder totais: **20000**
 Lotes em domínios regulados: **22**
 Conteúdo operacional regulado: **0**
 
 ## Lotes
 
-| # | Lote | Domínio | Subdomínio | Offset | Notas |
+| # | Lote | Domínio | Subdomínio | Offset | Arquivos-placeholder |
 |---:|---|---|---|---:|---:|
 | 1 | `lote-901` | `micologia` | `riscos-e-reducao-de-danos` | 2400 | 200 |
 | 2 | `lote-902` | `micologia` | `taxonomia` | 2400 | 200 |

@@ -2,17 +2,19 @@
 
 Gerado em: 2026-10-01T19:48:48
 
+> **Relatório histórico:** estas contagens descrevem arquivos-placeholder derivados do ledger, não notas válidas. Consulte [o status editorial](../../STATUS-CONSOLIDACAO-1M.md) e [a auditoria atual](note-quality-audit.md).
+
 Arquivo: `archives/study-vault-lotes-4101-4200.zip`
 Tamanho: 25.4M
 Lotes: **100**
-Notas por lote: **200**
-Notas totais: **20000**
+Arquivos-placeholder por lote: **200**
+Arquivos-placeholder totais: **20000**
 Lotes em domínios regulados: **20**
 Conteúdo operacional regulado: **0**
 
 ## Lotes
 
-| # | Lote | Domínio | Subdomínio | Offset | Notas |
+| # | Lote | Domínio | Subdomínio | Offset | Arquivos-placeholder |
 |---:|---|---|---|---:|---:|
 | 1 | `lote-4101` | `negocio-carreira-produto` | `carreira` | 10600 | 200 |
 | 2 | `lote-4102` | `negocio-carreira-produto` | `distribuicao` | 10600 | 200 |

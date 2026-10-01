@@ -4,11 +4,13 @@ ultima_verificacao: 2026-09-30
 tags: [moc, study-packs, ledger-1m]
 aliases: ["MOC — 78 Study Packs"]
 ---
-# MOC Global — 78 Study Packs (15.600 Notas Curadas)
+# MOC Global — 78 Study Packs (15.600 arquivos históricos)
 
-Todos os **78 subdomínios** da taxonomia possuem um Study Pack dedicado de **200 notas** (`15.600 notas` no total), consolidados em `archives/study-vault-1m-packs.zip`.
+> Este MOC é apenas navegação. As contagens abaixo descrevem arquivos-placeholder derivados do ledger e não notas validadas; este mapa não participa do gate de qualidade.
 
-| # | Domínio | Subdomínio | Título | Notas | Arquivo Individual |
+Todos os **78 subdomínios** possuem um Study Pack estrutural de **200 arquivos** (`15.600 arquivos` no total), consolidados em `archives/study-vault-1m-packs.zip`.
+
+| # | Domínio | Subdomínio | Título | Arquivos | Arquivo Individual |
 |---:|---|---|---|---:|---|
 | 1 | [[MOC-software|software]] | `fundamentos` | Software — Fundamentos | 200 | `archives/study-pack-software-fundamentos.zip` |
 | 2 | [[MOC-software|software]] | `arquitetura` | Software — Arquitetura | 200 | `archives/study-pack-software-arquitetura.zip` |

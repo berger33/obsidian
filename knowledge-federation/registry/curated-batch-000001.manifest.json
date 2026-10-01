@@ -1,0 +1,96 @@
+{
+  "batch_id": "curated-batch-000001",
+  "created_at": "2026-10-01",
+  "domain": "software",
+  "theme": "confiabilidade, contratos e qualidade de entrega",
+  "status": "ready_for_review",
+  "quality_status": "automated_gate_passed",
+  "human_review": "pending",
+  "planned_count": 8,
+  "generated_count": 8,
+  "valid_count": 0,
+  "notes": [
+    {
+      "id": "software.backend.idempotencia-api.000001",
+      "path": "domains/software-0002/software/backend/idempotencia-http-api.md",
+      "subdomain": "backend",
+      "sources": [
+        "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+        "https://docs.stripe.com/api/idempotent_requests"
+      ]
+    },
+    {
+      "id": "software.backend.retries-resilientes.000001",
+      "path": "domains/software-0002/software/backend/timeouts-retries-backoff-jitter.md",
+      "subdomain": "backend",
+      "sources": [
+        "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+        "https://sre.google/sre-book/handling-overload/"
+      ]
+    },
+    {
+      "id": "software.devops.observabilidade-sinais.000001",
+      "path": "domains/software-0002/software/devops/observabilidade-sinais-distribuidos.md",
+      "subdomain": "devops",
+      "sources": [
+        "https://opentelemetry.io/docs/concepts/signals/",
+        "https://opentelemetry.io/docs/specs/otel/overview/",
+        "https://opentelemetry.io/docs/concepts/signals/metrics/",
+        "https://opentelemetry.io/docs/security/handling-sensitive-data/"
+      ]
+    },
+    {
+      "id": "software.devops.sli-slo-orcamento.000001",
+      "path": "domains/software-0002/software/devops/sli-slo-orcamento-de-erro.md",
+      "subdomain": "devops",
+      "sources": [
+        "https://sre.google/workbook/slo-document/",
+        "https://sre.google/workbook/alerting-on-slos/"
+      ]
+    },
+    {
+      "id": "software.apis.openapi-contrato.000001",
+      "path": "domains/software-0002/software/apis/contrato-openapi-http.md",
+      "subdomain": "apis",
+      "sources": [
+        "https://spec.openapis.org/oas/v3.2.1.html",
+        "https://www.rfc-editor.org/rfc/rfc9110.html"
+      ]
+    },
+    {
+      "id": "software.testes.contract-testing.000001",
+      "path": "domains/software-0002/software/testes/contract-testing-consumer-provider.md",
+      "subdomain": "testes",
+      "sources": [
+        "https://docs.pact.io/",
+        "https://docs.pact.io/implementation_guides/python/docs/consumer",
+        "https://docs.pact.io/implementation_guides/javascript/readme"
+      ]
+    },
+    {
+      "id": "software.dados.migracoes.expand-contract.000001",
+      "path": "domains/software-0002/software/dados/migracoes-expand-contract.md",
+      "subdomain": "dados",
+      "sources": [
+        "https://docs.gitlab.com/development/database/avoiding_downtime_in_migrations/",
+        "https://docs.gitlab.com/development/migration_style_guide/"
+      ]
+    },
+    {
+      "id": "software.devops.gates-merge.000001",
+      "path": "domains/software-0002/software/devops/gates-de-qualidade-no-merge.md",
+      "subdomain": "devops",
+      "sources": [
+        "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches",
+        "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule",
+        "https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks"
+      ]
+    }
+  ],
+  "source_review": {
+    "status": "assistant_checked_not_human_approval",
+    "checked_at": "2026-10-01T22:34:58Z",
+    "report": "exports/reports/curated-batch-000001-source-review.md",
+    "counts_as_human_approval": false
+  }
+}

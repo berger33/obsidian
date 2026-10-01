@@ -56,6 +56,7 @@ def init_db(con):
       type TEXT NOT NULL,
       level TEXT NOT NULL,
       status TEXT NOT NULL,
+      quality_status TEXT NOT NULL DEFAULT 'draft',
       batch_id TEXT NOT NULL,
       vault TEXT NOT NULL,
       path TEXT,
@@ -84,6 +85,16 @@ def init_db(con):
       PRIMARY KEY(from_id, to_id)
     );
     """)
+    note_columns = {row[1] for row in con.execute("PRAGMA table_info(notes)")}
+    if "quality_status" not in note_columns:
+        con.execute("ALTER TABLE notes ADD COLUMN quality_status TEXT NOT NULL DEFAULT 'draft'")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_notes_quality_status ON notes(quality_status)")
+    tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "virtual_notes" in tables:
+        virtual_columns = {row[1] for row in con.execute("PRAGMA table_info(virtual_notes)")}
+        if "quality_status" not in virtual_columns:
+            con.execute("ALTER TABLE virtual_notes ADD COLUMN quality_status TEXT NOT NULL DEFAULT 'catalog_only'")
+        con.execute("CREATE INDEX IF NOT EXISTS idx_virtual_quality_status ON virtual_notes(quality_status)")
     con.commit()
 
 def write_json(path: Path, data):

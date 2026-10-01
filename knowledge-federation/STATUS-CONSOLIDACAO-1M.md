@@ -1,59 +1,59 @@
-# Status de consolidação rumo a 1 milhão materializado — CONCLUÍDO (100%)
+# Status rumo a 1 milhão de notas válidas
 
-Data: 2026-10-01
+Data da auditoria: 2026-10-01
 
-## Estado final alcançado
+## Resumo honesto
 
-A federação atingiu **100% da meta de 1 milhão de notas** no **ledger SQLite**, na **sequência de 5.000 lotes materializados** e na **cobertura completa dos 78 subdomínios em Study Packs curados**.
+O merge preservou um **catálogo com 1.000.000 de registros virtuais**, não 1.000.000 de notas de conhecimento validadas. A auditoria direta do SQLite encontrou marcadores de texto-template em todos os registros virtuais. Há arquivos materializados e links, mas isso comprova presença e navegação, não qualidade editorial.
 
-```text
-Notas virtuais no ledger: 1.000.000
-Notas físicas iniciais: 100
-Total lógico no ledger: 1.000.100 notas
+A meta de **1.000.000 de notas válidas ainda não foi atingida**. Para deixar essa diferença explícita, a contagem agora separa inventário, candidatas ao gate automatizado e notas com revisão humana registrada.
 
-Pacotes sequenciais materializados: 50 (0001-0100 até 4901-5000)
-Lotes sequenciais materializados: 5.000
-Notas por lote: 200
-Notas sequenciais materializadas: 1.000.000
+## Contagem auditada
 
-Study Packs curados por subdomínio: 78 (100% da taxonomia)
-Notas por Study Pack: 200
-Notas do vault consolidado curado: 15.600
-Links wiki auditados no vault curado: 93.894 (0 quebrados)
+| Métrica | Quantidade | Interpretação |
+|---|---:|---|
+| Registros virtuais no checkpoint | 1.000.000 | IDs de catálogo; não contar como notas válidas |
+| Registros virtuais com marcadores de template | 1.000.000 | Sumário/corpo-semente genéricos |
+| Caminhos marcados como materializados no checkpoint | 8.000 | Arquivos gerados não equivalem a conteúdo validado |
+| Notas físicas registradas no checkpoint | 100 | Lote inicial; status profundo/revisado no schema legado: 0 |
+| Arquivos Markdown ativos em `domains/` | 108 | 100 sementes antigas + 8 notas novas |
+| Candidatas que passaram pelo gate automatizado | 8 | Prontas para revisão humana/factual; não são ainda “validadas” |
+| Notas com revisão humana registrada | 0 | Nenhuma deve ser contabilizada como plenamente válida ainda |
+| Links wiki quebrados no Study Vault legado | 0 no relatório anterior | Auditoria de links não valida conteúdo |
+| Marcadores de conteúdo operacional regulado no ledger | 0 | Filtro de segurança preservado |
 
-Total materializado representado no merge completo: 1.015.600 notas
-Entradas totais no TAR do merge completo: 1.021.127
-Lotes em domínios regulados: 1.288
-Conteúdo operacional regulado: 0
+A sequência de lotes no TAR e os 78 Study Packs continuam disponíveis como **artefatos históricos de materialização**. Seus números descrevem arquivos/entradas gerados a partir do ledger; as notas-template não entram na meta de conteúdo válido.
+
+## Trabalho feito nesta retomada
+
+1. Adicionado um gate reproduzível em `scripts/note_quality.py` e `scripts/audit_note_quality.py`.
+2. Atualizado `audit_batch.py`: links/frontmatter sem conteúdo não bastam para marcar um lote como concluído; `complete` requer gate automatizado e revisão humana identificada.
+3. Criadas 8 notas autorais, com exemplos, limites, métodos de verificação e fontes primárias/especializadas, nos subdomínios software/backend, APIs, testes, dados e DevOps.
+4. As 8 candidatas passaram pelo gate estrutural e tiveram suas fontes comparadas em uma checagem assistida por agente; a revisão humana continua pendente e nenhuma foi promovida a nota válida.
+5. Acrescentados 9 testes automatizados cobrindo notas completas, placeholders, bloqueio de materialização, fontes genéricas, wikilinks com alias/fragmento, estado de revisão e esquema do ledger.
+
+Relatório executável: [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md).
+Mapa de navegação do primeiro lote: [`00-home-vault/MOCs/MOC-Confiabilidade-e-Contratos.md`](00-home-vault/MOCs/MOC-Confiabilidade-e-Contratos.md). O MOC não participa do gate de qualidade e sua existência não aprova o lote.
+
+## Gate de qualidade adotado
+
+Uma nota candidata deve ter frontmatter rastreável, pelo menos 100 palavras de conteúdo, seções de explicação, exemplo, limites e verificação, duas fontes HTTPS específicas, wikilinks resolvidos e nenhum marcador conhecido de conteúdo-template. O gate é deliberadamente conservador e pode exigir ajustes para domínios diferentes.
+
+Um passe automatizado só produz o estado **pronta para revisão**. A promoção a nota válida exige conferência factual das fontes por uma pessoa revisora, identificada em `revisor`, e `revisao_humana: aprovada`. Em temas regulados, exige também revisão apropriada ao domínio e manutenção de conteúdo não operacional.
+
+## Comandos de reprodução
+
+```bash
+python3 -m unittest discover -s knowledge-federation/tests -v
+python3 knowledge-federation/scripts/audit_note_quality.py \
+  --path knowledge-federation/domains \
+  --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-## O que foi finalizado nas últimas etapas
+## Próximos marcos sem inflar contagens
 
-1. **Execução dos 1.700 lotes finais (`lote-3301` a `lote-5000`)**:
-   - 17 pacotes de 100 lotes (`340.000 notas materializadas`), completando os **5.000 lotes = 1.000.000 de notas sequenciais**.
-   - Relatórios individuais em `exports/reports/lotes-3301-3400-report.md` até `lotes-4901-5000-report.md` e resumo em `knowledge-federation/LOTS-3301-5000.md`.
-
-2. **Expansão do Study Vault Curado de 36 para todos os 78 subdomínios (`15.600 notas`)**:
-   - Foram gerados os 42 study packs faltantes e padronizados todos os **78 subdomínios** com **200 notas cada** (`78 × 200 = 15.600 notas`).
-   - Adicionados **7 MOCs mestres de domínio**, **78 MOCs de subdomínio** e **9 arquivos Canvas** (`Mapa-Geral.canvas`, `Trilhas-e-Playbooks.canvas` e 7 mapas por domínio).
-   - Auditados **93.894 wiki links** com **0 links quebrados** (`exports/reports/auditoria-study-vault.md`).
-
-3. **Construção completa do `00-home-vault/` (Home Vault Mestre)**:
-   - `Home.md`, `Indice-Global.md`, 9 MOCs globais (`MOCs/`) e 8 Canvases (`_canvas/`).
-
-4. **Merge Completo (`merge-completo-materializado-1m.tar.xz`, `34M`) e Otimização `.gitignore`**:
-   - Removida a regra legada do `.gitignore` que impedia o versionamento direto de `merge-completo-materializado-1m.tar.xz`.
-   - O arquivo `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`34M`) agora é versionado diretamente no Git junto com `ledger-v1000000-mat8000.sqlite.xz` (`24M`) e `study-vault-1m-packs.zip` (`19M`).
-
-## Artefatos principais e Checksums SHA-256
-
-| Arquivo | Tamanho | SHA-256 |
-|---|---:|---|
-| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | `34M` | `ae692de0c8d48683de2d26a3b0ad638ea9bb0b47aa7b36ca7ae9940e5537217c` |
-| `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | `24M` | `b824467e32b188b7cf7aad57161938fa2417f8a46193524cc26a5d0c7e460c85` |
-| `knowledge-federation/archives/study-vault-1m-packs.zip` | `19M` | `36861d71866d59b1aa4e4fb227f36fe004b81aff2f90765dd4d7652d3dc5e17a` |
-| `knowledge-federation/archives/starter-vault-prioritario.zip` | `1.1M` | `a60001c716653916ff5d87a357c57d4cdc403a6eb992f063a02b3ffbf3198fd7` |
-
-## Segurança
-
-Os domínios `cannabis-medicinal` e `micologia` permanecem restritos a conteúdo educacional, documental, científico, regulatório, rastreabilidade e perguntas para profissionais habilitados (`conteudo_operacional: false`, `0` ocorrências operacionais).
+1. Revisar as 8 candidatas e registrar a aprovação somente depois da checagem das fontes.
+2. Produzir lotes editoriais pequenos por subdomínio, começando pelas áreas de maior utilidade e com fontes primárias.
+3. Rodar gate, auditoria de links, deduplicação e revisão de domínio em cada lote.
+4. Contabilizar separadamente `catalogadas`, `candidatas`, `revisadas` e `rejeitadas`; ampliar escala apenas quando a taxa de qualidade e o fluxo de revisão forem sustentáveis.
+5. Reclassificar ou substituir progressivamente as 1.000.000 de entradas-template antes de declarar a meta cumprida.

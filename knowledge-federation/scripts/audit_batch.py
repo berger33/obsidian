@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from kf_common import *
+from note_quality import assess_markdown
 import argparse, re
 
 BLOCK_PATTERNS = [
@@ -15,17 +16,29 @@ def main():
     b = con.execute("SELECT * FROM batches WHERE batch_id=?", (args.batch,)).fetchone()
     if not b: raise SystemExit("batch não encontrado")
     rows = con.execute("SELECT * FROM notes WHERE batch_id=?", (args.batch,)).fetchall()
-    broken=[]; nofm=[]; blocked=[]; orphan=[]
+    broken=[]; nofm=[]; blocked=[]; orphan=[]; quality_issues=[]
+    quality_ready=0; human_reviewed=0
     slugs = {r["slug"] for r in rows}
     incoming = {r["slug"]: 0 for r in rows}
     for r in rows:
         p = ROOT / r["path"]
         if not p.exists():
             broken.append(f"arquivo ausente: {r['path']}")
+            con.execute("UPDATE notes SET quality_status='needs_review' WHERE id=?", (r["id"],))
             continue
         txt = p.read_text(encoding="utf-8")
         if not txt.startswith("---"):
             nofm.append(r["slug"])
+        quality = assess_markdown(txt, r["path"])
+        if quality["ready_for_review"]:
+            quality_ready += 1
+            quality_status = "reviewed" if quality["human_reviewed"] else "ready_for_review"
+        else:
+            quality_status = "needs_review"
+            quality_issues.append(f"{r['slug']} :: {', '.join(quality['errors'])}")
+        con.execute("UPDATE notes SET quality_status=? WHERE id=?", (quality_status, r["id"]))
+        if quality["human_reviewed"]:
+            human_reviewed += 1
         if r["domain"] in ["cannabis-medicinal", "micologia"]:
             for pat in BLOCK_PATTERNS:
                 if re.search(pat, txt, re.I):
@@ -38,17 +51,29 @@ def main():
         if c == 0 and len(rows) > 1:
             # em lotes pequenos pode haver órfãos parciais; mantém relatório apenas
             orphan.append(s)
-    status = "complete" if not broken and not nofm and not blocked else "needs_review"
+    structural_ok = not broken and not nofm and not blocked
+    quality_ok = bool(rows) and len(quality_issues) == 0 and quality_ready == len(rows)
+    if not structural_ok or not quality_ok:
+        status = "needs_review"
+    elif human_reviewed == len(rows):
+        status = "complete"
+    else:
+        status = "ready_for_review"
     report = f"""# Auditoria {args.batch}
 
 - lote: {args.batch}
 - domínio: {b['domain']}/{b['subdomain']}
 - notas no registro: {len(rows)}
+- candidatas aprovadas no gate automatizado: {quality_ready}/{len(rows)}
+- notas com revisão humana registrada: {human_reviewed}/{len(rows)}
 - status sugerido: {status}
 - links/arquivos quebrados: {len(broken)}
 - sem frontmatter: {len(nofm)}
 - bloqueios de segurança: {len(blocked)}
+- pendências no gate de conteúdo: {len(quality_issues)}
 - possíveis órfãs dentro do lote: {len(orphan)}
+
+> Passar pelo gate automatizado não comprova veracidade. `complete` exige também revisão humana identificada no frontmatter.
 
 ## Links/arquivos quebrados
 {chr(10).join('- '+x for x in broken[:200]) or 'Nenhum.'}
@@ -58,6 +83,9 @@ def main():
 
 ## Bloqueios de segurança
 {chr(10).join('- '+x for x in blocked[:200]) or 'Nenhum.'}
+
+## Pendências de conteúdo
+{chr(10).join('- '+x for x in quality_issues[:200]) or 'Nenhuma.'}
 
 ## Possíveis órfãs
 {chr(10).join('- [[{}]]'.format(x) for x in orphan[:200]) or 'Nenhuma.'}

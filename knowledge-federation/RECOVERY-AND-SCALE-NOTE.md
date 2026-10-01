@@ -1,65 +1,46 @@
-# Nota de recuperação e escala
+# Retomada pós-merge: escala com qualidade
 
 Data: 2026-10-01
 
-## O que aconteceu
+## Estado observado após integrar o merge
 
-Durante a tentativa de continuar a geração para centenas de milhares de notas, ficou claro que o workspace atual não preservou os artefatos massivos das rodadas anteriores. A política prática do ambiente limita snapshots grandes e árvores com muitos arquivos. Como consequência, a continuação real deve abandonar a estratégia de manter centenas de milhares de arquivos Markdown ativos no repositório.
+Os artefatos massivos estão presentes como arquivos compactados versionados; não precisam ser recriados para continuar o trabalho. O checkpoint contém 1.000.000 de registros virtuais, 8.000 com caminho marcado como materializado e 100 registros físicos iniciais.
 
-Estado observado no workspace após a última retomada:
+A auditoria de qualidade encontrou marcadores de texto-template em todos os 1.000.000 registros virtuais. Os 100 arquivos iniciais também não passam no novo gate editorial. Isso explica por que os antigos números de catálogo, arquivos, lotes e links não devem ser apresentados como 1 milhão de notas válidas.
 
-- `knowledge-federation/` ativo: aproximadamente 1.2 MB.
-- Registry atual: contém apenas o lote inicial de teste, com 100 notas.
-- Scripts avançados criados nas rodadas anteriores não estavam mais presentes.
-- Archives grandes anteriores também não estavam presentes no workspace ativo.
+No diretório ativo `knowledge-federation/domains/` há 108 arquivos: 100 sementes antigas e 8 notas autorais da retomada. As 8 passam pelo gate estrutural automatizado, mas ainda aguardam revisão humana/factual.
 
 ## Decisão técnica
 
-A partir daqui, o caminho correto para atingir 1 milhão de notas é usar arquitetura **ledger-first**:
+Manter a arquitetura ledger-first para inventário e armazenamento, mas separar explicitamente quatro estados:
 
-1. Registrar milhões de notas no SQLite/Parquet/JSONL compactado, não como milhões de arquivos soltos.
-2. Materializar para Markdown apenas subconjuntos estudáveis, por exemplo:
-   - 500 notas por lote;
-   - 5.000 notas por sub-vault;
-   - MOCs e trilhas prioritárias;
-   - resultados de busca ou estudo.
-3. Manter `domains/` como cache descartável, não como fonte de verdade.
-4. Manter archives compactados fora da árvore ativa sempre que possível.
-5. Nunca ultrapassar milhares de arquivos ativos se o objetivo é persistência confiável neste ambiente.
+1. **catalogada** — ID e taxonomia; não conta como conteúdo;
+2. **candidata** — corpo substantivo e gate automatizado aprovado;
+3. **validada** — fontes e afirmações revisadas por pessoa identificada;
+4. **rejeitada/needs-review** — não contabilizada até ser corrigida.
 
-## Nova estratégia
+Materializar um arquivo Markdown não promove o registro de estado. Geradores de sementes servem ao planejamento, não à contagem de notas válidas.
 
-```text
-knowledge-federation/
-  registry/
-    knowledge.sqlite          # fonte de verdade
-    virtual_notes.jsonl.xz    # opcional: export de notas virtuais
-  materialized/
-    software-0001/            # apenas recortes materializados
-    ia-0001/
-  exports/
-    reports/
-  scripts/
-    generate_virtual_notes.py
-    materialize_batch.py
-    global_audit_fast.py
-```
+## Ferramentas adicionadas
 
-## Regras novas
+- `scripts/note_quality.py` — regras reutilizáveis de avaliação estrutural e detecção de placeholders.
+- `scripts/audit_note_quality.py` — auditoria dos arquivos ativos e, opcionalmente, do checkpoint SQLite compactado.
+- `scripts/audit_batch.py` — agora exige aprovação humana registrada antes de marcar um lote como `complete`.
+- `tests/test_note_quality.py` — regressões do gate para sementes, fontes genéricas e revisão humana.
 
-- Gerar volume como registros virtuais.
-- Materializar somente o que for usado no Obsidian agora.
-- Criar checkpoints compactados antes de qualquer limpeza.
-- Evitar gerar dezenas de milhares de `.md` ativos no workspace.
-
-## Próximo passo recomendado
-
-Implementar a versão `virtual-note` do pipeline:
+## Comandos de retomada
 
 ```bash
-python knowledge-federation/scripts/generate_virtual_notes.py --count 100000 --prefix vscale1
-python knowledge-federation/scripts/materialize_batch.py --domain software --limit 1000
-python knowledge-federation/scripts/global_audit_fast.py
+python3 -m unittest discover -s knowledge-federation/tests -v
+python3 knowledge-federation/scripts/audit_note_quality.py \
+  --path knowledge-federation/domains \
+  --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-Isso permite crescer rumo a 1 milhão sem depender de 1 milhão de arquivos no repositório.
+## Próximo ciclo recomendado
+
+1. Fazer revisão humana factual das 8 candidatas, usando a checagem assistida como ponto de partida e resolvendo as ressalvas registradas.
+2. Registrar revisão humana somente depois da conferência efetiva.
+3. Criar novos lotes pequenos, com conceitos específicos e fontes adequadas ao subdomínio.
+4. Auditar conteúdo, fontes, links, duplicatas e segurança antes de materializar/exportar.
+5. Reclassificar ou substituir progressivamente os registros-template; nunca elevar contagens por repetição de títulos ou arquivos.
