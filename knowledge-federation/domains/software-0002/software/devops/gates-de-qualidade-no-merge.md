@@ -10,7 +10,7 @@ validade: volatil
 status: candidata
 revisao_humana: pendente
 revisor: ""
-fontes: ["https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches", "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule"]
+fontes: ["https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches", "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule", "https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 aliases: [Quality gates, Proteção de branch e checks]
 ---
@@ -43,3 +43,4 @@ Abra uma mudança deliberadamente incompatível e confirme que o check correspon
 ## Fontes
 - [GitHub Docs — About protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) — requisitos que podem proteger branches; acesso em 2026-10-01.
 - [GitHub Docs — Managing a branch protection rule](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule) — configuração de pull requests e status checks; acesso em 2026-10-01.
+- [GitHub Docs — Troubleshooting required status checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks) — diferença entre workflows pulados por filtros e jobs pulados por condição; acesso em 2026-10-01.

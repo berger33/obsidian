@@ -10,7 +10,7 @@ validade: volatil
 status: candidata
 revisao_humana: pendente
 revisor: ""
-fontes: ["https://spec.openapis.org/oas/v3.2.0.html", "https://www.rfc-editor.org/rfc/rfc9110.html"]
+fontes: ["https://spec.openapis.org/oas/v3.2.1.html", "https://www.rfc-editor.org/rfc/rfc9110.html"]
 tags: [dominio/software, subdominio/apis, qualidade/candidata]
 aliases: [OpenAPI, Contrato de API HTTP]
 ---
@@ -41,5 +41,5 @@ Valide o documento com ferramentas compatíveis com a versão declarada, compare
 - [[gates-de-qualidade-no-merge]] — integra validação do contrato à revisão de mudanças.
 
 ## Fontes
-- [OpenAPI Specification 3.2.0](https://spec.openapis.org/oas/v3.2.0.html) — objetos de operação, parâmetros e respostas; acesso em 2026-10-01.
+- [OpenAPI Specification 3.2.1](https://spec.openapis.org/oas/v3.2.1.html) — objetos de operação, parâmetros e respostas; versão publicada consultada em 2026-10-01.
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) — semântica dos métodos e mensagens HTTP; acesso em 2026-10-01.

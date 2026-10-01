@@ -4,7 +4,9 @@
   "last_completed_index": 8,
   "total": 8,
   "automated_gate": "passed",
+  "source_review": "assistant_checked_not_human_approval",
+  "source_review_report": "exports/reports/curated-batch-000001-source-review.md",
   "human_review": "pending",
   "valid_notes": 0,
-  "updated_at": "2026-10-01T22:28:06Z"
+  "updated_at": "2026-10-01T22:34:58Z"
 }

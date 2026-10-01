@@ -10,7 +10,7 @@ validade: estavel
 status: candidata
 revisao_humana: pendente
 revisor: ""
-fontes: ["https://docs.gitlab.com/development/database/avoiding_downtime_in_migrations/", "https://docs.gitlab.com/ee/development/migration_style_guide.html"]
+fontes: ["https://docs.gitlab.com/development/database/avoiding_downtime_in_migrations/", "https://docs.gitlab.com/development/migration_style_guide/"]
 tags: [dominio/software, subdominio/dados, qualidade/candidata]
 aliases: [Migração expand-contract, Migração de banco sem downtime]
 ---
@@ -42,4 +42,4 @@ Teste a sequência com versões antiga e nova da aplicação, incluindo workers 
 
 ## Fontes
 - [GitLab — Avoiding downtime in migrations](https://docs.gitlab.com/development/database/avoiding_downtime_in_migrations/) — exemplos de mudanças compatíveis e etapas de migração; acesso em 2026-10-01.
-- [GitLab — Migration Style Guide](https://docs.gitlab.com/ee/development/migration_style_guide.html) — categorias, limites e práticas específicas do GitLab; acesso em 2026-10-01.
+- [GitLab — Migration Style Guide](https://docs.gitlab.com/development/migration_style_guide/) — categorias, limites e práticas específicas do GitLab; acesso em 2026-10-01.

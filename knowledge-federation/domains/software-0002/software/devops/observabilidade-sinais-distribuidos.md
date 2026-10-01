@@ -10,7 +10,7 @@ validade: estavel
 status: candidata
 revisao_humana: pendente
 revisor: ""
-fontes: ["https://opentelemetry.io/docs/concepts/signals/", "https://opentelemetry.io/docs/specs/otel/overview/"]
+fontes: ["https://opentelemetry.io/docs/concepts/signals/", "https://opentelemetry.io/docs/specs/otel/overview/", "https://opentelemetry.io/docs/concepts/signals/metrics/", "https://opentelemetry.io/docs/security/handling-sensitive-data/"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 aliases: [Sinais de observabilidade, Telemetria distribuída]
 ---
@@ -43,3 +43,5 @@ Inicie uma operação de teste e confirme que o trace atravessa os serviços esp
 ## Fontes
 - [OpenTelemetry — Signals](https://opentelemetry.io/docs/concepts/signals/) — definições de traces, metrics, logs e baggage; acesso em 2026-10-01.
 - [OpenTelemetry Specification — Overview](https://opentelemetry.io/docs/specs/otel/overview/) — modelo conceitual, spans e propagação de contexto; acesso em 2026-10-01.
+- [OpenTelemetry — Metrics](https://opentelemetry.io/docs/concepts/signals/metrics/) — cardinalidade e limites de combinações de atributos; acesso em 2026-10-01.
+- [OpenTelemetry — Handling sensitive data](https://opentelemetry.io/docs/security/handling-sensitive-data/) — riscos de PII/credenciais e minimização/redação de telemetria; acesso em 2026-10-01.

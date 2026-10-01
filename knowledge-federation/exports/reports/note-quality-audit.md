@@ -1,6 +1,6 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-01T22:28:06+00:00`
+Executada em: `2026-10-01T22:44:41+00:00`
 
 > Um resultado aprovado significa apenas que a nota passou por verificações automatizadas de estrutura, conteúdo mínimo, fontes específicas e ausência de marcadores de template. **Não comprova a veracidade das afirmações.** A validação factual e a aprovação humana permanecem separadas.
 
@@ -24,12 +24,12 @@ Executada em: `2026-10-01T22:28:06+00:00`
 
 ### Candidatas prontas para revisão
 
-- `knowledge-federation/domains/software-0002/software/apis/contrato-openapi-http.md` — 370 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/backend/idempotencia-http-api.md` — 385 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/backend/timeouts-retries-backoff-jitter.md` — 413 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/dados/migracoes-expand-contract.md` — 402 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/devops/gates-de-qualidade-no-merge.md` — 397 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/devops/observabilidade-sinais-distribuidos.md` — 384 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/apis/contrato-openapi-http.md` — 372 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/backend/idempotencia-http-api.md` — 421 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/backend/timeouts-retries-backoff-jitter.md` — 428 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/dados/migracoes-expand-contract.md` — 400 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/devops/gates-de-qualidade-no-merge.md` — 426 palavras; 3 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/devops/observabilidade-sinais-distribuidos.md` — 425 palavras; 4 fontes específicas; revisão humana: pendente.
 - `knowledge-federation/domains/software-0002/software/devops/sli-slo-orcamento-de-erro.md` — 413 palavras; 2 fontes específicas; revisão humana: pendente.
 - `knowledge-federation/domains/software-0002/software/testes/contract-testing-consumer-provider.md` — 410 palavras; 2 fontes específicas; revisão humana: pendente.
 

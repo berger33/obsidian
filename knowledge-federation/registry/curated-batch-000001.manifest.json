@@ -34,7 +34,9 @@
       "subdomain": "devops",
       "sources": [
         "https://opentelemetry.io/docs/concepts/signals/",
-        "https://opentelemetry.io/docs/specs/otel/overview/"
+        "https://opentelemetry.io/docs/specs/otel/overview/",
+        "https://opentelemetry.io/docs/concepts/signals/metrics/",
+        "https://opentelemetry.io/docs/security/handling-sensitive-data/"
       ]
     },
     {
@@ -51,7 +53,7 @@
       "path": "domains/software-0002/software/apis/contrato-openapi-http.md",
       "subdomain": "apis",
       "sources": [
-        "https://spec.openapis.org/oas/v3.2.0.html",
+        "https://spec.openapis.org/oas/v3.2.1.html",
         "https://www.rfc-editor.org/rfc/rfc9110.html"
       ]
     },
@@ -71,7 +73,7 @@
       "subdomain": "dados",
       "sources": [
         "https://docs.gitlab.com/development/database/avoiding_downtime_in_migrations/",
-        "https://docs.gitlab.com/ee/development/migration_style_guide.html"
+        "https://docs.gitlab.com/development/migration_style_guide/"
       ]
     },
     {
@@ -80,8 +82,15 @@
       "subdomain": "devops",
       "sources": [
         "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches",
-        "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule"
+        "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule",
+        "https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks"
       ]
     }
-  ]
+  ],
+  "source_review": {
+    "status": "assistant_checked_not_human_approval",
+    "checked_at": "2026-10-01T22:34:58Z",
+    "report": "exports/reports/curated-batch-000001-source-review.md",
+    "counts_as_human_approval": false
+  }
 }
