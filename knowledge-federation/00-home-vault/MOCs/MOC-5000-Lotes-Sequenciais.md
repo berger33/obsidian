@@ -4,11 +4,13 @@ ultima_verificacao: 2026-09-30
 tags: [moc, lotes, ledger-1m]
 aliases: ["MOC — 5000 Lotes Sequenciais"]
 ---
-# MOC Global — 5.000 Lotes Sequenciais (1.000.000 de Notas)
+# MOC Global — 5.000 lotes históricos (1.000.000 de arquivos)
 
-Sequência completa de **50 pacotes × 100 lotes × 200 notas = 1.000.000 de notas materializadas**, preservada dentro de `archives/merge-completo-materializado-1m.tar.xz` (`MERGE-COMPLETO/10-lotes/`).
+> A sequência representa arquivos materializados a partir do ledger-template. A contagem de arquivos e links não significa 1.000.000 de notas válidas. Consulte [[note-quality-audit]] para a auditoria editorial.
 
-| # | Intervalo | Pasta no Merge Completo | Notas | Lotes Regulados | Relatório |
+Sequência de **50 pacotes × 100 lotes × 200 arquivos = 1.000.000 de arquivos de catálogo**, preservada dentro de `archives/merge-completo-materializado-1m.tar.xz` (`MERGE-COMPLETO/10-lotes/`).
+
+| # | Intervalo | Pasta no Merge Completo | Arquivos de nota | Lotes Regulados | Relatório |
 |---:|---|---|---:|---:|---|
 | 1 | `0001-0100` | `MERGE-COMPLETO/10-lotes/0001-0100/` | 20.000 | 31 | `exports/reports/next-100-lotes-report.md` |
 | 2 | `0101-0200` | `MERGE-COMPLETO/10-lotes/0101-0200/` | 20.000 | 29 | `exports/reports/lotes-101-200-report.md` |

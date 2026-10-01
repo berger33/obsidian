@@ -24,6 +24,16 @@ def add_file(tar, path, arcname):
         tar.addfile(ti, f)
 
 
+def markdown_entry_count(zip_path):
+    if not zip_path.exists():
+        return None
+    with zipfile.ZipFile(zip_path) as archive:
+        return sum(
+            1 for item in archive.infolist()
+            if not item.is_dir() and item.filename.lower().endswith(".md")
+        )
+
+
 def iter_lot_archives():
     first = ROOT / "archives" / "study-vault-next-100-lotes.zip"
     if first.exists():
@@ -54,7 +64,7 @@ def add_zip_expanded(tar, zip_path, prefix):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Gera stream tar com merge completo dos vaults/lotes materializados.")
+    ap = argparse.ArgumentParser(description="Agrupa arquivos históricos de catálogo; contagens de arquivos não são contagens de notas válidas.")
     ap.add_argument("--base-tar", default=None, help="Tar.xz anterior para preservar lotes já podados (0001-3300).")
     ap.add_argument("--include-ledger", action="store_true", help="Inclui o checkpoint ledger compactado como arquivo interno.")
     args = ap.parse_args()
@@ -84,68 +94,80 @@ def main():
         seq_manifest_path,
     ]
 
-    total_packages = len(seq_manifest) if seq_manifest else len(lots)
+    base_path = Path(args.base_tar).expanduser() if args.base_tar else None
+    if base_path is not None and not base_path.is_file():
+        ap.error(f"--base-tar não existe ou não é arquivo: {base_path}")
+    if seq_manifest and not lots and base_path is None:
+        ap.error("os zips dos lotes foram podados; use --base-tar para preservar a sequência já arquivada")
+
+    if seq_manifest:
+        lot_count = sum(
+            int(item.get("lots", int(item["end"]) - int(item["start"]) + 1))
+            for item in seq_manifest
+        )
+        catalog_files_from_lots = sum(
+            int(item.get("notes", int(item.get("lots", 0)) * 200))
+            for item in seq_manifest
+        )
+        lot_archive_metadata = [
+            {"start": item["start"], "end": item["end"], "file": Path(item["zip"]).name}
+            for item in seq_manifest
+        ]
+    else:
+        lot_count = sum(end - start + 1 for start, end, _ in lots)
+        catalog_files_from_lots = lot_count * 200
+        lot_archive_metadata = [
+            {"start": start, "end": end, "file": path.name}
+            for start, end, path in lots
+        ]
+
     manifest = {
         "generated_at": now(),
-        "type": "merged-complete-materialized-vault",
+        "type": "historical-catalog-placeholder-archive",
         "consolidated_vault": consolidated.name if consolidated.exists() else None,
-        "lot_archives": [
-            {"start": m["start"], "end": m["end"], "file": Path(m["zip"]).name}
-            for m in seq_manifest
-        ] if seq_manifest else [{"start": a, "end": b, "file": p.name} for a, b, p in lots],
-        "lot_archive_count": total_packages,
-        "lots_count": total_packages * 100,
-        "notes_from_lot_archives": total_packages * 100 * 200,
-        "notes_from_curated_study_vault": 7100,
-        "total_materialized_notes_represented": total_packages * 100 * 200 + 7100,
+        "consolidated_vault_markdown_files": markdown_entry_count(consolidated),
+        "lot_archives": lot_archive_metadata,
+        "lot_archive_count": len(lot_archive_metadata),
+        "lots_count": lot_count,
+        "expected_catalog_placeholder_files_from_lots": catalog_files_from_lots,
+        "notes_validated_by_this_aggregator": 0,
+        "quality_validation": "not_performed_by_archive_aggregator",
         "ledger_included": bool(args.include_ledger and ledger.exists()),
         "ledger_archive": ledger.name if ledger.exists() else "ledger-v1000000-mat8000.sqlite.xz",
-        "regulated_operational_content": 0,
     }
 
     with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as tar:
-        add_bytes(tar, "MERGE-COMPLETO/README.md", f"""# Merge completo — Knowledge Federation (1 Milhão de Notas)
+        add_bytes(tar, "MERGE-COMPLETO/README.md", f"""# Arquivo consolidado histórico — Knowledge Federation
 
 Gerado em: {manifest['generated_at']}
 
-Este arquivo TAR contém o merge lógico completo dos vaults materializados e de todos os 50 pacotes sequenciais (5.000 lotes = 1.000.000 de notas) gerados a partir do ledger-first de 1 milhão de notas.
+> Este TAR agrega arquivos de catálogo e materializações históricas. Os números representam registros, lotes e arquivos, não notas válidas. A agregação não executa avaliação editorial nem revisão humana.
 
 ## Conteúdo
 
-- `00-vault-consolidado/`: vault curado com 7.100 notas, 36 packs temáticos, trilhas, playbooks, canvas e auditoria.
-- `10-lotes/`: sequência completa de 50 pacotes de lotes (`0001-0100` até `4901-5000`), totalizando 5.000 lotes e 1.000.000 de notas materializadas.
-- `90-ledger/`: metadados do checkpoint ledger (`archives/ledger-v1000000-mat8000.sqlite.xz`).
-- `99-relatorios/`: índices, manifestos e todos os relatórios de execução dos lotes.
+- `00-vault-consolidado/`: Study Vault com packs estruturais, MOCs, trilhas, playbooks, canvas e auditoria de navegação. Seus arquivos derivados do ledger não são conteúdo validado.
+- `10-lotes/`: lotes de arquivos-placeholder gerados a partir do catálogo.
+- `90-ledger/`: metadados do checkpoint (`archives/ledger-v1000000-mat8000.sqlite.xz`).
+- `99-relatorios/`: índices, manifestos e relatórios históricos.
 
-## Totais representados
+## Inventário (não é contagem editorial)
 
 ```text
-Pacotes sequenciais: {manifest['lot_archive_count']}
+Pacotes de lotes: {manifest['lot_archive_count']}
 Lotes sequenciais: {manifest['lots_count']}
-Notas sequenciais: {manifest['notes_from_lot_archives']}
-Notas do vault curado: {manifest['notes_from_curated_study_vault']}
-Total materializado representado: {manifest['total_materialized_notes_represented']}
-Conteúdo operacional regulado: 0
+Arquivos-placeholder esperados nos lotes: {manifest['expected_catalog_placeholder_files_from_lots']}
+Arquivos Markdown no Study Vault: {manifest['consolidated_vault_markdown_files']}
+Notas aprovadas por este agregador: {manifest['notes_validated_by_this_aggregator']}
+Validação de qualidade: {manifest['quality_validation']}
 ```
 
 ## Uso
 
-Extraia este `.tar.xz` e abra uma das pastas no Obsidian. Para navegação geral curada, comece por:
-
-```text
-MERGE-COMPLETO/00-vault-consolidado/study-vault-1m-packs/00-Inicio/Home.md
-```
-
-Para lotes sequenciais (de `0001-0100` a `4901-5000`), escolha uma pasta em:
-
-```text
-MERGE-COMPLETO/10-lotes/
-```
+Extraia este `.tar.xz` para inspecionar os artefatos históricos. Para retomar a redação, utilize notas candidatas auditadas e aguarde aprovação humana; não trate os lotes ou MOCs como prova de qualidade.
 """)
         add_bytes(tar, "MERGE-COMPLETO/99-relatorios/manifest-merge-completo.json", json.dumps(manifest, ensure_ascii=False, indent=2))
 
-        if args.base_tar:
-            base_path = Path(args.base_tar)
+        if base_path is not None:
             with tarfile.open(base_path, mode="r|*") as base:
                 for member in base:
                     if not member.isfile():

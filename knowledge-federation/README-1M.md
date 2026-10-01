@@ -1,61 +1,35 @@
-# Knowledge Federation — 1 milhão de notas lógicas e materializadas
+# Inventário legado de 1 milhão — estado de qualidade
 
-Este projeto atingiu **100% da meta de 1 milhão de notas**:
-- **1.000.100 notas lógicas no ledger SQLite** (`1.000.000` virtuais + `100` físicas iniciais).
-- **1.015.600 notas materializadas consolidadas** (`5.000 lotes sequenciais × 200 notas = 1.000.000 de notas sequenciais` + `78 study packs × 200 notas = 15.600 notas curadas`).
+O checkpoint e os pacotes materializados do merge preservam **1.000.000 de registros virtuais** e uma sequência de lotes com esse número de arquivos. A auditoria atual identificou texto-template em todos os registros virtuais. Portanto, esses artefatos representam uma **meta de inventário/materialização**, não 1.000.000 de notas válidas.
 
-## Estado final preservado
+## Estado auditado em 2026-10-01
 
-Merge completo materializado (`1.015.600 notas` representadas, `34M`):
+- Registros virtuais no SQLite: **1.000.000**.
+- Registros com marcadores de conteúdo-template: **1.000.000**.
+- Caminhos virtuais marcados como materializados no checkpoint: **8.000**.
+- Notas físicas do lote inicial: **100**, sem status profundo/revisado no schema legado.
+- Notas ativas novas que passaram pelo gate automatizado: **8 candidatas**; revisão humana pendente.
+- Notas plenamente aprovadas por revisão humana: **0**.
 
-```text
-knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
-```
+As quantidades `1.015.600`, `15.600`, `5.000 lotes` e `1.021.127 entradas` em manifestos antigos são contagens de arquivos e registros. Não devem ser usadas como contagem de conhecimento editorialmente validado.
 
-Checkpoint principal do ledger SQLite (`1.000.100 notas lógicas`, `24M`):
-
-```text
-knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
-```
-
-Vaults prontos para uso imediato:
+## Artefatos
 
 ```text
-knowledge-federation/archives/study-vault-1m-packs.zip       (19M — 78 packs / 15.600 notas)
-knowledge-federation/archives/starter-vault-prioritario.zip  (1.1M — 900 notas prioritárias)
-knowledge-federation/00-home-vault/                          (Home Vault Mestre com 9 MOCs e 8 Canvases)
+archives/merge-completo-materializado-1m.tar.xz
+archives/study-vault-1m-packs.zip
+archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-## Restaurar o ledger SQLite
+Os pacotes permanecem disponíveis por compatibilidade e recuperação. A auditoria em [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md) separa catálogo, arquivos candidatos e revisão humana.
+
+## Auditoria reproduzível
 
 ```bash
-python knowledge-federation/scripts/restore_ledger_checkpoint.py
+python3 -m unittest discover -s knowledge-federation/tests -v
+python3 knowledge-federation/scripts/audit_note_quality.py \
+  --path knowledge-federation/domains \
+  --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-## Consultar o checkpoint diretamente (sem restaurar no workspace)
-
-```bash
-python knowledge-federation/scripts/ledger_stats.py
-python knowledge-federation/scripts/query_checkpoint.py "agentes" --domain ia --limit 20
-```
-
-## Regerar os 78 Study Packs, o Home Vault e o Merge Completo
-
-```bash
-python knowledge-federation/scripts/build_all_78_study_packs.py
-python knowledge-federation/scripts/build_pack_inventory.py
-python knowledge-federation/scripts/build_global_indexes.py
-python knowledge-federation/scripts/build_full_merge_from_ledger.py
-```
-
-## Distribuição final das 1.000.000 notas virtuais
-
-```text
-software: 205.156 (16 subdomínios)
-ia: 153.844 (12 subdomínios)
-jogos: 153.840 (12 subdomínios)
-cannabis-medicinal: 141.020 (11 subdomínios)
-vibe-coding: 128.200 (10 subdomínios)
-micologia: 115.380 (9 subdomínios)
-negocio-carreira-produto: 102.560 (8 subdomínios)
-```
+Um passe automatizado apenas libera a nota para revisão humana. Só após checagem das fontes e aprovação registrada em `revisao_humana`/`revisor` ela entra na contagem de notas válidas.

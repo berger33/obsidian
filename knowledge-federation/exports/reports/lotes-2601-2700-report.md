@@ -2,17 +2,19 @@
 
 Gerado em: 2026-10-01T12:53:30
 
+> **Relatório histórico:** estas contagens descrevem arquivos-placeholder derivados do ledger, não notas válidas. Consulte [o status editorial](../../STATUS-CONSOLIDACAO-1M.md) e [a auditoria atual](note-quality-audit.md).
+
 Arquivo: `archives/study-vault-lotes-2601-2700.zip`
 Tamanho: 25.6M
 Lotes: **100**
-Notas por lote: **200**
-Notas totais: **20000**
+Arquivos-placeholder por lote: **200**
+Arquivos-placeholder totais: **20000**
 Lotes em domínios regulados: **29**
 Conteúdo operacional regulado: **0**
 
 ## Lotes
 
-| # | Lote | Domínio | Subdomínio | Offset | Notas |
+| # | Lote | Domínio | Subdomínio | Offset | Arquivos-placeholder |
 |---:|---|---|---|---:|---:|
 | 1 | `lote-2601` | `jogos` | `audio` | 6800 | 200 |
 | 2 | `lote-2602` | `jogos` | `engines` | 6800 | 200 |

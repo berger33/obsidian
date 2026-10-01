@@ -2,17 +2,19 @@
 
 Gerado em: 2026-10-01T19:48:20
 
+> **Relatório histórico:** estas contagens descrevem arquivos-placeholder derivados do ledger, não notas válidas. Consulte [o status editorial](../../STATUS-CONSOLIDACAO-1M.md) e [a auditoria atual](note-quality-audit.md).
+
 Arquivo: `archives/study-vault-lotes-3301-3400.zip`
 Tamanho: 25.6M
 Lotes: **100**
-Notas por lote: **200**
-Notas totais: **20000**
+Arquivos-placeholder por lote: **200**
+Arquivos-placeholder totais: **20000**
 Lotes em domínios regulados: **29**
 Conteúdo operacional regulado: **0**
 
 ## Lotes
 
-| # | Lote | Domínio | Subdomínio | Offset | Notas |
+| # | Lote | Domínio | Subdomínio | Offset | Arquivos-placeholder |
 |---:|---|---|---|---:|---:|
 | 1 | `lote-3301` | `jogos` | `3d` | 8600 | 200 |
 | 2 | `lote-3302` | `jogos` | `arte` | 8600 | 200 |

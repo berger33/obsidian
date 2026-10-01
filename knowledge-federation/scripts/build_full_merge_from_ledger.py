@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import io, json, os, sqlite3, subprocess, sys, tarfile, zipfile
+import argparse, io, json, os, sqlite3, subprocess, sys, tarfile, zipfile
 from collections import defaultdict
 from pathlib import Path
 from checkpoint_common import cached_sqlite_from_archive
@@ -65,6 +65,17 @@ class FastTarWriter:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Recria o merge histórico com arquivos-placeholder do ledger.")
+    parser.add_argument(
+        "--allow-catalog-stubs", action="store_true",
+        help="Confirma que o TAR conterá placeholders de catálogo, não notas válidas.",
+    )
+    args = parser.parse_args()
+    if not args.allow_catalog_stubs:
+        raise SystemExit(
+            "Recriação do merge a partir de registros-template bloqueada por padrão. "
+            "Use --allow-catalog-stubs apenas para recuperação/inspeção."
+        )
     out_xz = ROOT / "archives" / "merge-completo-materializado-1m.tar.xz"
     out_xz.parent.mkdir(parents=True, exist_ok=True)
     if out_xz.exists():
@@ -92,43 +103,47 @@ def main():
 
     manifest = {
         "generated_at": now(),
-        "type": "merged-complete-materialized-vault",
+        "type": "merged-inventory-materialization",
         "home_vault": "00-home-vault",
         "consolidated_vault": "study-vault-1m-packs.zip",
         "study_packs_count": 78,
-        "notes_from_curated_study_vault": 15600,
+        "note_files_from_study_packs": 15600,
+        "human_reviewed_note_count": 0,
+        "content_validation": "not-performed; virtual records are catalogue/template entries",
         "lot_archives": [
             {"start": m["start"], "end": m["end"], "file": Path(m["zip"]).name}
             for m in seq_manifest
         ],
         "lot_archive_count": len(seq_manifest),
         "lots_count": len(seq_manifest) * 100,
-        "notes_from_lot_archives": len(seq_manifest) * 100 * 200,
-        "total_materialized_notes_represented": len(seq_manifest) * 100 * 200 + 15600,
+        "note_files_from_lot_archives": len(seq_manifest) * 100 * 200,
+        "total_note_files_represented": len(seq_manifest) * 100 * 200 + 15600,
         "ledger_archive": "ledger-v1000000-mat8000.sqlite.xz",
         "regulated_operational_content": 0,
     }
 
-    readme_text = f"""# Merge completo — Knowledge Federation (1 Milhão de Notas + 78 Study Packs)
+    readme_text = f"""# Merge histórico — Knowledge Federation (inventário materializado)
 
 Gerado em: {manifest['generated_at']}
 
-Este arquivo TAR contém o merge lógico completo de toda a federação:
-- `00-home-vault/`: Home Vault mestre com Índice Global, 9 MOCs globais e 8 Canvases.
-- `00-vault-consolidado/`: Study Vault curado com **78 study packs (100% dos subdomínios = 15.600 notas)**, 85 MOCs, 5 trilhas, 6 playbooks, 9 canvases e auditoria com 0 links quebrados.
-- `10-lotes/`: sequência completa de **50 pacotes de lotes (`0001-0100` até `4901-5000`)**, totalizando **5.000 lotes e 1.000.000 de notas materializadas**.
-- `90-ledger/`: metadados do checkpoint ledger (`archives/ledger-v1000000-mat8000.sqlite.xz`).
-- `99-relatorios/`: índices, manifestos e todos os 50 relatórios de execução dos lotes.
+> Este TAR representa arquivos e registros exportados; não certifica qualidade editorial. O ledger legado contém texto-template. Arquivos materializados não devem ser contados como notas válidas sem passar pelo gate e por revisão humana.
 
-## Totais representados
+- `00-home-vault/`: navegação e índices do inventário.
+- `00-vault-consolidado/`: 78 Study Packs e 15.600 arquivos de nota gerados a partir do ledger; auditoria de links é apenas estrutural.
+- `10-lotes/`: **50 pacotes**, **5.000 lotes** e **1.000.000 arquivos de nota** materializados.
+- `90-ledger/`: metadados do checkpoint SQLite.
+- `99-relatorios/`: índices, manifestos e relatórios de execução legados.
+
+## Contagens de arquivos/entradas — não de notas validadas
 
 ```text
 Pacotes sequenciais: {manifest['lot_archive_count']}
 Lotes sequenciais: {manifest['lots_count']}
-Notas sequenciais: {manifest['notes_from_lot_archives']}
-Study packs curados (todos os subdomínios): {manifest['study_packs_count']}
-Notas do vault curado: {manifest['notes_from_curated_study_vault']}
-Total materializado representado: {manifest['total_materialized_notes_represented']}
+Arquivos de nota sequenciais: {manifest['note_files_from_lot_archives']}
+Study packs materializados: {manifest['study_packs_count']}
+Arquivos de nota nos packs: {manifest['note_files_from_study_packs']}
+Total de arquivos de nota representados: {manifest['total_note_files_represented']}
+Notas aprovadas por revisão humana: {manifest['human_reviewed_note_count']}
 Conteúdo operacional regulado: 0
 ```
 """
@@ -188,7 +203,7 @@ Conteúdo operacional regulado: 0
                 "",
                 f"Gerado em: {ts_now}",
                 "",
-                "Este vault contém 100 lotes derivados do checkpoint ledger-first de 1 milhão de notas.",
+                "> Este vault é um inventário de arquivos-placeholder derivados do ledger; não representa conteúdo editorial válido.",
                 "",
                 "## Índice de lotes",
                 "",
@@ -215,7 +230,7 @@ Conteúdo operacional regulado: 0
 
                 pack_base = f"10-Lotes/{pack_slug}"
                 moc_path = f"00-Mapas/MOC-{pack_slug}.md"
-                home_lines.append(f"- [[MOC-{pack_slug}]] — {title} (200 notas; offset {offset})")
+                home_lines.append(f"- [[MOC-{pack_slug}]] — {title} (200 arquivos-placeholder; offset {offset})")
 
                 moc = [
                     "---",
@@ -228,11 +243,13 @@ Conteúdo operacional regulado: 0
                     "---",
                     f"# {title}",
                     "",
+                    "> MOC de navegação apenas; não avalia qualidade nem aprova os arquivos listados.",
+                    "",
                     f"Lote: `{lot_id}`",
                     f"Domínio: `{domain}`",
                     f"Subdomínio: `{subdomain}`",
                     f"Offset no ledger: `{offset}`",
-                    "Notas: **200**",
+                    "Arquivos-placeholder: **200**",
                     "",
                 ]
                 if regulated:
@@ -241,7 +258,7 @@ Conteúdo operacional regulado: 0
                         "> Este lote é educacional, documental e não operacional. Use para estudo, perguntas qualificadas e conversa com profissionais habilitados.",
                         "",
                     ]
-                moc += ["## Notas", ""]
+                moc += ["## Arquivos-placeholder de catálogo", ""]
 
                 slugs = [r[1] for r in rows]
                 for j, r in enumerate(rows):
@@ -261,7 +278,8 @@ Conteúdo operacional regulado: 0
                         f"risco_legal: {r[9]}\n"
                         f"risco_medico: {r[10]}\n"
                         f"conteudo_operacional: false\n"
-                        f"status: materializada-do-checkpoint\n"
+                        f"status: catalog-placeholder\n"
+                        f"quality_status: catalog_only\n"
                         f"origem_lote: {lot_id}\n"
                         f"pack: {pack_slug}\n"
                         f"fontes: []\n"
@@ -274,7 +292,7 @@ Conteúdo operacional regulado: 0
                         f"## Em uma frase\n"
                         f"{r[11]}\n\n"
                         f"## Por que importa\n"
-                        f"Esta nota é um recorte materializado do ledger de 1 milhão de notas. Use como ponto de partida para estudo, decisão, backlog, curadoria e verificação com fontes primárias.\n\n"
+                        f"Este arquivo é somente uma representação de catálogo do ledger: o registro não contém conteúdo substantivo validado e não deve ser contado como nota pronta.\n\n"
                         f"## Como funciona\n"
                         f"{r[12]}\n\n"
                         f"## Como pedir isso para uma IA\n"
@@ -306,7 +324,7 @@ Conteúdo operacional regulado: 0
                     "limit": 200,
                     "pack_slug": pack_slug,
                     "title": title,
-                    "notes": 200,
+                    "catalog_placeholder_files": 200,
                     "moc": moc_path,
                     "path": pack_base,
                 })
@@ -328,7 +346,7 @@ Conteúdo operacional regulado: 0
                 "## Resumo",
                 "",
                 "- Lotes: **100**",
-                f"- Notas: **{pkg_notes}**",
+                f"- Arquivos-placeholder: **{pkg_notes}**",
                 f"- Lotes em domínios regulados: **{regulated_lots}**",
                 "- Conteúdo operacional em domínios regulados: **0 por política de geração**",
             ]
@@ -343,11 +361,11 @@ Conteúdo operacional regulado: 0
             )
             tar.add_bytes(
                 f"{pkg_prefix}/_meta/auditoria-next-100-lotes.md",
-                f"# Auditoria — Lotes {start_lot} a {end_lot}\n\nGerado em: {ts_now}\n\nLotes: 100\nNotas materializadas: {pkg_notes}\nMOCs: 100\nCanvas: 1\nLinks wiki analisados: {pkg_links + 100}\nLinks quebrados: 0\nLotes em domínios regulados: {regulated_lots}\nConteúdo operacional regulado: 0\n",
+                f"# Auditoria estrutural — Lotes {start_lot} a {end_lot}\n\nGerado em: {ts_now}\n\nLotes: 100\nArquivos de catálogo materializados: {pkg_notes}\nMOCs: 100\nCanvas: 1\nLinks wiki analisados: {pkg_links + 100}\nLinks quebrados: 0\nNotas válidas aprovadas: 0 (conteúdo do ledger ainda não foi redigido/revisado)\nLotes em domínios regulados: {regulated_lots}\nConteúdo operacional regulado: 0\n",
             )
             tar.add_bytes(
                 f"{pkg_prefix}/README.md",
-                f"# Study Vault — Lotes {start_lot} a {end_lot}\n\nAbra como vault no Obsidian e comece por `00-Inicio/Home.md`.\n\nNotas: {pkg_notes}\nLotes: 100\n",
+                f"# Recorte de catálogo — Lotes {start_lot} a {end_lot}\n\nAbra como vault no Obsidian e comece por `00-Inicio/Home.md`. Os arquivos são registros de catálogo, não notas válidas.\n\nArquivos de catálogo: {pkg_notes}\nLotes: 100\n",
             )
             if (pkg_idx + 1) % 10 == 0:
                 print(f"Streamed {pkg_idx + 1}/50 packages ({end_lot} lots)...", file=sys.stderr)

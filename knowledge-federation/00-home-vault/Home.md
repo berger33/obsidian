@@ -4,15 +4,18 @@ ultima_verificacao: 2026-09-30
 tags: [home, global, ledger-1m]
 aliases: ["Home — Knowledge Federation"]
 ---
-# Home — Knowledge Federation (1 Milhão de Notas)
+# Home — Knowledge Federation (Inventário de 1 Milhão)
 
-Bem-vindo ao **Home Vault Mestre** da Federação de Conhecimento de **1.000.100 notas lógicas** e **1.015.600 notas materializadas**.
+Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint contém 1.000.000 de registros virtuais de catálogo, mas a auditoria identificou texto-template em todos eles; esses registros **não são contados como notas válidas**. A validação de conteúdo está sendo retomada em lotes menores e auditáveis.
+
+- [[MOC-Confiabilidade-e-Contratos]] — primeiro lote de 8 notas autorais que passou pelos critérios estruturais e aguarda revisão humana/factual.
+- [[note-quality-audit|Auditoria de qualidade]] — contagens de registros, arquivos e pendências sem confundir volume com validade.
 
 ## Mapas Globais
 
 - [[Indice-Global]] — Inventário completo dos 7 domínios e 78 subdomínios
-- [[MOC-78-Study-Packs]] — Os 78 Study Packs curados (15.600 notas em `archives/study-vault-1m-packs.zip`)
-- [[MOC-5000-Lotes-Sequenciais]] — Os 50 pacotes / 5.000 lotes sequenciais (1.000.000 de notas em `archives/merge-completo-materializado-1m.tar.xz`)
+- [[MOC-78-Study-Packs]] — Navegação dos 78 packs estruturais (15.600 arquivos derivados do catálogo; não validados)
+- [[MOC-5000-Lotes-Sequenciais]] — Navegação dos 50 pacotes / 5.000 lotes (1.000.000 de arquivos-placeholder; não notas válidas)
 
 ## MOCs por Domínio
 

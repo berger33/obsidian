@@ -21,7 +21,8 @@ validade: {row['validity']}
 risco_legal: {row['risk_legal']}
 risco_medico: {row['risk_medical']}
 conteudo_operacional: false
-status: materializada-do-checkpoint
+status: catalog-placeholder
+quality_status: catalog_only
 fontes: []
 tags: [dominio/{row['domain']}, subdominio/{row['subdomain']}, origem/checkpoint]
 aliases: ["{row['title']}"]
@@ -33,7 +34,7 @@ prefixo_virtual: {row['prefix']}
 {row['summary']}
 
 ## Por que importa
-Esta nota é um recorte materializado do ledger de 1 milhão de notas. Ela deve ser usada como ponto de partida para estudo, pesquisa e refinamento com fontes primárias.
+Este arquivo apenas materializa um registro de catálogo. O corpo substantivo não foi redigido nem validado; não conte esta página como nota pronta para estudo ou decisão.
 
 ## Como funciona
 {row['body_seed']}
@@ -58,7 +59,7 @@ Expanda a nota "{row['title']}" com fontes primárias, exemplos seguros, conexõ
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Materializa notas do checkpoint ledger para Markdown sem restaurar DB no workspace.")
+    ap = argparse.ArgumentParser(description="Materializa registros de catálogo como placeholders Markdown; não produz notas válidas.")
     ap.add_argument("--archive", default=None)
     ap.add_argument("--domain", default=None)
     ap.add_argument("--subdomain", default=None)
@@ -68,7 +69,18 @@ def main():
     ap.add_argument("--out", default="checkpoint-materialized")
     ap.add_argument("--zip", dest="zip_path", default=None)
     ap.add_argument("--clean", action="store_true")
+    ap.add_argument(
+        "--allow-catalog-stubs", action="store_true",
+        help="Permite materializar registros de catálogo como placeholders explicitamente marcados; não são notas válidas.",
+    )
     args = ap.parse_args()
+    if args.limit < 1:
+        ap.error("--limit deve ser positivo")
+    if not args.allow_catalog_stubs:
+        raise SystemExit(
+            "Materialização de registros-template bloqueada por padrão. "
+            "Use --allow-catalog-stubs apenas para inspeção/recuperação; isso não cria notas válidas."
+        )
 
     db = cached_sqlite_from_archive(args.archive)
     con = sqlite3.connect(db)
@@ -98,7 +110,12 @@ def main():
         outdir.mkdir(parents=True, exist_ok=True)
         (outdir / f"{row['slug']}.md").write_text(render(row, related), encoding="utf-8")
     readme = outbase / "README.md"
-    readme.write_text(f"# Recorte materializado do checkpoint\n\nNotas: {len(rows)}\nFiltro: domain={args.domain}, subdomain={args.subdomain}, prefix={args.prefix}, query={args.query}\n", encoding="utf-8")
+    readme.write_text(
+        f"# Recorte de catálogo materializado\n\nArquivos-placeholder: {len(rows)}\n"
+        f"Notas válidas aprovadas: 0\n"
+        f"Filtro: domain={args.domain}, subdomain={args.subdomain}, prefix={args.prefix}, query={args.query}\n",
+        encoding="utf-8",
+    )
     if args.zip_path:
         zpath = ROOT / args.zip_path
         zpath.parent.mkdir(parents=True, exist_ok=True)
@@ -107,7 +124,7 @@ def main():
             for f in outbase.rglob("*"):
                 if f.is_file(): z.write(f, f.relative_to(ROOT))
         print(zpath)
-    print(f"Materializadas {len(rows)} notas em {outbase}")
+    print(f"Materializados {len(rows)} registros como catalog-placeholder em {outbase}; não são notas válidas.")
 
 if __name__ == "__main__":
     main()

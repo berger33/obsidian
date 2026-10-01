@@ -3,31 +3,34 @@ tipo: indice-global
 ultima_verificacao: 2026-09-30
 tags: [indice, global, ledger-1m]
 ---
-# Índice Global — Knowledge Federation (1 Milhão de Notas)
+# Índice Global — Knowledge Federation (inventário legado de 1 milhão)
+
+> As contagens abaixo descrevem registros, arquivos e pacotes. A auditoria identificou texto-template em todos os 1.000.000 registros virtuais; não são notas válidas. Consulte [[note-quality-audit]] e [[MOC-Confiabilidade-e-Contratos]].
 
 Atualizado em: 2026-10-01T20:22:44
 
 ## Resumo Executivo
 
-- **Notas virtuais no ledger:** 1.000.000
-- **Notas físicas iniciais:** 100
-- **Total lógico no ledger:** 1.000.100
-- **Lotes sequenciais materializados:** 5.000 lotes (50 pacotes de 100 lotes = **1.000.000 de notas**)
-- **Study Packs por subdomínio:** 78 packs × 200 notas = **15.600 notas curadas**
-- **Total materializado representado no merge completo:** **1.015.600 notas**
+- **Registros virtuais de catálogo:** 1.000.000 (com marcadores de template; não validados)
+- **Registros físicos iniciais:** 100 sementes sem aprovação editorial
+- **Total de entradas no inventário:** 1.000.100
+- **Arquivos sequenciais materializados:** 5.000 lotes / **1.000.000 arquivos**; não equivalem a notas válidas
+- **Study Packs históricos:** 78 × 200 = **15.600 arquivos de nota**; não validados
+- **Total de arquivos representados no merge:** **1.015.600** (sem MOCs/relatórios)
+- **Notas com revisão humana registrada:** 0 no checkpoint legado
 - **Conteúdo operacional em domínios regulados:** **0**
 
 ## Distribuição por Domínio no Ledger
 
-| Domínio | Notas Virtuais | Subdomínios | Study Packs (200 notas) | MOC Global |
+| Domínio | Registros virtuais | Subdomínios | Packs (200 arquivos) | MOC Global |
 |---|---:|---:|---:|---|
-| `software` | 205.156 | 16 | 16 (3.200 notas) | [[MOC-software]] |
-| `ia` | 153.844 | 12 | 12 (2.400 notas) | [[MOC-ia]] |
-| `jogos` | 153.840 | 12 | 12 (2.400 notas) | [[MOC-jogos]] |
-| `cannabis-medicinal` | 141.020 | 11 | 11 (2.200 notas) | [[MOC-cannabis-medicinal]] |
-| `vibe-coding` | 128.200 | 10 | 10 (2.000 notas) | [[MOC-vibe-coding]] |
-| `micologia` | 115.380 | 9 | 9 (1.800 notas) | [[MOC-micologia]] |
-| `negocio-carreira-produto` | 102.560 | 8 | 8 (1.600 notas) | [[MOC-negocio-carreira-produto]] |
+| `software` | 205.156 | 16 | 16 (3.200 arquivos) | [[MOC-software]] |
+| `ia` | 153.844 | 12 | 12 (2.400 arquivos) | [[MOC-ia]] |
+| `jogos` | 153.840 | 12 | 12 (2.400 arquivos) | [[MOC-jogos]] |
+| `cannabis-medicinal` | 141.020 | 11 | 11 (2.200 arquivos) | [[MOC-cannabis-medicinal]] |
+| `vibe-coding` | 128.200 | 10 | 10 (2.000 arquivos) | [[MOC-vibe-coding]] |
+| `micologia` | 115.380 | 9 | 9 (1.800 arquivos) | [[MOC-micologia]] |
+| `negocio-carreira-produto` | 102.560 | 8 | 8 (1.600 arquivos) | [[MOC-negocio-carreira-produto]] |
 
 ## Contagem por Domínio / Subdomínio (78 Subdomínios)
 

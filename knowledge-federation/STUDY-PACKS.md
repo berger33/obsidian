@@ -1,8 +1,10 @@
-# Study packs materializados do ledger de 1M (78 Subdomínios Completos)
+# Study packs históricos materializados do ledger (78 subdomínios)
 
 Data: 2026-10-01
 
-Este diretório contém os **78 recortes temáticos (100% dos subdomínios da taxonomia)** materializados a partir do checkpoint de 1 milhão de notas lógicas, com **200 notas por subdomínio = 15.600 notas curadas**.
+> **Ressalva:** os 15.600 itens são arquivos-placeholder derivados de registros de catálogo. A auditoria encontrou texto-template nos registros virtuais que alimentam os packs. Não conte esses arquivos como notas válidas; consulte [`STATUS-CONSOLIDACAO-1M.md`](STATUS-CONSOLIDACAO-1M.md).
+
+Este diretório contém 78 recortes organizados pela taxonomia, com 200 arquivos por subdomínio. A cobertura de tópicos e o total de arquivos não certificam conteúdo.
 
 ## Checkpoint-fonte
 
@@ -12,7 +14,7 @@ knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 
 ## Cobertura completa por domínio (78 Study Packs)
 
-| Domínio | Subdomínios / Packs | Notas por Pack | Notas Totais |
+| Domínio | Subdomínios / Packs | Arquivos por Pack | Arquivos Totais |
 |---|---:|---:|---:|
 | `software` | 16 | 200 | 3.200 |
 | `ia` | 12 | 200 | 2.400 |
@@ -47,7 +49,7 @@ knowledge-federation/archives/merge-completo-materializado-1m.tar.xz
 ## Como regerar todos os 78 packs e o Study Vault
 
 ```bash
-python knowledge-federation/scripts/build_all_78_study_packs.py
+python knowledge-federation/scripts/build_all_78_study_packs.py --allow-catalog-stubs  # apenas para inspeção/recuperação; não cria notas válidas
 python knowledge-federation/scripts/build_pack_inventory.py
 ```
 

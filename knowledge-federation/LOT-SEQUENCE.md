@@ -1,14 +1,17 @@
-# Sequência de lotes materializados (Completa — 1 Milhão de Notas)
+# Sequência histórica de lotes materializados (inventário, não notas válidas)
 
 Data: 2026-10-01
+
+> O checkpoint usado por estes lotes contém registros-template. A auditoria de conteúdo identificou esse padrão nos 1.000.000 registros virtuais. Os números abaixo descrevem arquivos, não conhecimento editorialmente válido.
 
 ## Totais sequenciais
 
 ```text
 Pacotes sequenciais: 50
 Lotes: 5.000
-Notas: 1.000.000
-Notas por lote: 200
+Arquivos de catálogo: 1.000.000
+Arquivos por lote: 200
+Notas válidas aprovadas por revisão humana: 0
 Arquivos internos nos zips: 1.005.250
 Tamanho somado dos zips sequenciais: 1273.4M
 Lotes em domínios regulados: 1.288
@@ -76,7 +79,7 @@ Conteúdo operacional regulado: 0
 archives/study-vault-1m-packs.zip
 ```
 
-Contém 7.100 notas de estudo curadas em 36 packs temáticos, trilhas, playbooks, canvas e auditoria.
+O artefato versionado contém 15.600 arquivos de estudo em 78 packs temáticos, além de trilhas, playbooks, canvas e auditoria. Os itens derivados do ledger são placeholders, não notas validadas.
 
 ## Merge completo
 
@@ -84,7 +87,7 @@ Contém 7.100 notas de estudo curadas em 36 packs temáticos, trilhas, playbooks
 archives/merge-completo-materializado-1m.tar.xz
 ```
 
-Contém os 50 pacotes sequenciais (1.000.000 de notas) + o vault consolidado curado (7.100 notas) = 1.007.100 notas materializadas representadas.
+Contém 1.000.000 arquivos-placeholder sequenciais e 15.600 arquivos dos packs = 1.015.600 arquivos, além de artefatos auxiliares. A soma não representa 1.015.600 notas válidas.
 
 ## Ledger completo
 

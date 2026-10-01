@@ -1,11 +1,13 @@
-# Auditoria Global Rápida
+# Auditoria Global Rápida — snapshot legado de inventário
 
 Atualizado em: 2026-10-01T12:24:13
 
+> Este relatório antigo mede entradas e estrutura, não qualidade editorial. A auditoria de conteúdo mais recente está em [`note-quality-audit.md`](note-quality-audit.md): foram detectados marcadores de template nos 1.000.000 registros virtuais e nenhuma nota com revisão humana registrada.
+
 - Notas físicas registradas no SQLite: 100
-- Notas virtuais registradas no SQLite: 1000000
-- Notas virtuais materializadas: 8000
-- Total lógico (físicas + virtuais): 1000100
+- Registros virtuais de catálogo no SQLite (não equivalem a notas validadas): 1000000
+- Registros virtuais com caminho de materialização (não é validação editorial): 8000
+- Total de registros no inventário (físicos + virtuais): 1000100
 - Notas profundas físicas: 0
 - Lotes por status: complete=1, planned=2017
 - Arquivos Markdown ativos em domains/: 100

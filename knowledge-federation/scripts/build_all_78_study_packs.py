@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, re, shutil, sqlite3, tempfile, zipfile
+import argparse, json, re, shutil, sqlite3, tempfile, zipfile
 from pathlib import Path
 from checkpoint_common import cached_sqlite_from_archive
 from kf_common import ROOT, TODAY, slugify, now
@@ -128,6 +128,18 @@ def write_curated_note(vault_dir: Path, rel: str, title: str, body: str, tags: l
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Gera pacotes de inspeção a partir do ledger, não notas válidas.")
+    parser.add_argument(
+        "--allow-catalog-stubs", action="store_true",
+        help="Confirma que as notas derivadas serão placeholders de catálogo, sem validade editorial.",
+    )
+    args = parser.parse_args()
+    if not args.allow_catalog_stubs:
+        raise SystemExit(
+            "Geração dos packs de registros-template bloqueada por padrão. "
+            "Use --allow-catalog-stubs apenas para inspeção; isso não produz notas válidas."
+        )
+    print("Aviso: os arquivos derivados do ledger serão marcados catalog_only e não contam como notas válidas.")
     db = cached_sqlite_from_archive()
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
@@ -153,7 +165,7 @@ def main():
             (domain, subdomain),
         ))
         if len(rows) != 200:
-            raise SystemExit(f"Subdomínio com menos de 200 notas: {domain}/{subdomain} -> {len(rows)}")
+            raise SystemExit(f"Subdomínio com menos de 200 registros de catálogo: {domain}/{subdomain} -> {len(rows)}")
 
         pack_dst = vault_dir / "10-Study-Packs" / pack_slug
         outdir = pack_dst / domain / subdomain
@@ -168,7 +180,7 @@ def main():
 
         readme = pack_dst / "README.md"
         readme.write_text(
-            f"# Recorte materializado do checkpoint\n\nPacote: `{pack_slug}`\nNotas: {len(rows)}\nFiltro: domain={domain}, subdomain={subdomain}\n",
+            f"# Recorte de catálogo materializado\n\nPacote: `{pack_slug}`\nArquivos de placeholder: {len(rows)}\nValidade editorial: não avaliada\nFiltro: domain={domain}, subdomain={subdomain}\n",
             encoding="utf-8",
         )
 
@@ -197,9 +209,11 @@ def main():
             f"Pacote: `{pack_slug}`",
             f"Domínio: [[MOC-Dominio-{domain}|{DOMAIN_TITLES[domain]}]]",
             f"Subdomínio: `{subdomain}`",
-            f"Notas: **{len(note_stems)}**",
+            "> MOC de navegação apenas; os arquivos de catálogo abaixo não são notas validadas e não passam por este mapa no gate editorial.",
             "",
-            "## Notas",
+            f"Arquivos-placeholder: **{len(note_stems)}**",
+            "",
+            "## Arquivos-placeholder de catálogo",
             "",
         ]
         moc_lines += [f"- [[{stem}]]" for stem in sorted(note_stems)]
@@ -207,7 +221,7 @@ def main():
             "",
             "## Como usar",
             "",
-            "1. Leia as notas por blocos de 10 para construir visão panorâmica.",
+            "1. Inspecione os arquivos em blocos de 10; não os trate como conteúdo editorial aprovado.",
             "2. Use backlinks e Graph View para explorar conexões locais.",
             "3. Verifique fontes primárias antes de tomar decisões críticas.",
         ]
@@ -232,7 +246,7 @@ def main():
             "",
             f"Domínio: `{domain}`",
             f"Subdomínios / Study Packs: **{len(packs)}**",
-            f"Notas curadas neste domínio: **{dom_notes}**",
+            f"Arquivos derivados do catálogo neste domínio (não validados): **{dom_notes}**",
             "",
             "## Study Packs do Domínio",
             "",
@@ -240,7 +254,7 @@ def main():
         cnodes = [{"id": "dom", "type": "file", "file": f"00-Mapas/{dom_moc}.md", "x": 0, "y": 0, "width": 420, "height": 150, "color": packs[0][3]}]
         cedges = []
         for idx, (pack_slug, subdomain, title, color, moc_name, n_count, zip_name) in enumerate(packs):
-            dlines.append(f"- [[{moc_name}]] — {title} ({n_count} notas) — `{zip_name}`")
+            dlines.append(f"- [[{moc_name}]] — {title} ({n_count} arquivos de placeholder) — `{zip_name}`")
             nid = f"sub-{idx}"
             cnodes.append({
                 "id": nid,
@@ -278,9 +292,11 @@ def main():
         "tags: [home, study-pack, ledger-1m]",
         "aliases: [Home, Study Vault 1M]",
         "---",
-        "# Home — Study Vault Completo (78 Subdomínios / 15.600 Notas)",
+        "# Home — Study Vault Materializado (78 packs / 15.600 arquivos)",
         "",
-        "Este vault contém os **78 study packs temáticos** (100% dos subdomínios da taxonomia, com **200 notas por subdomínio = 15.600 notas curadas**), derivados do ledger de **1.000.000 de notas lógicas**.",
+        "> Os 15.600 arquivos deste pacote são materializações de registros-template do ledger; não são notas editoriais validadas. As contagens e o teste de links não certificam conteúdo. Consulte o gate de qualidade antes de usar ou contabilizar.",
+        "",
+        "Este vault organiza arquivos por subdomínio para inspeção do inventário e recuperação, não para alegar 1 milhão de notas válidas.",
         "",
         f"Gerado em: {now()}",
         "",
@@ -288,7 +304,7 @@ def main():
         "",
     ]
     for domain, packs in by_domain.items():
-        home_lines.append(f"- [[MOC-Dominio-{domain}|{DOMAIN_TITLES[domain]}]] — {len(packs)} packs ({sum(p[5] for p in packs)} notas)")
+        home_lines.append(f"- [[MOC-Dominio-{domain}|{DOMAIN_TITLES[domain]}]] — {len(packs)} packs ({sum(p[5] for p in packs)} arquivos de placeholder)")
 
     home_lines += [
         "",
@@ -314,11 +330,11 @@ def main():
     ]
     for pack_slug, domain, subdomain, title, color, zip_name in ALL_78_PACKS:
         moc_name = f"MOC-{slugify(pack_slug)}"
-        home_lines.append(f"- [[{moc_name}]] — {title} (200 notas)")
+        home_lines.append(f"- [[{moc_name}]] — {title} (200 arquivos de placeholder)")
 
     home_lines += [
         "",
-        f"Total materializado neste vault: **{total_notes} notas** em **{len(ALL_78_PACKS)} study packs**.",
+        f"Total materializado neste vault: **{total_notes} arquivos de placeholder** em **{len(ALL_78_PACKS)} packs**. Notas válidas aprovadas por revisão humana: **0**.",
         "",
         "## Mapas visuais (Obsidian Canvas)",
         "",
@@ -335,14 +351,15 @@ def main():
     (vault_dir / "00-Inicio" / "Home.md").write_text("\n".join(home_lines) + "\n", encoding="utf-8")
 
     (vault_dir / "README.md").write_text("\n".join([
-        "# Study Vault — Ledger 1M (78 Study Packs Completos)",
+        "# Pacotes de catálogo — Ledger 1M",
         "",
-        "Abra esta pasta no Obsidian. Comece por `00-Inicio/Home.md`.",
+        "Abra esta pasta no Obsidian para inspecionar a estrutura. Comece por `00-Inicio/Home.md`.",
         "",
-        f"Notas materializadas em packs: {total_notes}",
-        f"Study packs (100% dos subdomínios): {len(ALL_78_PACKS)}",
+        f"Arquivos de placeholder materializados: {total_notes}",
+        f"Packs mapeados na taxonomia: {len(ALL_78_PACKS)}",
+        "Notas editoriais validadas: 0 — revisão humana não executada.",
         "",
-        "Este vault consolida todos os 78 subdomínios da federação de 1 milhão de notas.",
+        "Este pacote não deve ser usado como contagem de notas válidas.",
     ]) + "\n", encoding="utf-8")
 
     # Canvas Geral e Canvas de Trilhas
@@ -433,12 +450,13 @@ def main():
 
     canvas_files = sorted(vault_dir.rglob("*.canvas"))
     audit_lines = [
-        "# Auditoria — Study Vault 1M Packs (78 Subdomínios Completos)",
+        "# Auditoria estrutural — pacotes de catálogo (78 subdomínios)",
         "",
         f"Gerado em: {now()}",
         "",
-        f"Study packs (subdomínios): {len(ALL_78_PACKS)}",
-        f"Notas de estudo nos packs: {total_notes}",
+        f"Packs materializados (subdomínios): {len(ALL_78_PACKS)}",
+        f"Arquivos de placeholder nos packs: {total_notes}",
+        "Notas válidas aprovadas por revisão humana: 0",
         f"Arquivos Markdown totais no vault: {len(md_files)}",
         f"MOCs (78 subdomínios + 7 domínios + Home): 86",
         f"Trilhas e Playbooks: {len(TRILHAS) + len(PLAYBOOKS)}",

@@ -1,0 +1,10 @@
+{
+  "batch_id": "curated-batch-000001",
+  "status": "ready_for_review",
+  "last_completed_index": 8,
+  "total": 8,
+  "automated_gate": "passed",
+  "human_review": "pending",
+  "valid_notes": 0,
+  "updated_at": "2026-10-01T22:28:06Z"
+}

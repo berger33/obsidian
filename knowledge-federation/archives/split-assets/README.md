@@ -1,11 +1,13 @@
-# Checksums e artefatos para download via GitHub
+# Checksums e artefatos históricos para download via GitHub
+
+> **Ressalva editorial:** os números abaixo descrevem artefatos e arquivos gerados do catálogo, não notas válidas. A auditoria atual identificou texto-template nos 1.000.000 registros virtuais do ledger. Estado atual em [`../../STATUS-CONSOLIDACAO-1M.md`](../../STATUS-CONSOLIDACAO-1M.md).
 
 Graças à otimização com compressão LZMA2 (`.tar.xz` e `.sqlite.xz`), os artefatos principais ficaram abaixo do limite de 100 MiB por arquivo do GitHub e agora residem diretamente em `knowledge-federation/archives/`:
 
-- `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`32M` — 1.007.100 notas materializadas: vault curado + 5.000 lotes)
-- `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` (`24M` — banco SQLite completo com 1.000.100 notas lógicas)
-- `knowledge-federation/archives/study-vault-1m-packs.zip` (`8.4M` — vault curado de 7.100 notas)
-- `knowledge-federation/archives/starter-vault-prioritario.zip` (`1.1M` — starter vault de 900 notas)
+- `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` (`34M` — arquivos de catálogo, packs, lotes e relatórios; não são notas validadas)
+- `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` (`24M` — checkpoint com 1.000.000 de registros virtuais e 100 físicos)
+- `knowledge-federation/archives/study-vault-1m-packs.zip` (`19M` — vault estrutural com 15.600 arquivos de nota derivados do catálogo)
+- `knowledge-federation/archives/starter-vault-prioritario.zip` (`1.1M` — starter vault de inspeção; arquivos não aprovados pelo gate atual)
 
 ## Validação e compatibilidade
 

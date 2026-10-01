@@ -28,7 +28,8 @@ validade: {row['validity']}
 risco_legal: {row['risk_legal']}
 risco_medico: {row['risk_medical']}
 conteudo_operacional: false
-status: materializada-do-checkpoint
+status: catalog-placeholder
+quality_status: catalog_only
 origem_lote: {lot_id}
 pack: {pack_slug}
 fontes: []
@@ -42,7 +43,7 @@ prefixo_virtual: {row['prefix']}
 {row['summary']}
 
 ## Por que importa
-Esta nota é um recorte materializado do ledger de 1 milhão de notas. Use como ponto de partida para estudo, decisão, backlog, curadoria e verificação com fontes primárias.
+Este arquivo é uma representação de catálogo derivada do ledger. O corpo substantivo não foi redigido nem validado; não conte como nota pronta para estudo ou decisão.
 
 ## Como funciona
 {row['body_seed']}
@@ -103,7 +104,17 @@ def main():
     ap.add_argument("--per-lot", type=int, default=PER_LOT)
     ap.add_argument("--start-lot", type=int, default=1, help="Número 1-based do primeiro lote lógico")
     ap.add_argument("--report", default=None, help="Caminho do relatório; default: exports/reports/lotes-<inicio>-<fim>-report.md")
+    ap.add_argument(
+        "--allow-catalog-stubs", action="store_true",
+        help="Gera arquivos-placeholder de catálogo para recuperação/inspeção; não são notas válidas.",
+    )
     args = ap.parse_args()
+    if not args.allow_catalog_stubs:
+        raise SystemExit(
+            "Geração de lotes a partir de registros-template bloqueada por padrão. "
+            "Use --allow-catalog-stubs apenas para inspeção; isso não cria notas válidas."
+        )
+    print("Aviso: os arquivos gerados serão catalog-placeholder e não contarão como notas válidas.")
     db = cached_sqlite_from_archive()
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
@@ -135,7 +146,9 @@ def main():
         "",
         f"Gerado em: {now()}",
         "",
-        "Este vault zipado contém 100 lotes novos, derivados do checkpoint ledger-first de 1 milhão de notas. Ele foi gerado diretamente para zip para evitar criar dezenas de milhares de arquivos ativos no workspace.",
+        "> Este zip contém arquivos-placeholder de catálogo, não notas válidas. Eles foram materializados do checkpoint sem redação substantiva ou revisão humana.",
+        "",
+        "Os totais desta execução representam arquivos e IDs. Não os use como contagem de conteúdo validado.",
         "",
         "## Índice de lotes",
         "",
@@ -145,12 +158,12 @@ def main():
         for idx, lot in enumerate(plan):
             rows = rows_for(con, lot["domain"], lot["subdomain"], lot["limit"], lot["offset"])
             if len(rows) != lot["limit"]:
-                raise SystemExit(f"Lote incompleto: {lot} -> {len(rows)} notas")
+                raise SystemExit(f"Lote incompleto: {lot} -> {len(rows)} registros de catálogo")
             if lot["domain"] in REGULATED:
                 regulated_lots += 1
             pack_base = f"10-Lotes/{lot['pack_slug']}"
             moc_path = f"00-Mapas/MOC-{lot['pack_slug']}.md"
-            home_lines.append(f"- [[MOC-{lot['pack_slug']}]] — {lot['title']} ({len(rows)} notas; offset {lot['offset']})")
+            home_lines.append(f"- [[MOC-{lot['pack_slug']}]] — {lot['title']} ({len(rows)} arquivos-placeholder; offset {lot['offset']})")
             moc = [
                 "---",
                 "tipo: moc",
@@ -166,7 +179,9 @@ def main():
                 f"Domínio: `{lot['domain']}`",
                 f"Subdomínio: `{lot['subdomain']}`",
                 f"Offset no ledger: `{lot['offset']}`",
-                f"Notas: **{len(rows)}**",
+                "> MOC de navegação apenas; a lista não valida nem aprova o conteúdo.",
+                "",
+                f"Arquivos-placeholder: **{len(rows)}**",
                 "",
             ]
             if lot["domain"] in REGULATED:
@@ -175,7 +190,7 @@ def main():
                     "> Este lote é educacional, documental e não operacional. Use para estudo, perguntas qualificadas e conversa com profissionais habilitados.",
                     "",
                 ]
-            moc += ["## Notas", ""]
+            moc += ["## Arquivos-placeholder de catálogo", ""]
             for j, row in enumerate(rows):
                 related = rows[j+1:j+6] + rows[:max(0, 5-len(rows[j+1:j+6]))]
                 note_rel = f"{pack_base}/{row['domain']}/{row['subdomain']}/{row['slug']}.md"
@@ -185,7 +200,7 @@ def main():
                 total_links += len(related[:5])
             z.writestr(moc_path, "\n".join(moc) + "\n")
             total_links += len(rows)
-            manifest.append({**lot, "notes": len(rows), "moc": moc_path, "path": pack_base})
+            manifest.append({**lot, "catalog_placeholder_files": len(rows), "moc": moc_path, "path": pack_base})
             nid = f"lot-{idx+1:03d}"
             canvas_nodes.append({"id": nid, "type": "file", "file": moc_path, "x": ((idx % 5)-2)*480, "y": 260+(idx//5)*220, "width": 420, "height": 130, "color": str((idx % 6)+1)})
             canvas_edges.append({"id": f"e-{idx+1:03d}", "fromNode": "home", "toNode": nid})
@@ -195,7 +210,8 @@ def main():
             "## Resumo",
             "",
             f"- Lotes: **{len(plan)}**",
-            f"- Notas: **{total_notes}**",
+            f"- Arquivos-placeholder: **{total_notes}**",
+            "- Notas válidas aprovadas por revisão humana: **0**",
             f"- Lotes em domínios regulados: **{regulated_lots}**",
             "- Conteúdo operacional em domínios regulados: **0 por política de geração**",
             "",
@@ -212,7 +228,8 @@ def main():
             f"Gerado em: {now()}",
             "",
             f"Lotes: {len(plan)}",
-            f"Notas materializadas: {total_notes}",
+            f"Arquivos-placeholder materializados: {total_notes}",
+            "Notas válidas aprovadas por revisão humana: 0",
             "MOCs: 100",
             "Canvas: 1",
             f"Links wiki estimados/analisados por construção: {total_links + len(plan)}",
@@ -222,14 +239,16 @@ def main():
             "",
         ]))
         z.writestr("README.md", "\n".join([
-            f"# Study Vault — Lotes {args.start_lot} a {args.start_lot + args.lots - 1}",
+            f"# Recorte de catálogo — Lotes {args.start_lot} a {args.start_lot + args.lots - 1}",
             "",
-            "Abra como vault no Obsidian e comece por `00-Inicio/Home.md`.",
+            "Abra como vault no Obsidian para inspeção e comece por `00-Inicio/Home.md`.",
+            "Estes arquivos são placeholders do ledger, não notas válidas.",
             "",
-            f"Notas: {total_notes}",
+            f"Arquivos-placeholder: {total_notes}",
             f"Lotes: {len(plan)}",
+            "Notas editoriais aprovadas: 0",
             "",
-            "Gerado diretamente do checkpoint ledger-first para preservar escala sem criar milhares de arquivos ativos no workspace.",
+            "Gerado do checkpoint ledger-first; a materialização não atesta qualidade nem validade factual.",
         ]) + "\n")
 
     report_path = Path(args.report) if args.report else ROOT / "exports" / "reports" / f"lotes-{args.start_lot:03d}-{args.start_lot + args.lots - 1:03d}-report.md"
@@ -247,23 +266,23 @@ def main():
         f"Arquivo: `{out_zip.resolve().relative_to(ROOT.resolve()).as_posix()}`",
         f"Tamanho: {out_zip.stat().st_size / 1024 / 1024:.1f}M",
         f"Lotes: **{len(plan)}**",
-        f"Notas por lote: **{args.per_lot}**",
-        f"Notas totais: **{total_notes}**",
+        f"Arquivos-placeholder por lote: **{args.per_lot}**",
+        f"Arquivos-placeholder totais: **{total_notes}**",
         f"Lotes em domínios regulados: **{regulated_lots}**",
         "Conteúdo operacional regulado: **0**",
         "",
         "## Lotes",
         "",
-        "| # | Lote | Domínio | Subdomínio | Offset | Notas |",
+        "| # | Lote | Domínio | Subdomínio | Offset | Arquivos-placeholder |",
         "|---:|---|---|---|---:|---:|",
     ]
     for i, lot in enumerate(manifest, 1):
-        lines.append(f"| {i} | `{lot['lot_id']}` | `{lot['domain']}` | `{lot['subdomain']}` | {lot['offset']} | {lot['notes']} |")
+        lines.append(f"| {i} | `{lot['lot_id']}` | `{lot['domain']}` | `{lot['subdomain']}` | {lot['offset']} | {lot['catalog_placeholder_files']} |")
     report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(out_zip)
     print(report_path)
-    print(f"lots={len(plan)} notes={total_notes} regulated_lots={regulated_lots} size={out_zip.stat().st_size}")
+    print(f"lots={len(plan)} catalog_placeholder_files={total_notes} regulated_lots={regulated_lots} size={out_zip.stat().st_size}")
 
 if __name__ == "__main__":
     main()

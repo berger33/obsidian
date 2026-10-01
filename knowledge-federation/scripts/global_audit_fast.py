@@ -7,6 +7,9 @@ def main():
     con = connect()
     total = con.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
     deep = con.execute("SELECT COUNT(*) FROM notes WHERE status='deep'").fetchone()[0]
+    note_quality_ready = con.execute("SELECT COUNT(*) FROM notes WHERE quality_status='ready_for_review'").fetchone()[0]
+    note_quality_reviewed = con.execute("SELECT COUNT(*) FROM notes WHERE quality_status='reviewed'").fetchone()[0]
+    note_quality_needs_review = con.execute("SELECT COUNT(*) FROM notes WHERE quality_status='needs_review'").fetchone()[0]
     try:
         virtual_total = con.execute("SELECT COUNT(*) FROM virtual_notes").fetchone()[0]
         virtual_materialized = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE materialized_path IS NOT NULL").fetchone()[0]
@@ -14,8 +17,17 @@ def main():
         virtual_by_sub = con.execute("SELECT domain, subdomain, COUNT(*) c FROM virtual_notes GROUP BY domain, subdomain ORDER BY c DESC LIMIT 100").fetchall()
         virtual_dup_slug = con.execute("SELECT prefix, slug, COUNT(*) c FROM virtual_notes GROUP BY prefix, slug HAVING c > 1 LIMIT 200").fetchall()
         virtual_regulated_operational = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE domain IN ('cannabis-medicinal','micologia') AND operational_content != 0").fetchone()[0]
+        virtual_columns = {r[1] for r in con.execute("PRAGMA table_info(virtual_notes)")}
+        if "quality_status" in virtual_columns:
+            virtual_quality_ready = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE quality_status='ready_for_review'").fetchone()[0]
+            virtual_quality_reviewed = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE quality_status='reviewed'").fetchone()[0]
+            virtual_quality_catalog = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE quality_status='catalog_only'").fetchone()[0]
+            virtual_quality_needs_review = con.execute("SELECT COUNT(*) FROM virtual_notes WHERE quality_status='needs_review'").fetchone()[0]
+        else:
+            virtual_quality_ready = virtual_quality_reviewed = virtual_quality_catalog = virtual_quality_needs_review = 0
     except Exception:
         virtual_total = 0; virtual_materialized = 0; virtual_by_domain = []; virtual_by_sub = []; virtual_dup_slug = []; virtual_regulated_operational = 0
+        virtual_quality_ready = virtual_quality_reviewed = virtual_quality_catalog = virtual_quality_needs_review = 0
     batches = con.execute("SELECT status, COUNT(*) c FROM batches GROUP BY status ORDER BY status").fetchall()
     by_domain = con.execute("SELECT domain, COUNT(*) c FROM notes GROUP BY domain ORDER BY c DESC").fetchall()
     by_vault = con.execute("SELECT vault, COUNT(*) c FROM notes GROUP BY vault ORDER BY vault").fetchall()
@@ -34,10 +46,12 @@ def main():
         f"Atualizado em: {now()}",
         "",
         f"- Notas físicas registradas no SQLite: {total}",
-        f"- Notas virtuais registradas no SQLite: {virtual_total}",
-        f"- Notas virtuais materializadas: {virtual_materialized}",
-        f"- Total lógico (físicas + virtuais): {total + virtual_total}",
+        f"- Registros virtuais de catálogo no SQLite (não equivalem a notas validadas): {virtual_total}",
+        f"- Registros virtuais com caminho de materialização: {virtual_materialized} (materialização não é validação editorial)",
+        f"- Total de registros no inventário (físicos + virtuais): {total + virtual_total}",
         f"- Notas profundas físicas: {deep}",
+        f"- Notas físicas prontas para revisão / revisadas / pendentes: {note_quality_ready} / {note_quality_reviewed} / {note_quality_needs_review}",
+        f"- Registros virtuais catalog_only / prontos para revisão / revisados / pendentes: {virtual_quality_catalog} / {virtual_quality_ready} / {virtual_quality_reviewed} / {virtual_quality_needs_review}",
         "- Lotes por status: " + ", ".join(f"{b['status']}={b['c']}" for b in batches),
         f"- Arquivos Markdown ativos em domains/: {active_files}",
         f"- Archives de domains existentes: {len(archives)}",
