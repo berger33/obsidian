@@ -66,6 +66,12 @@ knowledge-federation/archives/reconstructed/
 
 ## Copiar para o cofre Obsidian
 
+Guia simples:
+
+```text
+knowledge-federation/COMO-COPIAR-PARA-O-COFRE-OBSIDIAN.md
+```
+
 Depois de reconstruir e extrair:
 
 ```bash
@@ -83,3 +89,13 @@ Ou copie lotes específicos de:
 ```text
 MERGE-COMPLETO/10-lotes/
 ```
+
+## Opção leve
+
+Para começar sem extrair o merge completo, use:
+
+```text
+knowledge-federation/archives/starter-vault-prioritario.zip
+```
+
+Ele contém 900 notas prioritárias sobre IA, RAG, backend, vibe coding/orquestração e MVP.

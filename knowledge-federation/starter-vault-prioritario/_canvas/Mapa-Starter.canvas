@@ -1,0 +1,91 @@
+{
+  "nodes": [
+    {
+      "id": "home",
+      "type": "file",
+      "file": "00-Inicio/Home.md",
+      "x": 0,
+      "y": 0,
+      "width": 420,
+      "height": 160,
+      "color": "1"
+    },
+    {
+      "id": "pack-0",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-agentes.md",
+      "x": -920,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "pack-1",
+      "type": "file",
+      "file": "00-Mapas/MOC-ia-rag.md",
+      "x": -460,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "2"
+    },
+    {
+      "id": "pack-2",
+      "type": "file",
+      "file": "00-Mapas/MOC-software-backend.md",
+      "x": 0,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "pack-3",
+      "type": "file",
+      "file": "00-Mapas/MOC-vibe-coding-orquestracao.md",
+      "x": 460,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "4"
+    },
+    {
+      "id": "pack-4",
+      "type": "file",
+      "file": "00-Mapas/MOC-negocio-mvp.md",
+      "x": 920,
+      "y": 280,
+      "width": 420,
+      "height": 130,
+      "color": "5"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-0",
+      "fromNode": "home",
+      "toNode": "pack-0"
+    },
+    {
+      "id": "e-1",
+      "fromNode": "home",
+      "toNode": "pack-1"
+    },
+    {
+      "id": "e-2",
+      "fromNode": "home",
+      "toNode": "pack-2"
+    },
+    {
+      "id": "e-3",
+      "fromNode": "home",
+      "toNode": "pack-3"
+    },
+    {
+      "id": "e-4",
+      "fromNode": "home",
+      "toNode": "pack-4"
+    }
+  ]
+}
