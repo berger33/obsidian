@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 249 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 249 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 240 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 349 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 349 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 340 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -309,6 +309,127 @@
 - [[docker-cache-reproducibilidade-build]] — Docker: testar cache sem depender dele para correção.
 - [[docker-image-sbom-provenance-release]] — Docker: associar imagem publicada a versão e proveniência.
 
+## Tranche 9 — frameworks, protocolos e infraestrutura de teste (100 notas)
+
+### Cypress
+- [[cypress-test-isolation-indexeddb]] — Cypress: entender o alcance do test isolation.
+- [[cypress-query-retry-sem-repetir-efeitos]] — Cypress: distinguir retryability de queries e efeitos.
+- [[cypress-intercept-browser-vs-cy-request]] — Cypress: cy.intercept observa tráfego do app, não cy.request.
+- [[cypress-register-intercept-before-trigger]] — Cypress: registrar intercept antes da ação que dispara a rede.
+- [[cypress-stub-versus-real-server-coverage]] — Cypress: equilibrar stubs de rede e fluxo com servidor real.
+- [[cypress-session-cache-validacao]] — Cypress: validar uma sessão restaurada por cy.session.
+- [[cypress-cross-origin-cy-origin]] — Cypress: cruzar origens com cy.origin no mesmo teste.
+- [[cypress-clock-timers-date]] — Cypress: controlar relógio sem mascarar espera externa.
+- [[cypress-component-testing-boundary]] — Cypress: separar component testing de cobertura end-to-end.
+- [[cypress-test-retries-diagnostico]] — Cypress: interpretar test retries como sinal de flakiness.
+
+### Pact
+- [[pact-consumer-request-as-sent]] — Pact: capturar a requisição que o cliente realmente envia.
+- [[pact-matchers-consumer-relevant]] — Pact: escolher matchers por relevância para o consumidor.
+- [[pact-not-functional-provider-test]] — Pact: não usar contrato como teste funcional do provider.
+- [[pact-provider-verify-local-instance]] — Pact: verificar contracts contra instância local do provider.
+- [[pact-provider-state-setup-per-interaction]] — Pact: preparar provider states determinísticos por interação.
+- [[pact-provider-state-false-positive-params]] — Pact: evitar falso positivo por parâmetro de busca ignorado.
+- [[pact-stub-below-request-validation]] — Pact: manter stubs abaixo da validação do request.
+- [[pact-publish-version-verification-matrix]] — Pact: publicar versões e resultados para compatibilidade.
+- [[pact-can-i-deploy-environment-context]] — Pact: testar can-i-deploy contra o ambiente real de destino.
+- [[pact-webhook-provider-verification-feedback]] — Pact: tratar webhook como gatilho, não resultado de verificação.
+
+### PostgreSQL
+- [[postgresql-read-committed-snapshot-por-statement]] — PostgreSQL: testar snapshots no READ COMMITTED.
+- [[postgresql-serializable-retry-serialization-failure]] — PostgreSQL: repetir transação após serialization failure.
+- [[postgresql-mvcc-concurrent-read-write]] — PostgreSQL: testar visibilidade MVCC entre conexões.
+- [[postgresql-unique-constraint-concorrencia]] — PostgreSQL: validar unicidade sob inserções concorrentes.
+- [[postgresql-row-lock-skip-locked-queue]] — PostgreSQL: testar filas com FOR UPDATE SKIP LOCKED.
+- [[postgresql-deadlock-sqlstate-retry]] — PostgreSQL: reproduzir deadlock e repetir operação inteira.
+- [[postgresql-explain-analyze-execucao-side-effects]] — PostgreSQL: tratar EXPLAIN ANALYZE como execução.
+- [[postgresql-sequence-valores-nao-gapless]] — PostgreSQL: não testar sequences como contador sem lacunas.
+- [[postgresql-timestamptz-session-timezone]] — PostgreSQL: testar timestamptz com timezone explícito.
+- [[postgresql-sqlstate-assertion-errors]] — PostgreSQL: afirmar SQLSTATE em vez de texto de erro.
+
+### GraphQL
+- [[graphql-validation-before-resolvers]] — GraphQL: validar operações antes de executar resolvers.
+- [[graphql-variable-omitted-null-default]] — GraphQL: distinguir variável omitida de null explícito.
+- [[graphql-non-null-null-propagation]] — GraphQL: testar propagação de null em campos non-null.
+- [[graphql-partial-data-errors-path]] — GraphQL: aceitar data parcial quando um resolver falha.
+- [[graphql-alias-fragment-response-shape]] — GraphQL: testar aliases e fragments pela forma da resposta.
+- [[graphql-pagination-cursor-invariants]] — GraphQL: validar invariantes da paginação por cursor.
+- [[graphql-dataloader-request-scope]] — GraphQL: testar batching sem compartilhar cache entre usuários.
+- [[graphql-authorization-resolver-context]] — GraphQL: verificar autorização no caminho de execução.
+- [[graphql-cache-control-private-identities]] — GraphQL: testar cache em respostas autenticadas.
+- [[graphql-schema-change-compatibility]] — GraphQL: revisar mudanças de schema com operações consumidoras.
+
+### Apple XCTest
+- [[xctest-async-await-test-method]] — XCTest: usar async/await em testes assíncronos Swift.
+- [[xctest-expectation-fulfillment-count]] — XCTest: controlar fulfillment e over-fulfillment de expectations.
+- [[xctest-waiter-group-timeout]] — XCTest: aguardar grupo de expectativas com resultado explícito.
+- [[xctest-ui-accessibility-identifiers]] — XCTest UI tests: selecionar controles por identificadores estáveis.
+- [[xctest-app-launch-arguments-environment]] — XCTest UI tests: configurar o app por launch arguments.
+- [[xctest-plans-matrix-configurations]] — Xcode test plans: variar configurações de execução intencionalmente.
+- [[xctest-signpost-performance-metric]] — XCTest: medir intervalo instrumentado com signpost metric.
+- [[xctest-order-independent-state-reset]] — XCTest: não depender da ordem dos métodos de teste.
+- [[xctest-locale-device-configuration]] — XCTest: cobrir locale e device sem depender do simulador anterior.
+- [[xctest-ui-wait-for-condition-not-sleep]] — XCTest UI tests: aguardar condição da interface, não sleep.
+
+### Kubernetes
+- [[kubernetes-job-completion-backoff]] — Kubernetes Job: testar conclusão e retries do controller.
+- [[kubernetes-cronjob-no-exactly-once]] — Kubernetes CronJob: testar execução idempotente, não exactly-once.
+- [[kubernetes-deployment-rollout-observed-state]] — Kubernetes Deployment: aguardar rollout e validar aplicação.
+- [[kubernetes-networkpolicy-plugin-enforcement-test]] — Kubernetes NetworkPolicy: testar enforcement do plugin de rede.
+- [[kubernetes-rbac-auth-can-i-identity]] — Kubernetes RBAC: verificar permissão com identidade e escopo.
+- [[kubernetes-pdb-voluntary-disruption-test]] — Kubernetes PDB: limitar disrupção voluntária em teste controlado.
+- [[kubernetes-hpa-eventual-convergence]] — Kubernetes HPA: testar convergência eventual de réplicas.
+- [[kubernetes-configmap-env-vs-volume]] — Kubernetes ConfigMap: testar atualização por env e por volume.
+- [[kubernetes-namespace-cleanup-isolation]] — Kubernetes: isolar testes de cluster por namespace descartável.
+- [[kubernetes-service-endpoints-readiness]] — Kubernetes Service: testar endpoints prontos sem fixar IP de Pod.
+
+### OpenTelemetry
+- [[otel-inmemory-span-exporter-assertions]] — OpenTelemetry: inspecionar spans com exporter em memória.
+- [[otel-span-error-status-exception]] — OpenTelemetry: testar exceção e status de span separadamente.
+- [[otel-context-propagation-async-boundary]] — OpenTelemetry: preservar contexto em fronteira assíncrona.
+- [[otel-resource-scope-instrumentation-identity]] — OpenTelemetry: distinguir resource de instrumentation scope.
+- [[otel-inmemory-metrics-reader-aggregation]] — OpenTelemetry: testar agregação de métricas em memória.
+- [[otel-histogram-buckets-boundaries]] — OpenTelemetry: testar histograma por limites e distribuição.
+- [[otel-log-trace-correlation-context]] — OpenTelemetry: verificar correlação de logs com trace ativo.
+- [[otel-cardinality-views-attribute-control]] — OpenTelemetry: testar cardinalidade e views de métricas.
+- [[otel-test-provider-exporter-lifecycle]] — OpenTelemetry: isolar exporter e provider entre testes.
+- [[otel-semconv-versioned-attributes]] — OpenTelemetry: versionar assertions de semantic conventions.
+
+### pytest
+- [[pytest-tmp-path-per-test-files]] — pytest: usar tmp_path para arquivos isolados por teste.
+- [[pytest-tmp-path-factory-session-data]] — pytest: reservar tmp_path_factory para artefato caro compartilhado.
+- [[pytest-yield-fixture-teardown-order]] — pytest: ordenar teardown de fixtures dependentes.
+- [[pytest-fixture-scope-isolation]] — pytest: alinhar escopo de fixture ao ciclo de vida do recurso.
+- [[pytest-parametrize-ids-values-reference]] — pytest: nomear parâmetros e proteger dados mutáveis.
+- [[pytest-indirect-param-fixture-setup]] — pytest: usar indirect parametrization para setup configurável.
+- [[pytest-autouse-fixture-hidden-side-effects]] — pytest: limitar efeitos ocultos de fixtures autouse.
+- [[pytest-unittest-fixture-injection-limit]] — pytest: entender limites de fixtures em unittest.TestCase.
+- [[pytest-monkeypatch-env-teardown]] — pytest: escopar monkeypatch de ambiente e dependências.
+- [[pytest-xfail-strict-expected-failure]] — pytest: ativar strict para xfail não mascarar regressão.
+
+### GitLab CI
+- [[gitlab-rules-avoid-duplicate-pipelines]] — GitLab CI: testar rules para evitar pipelines duplicados.
+- [[gitlab-merge-request-rules-main-config]] — GitLab CI: garantir que configuração principal habilita MR pipeline.
+- [[gitlab-child-pipeline-source-parent-pipeline]] — GitLab CI: reconhecer CI_PIPELINE_SOURCE em child pipeline.
+- [[gitlab-trigger-strategy-propagate-result]] — GitLab CI: propagar resultado do downstream ao pipeline pai.
+- [[gitlab-needs-artifacts-explicit-dependency]] — GitLab CI: verificar que jobs recebem artifacts necessários.
+- [[gitlab-cache-not-artifact]] — GitLab CI: não usar cache como evidência de build.
+- [[gitlab-resource-group-serialize-deploy]] — GitLab CI: serializar deploys com resource_group.
+- [[gitlab-rules-changes-path-coverage]] — GitLab CI: testar path rules para não pular validação compartilhada.
+- [[gitlab-protected-variables-untrusted-pipeline]] — GitLab CI: evitar secrets em pipeline não confiável.
+- [[gitlab-parallel-matrix-coverage]] — GitLab CI: validar combinações realmente cobertas por parallel matrix.
+
+### Spring Boot
+- [[spring-webmvctest-vs-springboottest]] — Spring Boot: escolher @WebMvcTest ou @SpringBootTest.
+- [[spring-mockmvc-vs-random-port]] — Spring Boot: distinguir MockMvc de servidor em porta aleatória.
+- [[spring-datajpatest-database-boundary]] — Spring Boot: delimitar @DataJpaTest e o banco usado.
+- [[spring-testcontext-cache-dirties-context]] — Spring TestContext: controlar estado em ApplicationContext cacheado.
+- [[spring-transactional-test-real-server-threads]] — Spring Boot: não presumir rollback do cliente em RANDOM_PORT.
+- [[spring-testresttemplate-status-assertions]] — Spring Boot: afirmar status com TestRestTemplate explicitamente.
+- [[spring-restclient-test-slice-mockserver]] — Spring Boot: usar @RestClientTest para cliente HTTP.
+- [[spring-active-profiles-test-configuration]] — Spring Boot: declarar perfil de teste sem depender do ambiente local.
+- [[spring-webtestclient-mock-vs-server]] — Spring Boot: testar WebTestClient em mock e servidor.
+- [[spring-graphql-test-slice-boundary]] — Spring Boot: delimitar @GraphQlTest e integração GraphQL.
 ## Estado editorial
 
-O gate automatizado foi aprovado por 249/249 notas e as 249 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 240 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (249 notas substantivas; 1.751 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), da [tranche 4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), da [tranche 5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), da [tranche 6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), da [tranche 7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md) e da [tranche 8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), e o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 349/349 notas e as 349 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 340 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (349 notas substantivas; 1.651 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md) e a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md) e [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

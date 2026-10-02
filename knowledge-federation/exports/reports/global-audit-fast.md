@@ -1,16 +1,18 @@
-# Auditoria Global Rápida — snapshot legado de inventário
+# Auditoria Global Rápida
 
-Atualizado em: 2026-10-01T12:24:13
+Atualizado em: 2026-10-02T03:17:54
 
-> Este relatório antigo mede entradas e estrutura, não qualidade editorial. A auditoria de conteúdo mais recente está em [`note-quality-audit.md`](note-quality-audit.md): foram detectados marcadores de template nos 1.000.000 registros virtuais e nenhuma nota com revisão humana registrada.
+> **Escopo:** o `registry/knowledge.sqlite` está sem registros físicos ou virtuais nesta execução. Esses zeros descrevem somente o banco local, não a presença de conteúdo nos arquivos; use a [auditoria de qualidade por arquivos](note-quality-audit.md) para a contagem editorial.
 
-- Notas físicas registradas no SQLite: 100
-- Registros virtuais de catálogo no SQLite (não equivalem a notas validadas): 1000000
-- Registros virtuais com caminho de materialização (não é validação editorial): 8000
-- Total de registros no inventário (físicos + virtuais): 1000100
+- Notas físicas registradas no SQLite: 0
+- Registros virtuais de catálogo no SQLite (não equivalem a notas validadas): 0
+- Registros virtuais com caminho de materialização: 0 (materialização não é validação editorial)
+- Total de registros no inventário (físicos + virtuais): 0
 - Notas profundas físicas: 0
-- Lotes por status: complete=1, planned=2017
-- Arquivos Markdown ativos em domains/: 100
+- Notas físicas prontas para revisão / revisadas / pendentes: 0 / 0 / 0
+- Registros virtuais catalog_only / prontos para revisão / revisados / pendentes: 0 / 0 / 0 / 0
+- Lotes por status: nenhum lote registrado no SQLite
+- Arquivos Markdown ativos em domains/: 489
 - Archives de domains existentes: 0
 - Slugs duplicados por vault: 0
 - Títulos duplicados por domínio/subdomínio: 0
@@ -20,106 +22,22 @@ Atualizado em: 2026-10-01T12:24:13
 
 ## Contagem por domínio — notas físicas
 
-- software: 100
+Nenhuma.
 
 ## Contagem por domínio — notas virtuais
 
-- software: 205156
-- ia: 153844
-- jogos: 153840
-- cannabis-medicinal: 141020
-- vibe-coding: 128200
-- micologia: 115380
-- negocio-carreira-produto: 102560
+Nenhuma.
 
 ## Contagem por vault
 
-- software-0001: 100
 
 ## Top subdomínios — notas físicas
 
-- software/fundamentos: 100
+Nenhum.
 
 ## Top subdomínios — notas virtuais
 
-- software/arquitetura: 12824
-- software/backend: 12824
-- software/frontend: 12824
-- software/fundamentos: 12824
-- software/desktop: 12823
-- software/mobile: 12823
-- software/dados: 12822
-- software/devops: 12822
-- software/seguranca: 12822
-- software/testes: 12822
-- ia/agentes: 12821
-- ia/fundamentos: 12821
-- ia/llms: 12821
-- ia/rag: 12821
-- software/apis: 12821
-- software/automacao: 12821
-- software/jogos: 12821
-- software/low-code: 12821
-- software/produto: 12821
-- software/sistemas-empresariais: 12821
-- cannabis-medicinal/botanica-geral: 12820
-- cannabis-medicinal/canabinoides: 12820
-- cannabis-medicinal/estudos-clinicos: 12820
-- cannabis-medicinal/farmacologia: 12820
-- cannabis-medicinal/formas-de-uso-legais: 12820
-- cannabis-medicinal/glossario: 12820
-- cannabis-medicinal/legal-regulatorio: 12820
-- cannabis-medicinal/paciente-documentacao: 12820
-- cannabis-medicinal/qualidade-e-rastreabilidade: 12820
-- cannabis-medicinal/riscos-e-interacoes: 12820
-- cannabis-medicinal/terpenos: 12820
-- ia/avaliacao: 12820
-- ia/custos: 12820
-- ia/ferramentas: 12820
-- ia/fine-tuning: 12820
-- ia/mlops: 12820
-- ia/modelos-locais: 12820
-- ia/multimodal: 12820
-- ia/seguranca: 12820
-- jogos/2d: 12820
-- jogos/3d: 12820
-- jogos/arte: 12820
-- jogos/audio: 12820
-- jogos/engines: 12820
-- jogos/game-design: 12820
-- jogos/level-design: 12820
-- jogos/live-ops: 12820
-- jogos/mmo: 12820
-- jogos/netcode: 12820
-- jogos/publicacao: 12820
-- jogos/ui-ux: 12820
-- micologia/cogumelos-comestiveis-legais: 12820
-- micologia/cogumelos-medicinais-legais: 12820
-- micologia/ecologia: 12820
-- micologia/fundamentos: 12820
-- micologia/glossario: 12820
-- micologia/psilocibina-pesquisa-clinica: 12820
-- micologia/psilocybe-historia-taxonomia-legislacao: 12820
-- micologia/riscos-e-reducao-de-danos: 12820
-- micologia/taxonomia: 12820
-- negocio-carreira-produto/carreira: 12820
-- negocio-carreira-produto/distribuicao: 12820
-- negocio-carreira-produto/mercado: 12820
-- negocio-carreira-produto/monetizacao: 12820
-- negocio-carreira-produto/mvp: 12820
-- negocio-carreira-produto/portfolio: 12820
-- negocio-carreira-produto/produto: 12820
-- negocio-carreira-produto/validacao: 12820
-- vibe-coding/conceitos: 12820
-- vibe-coding/context-engineering: 12820
-- vibe-coding/estudos: 12820
-- vibe-coding/ferramentas: 12820
-- vibe-coding/orquestracao: 12820
-- vibe-coding/prompts: 12820
-- vibe-coding/qualidade: 12820
-- vibe-coding/riscos: 12820
-- vibe-coding/spec-driven-dev: 12820
-- vibe-coding/workflows: 12820
+Nenhum.
 
 ## Duplicatas de slug
 

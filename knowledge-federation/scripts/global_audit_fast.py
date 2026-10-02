@@ -40,11 +40,18 @@ def main():
     if domains_dir.exists():
         active_files = sum(1 for p in domains_dir.rglob("*.md"))
     archives = sorted((ROOT / "archives").glob("domains-*.tar.xz"))
+    registry_scope_note = []
+    if total == 0 and virtual_total == 0:
+        registry_scope_note = [
+            "> **Escopo:** o `registry/knowledge.sqlite` está sem registros físicos ou virtuais nesta execução. Esses zeros descrevem somente o banco local, não a presença de conteúdo nos arquivos; use a [auditoria de qualidade por arquivos](note-quality-audit.md) para a contagem editorial.",
+            "",
+        ]
     report = [
         "# Auditoria Global Rápida",
         "",
         f"Atualizado em: {now()}",
         "",
+        *registry_scope_note,
         f"- Notas físicas registradas no SQLite: {total}",
         f"- Registros virtuais de catálogo no SQLite (não equivalem a notas validadas): {virtual_total}",
         f"- Registros virtuais com caminho de materialização: {virtual_materialized} (materialização não é validação editorial)",
@@ -52,7 +59,7 @@ def main():
         f"- Notas profundas físicas: {deep}",
         f"- Notas físicas prontas para revisão / revisadas / pendentes: {note_quality_ready} / {note_quality_reviewed} / {note_quality_needs_review}",
         f"- Registros virtuais catalog_only / prontos para revisão / revisados / pendentes: {virtual_quality_catalog} / {virtual_quality_ready} / {virtual_quality_reviewed} / {virtual_quality_needs_review}",
-        "- Lotes por status: " + ", ".join(f"{b['status']}={b['c']}" for b in batches),
+        "- Lotes por status: " + (", ".join(f"{b['status']}={b['c']}" for b in batches) or "nenhum lote registrado no SQLite"),
         f"- Arquivos Markdown ativos em domains/: {active_files}",
         f"- Archives de domains existentes: {len(archives)}",
         f"- Slugs duplicados por vault: {len(dup_slug)}",

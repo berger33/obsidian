@@ -6,7 +6,7 @@ Atualizado em 2026-10-02. A meta ativa é **500 lotes × 2.000 notas substantiva
 
 Os artefatos massivos permanecem como arquivos históricos compactados e não precisam ser recriados para continuar. O checkpoint legado contém 1.000.000 de registros virtuais, 8.000 caminhos marcados como materializados e 100 registros físicos iniciais. Os registros virtuais têm texto-template e os arquivos legados têm pendências; não contam como notas válidas.
 
-No diretório ativo `knowledge-federation/domains/` há 389 arquivos: 100 legados com pendências e 289 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 240 revisões por IA). O lote `software-testes-2000-0001` tem 249/2.000 notas válidas (9 humanas + 240 IA), com status `in_progress`. As notas 150–249 passaram pelo gate e têm relatório de revisão factual por IA da [tranche 8](exports/reports/ai-review-software-testes-2000-0001-tranche-08.md).
+No diretório ativo `knowledge-federation/domains/` há 489 arquivos: 100 legados com pendências e 389 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 340 revisões por IA). O lote `software-testes-2000-0001` tem 349/2.000 notas válidas (9 humanas + 340 IA), com status `in_progress`. As notas 250–349 passaram pelo gate e têm relatório de revisão factual por IA da [tranche 9](exports/reports/ai-review-software-testes-2000-0001-tranche-09.md); a tranche 8 cobre as notas 150–249.
 
 ## Decisão técnica e estados
 
@@ -35,7 +35,7 @@ python3 knowledge-federation/scripts/audit_note_quality.py \
 
 ## Próximo ciclo
 
-1. Continuar o lote atual em tranches de conteúdo real; faltam 1.751 notas qualificadas para completar as 2.000 configuradas.
+1. Continuar o lote atual em tranches de conteúdo real; faltam 1.651 notas qualificadas para completar as 2.000 configuradas.
 2. Consultar fontes específicas, revisar afirmações e registrar relatório factual por IA antes de contar cada nota nova.
 3. Auditar gate, fontes, links e duplicatas; atualizar manifesto, índice, fila e métricas.
 4. Abrir os 499 lotes seguintes de 2.000 notas somente após concluir o lote atual.

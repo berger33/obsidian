@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **249 / 2.000 (12,45%)**
-- Gate automatizado: **249/249 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
-- Revisão factual humana: **9/249**
-- Revisão factual por IA: **240/249**
-- Contabilizadas como válidas: **249/249**
+- Notas efetivamente redigidas até agora: **349 / 2.000 (17,45%)**
+- Gate automatizado: **349/349 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Revisão factual humana: **9/349**
+- Revisão factual por IA: **340/349**
+- Contabilizadas como válidas: **349/349**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 240 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–8 (240 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 340 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–9 (340 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do lote: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md) e [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md)
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md) e [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 249 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.751 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 349 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.651 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -292,6 +292,137 @@
 248. [Docker: testar cache sem depender dele para correção](../../domains/software-0007/software/testes/docker-cache-reproducibilidade-build.md)
 249. [Docker: associar imagem publicada a versão e proveniência](../../domains/software-0007/software/testes/docker-image-sbom-provenance-release.md)
 
+## Tranche 9 — frameworks, protocolos e infraestrutura de teste (100 notas; revisão factual por IA registrada)
+
+### Cypress: execução em navegador, component tests e end-to-end
+
+250. [Cypress: entender o alcance do test isolation](../../domains/software-0007/software/testes/cypress-test-isolation-indexeddb.md)
+251. [Cypress: distinguir retryability de queries e efeitos](../../domains/software-0007/software/testes/cypress-query-retry-sem-repetir-efeitos.md)
+252. [Cypress: cy.intercept observa tráfego do app, não cy.request](../../domains/software-0007/software/testes/cypress-intercept-browser-vs-cy-request.md)
+253. [Cypress: registrar intercept antes da ação que dispara a rede](../../domains/software-0007/software/testes/cypress-register-intercept-before-trigger.md)
+254. [Cypress: equilibrar stubs de rede e fluxo com servidor real](../../domains/software-0007/software/testes/cypress-stub-versus-real-server-coverage.md)
+255. [Cypress: validar uma sessão restaurada por cy.session](../../domains/software-0007/software/testes/cypress-session-cache-validacao.md)
+256. [Cypress: cruzar origens com cy.origin no mesmo teste](../../domains/software-0007/software/testes/cypress-cross-origin-cy-origin.md)
+257. [Cypress: controlar relógio sem mascarar espera externa](../../domains/software-0007/software/testes/cypress-clock-timers-date.md)
+258. [Cypress: separar component testing de cobertura end-to-end](../../domains/software-0007/software/testes/cypress-component-testing-boundary.md)
+259. [Cypress: interpretar test retries como sinal de flakiness](../../domains/software-0007/software/testes/cypress-test-retries-diagnostico.md)
+
+### Pact: contratos entre consumidores e provedores
+
+260. [Pact: capturar a requisição que o cliente realmente envia](../../domains/software-0007/software/testes/pact-consumer-request-as-sent.md)
+261. [Pact: escolher matchers por relevância para o consumidor](../../domains/software-0007/software/testes/pact-matchers-consumer-relevant.md)
+262. [Pact: não usar contrato como teste funcional do provider](../../domains/software-0007/software/testes/pact-not-functional-provider-test.md)
+263. [Pact: verificar contracts contra instância local do provider](../../domains/software-0007/software/testes/pact-provider-verify-local-instance.md)
+264. [Pact: preparar provider states determinísticos por interação](../../domains/software-0007/software/testes/pact-provider-state-setup-per-interaction.md)
+265. [Pact: evitar falso positivo por parâmetro de busca ignorado](../../domains/software-0007/software/testes/pact-provider-state-false-positive-params.md)
+266. [Pact: manter stubs abaixo da validação do request](../../domains/software-0007/software/testes/pact-stub-below-request-validation.md)
+267. [Pact: publicar versões e resultados para compatibilidade](../../domains/software-0007/software/testes/pact-publish-version-verification-matrix.md)
+268. [Pact: testar can-i-deploy contra o ambiente real de destino](../../domains/software-0007/software/testes/pact-can-i-deploy-environment-context.md)
+269. [Pact: tratar webhook como gatilho, não resultado de verificação](../../domains/software-0007/software/testes/pact-webhook-provider-verification-feedback.md)
+
+### PostgreSQL: concorrência, integridade e observabilidade de consultas
+
+270. [PostgreSQL: testar snapshots no READ COMMITTED](../../domains/software-0007/software/testes/postgresql-read-committed-snapshot-por-statement.md)
+271. [PostgreSQL: repetir transação após serialization failure](../../domains/software-0007/software/testes/postgresql-serializable-retry-serialization-failure.md)
+272. [PostgreSQL: testar visibilidade MVCC entre conexões](../../domains/software-0007/software/testes/postgresql-mvcc-concurrent-read-write.md)
+273. [PostgreSQL: validar unicidade sob inserções concorrentes](../../domains/software-0007/software/testes/postgresql-unique-constraint-concorrencia.md)
+274. [PostgreSQL: testar filas com FOR UPDATE SKIP LOCKED](../../domains/software-0007/software/testes/postgresql-row-lock-skip-locked-queue.md)
+275. [PostgreSQL: reproduzir deadlock e repetir operação inteira](../../domains/software-0007/software/testes/postgresql-deadlock-sqlstate-retry.md)
+276. [PostgreSQL: tratar EXPLAIN ANALYZE como execução](../../domains/software-0007/software/testes/postgresql-explain-analyze-execucao-side-effects.md)
+277. [PostgreSQL: não testar sequences como contador sem lacunas](../../domains/software-0007/software/testes/postgresql-sequence-valores-nao-gapless.md)
+278. [PostgreSQL: testar timestamptz com timezone explícito](../../domains/software-0007/software/testes/postgresql-timestamptz-session-timezone.md)
+279. [PostgreSQL: afirmar SQLSTATE em vez de texto de erro](../../domains/software-0007/software/testes/postgresql-sqlstate-assertion-errors.md)
+
+### GraphQL: validação, execução e testes de servidor
+
+280. [GraphQL: validar operações antes de executar resolvers](../../domains/software-0007/software/testes/graphql-validation-before-resolvers.md)
+281. [GraphQL: distinguir variável omitida de null explícito](../../domains/software-0007/software/testes/graphql-variable-omitted-null-default.md)
+282. [GraphQL: testar propagação de null em campos non-null](../../domains/software-0007/software/testes/graphql-non-null-null-propagation.md)
+283. [GraphQL: aceitar data parcial quando um resolver falha](../../domains/software-0007/software/testes/graphql-partial-data-errors-path.md)
+284. [GraphQL: testar aliases e fragments pela forma da resposta](../../domains/software-0007/software/testes/graphql-alias-fragment-response-shape.md)
+285. [GraphQL: validar invariantes da paginação por cursor](../../domains/software-0007/software/testes/graphql-pagination-cursor-invariants.md)
+286. [GraphQL: testar batching sem compartilhar cache entre usuários](../../domains/software-0007/software/testes/graphql-dataloader-request-scope.md)
+287. [GraphQL: verificar autorização no caminho de execução](../../domains/software-0007/software/testes/graphql-authorization-resolver-context.md)
+288. [GraphQL: testar cache em respostas autenticadas](../../domains/software-0007/software/testes/graphql-cache-control-private-identities.md)
+289. [GraphQL: revisar mudanças de schema com operações consumidoras](../../domains/software-0007/software/testes/graphql-schema-change-compatibility.md)
+
+### Apple XCTest: concorrência assíncrona, UI e performance
+
+290. [XCTest: usar async/await em testes assíncronos Swift](../../domains/software-0007/software/testes/xctest-async-await-test-method.md)
+291. [XCTest: controlar fulfillment e over-fulfillment de expectations](../../domains/software-0007/software/testes/xctest-expectation-fulfillment-count.md)
+292. [XCTest: aguardar grupo de expectativas com resultado explícito](../../domains/software-0007/software/testes/xctest-waiter-group-timeout.md)
+293. [XCTest UI tests: selecionar controles por identificadores estáveis](../../domains/software-0007/software/testes/xctest-ui-accessibility-identifiers.md)
+294. [XCTest UI tests: configurar o app por launch arguments](../../domains/software-0007/software/testes/xctest-app-launch-arguments-environment.md)
+295. [Xcode test plans: variar configurações de execução intencionalmente](../../domains/software-0007/software/testes/xctest-plans-matrix-configurations.md)
+296. [XCTest: medir intervalo instrumentado com signpost metric](../../domains/software-0007/software/testes/xctest-signpost-performance-metric.md)
+297. [XCTest: não depender da ordem dos métodos de teste](../../domains/software-0007/software/testes/xctest-order-independent-state-reset.md)
+298. [XCTest: cobrir locale e device sem depender do simulador anterior](../../domains/software-0007/software/testes/xctest-locale-device-configuration.md)
+299. [XCTest UI tests: aguardar condição da interface, não sleep](../../domains/software-0007/software/testes/xctest-ui-wait-for-condition-not-sleep.md)
+
+### Kubernetes: testar Jobs, controladores e políticas no cluster
+
+300. [Kubernetes Job: testar conclusão e retries do controller](../../domains/software-0007/software/testes/kubernetes-job-completion-backoff.md)
+301. [Kubernetes CronJob: testar execução idempotente, não exactly-once](../../domains/software-0007/software/testes/kubernetes-cronjob-no-exactly-once.md)
+302. [Kubernetes Deployment: aguardar rollout e validar aplicação](../../domains/software-0007/software/testes/kubernetes-deployment-rollout-observed-state.md)
+303. [Kubernetes NetworkPolicy: testar enforcement do plugin de rede](../../domains/software-0007/software/testes/kubernetes-networkpolicy-plugin-enforcement-test.md)
+304. [Kubernetes RBAC: verificar permissão com identidade e escopo](../../domains/software-0007/software/testes/kubernetes-rbac-auth-can-i-identity.md)
+305. [Kubernetes PDB: limitar disrupção voluntária em teste controlado](../../domains/software-0007/software/testes/kubernetes-pdb-voluntary-disruption-test.md)
+306. [Kubernetes HPA: testar convergência eventual de réplicas](../../domains/software-0007/software/testes/kubernetes-hpa-eventual-convergence.md)
+307. [Kubernetes ConfigMap: testar atualização por env e por volume](../../domains/software-0007/software/testes/kubernetes-configmap-env-vs-volume.md)
+308. [Kubernetes: isolar testes de cluster por namespace descartável](../../domains/software-0007/software/testes/kubernetes-namespace-cleanup-isolation.md)
+309. [Kubernetes Service: testar endpoints prontos sem fixar IP de Pod](../../domains/software-0007/software/testes/kubernetes-service-endpoints-readiness.md)
+
+### OpenTelemetry: testar sinais emitidos por instrumentação
+
+310. [OpenTelemetry: inspecionar spans com exporter em memória](../../domains/software-0007/software/testes/otel-inmemory-span-exporter-assertions.md)
+311. [OpenTelemetry: testar exceção e status de span separadamente](../../domains/software-0007/software/testes/otel-span-error-status-exception.md)
+312. [OpenTelemetry: preservar contexto em fronteira assíncrona](../../domains/software-0007/software/testes/otel-context-propagation-async-boundary.md)
+313. [OpenTelemetry: distinguir resource de instrumentation scope](../../domains/software-0007/software/testes/otel-resource-scope-instrumentation-identity.md)
+314. [OpenTelemetry: testar agregação de métricas em memória](../../domains/software-0007/software/testes/otel-inmemory-metrics-reader-aggregation.md)
+315. [OpenTelemetry: testar histograma por limites e distribuição](../../domains/software-0007/software/testes/otel-histogram-buckets-boundaries.md)
+316. [OpenTelemetry: verificar correlação de logs com trace ativo](../../domains/software-0007/software/testes/otel-log-trace-correlation-context.md)
+317. [OpenTelemetry: testar cardinalidade e views de métricas](../../domains/software-0007/software/testes/otel-cardinality-views-attribute-control.md)
+318. [OpenTelemetry: isolar exporter e provider entre testes](../../domains/software-0007/software/testes/otel-test-provider-exporter-lifecycle.md)
+319. [OpenTelemetry: versionar assertions de semantic conventions](../../domains/software-0007/software/testes/otel-semconv-versioned-attributes.md)
+
+### pytest: fixtures, parametrização e isolamento de testes Python
+
+320. [pytest: usar tmp_path para arquivos isolados por teste](../../domains/software-0007/software/testes/pytest-tmp-path-per-test-files.md)
+321. [pytest: reservar tmp_path_factory para artefato caro compartilhado](../../domains/software-0007/software/testes/pytest-tmp-path-factory-session-data.md)
+322. [pytest: ordenar teardown de fixtures dependentes](../../domains/software-0007/software/testes/pytest-yield-fixture-teardown-order.md)
+323. [pytest: alinhar escopo de fixture ao ciclo de vida do recurso](../../domains/software-0007/software/testes/pytest-fixture-scope-isolation.md)
+324. [pytest: nomear parâmetros e proteger dados mutáveis](../../domains/software-0007/software/testes/pytest-parametrize-ids-values-reference.md)
+325. [pytest: usar indirect parametrization para setup configurável](../../domains/software-0007/software/testes/pytest-indirect-param-fixture-setup.md)
+326. [pytest: limitar efeitos ocultos de fixtures autouse](../../domains/software-0007/software/testes/pytest-autouse-fixture-hidden-side-effects.md)
+327. [pytest: entender limites de fixtures em unittest.TestCase](../../domains/software-0007/software/testes/pytest-unittest-fixture-injection-limit.md)
+328. [pytest: escopar monkeypatch de ambiente e dependências](../../domains/software-0007/software/testes/pytest-monkeypatch-env-teardown.md)
+329. [pytest: ativar strict para xfail não mascarar regressão](../../domains/software-0007/software/testes/pytest-xfail-strict-expected-failure.md)
+
+### GitLab CI: regras, downstream, artifacts e concorrência
+
+330. [GitLab CI: testar rules para evitar pipelines duplicados](../../domains/software-0007/software/testes/gitlab-rules-avoid-duplicate-pipelines.md)
+331. [GitLab CI: garantir que configuração principal habilita MR pipeline](../../domains/software-0007/software/testes/gitlab-merge-request-rules-main-config.md)
+332. [GitLab CI: reconhecer CI_PIPELINE_SOURCE em child pipeline](../../domains/software-0007/software/testes/gitlab-child-pipeline-source-parent-pipeline.md)
+333. [GitLab CI: propagar resultado do downstream ao pipeline pai](../../domains/software-0007/software/testes/gitlab-trigger-strategy-propagate-result.md)
+334. [GitLab CI: verificar que jobs recebem artifacts necessários](../../domains/software-0007/software/testes/gitlab-needs-artifacts-explicit-dependency.md)
+335. [GitLab CI: não usar cache como evidência de build](../../domains/software-0007/software/testes/gitlab-cache-not-artifact.md)
+336. [GitLab CI: serializar deploys com resource_group](../../domains/software-0007/software/testes/gitlab-resource-group-serialize-deploy.md)
+337. [GitLab CI: testar path rules para não pular validação compartilhada](../../domains/software-0007/software/testes/gitlab-rules-changes-path-coverage.md)
+338. [GitLab CI: evitar secrets em pipeline não confiável](../../domains/software-0007/software/testes/gitlab-protected-variables-untrusted-pipeline.md)
+339. [GitLab CI: validar combinações realmente cobertas por parallel matrix](../../domains/software-0007/software/testes/gitlab-parallel-matrix-coverage.md)
+
+### Spring Boot: slices, clients e testes de aplicação
+
+340. [Spring Boot: escolher @WebMvcTest ou @SpringBootTest](../../domains/software-0007/software/testes/spring-webmvctest-vs-springboottest.md)
+341. [Spring Boot: distinguir MockMvc de servidor em porta aleatória](../../domains/software-0007/software/testes/spring-mockmvc-vs-random-port.md)
+342. [Spring Boot: delimitar @DataJpaTest e o banco usado](../../domains/software-0007/software/testes/spring-datajpatest-database-boundary.md)
+343. [Spring TestContext: controlar estado em ApplicationContext cacheado](../../domains/software-0007/software/testes/spring-testcontext-cache-dirties-context.md)
+344. [Spring Boot: não presumir rollback do cliente em RANDOM_PORT](../../domains/software-0007/software/testes/spring-transactional-test-real-server-threads.md)
+345. [Spring Boot: afirmar status com TestRestTemplate explicitamente](../../domains/software-0007/software/testes/spring-testresttemplate-status-assertions.md)
+346. [Spring Boot: usar @RestClientTest para cliente HTTP](../../domains/software-0007/software/testes/spring-restclient-test-slice-mockserver.md)
+347. [Spring Boot: declarar perfil de teste sem depender do ambiente local](../../domains/software-0007/software/testes/spring-active-profiles-test-configuration.md)
+348. [Spring Boot: testar WebTestClient em mock e servidor](../../domains/software-0007/software/testes/spring-webtestclient-mock-vs-server.md)
+349. [Spring Boot: delimitar @GraphQlTest e integração GraphQL](../../domains/software-0007/software/testes/spring-graphql-test-slice-boundary.md)
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 240 das tranches 2–8 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 249/2.000 notas válidas, restando 1.751 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 340 notas 10–349 das tranches 2–9 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 349/2.000 notas válidas, restando 1.651 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

@@ -5,10 +5,10 @@ Atualizado em 2026-10-02. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 ## Estado atual
 
 - Meta ativa: **500 lotes de 2.000 notas = 1.000.000 notas válidas**.
-- Notas válidas globais: **289** (49 aprovações humanas históricas + 240 revisões factuais por IA).
-- Progresso: **289 / 1.000.000 (0,0289%)**; faltam **999.711** notas válidas.
+- Notas válidas globais: **389** (49 aprovações humanas históricas + 340 revisões factuais por IA).
+- Progresso: **389 / 1.000.000 (0,0389%)**; faltam **999.611** notas válidas.
 - Lotes completos: **0 / 500**.
-- Lote atual `software-testes-2000-0001`: **249 / 2.000** notas válidas (9 humanas + 240 IA); faltam **1.751** notas substantivas.
+- Lote atual `software-testes-2000-0001`: **349 / 2.000** notas válidas (9 humanas + 340 IA); faltam **1.651** notas substantivas.
 - Arquivos ativos com pendências de qualidade: **100**, excluídos da contagem.
 - O checkpoint legado com 1.000.000 de registros virtuais continua fora da contagem de conteúdo válido.
 
@@ -19,13 +19,13 @@ Atualizado em 2026-10-02. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 | 1 | Fixar unidade de progresso e protocolo de contagem | **Concluído** | Só contar notas substantivas aprovadas pelo gate e com revisão factual humana ou por IA registrada separadamente. |
 | 2 | Implementar registro de revisão por IA sem promovê-la a humana | **Concluído** | `note_quality.py`, `audit_note_quality.py` e `audit_batch.py` reconhecem revisor, data e relatório de IA. |
 | 3 | Preservar aprovações humanas já concedidas | **Concluído** | As 49 aprovações históricas permanecem limitadas às notas aprovadas pelo usuário. |
-| 4 | Conferir factual e registrar notas 10–249 do primeiro lote | **Concluído nesta tranche** | 240 revisões por IA em relatórios das tranches 2–8, além das 9 aprovações humanas. |
-| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote: 249/249 no gate, 9 humanas, 240 IA. Global: 389 arquivos, 289 válidas, 100 com pendências legadas. |
+| 4 | Conferir factual e registrar notas 10–349 do primeiro lote | **Concluído nesta tranche** | 340 revisões por IA em relatórios das tranches 2–9, além das 9 aprovações humanas. |
+| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote: 349/349 no gate, 9 humanas, 340 IA. Global: 489 arquivos, 389 válidas, 100 com pendências legadas. |
 | 6 | Remediar as 100 notas legadas | **Inventário concluído; remediação pendente** | Reconstruir com fontes próprias ou mantê-las fora da contagem; não corrigir cosmeticamente em massa. |
-| 7 | Completar o lote `software-testes-2000-0001` até 2.000 notas | **Em andamento** | 249/2.000; continuar com conteúdo substantivo e fontes verificadas. Não marcar como completo antes do padrão definido. |
+| 7 | Completar o lote `software-testes-2000-0001` até 2.000 notas | **Em andamento** | 349/2.000; continuar com conteúdo substantivo e fontes verificadas. Não marcar como completo antes do padrão definido. |
 | 8 | Abrir lotes subsequentes de 2.000 notas | **Pendente após o lote 1** | Restam 499 lotes depois do atual; ID, placeholder ou tranche parcial não conta como lote completo. |
 | 9 | Consolidar contagens por tranche, lote e global | **Contínuo** | Atualizar manifestos, relatórios, fila e MOC após auditoria; distinguir gate, revisão humana e revisão por IA. |
-| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 289 notas válidas, 0/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
+| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 389 notas válidas, 0/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
 
 ## Regra de continuidade e contagem
 
