@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 549 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 549 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 540 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 649 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 649 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 640 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -675,6 +675,129 @@
 - [[appium-xcuitest-ios-boundary]] — XCUITest é driver oficial para apps iOS e seus requisitos dependem do host, toolchain Apple e configuração da sessão.
 - [[appium-locators-acessibilidade-contrato]] — Drivers expõem estratégias de locator dependentes da plataforma, incluindo identificadores de acessibilidade ou recursos nativos.
 
+## Tranche 12 — frameworks, propriedades e ferramentas de teste (IDs 550–649; revisão factual por IA registrada)
+
+### Playwright Test — projetos, servidores e artefatos de execução
+
+550. [[playwright-projects-browser-matrix]] — Um projeto nomeado combina os testes com opções de execução, como browser, dispositivo ou ambiente.
+551. [[playwright-project-dependencies-setup]] — Uma dependência de projeto permite executar testes de preparação antes dos projetos consumidores e declarar teardown associado.
+552. [[playwright-webserver-readiness-reuse]] — A opção `webServer` inicia um processo de aplicação e aguarda a URL configurada responder antes de liberar os testes.
+553. [[playwright-sharding-ci-particionamento]] — O parâmetro `--shard=x/y` seleciona uma parte da suíte, permitindo distribuir a execução entre jobs independentes.
+554. [[playwright-visual-snapshots-baseline]] — `toHaveScreenshot()` compara uma captura atual com uma imagem de referência gerada e versionada para aquele teste.
+555. [[playwright-page-object-contract]] — Um Page Object encapsula seletores e ações recorrentes de uma parte da aplicação, expondo aos testes uma interface de maior nível.
+556. [[playwright-download-save-context]] — O evento de download fornece um objeto temporário cujo arquivo é removido quando o browser context que o criou é encerrado.
+557. [[playwright-apirequest-cookie-context]] — O `APIRequestContext` ligado ao browser context usa o mesmo jar de cookies; uma instância criada isoladamente mantém armazenamento próprio.
+558. [[playwright-test-step-relatorio]] — `test.step()` agrupa uma parte assíncrona do teste sob um nome que aparece como etapa da execução.
+559. [[playwright-reporter-saida-por-ambiente]] — O runner inclui reporters com níveis de detalhe distintos e permite configurar mais de um para a mesma execução.
+### Hypothesis — construção de estratégias, replay e configuração
+
+560. [[hypothesis-strategy-combinators]] — Combinadores transformam ou encadeiam estratégias sem precisar reescrever o gerador e sua lógica de redução.
+561. [[hyp-composite-dependent-strategies]] — `@composite` permite combinar draws de estratégias em um gerador reutilizável cuja saída depende dos valores já sorteados.
+562. [[hyp-data-draw-dinamico]] — `st.data()` fornece ao teste uma interface para sortear valores adicionais durante a execução a partir de estratégias escolhidas pelo próprio caso gerado.
+563. [[hyp-builds-from-type-infer]] — `builds()` pode criar instâncias de uma classe chamando seu construtor e, quando autorizado, inferindo estratégias a partir de anotações de tipo.
+564. [[hyp-valid-collections-cardinality]] — Estratégias de listas, conjuntos e dicionários permitem declarar cardinalidade e tipo dos elementos diretamente no domínio gerado.
+565. [[hyp-floats-dominio-na-infinito]] — Estratégias de ponto flutuante podem incluir valores especiais como NaN e infinito, além de valores finitos próximos aos limites declarados.
+566. [[hyp-example-regressao-explicito]] — `@example` acrescenta uma entrada escolhida manualmente à execução de um teste baseado em propriedades.
+567. [[hyp-example-database-replay]] — O banco de exemplos guarda entradas que Hypothesis encontrou e pode reutilizá-las em execuções posteriores da mesma configuração.
+568. [[hyp-settings-profiles-healthchecks]] — Perfis de `settings` agrupam escolhas como orçamento de exemplos e comportamento de deadlines para ambientes com necessidades distintas.
+569. [[hyp-deadline-tempo-execucao]] — O `deadline` limita quanto cada exemplo gerado pode gastar em execução, separando lentidão localizada de um teste que simplesmente consome o orçamento total da suíte.
+### TestNG — dados, configuração, dependências e execução
+
+570. [[testng-dataprovider-casos]] — `@DataProvider` associa conjuntos de argumentos a uma função `@Test`, e cada linha retornada precisa ser atribuível aos parâmetros daquele método.
+571. [[testng-parameters-escopo-xml]] — `@Parameters` injeta valores declarados no `testng.xml` em métodos de teste ou de configuração que declaram os nomes correspondentes.
+572. [[testng-dependencies-hard-soft]] — `dependsOnMethods` ou `dependsOnGroups` expressam pré-requisitos de execução e podem fazer o framework pular um consumidor quando uma dependência falha.
+573. [[testng-groups-selecao]] — Groups etiquetam métodos ou classes e podem ser incluídos ou excluídos em configuração XML ou na linha de comando.
+574. [[testng-lifecycle-heranca-hooks]] — Os métodos `@Before...` e `@After...` descrevem fases diferentes do ciclo de vida e são herdados por classes de teste.
+575. [[testng-dataprovider-parallel]] — Um `DataProvider` pode pedir ao TestNG que execute em paralelo os testes gerados por suas linhas de dados.
+576. [[testng-suite-parallel-threadcount]] — A suite TestNG configura se métodos, classes, testes ou instâncias são executados em paralelo e quantas threads podem ser usadas.
+577. [[testng-factory-instancias]] — `@Factory` retorna objetos que o TestNG trata como instâncias de classes de teste, enquanto `@DataProvider` fornece argumentos para métodos.
+578. [[testng-listener-eventos-relatorio]] — Listeners recebem eventos ou oportunidades de extensão durante a execução e podem ser registrados por anotação ou configuração da suite.
+579. [[testng-invocationcount-timeout]] — `invocationCount` repete um método de teste e `invocationTimeOut` limita o tempo acumulado dessas invocações quando a contagem está definida.
+### Go testing — subtestes, concorrência, fuzzing e benchmarks
+
+580. [[go-subtests-run-filter]] — `t.Run` cria um subteste nomeado associado ao teste pai e possibilita executar subconjuntos por expressão de seleção.
+581. [[go-t-cleanup-subtest-scope]] — `T.Cleanup` registra uma função que roda quando o teste e seus subtestes concluírem, respeitando ordem inversa de registro.
+582. [[go-testing-helper-error-location]] — `T.Helper` marca uma função auxiliar de teste para que diagnósticos de `Error` ou `Fatal` apontem ao chamador relevante.
+583. [[go-parallel-subtests-barreira]] — Um subteste que chama `t.Parallel` pausa até a função do teste pai retornar, e o pai aguarda a conclusão dos filhos paralelos.
+584. [[go-fuzz-corpus-regressao]] — Um fuzz test pode combinar sementes declaradas no código com arquivos de corpus, e entradas que revelam falhas podem ser salvas para reprodução.
+585. [[go-race-dinamico-limites]] — O detector de corridas instrumenta o programa e reporta acessos concorrentes incompatíveis que aconteceram durante a execução observada.
+586. [[go-testing-synctest-tempo-virtual]] — `testing/synctest` executa código concorrente em uma bolha isolada com tempo virtual para testes que dependem de timers e goroutines.
+587. [[go-testmain-recursos-pacote]] — `TestMain(m *testing.M)` dá ao pacote um ponto único para preparar recursos antes de rodar seus testes e limpar depois.
+588. [[go-tdir-cleanup-descendants]] — `T.TempDir` cria um diretório temporário exclusivo para o teste e o remove quando o teste e seus descendentes terminam.
+589. [[go-b-loop-benchmark-comparacao]] — `B.Loop` fornece uma forma atual de escrever o corpo repetido de um benchmark sem controlar manualmente `b.N`.
+### PIT — mutation testing para Java
+
+590. [[pit-mutacao-bytecode-mutantes]] — PIT aplica mutadores ao bytecode compilado para criar versões pequenas do programa que representam falhas hipotéticas.
+591. [[pit-cobertura-selecao-testes]] — Antes de executar casos contra mutantes, PIT mede cobertura de linha e tempos para selecionar testes que alcançam a área modificada.
+592. [[pit-status-killed-survived]] — PIT classifica resultados como `Killed`, `Survived`, `No coverage`, `Non viable` e `Timed Out`, entre outros estados documentados.
+593. [[pit-mutator-groups-esforco]] — PIT oferece grupos de mutadores com alcances diferentes, incluindo `DEFAULTS`, `STRONGER` e `ALL`.
+594. [[pit-targetclasses-targettests]] — `targetClasses` e `targetTests` definem, respectivamente, quais classes podem receber mutações e quais testes podem participar da análise.
+595. [[pit-timeouts-mutantes-hang]] — PIT usa limite temporal para evitar que um mutante que provoque loop ou execução longa bloqueie indefinidamente a análise.
+596. [[pit-incremental-history-assumptions]] — A análise incremental conserva resultados anteriores e evita recomputar mutações que PIT considera inferíveis a partir de código e testes não alterados.
+597. [[pit-maven-dry-run-setup]] — O modo dry run, documentado desde PIT 1.17.3, reúne cobertura e gera mutantes sem executar a suíte contra cada mutação.
+598. [[pit-maven-goal-relatorio]] — O plugin Maven expõe o goal `mutationCoverage`, que compila e executa a análise conforme os filtros definidos no projeto.
+599. [[pit-mutation-score-interpretacao]] — Mutation score resume proporções de estados dos mutantes, mas não descreve quais requisitos foram testados nem o custo de interpretar sobreviventes.
+### PHPUnit — descoberta, dados, fixtures e execução
+
+600. [[phpunit-discovery-metodos-atributos]] — PHPUnit descobre métodos públicos com prefixo `test` ou métodos marcados com o atributo `#[Test]`.
+601. [[phpunit-dataprovider-contrato]] — Um data provider associa conjuntos de argumentos a um método de teste e faz cada conjunto aparecer como uma execução identificável.
+602. [[phpunit-testwith-inline-cases]] — O atributo `#[TestWith]` permite associar dados inline ao teste, enquanto `#[DataProvider]` mantém datasets maiores em um método nomeado.
+603. [[phpunit-depends-retorno]] — `#[Depends]` declara que um teste consome o valor retornado por outro teste, mas não define sozinho a ordem de execução dos métodos.
+604. [[phpunit-fixtures-per-test]] — O PHPUnit cria uma instância da classe de teste por método; `setUp()` e `tearDown()` rodam em cada caso, enquanto `setUpBeforeClass()` e `tearDownAfterClass()` cobrem o ciclo da classe.
+605. [[phpunit-config-precedencia]] — A configuração efetiva é construída dos defaults internos, depois do XML e por fim das opções de CLI.
+606. [[phpunit-selection-filter-group]] — O runner oferece opções para selecionar suite, grupo ou padrão de nome sem precisar editar a descoberta da classe.
+607. [[phpunit-random-seed-repro]] — A opção `--order-by random` executa testes em ordem pseudoaleatória e aceita uma seed para repetir a mesma sequência.
+608. [[phpunit-risky-output-assertions]] — PHPUnit pode classificar como arriscados testes sem assertions úteis ou que produzem saída, conforme verificações habilitadas.
+609. [[phpunit-size-time-budget]] — Atributos Small, Medium e Large classificam testes por custo e permitem aplicar limites temporais correspondentes na configuração.
+### RSpec — exemplos compartilhados, hooks, matchers e seleção
+
+610. [[rspec-shared-examples-contrato]] — Shared examples guardam comportamentos que podem ser executados no contexto de diferentes example groups.
+611. [[rspec-include-vs-it-behaves-like]] — `include_examples` inclui o conteúdo no contexto corrente, enquanto `it_behaves_like` cria um grupo aninhado para o comportamento compartilhado.
+612. [[rspec-around-hook-envelope]] — Um hook `around(:example)` recebe o objeto de exemplo e envolve a execução que ocorre em `example.run`.
+613. [[rspec-before-after-scope]] — Hooks `before` e `after` podem ser definidos para exemplos ou grupos e participam de uma ordem que depende do escopo.
+614. [[rspec-composable-matchers-estruturas]] — Matchers compostos permitem descrever partes importantes de uma estrutura aninhada sem exigir que todo valor coincida literalmente.
+615. [[rspec-verifying-doubles-interface]] — Verifying doubles checam se métodos configurados existem na classe ou objeto representado, reduzindo divergências entre mock e implementação.
+616. [[rspec-message-argument-constraints]] — `with` limita quais argumentos satisfazem uma expectativa ou resposta configurada para uma mensagem recebida por double.
+617. [[rspec-metadata-tag-selection]] — Metadata é associada a example groups e exemplos e pode selecionar quais casos entram numa execução da CLI.
+618. [[rspec-random-order-seed]] — RSpec pode embaralhar grupos e exemplos usando uma seed que permite repetir a ordem de uma execução.
+619. [[rspec-let-let-bang-lazy]] — `let` memoiza um helper quando ele é acessado pela primeira vez em cada exemplo, enquanto `let!` também agenda sua avaliação por um hook antes do exemplo.
+### ExUnit — callbacks, concorrência, templates e doctests
+
+620. [[exunit-setup-context-data]] — Callbacks `setup` podem receber contexto e retornar novos valores que são mesclados ao contexto disponível para etapas seguintes e para o teste.
+621. [[exunit-setup-all-process-boundary]] — `setup_all` roda uma vez por módulo antes dos testes, em processo separado do processo de cada teste.
+622. [[exunit-start-supervised-lifecycle]] — `start_supervised` inicia um processo sob supervisor vinculado ao ciclo de vida do teste e assegura seu encerramento antes de `on_exit`.
+623. [[exunit-on-exit-separar-cleanup]] — Callbacks `on_exit` são executados após a saída do processo de teste e rodam em processo separado.
+624. [[exunit-async-global-state]] — Com `async: true`, casos de teste podem executar em paralelo com outros módulos, enquanto testes do mesmo módulo permanecem seriais.
+625. [[exunit-case-template-reuso]] — `ExUnit.CaseTemplate` permite que módulos de teste usem um template com callbacks e funções comuns.
+626. [[exunit-capture-io-isolamento]] — `capture_io` substitui o group leader do processo atual durante a função e devolve o texto capturado.
+627. [[exunit-doctest-documentacao]] — `doctest` extrai exemplos formatados na documentação de um módulo e os executa como verificações de comportamento.
+628. [[exunit-tags-select-filters]] — Tags associadas a casos ou grupos adicionam metadata ao contexto e podem ser incluídas ou excluídas pela configuração do ExUnit.
+629. [[exunit-seed-cases-concorrencia]] — ExUnit permite configurar seed para randomizar testes e `max_cases` para limitar quantos casos de módulos distintos rodam simultaneamente.
+### Newman — execução de collections Postman em CLI e CI
+
+630. [[newman-maintenance-workflow-choice]] — O README atual informa que Newman está em modo de manutenção e recomenda Postman CLI para workflows novos que precisem acompanhar recursos recentes.
+631. [[newman-collection-source-version]] — `newman run` aceita uma collection exportada em arquivo JSON ou uma URL que forneça a definição da coleção.
+632. [[newman-environment-global-precedence]] — O CLI recebe arquivos de environment e globals, e variáveis globais têm precedência inferior às variáveis do environment com o mesmo nome.
+633. [[newman-iteration-data-csv-json]] — `--iteration-data` fornece arquivo JSON ou CSV às iterações de uma collection, e `--iteration-count` define a quantidade de execuções quando usado com esses dados.
+634. [[newman-folder-selection]] — A opção `--folder` seleciona requests dentro de uma ou mais pastas ou requests nomeadas da collection.
+635. [[newman-bail-exit-status]] — `--bail` pode interromper a execução ao encontrar erro em script de teste, e `--suppress-exit-code` substitui o código padrão do runner.
+636. [[newman-timeout-scopes]] — Newman configura limites distintos para duração da execução, requests e scripts, que protegem partes diferentes do workflow.
+637. [[newman-reporters-artifacts]] — Reporters integrados podem gerar saída terminal, JSON ou JUnit, e selecionar reporters de arquivo pode alterar se o reporter CLI continua habilitado.
+638. [[newman-custom-reporter-package]] — Newman pode carregar reporters externos instalados como módulos Node compatíveis com a convenção de reporter.
+639. [[newman-programmatic-events-summary]] — A API programática expõe `newman.run`, callback e eventos para iniciar collections de dentro de uma aplicação Node.
+### axe-core — escopo de varredura, resultados e limites
+
+640. [[axe-rendered-dom-state]] — axe.run analisa conteúdo renderizado no documento e não avalia automaticamente regiões ocultas que ainda não foram ativadas.
+641. [[axe-context-include-exclude]] — O argumento `context` aceita seletores ou nós DOM para incluir regiões e uma configuração de exclusão para omitir áreas escolhidas.
+642. [[axe-frames-shadow-dom-context]] — axe-core tem opções de contexto para limitar seleção dentro de frames e de regiões de shadow DOM.
+643. [[axe-runonly-tags-rules]] — A opção `runOnly` restringe quais regras ou grupos identificados por tags participam de uma execução.
+644. [[axe-result-categories]] — O objeto de resultados separa regras que falharam, passaram, exigem revisão incompleta ou não se aplicam à árvore examinada.
+645. [[axe-incomplete-manual-review]] — Uma regra que não consegue decidir automaticamente pode aparecer em `incomplete` com nós que demandam avaliação adicional.
+646. [[axe-impact-priorizacao-nao-conformidade]] — O campo `impact` ajuda a ordenar a severidade estimada de uma violação retornada, mas não é certificado de conformidade ou medida completa de impacto ao usuário.
+647. [[axe-tags-nao-cobertura-total-wcag]] — Tags de regras identificam relação com versões ou níveis de padrões e também podem marcar melhores práticas, entre outros metadados.
+648. [[axe-dynamic-flows-multiple-scans]] — Uma página interativa pode revelar conteúdo novo após abrir modal, menu ou erro de formulário, e cada estado exige uma execução própria para ser observado.
+649. [[axe-result-targets-regression]] — Resultados associam violações a nós e alvos, permitindo identificar onde uma regra encontrou o problema na árvore analisada.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 549/549 notas e as 549 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 540 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (549 notas substantivas; 1.451 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 649/649 notas e as 649 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 640 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (649 notas substantivas; 1.351 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

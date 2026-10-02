@@ -3,7 +3,6 @@
 from __future__ import annotations
 from datetime import date
 from pathlib import Path
-from collections import defaultdict
 import argparse
 import re
 import sys
@@ -15,7 +14,8 @@ REPORT = ROOT / "knowledge-federation" / "exports" / "reports" / "ai-review-soft
 DATE = date.today().isoformat()
 
 sys.path.insert(0, str(ROOT / "knowledge-federation" / "scripts"))
-from note_quality import assess_markdown, normalize
+from note_quality import assess_markdown
+from prose_audit import repeated_substantive_sentences
 
 SOURCES = {
     # REST Assured: project-maintained wiki plus current API reference.
@@ -138,39 +138,6 @@ def parse_group(path: Path):
         if key not in context:
             raise ValueError(f"{path.name}: falta contexto {key}")
     return context, rows
-
-
-def repeated_substantive_sentences(notes):
-    """Find exact prose sentences repeated across generated notes.
-
-    Short fragments and the navigation/source sections are ignored. Repeated
-    sentences of eight or more words are treated as likely group-level
-    boilerplate and must be reviewed before the tranche can be written.
-    """
-    occurrences = defaultdict(set)
-    for number, content in notes:
-        body = content.split("---", 2)[-1]
-        section = ""
-        for line in body.splitlines():
-            heading = re.match(r"^#{1,6}\s+(.+?)\s*#*\s*$", line)
-            if heading:
-                section = normalize(heading.group(1).strip())
-                continue
-            if section in {"fontes", "conexoes"} or not line.strip():
-                continue
-            for sentence in re.split(r"(?<=[.!?])\s+", line.strip()):
-                words = re.findall(r"(?u)\b[\w]+(?:[-'][\w]+)*\b", sentence)
-                if len(words) < 8:
-                    continue
-                normalized = normalize(sentence)
-                normalized = re.sub(r"[^\w]+", " ", normalized).strip()
-                if normalized:
-                    occurrences[normalized].add(number)
-    return {
-        sentence: sorted(numbers)
-        for sentence, numbers in occurrences.items()
-        if len(numbers) > 1
-    }
 
 
 def render_note(context, rows, index, row):

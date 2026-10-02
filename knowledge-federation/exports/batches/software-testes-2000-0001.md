@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **549 / 2.000 (27,45%)**
-- Gate automatizado: **549/549 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a correção editorial da tranche 11)
+- Notas efetivamente redigidas até agora: **649 / 2.000 (32,45%)**
+- Gate automatizado: **649/649 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após as correções factuais da tranche 12)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/549**
-- Revisão factual por IA: **540/549**
-- Contabilizadas como válidas: **549/549**
+- Revisão factual humana: **9/649**
+- Revisão factual por IA: **640/649**
+- Contabilizadas como válidas: **649/649**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 540 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–11 (540 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 640 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–12 (640 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-11.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-12.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) (a tranche 11 permanece registrada [aqui](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md))
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 549 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.451 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 649 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.351 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -670,6 +670,129 @@
 548. [Appium: verificar pré-requisitos de XCUITest para sessão Apple](../../domains/software-0007/software/testes/appium-xcuitest-ios-boundary.md)
 549. [Appium: preferir locators semânticos estáveis quando disponíveis](../../domains/software-0007/software/testes/appium-locators-acessibilidade-contrato.md)
 
+## Tranche 12 — frameworks, propriedades e ferramentas de teste (100 notas; revisão factual por IA registrada)
+
+### Playwright Test — projetos, servidores e artefatos de execução
+
+550. [Playwright Test: projetos para uma matriz de browsers](../../domains/software-0007/software/testes/playwright-projects-browser-matrix.md)
+551. [Playwright Test: setup como dependência de projeto](../../domains/software-0007/software/testes/playwright-project-dependencies-setup.md)
+552. [Playwright Test: prontidão do servidor local](../../domains/software-0007/software/testes/playwright-webserver-readiness-reuse.md)
+553. [Playwright Test: particionamento por shards na CI](../../domains/software-0007/software/testes/playwright-sharding-ci-particionamento.md)
+554. [Playwright Test: snapshots visuais e baseline](../../domains/software-0007/software/testes/playwright-visual-snapshots-baseline.md)
+555. [Playwright Test: limites de um Page Object](../../domains/software-0007/software/testes/playwright-page-object-contract.md)
+556. [Playwright Test: persistir downloads antes de fechar o contexto](../../domains/software-0007/software/testes/playwright-download-save-context.md)
+557. [Playwright Test: cookies em APIRequestContext](../../domains/software-0007/software/testes/playwright-apirequest-cookie-context.md)
+558. [Playwright Test: steps nomeados para tornar falhas legíveis](../../domains/software-0007/software/testes/playwright-test-step-relatorio.md)
+559. [Playwright Test: selecionar reporters por finalidade](../../domains/software-0007/software/testes/playwright-reporter-saida-por-ambiente.md)
+### Hypothesis — construção de estratégias, replay e configuração
+
+560. [Hypothesis: map, flatmap e filter em estratégias](../../domains/software-0007/software/testes/hypothesis-strategy-combinators.md)
+561. [Hypothesis: estratégias próprias com `@composite`](../../domains/software-0007/software/testes/hyp-composite-dependent-strategies.md)
+562. [Hypothesis: draws dinâmicos com `data()`](../../domains/software-0007/software/testes/hyp-data-draw-dinamico.md)
+563. [Hypothesis: inferir argumentos com `builds()`](../../domains/software-0007/software/testes/hyp-builds-from-type-infer.md)
+564. [Hypothesis: gerar coleções válidas sem rejeição excessiva](../../domains/software-0007/software/testes/hyp-valid-collections-cardinality.md)
+565. [Hypothesis: definir o domínio numérico de floats](../../domains/software-0007/software/testes/hyp-floats-dominio-na-infinito.md)
+566. [Hypothesis: adicionar regressões com `@example`](../../domains/software-0007/software/testes/hyp-example-regressao-explicito.md)
+567. [Hypothesis: banco persistente para replay de falhas](../../domains/software-0007/software/testes/hyp-example-database-replay.md)
+568. [Hypothesis: perfis de settings e health checks](../../domains/software-0007/software/testes/hyp-settings-profiles-healthchecks.md)
+569. [Hypothesis: escolher deadline sem esconder testes lentos](../../domains/software-0007/software/testes/hyp-deadline-tempo-execucao.md)
+### TestNG — dados, configuração, dependências e execução
+
+570. [TestNG: alinhar DataProvider e assinatura do teste](../../domains/software-0007/software/testes/testng-dataprovider-casos.md)
+571. [TestNG: organizar parâmetros XML por escopo](../../domains/software-0007/software/testes/testng-parameters-escopo-xml.md)
+572. [TestNG: dependências hard e soft entre testes](../../domains/software-0007/software/testes/testng-dependencies-hard-soft.md)
+573. [TestNG: usar groups para selecionar conjuntos de testes](../../domains/software-0007/software/testes/testng-groups-selecao.md)
+574. [TestNG: ordem de hooks de configuração herdados](../../domains/software-0007/software/testes/testng-lifecycle-heranca-hooks.md)
+575. [TestNG: DataProvider paralelo sem estado compartilhado](../../domains/software-0007/software/testes/testng-dataprovider-parallel.md)
+576. [TestNG: configurar paralelismo de suite conscientemente](../../domains/software-0007/software/testes/testng-suite-parallel-threadcount.md)
+577. [TestNG: criar instâncias de teste com `@Factory`](../../domains/software-0007/software/testes/testng-factory-instancias.md)
+578. [TestNG: usar listeners para observar execução](../../domains/software-0007/software/testes/testng-listener-eventos-relatorio.md)
+579. [TestNG: interpretar `invocationCount` e seu timeout](../../domains/software-0007/software/testes/testng-invocationcount-timeout.md)
+### Go testing — subtestes, concorrência, fuzzing e benchmarks
+
+580. [Go testing: hierarquia de subtests com `t.Run`](../../domains/software-0007/software/testes/go-subtests-run-filter.md)
+581. [Go testing: escopo de `t.Cleanup` com subtestes](../../domains/software-0007/software/testes/go-t-cleanup-subtest-scope.md)
+582. [Go testing: atribuir falhas ao chamador com `t.Helper`](../../domains/software-0007/software/testes/go-testing-helper-error-location.md)
+583. [Go testing: barreira de `t.Parallel` em subtestes](../../domains/software-0007/software/testes/go-parallel-subtests-barreira.md)
+584. [Go testing: corpus de fuzz como regressão executável](../../domains/software-0007/software/testes/go-fuzz-corpus-regressao.md)
+585. [Go testing: alcance e limite do detector `-race`](../../domains/software-0007/software/testes/go-race-dinamico-limites.md)
+586. [Go testing: coordenar concorrência com `testing/synctest`](../../domains/software-0007/software/testes/go-testing-synctest-tempo-virtual.md)
+587. [Go testing: centralizar preparação no `TestMain`](../../domains/software-0007/software/testes/go-testmain-recursos-pacote.md)
+588. [Go testing: temporários isolados com `t.TempDir`](../../domains/software-0007/software/testes/go-tdir-cleanup-descendants.md)
+589. [Go testing: estruturar medições com `B.Loop`](../../domains/software-0007/software/testes/go-b-loop-benchmark-comparacao.md)
+### PIT — mutation testing para Java
+
+590. [PIT: mutação de bytecode para avaliar assertions](../../domains/software-0007/software/testes/pit-mutacao-bytecode-mutantes.md)
+591. [PIT: usar cobertura para escolher testes por mutante](../../domains/software-0007/software/testes/pit-cobertura-selecao-testes.md)
+592. [PIT: interpretar estados de mutantes no relatório](../../domains/software-0007/software/testes/pit-status-killed-survived.md)
+593. [PIT: selecionar grupos de mutadores conforme a pergunta](../../domains/software-0007/software/testes/pit-mutator-groups-esforco.md)
+594. [PIT: delimitar classes e testes de mutation testing](../../domains/software-0007/software/testes/pit-targetclasses-targettests.md)
+595. [PIT: distinguir timeout de mutante sobrevivente](../../domains/software-0007/software/testes/pit-timeouts-mutantes-hang.md)
+596. [PIT: tratar histórico incremental como otimização](../../domains/software-0007/software/testes/pit-incremental-history-assumptions.md)
+597. [PIT: usar dry run ao configurar a análise](../../domains/software-0007/software/testes/pit-maven-dry-run-setup.md)
+598. [PIT: executar `mutationCoverage` e guardar o relatório](../../domains/software-0007/software/testes/pit-maven-goal-relatorio.md)
+599. [PIT: não reduzir adequação de testes ao mutation score](../../domains/software-0007/software/testes/pit-mutation-score-interpretacao.md)
+### PHPUnit — descoberta, dados, fixtures e execução
+
+600. [PHPUnit 12.5: descobrir métodos de teste](../../domains/software-0007/software/testes/phpunit-discovery-metodos-atributos.md)
+601. [PHPUnit 12.5: manter contratos explícitos em Data Providers](../../domains/software-0007/software/testes/phpunit-dataprovider-contrato.md)
+602. [PHPUnit 12.5: escolher entre `TestWith` e Data Provider](../../domains/software-0007/software/testes/phpunit-testwith-inline-cases.md)
+603. [PHPUnit 12.5: usar `Depends` para transferir resultado](../../domains/software-0007/software/testes/phpunit-depends-retorno.md)
+604. [PHPUnit 12.5: dimensionar fixtures por teste](../../domains/software-0007/software/testes/phpunit-fixtures-per-test.md)
+605. [PHPUnit 12.5: resolver configuração efetiva](../../domains/software-0007/software/testes/phpunit-config-precedencia.md)
+606. [PHPUnit 12.5: selecionar testes por suite, grupo ou padrão](../../domains/software-0007/software/testes/phpunit-selection-filter-group.md)
+607. [PHPUnit 12.5: reproduzir falhas por ordem aleatória](../../domains/software-0007/software/testes/phpunit-random-seed-repro.md)
+608. [PHPUnit 12.5: interpretar testes marcados como risky](../../domains/software-0007/software/testes/phpunit-risky-output-assertions.md)
+609. [PHPUnit 12.5: classificar tamanhos e limites de duração](../../domains/software-0007/software/testes/phpunit-size-time-budget.md)
+### RSpec — exemplos compartilhados, hooks, matchers e seleção
+
+610. [RSpec 3.13: shared examples como contrato comportamental](../../domains/software-0007/software/testes/rspec-shared-examples-contrato.md)
+611. [RSpec 3.13: escolher a inclusão de exemplos compartilhados](../../domains/software-0007/software/testes/rspec-include-vs-it-behaves-like.md)
+612. [RSpec 3.13: `around` como envelope de um exemplo](../../domains/software-0007/software/testes/rspec-around-hook-envelope.md)
+613. [RSpec 3.13: limitar hooks ao escopo necessário](../../domains/software-0007/software/testes/rspec-before-after-scope.md)
+614. [RSpec 3.13: compor matchers para respostas estruturadas](../../domains/software-0007/software/testes/rspec-composable-matchers-estruturas.md)
+615. [RSpec 3.13: doubles que verificam a interface](../../domains/software-0007/software/testes/rspec-verifying-doubles-interface.md)
+616. [RSpec 3.13: restringir argumentos de expectativas de mensagem](../../domains/software-0007/software/testes/rspec-message-argument-constraints.md)
+617. [RSpec 3.13: filtrar exemplos por metadata](../../domains/software-0007/software/testes/rspec-metadata-tag-selection.md)
+618. [RSpec 3.13: reproduzir falhas de ordem aleatória](../../domains/software-0007/software/testes/rspec-random-order-seed.md)
+619. [RSpec 3.13: diferenciar `let` e `let!`](../../domains/software-0007/software/testes/rspec-let-let-bang-lazy.md)
+### ExUnit — callbacks, concorrência, templates e doctests
+
+620. [ExUnit: passar contexto entre setup e teste](../../domains/software-0007/software/testes/exunit-setup-context-data.md)
+621. [ExUnit: limitar o que `setup_all` deve compartilhar](../../domains/software-0007/software/testes/exunit-setup-all-process-boundary.md)
+622. [ExUnit: encerrar processos com `start_supervised`](../../domains/software-0007/software/testes/exunit-start-supervised-lifecycle.md)
+623. [ExUnit: usar `on_exit` sem presumir o processo do teste](../../domains/software-0007/software/testes/exunit-on-exit-separar-cleanup.md)
+624. [ExUnit: habilitar `async: true` com estado independente](../../domains/software-0007/software/testes/exunit-async-global-state.md)
+625. [ExUnit: compartilhar convenções com `CaseTemplate`](../../domains/software-0007/software/testes/exunit-case-template-reuso.md)
+626. [ExUnit: capturar IO com segurança em testes async](../../domains/software-0007/software/testes/exunit-capture-io-isolamento.md)
+627. [ExUnit: transformar exemplos de documentação em testes](../../domains/software-0007/software/testes/exunit-doctest-documentacao.md)
+628. [ExUnit: selecionar execução com tags e filtros](../../domains/software-0007/software/testes/exunit-tags-select-filters.md)
+629. [ExUnit: reproduzir ordem com seed e controlar `max_cases`](../../domains/software-0007/software/testes/exunit-seed-cases-concorrencia.md)
+### Newman — execução de collections Postman em CLI e CI
+
+630. [Newman: avaliar o modo de manutenção antes de expandir uso](../../domains/software-0007/software/testes/newman-maintenance-workflow-choice.md)
+631. [Newman: fixar a origem da collection executada](../../domains/software-0007/software/testes/newman-collection-source-version.md)
+632. [Newman: separar environment e globals](../../domains/software-0007/software/testes/newman-environment-global-precedence.md)
+633. [Newman: controlar iterações com arquivo de dados](../../domains/software-0007/software/testes/newman-iteration-data-csv-json.md)
+634. [Newman: restringir execução a pastas da collection](../../domains/software-0007/software/testes/newman-folder-selection.md)
+635. [Newman: decidir entre interromper cedo e preservar diagnóstico](../../domains/software-0007/software/testes/newman-bail-exit-status.md)
+636. [Newman: distinguir timeout total, de request e de script](../../domains/software-0007/software/testes/newman-timeout-scopes.md)
+637. [Newman: combinar reporters sem perder saída CLI](../../domains/software-0007/software/testes/newman-reporters-artifacts.md)
+638. [Newman: estender relatórios com reporter externo](../../domains/software-0007/software/testes/newman-custom-reporter-package.md)
+639. [Newman: integrar collections pela API Node](../../domains/software-0007/software/testes/newman-programmatic-events-summary.md)
+### axe-core — escopo de varredura, resultados e limites
+
+640. [axe-core: executar análise depois de renderizar o estado](../../domains/software-0007/software/testes/axe-rendered-dom-state.md)
+641. [axe-core: restringir contexto sem abandonar cobertura](../../domains/software-0007/software/testes/axe-context-include-exclude.md)
+642. [axe-core: planejar frames e shadow DOM no contexto](../../domains/software-0007/software/testes/axe-frames-shadow-dom-context.md)
+643. [axe-core: selecionar regras com `runOnly`](../../domains/software-0007/software/testes/axe-runonly-tags-rules.md)
+644. [axe-core: distinguir violations, passes, incomplete e inapplicable](../../domains/software-0007/software/testes/axe-result-categories.md)
+645. [axe-core: revisar resultados marcados como incomplete](../../domains/software-0007/software/testes/axe-incomplete-manual-review.md)
+646. [axe-core: usar impact para priorizar sem certificar conformidade](../../domains/software-0007/software/testes/axe-impact-priorizacao-nao-conformidade.md)
+647. [axe-core: interpretar tags como escopo de regras](../../domains/software-0007/software/testes/axe-tags-nao-cobertura-total-wcag.md)
+648. [axe-core: escanear separadamente estados de interação](../../domains/software-0007/software/testes/axe-dynamic-flows-multiple-scans.md)
+649. [axe-core: registrar alvos de nós para regressões](../../domains/software-0007/software/testes/axe-result-targets-regression.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 540 notas 10–549 das tranches 2–11 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 549/2.000 notas válidas, restando 1.451 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 640 notas 10–649 das tranches 2–12 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 649/2.000 notas válidas, restando 1.351 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
