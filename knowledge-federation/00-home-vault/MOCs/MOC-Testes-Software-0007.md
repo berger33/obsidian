@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 649 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 649 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 640 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 749 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 749 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 740 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -798,6 +798,138 @@
 648. [[axe-dynamic-flows-multiple-scans]] — Uma página interativa pode revelar conteúdo novo após abrir modal, menu ou erro de formulário, e cada estado exige uma execução própria para ser observado.
 649. [[axe-result-targets-regression]] — Resultados associam violações a nós e alvos, permitindo identificar onde uma regra encontrou o problema na árvore analisada.
 
+## Tranche 13 — frameworks de teste, Rust e execução de suites (IDs 650–749; revisão factual por IA registrada)
+
+### Mocha — interfaces, hooks e execução paralela
+
+650. [[mocha-bdd-suite-tree]] — A interface BDD registra grupos com `describe()` e exemplos individuais com `it()`.
+651. [[mocha-hooks-nested-order]] — `before` e `after` envolvem uma suite, enquanto `beforeEach` e `afterEach` acompanham cada teste daquele escopo.
+652. [[mocha-async-completion-contract]] — Mocha reconhece teste síncrono, callback `done`, promessa retornada e função `async` que devolve promessa.
+653. [[mocha-root-hooks-plugin]] — Um Root Hook Plugin exporta hooks que o Mocha instala fora de uma suite nomeada.
+654. [[mocha-parallel-order-isolation]] — Com `--parallel`, Mocha distribui arquivos por workers e não garante a ordem em que eles serão executados.
+655. [[mocha-retry-diagnostic]] — A opção `--retries` repete testes que falham até o limite configurado; por padrão, falhas não são repetidas.
+656. [[mocha-timeout-test-and-hook]] — Mocha aplica limite de duração a testes e hooks, e o valor pode ser configurado em níveis diferentes.
+657. [[mocha-grep-focused-suite]] — `--grep` seleciona testes pelos títulos correspondentes e pode ser usado para executar um recorte sem alterar a suíte.
+658. [[mocha-reporter-parallel-output]] — Reporters transformam resultados em saída de terminal ou arquivos, e algumas opções precisam conhecer a suíte inteira antes da execução.
+659. [[mocha-global-fixture-lifecycle]] — Global fixtures oferecem configuração e limpeza uma vez para a execução do Mocha, ao passo que hooks pertencem às suites e seus testes.
+
+### Jasmine 7 — spies, relógio simulado e execução assíncrona
+
+660. [[jasmine-promise-completion]] — Jasmine aguarda a promessa retornada por um spec ou hook e falha o spec quando ela rejeita.
+661. [[jasmine-done-callback]] — Ao declarar argumento `done`, o spec ou hook usa o callback entregue por Jasmine para sinalizar conclusão.
+662. [[jasmine-clock-tick-cleanup]] — `jasmine.clock()` instala relógio simulado que permite avançar timers enfileirados sem esperar tempo real.
+663. [[jasmine-mock-date-time]] — O relógio de Jasmine pode ser instruído a simular a data que `new Date()` retorna.
+664. [[jasmine-spy-through-vs-stub]] — Um spy pode registrar chamadas e também ser configurado para executar a implementação original ou devolver comportamento falso.
+665. [[jasmine-spy-call-history]] — O objeto Spy expõe histórico de chamadas para examinar quantidade, argumentos e ordem observada.
+666. [[jasmine-beforeall-state-boundary]] — `beforeAll` prepara uma vez os specs de seu grupo, enquanto `beforeEach` roda antes de cada spec.
+667. [[jasmine-focused-spec-cleanup]] — `fit` e `fdescribe` focam uma spec ou suite e fazem com que apenas testes focados sejam executados.
+668. [[jasmine-pending-spec-intent]] — Um spec `it` sem função de teste é marcado como pending, e a API também distingue specs focados.
+669. [[jasmine-async-matcher-await]] — `expectAsync()` cria expectations cujos matchers retornam promises que precisam ser aguardadas ou retornadas.
+
+### WebdriverIO — espera explícita, runners e isolamento
+
+670. [[webdriverio-auto-wait-interactable]] — Comandos que interagem diretamente com elemento aguardam que ele esteja visível e interagível antes de agir.
+671. [[webdriverio-waituntil-condition]] — `browser.waitUntil()` consulta uma condição até que ela retorne valor truthy ou ultrapasse o timeout configurado.
+672. [[webdriverio-wait-displayed-state]] — `waitForDisplayed()` aguarda que um elemento esteja exibido, condição diferente de apenas localizar um seletor no DOM.
+673. [[webdriverio-soft-assertion-aggregation]] — `expect.soft()` coleta falhas sem interromper imediatamente o teste e as reporta juntas ao final quando o serviço correspondente está ativo.
+674. [[webdriverio-local-worker-isolation]] — No Local Runner, cada arquivo de teste roda em processo worker separado por capability, com sua própria sessão de browser.
+675. [[webdriverio-browser-runner-boundary]] — Browser Runner executa framework de teste dentro de browser real e é diferente do Local Runner que inicia framework em processo Node.
+676. [[webdriverio-selector-contract]] — WebdriverIO aceita estratégias de seletor diferentes, que variam em estabilidade e relação com a interface de usuário.
+677. [[webdriverio-capability-concurrency]] — Configuração do runner combina capabilities de browser e limites de execução concorrente.
+678. [[webdriverio-spec-file-retries]] — Configuração pode repetir um arquivo de spec que falhou até o limite `specFileRetries`.
+679. [[webdriverio-group-spec-execution]] — Suite pode ser organizada em grupos de spec que executam juntos, útil quando uma dependência de execução é inevitável.
+
+### Cargo test e rustdoc — organização e controle de execução
+
+680. [[cargo-unit-test-module]] — Unit tests escritos num módulo `#[cfg(test)]` dentro do arquivo podem acessar itens privados do módulo pai.
+681. [[cargo-integration-test-crate]] — Arquivos no diretório superior `tests/` são compilados individualmente como crates de integração.
+682. [[rustdoc-compile-fail-doctest]] — A cerca `compile_fail` marca um bloco de documentação que rustdoc compila negativamente e aprova quando o trecho não compila.
+683. [[cargo-doctest-hidden-setup]] — Linhas iniciadas por `#` podem compor contexto compilável do doctest sem aparecer no trecho renderizado.
+684. [[cargo-test-filter-argument-boundary]] — O argumento de filtro e os parâmetros depois de `--` são encaminhados ao executável de teste, enquanto opções antes do separador pertencem ao Cargo.
+685. [[cargo-no-run-compilation-check]] — A opção `--no-run` compila executáveis de teste sem iniciar o harness.
+686. [[cargo-no-fail-fast-scope]] — `--no-fail-fast` faz Cargo continuar para executáveis de teste posteriores depois de um deles falhar.
+687. [[cargo-test-thread-count-isolation]] — Testes do harness podem rodar em múltiplas threads, e `--test-threads` limita a concorrência desse executável.
+688. [[cargo-target-selection]] — Cargo consegue selecionar workspace, pacote, biblioteca, binário, exemplo ou alvo de integração em vez de compilar tudo.
+689. [[cargo-harness-false-boundary]] — Alvos com `harness = false` deixam de receber o harness automático e precisam fornecer seu próprio `main` para executar testes.
+
+### Criterion.rs — metodologia, configuração e interpretação de benchmarks
+
+690. [[criterion-benchmark-input-black-box]] — `bench_with_input()` associa um valor de entrada e um identificador ao benchmark e passa o input por `black_box`.
+691. [[criterion-benchmark-group-parameters]] — `BenchmarkGroup` relaciona casos que medem a mesma pergunta com parâmetros diferentes e gera sumarização conjunta.
+692. [[criterion-throughput-units]] — Throughput em bytes ou elementos exige informar quantos deles são processados em cada iteração.
+693. [[criterion-warmup-measurement-phases]] — Execução de benchmark passa por warmup, medição, análise e comparação com resultados salvos.
+694. [[criterion-sample-size-tradeoff]] — A quantidade de amostras afeta duração da execução e capacidade de estimar diferenças pequenas com a análise estatística configurada.
+695. [[criterion-outlier-interpretation]] — Criterion classifica outliers e avisa sobre sua presença, mas a análise subsequente continua usando as amostras coletadas.
+696. [[criterion-baseline-comparison]] — Criterion compara estatísticas atuais com dados previamente salvos e estima se a diferença pode ser atribuída a variação.
+697. [[criterion-flat-sampling-long-workload]] — Criterion oferece modos de amostragem `Auto`, `Linear` e `Flat`, sendo o último destinado a benchmarks de longa duração.
+698. [[criterion-throughput-and-log-scale]] — Grupos podem descrever throughput e usar escala logarítmica quando tamanhos de input crescem exponencialmente.
+699. [[criterion-benchmark-loop-scope]] — A closure de benchmark precisa repetir o trabalho que se deseja medir e evitar que preparação não representativa domine a duração.
+
+### Ginkgo v2 — árvore de specs, paralelismo e confiabilidade
+
+700. [[ginkgo-container-tree]] — Ginkgo usa `Describe`, `Context` e `It` para compor uma árvore de especificações que o runner constrói antes de executar os casos.
+701. [[ginkgo-before-after-nesting]] — `BeforeEach` roda para cada spec em seu escopo e hooks aninhados seguem hierarquia do container.
+702. [[ginkgo-suite-synchronized-setup]] — Suite-level setup e teardown têm nós próprios; em execução paralela, recurso compartilhado exige coordenação entre processos.
+703. [[ginkgo-process-parallel-isolation]] — CLI `ginkgo -p` executa specs usando processos paralelos e acelera suites que não compartilham recurso mutável.
+704. [[ginkgo-random-order-seed]] — Randomização muda ordem de execução dos specs e seed permite repetir a sequência que revelou dependência entre casos.
+705. [[ginkgo-label-filter]] — Labels associam metadados a specs e filtros permitem selecionar conjuntos sem comentar ou editar a árvore de testes.
+706. [[ginkgo-describe-table-entries]] — `DescribeTable` e `Entry` produzem specs a partir de exemplos declarados de forma explícita.
+707. [[ginkgo-eventually-context]] — `Eventually` repete observação até matcher passar ou contexto/timeout encerrar a tentativa.
+708. [[ginkgo-consistently-window]] — `Consistently` avalia matcher por uma janela temporal para verificar que condição permanece verdadeira ou comportamento indesejado não aparece.
+709. [[ginkgo-flake-attempts-evidence]] — `FlakeAttempts` permite executar novamente um spec marcado como flakey até o limite definido.
+
+### ScalaTest 3.2 — estilos, fixtures, tags e tabelas
+
+710. [[scalatest-style-selection]] — ScalaTest oferece style traits que adaptam a forma de declarar testes sem mudar o conceito central de `Suite`.
+711. [[scalatest-pending-cancel-semantics]] — Pending indica teste conhecido que ainda não foi implementado, enquanto cancel interrompe execução por condição que impede avaliação naquele contexto.
+712. [[scalatest-assertion-clue]] — Assertions ScalaTest podem carregar pistas contextuais para indicar qual etapa ou dado contribuiu para uma falha.
+713. [[scalatest-tags-select-test-runs]] — Tags classificam testes e runners permitem incluir ou excluir grupos durante a execução.
+714. [[scalatest-runner-entrypoints]] — ScalaTest pode ser executado por frameworks de build, Runner de linha de comando, IDEs e integrações específicas.
+715. [[scalatest-fixture-withfixture]] — `withFixture` permite envolver execução de testes com preparação e cleanup comuns a grande parte de uma suite.
+716. [[scalatest-loan-fixture-cleanup]] — Loan-fixture é opção quando testes diferentes precisam de objetos específicos que precisam ser limpos ao concluir.
+717. [[scalatest-table-driven-check]] — `TableDrivenPropertyChecks` aplica uma propriedade às linhas tipadas de `Table` usando métodos como `forAll` e `forEvery`.
+718. [[scalatest-matcher-composition]] — Matchers fornecem linguagem declarativa para comparar estado observado com condição esperada.
+719. [[scalatest-async-future-result]] — Estilos assíncronos do ScalaTest integram resultado de teste com `Future` e só concluem quando esse resultado finaliza.
+
+### Spock 2.4 — fixtures, dados e interações
+
+720. [[spock-given-when-then-contract]] — Uma feature Spock pode separar preparação, estímulo e resultado nos blocos `given:`, `when:` e `then:`.
+721. [[spock-fixture-lifecycle-order]] — `setupSpec`, `setup`, `cleanup` e `cleanupSpec` cobrem preparação e liberação em escopos diferentes.
+722. [[spock-shared-field-scope]] — Campos de instância recebem objeto independente para cada feature; `@Shared` amplia vida útil e partilha objeto entre métodos.
+723. [[spock-data-table-iterations]] — Bloco `where:` fornece data variables que executam a mesma feature para cada linha da tabela.
+724. [[spock-where-iteration-isolation]] — Cada iteração de feature data-driven ganha instância própria da specification e passa por setup e cleanup.
+725. [[spock-mock-interaction-constraints]] — Interação em bloco `then:` descreve chamadas esperadas por cardinalidade, alvo, método e argumentos.
+726. [[spock-stub-response-generator]] — Operador `>>` define resposta que mock ou stub fornece quando recebe chamada correspondente.
+727. [[spock-lenient-mock-scope]] — Mocks Spock são lenientes por padrão para chamadas inesperadas que não foram descritas, respondendo com valor default.
+728. [[spock-exception-condition]] — Condições de Spock ajudam verificar comportamento de exceção no caminho em que ela é lançada.
+729. [[spock-extension-boundary]] — Extensions registram comportamento reaproveitável que intercepta ou complementa lifecycle de specs e features.
+
+### GoogleTest — fixtures, parametrização, assertions e gMock
+
+730. [[googletest-test-suite-registration]] — Macro `TEST()` registra função de teste associada a uma suite nomeada, sem exigir lista manual para executar os casos.
+731. [[googletest-test-fixture-instance]] — `TEST_F` liga caso a uma classe derivada de `testing::Test`, e cada teste usa objeto fixture próprio.
+732. [[googletest-fatal-vs-nonfatal]] — `ASSERT_*` interrompe a função de teste no primeiro erro, enquanto `EXPECT_*` registra falha não fatal e continua.
+733. [[googletest-value-parameterized-suite]] — Teste value-parameterized reutiliza um padrão de fixture e executa para valores fornecidos por gerador.
+734. [[googletest-typed-test-known-types]] — Typed tests executam o mesmo conjunto de definições para uma lista de tipos conhecida na compilação.
+735. [[googletest-type-parameterized-contract]] — Type-parameterized tests definem padrões antes de conhecer a lista concreta de tipos que os instanciará.
+736. [[googletest-filter-selected-tests]] — Filtro `--gtest_filter` seleciona suites e testes pelo padrão de nome durante execução.
+737. [[googletest-death-test-process]] — Death tests verificam se uma operação encerra ou termina processo segundo condição esperada.
+738. [[googletest-global-environment-boundary]] — Test environment oferece `SetUp` e `TearDown` de escopo do programa, diferente de fixture por teste.
+739. [[gmock-interaction-expectation]] — `EXPECT_CALL` descreve chamada esperada a mock, incluindo método, argumentos, frequência e resposta opcional.
+
+### CTest e CMake — descoberta, fixtures, filtros e relatórios
+
+740. [[ctest-enable-testing-scope]] — CTest executa testes descritos em `CTestTestfile.cmake`, que CMake gera quando testing foi habilitado no diretório apropriado.
+741. [[ctest-add-test-command]] — A assinatura nomeada de `add_test(NAME ... COMMAND ...)` associa identificador estável e comando ao teste executado por CTest.
+742. [[ctest-working-directory-contract]] — `WORKING_DIRECTORY` define o diretório de execução do teste; quando omitido, CTest usa diretório binário atual.
+743. [[ctest-exit-code-will-fail]] — Por padrão, código de saída zero aprova teste e código diferente de zero o reprova; `WILL_FAIL` inverte essa lógica para casos que esperam retorno de falha.
+744. [[ctest-timeout-failure-diagnostic]] — Propriedade TIMEOUT define limite de parede por teste e impede processo travado de bloquear indefinidamente a suite.
+745. [[ctest-label-filter]] — Propriedade `LABELS` classifica teste e CTest permite selecionar ou excluir rótulos sem renomear alvo.
+746. [[ctest-fixture-dependency-graph]] — `FIXTURES_SETUP` marca um teste preparatório e `FIXTURES_REQUIRED` marca consumidores que precisam daquele recurso.
+747. [[ctest-parallel-processors]] — CTest pode executar testes em paralelo, e propriedade PROCESSORS informa quantos slots cada caso consome.
+748. [[ctest-repeat-and-random-order]] — CTest oferece opções de repetição e ordem aleatória para exercitar casos várias vezes no mesmo run.
+749. [[ctest-junit-preset-output]] — Test Preset guarda opções de execução reutilizáveis e CTest pode gravar saída JUnit com `--output-junit`.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 649/649 notas e as 649 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 640 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (649 notas substantivas; 1.351 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 749/749 notas e as 749 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 740 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (749 notas substantivas; 1.251 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-13.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

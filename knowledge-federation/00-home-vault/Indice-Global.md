@@ -11,9 +11,9 @@ Atualizado em: 2026-10-02
 
 ## Estado editorial do diretório ativo
 
-- Arquivos Markdown em `domains/`: **789** (100 sementes legadas + 689 notas autorais substantivas).
-- Candidatas aprovadas no gate automatizado: **689**; revisões humanas registradas: **49**; revisões factuais por IA: **640**; 100 sementes legadas mantêm pendências.
-- Os lotes atuais totalizam 689 notas válidas pelo protocolo; o lote `software-testes-2000-0001` tem 649/2.000, incluindo as notas 550–649 revisadas por IA na [tranche 12](../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md) e as notas 450–549 da [tranche 11](../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Veja também [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila de revisão](../exports/reports/human-review-queue.md).
+- Arquivos Markdown em `domains/`: **889** (100 sementes legadas + 789 notas autorais substantivas).
+- Candidatas aprovadas no gate automatizado: **789**; revisões humanas registradas: **49**; revisões factuais por IA: **740**; 100 sementes legadas mantêm pendências.
+- Os lotes atuais totalizam 789 notas válidas pelo protocolo; o lote `software-testes-2000-0001` tem 749/2.000, incluindo as notas 650–749 revisadas por IA na [tranche 13](../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), as notas 550–649 na [tranche 12](../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md) e as notas 450–549 na [tranche 11](../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Veja também [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila de revisão](../exports/reports/human-review-queue.md).
 
 ## Resumo Executivo
 

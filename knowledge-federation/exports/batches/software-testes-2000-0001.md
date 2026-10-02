@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **649 / 2.000 (32,45%)**
-- Gate automatizado: **649/649 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após as correções factuais da tranche 12)
+- Notas efetivamente redigidas até agora: **749 / 2.000 (37,45%)**
+- Gate automatizado: **749/749 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 13)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/649**
-- Revisão factual por IA: **640/649**
-- Contabilizadas como válidas: **649/649**
+- Revisão factual humana: **9/749**
+- Revisão factual por IA: **740/749**
+- Contabilizadas como válidas: **749/749**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 640 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–12 (640 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 740 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–13 (740 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-12.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) (a tranche 11 permanece registrada [aqui](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md))
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-13.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-13.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 649 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.351 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 749 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.251 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -793,6 +793,138 @@
 648. [axe-core: escanear separadamente estados de interação](../../domains/software-0007/software/testes/axe-dynamic-flows-multiple-scans.md)
 649. [axe-core: registrar alvos de nós para regressões](../../domains/software-0007/software/testes/axe-result-targets-regression.md)
 
+## Tranche 13 — frameworks de teste e tooling (100 notas; revisão factual por IA registrada)
+
+### Mocha — interfaces, hooks e execução paralela
+
+650. [Mocha: organizar suites BDD com describe e it](../../domains/software-0007/software/testes/mocha-bdd-suite-tree.md)
+651. [Mocha: controlar ordem e escopo de hooks aninhados](../../domains/software-0007/software/testes/mocha-hooks-nested-order.md)
+652. [Mocha: escolher uma única forma de concluir teste assíncrono](../../domains/software-0007/software/testes/mocha-async-completion-contract.md)
+653. [Mocha: instalar root hooks por plugin reutilizável](../../domains/software-0007/software/testes/mocha-root-hooks-plugin.md)
+654. [Mocha: não depender de ordem global em modo paralelo](../../domains/software-0007/software/testes/mocha-parallel-order-isolation.md)
+655. [Mocha: usar retries como evidência de instabilidade](../../domains/software-0007/software/testes/mocha-retry-diagnostic.md)
+656. [Mocha: dimensionar timeout de teste e hook](../../domains/software-0007/software/testes/mocha-timeout-test-and-hook.md)
+657. [Mocha: filtrar casos sem deixar foco acidental](../../domains/software-0007/software/testes/mocha-grep-focused-suite.md)
+658. [Mocha: combinar reporter com o modo de execução](../../domains/software-0007/software/testes/mocha-reporter-parallel-output.md)
+659. [Mocha: separar fixture global de hooks de suite](../../domains/software-0007/software/testes/mocha-global-fixture-lifecycle.md)
+
+### Jasmine 7 — spies, relógio simulado e execução assíncrona
+
+660. [Jasmine: devolver promessa para aguardar operação](../../domains/software-0007/software/testes/jasmine-promise-completion.md)
+661. [Jasmine: encerrar callback uma única vez](../../domains/software-0007/software/testes/jasmine-done-callback.md)
+662. [Jasmine: avançar relógio falso e restaurá-lo](../../domains/software-0007/software/testes/jasmine-clock-tick-cleanup.md)
+663. [Jasmine: alinhar new Date ao relógio simulado](../../domains/software-0007/software/testes/jasmine-mock-date-time.md)
+664. [Jasmine: distinguir spy que observa de spy com resposta](../../domains/software-0007/software/testes/jasmine-spy-through-vs-stub.md)
+665. [Jasmine: inspecionar histórico de chamadas de spy](../../domains/software-0007/software/testes/jasmine-spy-call-history.md)
+666. [Jasmine: limitar estado compartilhado em beforeAll](../../domains/software-0007/software/testes/jasmine-beforeall-state-boundary.md)
+667. [Jasmine: remover fit e fdescribe antes da CI](../../domains/software-0007/software/testes/jasmine-focused-spec-cleanup.md)
+668. [Jasmine: registrar pending sem confundir com cobertura](../../domains/software-0007/software/testes/jasmine-pending-spec-intent.md)
+669. [Jasmine: aguardar resultado de expectAsync](../../domains/software-0007/software/testes/jasmine-async-matcher-await.md)
+
+### WebdriverIO — espera explícita, runners e isolamento
+
+670. [WebdriverIO: confiar no auto-wait para interação](../../domains/software-0007/software/testes/webdriverio-auto-wait-interactable.md)
+671. [WebdriverIO: modelar condição temporal com waitUntil](../../domains/software-0007/software/testes/webdriverio-waituntil-condition.md)
+672. [WebdriverIO: esperar visibilidade sem presumir presença](../../domains/software-0007/software/testes/webdriverio-wait-displayed-state.md)
+673. [WebdriverIO: acumular falhas independentes com soft assertions](../../domains/software-0007/software/testes/webdriverio-soft-assertion-aggregation.md)
+674. [WebdriverIO: entender isolamento do Local Runner](../../domains/software-0007/software/testes/webdriverio-local-worker-isolation.md)
+675. [WebdriverIO: escolher Browser Runner para teste de componentes](../../domains/software-0007/software/testes/webdriverio-browser-runner-boundary.md)
+676. [WebdriverIO: escolher seletor que sobreviva a refatoração visual](../../domains/software-0007/software/testes/webdriverio-selector-contract.md)
+677. [WebdriverIO: limitar workers pela capacidade disponível](../../domains/software-0007/software/testes/webdriverio-capability-concurrency.md)
+678. [WebdriverIO: diagnosticar antes de ativar retry de spec](../../domains/software-0007/software/testes/webdriverio-spec-file-retries.md)
+679. [WebdriverIO: agrupar arquivos para controlar ordem necessária](../../domains/software-0007/software/testes/webdriverio-group-spec-execution.md)
+
+### Cargo test e rustdoc — organização e controle de execução
+
+680. [Cargo test: manter unit tests perto do módulo](../../domains/software-0007/software/testes/cargo-unit-test-module.md)
+681. [Cargo test: separar testes de integração como crates externos](../../domains/software-0007/software/testes/cargo-integration-test-crate.md)
+682. [rustdoc: verificar exemplos que devem falhar na compilação](../../domains/software-0007/software/testes/rustdoc-compile-fail-doctest.md)
+683. [rustdoc: esconder preparação sem retirá-la do doctest](../../domains/software-0007/software/testes/cargo-doctest-hidden-setup.md)
+684. [Cargo test: separar argumentos do Cargo e do harness](../../domains/software-0007/software/testes/cargo-test-filter-argument-boundary.md)
+685. [Cargo test: compilar alvos sem executá-los](../../domains/software-0007/software/testes/cargo-no-run-compilation-check.md)
+686. [Cargo test: entender o escopo de no-fail-fast](../../domains/software-0007/software/testes/cargo-no-fail-fast-scope.md)
+687. [Rust test harness: controlar concorrência com test-threads](../../domains/software-0007/software/testes/cargo-test-thread-count-isolation.md)
+688. [Cargo test: limitar execução por pacote e target](../../domains/software-0007/software/testes/cargo-target-selection.md)
+689. [Cargo test: desativar harness somente para executor próprio](../../domains/software-0007/software/testes/cargo-harness-false-boundary.md)
+
+### Criterion.rs — metodologia, configuração e interpretação de benchmarks
+
+690. [Criterion.rs: nomear benchmark com input explícito](../../domains/software-0007/software/testes/criterion-benchmark-input-black-box.md)
+691. [Criterion.rs: agrupar variações com BenchmarkGroup](../../domains/software-0007/software/testes/criterion-benchmark-group-parameters.md)
+692. [Criterion.rs: declarar unidade de throughput por iteração](../../domains/software-0007/software/testes/criterion-throughput-units.md)
+693. [Criterion.rs: separar warmup de coleta de amostras](../../domains/software-0007/software/testes/criterion-warmup-measurement-phases.md)
+694. [Criterion.rs: ajustar sample_size conforme precisão](../../domains/software-0007/software/testes/criterion-sample-size-tradeoff.md)
+695. [Criterion.rs: interpretar outliers sem descartá-los](../../domains/software-0007/software/testes/criterion-outlier-interpretation.md)
+696. [Criterion.rs: tratar comparação automática como hipótese](../../domains/software-0007/software/testes/criterion-baseline-comparison.md)
+697. [Criterion.rs: reservar Flat sampling para medições longas](../../domains/software-0007/software/testes/criterion-flat-sampling-long-workload.md)
+698. [Criterion.rs: escolher escala de gráfico para tamanhos crescentes](../../domains/software-0007/software/testes/criterion-throughput-and-log-scale.md)
+699. [Criterion.rs: manter trabalho relevante dentro do bencher](../../domains/software-0007/software/testes/criterion-benchmark-loop-scope.md)
+
+### Ginkgo v2 — árvore de specs, paralelismo e confiabilidade
+
+700. [Ginkgo: construir árvore de specs antes da execução](../../domains/software-0007/software/testes/ginkgo-container-tree.md)
+701. [Ginkgo: ordenar setup e cleanup em containers aninhados](../../domains/software-0007/software/testes/ginkgo-before-after-nesting.md)
+702. [Ginkgo: sincronizar recurso compartilhado na suite paralela](../../domains/software-0007/software/testes/ginkgo-suite-synchronized-setup.md)
+703. [Ginkgo: isolar recursos ao executar specs com -p](../../domains/software-0007/software/testes/ginkgo-process-parallel-isolation.md)
+704. [Ginkgo: reproduzir falha de ordem com seed](../../domains/software-0007/software/testes/ginkgo-random-order-seed.md)
+705. [Ginkgo: selecionar specs por labels declarados](../../domains/software-0007/software/testes/ginkgo-label-filter.md)
+706. [Ginkgo: gerar casos de tabela no estágio de construção](../../domains/software-0007/software/testes/ginkgo-describe-table-entries.md)
+707. [Gomega: limitar Eventually com contexto de spec](../../domains/software-0007/software/testes/ginkgo-eventually-context.md)
+708. [Gomega: usar Consistently para ausência durante janela](../../domains/software-0007/software/testes/ginkgo-consistently-window.md)
+709. [Ginkgo: deixar FlakeAttempts visível no relatório](../../domains/software-0007/software/testes/ginkgo-flake-attempts-evidence.md)
+
+### ScalaTest 3.2 — estilos, fixtures, tags e tabelas
+
+710. [ScalaTest: selecionar style trait pelo formato da equipe](../../domains/software-0007/software/testes/scalatest-style-selection.md)
+711. [ScalaTest: distinguir pending de cancelamento](../../domains/software-0007/software/testes/scalatest-pending-cancel-semantics.md)
+712. [ScalaTest: acrescentar contexto à falha de assertion](../../domains/software-0007/software/testes/scalatest-assertion-clue.md)
+713. [ScalaTest: filtrar testes por tags declaradas](../../domains/software-0007/software/testes/scalatest-tags-select-test-runs.md)
+714. [ScalaTest: manter runner alinhado ao build](../../domains/software-0007/software/testes/scalatest-runner-entrypoints.md)
+715. [ScalaTest: escolher withFixture para tratamento comum](../../domains/software-0007/software/testes/scalatest-fixture-withfixture.md)
+716. [ScalaTest: liberar fixture por loan pattern](../../domains/software-0007/software/testes/scalatest-loan-fixture-cleanup.md)
+717. [ScalaTest: associar cada linha de tabela a uma propriedade](../../domains/software-0007/software/testes/scalatest-table-driven-check.md)
+718. [ScalaTest: compor matcher para expectativa legível](../../domains/software-0007/software/testes/scalatest-matcher-composition.md)
+719. [ScalaTest: devolver Future no estilo assíncrono](../../domains/software-0007/software/testes/scalatest-async-future-result.md)
+
+### Spock 2.4 — fixtures, dados e interações
+
+720. [Spock: estruturar feature com given when then](../../domains/software-0007/software/testes/spock-given-when-then-contract.md)
+721. [Spock: dimensionar métodos de fixture por feature](../../domains/software-0007/software/testes/spock-fixture-lifecycle-order.md)
+722. [Spock: limitar uso de Shared para recurso realmente comum](../../domains/software-0007/software/testes/spock-shared-field-scope.md)
+723. [Spock: parametrizar feature com where table](../../domains/software-0007/software/testes/spock-data-table-iterations.md)
+724. [Spock: preservar isolamento entre linhas de dados](../../domains/software-0007/software/testes/spock-where-iteration-isolation.md)
+725. [Spock: especificar cardinalidade e alvo de interação](../../domains/software-0007/software/testes/spock-mock-interaction-constraints.md)
+726. [Spock: separar stubbing da verificação de interação](../../domains/software-0007/software/testes/spock-stub-response-generator.md)
+727. [Spock: evitar over-specification em mocks lenientes](../../domains/software-0007/software/testes/spock-lenient-mock-scope.md)
+728. [Spock: capturar exceção como parte da condição esperada](../../domains/software-0007/software/testes/spock-exception-condition.md)
+729. [Spock: usar extension para política transversal](../../domains/software-0007/software/testes/spock-extension-boundary.md)
+
+### GoogleTest — fixtures, parametrização, assertions e gMock
+
+730. [GoogleTest: nomear suite e teste com TEST](../../domains/software-0007/software/testes/googletest-test-suite-registration.md)
+731. [GoogleTest: criar fixture independente por TEST_F](../../domains/software-0007/software/testes/googletest-test-fixture-instance.md)
+732. [GoogleTest: escolher ASSERT ou EXPECT pelo fluxo](../../domains/software-0007/software/testes/googletest-fatal-vs-nonfatal.md)
+733. [GoogleTest: instanciar teste para conjunto de valores](../../domains/software-0007/software/testes/googletest-value-parameterized-suite.md)
+734. [GoogleTest: compartilhar testes por tipos conhecidos](../../domains/software-0007/software/testes/googletest-typed-test-known-types.md)
+735. [GoogleTest: publicar teste por tipo para implementar depois](../../domains/software-0007/software/testes/googletest-type-parameterized-contract.md)
+736. [GoogleTest: filtrar teste sem remover registro](../../domains/software-0007/software/testes/googletest-filter-selected-tests.md)
+737. [GoogleTest: isolar comportamento de morte em subprocesso](../../domains/software-0007/software/testes/googletest-death-test-process.md)
+738. [GoogleTest: reservar environment global para recurso de programa](../../domains/software-0007/software/testes/googletest-global-environment-boundary.md)
+739. [gMock: expressar cardinalidade e argumento em EXPECT_CALL](../../domains/software-0007/software/testes/gmock-interaction-expectation.md)
+
+### CTest e CMake — descoberta, fixtures, filtros e relatórios
+
+740. [CTest: habilitar descoberta no build tree](../../domains/software-0007/software/testes/ctest-enable-testing-scope.md)
+741. [CTest: registrar comando explícito com add_test NAME](../../domains/software-0007/software/testes/ctest-add-test-command.md)
+742. [CTest: fixar working directory para dados relativos](../../domains/software-0007/software/testes/ctest-working-directory-contract.md)
+743. [CTest: usar WILL_FAIL só para processo com erro esperado](../../domains/software-0007/software/testes/ctest-exit-code-will-fail.md)
+744. [CTest: limitar duração com propriedade TIMEOUT](../../domains/software-0007/software/testes/ctest-timeout-failure-diagnostic.md)
+745. [CTest: selecionar subconjunto por LABELS](../../domains/software-0007/software/testes/ctest-label-filter.md)
+746. [CTest: conectar setup e consumidor com fixtures](../../domains/software-0007/software/testes/ctest-fixture-dependency-graph.md)
+747. [CTest: declarar consumo para agendamento paralelo](../../domains/software-0007/software/testes/ctest-parallel-processors.md)
+748. [CTest: repetir teste para investigar instabilidade](../../domains/software-0007/software/testes/ctest-repeat-and-random-order.md)
+749. [CTest: versionar opções de run em Test Preset](../../domains/software-0007/software/testes/ctest-junit-preset-output.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 640 notas 10–649 das tranches 2–12 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 649/2.000 notas válidas, restando 1.351 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 740 notas 10–749 das tranches 2–13 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 749/2.000 notas válidas, restando 1.251 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

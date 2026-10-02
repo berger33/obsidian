@@ -84,7 +84,7 @@ def main():
 - pendências no gate de conteúdo: {len(quality_issues)}
 - possíveis órfãs dentro do lote: {len(orphan)}
 
-> Passar pelo gate automatizado não comprova veracidade. `complete` exige também revisão factual registrada por pessoa ou IA; o tipo e o responsável permanecem separados no frontmatter e neste relatório."
+> Passar pelo gate automatizado não comprova veracidade. `complete` exige também revisão factual registrada por pessoa ou IA; o tipo e o responsável permanecem separados no frontmatter e neste relatório.
 
 ## Links/arquivos quebrados
 {chr(10).join('- '+x for x in broken[:200]) or 'Nenhum.'}
