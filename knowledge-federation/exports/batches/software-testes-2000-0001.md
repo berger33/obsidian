@@ -3,19 +3,19 @@
 - Data de início: 2026-10-01
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **99 / 2.000 (4,95%)**
-- Gate automatizado: **99/99 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
-- Revisão factual humana: **9/99**
-- Revisão factual por IA: **90/99**
-- Contabilizadas como válidas: **99/99**
+- Notas efetivamente redigidas até agora: **149 / 2.000 (7,45%)**
+- Gate automatizado: **149/149 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Revisão factual humana: **9/149**
+- Revisão factual por IA: **140/149**
+- Contabilizadas como válidas: **149/149**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 90 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–6 (90 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 140 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–7 (140 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível da tranche: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md) e [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md)
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md) e [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 99 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.901 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 149 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.851 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -136,6 +136,58 @@
 98. [Ferramentas podem apoiar teste sem executar casos automaticamente](../../domains/software-0007/software/testes/test-tools-beyond-automation.md)
 99. [Adoção de ferramenta exige implantação, treinamento e análise de riscos](../../domains/software-0007/software/testes/test-tool-introduction-and-risk.md)
 
+## Tranche 7 — desempenho, acessibilidade, segurança, confiabilidade e contratos (50 notas; revisão factual por IA registrada)
+100. [Thresholds de latência por percentil](../../domains/software-0007/software/testes/testes-latencia-percentis-thresholds.md)
+101. [Correção funcional durante testes de carga](../../domains/software-0007/software/testes/testes-correcao-funcional-sob-carga.md)
+102. [Modelagem de carga: VUs e taxa de chegada](../../domains/software-0007/software/testes/testes-modelagem-carga-vus-taxa-chegada.md)
+103. [Smoke test de API com carga mínima](../../domains/software-0007/software/testes/testes-smoke-carga-minima-api.md)
+104. [Teste de carga com perfil de tráfego médio](../../domains/software-0007/software/testes/testes-carga-media-perfil-trafego.md)
+105. [Stress test para revelar limites de capacidade](../../domains/software-0007/software/testes/testes-stress-limite-capacidade.md)
+106. [Spike test para aumentos abruptos de tráfego](../../domains/software-0007/software/testes/testes-spike-picos-abruptos.md)
+107. [Soak test para degradação ao longo do tempo](../../domains/software-0007/software/testes/testes-soak-degradacao-temporal.md)
+108. [Breakpoint test com rampa progressiva de carga](../../domains/software-0007/software/testes/testes-breakpoint-rampa-carga.md)
+109. [Validação de canário com telemetria e rollback](../../domains/software-0007/software/testes/testes-canary-validacao-telemetria.md)
+110. [Teste de acessibilidade por navegação de teclado](../../domains/software-0007/software/testes/teste-acessibilidade-navegacao-teclado.md)
+111. [Testes de foco visível e ordem lógica](../../domains/software-0007/software/testes/teste-acessibilidade-foco-visivel-ordem.md)
+112. [Teste de rótulos e erros em formulários acessíveis](../../domains/software-0007/software/testes/teste-acessibilidade-rotulos-erros-formulario.md)
+113. [Teste de nome, papel e estado de controles](../../domains/software-0007/software/testes/teste-acessibilidade-nome-papel-valor.md)
+114. [Teste de contraste de texto e componentes](../../domains/software-0007/software/testes/teste-acessibilidade-contraste.md)
+115. [Teste de reflow em zoom e viewport estreito](../../domains/software-0007/software/testes/teste-acessibilidade-reflow-zoom.md)
+116. [Teste do tamanho mínimo de alvos WCAG 2.2](../../domains/software-0007/software/testes/teste-acessibilidade-wcag-target-size.md)
+117. [Teste de acessibilidade de autenticação](../../domains/software-0007/software/testes/teste-acessibilidade-autenticacao-acessivel.md)
+118. [Teste de mensagens de estado dinâmicas](../../domains/software-0007/software/testes/teste-acessibilidade-status-dinamico.md)
+119. [Regressão de acessibilidade multimodal](../../domains/software-0007/software/testes/teste-acessibilidade-regressao-multimodal.md)
+120. [Teste de autorização horizontal por objeto](../../domains/software-0007/software/testes/testes-autorizacao-horizontal-objetos.md)
+121. [Teste de autorização vertical e elevação de privilégios](../../domains/software-0007/software/testes/testes-autorizacao-vertical-privilegios.md)
+122. [Teste de timeout e replay de sessão](../../domains/software-0007/software/testes/testes-sessao-idle-timeout-replay.md)
+123. [Teste de regeneração contra session fixation](../../domains/software-0007/software/testes/testes-session-fixation-regeneracao-id.md)
+124. [Testes de CSRF com origem, token e cookies](../../domains/software-0007/software/testes/testes-csrf-origem-token-cookie.md)
+125. [Teste de saída refletida e codificação contra XSS](../../domains/software-0007/software/testes/testes-validacao-input-reflected-xss.md)
+126. [Teste seguro de destinos em funcionalidades de fetch de URL](../../domains/software-0007/software/testes/testes-ssrf-destino-url-egress.md)
+127. [Teste de limitação de tentativas de autenticação](../../domains/software-0007/software/testes/testes-autenticacao-rate-limit-enumeracao.md)
+128. [Teste de cabeçalhos HTTP de segurança no browser](../../domains/software-0007/software/testes/testes-security-headers-browser.md)
+129. [Testes de redação e injeção em logs](../../domains/software-0007/software/testes/testes-logs-redaction-injection.md)
+130. [Teste de degradação graciosa sob falha](../../domains/software-0007/software/testes/testes-degradacao-graciosa-invariantes.md)
+131. [Teste de load shedding e rejeição controlada](../../domains/software-0007/software/testes/testes-load-shedding-limites-sobrecarga.md)
+132. [Teste de retries com backoff e jitter](../../domains/software-0007/software/testes/testes-retry-backoff-jitter-cascata.md)
+133. [Teste de timeout e circuit breaker de dependência](../../domains/software-0007/software/testes/testes-falha-dependencia-timeout-circuit-breaker.md)
+134. [Teste de restauração de backup e integridade](../../domains/software-0007/software/testes/testes-restore-backup-integridade.md)
+135. [Exercício de recuperação com RTO e RPO](../../domains/software-0007/software/testes/testes-recuperacao-rto-rpo.md)
+136. [Comparação de canário com baseline](../../domains/software-0007/software/testes/testes-canary-comparacao-baseline.md)
+137. [Teste de disponibilidade durante rolling update Kubernetes](../../domains/software-0007/software/testes/testes-kubernetes-rolling-update-disponibilidade.md)
+138. [Teste de rollback e compatibilidade de estado](../../domains/software-0007/software/testes/testes-rollback-versao-estado.md)
+139. [Teste de startup, liveness e readiness probes](../../domains/software-0007/software/testes/testes-probes-startup-liveness-readiness.md)
+140. [Teste de negociação de conteúdo e Vary](../../domains/software-0007/software/testes/testes-http-content-negotiation-vary.md)
+141. [Teste de semântica e idempotência de métodos HTTP](../../domains/software-0007/software/testes/testes-semantica-metodos-http-idempotencia.md)
+142. [Teste de contrato Problem Details em APIs](../../domains/software-0007/software/testes/testes-api-problem-details-rfc9457.md)
+143. [Testes de requisições condicionais e ETag](../../domains/software-0007/software/testes/testes-http-conditional-requests-etag.md)
+144. [Teste de paginação por cursor e invariantes](../../domains/software-0007/software/testes/testes-pagination-cursor-invariantes.md)
+145. [Teste de API para 429 e Retry-After](../../domains/software-0007/software/testes/testes-api-rate-limit-429-retry-after.md)
+146. [Testes de contrato para compatibilidade de API](../../domains/software-0007/software/testes/testes-contract-testing-compatibilidade-api.md)
+147. [Teste de consumidor idempotente com mensagens duplicadas](../../domains/software-0007/software/testes/testes-consumer-idempotency-duplicates.md)
+148. [Teste de convergência sob consistência eventual](../../domains/software-0007/software/testes/testes-consistencia-eventual-convergencia.md)
+149. [Teste de constraints e reconciliação de integridade](../../domains/software-0007/software/testes/testes-database-integrity-reconciliation.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 90 das tranches 2–6 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 99/2.000 notas válidas, restando 1.901 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 140 das tranches 2–7 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 149/2.000 notas válidas, restando 1.851 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

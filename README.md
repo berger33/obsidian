@@ -10,11 +10,11 @@ A meta atual é **1.000 lotes de 2.000 notas substantivas**. Cada nota só conta
 |---|---:|---|
 | Meta | 2.000.000 | 1.000 lotes completos × 2.000 notas qualificadas |
 | Lotes completos | 0 / 1.000 | O primeiro lote ainda está em andamento |
-| Notas válidas contabilizadas | 139 / 2.000.000 (0,00695%) | 49 com aprovação humana histórica + 90 com revisão factual por IA |
+| Notas válidas contabilizadas | 189 / 2.000.000 (0,00945%) | 49 com aprovação humana histórica + 140 com revisão factual por IA |
 | Notas com revisão humana registrada | 49 | Aprovações anteriores do usuário; não ampliadas a conteúdo novo |
-| Notas com revisão factual por IA registrada | 90 | Revisões do lote atual, com relatório próprio; não são humanas |
-| Primeiro lote `software-testes-2000-0001` | 99 / 2.000 | 9 aprovadas por humano + 90 por IA; faltam 1.901 notas substantivas |
-| Arquivos Markdown ativos em `knowledge-federation/domains/` | 239 | 100 notas legadas com pendências + 139 notas autorais substantivas |
+| Notas com revisão factual por IA registrada | 140 | Revisões do lote atual, com relatórios por tranche; não são humanas |
+| Primeiro lote `software-testes-2000-0001` | 149 / 2.000 | 9 aprovadas por humano + 140 por IA; faltam 1.851 notas substantivas |
+| Arquivos Markdown ativos em `knowledge-federation/domains/` | 289 | 100 notas legadas com pendências + 189 notas autorais substantivas |
 | Notas legadas fora da contagem | 100 | Ainda têm falhas de conteúdo/fontes; consulte a fila de remediação |
 
 O checkpoint histórico preserva **1.000.000 de registros virtuais de catálogo**, com marcadores de template nos 1.000.000 registros, e 8.000 caminhos marcados como materializados. Isso não equivale a notas válidas nem avança a meta de 2 milhões. Os pacotes antigos permanecem disponíveis para inspeção e recuperação, não como prova de conteúdo validado.
@@ -46,7 +46,7 @@ python3 knowledge-federation/scripts/query_checkpoint.py "agentes" --domain ia -
 
 ## Retomada editorial e relatórios
 
-O lote em andamento é `software-testes-2000-0001`: 99 notas materiais já passaram pelo gate e revisão factual (9 humanas + 90 IA), com meta de 2.000. A [auditoria global](knowledge-federation/exports/reports/note-quality-audit.md), o [manifesto do lote](knowledge-federation/exports/batches/software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001.md), [4](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) e [6](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), o [registro de revisões](knowledge-federation/exports/reports/human-review-queue.md), a [fila legada](knowledge-federation/exports/reports/legacy-remediation-queue.md), o [plano de execução contínua](knowledge-federation/PLANO-CONTINUO-1M.md) e o [MOC de testes](knowledge-federation/00-home-vault/MOCs/MOC-Testes-Software-0007.md) mantêm o estado auditável.
+O lote em andamento é `software-testes-2000-0001`: 149 notas materiais já passaram pelo gate e revisão factual (9 humanas + 140 IA), com meta de 2.000. A [auditoria global](knowledge-federation/exports/reports/note-quality-audit.md), o [manifesto do lote](knowledge-federation/exports/batches/software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001.md), [4](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) e [7](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), o [registro de revisões](knowledge-federation/exports/reports/human-review-queue.md), a [fila legada](knowledge-federation/exports/reports/legacy-remediation-queue.md), o [plano de execução contínua](knowledge-federation/PLANO-CONTINUO-1M.md) e o [MOC de testes](knowledge-federation/00-home-vault/MOCs/MOC-Testes-Software-0007.md) mantêm o estado auditável.
 
 ```bash
 # Testes do gate

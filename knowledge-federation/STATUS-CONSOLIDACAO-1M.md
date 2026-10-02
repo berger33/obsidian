@@ -4,7 +4,7 @@ Data do status: 2026-10-01. O nome `STATUS-CONSOLIDACAO-1M.md` é mantido por co
 
 ## Resumo honesto
 
-O merge preservou um catálogo histórico com **1.000.000 de registros virtuais** e texto-template em todos eles. Esse acervo não é conteúdo validado nem progresso da meta ativa. A auditoria de arquivos reais encontrou 239 notas Markdown ativas; 139 são substantivas, passaram pelo gate e receberam revisão factual registrada. As outras 100 mantêm pendências e continuam fora da contagem válida.
+O merge preservou um catálogo histórico com **1.000.000 de registros virtuais** e texto-template em todos eles. Esse acervo não é conteúdo validado nem progresso da meta ativa. A auditoria de arquivos reais encontrou 289 notas Markdown ativas; 189 são substantivas, passaram pelo gate e receberam revisão factual registrada. As outras 100 mantêm pendências e continuam fora da contagem válida.
 
 A meta final não foi atingida. Só contam notas substantivas com fontes específicas conferidas, gate aprovado e revisão factual registrada. Lotes incompletos e seus resultados devem ser reportados como progresso parcial; placeholders, IDs e materialização de arquivos não contam.
 
@@ -14,11 +14,11 @@ A meta final não foi atingida. Só contam notas substantivas com fontes especí
 |---|---:|---|
 | Meta ativa | 2.000.000 | 1.000 lotes completos × 2.000 notas válidas por lote |
 | Lotes completos | 0 / 1.000 | O lote iniciado ainda não tem 2.000 notas |
-| Progresso válido global | 139 / 2.000.000 (0,00695%) | 49 revisões humanas históricas + 90 revisões por IA registradas separadamente |
+| Progresso válido global | 189 / 2.000.000 (0,00945%) | 49 revisões humanas históricas + 140 revisões por IA registradas separadamente |
 | Revisões humanas registradas | 49 | Aprovadas pelo usuário; não se estendem a conteúdo novo |
-| Revisões factuais por IA registradas | 90 | Relatório individual no lote `software-testes-2000-0001`; não são humanas |
-| Primeiro lote | 99 / 2.000 | 99 notas materiais válidas: 9 humanas + 90 IA; faltam 1.901 notas substantivas |
-| Candidatas que passaram pelo gate automatizado | 139 | Todas receberam revisão factual registrada; gate sozinho não comprova veracidade |
+| Revisões factuais por IA registradas | 140 | Relatório individual no lote `software-testes-2000-0001`; não são humanas |
+| Primeiro lote | 149 / 2.000 | 149 notas materiais válidas: 9 humanas + 140 IA; faltam 1.851 notas substantivas |
+| Candidatas que passaram pelo gate automatizado | 189 | Todas receberam revisão factual registrada; gate sozinho não comprova veracidade |
 | Arquivos Markdown ativos com pendências de qualidade | 100 | Sementes/legado; não contam até remediação e revisão |
 | Registros virtuais no checkpoint histórico | 1.000.000 | Catálogo com template; excluído da contagem de notas válidas |
 | Marcadores de conteúdo-template no ledger legado | 1.000.000 | Sumários/corpos-semente; não são notas substantivas |
@@ -33,8 +33,8 @@ A sequência de lotes no TAR e os 78 Study Packs continuam disponíveis como art
 2. Separados os estados de revisão factual humana e por IA; o relatório de IA, responsável e data são obrigatórios para contar uma nota revisada por IA.
 3. Atualizado `audit_batch.py`: um lote só pode ser `complete` após o gate e uma revisão factual registrada para cada nota, humana ou por IA.
 4. Preservadas as 49 aprovações humanas anteriores, sem estendê-las a novas notas.
-5. Revisadas factualmente por IA as 90 notas materiais 10–99 do lote de escala. Relatórios: [`tranches 2–3`](exports/reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) e [`tranche 6`](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md).
-6. Resultado parcial do primeiro lote: 99/99 aprovadas pelo gate; 9 revisões humanas, 90 revisões por IA; 99 notas qualificadas sob o protocolo atualizado. O lote segue `in_progress` com meta de 2.000.
+5. Revisadas factualmente por IA as 140 notas materiais 10–149 do lote de escala. Relatórios: [`tranches 2–3`](exports/reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) e [`tranche 7`](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md).
+6. Resultado parcial do primeiro lote: 149/149 aprovadas pelo gate; 9 revisões humanas, 140 revisões por IA; 149 notas qualificadas sob o protocolo atualizado. O lote segue `in_progress` com meta de 2.000.
 7. Mantidas as cinco séries autorais anteriores (40 notas humanas aprovadas) e as 100 notas legadas com falhas em suas filas próprias.
 
 Relatório global: [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md). Relatório do lote: [`exports/reports/note-quality-software-testes-2000-0001.md`](exports/reports/note-quality-software-testes-2000-0001.md). Registros separados por tipo de revisão: [`exports/reports/human-review-queue.md`](exports/reports/human-review-queue.md). Plano de continuidade: [`PLANO-CONTINUO-1M.md`](PLANO-CONTINUO-1M.md).
