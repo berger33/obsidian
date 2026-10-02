@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Requests sem mapping normalmente recebem 404 e podem ser consultadas como unmatched; near misses apontam mappings parecidos.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Um 404 genérico pode esconder diferença pequena de método, header ou corpo entre o teste e o matcher configurado.
+Um 404 genérico pode esconder diferença pequena de método, header ou corpo entre o teste e o matcher configurado.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Inspecione a request unmatched e use near-miss para localizar qual stub ficou mais próximo antes de ampliar o matcher.
+Inspecione a request unmatched e use near-miss para localizar qual stub ficou mais próximo antes de ampliar o matcher.
 
 ## Exemplo
 O cliente envia /v2/orders enquanto stub espera /v1/orders; a consulta mostra a rota e o mapping candidato.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Near miss é sugestão de diferença, não prova que o mapping candidato seja correto para o contrato.
+Near miss é sugestão de diferença, não prova que o mapping candidato seja correto para o contrato.
 
 ## Como verificar
 Force mismatch conhecido e verifique que a resposta diagnóstica identifica request e stub próximos sem aceitar a chamada inválida.

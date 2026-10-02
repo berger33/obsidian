@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Um caso Robot Framework contém chamadas a keywords descritas nas seções de teste e executadas pelas bibliotecas importadas.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Sequências que apenas reproduzem cliques ou chamadas internas são frágeis e podem não explicar o resultado que a pessoa usuária espera.
+Sequências que apenas reproduzem cliques ou chamadas internas são frágeis e podem não explicar o resultado que a pessoa usuária espera.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Dê nomes de negócio às user keywords e organize Given/When/Then quando isso melhorar a leitura sem criar camadas vazias.
+Dê nomes de negócio às user keywords e organize Given/When/Then quando isso melhorar a leitura sem criar camadas vazias.
 
 ## Exemplo
 Um caso “Pedido confirmado” prepara cliente, envia pedido e verifica status visível e evento esperado, em vez de chamar helper interno de controller.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Robot não impõe BDD nem uma quantidade fixa de steps; bom vocabulário depende do domínio.
+Robot não impõe BDD nem uma quantidade fixa de steps; bom vocabulário depende do domínio.
 
 ## Como verificar
 Peça a alguém fora da implementação que descreva o objetivo do caso usando apenas nomes e resultado das keywords.

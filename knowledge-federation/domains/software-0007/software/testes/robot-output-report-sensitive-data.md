@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Uma execução Robot gera output.xml e relatórios/logs configuráveis que ajudam a diagnosticar os casos executados.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Logs com headers, variáveis, screenshots ou corpos podem expor credenciais e dados pessoais mesmo quando a execução ocorre em CI privado.
+Logs com headers, variáveis, screenshots ou corpos podem expor credenciais e dados pessoais mesmo quando a execução ocorre em CI privado.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Defina retenção e acesso a artifacts, masque valores confidenciais e limite logging detalhado a cenários descartáveis.
+Defina retenção e acesso a artifacts, masque valores confidenciais e limite logging detalhado a cenários descartáveis.
 
 ## Exemplo
 O job salva resultado resumido, mascara token sintético e remove screenshots depois da retenção configurada.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Excluir keyword do log ou mascarar console não remove necessariamente segredos que também aparecem em output.xml ou artifacts anexados.
+Excluir keyword do log ou mascarar console não remove necessariamente segredos que também aparecem em output.xml ou artifacts anexados.
 
 ## Como verificar
 Pesquise tokens sentinela em todos os arquivos da execução e valide permissões, retenção e descarte no pipeline.

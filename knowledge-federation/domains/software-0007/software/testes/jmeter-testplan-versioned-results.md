@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Plano JMX e properties determinam execução; registrar apenas arquivo de resultado não permite reproduzir configuração de carga.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Mudança em thread count, timer, CSV ou versão JMeter pode explicar diferença de percentil entre duas execuções.
+Mudança em thread count, timer, CSV ou versão JMeter pode explicar diferença de percentil entre duas execuções.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Armazene commit do plano, versão do JMeter, properties sanitizadas, dataset gerado e comando de execução com relatório.
+Armazene commit do plano, versão do JMeter, properties sanitizadas, dataset gerado e comando de execução com relatório.
 
 ## Exemplo
 Duas execuções em builds diferentes registram hash do JMX e perfil de carga para comparação de baseline.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Dataset real pode conter segredo ou dado pessoal; publique fixture sintética e proteja artifacts de produção.
+Dataset real pode conter segredo ou dado pessoal; publique fixture sintética e proteja artifacts de produção.
 
 ## Como verificar
 Reexecute com os artefatos e confirme que usuário, taxas e assertions são reproduzíveis sem segredos.

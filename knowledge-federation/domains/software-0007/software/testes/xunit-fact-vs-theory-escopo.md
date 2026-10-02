@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Fact representa um caso individual; Theory associa a um método conjuntos de dados que produzem invocações parametrizadas.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Uma tabela dentro de Fact pode interromper a execução no primeiro erro e esconder qual entrada falhou no relatório.
+Uma tabela dentro de Fact pode interromper a execução no primeiro erro e esconder qual entrada falhou no relatório.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Use Fact para comportamento sem parâmetro e Theory quando valores distintos são exemplos do mesmo contrato.
+Use Fact para comportamento sem parâmetro e Theory quando valores distintos são exemplos do mesmo contrato.
 
 ## Exemplo
 A regra de desconto é uma Theory com valores de pedido e desconto esperado; erro identifica argumento do exemplo.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. Theory não gera combinações automaticamente nem prova entradas que não foram declaradas ou fornecidas pela fonte.
+Theory não gera combinações automaticamente nem prova entradas que não foram declaradas ou fornecidas pela fonte.
 
 ## Como verificar
 Confira a descoberta do runner e confirme que cada conjunto de dados aparece com valores de argumento no relatório.

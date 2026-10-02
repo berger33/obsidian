@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 wait_time é aplicado após a execução de uma tarefa; ausência de wait_time inicia a próxima task assim que a atual termina.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Pausa de tarefa não equivale a pausa entre cada request e não cria usuários para compensar operações lentas.
+Pausa de tarefa não equivale a pausa entre cada request e não cria usuários para compensar operações lentas.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Calcule throughput a partir de duração da jornada, requests por task e usuários simultâneos; escolha between/constant com hipótese clara.
+Calcule throughput a partir de duração da jornada, requests por task e usuários simultâneos; escolha between/constant com hipótese clara.
 
 ## Exemplo
 Uma task faz dois GETs e espera 1 segundo ao final, portanto uma iteração ainda contém duas chamadas.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. Tempo de resposta e ramp-up podem fazer throughput real ficar abaixo do teto especificado pelo pacing.
+Tempo de resposta e ramp-up podem fazer throughput real ficar abaixo do teto especificado pelo pacing.
 
 ## Como verificar
 Compare RPS medido com número de usuários, duração de task, requests por task e wait configurado.

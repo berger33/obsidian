@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Um cenário WireMock representa uma máquina de estados simples; mappings podem exigir estado e mudar o estado após uma request.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Mock sem estado devolve sempre a mesma resposta e não reproduz um fluxo em que uma ação altera o recurso simulado.
+Mock sem estado devolve sempre a mesma resposta e não reproduz um fluxo em que uma ação altera o recurso simulado.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Declare o estado inicial, configure transição em uma operação e responda de maneira diferente a uma leitura posterior.
+Declare o estado inicial, configure transição em uma operação e responda de maneira diferente a uma leitura posterior.
 
 ## Exemplo
 GET lista inicialmente sem item; POST adiciona item e muda estado; próximo GET devolve a lista atualizada.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Cenários não modelam toda a regra de negócio e estado pode vazar quando o servidor é reutilizado sem reset.
+Cenários não modelam toda a regra de negócio e estado pode vazar quando o servidor é reutilizado sem reset.
 
 ## Como verificar
 Execute sequência completa e depois resetScenario; repita o fluxo e confirme retorno ao estado inicial.

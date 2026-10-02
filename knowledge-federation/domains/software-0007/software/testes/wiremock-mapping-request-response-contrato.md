@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Um stub WireMock associa condições de request a uma response configurada por código ou arquivo JSON.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Se o matcher não inclui método ou caminho esperado, um teste pode receber resposta de sucesso para a chamada errada.
+Se o matcher não inclui método ou caminho esperado, um teste pode receber resposta de sucesso para a chamada errada.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Defina método e URL, acrescente apenas atributos relevantes ao contrato e configure status, headers e body usados pelo consumidor.
+Defina método e URL, acrescente apenas atributos relevantes ao contrato e configure status, headers e body usados pelo consumidor.
 
 ## Exemplo
 Um teste do client recebe JSON 200 somente para GET /inventory; POST ou caminho diferente não herda essa resposta.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Stub exercita o comportamento do consumidor diante da resposta simulada, não valida o serviço real que produziria o corpo.
+Stub exercita o comportamento do consumidor diante da resposta simulada, não valida o serviço real que produziria o corpo.
 
 ## Como verificar
 Envie uma request correta e duas variantes inválidas e confirme qual mapping respondeu a cada uma.

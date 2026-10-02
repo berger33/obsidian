@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Uma Feature agrupa cenários relacionados e cada Example ou Scenario descreve contexto, evento e resultado esperado em steps.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Descrições que só repetem detalhes de implementação não ajudam produto e engenharia a identificar qual regra está sendo exercitada.
+Descrições que só repetem detalhes de implementação não ajudam produto e engenharia a identificar qual regra está sendo exercitada.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Dê ao arquivo uma única Feature clara e escreva cenários com precondição, ação e observação de saída compreensíveis no domínio.
+Dê ao arquivo uma única Feature clara e escreva cenários com precondição, ação e observação de saída compreensíveis no domínio.
 
 ## Exemplo
 Uma feature de cobrança descreve saldo vencido, pagamento recebido e estado final da fatura sem citar nome de controller.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Descrição textual de Feature ajuda documentação, mas é ignorada na execução como steps.
+Descrição textual de Feature ajuda documentação, mas é ignorada na execução como steps.
 
 ## Como verificar
 Revise os cenários com pessoa de produto e confirme que cada Then pode ser observado pelo teste.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 OneTimeSetUp executa uma vez antes dos testes filhos da fixture; classes base e derivadas seguem ordem de herança documentada.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Confundir setup único com setup por teste pode compartilhar estado que uma assertion altera e tornar a suite não determinística.
+Confundir setup único com setup por teste pode compartilhar estado que uma assertion altera e tornar a suite não determinística.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Use OneTimeSetUp apenas para recurso caro e realmente imutável durante os casos; crie/limpe dados mutáveis em SetUp/TearDown.
+Use OneTimeSetUp apenas para recurso caro e realmente imutável durante os casos; crie/limpe dados mutáveis em SetUp/TearDown.
 
 ## Exemplo
 A fixture conecta ao container uma vez e cada teste cria schema ou linha própria antes de exercitar o repository.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Múltiplos métodos OneTimeSetUp na mesma classe têm ordem não definida; não use isso para sincronizar dependências.
+Múltiplos métodos OneTimeSetUp na mesma classe têm ordem não definida; não use isso para sincronizar dependências.
 
 ## Como verificar
 Registre número de chamadas por fixture e rode casos isolados para confirmar o limite de compartilhamento.

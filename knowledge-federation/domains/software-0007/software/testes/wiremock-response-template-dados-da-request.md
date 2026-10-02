@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Response templating pode preencher partes da resposta com valores do contexto da request em vez de manter uma fixture fixa.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Resposta com id constante pode limitar um fluxo de teste que precisa verificar propagação de dado entre chamada e retorno.
+Resposta com id constante pode limitar um fluxo de teste que precisa verificar propagação de dado entre chamada e retorno.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Habilite explicitamente a extensão de templating e use apenas variáveis de request necessárias na resposta.
+Habilite explicitamente a extensão de templating e use apenas variáveis de request necessárias na resposta.
 
 ## Exemplo
 O stub devolve um echo do request id em JSON e o client comprova que preservou o identificador.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Template não substitui validação de saída e pode introduzir risco se refletir conteúdo não confiável sem escape adequado.
+Template não substitui validação de saída e pode introduzir risco se refletir conteúdo não confiável sem escape adequado.
 
 ## Como verificar
 Envie valores simples, caracteres especiais e campos ausentes; confirme encoding, status e que nenhuma variável secreta foi refletida.

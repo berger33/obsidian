@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Background define steps comuns executados antes dos cenários aplicáveis dentro da Feature ou Rule.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Duplicar login e setup em todos os cenários polui exemplos; um background longo, por outro lado, esconde a precondição do caso.
+Duplicar login e setup em todos os cenários polui exemplos; um background longo, por outro lado, esconde a precondição do caso.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Mantenha apenas contexto curto que todo cenário daquela seção compartilha e deixe variações importantes nos próprios Examples.
+Mantenha apenas contexto curto que todo cenário daquela seção compartilha e deixe variações importantes nos próprios Examples.
 
 ## Exemplo
 A feature de conta declara “usuária autenticada” uma vez e cada cenário especifica papel ou saldo que diferencia o comportamento.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Background não substitui isolamento de fixture e pode causar dependência de estado entre cenários se reutilizar dados persistentes.
+Background não substitui isolamento de fixture e pode causar dependência de estado entre cenários se reutilizar dados persistentes.
 
 ## Como verificar
 Execute cenários individualmente e em ordem aleatória para provar que o contexto é reconstruído para cada execução.

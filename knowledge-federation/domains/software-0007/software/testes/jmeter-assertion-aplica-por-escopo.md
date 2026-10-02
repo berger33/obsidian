@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Assertions são executadas após samplers no escopo onde aparecem e verificam campos de request/response configurados.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Assertion em controller amplo pode avaliar samplers auxiliares, confundindo resultados e inflando failures.
+Assertion em controller amplo pode avaliar samplers auxiliares, confundindo resultados e inflando failures.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Aninhe assertion sob sampler específico ou use controller com descendentes intencionais e escolha explicitamente o campo avaliado.
+Aninhe assertion sob sampler específico ou use controller com descendentes intencionais e escolha explicitamente o campo avaliado.
 
 ## Exemplo
 Response Assertion verifica código e texto de GET /health sem ser aplicada ao login e ao download de fixture.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Assertion de texto não substitui parsing JSON/schema e status HTTP pode ter regra própria no sampler.
+Assertion de texto não substitui parsing JSON/schema e status HTTP pode ter regra própria no sampler.
 
 ## Como verificar
 Introduza falha somente no sampler alvo e confirme que nenhuma assertion de outro ramo é disparada.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Filters podem observar ou alterar request antes do envio e response antes das expectations; filtros também podem implementar logging ou autenticação.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. O log de uma especificação não é necessariamente a requisição final: cliente HTTP pode adicionar headers e filtros posteriores ainda podem modificá-la.
+O log de uma especificação não é necessariamente a requisição final: cliente HTTP pode adicionar headers e filtros posteriores ainda podem modificá-la.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Use filtros para comportamento transversal e diagnóstico; para prova do que chegou, observe o request em servidor controlado ou proxy de teste.
+Use filtros para comportamento transversal e diagnóstico; para prova do que chegou, observe o request em servidor controlado ou proxy de teste.
 
 ## Exemplo
 Um teste confirma no servidor um header inserido por filtro posterior, em vez de inferir sua presença apenas pelo log pré-envio.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. Logs podem conter tokens, cookies e corpos pessoais; redija segredos e não os publique como artefato irrestrito.
+Logs podem conter tokens, cookies e corpos pessoais; redija segredos e não os publique como artefato irrestrito.
 
 ## Como verificar
 Compare log, ordem de filtros e request observado no stub e confira política de redaction antes de habilitar logging em CI.

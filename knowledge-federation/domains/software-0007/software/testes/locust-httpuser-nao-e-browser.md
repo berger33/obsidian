@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 HttpUser oferece client HTTP e mantém cookies, mas não renderiza HTML nem carrega automaticamente recursos da página como browser.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Um teste HTTP de protocolo pode passar enquanto scripts, layout ou experiência do navegador estão quebrados.
+Um teste HTTP de protocolo pode passar enquanto scripts, layout ou experiência do navegador estão quebrados.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Use HttpUser para jornada de API/protocolo e complemente com automação browser quando a hipótese depende de frontend.
+Use HttpUser para jornada de API/protocolo e complemente com automação browser quando a hipótese depende de frontend.
 
 ## Exemplo
 Carga HTTP consulta endpoints de catálogo; um smoke browser separado valida login e recurso crítico carregado na tela.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. HttpUser não mede renderização, execução JavaScript nem download de subresources.
+HttpUser não mede renderização, execução JavaScript nem download de subresources.
 
 ## Como verificar
 Compare endpoints e métricas da carga com um caso browser representativo e registre qual fronteira cada teste cobre.

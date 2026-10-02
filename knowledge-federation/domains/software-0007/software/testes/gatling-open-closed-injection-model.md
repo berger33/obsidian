@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Perfis open injetam usuários por taxa de chegada; closed model define concorrência de usuários cuja duração influencia novas iterações.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Modelo fechado pode reduzir novas chegadas quando servidor fica lento e subestimar sobrecarga comparado a tráfego independente do tempo de resposta.
+Modelo fechado pode reduzir novas chegadas quando servidor fica lento e subestimar sobrecarga comparado a tráfego independente do tempo de resposta.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Declare se interesse é usuários concorrentes ou taxa de chegada e use injectOpen/injectClosed coerente com hipótese.
+Declare se interesse é usuários concorrentes ou taxa de chegada e use injectOpen/injectClosed coerente com hipótese.
 
 ## Exemplo
 API de ingestão testa chegada de eventos por segundo em modelo open; jornada com sessões concorrentes limitadas usa closed.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Perfis e formas de injection variam por DSL e produto; não compare execuções sem registrar modelo.
+Perfis e formas de injection variam por DSL e produto; não compare execuções sem registrar modelo.
 
 ## Como verificar
 Inspecione virtual users ativos, taxa de chegada e response time durante degradação para validar dinâmica observada.

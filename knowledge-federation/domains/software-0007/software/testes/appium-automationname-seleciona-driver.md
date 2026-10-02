@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 appium:automationName indica qual driver deve executar comandos da sessão.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Testes podem selecionar driver incorreto quando capability é omitida ou copiada de outra plataforma, falhando com comandos não suportados.
+Testes podem selecionar driver incorreto quando capability é omitida ou copiada de outra plataforma, falhando com comandos não suportados.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Escolha automationName compatível com OS e registre driver/version junto ao resultado do teste.
+Escolha automationName compatível com OS e registre driver/version junto ao resultado do teste.
 
 ## Exemplo
 Android usa UiAutomator2 e iOS usa XCUITest com capabilities separadas por job.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Drivers suportam plataformas e modos diferentes; não extrapole capability de um driver para outro.
+Drivers suportam plataformas e modos diferentes; não extrapole capability de um driver para outro.
 
 ## Como verificar
 Verifique nome do driver na sessão e execute comando pequeno de leitura antes do fluxo completo.

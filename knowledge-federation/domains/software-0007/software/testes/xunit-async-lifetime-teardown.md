@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 xUnit oferece interfaces de lifecycle assíncrono para inicialização e limpeza; suportes de DisposeAsync diferem entre v2 e v3.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Bloquear async no constructor pode causar deadlock ou estado parcialmente pronto antes da assertion.
+Bloquear async no constructor pode causar deadlock ou estado parcialmente pronto antes da assertion.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Use interface async correspondente à versão, aguarde setup antes dos testes e conclua cleanup sem deixar tasks pendentes.
+Use interface async correspondente à versão, aguarde setup antes dos testes e conclua cleanup sem deixar tasks pendentes.
 
 ## Exemplo
 A fixture de integração aguarda container ficar pronto em InitializeAsync e encerra em DisposeAsync.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. Não transfira diretamente exemplos de xUnit v3 para v2; verifique interface e método de cleanup disponíveis no pacote do projeto.
+Não transfira diretamente exemplos de xUnit v3 para v2; verifique interface e método de cleanup disponíveis no pacote do projeto.
 
 ## Como verificar
 Compile e execute com versão fixada e force falha após setup para verificar limpeza assíncrona.

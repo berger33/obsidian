@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 A palavra Given, When ou Then dá semântica ao texto, mas não é usada por Cucumber para distinguir step definitions durante matching.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Definir “Given user exists” e “Then user exists” como métodos diferentes pode criar ambiguidade quando o texto após keyword é igual.
+Definir “Given user exists” e “Then user exists” como métodos diferentes pode criar ambiguidade quando o texto após keyword é igual.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Use texto de step distinto e expressão de domínio precisa; deixe a palavra-chave comunicar papel narrativo, não despacho de código.
+Use texto de step distinto e expressão de domínio precisa; deixe a palavra-chave comunicar papel narrativo, não despacho de código.
 
 ## Exemplo
 A suíte tem um único step definition para “a conta possui saldo de 50” mesmo quando cenário o usa como contexto ou resultado.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. A recomendação de reutilizar expressão não exige que toda frase curta do domínio compartilhe método com efeitos diferentes.
+A recomendação de reutilizar expressão não exige que toda frase curta do domínio compartilhe método com efeitos diferentes.
 
 ## Como verificar
 Faça discovery e confirme que os steps da feature resolvem a exatamente uma implementação intencional.

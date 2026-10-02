@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Appium separa o servidor central de drivers que implementam automação por plataforma e precisam ser instalados para criar sessões.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Instalação apenas do servidor pode subir endpoint mas falhar ao iniciar sessão porque driver Android ou iOS não está presente.
+Instalação apenas do servidor pode subir endpoint mas falhar ao iniciar sessão porque driver Android ou iOS não está presente.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Fixe versão do servidor e do driver no ambiente de CI e verifique disponibilidade antes de iniciar device session.
+Fixe versão do servidor e do driver no ambiente de CI e verifique disponibilidade antes de iniciar device session.
 
 ## Exemplo
 Pipeline instala Appium e UiAutomator2 para suite Android e instala XCUITest somente no runner macOS.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Plugins e drivers têm compatibilidade e dependências próprias; atualizar servidor não atualiza automaticamente cada extensão.
+Plugins e drivers têm compatibilidade e dependências próprias; atualizar servidor não atualiza automaticamente cada extensão.
 
 ## Como verificar
 Rode listagem de drivers instalados e crie sessão mínima em cada plataforma planejada.

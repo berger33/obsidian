@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Appium oferece comandos W3C e extensões específicas do driver; migrações podem remover endpoints touch legados e apontar alternativas.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Código que usa endpoint antigo pode quebrar ao atualizar servidor/driver, e gesto pode ter semântica diferente entre plataformas.
+Código que usa endpoint antigo pode quebrar ao atualizar servidor/driver, e gesto pode ter semântica diferente entre plataformas.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Prefira API suportada pelo client e driver escolhidos; fixe versão e mapeie gesto para W3C Actions ou extensão documentada.
+Prefira API suportada pelo client e driver escolhidos; fixe versão e mapeie gesto para W3C Actions ou extensão documentada.
 
 ## Exemplo
 Swipe usa pointer actions no client quando suportado ou comando mobile do driver Android em fluxo que exige gesto nativo.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Migração Appium 3 altera comandos disponíveis; compatibilidade depende da versão de servidor e do driver.
+Migração Appium 3 altera comandos disponíveis; compatibilidade depende da versão de servidor e do driver.
 
 ## Como verificar
 Execute gesto em device de referência e confirme estado final observável, não apenas ausência de erro HTTP.

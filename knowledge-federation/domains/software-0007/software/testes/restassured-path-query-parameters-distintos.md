@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Path parameters substituem segmentos nomeados do caminho; query parameters são enviados na parte de consulta da URL.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Usar ambos como um único texto de URL dificulta variar identificadores e filtros e pode produzir encoding ou ordenação frágil.
+Usar ambos como um único texto de URL dificulta variar identificadores e filtros e pode produzir encoding ou ordenação frágil.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Declare o identificador de recurso como path parameter e filtros ou paginação como query parameters, sem concatenar valores manualmente.
+Declare o identificador de recurso como path parameter e filtros ou paginação como query parameters, sem concatenar valores manualmente.
 
 ## Exemplo
 O teste faz GET em /orders/{orderId} com orderId dinâmico e envia status=pending como parâmetro de consulta independente.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. Convenções de encoding e valores repetidos dependem da configuração e do contrato HTTP esperado pelo servidor.
+Convenções de encoding e valores repetidos dependem da configuração e do contrato HTTP esperado pelo servidor.
 
 ## Como verificar
 Inspecione a URL efetivamente recebida pelo servidor de teste para validar caminho, nomes, multiplicidade e encoding de parâmetros.

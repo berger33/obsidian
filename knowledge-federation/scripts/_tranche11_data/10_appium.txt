@@ -1,8 +1,5 @@
 group=Appium: sessões e automação móvel multiplataforma
 first=540
-why=Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução.
-method=Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar.
-limits=Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais.
 check=Confrontei Session Capabilities, Drivers, Contexts, migrações Appium 2/3, quickstart JS, Grid e referências oficiais UiAutomator2/XCUITest.
 ---
 appium-driver-instalacao-modular||Appium: instalar driver compatível além do servidor||Appium separa o servidor central de drivers que implementam automação por plataforma e precisam ser instalados para criar sessões.||Instalação apenas do servidor pode subir endpoint mas falhar ao iniciar sessão porque driver Android ou iOS não está presente.||Fixe versão do servidor e do driver no ambiente de CI e verifique disponibilidade antes de iniciar device session.||Pipeline instala Appium e UiAutomator2 para suite Android e instala XCUITest somente no runner macOS.||Plugins e drivers têm compatibilidade e dependências próprias; atualizar servidor não atualiza automaticamente cada extensão.||Rode listagem de drivers instalados e crie sessão mínima em cada plataforma planejada.||app_migration,app_drivers||Docs explicam que Appium 2 tornou drivers extensões instaladas separadamente e enumeram drivers oficiais.

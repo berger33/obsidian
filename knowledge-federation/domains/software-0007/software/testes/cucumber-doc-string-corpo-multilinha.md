@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Gherkin permite Doc Strings como argumento de step para passar texto longo, como JSON, GraphQL ou uma mensagem.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Escapar payload dentro de uma frase reduz leitura e pode fazer formatação ou caracteres relevantes desaparecerem.
+Escapar payload dentro de uma frase reduz leitura e pode fazer formatação ou caracteres relevantes desaparecerem.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Delimite o bloco com Doc String e receba-o explicitamente na definição, validando o conteúdo como parte do contrato.
+Delimite o bloco com Doc String e receba-o explicitamente na definição, validando o conteúdo como parte do contrato.
 
 ## Exemplo
 Um cenário passa body JSON formatado a um step de envio e verifica status e campos de resposta.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Doc String fornece texto, não valida automaticamente se o payload é JSON válido nem o transforma no DTO da aplicação.
+Doc String fornece texto, não valida automaticamente se o payload é JSON válido nem o transforma no DTO da aplicação.
 
 ## Como verificar
 Valide parsing e teste caractere especial, newline e campo obrigatório ausente.

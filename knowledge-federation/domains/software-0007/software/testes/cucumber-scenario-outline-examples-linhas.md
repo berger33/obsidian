@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Scenario Outline é um template; suas steps recebem valores de placeholders e o outline executa uma vez para cada linha em Examples.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Contar o template como caso isolado pode subestimar invocações e deixar coluna sem valor ou combinação de dados sem cobertura.
+Contar o template como caso isolado pode subestimar invocações e deixar coluna sem valor ou combinação de dados sem cobertura.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Declare cabeçalhos coerentes com placeholders e forneça exemplos representativos incluindo limites e resultado esperado.
+Declare cabeçalhos coerentes com placeholders e forneça exemplos representativos incluindo limites e resultado esperado.
 
 ## Exemplo
 Duas linhas em Examples validam saldo suficiente e insuficiente; cada execução recebe os valores de uma linha.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Outline replica somente combinações escritas, não gera automaticamente produto cartesiano nem cobre valores omitidos.
+Outline replica somente combinações escritas, não gera automaticamente produto cartesiano nem cobre valores omitidos.
 
 ## Como verificar
 Inspecione relatório do runner para confirmar número de invocações e associe falha à linha/valores exibidos.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Decorador @task com peso faz Locust escolher tarefas com frequência relativa entre as opções disponíveis do usuário.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Peso 3 não significa três chamadas HTTP nem taxa exata de 3 requests por segundo; a tarefa pode executar múltiplas operações.
+Peso 3 não significa três chamadas HTTP nem taxa exata de 3 requests por segundo; a tarefa pode executar múltiplas operações.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Modele proporção de jornadas no nível de tarefa e considere duração, wait_time e número de requests dentro de cada método.
+Modele proporção de jornadas no nível de tarefa e considere duração, wait_time e número de requests dentro de cada método.
 
 ## Exemplo
 Tarefa view_item peso 3 é mais provável que checkout peso 1, mas checkout pode disparar várias requests.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. Frequência observada varia com duração e estado das tarefas e representa distribuição aproximada, não sequência rígida.
+Frequência observada varia com duração e estado das tarefas e representa distribuição aproximada, não sequência rígida.
 
 ## Como verificar
 Rode amostra longa e compare proporções de tasks e requests com o workload desejado.

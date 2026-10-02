@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 TestContext fornece dados do execution context e distingue contexto de caso em método/setup/teardown de contexto de fixture nos métodos one-time.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Buscar argumentos de test case em OneTimeSetUp ou compartilhar resultado do fixture como se fosse de um caso pode produzir diagnóstico incorreto.
+Buscar argumentos de test case em OneTimeSetUp ou compartilhar resultado do fixture como se fosse de um caso pode produzir diagnóstico incorreto.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Leia properties e argumentos no contexto apropriado e acrescente diagnostics associados ao caso sem transformar saída em assertion oculta.
+Leia properties e argumentos no contexto apropriado e acrescente diagnostics associados ao caso sem transformar saída em assertion oculta.
 
 ## Exemplo
 O teardown registra identificador do caso que falhou e relatório do fixture registra apenas metadado de inicialização.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Somente assertions falhas são armazenadas em certos resultados e APIs podem depender da fase do lifecycle.
+Somente assertions falhas são armazenadas em certos resultados e APIs podem depender da fase do lifecycle.
 
 ## Como verificar
 Gere uma falha em setup e outra no teste e compare TestContext e arquivos de saída associados a cada fase.

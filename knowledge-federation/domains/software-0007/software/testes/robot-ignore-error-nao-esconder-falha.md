@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Run Keyword And Ignore Error captura falha de keyword e devolve status e mensagem, permitindo tratamento deliberado no fluxo.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Usar a keyword como wrapper genérico pode fazer a suíte terminar verde apesar de a operação crítica ter falhado.
+Usar a keyword como wrapper genérico pode fazer a suíte terminar verde apesar de a operação crítica ter falhado.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Desestruture o status retornado, aceite somente a falha esperada e propague ou marque como falha qualquer resultado inesperado.
+Desestruture o status retornado, aceite somente a falha esperada e propague ou marque como falha qualquer resultado inesperado.
 
 ## Exemplo
 Um teste tenta uma consulta opcional e valida status FAIL apenas para recurso ausente; falha de autenticação continua sendo erro do caso.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Capturar a exceção altera a forma de fluxo; o resultado ignorado não deve ser confundido com sucesso da operação.
+Capturar a exceção altera a forma de fluxo; o resultado ignorado não deve ser confundido com sucesso da operação.
 
 ## Como verificar
 Force tanto o erro esperado quanto um erro diferente e confirme que somente o primeiro segue pelo ramo permitido.

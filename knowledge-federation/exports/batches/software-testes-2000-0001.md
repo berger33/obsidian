@@ -5,7 +5,8 @@
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
 - Notas efetivamente redigidas até agora: **549 / 2.000 (27,45%)**
-- Gate automatizado: **549/549 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Gate automatizado: **549/549 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a correção editorial da tranche 11)
+- Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
 - Revisão factual humana: **9/549**
 - Revisão factual por IA: **540/549**
 - Contabilizadas como válidas: **549/549**

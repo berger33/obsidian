@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Uma DataTable é passada como argumento multilinha final à step definition e pode ser convertida conforme sua forma e tipo.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Compactar várias entidades em uma frase torna o cenário difícil de revisar e pode esconder diferença entre colunas e linhas.
+Compactar várias entidades em uma frase torna o cenário difícil de revisar e pode esconder diferença entre colunas e linhas.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Use cabeçalho com nomes estáveis e converta para coleção tipada adequada; valide cardinalidade e valores na fronteira do teste.
+Use cabeçalho com nomes estáveis e converta para coleção tipada adequada; valide cardinalidade e valores na fronteira do teste.
 
 ## Exemplo
 A tabela de usuários vira uma lista de maps com name/email e o teste confirma que cada usuário foi criado uma vez.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Conversão disponível depende da forma da tabela e dos tipos registrados; não confunda tabela com vários parâmetros capturados na expressão.
+Conversão disponível depende da forma da tabela e dos tipos registrados; não confunda tabela com vários parâmetros capturados na expressão.
 
 ## Como verificar
 Teste tabela vazia, coluna faltante e valor inválido e confira que a falha aponta linha ou campo relevante.

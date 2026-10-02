@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 FastHttpUser pode reduzir overhead de cliente HTTP quando Locust precisa gerar uma taxa alta de requests.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. CPU saturada no gerador pode parecer throughput máximo do serviço, levando a uma conclusão errada sobre capacidade do sistema testado.
+CPU saturada no gerador pode parecer throughput máximo do serviço, levando a uma conclusão errada sobre capacidade do sistema testado.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Monitore recursos do load generator e compare cliente HTTP padrão/rápido sob a mesma hipótese, payload e perfil.
+Monitore recursos do load generator e compare cliente HTTP padrão/rápido sob a mesma hipótese, payload e perfil.
 
 ## Exemplo
 Aumentar workers eleva taxa até um limite; experimento separado compara taxa possível sem confundir esse ganho com mudança do servidor.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. FastHttpUser altera custo do cliente e não reproduz browser; comparações requerem controles de rede e payload.
+FastHttpUser altera custo do cliente e não reproduz browser; comparações requerem controles de rede e payload.
 
 ## Como verificar
 Verifique CPU do gerador, warnings e latência do servidor para distinguir saturação do cliente de gargalo do alvo.

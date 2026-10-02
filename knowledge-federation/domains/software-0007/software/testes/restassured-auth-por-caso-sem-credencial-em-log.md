@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 REST Assured suporta esquemas de autenticação e configuração de credenciais por request.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Credenciais estáticas globais podem ser herdadas por testes indevidos e aparecer em logs, fixtures ou mensagens de falha.
+Credenciais estáticas globais podem ser herdadas por testes indevidos e aparecer em logs, fixtures ou mensagens de falha.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Leia credenciais de mecanismo de teste isolado, associe autenticação à chamada que precisa dela e aplique filtros de logging com redaction.
+Leia credenciais de mecanismo de teste isolado, associe autenticação à chamada que precisa dela e aplique filtros de logging com redaction.
 
 ## Exemplo
 Um caso usa token sintético de curta duração para GET protegido; outro confirma 401 sem token sem reutilizar credencial de produção.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. O suporte do cliente não valida a política de autorização do servidor; respostas precisam ser verificadas em ambiente controlado.
+O suporte do cliente não valida a política de autorização do servidor; respostas precisam ser verificadas em ambiente controlado.
 
 ## Como verificar
 Procure tokens nos relatórios gerados e confirme que o teste negativo permanece independente da execução do caso autenticado.

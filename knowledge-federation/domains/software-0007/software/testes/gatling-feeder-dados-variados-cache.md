@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Feeder fornece records aos virtual users por meio de feed e os atributos passam para Session.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Se todos os usuários consultam o mesmo objeto, caches do alvo podem ficar mais quentes que o workload real.
+Se todos os usuários consultam o mesmo objeto, caches do alvo podem ficar mais quentes que o workload real.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Prepare dataset controlado e escolha estratégia de consumo/reciclagem coerente com unicidade e tamanho necessário.
+Prepare dataset controlado e escolha estratégia de consumo/reciclagem coerente com unicidade e tamanho necessário.
 
 ## Exemplo
 Feeder CSV dá user id e produto a cada usuário para que requests usem recursos distintos.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Dado único aumenta cobertura de objetos mas requer dataset suficiente; exhausted feeder pode falhar conforme estratégia usada.
+Dado único aumenta cobertura de objetos mas requer dataset suficiente; exhausted feeder pode falhar conforme estratégia usada.
 
 ## Como verificar
 Rode pequena população, registre records distribuídos e valide fim de arquivo, recycle e ausência de dados sensíveis.

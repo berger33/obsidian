@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Assert.Throws e variantes assíncronas capturam exceção da operação e permitem verificar tipo e conteúdo da falha.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Try/catch amplo ao redor de várias etapas pode aceitar exceção de setup ou de código que não era alvo do teste.
+Try/catch amplo ao redor de várias etapas pode aceitar exceção de setup ou de código que não era alvo do teste.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Passe apenas a ação sob teste à assertion de exceção e verifique mensagem/código somente quando fizerem parte do contrato.
+Passe apenas a ação sob teste à assertion de exceção e verifique mensagem/código somente quando fizerem parte do contrato.
 
 ## Exemplo
 Uma chamada de parser inválida deve lançar FormatException; erro de preparação da entrada não pode satisfazer assertion por acidente.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. Algumas APIs de assertion exigem tipo exato, enquanto outras aceitam subtipos; consulte a variante usada e versão.
+Algumas APIs de assertion exigem tipo exato, enquanto outras aceitam subtipos; consulte a variante usada e versão.
 
 ## Como verificar
 Teste tipo esperado, subtipo não permitido e ausência de exceção e confira em qual linha a falha é apontada.

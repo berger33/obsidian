@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 CSV Data Set Config lê registros em variáveis e normalmente fornece linhas diferentes às threads do plano.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Usar a mesma conta para muitos usuários pode causar conflito e medir contenção artificial em vez do comportamento pretendido.
+Usar a mesma conta para muitos usuários pode causar conflito e medir contenção artificial em vez do comportamento pretendido.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Forneça dados descartáveis únicos por thread, configure delimiter e política de EOF e verifique volume suficiente para iterações.
+Forneça dados descartáveis únicos por thread, configure delimiter e política de EOF e verifique volume suficiente para iterações.
 
 ## Exemplo
 Arquivo contém header user_id; com campo Variable Names vazio JMeter usa primeira linha como nomes e distribui dados.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Ordem em que linhas chegam a threads depende do scheduler e execução, não use arquivo como garantia de ordenação entre usuários.
+Ordem em que linhas chegam a threads depende do scheduler e execução, não use arquivo como garantia de ordenação entre usuários.
 
 ## Como verificar
 Registre ids usados em amostra e confirme ausência de repetição conforme política de recycle/EOF.

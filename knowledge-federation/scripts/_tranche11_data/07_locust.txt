@@ -1,8 +1,5 @@
 group=Locust: cenários de usuário e geração de carga Python
 first=510
-why=Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador.
-method=Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado.
-limits=HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests.
 check=Confrontei locustfile, TaskSet, LoadTestShape API, increasing request rate e geração distribuída; verifiquei pesos, espera após tarefa e divisão master/worker.
 ---
 locust-httpuser-nao-e-browser||Locust: não confundir HttpUser com navegador real||HttpUser oferece client HTTP e mantém cookies, mas não renderiza HTML nem carrega automaticamente recursos da página como browser.||Um teste HTTP de protocolo pode passar enquanto scripts, layout ou experiência do navegador estão quebrados.||Use HttpUser para jornada de API/protocolo e complemente com automação browser quando a hipótese depende de frontend.||Carga HTTP consulta endpoints de catálogo; um smoke browser separado valida login e recurso crítico carregado na tela.||HttpUser não mede renderização, execução JavaScript nem download de subresources.||Compare endpoints e métricas da carga com um caso browser representativo e registre qual fronteira cada teste cobre.||locust_file,locust_api||A documentação descreve client/cookies de HttpUser e ressalva explicitamente que não é navegador.

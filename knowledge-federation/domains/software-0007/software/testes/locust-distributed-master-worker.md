@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Em execução distribuída, master coordena interface e spawn/stop; workers executam Users e enviam estatísticas ao master.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Medir CPU do master como se gerasse requests ou esquecer worker ausente distorce capacidade atribuída ao sistema alvo.
+Medir CPU do master como se gerasse requests ou esquecer worker ausente distorce capacidade atribuída ao sistema alvo.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Inicie master e workers com versões, locustfiles e conectividade compatíveis; para headless aguarde quantidade esperada de workers.
+Inicie master e workers com versões, locustfiles e conectividade compatíveis; para headless aguarde quantidade esperada de workers.
 
 ## Exemplo
 Dois workers distribuem usuários enquanto master agrega resultados e aguarda todos conectados antes de iniciar teste headless.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. Mais workers não garantem escala linear; cada worker, rede e request rate continuam limitantes.
+Mais workers não garantem escala linear; cada worker, rede e request rate continuam limitantes.
 
 ## Como verificar
 Observe workers conectados, CPU/memória por nó, taxa gerada e warnings de saturação antes de concluir capacidade do alvo.

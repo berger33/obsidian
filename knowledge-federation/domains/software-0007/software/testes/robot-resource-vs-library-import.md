@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Resource files compartilham user keywords e dados Robot; libraries fornecem keywords implementadas em Python ou outra integração suportada.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Importar um resource como se fosse library ou depender de import implícito cria falhas de descoberta e acoplamento difícil de rastrear.
+Importar um resource como se fosse library ou depender de import implícito cria falhas de descoberta e acoplamento difícil de rastrear.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Mantenha keywords de domínio em resources reutilizáveis e importe bibliotecas externas com nome e dependências explícitos.
+Mantenha keywords de domínio em resources reutilizáveis e importe bibliotecas externas com nome e dependências explícitos.
 
 ## Exemplo
 Um resource define “Criar Pedido”; uma library fornece keyword de banco com configuração injetada pelo ambiente de teste.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Escopo e lifecycle dependem da library importada; variáveis de resource também podem ser sobrescritas por fontes de maior prioridade.
+Escopo e lifecycle dependem da library importada; variáveis de resource também podem ser sobrescritas por fontes de maior prioridade.
 
 ## Como verificar
 Rode descoberta no ambiente limpo do CI e confirme que imports e versões estão declarados no repositório.

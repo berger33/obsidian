@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Robot Framework oferece variáveis de diferentes origens e escopos, e sua resolução depende da origem e do momento da definição.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Variável global ou de suite alterada durante teste pode afetar outros casos que usam o mesmo processo.
+Variável global ou de suite alterada durante teste pode afetar outros casos que usam o mesmo processo.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Prefira variáveis locais ao caso; use suite/global apenas para configuração imutável ou recurso cuja partilha seja explícita.
+Prefira variáveis locais ao caso; use suite/global apenas para configuração imutável ou recurso cuja partilha seja explícita.
 
 ## Exemplo
 Um teste altera ${TOKEN} localmente e confirma que outro caso não herda o token nem modifica configurações do pipeline.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Os mecanismos de configuração por CLI, arquivo de variáveis e keywords têm precedências documentadas que variam por tipo de variável.
+Os mecanismos de configuração por CLI, arquivo de variáveis e keywords têm precedências documentadas que variam por tipo de variável.
 
 ## Como verificar
 Execute a suíte com overrides de CLI e verifique quais valores chegaram a cada nível sem imprimir segredos no log.

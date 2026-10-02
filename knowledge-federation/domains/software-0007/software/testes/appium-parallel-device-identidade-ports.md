@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Capabilities como udid identificam dispositivo alvo; drivers também podem requerer portas e recursos distintos para sessões simultâneas.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Duas sessões podem disputar device ou porta auxiliar e produzir flakiness que parece defeito da aplicação.
+Duas sessões podem disputar device ou porta auxiliar e produzir flakiness que parece defeito da aplicação.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Atribua device id exclusivo, configure portas por driver segundo sua documentação e isole dados/contas por execução.
+Atribua device id exclusivo, configure portas por driver segundo sua documentação e isole dados/contas por execução.
 
 ## Exemplo
 Dois workers iniciam Android com udid e systemPort distintos, cada um usando instalação e usuário de teste próprios.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Requisitos de porta variam por driver/versão e Grid não cria isolamento de dados da aplicação automaticamente.
+Requisitos de porta variam por driver/versão e Grid não cria isolamento de dados da aplicação automaticamente.
 
 ## Como verificar
 Rode duas sessões simultâneas repetidamente e verifique device, porta reservada, logs e estado de app de cada worker.

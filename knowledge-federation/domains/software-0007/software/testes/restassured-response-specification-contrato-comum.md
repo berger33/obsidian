@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Uma response specification permite reutilizar assertions comuns para respostas de vários testes.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Se cada cenário validar somente status, mudanças de Content-Type ou headers obrigatórios podem passar despercebidas; uma especificação genérica demais também pode impor expectativas sem relação com o caso.
+Se cada cenário validar somente status, mudanças de Content-Type ou headers obrigatórios podem passar despercebidas; uma especificação genérica demais também pode impor expectativas sem relação com o caso.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Defina um conjunto enxuto de invariantes comuns, como tipo de conteúdo ou header de segurança, e mantenha no teste as assertions específicas do endpoint.
+Defina um conjunto enxuto de invariantes comuns, como tipo de conteúdo ou header de segurança, e mantenha no teste as assertions específicas do endpoint.
 
 ## Exemplo
 Vários GET validam application/json por specification comum, enquanto cada teste verifica seus próprios campos e semântica de status.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. A API e a forma de declarar a specification variam conforme a versão usada; não compartilhe uma specification que o teste modifica.
+A API e a forma de declarar a specification variam conforme a versão usada; não compartilhe uma specification que o teste modifica.
 
 ## Como verificar
 Faça um teste de controle que remova cada header obrigatório e confirme que a expectativa compartilhada falha pelo motivo esperado.

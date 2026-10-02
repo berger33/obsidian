@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Session pode ser inspecionada durante desenvolvimento para diagnosticar feeders, expressões e check failures.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Imprimir sessão em cada ação sob alta concorrência consome recursos do engine e pode expor token ou dados de usuário.
+Imprimir sessão em cada ação sob alta concorrência consome recursos do engine e pode expor token ou dados de usuário.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Ative logging em execução pequena e isolada, remova debug antes do benchmark e redija atributos sensíveis.
+Ative logging em execução pequena e isolada, remova debug antes do benchmark e redija atributos sensíveis.
 
 ## Exemplo
 Um teste de smoke imprime somente chave de fixture; a simulação de carga registra métricas sem despejar Session.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Logging pode ainda afetar medição mesmo que a aplicação não mude; dados exportados exigem proteção.
+Logging pode ainda afetar medição mesmo que a aplicação não mude; dados exportados exigem proteção.
 
 ## Como verificar
 Compare RPS e uso de CPU com debug habilitado/desabilitado e procure valores secretos nos artifacts.

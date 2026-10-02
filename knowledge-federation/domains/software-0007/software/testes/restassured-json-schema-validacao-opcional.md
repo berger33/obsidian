@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 REST Assured oferece matcher para validar um corpo JSON contra um schema, disponível pela integração de validação correspondente.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Verificar poucos campos pode deixar propriedades obrigatórias, tipos ou estruturas aninhadas incompatíveis com o contrato passar despercebidas.
+Verificar poucos campos pode deixar propriedades obrigatórias, tipos ou estruturas aninhadas incompatíveis com o contrato passar despercebidas.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Inclua a dependência de JSON Schema Validator, carregue schema versionado e aplique o matcher à resposta que já teve status validado.
+Inclua a dependência de JSON Schema Validator, carregue schema versionado e aplique o matcher à resposta que já teve status validado.
 
 ## Exemplo
 A resposta de listagem é conferida contra schema que exige id e name em cada item e define o tipo de price.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. O schema precisa refletir a versão de contrato pretendida; matcher não verifica regras de negócio nem que o schema esteja correto.
+O schema precisa refletir a versão de contrato pretendida; matcher não verifica regras de negócio nem que o schema esteja correto.
 
 ## Como verificar
 Altere um tipo obrigatório de resposta em um teste negativo e confirme que o matcher reporta o caminho do campo inválido.

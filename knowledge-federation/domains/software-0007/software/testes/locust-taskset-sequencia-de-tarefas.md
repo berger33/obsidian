@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 TaskSet organiza conjunto de tarefas e pode delegar para subtasksets; SequentialTaskSet expressa sequência declarada quando a jornada requer ordem.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Um conjunto plano de tasks pode gerar transições impossíveis, enquanto ordem rígida aplicada ao usuário inteiro reduz variabilidade sem justificativa.
+Um conjunto plano de tasks pode gerar transições impossíveis, enquanto ordem rígida aplicada ao usuário inteiro reduz variabilidade sem justificativa.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Use TaskSet para subfluxo coerente e SequentialTaskSet somente quando próxima etapa depende da ordem explícita.
+Use TaskSet para subfluxo coerente e SequentialTaskSet somente quando próxima etapa depende da ordem explícita.
 
 ## Exemplo
 Usuário autentica, navega seção e encerra subfluxo antes de voltar à jornada principal.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. TaskSet não implementa máquina de estados de negócio automaticamente; transições e interrupção ainda precisam ser definidas.
+TaskSet não implementa máquina de estados de negócio automaticamente; transições e interrupção ainda precisam ser definidas.
 
 ## Como verificar
 Observe logs de sequência e confirme que o modelo não emite checkout sem carrinho criado quando essa dependência é obrigatória.

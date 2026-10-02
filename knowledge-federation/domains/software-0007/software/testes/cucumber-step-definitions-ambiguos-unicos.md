@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Cucumber precisa de uma definição única que corresponda ao texto de cada step; mais de uma correspondência impede execução inequívoca.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Expressões genéricas como “I have .*” podem sobrepor passos específicos e falhar só quando nova feature adiciona texto coincidente.
+Expressões genéricas como “I have .*” podem sobrepor passos específicos e falhar só quando nova feature adiciona texto coincidente.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Prefira expressões limitadas por tipo ou valor e reúna lógica comum numa implementação com parâmetros explícitos.
+Prefira expressões limitadas por tipo ou valor e reúna lógica comum numa implementação com parâmetros explícitos.
 
 ## Exemplo
 O step “saldo é {int}” atende vários valores; uma segunda expressão que também captura qualquer frase de saldo é removida.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Expressão regular pode ser necessária, mas grupos capturados devem corresponder à assinatura do método.
+Expressão regular pode ser necessária, mas grupos capturados devem corresponder à assinatura do método.
 
 ## Como verificar
 Rode discovery da suíte inteira e acrescente casos de fronteira que exercitem sobreposição de expressões.

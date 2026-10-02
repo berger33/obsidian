@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 RequestSpecification agrupa dados de request que podem ser compostos e reaproveitados em várias chamadas.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Duplicar base URI, headers comuns e autenticação em cada caso cria divergência; um objeto global mutável pode, por outro lado, vazar dados entre testes.
+Duplicar base URI, headers comuns e autenticação em cada caso cria divergência; um objeto global mutável pode, por outro lado, vazar dados entre testes.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Construa uma specification comum para invariantes e derive ou crie uma configuração por cenário quando parâmetros e headers mudarem.
+Construa uma specification comum para invariantes e derive ou crie uma configuração por cenário quando parâmetros e headers mudarem.
 
 ## Exemplo
 Uma specification base define host e Accept; cada teste cria sua própria cópia lógica com token e path parameter do usuário em teste.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. O merge de specifications tem regras próprias para campos sobrescritos e mesclados; não presuma que toda propriedade é acumulada.
+O merge de specifications tem regras próprias para campos sobrescritos e mesclados; não presuma que toda propriedade é acumulada.
 
 ## Como verificar
 Execute os casos em paralelo e em ordem aleatória e confirme que host, autenticação e parâmetros permanecem associados ao cenário certo.

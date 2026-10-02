@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Groups agrupam ações do usuário e permitem observar estatísticas relativas a uma parte nomeada do scenario.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Métrica global pode esconder uma chamada lenta de autenticação dentro de várias requests rápidas.
+Métrica global pode esconder uma chamada lenta de autenticação dentro de várias requests rápidas.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Agrupe fronteiras relevantes, use nomes estáveis e evite criar grupos por id dinâmico de usuário.
+Agrupe fronteiras relevantes, use nomes estáveis e evite criar grupos por id dinâmico de usuário.
 
 ## Exemplo
 Grupo checkout contém validação de carrinho e confirmação de pagamento e tem assertions próprias de erro/tempo.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Group statistic não altera workload nem substitui métricas de sistema ou análise de dependência.
+Group statistic não altera workload nem substitui métricas de sistema ou análise de dependência.
 
 ## Como verificar
 Compare métricas de grupo com global e confirme cardinalidade limitada aos nomes de jornada.

@@ -1,8 +1,5 @@
 group=NUnit: parametrização, lifecycle e execução paralela
 first=490
-why=NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos.
-method=Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização.
-limits=Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados.
 check=Confrontei Test, TestCase, TestCaseSource, SetUp/TearDown, OneTimeSetUp, FixtureLifeCycle, Parallelizable, Order e TestContext na documentação NUnit.
 ---
 nunit-test-async-await-task||NUnit: aguardar métodos de teste assíncronos por Task||NUnit aceita test methods async que retornam Task ou Task<T> e registra o resultado após a conclusão.||Um método async void pode retornar o controle ao runner antes de assertions ou erros assíncronos serem observados.||Retorne Task, aguarde todas as operações e faça assertions após o await sem iniciar trabalho fire-and-forget.||O teste aguarda leitura assíncrona do repositório fake, valida o valor e propaga a exceção quando a chamada falha.||API callback sem forma async pode exigir outra adaptação; retorno Task não encerra trabalho que foi deliberadamente destacado.||Force sucesso, exceção e timeout e confirme que o runner não marca sucesso antes de a operação terminar.||nunit_test,nunit_assert||A documentação do atributo Test exige Task ou Task<T> para método assíncrono e o runner aguarda sua conclusão.

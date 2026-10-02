@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 A extensão WireMock para JUnit Jupiter inicia e encerra servidor conforme lifecycle e, por padrão, reseta mappings e requests entre métodos.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Servidor ou journal compartilhado sem limpeza pode fazer um caso depender de stubs e tráfego de outro.
+Servidor ou journal compartilhado sem limpeza pode fazer um caso depender de stubs e tráfego de outro.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Use porta dinâmica fornecida pela extensão e teste cada método com seus próprios mappings; altere reset automático somente se justificar o compartilhamento.
+Use porta dinâmica fornecida pela extensão e teste cada método com seus próprios mappings; altere reset automático somente se justificar o compartilhamento.
 
 ## Exemplo
 Dois métodos registram stubs diferentes e cada um usa URL/porta obtida da instância da extensão.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Desabilitar reset exige limpeza explícita e cuidado com paralelismo e estado de cenários.
+Desabilitar reset exige limpeza explícita e cuidado com paralelismo e estado de cenários.
 
 ## Como verificar
 Execute métodos em ordem aleatória e confirme que cada request tem apenas o mapping e o journal esperados.

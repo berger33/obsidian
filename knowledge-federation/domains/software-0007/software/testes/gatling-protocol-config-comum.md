@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Protocol configuration reúne base URL, headers e opções compartilhadas que podem ser associadas a um ou mais cenários.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Configuração duplicada deriva entre cenários; override global oculto pode alterar comportamento sem ficar evidente no request.
+Configuração duplicada deriva entre cenários; override global oculto pode alterar comportamento sem ficar evidente no request.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Declare configuração HTTP legível, aplique-a nos cenários pretendidos e mantenha headers específicos junto ao request que os exige.
+Declare configuração HTTP legível, aplique-a nos cenários pretendidos e mantenha headers específicos junto ao request que os exige.
 
 ## Exemplo
 Dois cenários usam mesmo baseUrl e accept header, enquanto fluxo admin define token em sua ação autenticada.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Defaults compartilhados não são automaticamente aplicados se protocolo não for associado ao setup do cenário.
+Defaults compartilhados não são automaticamente aplicados se protocolo não for associado ao setup do cenário.
 
 ## Como verificar
 Inspecione requests emitidos por cada cenário e faça teste de configuração quando mudar base URL ou TLS.

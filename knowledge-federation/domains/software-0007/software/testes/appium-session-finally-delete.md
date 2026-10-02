@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Quickstart abre session remota e chama deleteSession ao concluir interação; lifecycle da sessão é responsabilidade do cliente de teste.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Falha antes do encerramento pode deixar device ocupado, app em estado inesperado e próximo teste associado a sessão antiga.
+Falha antes do encerramento pode deixar device ocupado, app em estado inesperado e próximo teste associado a sessão antiga.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Guarde driver em escopo de teste e finalize sessão em bloco de cleanup que rode também quando comando/assertion lança erro.
+Guarde driver em escopo de teste e finalize sessão em bloco de cleanup que rode também quando comando/assertion lança erro.
 
 ## Exemplo
 Teste navega settings e encerra sessão em finally; caminho de assertion falha ainda executa deleteSession.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Pausa fixa para visualização não substitui condição de espera e pode alongar suite sem garantir prontidão.
+Pausa fixa para visualização não substitui condição de espera e pode alongar suite sem garantir prontidão.
 
 ## Como verificar
 Injete exceção no meio do teste e confirme que sessão some do servidor e device fica disponível.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Theories podem obter dados de membros ou classes provedoras, separando matriz de argumentos da lógica do teste.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Um atributo com dezenas de valores comprime manutenção e pode levar casos diferentes a compartilhar estado mutável.
+Um atributo com dezenas de valores comprime manutenção e pode levar casos diferentes a compartilhar estado mutável.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Use provedor determinístico, descreva cada linha e devolva objetos novos quando mutabilidade fizer parte do teste.
+Use provedor determinístico, descreva cada linha e devolva objetos novos quando mutabilidade fizer parte do teste.
 
 ## Exemplo
 Três classes testam um parser com MemberData compartilhado que fornece strings e resultado esperado por linha.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. Descoberta de dados e serialização de argumentos dependem do runner e da versão xUnit utilizada.
+Descoberta de dados e serialização de argumentos dependem do runner e da versão xUnit utilizada.
 
 ## Como verificar
 Rode discovery no runner de CI e confirme que cada linha é descobrível e reexecutável com argumento registrado.

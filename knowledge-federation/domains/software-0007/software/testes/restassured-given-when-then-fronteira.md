@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 O padrão given/when/then organiza a especificação da requisição, a execução do HTTP e as expectativas sobre a resposta.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Assertions distribuídas em helpers pouco claros podem ocultar qual entrada produziu um status ou corpo inesperado.
+Assertions distribuídas em helpers pouco claros podem ocultar qual entrada produziu um status ou corpo inesperado.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Monte headers, parâmetros e corpo no given, faça a chamada identificável no when e valide status, headers e campos de resposta no then.
+Monte headers, parâmetros e corpo no given, faça a chamada identificável no when e valide status, headers e campos de resposta no then.
 
 ## Exemplo
 Um teste POST configura JSON e token, envia a criação de pedido e verifica status 201, tipo de conteúdo e identificador devolvido.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. A DSL melhora leitura, mas não define por si só se a chamada é unitária, de integração ou contra um serviço externo.
+A DSL melhora leitura, mas não define por si só se a chamada é unitária, de integração ou contra um serviço externo.
 
 ## Como verificar
 Compare o request construído com o contrato e verifique que cada assertion aponta para uma saída observável relevante.

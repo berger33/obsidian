@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Drivers expõem estratégias de locator dependentes da plataforma, incluindo identificadores de acessibilidade ou recursos nativos.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. XPath baseado em hierarquia incidental muda com layout e aumenta fragilidade ao redesenhar tela sem mudar comportamento.
+XPath baseado em hierarquia incidental muda com layout e aumenta fragilidade ao redesenhar tela sem mudar comportamento.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Priorize identificador semântico mantido pelo app e reserve selectors estruturais para caso sem alternativa adequada.
+Priorize identificador semântico mantido pelo app e reserve selectors estruturais para caso sem alternativa adequada.
 
 ## Exemplo
 Botão “Salvar” recebe accessibility id estável e teste o localiza por id em vez de caminho absoluto do XML.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Availability e semântica do locator variam entre Android, iOS, native e web contexts.
+Availability e semântica do locator variam entre Android, iOS, native e web contexts.
 
 ## Como verificar
 Rode teste com pequenas mudanças de layout e valide que locator ainda identifica um único controle com papel/ação correta.

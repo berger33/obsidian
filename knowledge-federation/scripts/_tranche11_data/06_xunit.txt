@@ -1,8 +1,5 @@
 group=xUnit.net v3: dados, fixtures e paralelismo
 first=500
-why=xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle.
-method=Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados.
-limits=Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos.
 check=Confrontei Getting Started v3, Sharing Context, Running Tests in Parallel, Capturing Output, Assertions e configuração oficial do runner, observando diferenças de versão.
 ---
 xunit-fact-vs-theory-escopo||xUnit: escolher Fact ou Theory conforme número de exemplos||Fact representa um caso individual; Theory associa a um método conjuntos de dados que produzem invocações parametrizadas.||Uma tabela dentro de Fact pode interromper a execução no primeiro erro e esconder qual entrada falhou no relatório.||Use Fact para comportamento sem parâmetro e Theory quando valores distintos são exemplos do mesmo contrato.||A regra de desconto é uma Theory com valores de pedido e desconto esperado; erro identifica argumento do exemplo.||Theory não gera combinações automaticamente nem prova entradas que não foram declaradas ou fornecidas pela fonte.||Confira a descoberta do runner e confirme que cada conjunto de dados aparece com valores de argumento no relatório.||xu_start,xu_assert||O guia v3 diferencia Fact e Theory e mostra linhas de dados criando test cases individuais.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Um ScenarioBuilder encadeia ações com exec; requests e funções executadas no cenário seguem a sequência declarada.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Request de checkout pode rodar sem autenticação se a etapa anterior foi omitida ou a cadeia não foi ligada ao scenario correto.
+Request de checkout pode rodar sem autenticação se a etapa anterior foi omitida ou a cadeia não foi ligada ao scenario correto.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Divida jornadas reutilizáveis em chains pequenas e encadeie explicitamente login, leitura, ação e verificação.
+Divida jornadas reutilizáveis em chains pequenas e encadeie explicitamente login, leitura, ação e verificação.
 
 ## Exemplo
 O virtual user busca carrinho, extrai id, adiciona item e conclui checkout em ações sucessivas.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Uma sequência sintática correta não garante que o estado do serviço corresponda à precondição de cada passo.
+Uma sequência sintática correta não garante que o estado do serviço corresponda à precondição de cada passo.
 
 ## Como verificar
 Inspecione order de requests e faça um teste pequeno que valide status e estado final antes de subir carga.

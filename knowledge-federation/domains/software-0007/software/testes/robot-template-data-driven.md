@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Um test template transforma as linhas de argumentos de um caso em chamadas repetidas à keyword-template escolhida.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Duplicar casos quase idênticos aumenta manutenção e torna difícil perceber se entradas de fronteira foram cobertas.
+Duplicar casos quase idênticos aumenta manutenção e torna difícil perceber se entradas de fronteira foram cobertas.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Declare o template uma vez e forneça exemplos de entrada/resultado com nomes que identifiquem cada variação.
+Declare o template uma vez e forneça exemplos de entrada/resultado com nomes que identifiquem cada variação.
 
 ## Exemplo
 A mesma keyword valida códigos válidos e inválidos com linhas de argumento, enquanto a assertion continua observando resposta completa.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Linhas do template são iterações dentro do caso configurado, não devem ser confundidas automaticamente com casos independentes no runner.
+Linhas do template são iterações dentro do caso configurado, não devem ser confundidas automaticamente com casos independentes no runner.
 
 ## Como verificar
 Inspecione report.xml e o log para saber como cada linha é apresentada e force uma linha inválida para validar diagnóstico.

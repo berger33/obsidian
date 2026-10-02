@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Cada thread de um Thread Group executa o plano de teste de forma independente e pode representar uma conexão/usuário concorrente.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Número de threads não equivale automaticamente a taxa de requests, pois loops, timers e duração de cada interação influenciam resultado.
+Número de threads não equivale automaticamente a taxa de requests, pois loops, timers e duração de cada interação influenciam resultado.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Defina threads, ramp-up, iterações e duração explicitamente e estime quantos usuários estarão ativos durante cada janela.
+Defina threads, ramp-up, iterações e duração explicitamente e estime quantos usuários estarão ativos durante cada janela.
 
 ## Exemplo
 Thread Group sobe 20 threads em 60 segundos e cada uma executa fluxo de login e leitura com think time configurado.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. O modelo de thread do JMeter é distinto de taxa aberta k6/Gatling; resposta lenta pode reduzir ritmo do modelo fechado.
+O modelo de thread do JMeter é distinto de taxa aberta k6/Gatling; resposta lenta pode reduzir ritmo do modelo fechado.
 
 ## Como verificar
 Compare usuários ativos e RPS observado ao variar latência, e documente se workload pretendido é usuários concorrentes ou chegadas por segundo.

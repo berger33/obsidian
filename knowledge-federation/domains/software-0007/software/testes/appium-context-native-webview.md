@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Contexts representam modos de automação que o driver implementa; API permite listar, ler contexto atual e trocar para outro nome disponível.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Comandos e locators podem se comportar diferente em app híbrido conforme contexto ativo e referência do elemento.
+Comandos e locators podem se comportar diferente em app híbrido conforme contexto ativo e referência do elemento.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Consulte contexts no runtime, identifique WebView correto e altere contexto somente quando driver reportar sua disponibilidade.
+Consulte contexts no runtime, identifique WebView correto e altere contexto somente quando driver reportar sua disponibilidade.
 
 ## Exemplo
 Fluxo interage com botão nativo, troca para webview de checkout, valida DOM e restaura contexto nativo.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Lista, nome e suporte de cada contexto dependem do driver/plataforma; não fixe WEBVIEW_1 sem verificação.
+Lista, nome e suporte de cada contexto dependem do driver/plataforma; não fixe WEBVIEW_1 sem verificação.
 
 ## Como verificar
 Registre contexts disponíveis por build e valide interação correspondente a cada contexto sem reutilizar elemento antigo.

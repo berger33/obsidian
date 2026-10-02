@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 WireMock fornece matchers de corpo JSON que comparam conteúdo estruturado, além de comparação literal ou JSONPath.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Espaços, ordem de propriedades ou diferenças irrelevantes de formatação não deveriam quebrar um mock quando o contrato exige mesmos valores.
+Espaços, ordem de propriedades ou diferenças irrelevantes de formatação não deveriam quebrar um mock quando o contrato exige mesmos valores.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Escolha equalToJson ou matcher de JSONPath para os campos pertinentes e configure tolerância a propriedades extras somente quando fizer sentido.
+Escolha equalToJson ou matcher de JSONPath para os campos pertinentes e configure tolerância a propriedades extras somente quando fizer sentido.
 
 ## Exemplo
 Um POST com propriedades JSON reordenadas ainda corresponde ao stub, mas um amount diferente não corresponde.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Permitir propriedades extras pode esconder campos não esperados; a escolha de strictness deve refletir o objetivo do teste.
+Permitir propriedades extras pode esconder campos não esperados; a escolha de strictness deve refletir o objetivo do teste.
 
 ## Como verificar
 Envie payloads com formatação equivalente e com uma diferença de valor e confirme respostas distintas do mapping.

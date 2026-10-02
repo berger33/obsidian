@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Variáveis de JMeter têm escopo de thread, enquanto properties são compartilhadas entre threads do processo.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Usar property para dados de usuário pode criar race e substituição de valor entre VUs; usar variable para coordenação global não compartilha estado.
+Usar property para dados de usuário pode criar race e substituição de valor entre VUs; usar variable para coordenação global não compartilha estado.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Use JMeter variables para contexto local e properties apenas para configuração ou coordenação explicitamente global.
+Use JMeter variables para contexto local e properties apenas para configuração ou coordenação explicitamente global.
 
 ## Exemplo
 Cada thread guarda seu token em variável própria; propriedade `baseUrl` configura destino comum da execução.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Compartilhamento de property entre threads não implica distribuição automática de atualizações a engines remotos sem configuração.
+Compartilhamento de property entre threads não implica distribuição automática de atualizações a engines remotos sem configuração.
 
 ## Como verificar
 Execute duas threads com valores sentinela distintos e confirme que variáveis permanecem separadas enquanto configuração global é comum.

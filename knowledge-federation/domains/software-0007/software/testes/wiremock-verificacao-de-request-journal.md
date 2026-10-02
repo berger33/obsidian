@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 O request journal mantém requests recebidas em memória para verificação e consulta após as chamadas do sistema sob teste.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Validar apenas a resposta do mock pode não detectar chamadas duplicadas, headers ausentes ou sequência incorreta.
+Validar apenas a resposta do mock pode não detectar chamadas duplicadas, headers ausentes ou sequência incorreta.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Use verify com matcher alinhado ao contrato e, quando necessário, consulte requests registradas para diagnosticar a interação.
+Use verify com matcher alinhado ao contrato e, quando necessário, consulte requests registradas para diagnosticar a interação.
 
 ## Exemplo
 Após criar pedido, o teste verifica um POST com Authorization e corpo contendo o id esperado.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. O journal pode ser desabilitado para carga; nesse modo verificações baseadas em journal não são evidência disponível.
+O journal pode ser desabilitado para carga; nesse modo verificações baseadas em journal não são evidência disponível.
 
 ## Como verificar
 Confirme a configuração do journal e prove que uma chamada duplicada ou incompleta faz a verificação falhar.

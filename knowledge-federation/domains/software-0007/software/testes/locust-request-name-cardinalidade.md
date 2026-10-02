@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 O parâmetro name do client pode agrupar requests com paths ou query values diferentes sob um nome de estatística comum.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Ids dinâmicos criam muitas linhas e fragmentam amostras de endpoint, dificultando comparação de latência e erro.
+Ids dinâmicos criam muitas linhas e fragmentam amostras de endpoint, dificultando comparação de latência e erro.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Use nome estável para rotas equivalentes e preserve ids em logs de diagnóstico sem transformá-los em labels de métrica.
+Use nome estável para rotas equivalentes e preserve ids em logs de diagnóstico sem transformá-los em labels de métrica.
 
 ## Exemplo
 Requests /item?id=1 a /item?id=10 usam name=/item e aparecem como grupo de endpoint único.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. Agrupar endpoints funcionalmente distintos sob o mesmo nome também esconde comportamento divergente.
+Agrupar endpoints funcionalmente distintos sob o mesmo nome também esconde comportamento divergente.
 
 ## Como verificar
 Confira que cada grupo de estatística corresponde a um contrato/rota comparável e que a cardinalidade diminuiu sem perder distinções necessárias.

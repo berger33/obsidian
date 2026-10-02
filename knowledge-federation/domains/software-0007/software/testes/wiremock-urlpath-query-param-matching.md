@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 WireMock permite comparar URL completa ou só o path e declarar query parameters separadamente.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Comparar URL inteira pode tornar o teste sensível à ordem de parâmetros, apesar de ela não representar a distinção do contrato que se quer verificar.
+Comparar URL inteira pode tornar o teste sensível à ordem de parâmetros, apesar de ela não representar a distinção do contrato que se quer verificar.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Use urlPathEqualTo para a rota e withQueryParam para cada parâmetro cuja presença ou valor seja relevante.
+Use urlPathEqualTo para a rota e withQueryParam para cada parâmetro cuja presença ou valor seja relevante.
 
 ## Exemplo
 O stub /search aceita query term=wiremock independentemente da ordem com page=2, e rejeita termo diferente.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. Regex amplo de URL pode aceitar caminhos não pretendidos; delimite segmentos e valores que importam ao caso.
+Regex amplo de URL pode aceitar caminhos não pretendidos; delimite segmentos e valores que importam ao caso.
 
 ## Como verificar
 Envie as mesmas query parameters em ordens diferentes e confirme igualdade; depois varie um valor contratualmente significativo.

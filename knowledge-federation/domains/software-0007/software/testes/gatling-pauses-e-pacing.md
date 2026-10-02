@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Pause modela intervalo entre ações do scenario; injection controla chegada/concorrência inicial de virtual users.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Aumentar pause pode reduzir requests por usuário sem necessariamente representar chegada pretendida de usuários novos.
+Aumentar pause pode reduzir requests por usuário sem necessariamente representar chegada pretendida de usuários novos.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Use pauses para think time dentro de workflow e ajuste injection profile para população e ritmo de chegada.
+Use pauses para think time dentro de workflow e ajuste injection profile para população e ritmo de chegada.
 
 ## Exemplo
 Usuário lê página e espera antes de enviar formulário; teste de pico separado injeta perfis crescentes.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Duração de resposta soma ao ciclo do usuário e afeta modelo fechado; pause não é garantia de RPS.
+Duração de resposta soma ao ciclo do usuário e afeta modelo fechado; pause não é garantia de RPS.
 
 ## Como verificar
 Meça request rate e users ativos após variar pause e injection separadamente.

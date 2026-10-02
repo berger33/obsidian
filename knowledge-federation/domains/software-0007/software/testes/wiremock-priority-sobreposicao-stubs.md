@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Se múltiplos stubs combinam com uma request, a prioridade controla qual resposta é selecionada; números menores indicam prioridade maior.
 
 ## Por que importa
-WireMock devolve respostas configuradas para requests correspondentes e mantém evidência de tráfego recebido, permitindo isolar dependências sem substituir assertions do sistema testado. Um catch-all pode interceptar rota específica e transformar o erro de roteamento em resposta aparentemente válida.
+Um catch-all pode interceptar rota específica e transformar o erro de roteamento em resposta aparentemente válida.
 
 ## Como funciona
-Configure mappings próximos do caso, use matchers que expressem o contrato observado e isole servidor, request journal e cenários entre testes; verifique requests e respostas em vez de testar somente o stub. Atribua prioridade alta ao caso específico e baixa ao fallback, ou torne os matchers mutuamente exclusivos.
+Atribua prioridade alta ao caso específico e baixa ao fallback, ou torne os matchers mutuamente exclusivos.
 
 ## Exemplo
 Um stub para /api/orders/42 vence o fallback de /api/orders/* mesmo quando ambos são elegíveis.
 
 ## Limites e trade-offs
-Um mock não prova a compatibilidade com serviço real. Journal e cenários possuem estado, matchers genéricos podem aceitar requests incorretos e extensões como templating exigem configuração explícita. A ordem em que mappings são registrados também influencia a seleção quando não se define prioridade; não dependa acidentalmente dela.
+A ordem em que mappings são registrados também influencia a seleção quando não se define prioridade; não dependa acidentalmente dela.
 
 ## Como verificar
 Ative ambos mappings e teste a rota específica, outra rota válida e uma rota inexistente, conferindo status e id do stub.

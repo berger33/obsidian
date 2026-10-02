@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Session representa o estado de um virtual user e carrega atributos ao longo das ações do scenario.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Guardar token ou id em variável global pode misturar usuários e gerar requests cruzadas durante concorrência.
+Guardar token ou id em variável global pode misturar usuários e gerar requests cruzadas durante concorrência.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Extraia valores para Session e leia-os na expressão seguinte do mesmo usuário, sem compartilhar atributo mutável entre cenários.
+Extraia valores para Session e leia-os na expressão seguinte do mesmo usuário, sem compartilhar atributo mutável entre cenários.
 
 ## Exemplo
 Cada user extrai seu access token do login e usa esse token em request de perfil própria.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. No Gatling Session é imutável; uma transformação precisa devolver a nova Session para que a alteração continue no fluxo.
+No Gatling Session é imutável; uma transformação precisa devolver a nova Session para que a alteração continue no fluxo.
 
 ## Como verificar
 Crie dois usuários com tokens distintos e confirme que cada request subsequente carrega somente seu próprio valor.

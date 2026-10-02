@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Step definitions podem usar Cucumber Expressions ou regular expressions e receber valores capturados como argumentos.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Parsing manual de números, datas e enums em cada método repete lógica e deixa formatos inválidos produzirem erros pouco localizados.
+Parsing manual de números, datas e enums em cada método repete lógica e deixa formatos inválidos produzirem erros pouco localizados.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Use parâmetros integrados ou tipos registrados para converter texto ao tipo necessário antes de executar o método.
+Use parâmetros integrados ou tipos registrados para converter texto ao tipo necessário antes de executar o método.
 
 ## Exemplo
 A expressão “tenho {int} itens” passa inteiro à definição; um valor textual que não corresponde não alcança essa implementação.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Conversão automática depende do tipo e da expressão registrada; formatação localizada pode exigir parâmetro customizado explícito.
+Conversão automática depende do tipo e da expressão registrada; formatação localizada pode exigir parâmetro customizado explícito.
 
 ## Como verificar
 Teste valores válidos, limites e texto inválido e confirme erro de matching ou transformação antes da regra de negócio.

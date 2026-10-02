@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 XCUITest é driver oficial para apps iOS e seus requisitos dependem do host, toolchain Apple e configuração da sessão.
 
 ## Por que importa
-Appium usa sessões WebDriver e drivers específicos para automação native, hybrid ou web em diferentes plataformas; capabilities e contextos definem comandos aceitos durante a execução. Suite que passa em Android ou simulator não demonstra que build, signing ou permissões iOS estão prontos.
+Suite que passa em Android ou simulator não demonstra que build, signing ou permissões iOS estão prontos.
 
 ## Como funciona
-Instale e versione driver explicitamente, fixe capabilities no início da sessão, selecione contexto suportado pelo driver e encerre a sessão mesmo quando assertion ou comando falhar. Mantenha setup de macOS/Xcode e capabilities XCUITest explícitos no job e valide sessão em cada classe de device suportada.
+Mantenha setup de macOS/Xcode e capabilities XCUITest explícitos no job e valide sessão em cada classe de device suportada.
 
 ## Exemplo
 Pipeline macOS inicia app .app assinado por simulator, enquanto device real usa configuração de instalação e provisioning correspondente.
 
 ## Limites e trade-offs
-Appium abstrai o protocolo, mas semântica de gesto, locator, porta e lifecycle continua dependente de plataforma/driver. Uma execução em emulador não comprova compatibilidade em todos os devices reais. Capability de app, bundle id e browser variam pelo fluxo; driver não substitui configuração de signing nem valida todos devices.
+Capability de app, bundle id e browser variam pelo fluxo; driver não substitui configuração de signing nem valida todos devices.
 
 ## Como verificar
 Execute smoke em simulator e device real quando ambos são suportados e guarde diagnóstico sanitizado do driver.

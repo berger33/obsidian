@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 TestCase fornece argumentos inline para um método parametrizado e permite que cada combinação seja descoberta como test case.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Um único loop dentro de método perde identificação individual de qual entrada falhou e pode parar assertions posteriores no primeiro erro.
+Um único loop dentro de método perde identificação individual de qual entrada falhou e pode parar assertions posteriores no primeiro erro.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Declare entradas e resultados esperados próximos ao método ou use fonte quando os dados precisarem ser reutilizados ou construídos.
+Declare entradas e resultados esperados próximos ao método ou use fonte quando os dados precisarem ser reutilizados ou construídos.
 
 ## Exemplo
 O parser é exercitado por strings válidas e inválidas em atributos TestCase; relatório identifica a linha de argumentos que falhou.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Dados inline são apropriados para conjuntos pequenos; valores complexos, secretos ou mutáveis devem ficar fora do atributo.
+Dados inline são apropriados para conjuntos pequenos; valores complexos, secretos ou mutáveis devem ficar fora do atributo.
 
 ## Como verificar
 Confirme discovery count e que uma falha de uma linha não elimina a execução dos outros casos descobertos.

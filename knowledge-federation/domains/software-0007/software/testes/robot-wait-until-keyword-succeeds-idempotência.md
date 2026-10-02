@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Wait Until Keyword Succeeds repete uma keyword em intervalo configurado até passar ou esgotar limite.
 
 ## Por que importa
-Robot Framework interpreta arquivos de teste por seções e executa keywords de bibliotecas ou recursos; a legibilidade da suíte depende de escopo de variáveis, setup e teardown bem delimitados. Repetir um POST de compra ou migração pode produzir múltiplos efeitos quando a primeira resposta é lenta ou ambígua.
+Repetir um POST de compra ou migração pode produzir múltiplos efeitos quando a primeira resposta é lenta ou ambígua.
 
 ## Como funciona
-Modele cada caso pelo comportamento observável, mantenha preparações e limpeza no nível apropriado, use tags e templates para organização explícita e prefira keywords de domínio em vez de fluxo condicional espalhado. Use retry apenas para leitura/assertion idempotente de condição eventualmente consistente; faça a ação única e aguarde depois por estado observável.
+Use retry apenas para leitura/assertion idempotente de condição eventualmente consistente; faça a ação única e aguarde depois por estado observável.
 
 ## Exemplo
 Após iniciar processamento uma vez, o teste consulta status até aparecer complete em vez de reenviar a solicitação de processamento.
 
 ## Limites e trade-offs
-Keywords e bibliotecas externas têm ciclo de vida e estado próprios; um teardown não desfaz efeitos fora do ambiente de teste. O formato de dados não torna automaticamente um teste independente ou determinístico. Retry não garante que a operação anterior não tenha sido executada, e tempo total depende de intervalo e limite configurados.
+Retry não garante que a operação anterior não tenha sido executada, e tempo total depende de intervalo e limite configurados.
 
 ## Como verificar
 Registre número de chamadas e force timeout com efeito já aplicado para comprovar que a ação não é repetida.

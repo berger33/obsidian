@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 LoadTestShape permite controlar usuários e spawn rate através de tick, que retorna a população desejada e pode terminar com None.
 
 ## Por que importa
-Locust descreve usuários simulados com tarefas Python e controla concorrência, waits e geração distribuída; a taxa observada depende do tempo das tarefas e da capacidade do gerador. Perfil estático não reproduz sempre pico, queda e recuperação que motivam o experimento de capacidade.
+Perfil estático não reproduz sempre pico, queda e recuperação que motivam o experimento de capacidade.
 
 ## Como funciona
-Modele jornadas com tarefas observáveis, escolha pacing e pesos a partir do workload esperado, normalize nomes de requests e valide que o gerador suporta o volume planejado. Codifique estágios com duração e população declaradas e registre tempo decorrido usando API da shape.
+Codifique estágios com duração e população declaradas e registre tempo decorrido usando API da shape.
 
 ## Exemplo
 A shape mantém baseline, ramp-up, pico limitado e ramp-down antes de devolver None para parar execução.
 
 ## Limites e trade-offs
-HttpUser não é navegador real; resultado do teste combina comportamento da aplicação, cliente e gerador. Wait time não cria usuários para atingir throughput e tarefas podem conter várias requests. tick é chamado periodicamente pelo runner e mudanças de usuários ficam limitadas ao spawn rate; shape não garante RPS exato.
+tick é chamado periodicamente pelo runner e mudanças de usuários ficam limitadas ao spawn rate; shape não garante RPS exato.
 
 ## Como verificar
 Compare população solicitada e observada por estágio e valide que a shape encerra no tempo esperado.

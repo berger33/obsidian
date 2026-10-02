@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Assertions na Simulation definem critérios sobre estatísticas globais ou escopos como requests/grupos.
 
 ## Por que importa
-Gatling executa workflows de virtual users, aplica perfis de injeção e mede estatísticas; dados, checks e modelo de chegada determinam se o benchmark representa o workload. Gerar relatório sem threshold pode deixar run com alta taxa de erro ser interpretada como aprovada.
+Gerar relatório sem threshold pode deixar run com alta taxa de erro ser interpretada como aprovada.
 
 ## Como funciona
-Modele ações em ordem, armazene atributos por usuário na Session, valide respostas antes de reutilizar extrações e defina assertions de negócio sobre métricas globais ou grupos. Defina limites de erro e latência que correspondam ao SLO e a população executada, com escopo nomeado.
+Defina limites de erro e latência que correspondam ao SLO e a população executada, com escopo nomeado.
 
 ## Exemplo
 Teste falha se percentagem global de requests bem-sucedidas cair abaixo do critério definido.
 
 ## Limites e trade-offs
-Uma simulation aprovada apenas satisfaz as assertions escolhidas no perfil de injeção executado. Sessões e feeders não criam semântica de negócio, e resultados dependem da capacidade do gerador e do alvo. Threshold depende do workload e ambiente; usar percentil médio ou valor sem baseline não cria critério confiável.
+Threshold depende do workload e ambiente; usar percentil médio ou valor sem baseline não cria critério confiável.
 
 ## Como verificar
 Injete uma falha controlada e confirme que assertion muda o resultado final da execução.

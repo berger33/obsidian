@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Listeners exibem, salvam ou processam resultados e podem consumir recursos do gerador conforme volume e formato.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. View Results Tree para cada amostra pode dominar CPU/memória do cliente e reduzir taxa gerada, especialmente em teste grande.
+View Results Tree para cada amostra pode dominar CPU/memória do cliente e reduzir taxa gerada, especialmente em teste grande.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Na carga real, salve somente campos necessários em CSV/JTL e reserve listeners visuais para depuração de amostra pequena.
+Na carga real, salve somente campos necessários em CSV/JTL e reserve listeners visuais para depuração de amostra pequena.
 
 ## Exemplo
 Plano de desenvolvimento usa árvore de respostas em poucas iterações; pipeline de carga gera CSV sem conteúdo completo de response.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Remover conteúdo da resposta reduz evidência diagnóstica; preserve amostra limitada de erro de forma segura e econômica.
+Remover conteúdo da resposta reduz evidência diagnóstica; preserve amostra limitada de erro de forma segura e econômica.
 
 ## Como verificar
 Compare uso de CPU, tamanho de saída e taxa com/sem listener pesado antes de interpretar benchmark.

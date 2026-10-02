@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Transaction Controller agrupa samplers em transação e pode produzir sample agregado conforme modo configurado.
 
 ## Por que importa
-JMeter executa uma árvore ordenada de samplers e elementos hierárquicos; escopo de threads, timers, assertions e dados determina que requests cada elemento realmente afeta. Somar request individuais e transação agregada como se fossem operações independentes pode duplicar contagem e distorcer latência.
+Somar request individuais e transação agregada como se fossem operações independentes pode duplicar contagem e distorcer latência.
 
 ## Como funciona
-Crie ou depure o plano em GUI, execute carga em CLI, reutilize dados controlados e limite listeners/assertions ao objetivo de medição; registre plano, propriedades e arquivo de resultado. Escolha modo parent/aggregate coerente com métrica e configure assertions no nível cuja duração deseja medir.
+Escolha modo parent/aggregate coerente com métrica e configure assertions no nível cuja duração deseja medir.
 
 ## Exemplo
 Fluxo de autenticação agrupa GET challenge e POST login como uma jornada; relatório distingue parent transaction de requests filhos.
 
 ## Limites e trade-offs
-Árvore de JMeter pode gerar tráfego diferente do esperado por escopo ou ordem. GUI, listeners e gerador limitado podem alterar medidas, e propriedades globais têm compartilhamento mais amplo que variáveis de thread. Modo parent pode aplicar assertions aos sub-samples e ao aggregate dependendo da configuração.
+Modo parent pode aplicar assertions aos sub-samples e ao aggregate dependendo da configuração.
 
 ## Como verificar
 Inspecione JTL para confirmar quantidade, labels e duração de amostras antes de calcular percentis.

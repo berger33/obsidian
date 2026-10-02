@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Tags podem organizar features e cenários e selecionar subconjuntos de execução; expressões também podem restringir hooks.
 
 ## Por que importa
-Gherkin estrutura exemplos em linguagem de domínio e Cucumber associa steps a código; erros de semântica, matching ou preparação podem tornar especificações duplicadas ou frágeis. Filtro incorreto pode deixar suite verde sem rodar os cenários críticos, especialmente em pipelines com tags negativas ou combinadas.
+Filtro incorreto pode deixar suite verde sem rodar os cenários críticos, especialmente em pipelines com tags negativas ou combinadas.
 
 ## Como funciona
-Escreva exemplos curtos que exponham regra e resultado, mantenha steps observáveis, tipifique parâmetros e isole estado por cenário; use tags e hooks para seleção e preparação transversal justificadas. Mantenha tags semânticas e valide expressões AND/OR/NOT por conjunto esperado de cenários antes de confiar no job.
+Mantenha tags semânticas e valide expressões AND/OR/NOT por conjunto esperado de cenários antes de confiar no job.
 
 ## Exemplo
 Uma matriz comprova que @smoke and not @external seleciona apenas cenários de smoke sem integração externa.
 
 ## Limites e trade-offs
-Executar uma feature não comprova que os exemplos cobrem todas as regras nem que passos descrevam comportamento de usuário. Hooks e steps podem esconder lógica, efeitos e dependências externas. Tags em Feature ou Rule podem afetar cenários descendentes; confirme herança e opções do runner usados na versão do projeto.
+Tags em Feature ou Rule podem afetar cenários descendentes; confirme herança e opções do runner usados na versão do projeto.
 
 ## Como verificar
 Compare identificadores descobertos com uma lista esperada para cada expressão e falhe se o conjunto ficar vazio inesperadamente.

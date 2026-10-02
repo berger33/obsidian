@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 TestCaseSource identifica campo, propriedade ou método que fornece argumentos para casos parametrizados.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Fonte explícita permite compartilhar dados de domínio sem entupir assinatura do teste ou duplicar matrizes.
+Fonte explícita permite compartilhar dados de domínio sem entupir assinatura do teste ou duplicar matrizes.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Use source que retorna IEnumerable e mantenha seus dados determinísticos; confira requisito de membro static para as formas documentadas.
+Use source que retorna IEnumerable e mantenha seus dados determinísticos; confira requisito de membro static para as formas documentadas.
 
 ## Exemplo
 Um source fornece entradas de moeda e arredondamento com resultado esperado para dois testes que compartilham o mesmo conjunto.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Fontes async e IAsyncEnumerable têm suporte dependente de versão NUnit; não presuma compatibilidade com versões antigas.
+Fontes async e IAsyncEnumerable têm suporte dependente de versão NUnit; não presuma compatibilidade com versões antigas.
 
 ## Como verificar
 Execute discovery com a versão do runner do projeto e confirme nomes, contagem e argumentos dos casos gerados.

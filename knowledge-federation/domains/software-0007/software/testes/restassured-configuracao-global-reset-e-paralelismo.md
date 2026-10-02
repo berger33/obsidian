@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 REST Assured expõe defaults estáticos como base URI, filtros e specifications que influenciam requests posteriores.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Uma alteração de host ou parser em um teste pode contaminar outros casos, sobretudo quando a suíte roda em paralelo.
+Uma alteração de host ou parser em um teste pode contaminar outros casos, sobretudo quando a suíte roda em paralelo.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Prefira configuração local por request e restaure explicitamente qualquer default global alterado pelo teste.
+Prefira configuração local por request e restaure explicitamente qualquer default global alterado pelo teste.
 
 ## Exemplo
 Um teste aponta baseUri para um mock local e limpa a configuração no teardown; outro confirma que continua usando seu próprio destino.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. Reset global durante execução paralela também pode afetar testes em andamento; limpeza não substitui isolamento concorrente.
+Reset global durante execução paralela também pode afetar testes em andamento; limpeza não substitui isolamento concorrente.
 
 ## Como verificar
 Rode a classe em ordem aleatória e com paralelismo habilitado e procure requests enviados ao host de outro cenário.

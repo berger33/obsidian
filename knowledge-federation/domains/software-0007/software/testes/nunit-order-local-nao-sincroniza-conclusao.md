@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 Order organiza quando testes ou fixtures começam dentro da suite que os contém; não ordena globalmente nem aguarda término anterior.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Testes que dependem de dados criados por outro método falham em paralelismo, filtro parcial ou nova execução.
+Testes que dependem de dados criados por outro método falham em paralelismo, filtro parcial ou nova execução.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Transforme a sequência em um caso com setup explícito ou em fixtures independentes com estado reconstruível.
+Transforme a sequência em um caso com setup explícito ou em fixtures independentes com estado reconstruível.
 
 ## Exemplo
 Migration A e migration B são verificadas dentro de um teste que cria seu próprio banco, em vez de depender de [Order] entre methods.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Testes com mesmo order ou sem atributo têm sequência indeterminada e paralelo pode sobrepor suas execuções.
+Testes com mesmo order ou sem atributo têm sequência indeterminada e paralelo pode sobrepor suas execuções.
 
 ## Como verificar
 Execute filtro contendo apenas o segundo caso e paralelismo habilitado; o caso deve continuar válido sem predecessor.

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 SetUpFixture oferece setup e teardown únicos para fixtures pertencentes a namespace e subnamespaces na assembly.
 
 ## Por que importa
-NUnit transforma attributes e fontes de dados em test cases e controla setup, teardown, fixtures e paralelismo; confundir esse lifecycle gera dependência entre casos. Preparação de ambiente repetida por fixture pode ser cara, mas ampliá-la à assembly inteira sem intenção afeta testes sem relação.
+Preparação de ambiente repetida por fixture pode ser cara, mas ampliá-la à assembly inteira sem intenção afeta testes sem relação.
 
 ## Como funciona
-Escolha dados e lifecycle pelo custo e isolamento desejados, verifique assinaturas async, configure concorrência de forma explícita e trate ordem como organização local, não como mecanismo de sincronização. Coloque SetUpFixture dentro do namespace adequado, limite seu efeito e mantenha no máximo setup e teardown únicos do nível.
+Coloque SetUpFixture dentro do namespace adequado, limite seu efeito e mantenha no máximo setup e teardown únicos do nível.
 
 ## Exemplo
 Vários fixtures de integração sob namespace database-test usam servidor local iniciado uma vez e recebem teardown após concluírem.
 
 ## Limites e trade-offs
-Versão de NUnit, runner e configuração da assembly podem alterar APIs e execução. Parallelizable não torna recursos estáticos ou externos thread-safe, e um teste verde não prova todas as combinações de dados. Fixtures no mesmo nível podem ter ordem indeterminada; dependência em sequência entre namespaces deve ser removida ou modelada fora do runner.
+Fixtures no mesmo nível podem ter ordem indeterminada; dependência em sequência entre namespaces deve ser removida ou modelada fora do runner.
 
 ## Como verificar
 Execute fixture de outro namespace e confirme que não herda o recurso; observe início e descarte da configuração compartilhada.

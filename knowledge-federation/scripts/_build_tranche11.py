@@ -3,6 +3,9 @@
 from __future__ import annotations
 from datetime import date
 from pathlib import Path
+from collections import defaultdict
+import argparse
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,7 +15,7 @@ REPORT = ROOT / "knowledge-federation" / "exports" / "reports" / "ai-review-soft
 DATE = date.today().isoformat()
 
 sys.path.insert(0, str(ROOT / "knowledge-federation" / "scripts"))
-from note_quality import assess_markdown
+from note_quality import assess_markdown, normalize
 
 SOURCES = {
     # REST Assured: project-maintained wiki plus current API reference.
@@ -131,10 +134,43 @@ def parse_group(path: Path):
                      "sources": source_keys.split(","), "review": review})
     if len(rows) != 10:
         raise ValueError(f"{path.name}: o grupo precisa ter 10 notas; tem {len(rows)}")
-    for key in ("group", "first", "why", "method", "limits", "check"):
+    for key in ("group", "first", "check"):
         if key not in context:
             raise ValueError(f"{path.name}: falta contexto {key}")
     return context, rows
+
+
+def repeated_substantive_sentences(notes):
+    """Find exact prose sentences repeated across generated notes.
+
+    Short fragments and the navigation/source sections are ignored. Repeated
+    sentences of eight or more words are treated as likely group-level
+    boilerplate and must be reviewed before the tranche can be written.
+    """
+    occurrences = defaultdict(set)
+    for number, content in notes:
+        body = content.split("---", 2)[-1]
+        section = ""
+        for line in body.splitlines():
+            heading = re.match(r"^#{1,6}\s+(.+?)\s*#*\s*$", line)
+            if heading:
+                section = normalize(heading.group(1).strip())
+                continue
+            if section in {"fontes", "conexoes"} or not line.strip():
+                continue
+            for sentence in re.split(r"(?<=[.!?])\s+", line.strip()):
+                words = re.findall(r"(?u)\b[\w]+(?:[-'][\w]+)*\b", sentence)
+                if len(words) < 8:
+                    continue
+                normalized = normalize(sentence)
+                normalized = re.sub(r"[^\w]+", " ", normalized).strip()
+                if normalized:
+                    occurrences[normalized].add(number)
+    return {
+        sentence: sorted(numbers)
+        for sentence, numbers in occurrences.items()
+        if len(numbers) > 1
+    }
 
 
 def render_note(context, rows, index, row):
@@ -176,16 +212,16 @@ lote: software-testes-2000-0001
 {row['summary']}
 
 ## Por que importa
-{context['why']} {row['reason']}
+{row['reason']}
 
 ## Como funciona
-{context['method']} {row['how']}
+{row['how']}
 
 ## Exemplo
 {row['example']}
 
 ## Limites e trade-offs
-{context['limits']} {row['caveat']}
+{row['caveat']}
 
 ## Como verificar
 {row['verify']}
@@ -203,6 +239,13 @@ lote: software-testes-2000-0001
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Rebuild the existing 100 tranche-11 notes after validating their IDs and inventory.",
+    )
+    args = parser.parse_args()
     group_files = sorted(DATA_DIR.glob("*.txt"))
     if len(group_files) != 10:
         raise SystemExit(f"Esperados 10 arquivos de grupo; encontrados {len(group_files)}")
@@ -219,8 +262,18 @@ def main():
         group_summaries.append(context)
         for index, row in enumerate(rows):
             normalized_title = row["title"].casefold().strip()
-            if row["slug"] in seen_slugs or (NOTES_DIR / f"{row['slug']}.md").exists():
-                raise ValueError(f"slug duplicado/arquivo existente: {row['slug']}")
+            target_path = NOTES_DIR / f"{row['slug']}.md"
+            if row["slug"] in seen_slugs:
+                raise ValueError(f"slug duplicado: {row['slug']}")
+            if target_path.exists():
+                current = target_path.read_text(encoding="utf-8")
+                expected_id = f"id: software.testes.tranche11.{expected_number + index:06d}"
+                if not args.refresh:
+                    raise ValueError(f"arquivo já existe (use --refresh apenas para a tranche 11): {target_path}")
+                if expected_id not in current.splitlines()[:25]:
+                    raise ValueError(f"ID existente não corresponde à tranche: {target_path}")
+            elif args.refresh:
+                raise ValueError(f"--refresh exige os 100 arquivos existentes; falta {target_path}")
             if normalized_title in seen_titles:
                 raise ValueError(f"título duplicado: {row['title']}")
             seen_slugs.add(row["slug"])
@@ -235,8 +288,20 @@ def main():
         expected_number += 10
     if len(pending) != 100 or expected_number != 550:
         raise ValueError(f"esperadas 100 notas de 450 a 549, validadas {len(pending)}")
-    if REPORT.exists():
-        raise ValueError(f"relatório já existe: {REPORT}")
+    repeated = repeated_substantive_sentences([(number, content) for number, _, _, content, _ in pending])
+    if repeated:
+        examples = [f"{numbers}: {sentence}" for sentence, numbers in list(repeated.items())[:5]]
+        raise ValueError(f"prosa substantiva repetida entre notas; revisar antes de gravar: {examples}")
+    existing_tranche = [
+        path for path in NOTES_DIR.glob("*.md")
+        if re.search(r"(?m)^id: software\.testes\.tranche11\.\d{6}\s*$", path.read_text(encoding="utf-8")[:1200])
+    ]
+    if args.refresh and len(existing_tranche) != 100:
+        raise ValueError(f"--refresh exige exatamente 100 notas tranche11 existentes; encontradas {len(existing_tranche)}")
+    if REPORT.exists() and not args.refresh:
+        raise ValueError(f"relatório já existe (use --refresh apenas para atualizar a tranche 11): {REPORT}")
+    if args.refresh and not REPORT.exists():
+        raise ValueError(f"--refresh exige relatório factual existente: {REPORT}")
 
     # All note content and metadata pass the deterministic gate before any file is written.
     for number, row, context, content, quality in pending:
@@ -248,8 +313,9 @@ def main():
         f"- Data: {DATE}",
         "- Revisor: `Arena.ai Agent Mode`",
         "- Escopo: notas **450–549**, em dez grupos de dez; cada linha registra a conferência específica.",
-        "- Resultado: **100 notas aprovadas por revisão factual por IA** contra documentação oficial; o gate automatizado e os links foram auditados separadamente.",
-        "- Revisão por IA não é revisão humana nem garantia de ausência de erro.",
+        "- Correção editorial desta edição: removidas das 100 notas as três frases genéricas de grupo (`why`, `method`, `limits`) repetidas em cada grupo; permanecem os argumentos, procedimentos, exemplos e ressalvas específicos de cada nota.",
+        "- Nenhuma afirmação técnica específica foi acrescentada nesta correção; o conteúdo restante foi reavaliado contra a fonte principal de cada linha, e o gate automatizado e os links foram auditados separadamente.",
+        "- Resultado: **100 revisões factuais por IA registradas**; isso não é revisão humana nem garantia de ausência de erro.",
         "",
         "## Registro por nota",
         "",

@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 ITestOutputHelper fornece saída associada ao test case, enquanto Console e Trace são recursos compartilhados do processo.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Console.WriteLine concorrente pode misturar mensagens de testes e dificultar saber qual contexto produziu a linha.
+Console.WriteLine concorrente pode misturar mensagens de testes e dificultar saber qual contexto produziu a linha.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Injete o helper no construtor do teste e escreva somente informações úteis, sem segredo ou dumps excessivos.
+Injete o helper no construtor do teste e escreva somente informações úteis, sem segredo ou dumps excessivos.
 
 ## Exemplo
 Um teste registra correlation id sintético e valor esperado usando seu helper para que runner associe output à falha correta.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. Captura direta de Console em xUnit v3 é configurável e desabilitada por default para compatibilidade; não presuma mesma política entre versões.
+Captura direta de Console em xUnit v3 é configurável e desabilitada por default para compatibilidade; não presuma mesma política entre versões.
 
 ## Como verificar
 Execute dois casos concorrentes com mensagens distintas e confirme que cada saída aparece associada ao caso correto.

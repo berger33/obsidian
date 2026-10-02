@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 JsonPath permite selecionar valores do corpo JSON da resposta para assertions ou etapas posteriores do teste.
 
 ## Por que importa
-REST Assured oferece uma DSL Java para enviar requisições HTTP e validar respostas, mas sua cobertura depende dos dados, do servidor e das assertions escritos no teste. Extrair um campo sem primeiro validar status e formato pode transformar uma resposta de erro em falha secundária confusa.
+Extrair um campo sem primeiro validar status e formato pode transformar uma resposta de erro em falha secundária confusa.
 
 ## Como funciona
-Separe preparação da requisição, envio e verificação da resposta; reaproveite specifications somente para invariantes, forneça dados próprios por cenário e mantenha configuração, credenciais e logs controlados. Valide primeiro status e Content-Type; então extraia o campo relevante e compare seu valor ou use-o em uma chamada subsequente controlada.
+Valide primeiro status e Content-Type; então extraia o campo relevante e compare seu valor ou use-o em uma chamada subsequente controlada.
 
 ## Exemplo
 Um GET de pedido verifica status 200 e JSON antes de extrair o id para consultar uma rota de detalhe.
 
 ## Limites e trade-offs
-Um teste do cliente não prova a correção do provedor nem o contrato completo da API. Mapeadores e validadores de schema dependem de módulos no classpath, e configuração estática compartilhada pode gerar interferência entre testes. JsonPath verifica caminhos e valores escolhidos, mas não prova que todos os campos ou a estrutura completa obedecem a um schema.
+JsonPath verifica caminhos e valores escolhidos, mas não prova que todos os campos ou a estrutura completa obedecem a um schema.
 
 ## Como verificar
 Substitua o status de sucesso por erro e confirme que o teste falha na assertion de protocolo antes da extração do campo.

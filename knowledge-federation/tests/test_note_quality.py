@@ -13,6 +13,7 @@ from generate_virtual_notes import ensure_virtual_schema  # noqa: E402
 from audit_note_quality import markdown_link_index, unresolved_wikilinks  # noqa: E402
 from audit_batch import suggested_batch_status  # noqa: E402
 from materialize_batch import require_catalog_stub_opt_in  # noqa: E402
+from _build_tranche11 import repeated_substantive_sentences  # noqa: E402
 
 
 GOOD_NOTE = """---
@@ -63,6 +64,14 @@ class NoteQualityTests(unittest.TestCase):
         self.assertGreaterEqual(result["word_count"], 100)
         self.assertEqual(result["source_count"], 2)
         self.assertFalse(result["human_reviewed"])
+
+    def test_builder_flags_repeated_substantive_prose_but_ignores_sources(self) -> None:
+        sentence = "A repeated sentence explains meaningful behavior and an observable result across scenarios."
+        first = f"# First\n\n## Por que importa\n{sentence}\n\n## Fontes\n{sentence}\n"
+        second = f"# Second\n\n## Como funciona\n{sentence}\n\n## Fontes\n{sentence}\n"
+        repeated = repeated_substantive_sentences([(450, first), (451, second)])
+        key = "a repeated sentence explains meaningful behavior and an observable result across scenarios"
+        self.assertEqual(repeated, {key: [450, 451]})
 
     def test_template_seed_is_not_mistaken_for_a_valid_note(self) -> None:
         seed = """---

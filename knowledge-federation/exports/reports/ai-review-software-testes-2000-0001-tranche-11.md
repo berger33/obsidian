@@ -3,8 +3,9 @@
 - Data: 2026-10-02
 - Revisor: `Arena.ai Agent Mode`
 - Escopo: notas **450–549**, em dez grupos de dez; cada linha registra a conferência específica.
-- Resultado: **100 notas aprovadas por revisão factual por IA** contra documentação oficial; o gate automatizado e os links foram auditados separadamente.
-- Revisão por IA não é revisão humana nem garantia de ausência de erro.
+- Correção editorial desta edição: removidas das 100 notas as três frases genéricas de grupo (`why`, `method`, `limits`) repetidas em cada grupo; permanecem os argumentos, procedimentos, exemplos e ressalvas específicos de cada nota.
+- Nenhuma afirmação técnica específica foi acrescentada nesta correção; o conteúdo restante foi reavaliado contra a fonte principal de cada linha, e o gate automatizado e os links foram auditados separadamente.
+- Resultado: **100 revisões factuais por IA registradas**; isso não é revisão humana nem garantia de ausência de erro.
 
 ## Registro por nota
 

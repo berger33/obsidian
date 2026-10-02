@@ -25,16 +25,16 @@ lote: software-testes-2000-0001
 InlineData fornece argumentos constantes para Theory e cada linha representa um caso executável.
 
 ## Por que importa
-xUnit.net cria casos a partir de Facts/Theories e gerencia instâncias e fixtures com regras próprias de escopo e paralelismo; o nome familiar de um atributo não dispensa entender o lifecycle. Dados embutidos ajudam casos simples, mas expressões complexas e objetos mutáveis em atributos dificultam revisão e diagnóstico.
+Dados embutidos ajudam casos simples, mas expressões complexas e objetos mutáveis em atributos dificultam revisão e diagnóstico.
 
 ## Como funciona
-Use test class instance para estado novo por caso, fixtures compartilhadas só quando o custo justificar, dados nomeáveis e determinísticos e coleções para proteger recursos compartilhados. Declare entradas legíveis e independentes em InlineData e extraia conjunto extenso para MemberData ou ClassData.
+Declare entradas legíveis e independentes em InlineData e extraia conjunto extenso para MemberData ou ClassData.
 
 ## Exemplo
 Theory usa valores 3, 5 e 6; relatório identifica que somente o caso com 6 falha no predicate.
 
 ## Limites e trade-offs
-Detalhes de fixtures, runner e modos de paralelismo variam entre xUnit v2 e v3 e entre versões do runner. Compartilhar fixture não a torna thread-safe, e ordem do teste não é contrato entre casos. InlineData precisa respeitar tipos aceitos pelo atributo e não é adequado a recursos preparados assincronamente.
+InlineData precisa respeitar tipos aceitos pelo atributo e não é adequado a recursos preparados assincronamente.
 
 ## Como verificar
 Verifique contagem de cases, nome/argumentos no report e execução isolada de uma linha que falha.
