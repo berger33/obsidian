@@ -4,18 +4,18 @@ Federação de conhecimento em Markdown para Obsidian, organizada por domínio e
 
 ## Meta editorial ativa
 
-A meta confirmada é **1.000 lotes × 2.000 notas substantivas = 2.000.000 de notas válidas**. A revisão humana não é obrigatória para notas novas; cada nota que contar precisa passar pelo gate automatizado e receber revisão factual humana ou por IA, registrada separadamente. Uma revisão por IA nunca é apresentada como aprovação humana.
+A meta ativa é **500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas**. A revisão humana não é obrigatória para notas novas; cada nota que contar precisa passar pelo gate automatizado e receber revisão factual humana ou por IA, registrada separadamente. Uma revisão por IA nunca é apresentada como aprovação humana.
 
 O checkpoint legado ainda contém 1.000.000 de registros virtuais de catálogo, mas a auditoria encontrou marcadores de template nos 1.000.000 registros. Eles não equivalem a notas válidas e não avançam a meta editorial.
 
-- Arquivos Markdown ativos: **289** (100 notas legadas com pendências + 189 notas autorais substantivas).
-- Notas válidas pelo protocolo atual: **189** (49 aprovações humanas históricas + 140 revisões factuais por IA).
-- Progresso: **189 / 2.000.000 (0,00945%)**; faltam 1.999.811 notas válidas.
-- Lotes completos: **0 / 1.000**.
-- Lote em andamento `software-testes-2000-0001`: **149 / 2.000** notas válidas; 9 humanas e 140 por IA; faltam 1.851 notas materiais.
+- Arquivos Markdown ativos: **389** (100 notas legadas com pendências + 289 notas autorais substantivas).
+- Notas válidas pelo protocolo atual: **289** (49 aprovações humanas históricas + 240 revisões factuais por IA).
+- Progresso: **289 / 1.000.000 (0,0289%)**; faltam 999.711 notas válidas.
+- Lotes completos: **0 / 500**.
+- Lote em andamento `software-testes-2000-0001`: **249 / 2.000** notas válidas; 9 humanas e 240 por IA; faltam 1.751 notas materiais.
 - As **100** notas legadas com pendências continuam excluídas.
 
-Consulte os [manifestos de lote](exports/batches/), as [auditorias e relatórios](exports/reports/), o [registro separado de revisões](exports/reports/human-review-queue.md), a [fila de remediação legada](exports/reports/legacy-remediation-queue.md), o [plano para 2 milhões](PLANO-CONTINUO-1M.md) e o [status auditado](STATUS-CONSOLIDACAO-1M.md). Os relatórios factuais por IA do lote atual estão em [`exports/reports/ai-review-software-testes-2000-0001.md`](exports/reports/ai-review-software-testes-2000-0001.md) (tranches 2–3), [`exports/reports/ai-review-software-testes-2000-0001-tranche-04.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md) (tranche 4), [`exports/reports/ai-review-software-testes-2000-0001-tranche-05.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) (tranche 5), [`exports/reports/ai-review-software-testes-2000-0001-tranche-06.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) (tranche 6) e [`exports/reports/ai-review-software-testes-2000-0001-tranche-07.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md) (tranche 7).
+Consulte os [manifestos de lote](exports/batches/), as [auditorias e relatórios](exports/reports/), o [registro separado de revisões](exports/reports/human-review-queue.md), a [fila de remediação legada](exports/reports/legacy-remediation-queue.md), o [plano para 1 milhão](PLANO-CONTINUO-1M.md) e o [status auditado](STATUS-CONSOLIDACAO-1M.md). Os relatórios factuais por IA do lote atual estão em [`exports/reports/ai-review-software-testes-2000-0001.md`](exports/reports/ai-review-software-testes-2000-0001.md) (tranches 2–3), [`exports/reports/ai-review-software-testes-2000-0001-tranche-04.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md) (tranche 4), [`exports/reports/ai-review-software-testes-2000-0001-tranche-05.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) (tranche 5), [`exports/reports/ai-review-software-testes-2000-0001-tranche-06.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) (tranche 6) e [`exports/reports/ai-review-software-testes-2000-0001-tranche-07.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md) (tranche 7) e [`exports/reports/ai-review-software-testes-2000-0001-tranche-08.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-08.md) (tranche 8).
 
 ## Auditoria de qualidade
 

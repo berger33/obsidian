@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config" / "taxonomy.json"
 REGISTRY = ROOT / "registry"
 DB = REGISTRY / "knowledge.sqlite"
-TODAY = "2026-09-30"
+TODAY = datetime.date.today().isoformat()
 
 TRANSLATE = str.maketrans("áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ", "aaaaaeeeeiiiiooooouuuucnAAAAAEEEEIIIIOOOOOUUUUCN")
 

@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 149 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 149 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 140 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 249 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 249 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 240 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -187,5 +187,128 @@
 - [[testes-consistencia-eventual-convergencia]] — Verifique se leituras eventualmente consistentes convergem dentro do comportamento e prazo operacional declarados, sem exigir visibilidade imediata não prometida.
 - [[testes-database-integrity-reconciliation]] — Verifique invariantes de dados tanto no limite transacional do banco quanto em reconciliações independentes entre fontes ou projeções.
 
+## Tranche 8 — frameworks e plataformas de teste (100 notas)
+
+### Playwright
+- [[playwright-fixture-ciclo-vida-isolamento]] — Playwright: ciclo de vida de fixtures por teste.
+- [[playwright-fixture-worker-escopo-paralelismo]] — Playwright: fixtures de worker e estado compartilhado.
+- [[playwright-autenticacao-storage-state-expiracao]] — Playwright: reutilização segura de estado autenticado.
+- [[playwright-teardown-recursos-externos]] — Playwright: teardown confiável de recursos externos.
+- [[playwright-mock-api-contrato-resposta]] — Playwright: mocks de API alinhados ao contrato.
+- [[playwright-har-replay-cobertura-rede]] — Playwright: replay de HAR para cenários de rede.
+- [[playwright-status-http-vs-falha-transporte]] — Playwright: distinguir erro HTTP de falha de transporte.
+- [[playwright-retries-flaky-diagnostico]] — Playwright: retries como sinal de flakiness, não correção.
+- [[playwright-paralelismo-dados-exclusivos]] — Playwright: dados exclusivos para testes paralelos.
+- [[playwright-locators-assertions-web-first]] — Playwright: locators resilientes e assertions web-first.
+
+### React Testing Library
+- [[rtl-interacao-user-event-fluxo-realista]] — Testing Library: interações realistas com user-event.
+- [[rtl-consultas-prioridade-role-name]] — Testing Library: priorizar consultas por papel e nome.
+- [[rtl-async-findby-waitfor-condicao]] — Testing Library: aguardar estado assíncrono pela condição.
+- [[rtl-waitfor-sem-efeito-colateral]] — Testing Library: manter waitFor sem efeitos colaterais.
+- [[rtl-formulario-erro-associacao-label]] — Testing Library: validar formulários pela relação label-controle.
+- [[rtl-render-customizado-provedores-contexto]] — Testing Library: render customizado com provedores.
+- [[rtl-testar-resultado-nao-implementacao]] — Testing Library: verificar resultado em vez de detalhe interno.
+- [[rtl-consulta-singular-ambiguidade]] — Testing Library: detectar consultas ambíguas.
+- [[rtl-fetch-loading-empty-error-states]] — Testing Library: cobrir loading, vazio e erro de carregamento.
+- [[rtl-cleanup-isolamento-renderizacao]] — Testing Library: limpeza e isolamento entre renders.
+
+### Android
+- [[android-test-pyramid-escopo-runner]] — Android: escolher escopo e runner de teste.
+- [[android-instrumented-sincronizacao-sem-sleep]] — Android: sincronizar testes instrumentados sem sleeps fixos.
+- [[android-uiautomator-fronteira-sistema]] — Android: UI Automator para fronteiras de sistema.
+- [[android-compose-semantics-assertions]] — Android Compose: testar semântica e ações expostas.
+- [[android-compose-clock-idle-animacoes]] — Android Compose: controlar clock e animações em testes.
+- [[android-multiplas-telas-configuracao]] — Android: cobrir tamanhos de tela e configuração.
+- [[android-process-death-restauracao-estado]] — Android: testar restauração após recriação do processo.
+- [[android-permissoes-recusa-revocacao]] — Android: testar concessão, recusa e revogação de permissões.
+- [[android-separar-teste-ui-de-regra]] — Android: não concentrar regras de negócio em teste de UI.
+- [[android-test-flakiness-reproducao-dispositivo]] — Android: tornar falhas instrumentadas reproduzíveis.
+
+### Flutter
+- [[flutter-estrategia-unit-widget-integration]] — Flutter: distribuir testes entre unit, widget e integração.
+- [[flutter-plugin-channel-mock-fronteira]] — Flutter: mockar canais de plugin sem alegar teste nativo.
+- [[flutter-integration-dispositivo-fluxo]] — Flutter: desenhar testes de integração em dispositivo.
+- [[flutter-widget-lista-rolagem-scrolluntilvisible]] — Flutter: testar listas longas sem assumir posição fixa.
+- [[flutter-orientacao-layout-widget-test]] — Flutter: validar orientação retrato e paisagem.
+- [[flutter-pumpandsettle-animacao-indefinida]] — Flutter: evitar pumpAndSettle em animações sem fim.
+- [[flutter-finders-chaves-vs-texto]] — Flutter: escolher Finder por semântica, texto ou chave.
+- [[flutter-testwidgets-pump-microtasks]] — Flutter: sincronizar pump e atualizações assíncronas.
+- [[flutter-widget-erro-overflow-responsivo]] — Flutter: detectar overflow e conteúdo inacessível em widget tests.
+- [[flutter-mocks-plugin-versus-device-regressao]] — Flutter: separar contrato simulado de regressão em dispositivo.
+
+### Terraform
+- [[terraform-validate-vs-test-provisionamento]] — Terraform: distinguir validate de terraform test.
+- [[terraform-tests-mock-provider-escopo]] — Terraform: delimitar mocks de provider.
+- [[terraform-test-run-apply-cleanup]] — Terraform: isolar testes que aplicam infraestrutura.
+- [[terraform-variable-validation-contract]] — Terraform: testar validação de variáveis como contrato.
+- [[terraform-check-block-nao-blocking]] — Terraform: interpretar check blocks sem tratá-los como preconditions.
+- [[terraform-outputs-sensitive-testes]] — Terraform: testar outputs sem expor valores sensíveis.
+- [[terraform-provider-lockfile-reprodutibilidade]] — Terraform: validar reprodutibilidade de providers.
+- [[terraform-data-sources-outputs-mock-real]] — Terraform: testar data sources e outputs calculados.
+- [[terraform-plan-assertions-estado-esperado]] — Terraform: verificar plano contra mudança de infraestrutura esperada.
+- [[terraform-sandbox-isolamento-paralelo]] — Terraform: isolar sandboxes de testes paralelos.
+
+### Kafka
+- [[kafka-producer-idempotencia-retries-acks]] — Kafka: testar produtor idempotente e confirmação.
+- [[kafka-ordering-partition-retries]] — Kafka: delimitar ordenação por partição.
+- [[kafka-transactional-producer-consumer-read-committed]] — Kafka: testar transações com consumidor read-committed.
+- [[kafka-offset-commit-proximo-registro]] — Kafka: verificar semântica de offset committed.
+- [[kafka-at-least-once-consumidor-idempotente]] — Kafka: tornar efeitos do consumidor seguros contra redelivery.
+- [[kafka-rebalance-processamento-em-curso]] — Kafka: testar rebalance com processamento em andamento.
+- [[kafka-retry-dlq-erro-transitorio-permanente]] — Kafka: separar erro transitório de erro permanente.
+- [[kafka-producer-callback-delivery-failure]] — Kafka: observar falhas de entrega no produtor.
+- [[kafka-consumer-reset-start-offset]] — Kafka: testar offset inicial e política de reset.
+- [[kafka-testcontainers-contrato-broker]] — Kafka: escolher broker de teste conforme contrato.
+
+### Machine learning
+- [[ml-feature-schema-contract-validacao]] — ML: validar schema de features antes do serving.
+- [[ml-training-serving-skew-transformacao]] — ML: detectar divergência entre transformação de treino e serving.
+- [[ml-data-leakage-split-temporal]] — ML: testar vazamento de informação entre splits.
+- [[ml-reproducibilidade-seed-ambiente-artefatos]] — ML: tornar experimentos e artefatos reproduzíveis.
+- [[ml-calibracao-limiares-decisao]] — ML: testar calibração e limiares de decisão.
+- [[ml-monitoring-drift-feature-label]] — ML: monitorar drift sem confundir com queda de qualidade.
+- [[ml-batch-online-paridade-predicoes]] — ML: comparar predição batch e online.
+- [[ml-model-serving-fallback-timeout]] — ML: testar timeout e fallback de serving.
+- [[ml-numerica-tolerancia-estabilidade]] — ML: definir tolerância para comparações numéricas.
+- [[ml-canary-release-rollback-metricas]] — ML: liberar modelo por canário e critério de rollback.
+
+### GitHub Actions
+- [[gha-minimum-token-permissions]] — GitHub Actions: limitar permissões do token GITHUB_TOKEN.
+- [[gha-script-injection-event-context]] — GitHub Actions: evitar injeção em scripts com contexto de evento.
+- [[gha-pinning-third-party-actions]] — GitHub Actions: fixar e revisar actions de terceiros.
+- [[gha-secrets-pull-request-forks]] — GitHub Actions: proteger secrets em pull requests externos.
+- [[gha-concurrency-cancel-deployments]] — GitHub Actions: configurar concurrency sem cancelar release válida.
+- [[gha-artifact-retention-provenance]] — GitHub Actions: reter artifacts sem perder proveniência.
+- [[gha-environment-protection-gates]] — GitHub Actions: verificar gates de environment antes do deploy.
+- [[gha-matrix-fail-fast-coverage]] — GitHub Actions: desenhar matrix que detecta incompatibilidade.
+- [[gha-job-output-untrusted-artifacts]] — GitHub Actions: não confiar em artifacts de execução não privilegiada.
+- [[gha-path-filters-ci-cobertura]] — GitHub Actions: testar path filters e caminhos de validação.
+
+### Prometheus
+- [[prometheus-alert-rule-unit-test-input-series]] — Prometheus: testar alert rules com séries controladas.
+- [[prometheus-alert-for-pending-firing]] — Prometheus: cobrir estados pending e firing de alertas.
+- [[prometheus-alert-labels-annotations-invariantes]] — Prometheus: validar labels e annotations de alertas.
+- [[prometheus-recording-rule-expression-output]] — Prometheus: testar recording rules e série resultante.
+- [[prometheus-rate-counter-reset]] — Prometheus: testar rate diante de reset de counter.
+- [[prometheus-vector-vazio-vs-zero]] — Prometheus: diferenciar vetor vazio de valor zero.
+- [[prometheus-aggregation-labels-cardinality]] — Prometheus: testar agregação e preservação de labels.
+- [[prometheus-alert-no-data-scrape-failure]] — Prometheus: separar condição saudável de ausência de telemetria.
+- [[prometheus-rule-test-boundary-time-window]] — Prometheus: cobrir fronteiras de janela em testes de regras.
+- [[prometheus-promtool-ci-rule-validation]] — Prometheus: executar promtool no CI para regras versionadas.
+
+### Docker
+- [[docker-build-context-dockerignore-audit]] — Docker: auditar build context e .dockerignore.
+- [[docker-multistage-runtime-minimo]] — Docker: verificar fronteira entre build stage e runtime.
+- [[docker-base-image-digest-atualizacao]] — Docker: controlar base image e processo de atualização.
+- [[docker-build-checks-lint-dockerfile]] — Docker: executar build checks para detectar erros de Dockerfile.
+- [[docker-build-secrets-nao-arg-env]] — Docker: não inserir secrets em ARG, ENV ou layers.
+- [[docker-container-nonroot-permissions]] — Docker: testar execução com usuário não privilegiado.
+- [[docker-runtime-healthcheck-supervision]] — Docker: validar healthcheck sem confundi-lo com readiness.
+- [[docker-image-test-smoke-entrypoint]] — Docker: testar a imagem final com smoke test.
+- [[docker-cache-reproducibilidade-build]] — Docker: testar cache sem depender dele para correção.
+- [[docker-image-sbom-provenance-release]] — Docker: associar imagem publicada a versão e proveniência.
+
 ## Estado editorial
-O gate automatizado foi aprovado por 149/149 notas e as 149 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 140 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (149 notas substantivas; 1.851 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), da [tranche 4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), da [tranche 5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), da [tranche 6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) e da [tranche 7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), e o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+
+O gate automatizado foi aprovado por 249/249 notas e as 249 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 240 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (249 notas substantivas; 1.751 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), da [tranche 4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), da [tranche 5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), da [tranche 6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), da [tranche 7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md) e da [tranche 8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), e o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

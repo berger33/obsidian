@@ -1,6 +1,6 @@
 # Inventário legado de 1 milhão — registro histórico
 
-Este documento descreve somente o antigo checkpoint/catalogue de 1.000.000 de registros virtuais e os arquivos materializados associados. **Não é a meta editorial ativa.** A meta atual é 1.000 lotes × 2.000 notas substantivas = 2.000.000; acompanhe o [plano contínuo](PLANO-CONTINUO-1M.md) e o [status atual](STATUS-CONSOLIDACAO-1M.md).
+Este documento descreve somente o antigo checkpoint/catalogue de 1.000.000 de registros virtuais e os arquivos materializados associados. **Não é a meta editorial ativa.** A meta ativa é 500 lotes × 2.000 notas substantivas = 1.000.000; acompanhe o [plano contínuo](PLANO-CONTINUO-1M.md) e o [status atual](STATUS-CONSOLIDACAO-1M.md).
 
 ## Estado do checkpoint histórico
 
@@ -14,7 +14,7 @@ O TAR reconstruído em 2026-10-01 contém **1.015.608 arquivos de nota represent
 
 ## Estado editorial atual — fora do snapshot
 
-O cofre contém 79 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 30 revisões factuais por IA registradas separadamente). O lote `software-testes-2000-0001` tem 39/2.000 notas válidas; está em andamento. A auditoria global registra 100 arquivos legados com pendências, ainda excluídos da contagem.
+Na atualização de 2026-10-02, o repositório tem 289 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 240 revisões factuais por IA registradas separadamente). O lote `software-testes-2000-0001` tem 249/2.000 notas válidas e segue em andamento. A auditoria global registra 100 arquivos legados com pendências, ainda excluídos da contagem.
 
 ## Artefatos
 

@@ -1,21 +1,22 @@
 # Lote de escala software-testes-2000-0001
 
 - Data de início: 2026-10-01
+- Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **149 / 2.000 (7,45%)**
-- Gate automatizado: **149/149 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
-- Revisão factual humana: **9/149**
-- Revisão factual por IA: **140/149**
-- Contabilizadas como válidas: **149/149**
+- Notas efetivamente redigidas até agora: **249 / 2.000 (12,45%)**
+- Gate automatizado: **249/249 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Revisão factual humana: **9/249**
+- Revisão factual por IA: **240/249**
+- Contabilizadas como válidas: **249/249**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 140 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–7 (140 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
-- Auditoria reproduzível da tranche: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md) e [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md)
+- Revisor das 240 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–8 (240 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Auditoria reproduzível do lote: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md) e [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 149 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.851 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 249 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.751 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -188,6 +189,109 @@
 148. [Teste de convergência sob consistência eventual](../../domains/software-0007/software/testes/testes-consistencia-eventual-convergencia.md)
 149. [Teste de constraints e reconciliação de integridade](../../domains/software-0007/software/testes/testes-database-integrity-reconciliation.md)
 
+## Tranche 8 — frameworks e plataformas de teste (100 notas; revisão factual por IA registrada)
+
+150. [Playwright: ciclo de vida de fixtures por teste](../../domains/software-0007/software/testes/playwright-fixture-ciclo-vida-isolamento.md)
+151. [Playwright: fixtures de worker e estado compartilhado](../../domains/software-0007/software/testes/playwright-fixture-worker-escopo-paralelismo.md)
+152. [Playwright: reutilização segura de estado autenticado](../../domains/software-0007/software/testes/playwright-autenticacao-storage-state-expiracao.md)
+153. [Playwright: teardown confiável de recursos externos](../../domains/software-0007/software/testes/playwright-teardown-recursos-externos.md)
+154. [Playwright: mocks de API alinhados ao contrato](../../domains/software-0007/software/testes/playwright-mock-api-contrato-resposta.md)
+155. [Playwright: replay de HAR para cenários de rede](../../domains/software-0007/software/testes/playwright-har-replay-cobertura-rede.md)
+156. [Playwright: distinguir erro HTTP de falha de transporte](../../domains/software-0007/software/testes/playwright-status-http-vs-falha-transporte.md)
+157. [Playwright: retries como sinal de flakiness, não correção](../../domains/software-0007/software/testes/playwright-retries-flaky-diagnostico.md)
+158. [Playwright: dados exclusivos para testes paralelos](../../domains/software-0007/software/testes/playwright-paralelismo-dados-exclusivos.md)
+159. [Playwright: locators resilientes e assertions web-first](../../domains/software-0007/software/testes/playwright-locators-assertions-web-first.md)
+160. [Testing Library: interações realistas com user-event](../../domains/software-0007/software/testes/rtl-interacao-user-event-fluxo-realista.md)
+161. [Testing Library: priorizar consultas por papel e nome](../../domains/software-0007/software/testes/rtl-consultas-prioridade-role-name.md)
+162. [Testing Library: aguardar estado assíncrono pela condição](../../domains/software-0007/software/testes/rtl-async-findby-waitfor-condicao.md)
+163. [Testing Library: manter waitFor sem efeitos colaterais](../../domains/software-0007/software/testes/rtl-waitfor-sem-efeito-colateral.md)
+164. [Testing Library: validar formulários pela relação label-controle](../../domains/software-0007/software/testes/rtl-formulario-erro-associacao-label.md)
+165. [Testing Library: render customizado com provedores](../../domains/software-0007/software/testes/rtl-render-customizado-provedores-contexto.md)
+166. [Testing Library: verificar resultado em vez de detalhe interno](../../domains/software-0007/software/testes/rtl-testar-resultado-nao-implementacao.md)
+167. [Testing Library: detectar consultas ambíguas](../../domains/software-0007/software/testes/rtl-consulta-singular-ambiguidade.md)
+168. [Testing Library: cobrir loading, vazio e erro de carregamento](../../domains/software-0007/software/testes/rtl-fetch-loading-empty-error-states.md)
+169. [Testing Library: limpeza e isolamento entre renders](../../domains/software-0007/software/testes/rtl-cleanup-isolamento-renderizacao.md)
+170. [Android: escolher escopo e runner de teste](../../domains/software-0007/software/testes/android-test-pyramid-escopo-runner.md)
+171. [Android: sincronizar testes instrumentados sem sleeps fixos](../../domains/software-0007/software/testes/android-instrumented-sincronizacao-sem-sleep.md)
+172. [Android: UI Automator para fronteiras de sistema](../../domains/software-0007/software/testes/android-uiautomator-fronteira-sistema.md)
+173. [Android Compose: testar semântica e ações expostas](../../domains/software-0007/software/testes/android-compose-semantics-assertions.md)
+174. [Android Compose: controlar clock e animações em testes](../../domains/software-0007/software/testes/android-compose-clock-idle-animacoes.md)
+175. [Android: cobrir tamanhos de tela e configuração](../../domains/software-0007/software/testes/android-multiplas-telas-configuracao.md)
+176. [Android: testar restauração após recriação do processo](../../domains/software-0007/software/testes/android-process-death-restauracao-estado.md)
+177. [Android: testar concessão, recusa e revogação de permissões](../../domains/software-0007/software/testes/android-permissoes-recusa-revocacao.md)
+178. [Android: não concentrar regras de negócio em teste de UI](../../domains/software-0007/software/testes/android-separar-teste-ui-de-regra.md)
+179. [Android: tornar falhas instrumentadas reproduzíveis](../../domains/software-0007/software/testes/android-test-flakiness-reproducao-dispositivo.md)
+180. [Flutter: distribuir testes entre unit, widget e integração](../../domains/software-0007/software/testes/flutter-estrategia-unit-widget-integration.md)
+181. [Flutter: mockar canais de plugin sem alegar teste nativo](../../domains/software-0007/software/testes/flutter-plugin-channel-mock-fronteira.md)
+182. [Flutter: desenhar testes de integração em dispositivo](../../domains/software-0007/software/testes/flutter-integration-dispositivo-fluxo.md)
+183. [Flutter: testar listas longas sem assumir posição fixa](../../domains/software-0007/software/testes/flutter-widget-lista-rolagem-scrolluntilvisible.md)
+184. [Flutter: validar orientação retrato e paisagem](../../domains/software-0007/software/testes/flutter-orientacao-layout-widget-test.md)
+185. [Flutter: evitar pumpAndSettle em animações sem fim](../../domains/software-0007/software/testes/flutter-pumpandsettle-animacao-indefinida.md)
+186. [Flutter: escolher Finder por semântica, texto ou chave](../../domains/software-0007/software/testes/flutter-finders-chaves-vs-texto.md)
+187. [Flutter: sincronizar pump e atualizações assíncronas](../../domains/software-0007/software/testes/flutter-testwidgets-pump-microtasks.md)
+188. [Flutter: detectar overflow e conteúdo inacessível em widget tests](../../domains/software-0007/software/testes/flutter-widget-erro-overflow-responsivo.md)
+189. [Flutter: separar contrato simulado de regressão em dispositivo](../../domains/software-0007/software/testes/flutter-mocks-plugin-versus-device-regressao.md)
+190. [Terraform: distinguir validate de terraform test](../../domains/software-0007/software/testes/terraform-validate-vs-test-provisionamento.md)
+191. [Terraform: delimitar mocks de provider](../../domains/software-0007/software/testes/terraform-tests-mock-provider-escopo.md)
+192. [Terraform: isolar testes que aplicam infraestrutura](../../domains/software-0007/software/testes/terraform-test-run-apply-cleanup.md)
+193. [Terraform: testar validação de variáveis como contrato](../../domains/software-0007/software/testes/terraform-variable-validation-contract.md)
+194. [Terraform: interpretar check blocks sem tratá-los como preconditions](../../domains/software-0007/software/testes/terraform-check-block-nao-blocking.md)
+195. [Terraform: testar outputs sem expor valores sensíveis](../../domains/software-0007/software/testes/terraform-outputs-sensitive-testes.md)
+196. [Terraform: validar reprodutibilidade de providers](../../domains/software-0007/software/testes/terraform-provider-lockfile-reprodutibilidade.md)
+197. [Terraform: testar data sources e outputs calculados](../../domains/software-0007/software/testes/terraform-data-sources-outputs-mock-real.md)
+198. [Terraform: verificar plano contra mudança de infraestrutura esperada](../../domains/software-0007/software/testes/terraform-plan-assertions-estado-esperado.md)
+199. [Terraform: isolar sandboxes de testes paralelos](../../domains/software-0007/software/testes/terraform-sandbox-isolamento-paralelo.md)
+200. [Kafka: testar produtor idempotente e confirmação](../../domains/software-0007/software/testes/kafka-producer-idempotencia-retries-acks.md)
+201. [Kafka: delimitar ordenação por partição](../../domains/software-0007/software/testes/kafka-ordering-partition-retries.md)
+202. [Kafka: testar transações com consumidor read-committed](../../domains/software-0007/software/testes/kafka-transactional-producer-consumer-read-committed.md)
+203. [Kafka: verificar semântica de offset committed](../../domains/software-0007/software/testes/kafka-offset-commit-proximo-registro.md)
+204. [Kafka: tornar efeitos do consumidor seguros contra redelivery](../../domains/software-0007/software/testes/kafka-at-least-once-consumidor-idempotente.md)
+205. [Kafka: testar rebalance com processamento em andamento](../../domains/software-0007/software/testes/kafka-rebalance-processamento-em-curso.md)
+206. [Kafka: separar erro transitório de erro permanente](../../domains/software-0007/software/testes/kafka-retry-dlq-erro-transitorio-permanente.md)
+207. [Kafka: observar falhas de entrega no produtor](../../domains/software-0007/software/testes/kafka-producer-callback-delivery-failure.md)
+208. [Kafka: testar offset inicial e política de reset](../../domains/software-0007/software/testes/kafka-consumer-reset-start-offset.md)
+209. [Kafka: escolher broker de teste conforme contrato](../../domains/software-0007/software/testes/kafka-testcontainers-contrato-broker.md)
+210. [ML: validar schema de features antes do serving](../../domains/software-0007/software/testes/ml-feature-schema-contract-validacao.md)
+211. [ML: detectar divergência entre transformação de treino e serving](../../domains/software-0007/software/testes/ml-training-serving-skew-transformacao.md)
+212. [ML: testar vazamento de informação entre splits](../../domains/software-0007/software/testes/ml-data-leakage-split-temporal.md)
+213. [ML: tornar experimentos e artefatos reproduzíveis](../../domains/software-0007/software/testes/ml-reproducibilidade-seed-ambiente-artefatos.md)
+214. [ML: testar calibração e limiares de decisão](../../domains/software-0007/software/testes/ml-calibracao-limiares-decisao.md)
+215. [ML: monitorar drift sem confundir com queda de qualidade](../../domains/software-0007/software/testes/ml-monitoring-drift-feature-label.md)
+216. [ML: comparar predição batch e online](../../domains/software-0007/software/testes/ml-batch-online-paridade-predicoes.md)
+217. [ML: testar timeout e fallback de serving](../../domains/software-0007/software/testes/ml-model-serving-fallback-timeout.md)
+218. [ML: definir tolerância para comparações numéricas](../../domains/software-0007/software/testes/ml-numerica-tolerancia-estabilidade.md)
+219. [ML: liberar modelo por canário e critério de rollback](../../domains/software-0007/software/testes/ml-canary-release-rollback-metricas.md)
+220. [GitHub Actions: limitar permissões do token GITHUB_TOKEN](../../domains/software-0007/software/testes/gha-minimum-token-permissions.md)
+221. [GitHub Actions: evitar injeção em scripts com contexto de evento](../../domains/software-0007/software/testes/gha-script-injection-event-context.md)
+222. [GitHub Actions: fixar e revisar actions de terceiros](../../domains/software-0007/software/testes/gha-pinning-third-party-actions.md)
+223. [GitHub Actions: proteger secrets em pull requests externos](../../domains/software-0007/software/testes/gha-secrets-pull-request-forks.md)
+224. [GitHub Actions: configurar concurrency sem cancelar release válida](../../domains/software-0007/software/testes/gha-concurrency-cancel-deployments.md)
+225. [GitHub Actions: reter artifacts sem perder proveniência](../../domains/software-0007/software/testes/gha-artifact-retention-provenance.md)
+226. [GitHub Actions: verificar gates de environment antes do deploy](../../domains/software-0007/software/testes/gha-environment-protection-gates.md)
+227. [GitHub Actions: desenhar matrix que detecta incompatibilidade](../../domains/software-0007/software/testes/gha-matrix-fail-fast-coverage.md)
+228. [GitHub Actions: não confiar em artifacts de execução não privilegiada](../../domains/software-0007/software/testes/gha-job-output-untrusted-artifacts.md)
+229. [GitHub Actions: testar path filters e caminhos de validação](../../domains/software-0007/software/testes/gha-path-filters-ci-cobertura.md)
+230. [Prometheus: testar alert rules com séries controladas](../../domains/software-0007/software/testes/prometheus-alert-rule-unit-test-input-series.md)
+231. [Prometheus: cobrir estados pending e firing de alertas](../../domains/software-0007/software/testes/prometheus-alert-for-pending-firing.md)
+232. [Prometheus: validar labels e annotations de alertas](../../domains/software-0007/software/testes/prometheus-alert-labels-annotations-invariantes.md)
+233. [Prometheus: testar recording rules e série resultante](../../domains/software-0007/software/testes/prometheus-recording-rule-expression-output.md)
+234. [Prometheus: testar rate diante de reset de counter](../../domains/software-0007/software/testes/prometheus-rate-counter-reset.md)
+235. [Prometheus: diferenciar vetor vazio de valor zero](../../domains/software-0007/software/testes/prometheus-vector-vazio-vs-zero.md)
+236. [Prometheus: testar agregação e preservação de labels](../../domains/software-0007/software/testes/prometheus-aggregation-labels-cardinality.md)
+237. [Prometheus: separar condição saudável de ausência de telemetria](../../domains/software-0007/software/testes/prometheus-alert-no-data-scrape-failure.md)
+238. [Prometheus: cobrir fronteiras de janela em testes de regras](../../domains/software-0007/software/testes/prometheus-rule-test-boundary-time-window.md)
+239. [Prometheus: executar promtool no CI para regras versionadas](../../domains/software-0007/software/testes/prometheus-promtool-ci-rule-validation.md)
+240. [Docker: auditar build context e .dockerignore](../../domains/software-0007/software/testes/docker-build-context-dockerignore-audit.md)
+241. [Docker: verificar fronteira entre build stage e runtime](../../domains/software-0007/software/testes/docker-multistage-runtime-minimo.md)
+242. [Docker: controlar base image e processo de atualização](../../domains/software-0007/software/testes/docker-base-image-digest-atualizacao.md)
+243. [Docker: executar build checks para detectar erros de Dockerfile](../../domains/software-0007/software/testes/docker-build-checks-lint-dockerfile.md)
+244. [Docker: não inserir secrets em ARG, ENV ou layers](../../domains/software-0007/software/testes/docker-build-secrets-nao-arg-env.md)
+245. [Docker: testar execução com usuário não privilegiado](../../domains/software-0007/software/testes/docker-container-nonroot-permissions.md)
+246. [Docker: validar healthcheck sem confundi-lo com readiness](../../domains/software-0007/software/testes/docker-runtime-healthcheck-supervision.md)
+247. [Docker: testar a imagem final com smoke test](../../domains/software-0007/software/testes/docker-image-test-smoke-entrypoint.md)
+248. [Docker: testar cache sem depender dele para correção](../../domains/software-0007/software/testes/docker-cache-reproducibilidade-build.md)
+249. [Docker: associar imagem publicada a versão e proveniência](../../domains/software-0007/software/testes/docker-image-sbom-provenance-release.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 140 das tranches 2–7 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 149/2.000 notas válidas, restando 1.851 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 240 das tranches 2–8 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 249/2.000 notas válidas, restando 1.751 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
