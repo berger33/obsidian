@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 449 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 449 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 440 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 549 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 549 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 540 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -553,6 +553,128 @@
 - [[stryker-timeout-investigar-runner-e-mutante]] — A configuração oferece limites temporais para processos de teste e execução de mutants.
 - [[stryker-equivalent-mutant-score-interpretacao]] — Mutation score resume resultados de mutants no escopo selecionado, mas não classifica automaticamente equivalência semântica.
 
+## Tranche 11 — frameworks, protocolos, carga e automação móvel (notas 450–549)
+
+### REST Assured: contratos HTTP testáveis em Java
+- [[restassured-given-when-then-fronteira]] — O padrão given/when/then organiza a especificação da requisição, a execução do HTTP e as expectativas sobre a resposta.
+- [[restassured-request-specification-reuso-isolado]] — RequestSpecification agrupa dados de request que podem ser compostos e reaproveitados em várias chamadas.
+- [[restassured-response-specification-contrato-comum]] — Uma response specification permite reutilizar assertions comuns para respostas de vários testes.
+- [[restassured-path-query-parameters-distintos]] — Path parameters substituem segmentos nomeados do caminho; query parameters são enviados na parte de consulta da URL.
+- [[restassured-object-mapping-dependencias-explícitas]] — REST Assured pode serializar objetos Java para JSON ou XML e desserializar respostas quando os mapeadores compatíveis estão disponíveis no classpath.
+- [[restassured-jsonpath-extrair-depois-de-validar]] — JsonPath permite selecionar valores do corpo JSON da resposta para assertions ou etapas posteriores do teste.
+- [[restassured-json-schema-validacao-opcional]] — REST Assured oferece matcher para validar um corpo JSON contra um schema, disponível pela integração de validação correspondente.
+- [[restassured-filtros-logging-nao-e-wire-capture]] — Filters podem observar ou alterar request antes do envio e response antes das expectations; filtros também podem implementar logging ou autenticação.
+- [[restassured-auth-por-caso-sem-credencial-em-log]] — REST Assured suporta esquemas de autenticação e configuração de credenciais por request.
+- [[restassured-configuracao-global-reset-e-paralelismo]] — REST Assured expõe defaults estáticos como base URI, filtros e specifications que influenciam requests posteriores.
+
+### WireMock: stubs HTTP, estados e diagnóstico de interações
+- [[wiremock-mapping-request-response-contrato]] — Um stub WireMock associa condições de request a uma response configurada por código ou arquivo JSON.
+- [[wiremock-urlpath-query-param-matching]] — WireMock permite comparar URL completa ou só o path e declarar query parameters separadamente.
+- [[wiremock-json-body-matcher-estrutura]] — WireMock fornece matchers de corpo JSON que comparam conteúdo estruturado, além de comparação literal ou JSONPath.
+- [[wiremock-priority-sobreposicao-stubs]] — Se múltiplos stubs combinam com uma request, a prioridade controla qual resposta é selecionada; números menores indicam prioridade maior.
+- [[wiremock-scenario-maquina-de-estados]] — Um cenário WireMock representa uma máquina de estados simples; mappings podem exigir estado e mudar o estado após uma request.
+- [[wiremock-verificacao-de-request-journal]] — O request journal mantém requests recebidas em memória para verificação e consulta após as chamadas do sistema sob teste.
+- [[wiremock-unmatched-requests-near-miss]] — Requests sem mapping normalmente recebem 404 e podem ser consultadas como unmatched; near misses apontam mappings parecidos.
+- [[wiremock-faults-para-resiliencia]] — WireMock pode simular falhas de transporte para observar como o cliente trata interrupções e respostas incompletas.
+- [[wiremock-junit-extension-reset-por-teste]] — A extensão WireMock para JUnit Jupiter inicia e encerra servidor conforme lifecycle e, por padrão, reseta mappings e requests entre métodos.
+- [[wiremock-response-template-dados-da-request]] — Response templating pode preencher partes da resposta com valores do contexto da request em vez de manter uma fixture fixa.
+
+### Robot Framework 7.5: keywords, fixtures e dados de teste
+- [[robot-test-case-keywords-observáveis]] — Um caso Robot Framework contém chamadas a keywords descritas nas seções de teste e executadas pelas bibliotecas importadas.
+- [[robot-setup-teardown-escopo]] — Setups e teardowns podem ser definidos no nível de caso ou suite e executam keywords antes/depois da unidade configurada.
+- [[robot-tags-selecao-sem-substituir-assertions]] — Tags podem classificar casos e orientar a seleção de testes durante a execução.
+- [[robot-template-data-driven]] — Um test template transforma as linhas de argumentos de um caso em chamadas repetidas à keyword-template escolhida.
+- [[robot-variaveis-escopo-prioridade]] — Robot Framework oferece variáveis de diferentes origens e escopos, e sua resolução depende da origem e do momento da definição.
+- [[robot-resource-vs-library-import]] — Resource files compartilham user keywords e dados Robot; libraries fornecem keywords implementadas em Python ou outra integração suportada.
+- [[robot-keyword-argumentos-e-conversao]] — User keywords podem receber argumentos nomeados ou posicionais e podem expor valores de retorno a outras keywords.
+- [[robot-ignore-error-nao-esconder-falha]] — Run Keyword And Ignore Error captura falha de keyword e devolve status e mensagem, permitindo tratamento deliberado no fluxo.
+- [[robot-wait-until-keyword-succeeds-idempotência]] — Wait Until Keyword Succeeds repete uma keyword em intervalo configurado até passar ou esgotar limite.
+- [[robot-output-report-sensitive-data]] — Uma execução Robot gera output.xml e relatórios/logs configuráveis que ajudam a diagnosticar os casos executados.
+
+### Cucumber e Gherkin: especificações executáveis sem ambiguidade
+- [[cucumber-feature-scenario-executable-spec]] — Uma Feature agrupa cenários relacionados e cada Example ou Scenario descreve contexto, evento e resultado esperado em steps.
+- [[cucumber-keywords-nao-fazem-parte-do-matching]] — A palavra Given, When ou Then dá semântica ao texto, mas não é usada por Cucumber para distinguir step definitions durante matching.
+- [[cucumber-expressions-parametros-tipados]] — Step definitions podem usar Cucumber Expressions ou regular expressions e receber valores capturados como argumentos.
+- [[cucumber-step-definitions-ambiguos-unicos]] — Cucumber precisa de uma definição única que corresponda ao texto de cada step; mais de uma correspondência impede execução inequívoca.
+- [[cucumber-scenario-outline-examples-linhas]] — Scenario Outline é um template; suas steps recebem valores de placeholders e o outline executa uma vez para cada linha em Examples.
+- [[cucumber-data-tables-argumento-final]] — Uma DataTable é passada como argumento multilinha final à step definition e pode ser convertida conforme sua forma e tipo.
+- [[cucumber-doc-string-corpo-multilinha]] — Gherkin permite Doc Strings como argumento de step para passar texto longo, como JSON, GraphQL ou uma mensagem.
+- [[cucumber-background-precondicao-compartilhada]] — Background define steps comuns executados antes dos cenários aplicáveis dentro da Feature ou Rule.
+- [[cucumber-hooks-condicionais-com-tags]] — Hooks podem ser associados a expressões de tags para executar preparação ou limpeza em cenários selecionados.
+- [[cucumber-tags-selecao-e-inclusao]] — Tags podem organizar features e cenários e selecionar subconjuntos de execução; expressões também podem restringir hooks.
+
+### NUnit: parametrização, lifecycle e execução paralela
+- [[nunit-test-async-await-task]] — NUnit aceita test methods async que retornam Task ou Task<T> e registra o resultado após a conclusão.
+- [[nunit-testcase-cada-argumento-caso]] — TestCase fornece argumentos inline para um método parametrizado e permite que cada combinação seja descoberta como test case.
+- [[nunit-testcasesource-fonte-enumeravel]] — TestCaseSource identifica campo, propriedade ou método que fornece argumentos para casos parametrizados.
+- [[nunit-setup-teardown-por-caso]] — SetUp é chamado antes de cada test method e TearDown logo depois de cada test case na fixture.
+- [[nunit-onetimesetup-hierarquia-fixture]] — OneTimeSetUp executa uma vez antes dos testes filhos da fixture; classes base e derivadas seguem ordem de herança documentada.
+- [[nunit-setupfixture-escopo-namespace]] — SetUpFixture oferece setup e teardown únicos para fixtures pertencentes a namespace e subnamespaces na assembly.
+- [[nunit-fixturelifecycle-instance-per-case]] — FixtureLifeCycle pode usar instância única por fixture ou instância nova por test case.
+- [[nunit-parallelizable-nao-e-limite-de-workers]] — Parallelizable marca testes ou descendentes elegíveis para concorrência; LevelOfParallelism define o teto de workers da assembly.
+- [[nunit-order-local-nao-sincroniza-conclusao]] — Order organiza quando testes ou fixtures começam dentro da suite que os contém; não ordena globalmente nem aguarda término anterior.
+- [[nunit-testcontext-diagnostico-por-escopo]] — TestContext fornece dados do execution context e distingue contexto de caso em método/setup/teardown de contexto de fixture nos métodos one-time.
+
+### xUnit.net v3: dados, fixtures e paralelismo
+- [[xunit-fact-vs-theory-escopo]] — Fact representa um caso individual; Theory associa a um método conjuntos de dados que produzem invocações parametrizadas.
+- [[xunit-inline-data-casos-visíveis]] — InlineData fornece argumentos constantes para Theory e cada linha representa um caso executável.
+- [[xunit-memberdata-classdata-provedor-tipado]] — Theories podem obter dados de membros ou classes provedoras, separando matriz de argumentos da lógica do teste.
+- [[xunit-constructor-dispose-instancia-por-teste]] — xUnit cria instância nova da classe de teste para cada test que executa; constructor e Dispose oferecem preparação e limpeza por instância.
+- [[xunit-class-fixture-compartilhar-recurso]] — IClassFixture compartilha uma instância de fixture entre os testes de uma classe e a descarta depois da classe.
+- [[xunit-collection-fixture-serializar-recurso]] — Collection fixtures compartilham fixture entre classes associadas à mesma collection; classes na collection deixam de executar paralelamente entre si.
+- [[xunit-async-lifetime-teardown]] — xUnit oferece interfaces de lifecycle assíncrono para inicialização e limpeza; suportes de DisposeAsync diferem entre v2 e v3.
+- [[xunit-paralelismo-por-collection-isolar]] — No modo collections, testes de uma collection não rodam em paralelo entre si, mas collections distintas podem concorrer.
+- [[xunit-outputhelper-saida-associada]] — ITestOutputHelper fornece saída associada ao test case, enquanto Console e Trace são recursos compartilhados do processo.
+- [[xunit-assert-throws-tipo-exato]] — Assert.Throws e variantes assíncronas capturam exceção da operação e permitem verificar tipo e conteúdo da falha.
+
+### Locust: cenários de usuário e geração de carga Python
+- [[locust-httpuser-nao-e-browser]] — HttpUser oferece client HTTP e mantém cookies, mas não renderiza HTML nem carrega automaticamente recursos da página como browser.
+- [[locust-task-weights-probabilidade]] — Decorador @task com peso faz Locust escolher tarefas com frequência relativa entre as opções disponíveis do usuário.
+- [[locust-wait-time-pos-task-nao-rps]] — wait_time é aplicado após a execução de uma tarefa; ausência de wait_time inicia a próxima task assim que a atual termina.
+- [[locust-on-start-stop-lifecycle]] — on_start e on_stop são callbacks por instância de User que permitem iniciar e encerrar contexto do usuário simulado.
+- [[locust-request-name-cardinalidade]] — O parâmetro name do client pode agrupar requests com paths ou query values diferentes sob um nome de estatística comum.
+- [[locust-catch-response-validacao-manual]] — Cliente HTTP de Locust permite inspecionar resposta no bloco catch_response e decidir manualmente se a chamada conta como sucesso ou falha.
+- [[locust-taskset-sequencia-de-tarefas]] — TaskSet organiza conjunto de tarefas e pode delegar para subtasksets; SequentialTaskSet expressa sequência declarada quando a jornada requer ordem.
+- [[locust-loadtestshape-tick]] — LoadTestShape permite controlar usuários e spawn rate através de tick, que retorna a população desejada e pode terminar com None.
+- [[locust-distributed-master-worker]] — Em execução distribuída, master coordena interface e spawn/stop; workers executam Users e enviam estatísticas ao master.
+- [[locust-fast-httpuser-gerador-versus-alvo]] — FastHttpUser pode reduzir overhead de cliente HTTP quando Locust precisa gerar uma taxa alta de requests.
+
+### Apache JMeter: planos de teste e carga reproduzível
+- [[jmeter-threadgroup-threads-independentes]] — Cada thread de um Thread Group executa o plano de teste de forma independente e pode representar uma conexão/usuário concorrente.
+- [[jmeter-timer-before-samplers-scope]] — Timer é processado antes de cada sampler dentro do escopo hierárquico, e múltiplos timers podem acumular atraso.
+- [[jmeter-assertion-aplica-por-escopo]] — Assertions são executadas após samplers no escopo onde aparecem e verificam campos de request/response configurados.
+- [[jmeter-csv-dataset-dados-por-thread]] — CSV Data Set Config lê registros em variáveis e normalmente fornece linhas diferentes às threads do plano.
+- [[jmeter-thread-variables-properties-compartilhamento]] — Variáveis de JMeter têm escopo de thread, enquanto properties são compartilhadas entre threads do processo.
+- [[jmeter-cli-para-carga-gui-para-debug]] — Manual recomenda GUI para criar/debuggar plano e CLI mode para load test com menor overhead de interface.
+- [[jmeter-execution-order-processors]] — JMeter processa elementos da árvore em ordem definida, com configuration elements e preprocessors antes do sampler e postprocessors/assertions depois.
+- [[jmeter-listeners-impacto-gerador]] — Listeners exibem, salvam ou processam resultados e podem consumir recursos do gerador conforme volume e formato.
+- [[jmeter-transaction-controller-unidades-medicao]] — Transaction Controller agrupa samplers em transação e pode produzir sample agregado conforme modo configurado.
+- [[jmeter-testplan-versioned-results]] — Plano JMX e properties determinam execução; registrar apenas arquivo de resultado não permite reproduzir configuração de carga.
+
+### Gatling: cenários, sessão e critérios de performance
+- [[gatling-scenario-exec-sequencia]] — Um ScenarioBuilder encadeia ações com exec; requests e funções executadas no cenário seguem a sequência declarada.
+- [[gatling-session-estado-por-virtual-user]] — Session representa o estado de um virtual user e carrega atributos ao longo das ações do scenario.
+- [[gatling-feeder-dados-variados-cache]] — Feeder fornece records aos virtual users por meio de feed e os atributos passam para Session.
+- [[gatling-check-saveas-apos-sucesso]] — Checks validam request/response e podem extrair um valor para Session; saveAs só é efetivo quando check passa.
+- [[gatling-assertions-criterios-de-simulacao]] — Assertions na Simulation definem critérios sobre estatísticas globais ou escopos como requests/grupos.
+- [[gatling-open-closed-injection-model]] — Perfis open injetam usuários por taxa de chegada; closed model define concorrência de usuários cuja duração influencia novas iterações.
+- [[gatling-groups-agregacao-por-jornada]] — Groups agrupam ações do usuário e permitem observar estatísticas relativas a uma parte nomeada do scenario.
+- [[gatling-pauses-e-pacing]] — Pause modela intervalo entre ações do scenario; injection controla chegada/concorrência inicial de virtual users.
+- [[gatling-protocol-config-comum]] — Protocol configuration reúne base URL, headers e opções compartilhadas que podem ser associadas a um ou mais cenários.
+- [[gatling-session-debug-fora-da-carga]] — Session pode ser inspecionada durante desenvolvimento para diagnosticar feeders, expressões e check failures.
+
+### Appium: sessões e automação móvel multiplataforma
+- [[appium-driver-instalacao-modular]] — Appium separa o servidor central de drivers que implementam automação por plataforma e precisam ser instalados para criar sessões.
+- [[appium-capabilities-prefix-vendor]] — Capabilities são parâmetros key-value de criação de sessão e não podem ser alteradas durante seu lifecycle; capabilities não padrão usam prefixo vendor como appium:.
+- [[appium-automationname-seleciona-driver]] — appium:automationName indica qual driver deve executar comandos da sessão.
+- [[appium-context-native-webview]] — Contexts representam modos de automação que o driver implementa; API permite listar, ler contexto atual e trocar para outro nome disponível.
+- [[appium-session-finally-delete]] — Quickstart abre session remota e chama deleteSession ao concluir interação; lifecycle da sessão é responsabilidade do cliente de teste.
+- [[appium-w3c-actions-vs-comandos-driver]] — Appium oferece comandos W3C e extensões específicas do driver; migrações podem remover endpoints touch legados e apontar alternativas.
+- [[appium-parallel-device-identidade-ports]] — Capabilities como udid identificam dispositivo alvo; drivers também podem requerer portas e recursos distintos para sessões simultâneas.
+- [[appium-uiautomator2-android-boundary]] — UiAutomator2 é driver oficial para Android e documenta capabilities, comandos e requisitos que não são universais a todo Appium.
+- [[appium-xcuitest-ios-boundary]] — XCUITest é driver oficial para apps iOS e seus requisitos dependem do host, toolchain Apple e configuração da sessão.
+- [[appium-locators-acessibilidade-contrato]] — Drivers expõem estratégias de locator dependentes da plataforma, incluindo identificadores de acessibilidade ou recursos nativos.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 449/449 notas e as 449 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 440 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (449 notas substantivas; 1.551 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-10.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 549/549 notas e as 549 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 540 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (549 notas substantivas; 1.451 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

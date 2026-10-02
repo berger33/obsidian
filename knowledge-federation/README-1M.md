@@ -14,7 +14,7 @@ O TAR reconstruído em 2026-10-01 contém **1.015.608 arquivos de nota represent
 
 ## Estado editorial atual — fora do snapshot
 
-Na atualização de 2026-10-02, o repositório tem 489 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 440 revisões factuais por IA registradas separadamente). O lote `software-testes-2000-0001` tem 449/2.000 notas válidas e segue em andamento; as notas 350–449 estão no [relatório factual por IA da tranche 10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md) e no [manifesto do lote](exports/batches/software-testes-2000-0001.md). A auditoria global registra 100 arquivos legados com pendências, ainda excluídos da contagem.
+Na atualização de 2026-10-02, o repositório tem 589 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 540 revisões factuais por IA registradas separadamente). O lote `software-testes-2000-0001` tem 549/2.000 notas válidas e segue em andamento; as notas 450–549 estão no [relatório factual por IA da tranche 11](exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e no [manifesto do lote](exports/batches/software-testes-2000-0001.md). A auditoria global registra 100 arquivos legados com pendências, ainda excluídos da contagem.
 
 ## Artefatos
 

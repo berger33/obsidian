@@ -8,14 +8,14 @@ A meta ativa é **500 lotes × 2.000 notas substantivas = 1.000.000 de notas vá
 
 O checkpoint legado ainda contém 1.000.000 de registros virtuais de catálogo, mas a auditoria encontrou marcadores de template nos 1.000.000 registros. Eles não equivalem a notas válidas e não avançam a meta editorial.
 
-- Arquivos Markdown ativos: **589** (100 notas legadas com pendências + 489 notas autorais substantivas).
-- Notas válidas pelo protocolo atual: **489** (49 aprovações humanas históricas + 440 revisões factuais por IA).
-- Progresso: **489 / 1.000.000 (0,0489%)**; faltam 999.511 notas válidas.
+- Arquivos Markdown ativos: **689** (100 notas legadas com pendências + 589 notas autorais substantivas).
+- Notas válidas pelo protocolo atual: **589** (49 aprovações humanas históricas + 540 revisões factuais por IA).
+- Progresso: **589 / 1.000.000 (0,0589%)**; faltam 999.411 notas válidas.
 - Lotes completos: **0 / 500**.
-- Lote em andamento `software-testes-2000-0001`: **449 / 2.000** notas válidas; 9 humanas e 440 por IA; faltam 1.551 notas materiais.
+- Lote em andamento `software-testes-2000-0001`: **549 / 2.000** notas válidas; 9 humanas e 540 por IA; faltam 1.451 notas materiais.
 - As **100** notas legadas com pendências continuam excluídas.
 
-Consulte os [manifestos de lote](exports/batches/), as [auditorias e relatórios](exports/reports/), o [registro separado de revisões](exports/reports/human-review-queue.md), a [fila de remediação legada](exports/reports/legacy-remediation-queue.md), o [plano para 1 milhão](PLANO-CONTINUO-1M.md) e o [status auditado](STATUS-CONSOLIDACAO-1M.md). Os relatórios factuais por IA do lote atual são [tranches 2–3](exports/reports/ai-review-software-testes-2000-0001.md), [4](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md).
+Consulte os [manifestos de lote](exports/batches/), as [auditorias e relatórios](exports/reports/), o [registro separado de revisões](exports/reports/human-review-queue.md), a [fila de remediação legada](exports/reports/legacy-remediation-queue.md), o [plano para 1 milhão](PLANO-CONTINUO-1M.md) e o [status auditado](STATUS-CONSOLIDACAO-1M.md). Os relatórios factuais por IA do lote atual são [tranches 2–3](exports/reports/ai-review-software-testes-2000-0001.md), [4](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](exports/reports/ai-review-software-testes-2000-0001-tranche-11.md).
 
 ## Auditoria de qualidade
 

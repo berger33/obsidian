@@ -4,20 +4,20 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **449 / 2.000 (22,45%)**
-- Gate automatizado: **449/449 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
-- Revisão factual humana: **9/449**
-- Revisão factual por IA: **440/449**
-- Contabilizadas como válidas: **449/449**
+- Notas efetivamente redigidas até agora: **549 / 2.000 (27,45%)**
+- Gate automatizado: **549/549 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Revisão factual humana: **9/549**
+- Revisão factual por IA: **540/549**
+- Contabilizadas como válidas: **549/549**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 440 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–10 (440 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 540 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–11 (540 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-10.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-10.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md)
+- Reconciliação estrutural do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-11.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md)
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 449 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.551 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 549 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.451 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -547,6 +547,128 @@
 448. [StrykerJS: investigar timeout antes de alterar o limite](../../domains/software-0007/software/testes/stryker-timeout-investigar-runner-e-mutante.md)
 449. [StrykerJS: interpretar sobreviventes sem perseguir score perfeito](../../domains/software-0007/software/testes/stryker-equivalent-mutant-score-interpretacao.md)
 
+## Tranche 11 — frameworks de teste, integração, carga e automação móvel (100 notas; revisão factual por IA registrada)
+
+### REST Assured: contratos HTTP testáveis em Java
+450. [REST Assured: separar preparação, chamada e assertions](../../domains/software-0007/software/testes/restassured-given-when-then-fronteira.md)
+451. [REST Assured: reutilizar request specification sem compartilhar mutações](../../domains/software-0007/software/testes/restassured-request-specification-reuso-isolado.md)
+452. [REST Assured: compartilhar expectativas de resposta sem mascarar exceções](../../domains/software-0007/software/testes/restassured-response-specification-contrato-comum.md)
+453. [REST Assured: distinguir path parameters de query parameters](../../domains/software-0007/software/testes/restassured-path-query-parameters-distintos.md)
+454. [REST Assured: verificar dependências exigidas por object mapping](../../domains/software-0007/software/testes/restassured-object-mapping-dependencias-explícitas.md)
+455. [REST Assured: extrair valores JSON após validar a resposta](../../domains/software-0007/software/testes/restassured-jsonpath-extrair-depois-de-validar.md)
+456. [REST Assured: tratar JSON Schema como validação configurada](../../domains/software-0007/software/testes/restassured-json-schema-validacao-opcional.md)
+457. [REST Assured: não confundir logging de filtro com captura exata no wire](../../domains/software-0007/software/testes/restassured-filtros-logging-nao-e-wire-capture.md)
+458. [REST Assured: configurar autenticação por teste e proteger credenciais](../../domains/software-0007/software/testes/restassured-auth-por-caso-sem-credencial-em-log.md)
+459. [REST Assured: evitar vazamento de configuração estática entre testes](../../domains/software-0007/software/testes/restassured-configuracao-global-reset-e-paralelismo.md)
+
+### WireMock: stubs HTTP, estados e diagnóstico de interações
+460. [WireMock: parear matcher de request com resposta explícita](../../domains/software-0007/software/testes/wiremock-mapping-request-response-contrato.md)
+461. [WireMock: separar path matching da comparação de query](../../domains/software-0007/software/testes/wiremock-urlpath-query-param-matching.md)
+462. [WireMock: comparar estrutura JSON sem fixar formatação textual](../../domains/software-0007/software/testes/wiremock-json-body-matcher-estrutura.md)
+463. [WireMock: definir prioridade quando mappings se sobrepõem](../../domains/software-0007/software/testes/wiremock-priority-sobreposicao-stubs.md)
+464. [WireMock: modelar fluxo stateful com cenário explícito](../../domains/software-0007/software/testes/wiremock-scenario-maquina-de-estados.md)
+465. [WireMock: verificar request recebida sem confundir com resposta](../../domains/software-0007/software/testes/wiremock-verificacao-de-request-journal.md)
+466. [WireMock: diagnosticar request não mapeada com near miss](../../domains/software-0007/software/testes/wiremock-unmatched-requests-near-miss.md)
+467. [WireMock: usar faults controlados para testar tolerância a falha](../../domains/software-0007/software/testes/wiremock-faults-para-resiliencia.md)
+468. [WireMock: confirmar lifecycle e reset da extensão JUnit](../../domains/software-0007/software/testes/wiremock-junit-extension-reset-por-teste.md)
+469. [WireMock: tornar resposta dinâmica com response templating configurado](../../domains/software-0007/software/testes/wiremock-response-template-dados-da-request.md)
+
+### Robot Framework 7.5: keywords, fixtures e dados de teste
+470. [Robot Framework: manter caso centrado em comportamento observável](../../domains/software-0007/software/testes/robot-test-case-keywords-observáveis.md)
+471. [Robot Framework: escolher setup e teardown pelo escopo do recurso](../../domains/software-0007/software/testes/robot-setup-teardown-escopo.md)
+472. [Robot Framework: usar tags para selecionar casos, não para definir seu resultado](../../domains/software-0007/software/testes/robot-tags-selecao-sem-substituir-assertions.md)
+473. [Robot Framework: usar Test Template para repetir keyword com dados](../../domains/software-0007/software/testes/robot-template-data-driven.md)
+474. [Robot Framework: controlar escopo e precedência de variáveis](../../domains/software-0007/software/testes/robot-variaveis-escopo-prioridade.md)
+475. [Robot Framework: distinguir resource file de test library](../../domains/software-0007/software/testes/robot-resource-vs-library-import.md)
+476. [Robot Framework: declarar argumentos de keyword como interface de teste](../../domains/software-0007/software/testes/robot-keyword-argumentos-e-conversao.md)
+477. [Robot Framework: limitar Run Keyword And Ignore Error a erro esperado](../../domains/software-0007/software/testes/robot-ignore-error-nao-esconder-falha.md)
+478. [Robot Framework: repetir condição observável sem repetir efeito irreversível](../../domains/software-0007/software/testes/robot-wait-until-keyword-succeeds-idempotência.md)
+479. [Robot Framework: controlar artefatos de saída e dados sensíveis](../../domains/software-0007/software/testes/robot-output-report-sensitive-data.md)
+
+### Cucumber e Gherkin: especificações executáveis sem ambiguidade
+480. [Cucumber: escrever Feature e Example como regra verificável](../../domains/software-0007/software/testes/cucumber-feature-scenario-executable-spec.md)
+481. [Cucumber: não tratar Given When Then como namespaces de step](../../domains/software-0007/software/testes/cucumber-keywords-nao-fazem-parte-do-matching.md)
+482. [Cucumber: converter parâmetros de expressão para tipos de domínio](../../domains/software-0007/software/testes/cucumber-expressions-parametros-tipados.md)
+483. [Cucumber: impedir step definitions ambíguos e duplicados](../../domains/software-0007/software/testes/cucumber-step-definitions-ambiguos-unicos.md)
+484. [Cucumber: tratar cada linha de Examples como invocação do outline](../../domains/software-0007/software/testes/cucumber-scenario-outline-examples-linhas.md)
+485. [Cucumber: modelar DataTable como argumento do step](../../domains/software-0007/software/testes/cucumber-data-tables-argumento-final.md)
+486. [Cucumber: usar Doc String para payload textual multilinha](../../domains/software-0007/software/testes/cucumber-doc-string-corpo-multilinha.md)
+487. [Cucumber: limitar Background a contexto comum necessário](../../domains/software-0007/software/testes/cucumber-background-precondicao-compartilhada.md)
+488. [Cucumber: restringir hooks por tag e escopo explícito](../../domains/software-0007/software/testes/cucumber-hooks-condicionais-com-tags.md)
+489. [Cucumber: verificar filtros de tags contra casos descobertos](../../domains/software-0007/software/testes/cucumber-tags-selecao-e-inclusao.md)
+
+### NUnit: parametrização, lifecycle e execução paralela
+490. [NUnit: aguardar métodos de teste assíncronos por Task](../../domains/software-0007/software/testes/nunit-test-async-await-task.md)
+491. [NUnit: interpretar cada TestCase como caso parametrizado separado](../../domains/software-0007/software/testes/nunit-testcase-cada-argumento-caso.md)
+492. [NUnit: separar conjunto de dados com TestCaseSource](../../domains/software-0007/software/testes/nunit-testcasesource-fonte-enumeravel.md)
+493. [NUnit: reservar SetUp e TearDown para estado de cada caso](../../domains/software-0007/software/testes/nunit-setup-teardown-por-caso.md)
+494. [NUnit: delimitar OneTimeSetUp à fixture e à hierarquia](../../domains/software-0007/software/testes/nunit-onetimesetup-hierarquia-fixture.md)
+495. [NUnit: usar SetUpFixture para preparação de namespace conscientemente](../../domains/software-0007/software/testes/nunit-setupfixture-escopo-namespace.md)
+496. [NUnit: combinar lifecycle por caso com parallelism sem estado de instância](../../domains/software-0007/software/testes/nunit-fixturelifecycle-instance-per-case.md)
+497. [NUnit: distinguir Parallelizable de LevelOfParallelism](../../domains/software-0007/software/testes/nunit-parallelizable-nao-e-limite-de-workers.md)
+498. [NUnit: usar Order para organização local, nunca como dependência temporal](../../domains/software-0007/software/testes/nunit-order-local-nao-sincroniza-conclusao.md)
+499. [NUnit: ler TestContext no escopo de execução correto](../../domains/software-0007/software/testes/nunit-testcontext-diagnostico-por-escopo.md)
+
+### xUnit.net v3: dados, fixtures e paralelismo
+500. [xUnit: escolher Fact ou Theory conforme número de exemplos](../../domains/software-0007/software/testes/xunit-fact-vs-theory-escopo.md)
+501. [xUnit: manter InlineData pequeno e representar cada linha no relatório](../../domains/software-0007/software/testes/xunit-inline-data-casos-visíveis.md)
+502. [xUnit: mover dados reutilizáveis para MemberData ou ClassData](../../domains/software-0007/software/testes/xunit-memberdata-classdata-provedor-tipado.md)
+503. [xUnit: usar constructor e Dispose para contexto novo por caso](../../domains/software-0007/software/testes/xunit-constructor-dispose-instancia-por-teste.md)
+504. [xUnit: usar class fixture somente para contexto realmente comum](../../domains/software-0007/software/testes/xunit-class-fixture-compartilhar-recurso.md)
+505. [xUnit: agrupar classes por collection quando compartilham recurso](../../domains/software-0007/software/testes/xunit-collection-fixture-serializar-recurso.md)
+506. [xUnit: escolher lifecycle async compatível com versão](../../domains/software-0007/software/testes/xunit-async-lifetime-teardown.md)
+507. [xUnit: entender paralelismo por collection antes de aumentar threads](../../domains/software-0007/software/testes/xunit-paralelismo-por-collection-isolar.md)
+508. [xUnit: associar diagnóstico ao teste com ITestOutputHelper](../../domains/software-0007/software/testes/xunit-outputhelper-saida-associada.md)
+509. [xUnit: afirmar exceção esperada no ponto da chamada](../../domains/software-0007/software/testes/xunit-assert-throws-tipo-exato.md)
+
+### Locust: cenários de usuário e geração de carga Python
+510. [Locust: não confundir HttpUser com navegador real](../../domains/software-0007/software/testes/locust-httpuser-nao-e-browser.md)
+511. [Locust: interpretar peso de @task como probabilidade relativa](../../domains/software-0007/software/testes/locust-task-weights-probabilidade.md)
+512. [Locust: interpretar wait_time após tarefa sem tratá-lo como taxa](../../domains/software-0007/software/testes/locust-wait-time-pos-task-nao-rps.md)
+513. [Locust: preparar e liberar estado por usuário no lifecycle](../../domains/software-0007/software/testes/locust-on-start-stop-lifecycle.md)
+514. [Locust: agrupar URLs variáveis com name estável nas estatísticas](../../domains/software-0007/software/testes/locust-request-name-cardinalidade.md)
+515. [Locust: marcar resposta manualmente com catch_response](../../domains/software-0007/software/testes/locust-catch-response-validacao-manual.md)
+516. [Locust: escolher TaskSet para comportamento hierárquico ou sequência](../../domains/software-0007/software/testes/locust-taskset-sequencia-de-tarefas.md)
+517. [Locust: codificar estágio de carga via LoadTestShape](../../domains/software-0007/software/testes/locust-loadtestshape-tick.md)
+518. [Locust: dimensionar master e workers sem atribuir carga ao master](../../domains/software-0007/software/testes/locust-distributed-master-worker.md)
+519. [Locust: separar limite do gerador do limite do serviço](../../domains/software-0007/software/testes/locust-fast-httpuser-gerador-versus-alvo.md)
+
+### Apache JMeter: planos de teste e carga reproduzível
+520. [JMeter: interpretar threads do Thread Group como fluxos independentes](../../domains/software-0007/software/testes/jmeter-threadgroup-threads-independentes.md)
+521. [JMeter: lembrar que timers atrasam samplers dentro de seu escopo](../../domains/software-0007/software/testes/jmeter-timer-before-samplers-scope.md)
+522. [JMeter: limitar Assertion ao sampler que representa o contrato](../../domains/software-0007/software/testes/jmeter-assertion-aplica-por-escopo.md)
+523. [JMeter: entender leitura CSV por thread e iteração](../../domains/software-0007/software/testes/jmeter-csv-dataset-dados-por-thread.md)
+524. [JMeter: distinguir variáveis de thread de propriedades compartilhadas](../../domains/software-0007/software/testes/jmeter-thread-variables-properties-compartilhamento.md)
+525. [JMeter: usar GUI para depurar e CLI para medir carga](../../domains/software-0007/software/testes/jmeter-cli-para-carga-gui-para-debug.md)
+526. [JMeter: respeitar ordem de config, preprocessors, sampler e assertions](../../domains/software-0007/software/testes/jmeter-execution-order-processors.md)
+527. [JMeter: limitar listeners pesados durante execução de carga](../../domains/software-0007/software/testes/jmeter-listeners-impacto-gerador.md)
+528. [JMeter: definir se Transaction Controller agrega sub-samples](../../domains/software-0007/software/testes/jmeter-transaction-controller-unidades-medicao.md)
+529. [JMeter: versionar plano e propriedades junto com resultado](../../domains/software-0007/software/testes/jmeter-testplan-versioned-results.md)
+
+### Gatling: cenários, sessão e critérios de performance
+530. [Gatling: construir workflow ordenado com exec](../../domains/software-0007/software/testes/gatling-scenario-exec-sequencia.md)
+531. [Gatling: manter atributos na Session do próprio usuário](../../domains/software-0007/software/testes/gatling-session-estado-por-virtual-user.md)
+532. [Gatling: alimentar usuários com registros distintos para workload](../../domains/software-0007/software/testes/gatling-feeder-dados-variados-cache.md)
+533. [Gatling: validar resposta antes de guardar valor com saveAs](../../domains/software-0007/software/testes/gatling-check-saveas-apos-sucesso.md)
+534. [Gatling: expressar pass fail com assertions de estatísticas](../../domains/software-0007/software/testes/gatling-assertions-criterios-de-simulacao.md)
+535. [Gatling: escolher open ou closed conforme hipótese de carga](../../domains/software-0007/software/testes/gatling-open-closed-injection-model.md)
+536. [Gatling: nomear groups para separar estatísticas de jornada](../../domains/software-0007/software/testes/gatling-groups-agregacao-por-jornada.md)
+537. [Gatling: distinguir pausa do usuário de arrival-rate injection](../../domains/software-0007/software/testes/gatling-pauses-e-pacing.md)
+538. [Gatling: centralizar protocolo HTTP comum sem esconder overrides](../../domains/software-0007/software/testes/gatling-protocol-config-comum.md)
+539. [Gatling: limitar logging e inspeção de Session fora da carga](../../domains/software-0007/software/testes/gatling-session-debug-fora-da-carga.md)
+
+### Appium: sessões e automação móvel multiplataforma
+540. [Appium: instalar driver compatível além do servidor](../../domains/software-0007/software/testes/appium-driver-instalacao-modular.md)
+541. [Appium: prefixar capabilities específicas e fixá-las ao iniciar sessão](../../domains/software-0007/software/testes/appium-capabilities-prefix-vendor.md)
+542. [Appium: usar automationName para selecionar implementação do driver](../../domains/software-0007/software/testes/appium-automationname-seleciona-driver.md)
+543. [Appium: consultar contexts antes de alternar entre native e webview](../../domains/software-0007/software/testes/appium-context-native-webview.md)
+544. [Appium: encerrar session em finally após cada fluxo](../../domains/software-0007/software/testes/appium-session-finally-delete.md)
+545. [Appium: separar W3C Actions de comandos móveis específicos](../../domains/software-0007/software/testes/appium-w3c-actions-vs-comandos-driver.md)
+546. [Appium: atribuir device e recursos isolados a cada sessão paralela](../../domains/software-0007/software/testes/appium-parallel-device-identidade-ports.md)
+547. [Appium: validar opções específicas de UiAutomator2 na versão usada](../../domains/software-0007/software/testes/appium-uiautomator2-android-boundary.md)
+548. [Appium: verificar pré-requisitos de XCUITest para sessão Apple](../../domains/software-0007/software/testes/appium-xcuitest-ios-boundary.md)
+549. [Appium: preferir locators semânticos estáveis quando disponíveis](../../domains/software-0007/software/testes/appium-locators-acessibilidade-contrato.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 440 notas 10–449 das tranches 2–10 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 449/2.000 notas válidas, restando 1.551 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 540 notas 10–549 das tranches 2–11 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 549/2.000 notas válidas, restando 1.451 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
