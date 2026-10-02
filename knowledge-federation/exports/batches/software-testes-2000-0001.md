@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **749 / 2.000 (37,45%)**
-- Gate automatizado: **749/749 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 13)
+- Notas efetivamente redigidas até agora: **849 / 2.000 (42,45%)**
+- Gate automatizado: **849/849 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 14)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/749**
-- Revisão factual por IA: **740/749**
-- Contabilizadas como válidas: **749/749**
+- Revisão factual humana: **9/849**
+- Revisão factual por IA: **840/849**
+- Contabilizadas como válidas: **849/849**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 740 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–13 (740 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 840 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–14 (840 notas, IDs 10–849) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-13.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-13.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-14.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 749 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.251 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 849 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.151 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -925,6 +925,138 @@
 748. [CTest: repetir teste para investigar instabilidade](../../domains/software-0007/software/testes/ctest-repeat-and-random-order.md)
 749. [CTest: versionar opções de run em Test Preset](../../domains/software-0007/software/testes/ctest-junit-preset-output.md)
 
+## Tranche 14 — frameworks de build, teste e tooling atuais (100 notas; revisão factual por IA registrada)
+
+### Bazel — testes herméticos, sinais de execução e resultados
+
+750. [Bazel: delimitar o contrato hermético do teste](../../domains/software-0007/software/testes/bazel-test-hermetic-runtime-boundary.md)
+751. [Bazel: fornecer arquivos de runtime por runfiles](../../domains/software-0007/software/testes/bazel-test-runtime-files-through-runfiles.md)
+752. [Bazel: implementar o contrato de shards no runner](../../domains/software-0007/software/testes/bazel-test-shard-contract.md)
+753. [Bazel: separar tamanho de teste e limite de tempo](../../domains/software-0007/software/testes/bazel-test-size-and-timeout.md)
+754. [Bazel: escolher saída de teste adequada ao diagnóstico](../../domains/software-0007/software/testes/bazel-test-output-as-diagnostic-policy.md)
+755. [Bazel: declarar variáveis de ambiente de teste](../../domains/software-0007/software/testes/bazel-test-env-declaration.md)
+756. [Bazel: encaminhar opções do runner com test_arg](../../domains/software-0007/software/testes/bazel-test-arg-forwarding.md)
+757. [Bazel: selecionar alvos de teste por padrões](../../domains/software-0007/software/testes/bazel-test-target-selection-patterns.md)
+758. [Bazel: consumir resultados de testes via BEP](../../domains/software-0007/software/testes/bazel-build-event-protocol-test-results.md)
+759. [Bazel: projetar testes compatíveis com execução remota](../../domains/software-0007/software/testes/bazel-remote-test-environment.md)
+
+### Maven Surefire e Failsafe — ciclo de vida, seleção e isolamento
+
+760. [Maven Surefire: executar testes unitários na fase test](../../domains/software-0007/software/testes/maven-surefire-test-phase.md)
+761. [Maven Failsafe: encerrar integração pela fase verify](../../domains/software-0007/software/testes/maven-failsafe-verify-lifecycle.md)
+762. [Maven Surefire: selecionar classe sem confundir o escopo](../../domains/software-0007/software/testes/maven-single-test-selection.md)
+763. [Maven Surefire: conferir engines da JUnit Platform](../../domains/software-0007/software/testes/maven-junit-platform-provider-boundary.md)
+764. [Maven Surefire: tornar convenções de nome parte da descoberta](../../domains/software-0007/software/testes/maven-test-class-naming-patterns.md)
+765. [Maven Surefire: escolher forkCount pelo isolamento exigido](../../domains/software-0007/software/testes/maven-fork-count-process-isolation.md)
+766. [Maven Surefire: habilitar paralelismo só com estado seguro](../../domains/software-0007/software/testes/maven-parallel-tests-thread-safety.md)
+767. [Maven: distinguir pular testes de pular sua compilação](../../domains/software-0007/software/testes/maven-skip-execution-vs-test-compilation.md)
+768. [Maven Surefire: registrar reruns como evidência de flakiness](../../domains/software-0007/software/testes/maven-rerun-flaky-evidence.md)
+769. [Maven Failsafe: separar relatórios de integração dos unitários](../../domains/software-0007/software/testes/maven-failsafe-report-separation.md)
+
+### Gradle — tasks Test, suites JVM e isolamento de execução
+
+770. [Gradle: configurar classes e classpath da task Test](../../domains/software-0007/software/testes/gradle-test-task-input-contract.md)
+771. [Gradle: ativar explicitamente a JUnit Platform](../../domains/software-0007/software/testes/gradle-select-junit-platform-engine.md)
+772. [Gradle: modelar integração como suite JVM separada](../../domains/software-0007/software/testes/gradle-jvm-test-suite-boundary.md)
+773. [Gradle: tornar a suite de integração alcançável por check](../../domains/software-0007/software/testes/gradle-check-dependency-for-suite.md)
+774. [Gradle: isolar recursos quando maxParallelForks aumenta](../../domains/software-0007/software/testes/gradle-parallel-forks-and-unique-resources.md)
+775. [Gradle: usar forkEvery para limitar estado por processo](../../domains/software-0007/software/testes/gradle-fork-every-process-reset.md)
+776. [Gradle: combinar filtro dirigido com descoberta visível](../../domains/software-0007/software/testes/gradle-test-filter-vs-discovery.md)
+777. [Gradle: tratar ausência de testes descobertos como falha](../../domains/software-0007/software/testes/gradle-fail-on-empty-test-discovery.md)
+778. [Gradle: preservar relatórios de cada task Test](../../domains/software-0007/software/testes/gradle-test-report-artifact-contract.md)
+779. [Gradle: não confundir ignoreFailures com teste aprovado](../../domains/software-0007/software/testes/gradle-ignore-failures-policy.md)
+
+### Django 6.1 — cliente, banco, views e isolamento de settings
+
+780. [Django: escolher TestCase quando a asserção acessa o banco](../../domains/software-0007/software/testes/django-testcase-database-isolation.md)
+781. [Django: usar Client sem iniciar servidor HTTP](../../domains/software-0007/software/testes/django-client-without-live-server.md)
+782. [Django: usar RequestFactory para testar a view diretamente](../../domains/software-0007/software/testes/django-requestfactory-middleware-boundary.md)
+783. [Django: reservar setUpTestData para dados imutáveis da classe](../../domains/software-0007/software/testes/django-setuptestdata-class-fixture.md)
+784. [Django: escolher LiveServerTestCase para cliente externo](../../domains/software-0007/software/testes/django-live-server-browser-boundary.md)
+785. [Django: usar assertNumQueries como orçamento local](../../domains/software-0007/software/testes/django-assert-num-queries-scope.md)
+786. [Django: inspecionar mensagens sem enviar e-mail real](../../domains/software-0007/software/testes/django-email-outbox-testing.md)
+787. [Django: limitar override_settings ao teste que o requer](../../domains/software-0007/software/testes/django-override-settings-scope.md)
+788. [Django: combinar descoberta padrão e labels explícitos](../../domains/software-0007/software/testes/django-test-discovery-and-labels.md)
+789. [Django: ativar verificação CSRF ao testar requests](../../domains/software-0007/software/testes/django-client-csrf-enforcement.md)
+
+### Android Espresso — sincronização, intents, listas e acessibilidade
+
+790. [Espresso: explicitar alvo, ação e resultado](../../domains/software-0007/software/testes/espresso-view-action-assertion-chain.md)
+791. [Espresso: reconhecer o limite da sincronização automática](../../domains/software-0007/software/testes/espresso-automatic-idle-boundary.md)
+792. [Espresso: registrar idling resource antes da primeira ação](../../domains/software-0007/software/testes/espresso-register-idling-resource-lifecycle.md)
+793. [Espresso-Intents: validar o intent que o app tentou enviar](../../domains/software-0007/software/testes/espresso-intents-validate-outgoing.md)
+794. [Espresso-Intents: simular resposta externa com intending](../../domains/software-0007/software/testes/espresso-intents-stub-response.md)
+795. [Espresso: localizar item de AdapterView com onData](../../domains/software-0007/software/testes/espresso-adapter-view-ondata-selection.md)
+796. [Espresso: usar RecyclerViewActions para itens reciclados](../../domains/software-0007/software/testes/espresso-recyclerview-actions.md)
+797. [Espresso: executar verificações de acessibilidade junto às ações](../../domains/software-0007/software/testes/espresso-accessibility-checks-at-actions.md)
+798. [Espresso: restringir supressões de findings de acessibilidade](../../domains/software-0007/software/testes/espresso-suppress-accessibility-narrowly.md)
+799. [Espresso-Web: testar WebView dentro de fluxo híbrido](../../domains/software-0007/software/testes/espresso-webview-testing-boundary.md)
+
+### Rails 8.1 — fixtures, integração HTTP, tempo, jobs e paralelismo
+
+800. [Rails: tratar fixtures como dados de referência explícitos](../../domains/software-0007/software/testes/rails-fixtures-stable-reference-data.md)
+801. [Rails: manter banco de teste separado do ambiente local](../../domains/software-0007/software/testes/rails-test-environment-database-boundary.md)
+802. [Rails: usar IntegrationTest para percorrer um fluxo HTTP](../../domains/software-0007/software/testes/rails-integration-test-full-stack-flow.md)
+803. [Rails: validar encoding e corpo de resposta JSON](../../domains/software-0007/software/testes/rails-integration-json-response-contract.md)
+804. [Rails: reservar system tests para comportamento de navegador](../../domains/software-0007/software/testes/rails-system-test-browser-scope.md)
+805. [Rails: isolar banco e recursos entre workers paralelos](../../domains/software-0007/software/testes/rails-parallel-process-test-isolation.md)
+806. [Rails: congelar o relógio com restauração garantida](../../domains/software-0007/software/testes/rails-freeze-time-helper-cleanup.md)
+807. [Rails: distinguir job enfileirado de job executado](../../domains/software-0007/software/testes/rails-activejob-enqueue-vs-perform.md)
+808. [Rails: separar conteúdo de mailer da entrega](../../domains/software-0007/software/testes/rails-mailer-generation-and-delivery-tests.md)
+809. [Rails: executar arquivo ou caso por linha durante diagnóstico](../../domains/software-0007/software/testes/rails-test-file-and-line-selection.md)
+
+### tox 4 — ambientes reproduzíveis, fatores e execução
+
+810. [tox: preferir configuração TOML em projetos novos](../../domains/software-0007/software/testes/tox-toml-over-deprecated-ini.md)
+811. [tox: tratar env_list como matriz padrão executável](../../domains/software-0007/software/testes/tox-env-list-is-default-matrix.md)
+812. [tox: compor ambientes por fatores sem expandir manualmente](../../domains/software-0007/software/testes/tox-factor-matrix-combinations.md)
+813. [tox: separar instalação de dependências e comando de teste](../../domains/software-0007/software/testes/tox-deps-commands-and-posargs.md)
+814. [tox: distinguir executar ambientes em sequência de paralelo](../../domains/software-0007/software/testes/tox-env-selection-sequential-vs-parallel.md)
+815. [tox: controlar variáveis herdadas com pass_env](../../domains/software-0007/software/testes/tox-pass-env-explicit-contract.md)
+816. [tox: inspecionar configuração resolvida antes de editar](../../domains/software-0007/software/testes/tox-config-command-as-debugging-tool.md)
+817. [tox: usar exec para ferramenta sem executar os hooks do ambiente](../../domains/software-0007/software/testes/tox-exec-is-not-configured-test-run.md)
+818. [tox: dar basetemp distinto a cada pytest paralelo](../../domains/software-0007/software/testes/tox-parallel-pytest-temp-isolation.md)
+819. [tox: verificar o artefato instalado e não só o checkout](../../domains/software-0007/software/testes/tox-package-under-test-contract.md)
+
+### Nox — sessões Python, parametrização e seleção de tarefas
+
+820. [Nox: modelar versões Python como sessões separadas](../../domains/software-0007/software/testes/nox-python-version-matrix.md)
+821. [Nox: parametrizar entradas de sessão sem duplicar funções](../../domains/software-0007/software/testes/nox-parametrize-session-axis.md)
+822. [Nox: escolher reuso de virtualenv sem perder reprodutibilidade](../../domains/software-0007/software/testes/nox-recreate-vs-reuse-venv.md)
+823. [Nox: dispensar virtualenv apenas quando o ambiente atual for parte do contrato](../../domains/software-0007/software/testes/nox-no-virtualenv-scope.md)
+824. [Nox: tirar tarefas auxiliares da execução padrão](../../domains/software-0007/software/testes/nox-default-session-surface.md)
+825. [Nox: declarar dependências entre sessões com requires](../../domains/software-0007/software/testes/nox-requires-session-dependency-order.md)
+826. [Nox: selecionar sessões por tags em jobs especializados](../../domains/software-0007/software/testes/nox-tag-filtered-ci-selection.md)
+827. [Nox: separar dependências instaladas do executável chamado](../../domains/software-0007/software/testes/nox-session-install-run-boundary.md)
+828. [Nox: marcar comando externo ao ambiente como exceção](../../domains/software-0007/software/testes/nox-external-command-boundary.md)
+829. [Nox: encaminhar argumentos de diagnóstico sem editar o noxfile](../../domains/software-0007/software/testes/nox-posargs-test-filter-forwarding.md)
+
+### Laravel 13 — HTTP, banco e fakes de dependências
+
+830. [Laravel: escolher Unit ou Feature pelo bootstrap necessário](../../domains/software-0007/software/testes/laravel-unit-vs-feature-bootstrap.md)
+831. [Laravel: isolar configuração do ambiente testing](../../domains/software-0007/software/testes/laravel-testing-environment-boundary.md)
+832. [Laravel: entender quando RefreshDatabase usa transação](../../domains/software-0007/software/testes/laravel-refresh-database-transaction-contract.md)
+833. [Laravel: testar rota com request simulado internamente](../../domains/software-0007/software/testes/laravel-http-test-internal-request.md)
+834. [Laravel: validar contrato JSON por caminho sem comparar payload inteiro](../../domains/software-0007/software/testes/laravel-json-path-assertions.md)
+835. [Laravel: impedir tráfego HTTP real com Http::fake](../../domains/software-0007/software/testes/laravel-http-client-fake-prevent-network.md)
+836. [Laravel: usar Event fake sem ocultar listener necessário](../../domains/software-0007/software/testes/laravel-event-fake-scope.md)
+837. [Laravel: testar dispatch de job com queue fake](../../domains/software-0007/software/testes/laravel-queue-fake-job-contract.md)
+838. [Laravel: verificar Mailable sem entregar e-mail externo](../../domains/software-0007/software/testes/laravel-mail-fake-content-vs-delivery.md)
+839. [Laravel: isolar bancos de testes paralelos por processo](../../domains/software-0007/software/testes/laravel-parallel-test-database-tokens.md)
+
+### Python unittest — descoberta, fixtures, subtests e mocks
+
+840. [Python unittest: alinhar nomes de arquivos à descoberta](../../domains/software-0007/software/testes/python-unittest-discovery-names.md)
+841. [Python unittest: usar subTest para variações que compartilham contexto](../../domains/software-0007/software/testes/python-unittest-subtest-dimensions.md)
+842. [Python unittest: escolher setup por caso ou por classe](../../domains/software-0007/software/testes/python-unittest-setuptestdata-lifecycle.md)
+843. [Python unittest: registrar cleanup junto à criação do recurso](../../domains/software-0007/software/testes/python-unittest-addcleanup-lifo.md)
+844. [Python unittest: afirmar tipo e mensagem relevante de exceção](../../domains/software-0007/software/testes/python-unittest-assert-raises-regex.md)
+845. [Python unittest: distinguir caso indisponível de falha prevista](../../domains/software-0007/software/testes/python-unittest-skip-vs-expected-failure.md)
+846. [Python unittest.mock: aplicar patch no namespace consultado](../../domains/software-0007/software/testes/python-mock-patch-lookup-namespace.md)
+847. [Python unittest.mock: restringir mock com autospec](../../domains/software-0007/software/testes/python-mock-autospec-interface-check.md)
+848. [Python unittest: isolar ciclo de vida de caso assíncrono](../../domains/software-0007/software/testes/python-isolated-asyncio-testcase-lifecycle.md)
+849. [Python unittest: capturar logs do escopo da operação](../../domains/software-0007/software/testes/python-unittest-assertlogs-context.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 740 notas 10–749 das tranches 2–13 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 749/2.000 notas válidas, restando 1.251 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 840 notas 10–849 das tranches 2–14 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 849/2.000 notas válidas, restando 1.151 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

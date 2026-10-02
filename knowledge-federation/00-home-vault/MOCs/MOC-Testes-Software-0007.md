@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 749 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 749 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 740 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 849 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 849 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 840 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -930,6 +930,138 @@
 748. [[ctest-repeat-and-random-order]] — CTest oferece opções de repetição e ordem aleatória para exercitar casos várias vezes no mesmo run.
 749. [[ctest-junit-preset-output]] — Test Preset guarda opções de execução reutilizáveis e CTest pode gravar saída JUnit com `--output-junit`.
 
+## Tranche 14 — frameworks de build, teste e tooling atuais
+
+### Bazel — testes herméticos, sinais de execução e resultados
+
+750. [[bazel-test-hermetic-runtime-boundary]] — Um teste executado por Bazel deve depender de fontes declaradas, produtos de build declarados e recursos cujo comportamento o runner garante.
+751. [[bazel-test-runtime-files-through-runfiles]] — Arquivos usados durante a execução devem chegar ao teste como entradas de runtime do alvo, e não por caminhos presumidos na árvore de saída.
+752. [[bazel-test-shard-contract]] — `shard_count` solicita shards, mas cabe ao test runner suportar a partição e usar os índices de shard que o Bazel fornece.
+753. [[bazel-test-size-and-timeout]] — `size` informa a demanda de recursos presumida, enquanto `timeout` define a classe de duração; os atributos são relacionados, mas não intercambiáveis.
+754. [[bazel-test-output-as-diagnostic-policy]] — `--test_output` controla como stdout e stderr dos testes aparecem durante `bazel test`, com modos úteis para resumo, falhas, tudo ou transmissão ao vivo.
+755. [[bazel-test-env-declaration]] — `--test_env` injeta uma variável no ambiente do teste; especificar valor fixa esse valor, enquanto omiti-lo herda o valor do shell que iniciou Bazel.
+756. [[bazel-test-arg-forwarding]] — `--test_arg` encaminha argumentos ao programa de teste, permitindo usar filtros próprios sem confundir opções do framework com flags de Bazel.
+757. [[bazel-test-target-selection-patterns]] — `bazel test` seleciona regras de teste por labels e padrões de targets, não por nomes internos de métodos de qualquer framework.
+758. [[bazel-build-event-protocol-test-results]] — Build Event Protocol representa a invocação como eventos estruturados e inclui resultados e progresso de testes para ferramentas consumidoras.
+759. [[bazel-remote-test-environment]] — Execução remota distribui ações de build e teste em workers, portanto o teste não deve depender de estado local não declarado.
+
+### Maven Surefire e Failsafe — ciclo de vida, seleção e isolamento
+
+760. [[maven-surefire-test-phase]] — Surefire executa testes unitários na fase `test` do ciclo Maven e produz relatórios texto e XML no diretório padrão do projeto.
+761. [[maven-failsafe-verify-lifecycle]] — Failsafe separa execução de testes de integração em `integration-test` da avaliação final de resultados em `verify`.
+762. [[maven-single-test-selection]] — A propriedade `-Dtest` seleciona classes ou métodos para Surefire, e deve ser tratada como filtro de diagnóstico, não como execução integral.
+763. [[maven-junit-platform-provider-boundary]] — A integração com JUnit Platform usa engines presentes nas dependências para executar frameworks compatíveis; no Surefire 3.6.0 o provider unificado é documentado.
+764. [[maven-test-class-naming-patterns]] — Os padrões de inclusão do Surefire determinam quais classes compiladas entram na execução padrão.
+765. [[maven-fork-count-process-isolation]] — `forkCount` limita quantas JVMs de teste são abertas em paralelo; valor zero executa no processo Maven, enquanto valor positivo usa processos separados.
+766. [[maven-parallel-tests-thread-safety]] — Surefire não executa testes em paralelo por padrão; paralelismo precisa ser configurado segundo provider e estrutura de testes.
+767. [[maven-skip-execution-vs-test-compilation]] — `-DskipTests` pula a execução dos testes, enquanto `-Dmaven.test.skip=true` também pode pular a compilação do código de teste.
+768. [[maven-rerun-flaky-evidence]] — `rerunFailingTestsCount` repete falhas até aprovação ou esgotamento e o Surefire marca um caso que passa depois de falhar como flaky.
+769. [[maven-failsafe-report-separation]] — Failsafe registra resultados de integração em formato compatível com Surefire, mas seus relatórios ficam em diretório próprio.
+
+### Gradle — tasks Test, suites JVM e isolamento de execução
+
+770. [[gradle-test-task-input-contract]] — Uma task Gradle do tipo `Test` precisa dos diretórios de classes de teste e do classpath de execução para descobrir e executar casos JVM.
+771. [[gradle-select-junit-platform-engine]] — Adicionar uma dependência de teste não basta para selecionar o mecanismo de execução; a task `Test` deve usar a plataforma apropriada ao framework.
+772. [[gradle-jvm-test-suite-boundary]] — O plugin JVM Test Suite permite agrupar testes por propósito, com source, dependências, framework e task próprios.
+773. [[gradle-check-dependency-for-suite]] — Uma suite de teste adicional não passa a rodar em `check` apenas por existir; seu vínculo com o lifecycle deve ser declarado.
+774. [[gradle-parallel-forks-and-unique-resources]] — `maxParallelForks` define o máximo de processos de teste concorrentes e seu valor padrão é um.
+775. [[gradle-fork-every-process-reset]] — `forkEvery` reinicia o processo de teste depois de certo número de classes ou definições executadas.
+776. [[gradle-test-filter-vs-discovery]] — O filtro da task permite reduzir quais testes são executados, enquanto a descoberta identifica classes e métodos reconhecidos pelo framework.
+777. [[gradle-fail-on-empty-test-discovery]] — `failOnNoDiscoveredTests` pode impedir que uma task com fontes de teste existentes termine silenciosamente sem descobrir nenhum teste.
+778. [[gradle-test-report-artifact-contract]] — Cada task de teste produz resultados que o Gradle pode converter em relatórios, e suites separadas permitem inspecionar resultados por finalidade.
+779. [[gradle-ignore-failures-policy]] — `ignoreFailures` permite que o build prossiga após falha da task Test, mas não altera o resultado individual dos testes.
+
+### Django 6.1 — cliente, banco, views e isolamento de settings
+
+780. [[django-testcase-database-isolation]] — `django.test.TestCase` executa cada teste com isolamento transacional e é a base adequada para a maioria dos casos que consultam ou alteram o banco.
+781. [[django-client-without-live-server]] — O `django.test.Client` simula requisições à aplicação sem exigir que um servidor de desenvolvimento esteja rodando.
+782. [[django-requestfactory-middleware-boundary]] — `RequestFactory` cria objetos request para passar diretamente a uma view, sem executar o ciclo de roteamento e middleware.
+783. [[django-setuptestdata-class-fixture]] — `setUpTestData()` prepara dados de banco uma vez por classe `TestCase`, ao passo que `setUp()` roda antes de cada método de teste.
+784. [[django-live-server-browser-boundary]] — `LiveServerTestCase` inicia um servidor de teste em thread para permitir que Selenium ou outro cliente real interaja com a aplicação.
+785. [[django-assert-num-queries-scope]] — `assertNumQueries` verifica quantas queries SQL foram executadas dentro de um bloco ou por uma operação específica do teste.
+786. [[django-email-outbox-testing]] — Durante testes, Django fornece uma caixa de saída em memória para observar mensagens enviadas pelo código da aplicação.
+787. [[django-override-settings-scope]] — `override_settings` substitui temporariamente valores de settings e restaura o contexto ao final do escopo gerenciado.
+788. [[django-test-discovery-and-labels]] — O comando `manage.py test` descobre por padrão módulos que seguem o padrão de nomes de teste e aceita labels para reduzir o escopo.
+789. [[django-client-csrf-enforcement]] — O cliente Django desativa verificações CSRF por padrão, então um POST aceito pelo Client não prova sozinho que a proteção foi aplicada.
+
+### Android Espresso — sincronização, intents, listas e acessibilidade
+
+790. [[espresso-view-action-assertion-chain]] — O fluxo central do Espresso separa a seleção de uma view, a ação do usuário e a assertion sobre o estado apresentado.
+791. [[espresso-automatic-idle-boundary]] — Espresso aguarda condições conhecidas da fila de UI e recursos de idling registrados, mas não entende automaticamente toda tarefa de background.
+792. [[espresso-register-idling-resource-lifecycle]] — Os benefícios de sincronização começam quando Espresso consulta o recurso; registrar antecipadamente evita uma primeira ação que passe sem observá-lo.
+793. [[espresso-intents-validate-outgoing]] — `intended()` verifica se um intent de saída que corresponde ao matcher foi registrado pelo Espresso-Intents.
+794. [[espresso-intents-stub-response]] — `intending()` configura uma resposta para intents de saída correspondentes e permite testar o fluxo local sem abrir o aplicativo externo.
+795. [[espresso-adapter-view-ondata-selection]] — `onData()` procura o objeto de dados que alimenta uma `AdapterView` e pode rolar a lista até tornar a linha correspondente visível.
+796. [[espresso-recyclerview-actions]] — `RecyclerViewActions` oferece ações de lista para localizar e operar itens que podem não estar materializados na tela.
+797. [[espresso-accessibility-checks-at-actions]] — `AccessibilityChecks.enable()` integra verificações do Android Accessibility Test Framework às ações de view feitas pelos testes Espresso.
+798. [[espresso-suppress-accessibility-narrowly]] — O matcher de supressão deve identificar um finding específico, em vez de silenciar toda uma categoria ou tela.
+799. [[espresso-webview-testing-boundary]] — Espresso-Web é apropriado para exercitar o WebView como parte de uma aplicação híbrida e pode ser combinado a operações Espresso em views nativas.
+
+### Rails 8.1 — fixtures, integração HTTP, tempo, jobs e paralelismo
+
+800. [[rails-fixtures-stable-reference-data]] — Fixtures Active Record armazenam dados de teste declarativos e permitem que casos usem um conjunto conhecido de registros.
+801. [[rails-test-environment-database-boundary]] — Rails executa testes sob `RAILS_ENV=test` e configura um banco de teste distinto conforme a configuração da aplicação.
+802. [[rails-integration-test-full-stack-flow]] — `ActionDispatch::IntegrationTest` exercita vários controllers e o caminho completo entre dispatcher, aplicação e banco.
+803. [[rails-integration-json-response-contract]] — `IntegrationTest` permite declarar formato de request e inspecionar corpo parseado para testar um endpoint JSON dentro da aplicação.
+804. [[rails-system-test-browser-scope]] — Rails system tests usam Capybara para exercitar a aplicação no browser, inclusive comportamento JavaScript percebido pelo usuário.
+805. [[rails-parallel-process-test-isolation]] — Rails pode distribuir testes por processos e criar bancos de teste correspondentes a workers quando a configuração de banco está disponível.
+806. [[rails-freeze-time-helper-cleanup]] — `travel_to` e `freeze_time` substituem fontes de tempo relevantes para testar vencimentos e agendamentos sem esperar pelo relógio real.
+807. [[rails-activejob-enqueue-vs-perform]] — Active Job oferece helpers de teste para observar jobs enfileirados e executar jobs sob demanda com o adapter de teste.
+808. [[rails-mailer-generation-and-delivery-tests]] — Rails oferece testes de mailer para verificar mensagem construída e testes de integração para o fluxo de entrega acionado por outra camada.
+809. [[rails-test-file-and-line-selection]] — O comando `bin/rails test` aceita um caminho de teste e seletores mais específicos para encurtar o ciclo de investigação.
+
+### tox 4 — ambientes reproduzíveis, fatores e execução
+
+810. [[tox-toml-over-deprecated-ini]] — tox 4 aceita TOML nativo e mantém INI por compatibilidade, mas a documentação marca INI como obsoleto e congelado.
+811. [[tox-env-list-is-default-matrix]] — `env_list` define ambientes que tox seleciona por padrão quando a execução não recebe um escopo mais restrito.
+812. [[tox-factor-matrix-combinations]] — Fatores são segmentos do nome do ambiente e permitem condicionar dependências ou comandos por combinação, incluindo plataforma.
+813. [[tox-deps-commands-and-posargs]] — Configuração tox define dependências de ambiente e comandos a executar, podendo encaminhar argumentos do usuário ao runner.
+814. [[tox-env-selection-sequential-vs-parallel]] — `tox run -e` executa ambientes escolhidos segundo a ordem especificada, enquanto o subcomando `tox parallel` executa em modo concorrente.
+815. [[tox-pass-env-explicit-contract]] — `pass_env` seleciona variáveis do ambiente do processo que podem atravessar para a execução do ambiente tox.
+816. [[tox-config-command-as-debugging-tool]] — O comando `tox config` mostra valores efetivos de um ambiente, incluindo herança e substituições aplicadas.
+817. [[tox-exec-is-not-configured-test-run]] — `tox exec` roda um comando pontual no ambiente selecionado, sem executar `commands`, `commands_pre` ou `commands_post`, e sem instalar pacote.
+818. [[tox-parallel-pytest-temp-isolation]] — Quando tox paraleliza ambientes que executam pytest, cada invocação deve usar diretório temporário próprio para evitar colisões.
+819. [[tox-package-under-test-contract]] — tox pode preparar um pacote do projeto e instalá-lo no ambiente antes de rodar os comandos configurados.
+
+### Nox — sessões Python, parametrização e seleção de tarefas
+
+820. [[nox-python-version-matrix]] — Uma sessão Nox pode declarar vários intérpretes e gerar uma execução isolada para cada versão suportada.
+821. [[nox-parametrize-session-axis]] — `nox.parametrize` expande uma função de sessão em invocações distintas com argumentos definidos pela matriz.
+822. [[nox-recreate-vs-reuse-venv]] — Por padrão, Nox recria virtualenvs a cada execução; reuso é opção consciente para acelerar ciclos locais.
+823. [[nox-no-virtualenv-scope]] — `python=False` ou backend `none` executa sessão sem criar virtualenv gerenciada pelo Nox.
+824. [[nox-default-session-surface]] — Por padrão Nox executa todas as sessões configuradas, a menos que opções ou `default=False` alterem a seleção padrão.
+825. [[nox-requires-session-dependency-order]] — `requires` permite que uma sessão dependa de outras, cuja ordem de execução Nox resolve de forma estável e topológica.
+826. [[nox-tag-filtered-ci-selection]] — Sessões Nox aceitam tags e a CLI pode filtrar sessões por tags ou expressão de keywords.
+827. [[nox-session-install-run-boundary]] — `session.install()` prepara pacotes no ambiente da sessão, enquanto `session.run()` invoca comandos dentro do contexto daquela sessão.
+828. [[nox-external-command-boundary]] — `session.run` espera comando disponível no ambiente da sessão; executável do host deve ser autorizado de forma explícita quando necessário.
+829. [[nox-posargs-test-filter-forwarding]] — Nox expõe argumentos posicionais da sessão para que o chamador acrescente opções do test runner.
+
+### Laravel 13 — HTTP, banco e fakes de dependências
+
+830. [[laravel-unit-vs-feature-bootstrap]] — Testes Unit não iniciam a aplicação Laravel e por isso não acessam automaticamente banco ou serviços do framework; Feature tests podem atravessar objetos e requests HTTP.
+831. [[laravel-testing-environment-boundary]] — Laravel configura ambiente de teste por meio da configuração de PHPUnit e fornece arquivo `.env.testing` para valores específicos de teste.
+832. [[laravel-refresh-database-transaction-contract]] — `RefreshDatabase` limpa o estado entre testes e, se o schema já estiver atualizado, executa o teste em transação sem migrar novamente.
+833. [[laravel-http-test-internal-request]] — Os métodos de HTTP tests exercitam a aplicação sem emitir uma requisição real pela rede e retornam uma resposta de teste com assertions.
+834. [[laravel-json-path-assertions]] — Fluent JSON assertions permitem verificar caminho, estrutura e valores selecionados sem fixar detalhes irrelevantes do documento completo.
+835. [[laravel-http-client-fake-prevent-network]] — `Http::fake` substitui respostas de saída do HTTP client Laravel e pode evitar que teste faça requests para serviços externos.
+836. [[laravel-event-fake-scope]] — Fakes de eventos permitem verificar dispatch sem executar listeners reais que podem enviar notificações, chamar rede ou alterar outros sistemas.
+837. [[laravel-queue-fake-job-contract]] — `Queue::fake()` permite inspecionar jobs enviados à fila sem iniciar worker nem usar o backend real.
+838. [[laravel-mail-fake-content-vs-delivery]] — `Mail::fake()` registra mailables enviados para que testes verifiquem destinatário e conteúdo sem acessar transporte externo.
+839. [[laravel-parallel-test-database-tokens]] — Ao executar testes em paralelo, Laravel cria e migra bancos de teste por processo usando um token único no nome.
+
+### Python unittest — descoberta, fixtures, subtests e mocks
+
+840. [[python-unittest-discovery-names]] — `unittest` descobre métodos pelo padrão `test` e o discovery recursivo usa convenções de nomes de arquivos e pacotes.
+841. [[python-unittest-subtest-dimensions]] — `subTest()` marca uma subexecução com parâmetros durante o mesmo método e permite identificar qual combinação falhou.
+842. [[python-unittest-setuptestdata-lifecycle]] — `setUp()` e `tearDown()` executam em torno de cada método de teste, enquanto setup de classe é compartilhado por métodos da mesma classe.
+843. [[python-unittest-addcleanup-lifo]] — `addCleanup()` registra funções que rodam em ordem inversa de registro ao finalizar o caso, inclusive quando `setUp()` falha depois do registro.
+844. [[python-unittest-assert-raises-regex]] — `assertRaisesRegex` verifica que uma chamada lança o tipo de exceção esperado e que sua mensagem combina com uma expressão regular.
+845. [[python-unittest-skip-vs-expected-failure]] — Skip remove temporariamente um teste da execução com motivo; `expectedFailure` marca que o caso deve falhar e registra sucesso inesperado como resultado distinto.
+846. [[python-mock-patch-lookup-namespace]] — `patch()` substitui um objeto no namespace em que o código sob teste procura o nome, não necessariamente onde a classe foi originalmente definida.
+847. [[python-mock-autospec-interface-check]] — `autospec` cria mocks guiados pela assinatura ou interface do objeto real e pode rejeitar atributos que não existem.
+848. [[python-isolated-asyncio-testcase-lifecycle]] — `IsolatedAsyncioTestCase` permite escrever setup, teste e teardown assíncronos mantendo o contrato de TestCase.
+849. [[python-unittest-assertlogs-context]] — `assertLogs()` captura registros de logging de um logger durante um bloco e permite verificar nível e conteúdo sem interceptar stdout.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 749/749 notas e as 749 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 740 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (749 notas substantivas; 1.251 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-13.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 849/849 notas e as 849 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 840 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (849 notas substantivas; 1.151 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md) e [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
