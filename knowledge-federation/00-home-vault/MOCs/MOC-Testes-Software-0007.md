@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 349 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 349 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 340 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 449 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 449 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 440 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -430,6 +430,129 @@
 - [[spring-active-profiles-test-configuration]] — Spring Boot: declarar perfil de teste sem depender do ambiente local.
 - [[spring-webtestclient-mock-vs-server]] — Spring Boot: testar WebTestClient em mock e servidor.
 - [[spring-graphql-test-slice-boundary]] — Spring Boot: delimitar @GraphQlTest e integração GraphQL.
+
+## Tranche 10 — frameworks, infraestrutura e ferramentas (notas 350–449)
+
+### Selenium WebDriver: sincronização e interações no navegador
+- [[selenium-explicit-wait-condicao-observavel]] — Uma espera explícita consulta uma condição definida até que ela seja verdadeira ou que o timeout configurado expire.
+- [[selenium-nao-misturar-esperas-implicit-explicit]] — A espera implícita afeta buscas de elementos, enquanto a explícita aguarda uma condição específica definida pelo teste.
+- [[selenium-locators-identidade-estavel]] — Locators traduzem uma propriedade observável do DOM em um alvo para interações WebDriver.
+- [[selenium-findelement-find-elements-ausencia]] — findElement retorna um elemento correspondente e sinaliza ausência; findElements retorna uma lista, que pode estar vazia.
+- [[selenium-stale-element-relocalizar-apos-render]] — Uma referência WebElement pode ficar obsoleta quando o nó original deixa de pertencer ao DOM ativo.
+- [[selenium-frame-trocar-e-restaurar-contexto]] — O driver procura elementos no contexto de navegação atualmente selecionado; conteúdo em iframe requer troca explícita para o frame.
+- [[selenium-nova-janela-diferenca-handles]] — WebDriver representa janelas e abas por handles únicos dentro da sessão e não distingue conceitualmente as duas formas.
+- [[selenium-alert-wait-accept-dismiss]] — WebDriver expõe alertas, confirmações e prompts nativos por uma API específica após selecionar o alerta ativo.
+- [[selenium-actions-sequencia-e-liberacao-input]] — Actions API encadeia comandos de dispositivos de entrada, como teclado, ponteiro e roda, para interações de baixo nível.
+- [[selenium-elemento-interativo-validar-estado]] — Comandos de elemento incluem click, send keys, clear e ações apropriadas ao tipo do controle.
+
+### JUnit 6.1.3: parametrização, ciclo de vida e execução
+- [[junit-parametrized-test-casos-complementares]] — @ParameterizedTest executa um método repetidamente com argumentos fornecidos por uma fonte declarada.
+- [[junit-methodsource-ordem-argumentos]] — MethodSource fornece os argumentos de cada invocação a partir de uma factory method compatível.
+- [[junit-dynamic-test-factory-nao-e-caso]] — @TestFactory produz nós DynamicTest ou DynamicContainer em tempo de execução; a factory não é em si um caso de teste.
+- [[junit-per-class-estado-compartilhado]] — O lifecycle padrão cria uma instância por método; PER_CLASS reutiliza uma instância para métodos da mesma classe.
+- [[junit-parallel-opt-in-modos-e-sincronizacao]] — A execução paralela do Jupiter é opt-in; habilitar o parâmetro global não torna todos os nós concorrentes por padrão.
+- [[junit-extension-parameter-resolver-explicito]] — Extensões Jupiter podem resolver parâmetros de métodos e construtores quando um ParameterResolver registrado declara suporte.
+- [[junit-tempdir-escopo-e-limpeza]] — A extensão TempDir fornece diretório temporário a um campo ou parâmetro de teste.
+- [[junit-tags-filtrar-testes-por-categoria]] — Tags identificam testes e podem ser usadas pelo runner para incluir ou excluir grupos durante uma execução.
+- [[junit-condicional-nao-substitui-diagnostico]] — Anotações condicionais e @Disabled controlam se um teste é executado em determinado ambiente ou contexto.
+- [[junit-repeated-test-invocacoes-nomeadas]] — @RepeatedTest agenda invocações repetidas de um método e pode expor o número atual e total pelo contexto de repetição.
+
+### Mockito: isolamento de colaboradores e verificação de comportamento
+- [[mockito-verificar-contrato-nao-roteiro-interno]] — verify verifica se uma interação esperada ocorreu e pode limitar a quantidade de chamadas.
+- [[mockito-stubbing-nao-duplicar-verificacao]] — Stubbing define a resposta de um mock; verificar uma invocação stubada costuma ser redundante quando a saída do sistema já comprova seu uso.
+- [[mockito-argumentcaptor-apos-verificacao]] — ArgumentCaptor guarda o argumento passado para uma chamada verificada para permitir assertions específicas sobre seus campos.
+- [[mockito-matchers-consistencia-em-todos-argumentos]] — Quando um argumento de uma invocação usa matcher, todos os argumentos dessa mesma invocação precisam ser representados por matchers.
+- [[mockito-strict-stubs-detectar-setup-morto]] — STRICT_STUBS ajuda a detectar stubs não utilizados e incompatibilidades entre argumentos configurados e invocações reais.
+- [[mockito-lenient-apenas-no-stub-excepcional]] — Lenient permite que um stub escape de verificações estritas como unused stubbing ou argumento potencialmente incorreto.
+- [[mockito-spy-metodo-real-e-efeitos-colaterais]] — Um spy delega chamadas não stubadas ao objeto real, diferentemente do mock que usa comportamento simulado.
+- [[mockito-stubbing-consecutivo-modelar-retentativas]] — Stubbing consecutivo define respostas diferentes para chamadas subsequentes do mesmo método.
+- [[mockito-nao-compartilhar-mock-mutavel-entre-testes]] — reset apaga stubbing e interações de um mock, enquanto clearInvocations limpa interações sem remover o comportamento configurado.
+- [[mockito-junit-jupiter-lifecycle-explicito]] — MockitoExtension integra criação de mocks anotados e sessão Mockito ao lifecycle de testes Jupiter.
+
+### Jest 30.5: execução assíncrona, mocks e snapshots
+- [[jest-retornar-promise-para-aguardar-assercoes]] — Jest considera uma função assíncrona concluída quando sua Promise retornada resolve ou rejeita.
+- [[jest-rejeicoes-async-com-rejects]] — Matchers .rejects permitem verificar o valor ou erro de uma Promise rejeitada e precisam ser retornados ou aguardados.
+- [[jest-hooks-escopo-e-ordem]] — beforeAll, beforeEach, afterEach e afterAll organizam setup e cleanup no escopo em que são declarados.
+- [[jest-beforeall-nao-compartilha-estado-entre-arquivos]] — beforeAll executa uma vez antes dos testes do escopo atual, não como banco de estado universal entre arquivos.
+- [[jest-mock-function-calls-results-context]] — Mock functions registram chamadas, resultados, instâncias e contexto this para assertions sobre colaboração.
+- [[jest-clear-reset-restore-mocks-diferencas]] — Clear apaga histórico, reset também substitui implementação configurada, e restore devolve implementação original quando a função é spy.
+- [[jest-fake-timers-timers-pendentes-recursivos]] — Fake timers permitem avançar relógio JavaScript sem esperar o tempo real passar.
+- [[jest-mock-modulos-esm-commonjs]] — O fluxo de mock de módulo depende do sistema de módulos e da ordem em que imports estáticos são avaliados.
+- [[jest-snapshot-revisao-antes-de-atualizar]] — Snapshot armazena uma representação serializada para comparar execuções futuras e detectar mudanças de saída.
+- [[jest-coverage-thresholds-nao-medir-qualidade-sozinhos]] — A configuração pode impor thresholds de cobertura globais ou para caminhos específicos e falhar quando o limite não é atingido.
+
+### Vitest: mocks, isolamento e configuração de projetos
+- [[vitest-vi-mock-hoisting-importacao]] — vi.mock é elevado pelo transformador do Vitest para executar antes dos imports estáticos do módulo de teste.
+- [[vitest-domock-mock-runtime-import]] — vi.doMock registra um mock em runtime e não é içado como vi.mock.
+- [[vitest-setupfiles-mocks-modulos-cache]] — Arquivos setupFiles são executados antes dos arquivos de teste e podem carregar módulos antes de um mock local.
+- [[vitest-fake-timers-restaurar-relogio]] — vi.useFakeTimers substitui timers do ambiente selecionado até que o teste volte ao relógio real.
+- [[vitest-setsystemtime-nao-disparar-timers]] — vi.setSystemTime altera a data percebida pelo código, mas não dispara por si só timers agendados.
+- [[vitest-browser-mode-spy-namespace]] — Em Browser Mode, módulos ESM nativos têm namespace de importação que não pode ser substituído como um objeto mutável comum.
+- [[vitest-projects-inheritance-opcoes-globais]] — Vitest Projects permite agrupar conjuntos de testes com opções próprias; projetos inline podem herdar configuração conforme extends.
+- [[vitest-isolation-parallelism-tradeoff]] — Por padrão, o pool do Vitest isola arquivos de teste; configuração sem isolamento pode compartilhar estado de ambiente e módulos.
+- [[vitest-coverage-provider-relatorio-declarado]] — Vitest suporta cobertura via provider nativo v8 ou instrumentação Istanbul, com configuração de reporters.
+- [[vitest-snapshot-diff-revisao-intencional]] — Snapshots registram uma saída serializada e falham quando a nova saída difere do baseline salvo.
+
+### Testcontainers para Java: readiness, ciclo de vida e isolamento
+- [[testcontainers-startup-check-vs-readiness]] — Startup checks detectam o estado de inicialização do container; wait strategies aguardam uma condição de readiness do serviço.
+- [[testcontainers-wait-endpoint-readiness-contract]] — A wait strategy pode observar condições diferentes, incluindo porta, resposta HTTP, healthcheck e logs.
+- [[testcontainers-junit-static-vs-instance-containers]] — A extensão Jupiter associa containers estáticos ao ciclo de vida da classe e containers de instância ao lifecycle por teste.
+- [[testcontainers-junit5-parallel-extension-limit]] — A integração JUnit Jupiter de Testcontainers documenta que execução paralela não é suportada pela extensão.
+- [[testcontainers-manual-lifecycle-cleanup]] — Controle manual permite iniciar recursos fora do lifecycle automático de uma extensão e usá-los em escopo explícito.
+- [[testcontainers-jdbc-url-configuracao-reprodutivel]] — O suporte JDBC permite solicitar bancos Testcontainers por URL jdbc:tc e associar o driver e módulo apropriados.
+- [[testcontainers-reuse-opt-in-estado-persistente]] — Reusable Containers requer opt-in e configuração idêntica para que uma execução reutilize o recurso anterior.
+- [[testcontainers-compose-espera-servico-especifico]] — A integração com Compose permite identificar serviços expostos e associar uma wait strategy ao serviço relevante.
+- [[testcontainers-pinar-imagem-para-reprodutibilidade]] — Uma tag específica reduz mudanças inesperadas da imagem, enquanto um digest pode identificar exatamente o artefato resolvido.
+- [[testcontainers-startup-parallel-independencia-recursos]] — Opções avançadas permitem reduzir tempo de inicialização de containers quando o setup possui serviços independentes.
+
+### Grafana k6: modelagem de carga, métricas e thresholds
+- [[k6-checks-precisam-threshold-para-falhar]] — Checks registram se uma condição observável passou, mas checks falhados não abortam nem reprovam sozinhos o teste.
+- [[k6-thresholds-criterios-operacionais-pass-fail]] — Thresholds expressam condições de aprovação sobre métricas e podem afetar o resultado final de uma execução.
+- [[k6-scenarios-executors-workload-nomeado]] — Scenario descreve como executar funções de teste e escolhe executor, duração, usuários ou taxa de iteração.
+- [[k6-open-arrival-closed-vus]] — Executors baseados em VUs mantêm usuários virtuais que iniciam nova iteração após a anterior; arrival-rate agenda iterações por taxa.
+- [[k6-dropped-iterations-capacidade-vus]] — Arrival-rate executors podem deixar de iniciar iterações quando não há VUs disponíveis ou o tempo máximo termina.
+- [[k6-setup-teardown-dados-compartilhados]] — setup prepara dados antes dos cenários; seus dados JSON são copiados para cada VU e para teardown, não compartilhados como um objeto JavaScript mutável.
+- [[k6-tags-segmentar-metricas-sem-alta-cardinalidade]] — Tags categorizam requests, checks, thresholds e métricas customizadas para filtragem e comparação.
+- [[k6-threshold-por-tag-e-escopo-de-metrica]] — Threshold pode selecionar subconjuntos de métricas filtrando tags associadas aos samples.
+- [[k6-sleep-pacing-representar-think-time]] — sleep(t) suspende o VU pelo número de segundos informado e pode representar think time quando a pausa fizer parte do workload.
+- [[k6-browser-protocolo-e-experiencia-complementares]] — O módulo browser do k6 combina automação de navegador com métricas de desempenho frontend para jornadas sintéticas.
+
+### OWASP ZAP: varredura passiva, ativa e automação segura
+- [[zap-baseline-scan-passivo-sem-ataque]] — O Docker Baseline Scan realiza spidering e passive scanning, sem executar active attacks contra o alvo.
+- [[zap-api-scan-definicao-e-active-scan]] — API Scan importa definições como OpenAPI, SOAP ou GraphQL e aplica varredura adaptada ao formato.
+- [[zap-active-scan-autorizacao-e-ambiente]] — Active Scan envia requisições de ataque para identificar vulnerabilidades e pode alterar ou sobrecarregar o sistema alvo.
+- [[zap-warnings-exitstatus-politica-ci]] — Automation Framework oferece job exitStatus para derivar o status da execução dos resultados configurados.
+- [[zap-automation-framework-plano-yaml]] — Automation Framework executa jobs sequenciais a partir de um plano YAML com ambiente e configuração definidos.
+- [[zap-passive-scan-wait-antes-do-relatorio]] — O job passiveScan-wait aguarda que o scanner passivo termine de processar a fila atual.
+- [[zap-autenticacao-verificar-sessao-do-scan]] — ZAP suporta métodos de autenticação e verificações de sessão configurados no ambiente e no contexto.
+- [[zap-alert-filter-excecao-com-justificativa]] — Alert Filters podem sobrescrever o risco de alertas de scans ativos e passivos; há regras globais e associadas a contexto.
+- [[zap-relatorio-artefato-e-evidencia]] — O add-on de Report Generation produz relatórios em formatos configuráveis e tem suporte ao Automation Framework.
+- [[zap-separar-passive-active-pipeline]] — Baseline passivo e varredura ativa têm efeitos e evidências diferentes e podem exigir agendas de pipeline diferentes.
+
+### Schemathesis: geração baseada em schema e fluxos de API
+- [[schemathesis-schema-inputs-e-checks]] — Schemathesis lê schema OpenAPI ou GraphQL para construir entradas e exercitar operações documentadas.
+- [[schemathesis-fases-coverage-fuzzing-stateful]] — Data generation inclui estratégias e fases diferentes, como exemplos, coverage, fuzzing e execução stateful.
+- [[schemathesis-valid-invalid-modes-contrato]] — Modos de geração podem focar entradas conformes ou violadoras do schema para testar aceitação e rejeição.
+- [[schemathesis-shrinking-reproducao-falha]] — Shrinking busca reduzir uma entrada que reproduz uma falha para um caso menor e mais diagnóstico.
+- [[schemathesis-stateful-links-sequencia-api]] — OpenAPI Links permite mapear explicitamente dados de uma resposta para parâmetros de outra operação e modelar relações stateful específicas.
+- [[schemathesis-stateful-sem-link-nao-presumir]] — Schemathesis pode inferir conexões stateful por análise do schema OpenAPI, aprender relações de cabeçalhos Location no CLI e usar Links explícitos quando necessário.
+- [[schemathesis-checks-server-error-schema-status]] — Checks centrais podem detectar erros do servidor, status não documentados e respostas incompatíveis com o schema.
+- [[schemathesis-autenticacao-precedencia-e-sanitizacao]] — Schemathesis aceita autenticação por CLI, configuração ou mecanismo associado ao schema, com precedência definida pela ferramenta.
+- [[schemathesis-pytest-parametrize-call-and-validate]] — A integração pytest parametriza testes pelas operações e oferece Case para executar e validar respostas.
+- [[schemathesis-orcamento-exemplos-rate-limit]] — `generation.max-examples` limita casos da fase fuzzing por operação e sequências stateful; examples e coverage adicionam seus próprios casos.
+
+### StrykerJS: mutation testing e interpretação de resultados
+- [[stryker-dry-run-suite-original-passa]] — Stryker executa um dry run sem mutações antes de iniciar a avaliação de mutants.
+- [[stryker-killed-survived-no-coverage]] — Killed indica que um teste falhou com o mutant ativo; survived e No coverage são undetected, enquanto Ignored é excluído intencionalmente da avaliação.
+- [[stryker-threshold-break-falha-pipeline]] — Thresholds high e low classificam a pontuação, enquanto break pode fazer a execução terminar com erro abaixo do limite.
+- [[stryker-coverage-analysis-custos-e-classificacao]] — Coverage analysis pode selecionar quais testes executar para cada mutant e distinguir categorias conforme dados do runner.
+- [[stryker-incremental-resultados-cache-validade]] — Incremental mode reutiliza resultados quando arquivos mutados e testes não mudaram segundo o diff que o runner suporta.
+- [[stryker-mutate-apenas-codigo-de-producao]] — A opção mutate seleciona arquivos e padrões sujeitos a alterações artificiais.
+- [[stryker-ignore-mutant-justificado-e-visivel]] — Stryker permite excluir mutators, usar comentários disable ou plugins ignore para padrões específicos.
+- [[stryker-static-mutants-pertest-requirement]] — StrykerJS exige coverageAnalysis perTest para ignoreStatic; mutants estáticos ignorados aparecem como Ignored e não contam no mutation score.
+- [[stryker-timeout-investigar-runner-e-mutante]] — A configuração oferece limites temporais para processos de teste e execução de mutants.
+- [[stryker-equivalent-mutant-score-interpretacao]] — Mutation score resume resultados de mutants no escopo selecionado, mas não classifica automaticamente equivalência semântica.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 349/349 notas e as 349 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 340 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (349 notas substantivas; 1.651 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md) e a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md) e [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 449/449 notas e as 449 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 440 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (449 notas substantivas; 1.551 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-10.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md) e [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

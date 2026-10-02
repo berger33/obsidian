@@ -33,6 +33,6 @@
 
 ## Política aplicada a partir desta solicitação
 
-O usuário autorizou **1.000 lotes de 2.000 notas** (meta de 2.000.000), sem revisão humana obrigatória e com revisão factual por IA. Assim, as 20 notas acima receberam os campos `revisao_ia`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`; seus campos de revisão humana foram definidos como `nao_solicitada`, sem falsificar aprovação humana. As nove notas anteriormente aprovadas pelo usuário preservam seu registro humano separado.
+A meta editorial ativa é **500 lotes de 2.000 notas substantivas = 1.000.000 de notas válidas**; um alvo anterior de 2.000.000 está supersedido. Não há revisão humana obrigatória para notas novas, e a revisão factual por IA é registrada separadamente. As 20 notas cobertas por este relatório receberam `revisao_ia`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`; seus campos humanos não foram preenchidos. As nove notas anteriormente aprovadas pelo usuário preservam seu registro humano separado.
 
 Esta política não converte o passe automatizado em verificação factual: cada lote deverá continuar tendo conteúdo substantivo, fontes consultadas, relatório de revisão por IA e ressalvas registradas. Notas não verificadas não serão contadas como válidas.

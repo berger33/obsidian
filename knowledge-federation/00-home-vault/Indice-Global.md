@@ -11,9 +11,9 @@ Atualizado em: 2026-10-02
 
 ## Estado editorial do diretório ativo
 
-- Arquivos Markdown em `domains/`: **169** (100 sementes legadas + 69 notas autorais).
-- Candidatas aprovadas no gate automatizado: **69**; aprovação factual humana registrada: **49**; 20 aguardam revisão.
-- Os lotes 0004–0006 e as 29 notas atuais do lote `software-testes-2000-0001` acrescentam 53 notas autorais sobre dados distribuídos, Kubernetes, cache HTTP e testes; veja [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila humana](../exports/reports/human-review-queue.md).
+- Arquivos Markdown em `domains/`: **589** (100 sementes legadas + 489 notas autorais substantivas).
+- Candidatas aprovadas no gate automatizado: **489**; revisões humanas registradas: **49**; revisões factuais por IA: **440**; 100 sementes legadas mantêm pendências.
+- Os lotes atuais totalizam 489 notas válidas pelo protocolo; o lote `software-testes-2000-0001` tem 449/2.000, incluindo as notas 350–449 revisadas por IA na [tranche 10](../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md). Veja também [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila de revisão](../exports/reports/human-review-queue.md).
 
 ## Resumo Executivo
 
@@ -22,7 +22,7 @@ Atualizado em: 2026-10-02
 - **Total de entradas no inventário:** 1.000.100
 - **Arquivos sequenciais materializados:** 5.000 lotes / **1.000.000 arquivos**; não equivalem a notas válidas
 - **Study Packs históricos:** 78 × 200 = **15.600 arquivos de nota**; não validados
-- **Arquivos de nota representados no TAR histórico:** **1.015.608** (1.000.000 placeholders + 15.600 arquivos dos Study Packs + 8 candidatas incluídas na data do empacotamento; não são notas válidas; os lotes ativos 0003–0006 e o lote 0007 não estão no TAR, somando 51 notas autorais fora dele)
+- **Arquivos de nota representados no TAR histórico:** **1.015.608** (1.000.000 placeholders + 15.600 arquivos dos Study Packs + 8 candidatas incluídas na data do empacotamento; não são notas válidas; os lotes ativos não estão no TAR; as notas autorais atuais ficam fora desse snapshot)
 - **Notas com revisão humana registrada:** 0 no checkpoint legado
 - **Conteúdo operacional em domínios regulados:** **0**
 

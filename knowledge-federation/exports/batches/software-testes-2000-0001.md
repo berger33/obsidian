@@ -4,19 +4,20 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **349 / 2.000 (17,45%)**
-- Gate automatizado: **349/349 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
-- Revisão factual humana: **9/349**
-- Revisão factual por IA: **340/349**
-- Contabilizadas como válidas: **349/349**
+- Notas efetivamente redigidas até agora: **449 / 2.000 (22,45%)**
+- Gate automatizado: **449/449 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks)
+- Revisão factual humana: **9/449**
+- Revisão factual por IA: **440/449**
+- Contabilizadas como válidas: **449/449**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 340 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–9 (340 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
-- Auditoria reproduzível do lote: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md) e [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md)
+- Revisor das 440 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–10 (440 notas) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
+- Reconciliação estrutural do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-10.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-10.md)
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 349 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.651 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 449 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.551 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -423,6 +424,129 @@
 347. [Spring Boot: declarar perfil de teste sem depender do ambiente local](../../domains/software-0007/software/testes/spring-active-profiles-test-configuration.md)
 348. [Spring Boot: testar WebTestClient em mock e servidor](../../domains/software-0007/software/testes/spring-webtestclient-mock-vs-server.md)
 349. [Spring Boot: delimitar @GraphQlTest e integração GraphQL](../../domains/software-0007/software/testes/spring-graphql-test-slice-boundary.md)
+
+## Tranche 10 — frameworks, infraestrutura e ferramentas (100 notas; revisão factual por IA registrada)
+
+### Selenium WebDriver: sincronização e interações no navegador
+350. [Selenium: esperar a condição observável, não um intervalo fixo](../../domains/software-0007/software/testes/selenium-explicit-wait-condicao-observavel.md)
+351. [Selenium: não misturar implicit waits e explicit waits](../../domains/software-0007/software/testes/selenium-nao-misturar-esperas-implicit-explicit.md)
+352. [Selenium: preferir locators únicos e estáveis](../../domains/software-0007/software/testes/selenium-locators-identidade-estavel.md)
+353. [Selenium: distinguir busca singular de busca plural](../../domains/software-0007/software/testes/selenium-findelement-find-elements-ausencia.md)
+354. [Selenium: relocalizar elementos após uma nova renderização](../../domains/software-0007/software/testes/selenium-stale-element-relocalizar-apos-render.md)
+355. [Selenium: trocar para o frame antes de interagir](../../domains/software-0007/software/testes/selenium-frame-trocar-e-restaurar-contexto.md)
+356. [Selenium: identificar a nova janela pelo handle](../../domains/software-0007/software/testes/selenium-nova-janela-diferenca-handles.md)
+357. [Selenium: aguardar e tratar alertas JavaScript nativos](../../domains/software-0007/software/testes/selenium-alert-wait-accept-dismiss.md)
+358. [Selenium Actions API: compor ações e liberar o estado de entrada](../../domains/software-0007/software/testes/selenium-actions-sequencia-e-liberacao-input.md)
+359. [Selenium: validar interatividade antes de operar no elemento](../../domains/software-0007/software/testes/selenium-elemento-interativo-validar-estado.md)
+
+### JUnit 6.1.3: parametrização, ciclo de vida e execução
+360. [JUnit: usar testes parametrizados para variação de dados](../../domains/software-0007/software/testes/junit-parametrized-test-casos-complementares.md)
+361. [JUnit: projetar MethodSource com argumentos explícitos](../../domains/software-0007/software/testes/junit-methodsource-ordem-argumentos.md)
+362. [JUnit: distinguir a factory de seus dynamic tests](../../domains/software-0007/software/testes/junit-dynamic-test-factory-nao-e-caso.md)
+363. [JUnit: tratar PER_CLASS como estado compartilhado](../../domains/software-0007/software/testes/junit-per-class-estado-compartilhado.md)
+364. [JUnit: configurar paralelismo sem presumir concorrência automática](../../domains/software-0007/software/testes/junit-parallel-opt-in-modos-e-sincronizacao.md)
+365. [JUnit: usar ParameterResolver para dependências de teste](../../domains/software-0007/software/testes/junit-extension-parameter-resolver-explicito.md)
+366. [JUnit: usar @TempDir para arquivos temporários isolados](../../domains/software-0007/software/testes/junit-tempdir-escopo-e-limpeza.md)
+367. [JUnit: selecionar testes por tags sem confundir com suites](../../domains/software-0007/software/testes/junit-tags-filtrar-testes-por-categoria.md)
+368. [JUnit: reservar condições de execução para requisitos reais](../../domains/software-0007/software/testes/junit-condicional-nao-substitui-diagnostico.md)
+369. [JUnit: interpretar cada repetição como invocação identificável](../../domains/software-0007/software/testes/junit-repeated-test-invocacoes-nomeadas.md)
+
+### Mockito: isolamento de colaboradores e verificação de comportamento
+370. [Mockito: verificar contrato observável do colaborador](../../domains/software-0007/software/testes/mockito-verificar-contrato-nao-roteiro-interno.md)
+371. [Mockito: não verificar automaticamente uma chamada já stubada](../../domains/software-0007/software/testes/mockito-stubbing-nao-duplicar-verificacao.md)
+372. [Mockito: capturar argumento durante a verificação](../../domains/software-0007/software/testes/mockito-argumentcaptor-apos-verificacao.md)
+373. [Mockito: usar matchers em todos os argumentos da chamada](../../domains/software-0007/software/testes/mockito-matchers-consistencia-em-todos-argumentos.md)
+374. [Mockito: usar STRICT_STUBS para expor stubs desnecessários](../../domains/software-0007/software/testes/mockito-strict-stubs-detectar-setup-morto.md)
+375. [Mockito: limitar lenient a stubs realmente excepcionais](../../domains/software-0007/software/testes/mockito-lenient-apenas-no-stub-excepcional.md)
+376. [Mockito: considerar execução real ao configurar um spy](../../domains/software-0007/software/testes/mockito-spy-metodo-real-e-efeitos-colaterais.md)
+377. [Mockito: usar stubbing consecutivo para sequência legítima](../../domains/software-0007/software/testes/mockito-stubbing-consecutivo-modelar-retentativas.md)
+378. [Mockito: preferir mocks novos a resetar estado compartilhado](../../domains/software-0007/software/testes/mockito-nao-compartilhar-mock-mutavel-entre-testes.md)
+379. [Mockito: registrar a extensão JUnit Jupiter para inicializar mocks](../../domains/software-0007/software/testes/mockito-junit-jupiter-lifecycle-explicito.md)
+
+### Jest 30.5: execução assíncrona, mocks e snapshots
+380. [Jest: retornar ou aguardar a Promise do teste](../../domains/software-0007/software/testes/jest-retornar-promise-para-aguardar-assercoes.md)
+381. [Jest: testar rejeições com .rejects aguardado](../../domains/software-0007/software/testes/jest-rejeicoes-async-com-rejects.md)
+382. [Jest: alinhar setup hooks ao escopo describe](../../domains/software-0007/software/testes/jest-hooks-escopo-e-ordem.md)
+383. [Jest: tratar beforeAll como escopo do arquivo de teste](../../domains/software-0007/software/testes/jest-beforeall-nao-compartilha-estado-entre-arquivos.md)
+384. [Jest: inspecionar chamadas e resultados de jest.fn](../../domains/software-0007/software/testes/jest-mock-function-calls-results-context.md)
+385. [Jest: distinguir limpar, resetar e restaurar mocks](../../domains/software-0007/software/testes/jest-clear-reset-restore-mocks-diferencas.md)
+386. [Jest: controlar timers falsos sem drenar loops recursivos](../../domains/software-0007/software/testes/jest-fake-timers-timers-pendentes-recursivos.md)
+387. [Jest: escolher API de mock conforme ESM ou CommonJS](../../domains/software-0007/software/testes/jest-mock-modulos-esm-commonjs.md)
+388. [Jest: revisar mudança de snapshot antes de atualizar](../../domains/software-0007/software/testes/jest-snapshot-revisao-antes-de-atualizar.md)
+389. [Jest: usar thresholds de cobertura como guarda de mudança](../../domains/software-0007/software/testes/jest-coverage-thresholds-nao-medir-qualidade-sozinhos.md)
+
+### Vitest: mocks, isolamento e configuração de projetos
+390. [Vitest: considerar hoisting de vi.mock antes do import](../../domains/software-0007/software/testes/vitest-vi-mock-hoisting-importacao.md)
+391. [Vitest: usar vi.doMock para substituição não hoisted](../../domains/software-0007/software/testes/vitest-domock-mock-runtime-import.md)
+392. [Vitest: planejar mocks registrados em setupFiles](../../domains/software-0007/software/testes/vitest-setupfiles-mocks-modulos-cache.md)
+393. [Vitest: restaurar timers falsos após cada teste](../../domains/software-0007/software/testes/vitest-fake-timers-restaurar-relogio.md)
+394. [Vitest: separar setSystemTime do avanço de timers](../../domains/software-0007/software/testes/vitest-setsystemtime-nao-disparar-timers.md)
+395. [Vitest Browser Mode: distinguir spy de substituição de export ESM](../../domains/software-0007/software/testes/vitest-browser-mode-spy-namespace.md)
+396. [Vitest: separar configuração raiz e configuração de cada projeto](../../domains/software-0007/software/testes/vitest-projects-inheritance-opcoes-globais.md)
+397. [Vitest: avaliar custo antes de desativar isolamento](../../domains/software-0007/software/testes/vitest-isolation-parallelism-tradeoff.md)
+398. [Vitest: declarar provider e formato de relatório de coverage](../../domains/software-0007/software/testes/vitest-coverage-provider-relatorio-declarado.md)
+399. [Vitest: revisar o diff antes de atualizar snapshot](../../domains/software-0007/software/testes/vitest-snapshot-diff-revisao-intencional.md)
+
+### Testcontainers para Java: readiness, ciclo de vida e isolamento
+400. [Testcontainers: distinguir container iniciado de serviço pronto](../../domains/software-0007/software/testes/testcontainers-startup-check-vs-readiness.md)
+401. [Testcontainers: escolher wait strategy alinhada ao protocolo](../../domains/software-0007/software/testes/testcontainers-wait-endpoint-readiness-contract.md)
+402. [Testcontainers JUnit: escolher container compartilhado ou por teste](../../domains/software-0007/software/testes/testcontainers-junit-static-vs-instance-containers.md)
+403. [Testcontainers JUnit: não presumir paralelismo seguro da extensão](../../domains/software-0007/software/testes/testcontainers-junit5-parallel-extension-limit.md)
+404. [Testcontainers: encerrar containers iniciados manualmente](../../domains/software-0007/software/testes/testcontainers-manual-lifecycle-cleanup.md)
+405. [Testcontainers JDBC: declarar driver, banco e dados iniciais](../../domains/software-0007/software/testes/testcontainers-jdbc-url-configuracao-reprodutivel.md)
+406. [Testcontainers: tratar reusable containers como recurso experimental](../../domains/software-0007/software/testes/testcontainers-reuse-opt-in-estado-persistente.md)
+407. [Testcontainers Compose: esperar pelo serviço que o cliente usa](../../domains/software-0007/software/testes/testcontainers-compose-espera-servico-especifico.md)
+408. [Testcontainers: fixar imagem com tag específica e digest quando necessário](../../domains/software-0007/software/testes/testcontainers-pinar-imagem-para-reprodutibilidade.md)
+409. [Testcontainers: paralelizar startup somente para serviços independentes](../../domains/software-0007/software/testes/testcontainers-startup-parallel-independencia-recursos.md)
+
+### Grafana k6: modelagem de carga, métricas e thresholds
+410. [k6: combinar checks com thresholds para reprovar a execução](../../domains/software-0007/software/testes/k6-checks-precisam-threshold-para-falhar.md)
+411. [k6: usar thresholds como critério operacional verificável](../../domains/software-0007/software/testes/k6-thresholds-criterios-operacionais-pass-fail.md)
+412. [k6: separar cenários e executors por workload](../../domains/software-0007/software/testes/k6-scenarios-executors-workload-nomeado.md)
+413. [k6: escolher modelo de chegada aberto ou fechado](../../domains/software-0007/software/testes/k6-open-arrival-closed-vus.md)
+414. [k6: interpretar dropped iterations junto à capacidade de VUs](../../domains/software-0007/software/testes/k6-dropped-iterations-capacidade-vus.md)
+415. [k6: manter setup e teardown como lifecycle explícito](../../domains/software-0007/software/testes/k6-setup-teardown-dados-compartilhados.md)
+416. [k6: usar tags para segmentar métricas de forma controlada](../../domains/software-0007/software/testes/k6-tags-segmentar-metricas-sem-alta-cardinalidade.md)
+417. [k6: limitar threshold a segmentos etiquetados](../../domains/software-0007/software/testes/k6-threshold-por-tag-e-escopo-de-metrica.md)
+418. [k6: modelar think time em vez de adicionar pausas arbitrárias](../../domains/software-0007/software/testes/k6-sleep-pacing-representar-think-time.md)
+419. [k6: complementar teste de protocolo com teste de browser](../../domains/software-0007/software/testes/k6-browser-protocolo-e-experiencia-complementares.md)
+
+### OWASP ZAP: varredura passiva, ativa e automação segura
+420. [OWASP ZAP: entender o limite do baseline scan](../../domains/software-0007/software/testes/zap-baseline-scan-passivo-sem-ataque.md)
+421. [OWASP ZAP: tratar API scan como active scan](../../domains/software-0007/software/testes/zap-api-scan-definicao-e-active-scan.md)
+422. [OWASP ZAP: limitar active scan a alvo autorizado](../../domains/software-0007/software/testes/zap-active-scan-autorizacao-e-ambiente.md)
+423. [OWASP ZAP: declarar política de alertas e status de saída](../../domains/software-0007/software/testes/zap-warnings-exitstatus-politica-ci.md)
+424. [OWASP ZAP: versionar o Automation Framework como plano](../../domains/software-0007/software/testes/zap-automation-framework-plano-yaml.md)
+425. [OWASP ZAP: aguardar a fila passiva antes de finalizar](../../domains/software-0007/software/testes/zap-passive-scan-wait-antes-do-relatorio.md)
+426. [OWASP ZAP: verificar autenticação efetiva durante o scan](../../domains/software-0007/software/testes/zap-autenticacao-verificar-sessao-do-scan.md)
+427. [OWASP ZAP: aplicar alert filter com contexto e justificativa](../../domains/software-0007/software/testes/zap-alert-filter-excecao-com-justificativa.md)
+428. [OWASP ZAP: preservar relatório como evidência de uma execução](../../domains/software-0007/software/testes/zap-relatorio-artefato-e-evidencia.md)
+429. [OWASP ZAP: separar passivo e ativo em etapas de risco distinto](../../domains/software-0007/software/testes/zap-separar-passive-active-pipeline.md)
+
+### Schemathesis: geração baseada em schema e fluxos de API
+430. [Schemathesis: gerar chamadas a partir do contrato da API](../../domains/software-0007/software/testes/schemathesis-schema-inputs-e-checks.md)
+431. [Schemathesis: distinguir fases de coverage, fuzzing e stateful](../../domains/software-0007/software/testes/schemathesis-fases-coverage-fuzzing-stateful.md)
+432. [Schemathesis: usar modos válido e inválido com objetivo claro](../../domains/software-0007/software/testes/schemathesis-valid-invalid-modes-contrato.md)
+433. [Schemathesis: usar shrinking para reduzir caso que falha](../../domains/software-0007/software/testes/schemathesis-shrinking-reproducao-falha.md)
+434. [Schemathesis: declarar OpenAPI Links para fluxos stateful específicos](../../domains/software-0007/software/testes/schemathesis-stateful-links-sequencia-api.md)
+435. [Schemathesis: links explícitos não são pré-requisito universal para stateful](../../domains/software-0007/software/testes/schemathesis-stateful-sem-link-nao-presumir.md)
+436. [Schemathesis: classificar server errors e respostas fora do schema](../../domains/software-0007/software/testes/schemathesis-checks-server-error-schema-status.md)
+437. [Schemathesis: controlar precedência e exposição de credenciais](../../domains/software-0007/software/testes/schemathesis-autenticacao-precedencia-e-sanitizacao.md)
+438. [Schemathesis: integrar operações à suíte pytest](../../domains/software-0007/software/testes/schemathesis-pytest-parametrize-call-and-validate.md)
+439. [Schemathesis: limitar geração sem confundir orçamento e total de requests](../../domains/software-0007/software/testes/schemathesis-orcamento-exemplos-rate-limit.md)
+
+### StrykerJS: mutation testing e interpretação de resultados
+440. [StrykerJS: exigir dry run verde antes de mutar](../../domains/software-0007/software/testes/stryker-dry-run-suite-original-passa.md)
+441. [StrykerJS: distinguir killed, survived e no coverage](../../domains/software-0007/software/testes/stryker-killed-survived-no-coverage.md)
+442. [StrykerJS: usar break threshold para bloquear score baixo](../../domains/software-0007/software/testes/stryker-threshold-break-falha-pipeline.md)
+443. [StrykerJS: usar coverage analysis para reduzir execuções](../../domains/software-0007/software/testes/stryker-coverage-analysis-custos-e-classificacao.md)
+444. [StrykerJS: verificar validade de resultados incrementais](../../domains/software-0007/software/testes/stryker-incremental-resultados-cache-validade.md)
+445. [StrykerJS: delimitar mutate a código de produção](../../domains/software-0007/software/testes/stryker-mutate-apenas-codigo-de-producao.md)
+446. [StrykerJS: ignorar somente mutant não testável com justificativa](../../domains/software-0007/software/testes/stryker-ignore-mutant-justificado-e-visivel.md)
+447. [StrykerJS: respeitar a exigência de perTest para ignorar static mutants](../../domains/software-0007/software/testes/stryker-static-mutants-pertest-requirement.md)
+448. [StrykerJS: investigar timeout antes de alterar o limite](../../domains/software-0007/software/testes/stryker-timeout-investigar-runner-e-mutante.md)
+449. [StrykerJS: interpretar sobreviventes sem perseguir score perfeito](../../domains/software-0007/software/testes/stryker-equivalent-mutant-score-interpretacao.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 340 notas 10–349 das tranches 2–9 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 349/2.000 notas válidas, restando 1.651 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 440 notas 10–449 das tranches 2–10 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 449/2.000 notas válidas, restando 1.551 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
