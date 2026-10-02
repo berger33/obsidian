@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 849 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 849 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 840 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 949 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 949 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 940 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1062,6 +1062,138 @@
 848. [[python-isolated-asyncio-testcase-lifecycle]] — `IsolatedAsyncioTestCase` permite escrever setup, teste e teardown assíncronos mantendo o contrato de TestCase.
 849. [[python-unittest-assertlogs-context]] — `assertLogs()` captura registros de logging de um logger durante um bloco e permite verificar nível e conteúdo sem interceptar stdout.
 
+## Tranche 15 — frameworks, mocks, cobertura e automação móvel
+
+### Puppeteer — locators, avaliação, rede, protocolos e evidências
+
+850. [[puppeteer-locator-auto-waiting]] — Um locator representa um elemento que pode ainda não existir e só resolve sua localização quando uma ação ou condição é solicitada por meio dele.
+851. [[puppeteer-page-evaluate-serialization]] — `page.evaluate()` executa uma função dentro do navegador e devolve apenas valores serializáveis para o processo Node que controla a automação.
+852. [[puppeteer-selector-syntax-beyond-css]] — Além de seletores CSS, o Puppeteer aceita extensões como `::-p-text()`, `::-p-aria()` e o combinador `>>>` para atravessar shadow roots abertos.
+853. [[puppeteer-network-interception-cooperative]] — Com a interceptação ativa, mais de uma callback pode opinar sobre a mesma requisição, e a resolução cooperativa decide o resultado pela prioridade informada em cada voto.
+854. [[puppeteer-request-abort-and-continue]] — Cada requisição capturada precisa terminar em `continue`, `abort` ou `respond`; enquanto isso não acontece, a navegação permanece pendente aguardando a decisão.
+855. [[puppeteer-bidi-vs-cdp]] — O Puppeteer controla navegadores por DevTools Protocol ou por WebDriver BiDi, com BiDi como padrão no Firefox e CDP ainda como padrão no Chrome.
+856. [[puppeteer-headless-modes]] — O modo headless moderno é o padrão de lançamento, e o binário reduzido `chrome-headless-shell` é solicitado com `headless: 'shell'`, enquanto `headless: false` abre a janela para depuração.
+857. [[puppeteer-navigation-race-free]] — Uma ação que dispara navegação deve ser aguardada em conjunto com a espera pelo resultado, para que o observador exista antes de o evento acontecer.
+858. [[puppeteer-screenshots-artifacts]] — `page.screenshot()` grava imagem da viewport, da página inteira ou de uma região delimitada, servindo como evidência de falha e insumo de comparação visual.
+859. [[puppeteer-browser-context-isolation]] — Cada contexto de navegador mantém cookies, cache e armazenamento próprios, funcionando como um perfil isolado dentro da mesma instância de navegador.
+
+### Mock Service Worker 2 — handlers, respostas, ciclo de vida e padrões de rede
+
+860. [[msw-setupserver-node-interception]] — `setupServer` configura a interceptação de requisições no processo Node sem abrir porta ou servidor real, aplicando os mesmos handlers usados no navegador.
+861. [[msw-lifecycle-listen-reset-close]] — O ciclo recomendado inicia a interceptação antes de todos os testes, remove handlers adicionados por cada caso e encerra o servidor ao final da suíte.
+862. [[msw-onunhandledrequest-fail]] — Por padrão, uma requisição sem handler correspondente gera aviso; a opção `onUnhandledRequest` permite elevá-la a erro ou fornecer tratamento próprio.
+863. [[msw-handler-order-and-overrides]] — As requisições percorrem a lista de handlers em ordem até o primeiro que produzir uma instrução, e `server.use()` insere novos handlers no início da lista.
+864. [[msw-passthrough-real-response]] — Retornar `passthrough()` executa a requisição original e devolve a resposta real, e ainda assim a requisição é considerada tratada para fins de resolução.
+865. [[msw-httpresponse-construction]] — `HttpResponse` oferece métodos como `json`, `text`, `html` e `error` para compor status, cabeçalhos e corpo da resposta mockada de forma tipada.
+866. [[msw-url-patterns-and-params]] — Padrões de URL podem incluir parâmetros de caminho como `:id`, curingas e expressões, e o resolver recebe os valores extraídos para montar a resposta.
+867. [[msw-async-handler-and-body]] — Ler o corpo com `await request.json()` exige um resolver assíncrono; um resolver síncrono que tenta aguardar o corpo devolve resultado indefinido.
+868. [[msw-shared-handlers-across-environments]] — A mesma lista de handlers pode atender testes automatizados, desenvolvimento local e catálogo de componentes, mantendo uma única descrição do comportamento simulado.
+869. [[msw-per-test-error-overrides]] — Um teste específico pode registrar handlers de falha com `server.use()`, substituindo temporariamente o caminho feliz sem alterar a definição global.
+
+### Supertest — requisições HTTP, agentes, asserções e ciclo do servidor
+
+870. [[supertest-agent-persistent-cookies]] — `request.agent(app)` mantém os cookies recebidos entre chamadas, reproduzindo o comportamento de um cliente que preserva sessão entre requisições.
+871. [[supertest-chained-expectations]] — O método `expect` permite afirmar status, cabeçalhos e corpo em uma única cadeia encadeada à requisição, com falha apontando a expectativa violada.
+872. [[supertest-send-json-body]] — Chamar `.send()` com um objeto faz o Superagent serializar o conteúdo como JSON e definir o cabeçalho de tipo de conteúdo correspondente.
+873. [[supertest-end-callback-error-handling]] — O método `end` recebe callback com erro e resposta e pode ser usado quando o teste precisa de controle explícito, enquanto o estilo de promessa cobre a maioria dos casos.
+874. [[supertest-multipart-attach]] — O método `attach` adiciona uma parte de arquivo a uma requisição multipart, recebendo caminho do documento e campos adicionais do formulário.
+875. [[supertest-auth-headers-set]] — O método `set` adiciona cabeçalhos à requisição e é o caminho para enviar token de portador, chave de API ou cabeçalhos condicionais específicos do caso.
+876. [[supertest-timeouts]] — O cliente herdado do Superagent permite configurar tempo limite por resposta ou por prazo total, evitando que uma suíte fique pendurada indefinidamente.
+877. [[supertest-binary-buffer-parsing]] — Respostas que não são JSON chegam ao teste como fluxo ou buffer, e a verificação precisa olhar bytes e cabeçalhos em vez de assumir corpo estruturado.
+878. [[supertest-server-lifecycle]] — Ao receber a aplicação, o Supertest inicia um servidor em porta efêmera para a requisição e o encerra ao final, dispensando gerenciamento manual de porta na maioria dos casos.
+879. [[supertest-against-express-router]] — O Supertest aceita a aplicação completa, um roteador ou uma função de tratamento, e a escolha define quais camadas — parsing, autenticação, middleware — participam do teste.
+
+### Minitest — asserções, spec, mocks, ciclo de vida e paralelização
+
+880. [[minitest-test-class-method-naming]] — Casos escritos em classes que herdam de `Minitest::Test` são descobertos pelos métodos cujo nome começa com `test_`, sem registro manual de suíte.
+881. [[minitest-core-assertions]] — O módulo de asserções cobre igualdade, predicados, tipos, inclusão e referência, cada uma produzindo mensagem de falha específica para o tipo de comparação.
+882. [[minitest-assert-raises]] — `assert_raises` falha se o bloco não levantar uma das exceções esperadas e devolve a exceção capturada para verificação de mensagem e atributos.
+883. [[minitest-setup-teardown]] — Os métodos `setup` e `teardown` executam antes e depois de cada teste da classe, mantendo o estado de preparação isolado entre casos individuais.
+884. [[minitest-spec-dsl]] — `Minitest::Spec` oferece `describe` e `it` com hooks `before`, `after` e `around`, além de matchers de expectativa para testes escritos em estilo de especificação.
+885. [[minitest-mock-and-stub]] — `Minitest::Mock` registra expectativas e verifica chamadas ao final do teste, enquanto o método `stub` substitui um objeto por um retorno controlado durante o bloco.
+886. [[minitest-parallelize-me]] — `parallelize_me!` executa os testes da classe em várias threads, reduzindo tempo total quando os casos são independentes entre si.
+887. [[minitest-random-order-and-seed]] — O Minitest executa os testes em ordem aleatória por padrão e informa a semente usada, permitindo repetir a mesma sequência em caso de falha.
+888. [[minitest-skip-and-flunk]] — `skip` interrompe o caso com motivo e o registra como pulado, enquanto `flunk` falha de propósito para marcar um caminho que nunca deveria ser alcançado.
+889. [[minitest-reporters-and-run]] — O Minitest pode ser executado com `ruby -Ilib:test` em arquivos isolados, com `ruby -e` para carregar toda a suíte ou por integração com Rake e ferramentas de relatório.
+
+### JaCoCo — agente, contadores, relatórios, verificação e instrumentação offline
+
+890. [[jacoco-agent-on-the-fly]] — O agente do JaCoCo instrumenta classes em tempo de execução e grava os dados coletados em um arquivo binário de execução durante a JVM.
+891. [[jacoco-counters-meaning]] — O JaCoCo contabiliza instruções, ramos, linhas, complexidade, métodos e classes, cada qual respondendo a uma pergunta distinta sobre a execução.
+892. [[jacoco-branch-vs-line]] — A cobertura de ramos mede quantos desfechos de estruturas condicionais foram executados, incluindo os caminhos de `if` e de `switch`.
+893. [[jacoco-report-formats]] — O goal de relatório gera HTML para leitura humana e pode produzir XML e CSV para consumo por outras ferramentas, todos derivados do mesmo arquivo de execução.
+894. [[jacoco-check-rules-limits]] — O goal de verificação avalia regras compostas por elemento, contador, valor e limite, e pode interromper o build quando o mínimo configurado não é atingido.
+895. [[jacoco-offline-instrumentation]] — Na instrumentação offline, as classes são transformadas antes da execução e os dados são gravados pela biblioteca de runtime, sem agente anexado à JVM.
+896. [[jacoco-merge-exec-files]] — Quando a suíte roda em várias JVMs, cada processo gera dados próprios, e o goal de merge combina os arquivos em um único conjunto antes do relatório.
+897. [[jacoco-excludes-filtering]] — Exclusões podem ser configuradas por classe, pacote, anotação ou expressão, removendo do relatório código que não é alvo de teste significativo.
+898. [[jacoco-thresholds-policy]] — Cobertura descreve o que foi executado e não prova qualidade das asserções, portanto o limite deve expressar uma política de proteção contra regressão.
+899. [[jacoco-build-integration]] — A integração típica encadeia preparação do agente, execução dos testes, geração de relatório e verificação, cada passo dependendo do anterior no ciclo do projeto.
+
+### Maestro — fluxos YAML, comandos, tags, reuso e evidências
+
+900. [[maestro-flow-yaml-structure]] — Um fluxo do Maestro é um arquivo YAML com identificador do aplicativo no cabeçalho, separador de documento e uma lista de comandos executados em ordem.
+901. [[maestro-launch-and-state]] — `launchApp` inicia o aplicativo, `clearState` remove dados persistidos e `stopApp` encerra a execução, permitindo controlar o estado inicial de cada cenário.
+902. [[maestro-tapon-selectors]] — O comando `tapOn` aceita texto visível, identificador de testabilidade e posição relativa, e a escolha do seletor define a estabilidade do passo.
+903. [[maestro-assertions-and-waits]] — `assertVisible` e `assertNotVisible` verificam o estado da tela, e `extendedWaitUntil` aguarda uma condição com tempo limite antes de seguir.
+904. [[maestro-runflow-subflows]] — O comando `runFlow` executa comandos de outro arquivo, aceita variáveis de ambiente e pode ser condicionado à visibilidade de um elemento.
+905. [[maestro-input-and-keyboard]] — `inputText` digita em um campo focado, `eraseText` remove caracteres e `hideKeyboard` fecha o teclado virtual quando ele cobre a interface.
+906. [[maestro-tags-and-filters]] — Tags declaradas no fluxo permitem selecionar subconjuntos na CLI com `--include-tags` e excluir grupos com `--exclude-tags`, usando lógica de união dentro de cada flag.
+907. [[maestro-repeat-and-conditions]] — O comando `repeat` executa um bloco por número de vezes ou enquanto uma condição for verdadeira, permitindo cobrir listas e tentativas sem duplicar comandos.
+908. [[maestro-screenshots-artifacts]] — O comando `takeScreenshot` e o diretório de saída da CLI registram imagens dos passos, e a execução pode produzir resultado em formato consumível pelo pipeline.
+909. [[maestro-wait-animation-and-scroll]] — `waitForAnimationToEnd` aguarda a interface estabilizar e `scrollUntilVisible` rola a tela até o elemento aparecer, com limite de rolagem.
+
+### Karate — feature files, asserções, configuração, paralelismo e mocks
+
+910. [[karate-gherkin-builtin-steps]] — Arquivos de feature usam sintaxe Gherkin, mas os passos de HTTP, asserção e manipulação de dados já vêm implementados no framework.
+911. [[karate-match-assertions]] — O comando `match` compara respostas com valores esperados e aceita marcadores como `#string`, `#number` e `#[]` para validar estrutura sem fixar conteúdo volátil.
+912. [[karate-config-js]] — O arquivo `karate-config.js` é avaliado antes das features e devolve um objeto de configuração que pode variar conforme o ambiente selecionado.
+913. [[karate-call-and-read]] — `call` executa outra feature como função em contexto isolado, `callonce` reaproveita o resultado e `read` carrega conteúdo de arquivo para os dados do cenário.
+914. [[karate-parallel-runner]] — O runner do Karate executa features em paralelo por padrão quando configurado com um número de threads, mantendo cada cenário em contexto isolado.
+915. [[karate-data-driven]] — Cenários podem ser repetidos com conjuntos de dados declarados em tabelas, `Examples` ou arquivos externos como CSV, mantendo a lógica única e os dados separados.
+916. [[karate-tags-selection]] — Tags declaradas em features e cenários permitem selecionar subconjuntos por execução, incluindo ou excluindo grupos conforme a necessidade do pipeline.
+917. [[karate-mock-server]] — O servidor mock do Karate descreve rotas, respostas e validações em feature files, cobrindo contratos antes de o serviço real existir.
+918. [[karate-print-and-debug]] — O comando `print` exibe valores no relatório e a resposta completa pode ser inspecionada para diagnóstico quando a asserção falha.
+919. [[karate-reports-artifacts]] — O runner gera relatório HTML com o detalhamento de cada feature, cenário e passo, além de artefatos consumíveis por ferramentas de integração contínua.
+
+### Swift Testing — macros, suítes, traits, parametrização e migração
+
+920. [[swift-testing-test-macro]] — A macro `@Test` identifica uma função de teste, dispensando herança de classe e o prefixo `test` no nome do método.
+921. [[swift-testing-expect-and-require]] — `#expect` registra uma falha e continua a execução, enquanto `#require` interrompe o teste ao falhar e devolve o valor desembrulhado.
+922. [[swift-testing-suites-and-lifecycle]] — Qualquer tipo que contenha funções de teste forma uma suíte, e a anotação `@Suite` é necessária apenas para nome, traits ou agrupamento explícito.
+923. [[swift-testing-parameterized-tests]] — A macro `@Test(arguments:)` executa a mesma função para cada argumento, gerando um resultado pai com um filho por valor ou combinação.
+924. [[swift-testing-traits]] — Traits são valores aplicados a testes e suítes para desabilitar, condicionar, limitar tempo, marcar tags e registrar referências de defeito.
+925. [[swift-testing-tags]] — Tags declaradas em extensões do tipo `Tag` permitem rotular testes e suítes para organização e filtragem em planos de teste.
+926. [[swift-testing-serialized]] — Testes rodam em paralelo por padrão e a trait `.serialized` restringe a execução de uma suíte à ordem sequencial.
+927. [[swift-testing-async-tests]] — Funções de teste podem ser `async` e aguardar operações diretamente, sem expectativas de inversão de controle nem callbacks de conclusão.
+928. [[swift-testing-migration-from-xctest]] — A migração converte classes `XCTestCase` em suítes, métodos com prefixo em funções `@Test` e asserções específicas nas macros de expectativa.
+929. [[swift-testing-swift-test-cli]] — O comando `swift test` do SwiftPM descobre e executa os testes do pacote, incluindo os escritos com Swift Testing em toolchains compatíveis.
+
+### MSTest — estrutura, dados, ciclo de vida, paralelização e configuração
+
+930. [[mstest-testclass-and-testmethod]] — Métodos de teste são marcados com `[TestMethod]` dentro de classes anotadas com `[TestClass]`, e precisam ser públicos, de instância e sem parâmetros fora de casos com dados.
+931. [[mstest-datarow-inline]] — O atributo `[DataRow]` declara valores constantes para os parâmetros do teste, e cada linha gera uma execução independente identificada pelos dados.
+932. [[mstest-dynamicdata-provider]] — O atributo `[DynamicData]` referencia uma propriedade ou método que devolve uma coleção de linhas, permitindo dados calculados ou objetos tipados.
+933. [[mstest-lifecycle-order]] — A inicialização e a limpeza acontecem em níveis de assembly, classe e teste, e o nível de teste se repete para cada linha de dados parametrizados.
+934. [[mstest-testcontext]] — O executor injeta um objeto `TestContext` no teste, oferecendo informações de execução, resultado da linha de dados e saída de diagnóstico associada ao caso.
+935. [[mstest-assertions-and-exceptions]] — O tipo `Assert` reúne comparações de igualdade, verificações de coleção e asserções de exceção que falham com mensagem específica.
+936. [[mstest-parallelization]] — A paralelização pode ser declarada por atributo de assembly com escopo e número de trabalhadores, ou configurada globalmente em runsettings ou testconfig.
+937. [[mstest-timeout-and-retry]] — Atributos de tempo limite e de repetição permitem interromper operação longa e repetir um caso falho antes de considerá-lo reprovado.
+938. [[mstest-categories-and-filtering]] — Atributos de categoria e propriedade rotulam testes para filtragem no executor, permitindo selecionar subconjuntos por tipo ou risco.
+939. [[mstest-runsettings-vs-testconfig]] — Executores baseados na plataforma de testes leem `testconfig.json`, enquanto o caminho clássico usa `.runsettings` para paralelização, timeouts e demais ajustes.
+
+### cargo-nextest — isolamento, perfis, retries, partições e relatórios
+
+940. [[nextest-process-per-test]] — O nextest agenda cada teste como um processo separado, em vez de compartilhar o binário de teste entre vários casos como faz o executor padrão.
+941. [[nextest-profiles]] — Configurações ficam em arquivo de perfil no workspace, com um perfil padrão e perfis nomeados que podem ser selecionados na linha de comando.
+942. [[nextest-retries-and-flaky-result]] — Retries configuram quantas vezes um teste falho é repetido, e a política de resultado define se a execução final conta como falha ou como instável.
+943. [[nextest-slow-timeout]] — O limite de lentidão avisa quando um teste excede o período configurado e pode encerrá-lo após um número de períodos.
+944. [[nextest-filtersets]] — Expressões de filtro permitem selecionar casos por nome, pacote, tipo de teste e outras propriedades diretamente na linha de comando.
+945. [[nextest-partitioning]] — O particionamento divide os testes em fatias ou por hash de identificador, permitindo distribuir a mesma suíte entre executores paralelos.
+946. [[nextest-junit-report]] — O nextest pode gravar relatório JUnit XML por perfil, com opções para incluir ou omitir saída de testes aprovados e para classificar resultados instáveis.
+947. [[nextest-archives]] — O comando de arquivamento empacota os binários de teste compilados para que outra etapa ou máquina execute o mesmo build sem recompilar.
+948. [[nextest-doctests-boundary]] — O nextest executa binários de teste compilados e não cobre exemplos de documentação, que continuam precisando do comando clássico do Cargo.
+949. [[nextest-listing-and-ignored]] — O comando de listagem mostra o conjunto descoberto sem executar, e a opção de execução de ignorados permite rodar casos marcados como pendentes.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 849/849 notas e as 849 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 840 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (849 notas substantivas; 1.151 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md) e [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 949/949 notas e as 949 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 940 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (949 notas substantivas; 1.051 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md) e [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

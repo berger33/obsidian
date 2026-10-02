@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **849 / 2.000 (42,45%)**
-- Gate automatizado: **849/849 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 14)
+- Notas efetivamente redigidas até agora: **949 / 2.000 (47,45%)**
+- Gate automatizado: **949/949 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 15)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/849**
-- Revisão factual por IA: **840/849**
-- Contabilizadas como válidas: **849/849**
+- Revisão factual humana: **9/949**
+- Revisão factual por IA: **940/949**
+- Contabilizadas como válidas: **949/949**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 840 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–14 (840 notas, IDs 10–849) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 940 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–15 (940 notas, IDs 10–949) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-14.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-15.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 849 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.151 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 949 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.051 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1057,6 +1057,138 @@
 848. [Python unittest: isolar ciclo de vida de caso assíncrono](../../domains/software-0007/software/testes/python-isolated-asyncio-testcase-lifecycle.md)
 849. [Python unittest: capturar logs do escopo da operação](../../domains/software-0007/software/testes/python-unittest-assertlogs-context.md)
 
+## Tranche 15 — frameworks, mocks, cobertura e automação móvel (100 notas; revisão factual por IA registrada)
+
+### Puppeteer — locators, avaliação, rede, protocolos e evidências
+
+850. [Puppeteer: usar locator para esperar antes de agir](../../domains/software-0007/software/testes/puppeteer-locator-auto-waiting.md)
+851. [Puppeteer: avaliar código no contexto da página](../../domains/software-0007/software/testes/puppeteer-page-evaluate-serialization.md)
+852. [Puppeteer: usar seletores além do CSS](../../domains/software-0007/software/testes/puppeteer-selector-syntax-beyond-css.md)
+853. [Puppeteer: resolver interceptação de rede de forma cooperativa](../../domains/software-0007/software/testes/puppeteer-network-interception-cooperative.md)
+854. [Puppeteer: concluir toda requisição interceptada](../../domains/software-0007/software/testes/puppeteer-request-abort-and-continue.md)
+855. [Puppeteer: escolher entre CDP e WebDriver BiDi](../../domains/software-0007/software/testes/puppeteer-bidi-vs-cdp.md)
+856. [Puppeteer: distinguir os modos headless](../../domains/software-0007/software/testes/puppeteer-headless-modes.md)
+857. [Puppeteer: evitar corrida entre ação e navegação](../../domains/software-0007/software/testes/puppeteer-navigation-race-free.md)
+858. [Puppeteer: capturar evidências com screenshot](../../domains/software-0007/software/testes/puppeteer-screenshots-artifacts.md)
+859. [Puppeteer: isolar estado com contexto de navegador](../../domains/software-0007/software/testes/puppeteer-browser-context-isolation.md)
+
+### Mock Service Worker 2 — handlers, respostas, ciclo de vida e padrões de rede
+
+860. [MSW: interceptar requisições em Node com setupServer](../../domains/software-0007/software/testes/msw-setupserver-node-interception.md)
+861. [MSW: cumprir o ciclo listen, reset e close](../../domains/software-0007/software/testes/msw-lifecycle-listen-reset-close.md)
+862. [MSW: tratar requisição sem handler como falha](../../domains/software-0007/software/testes/msw-onunhandledrequest-fail.md)
+863. [MSW: entender ordem e sobreposição de handlers](../../domains/software-0007/software/testes/msw-handler-order-and-overrides.md)
+864. [MSW: encaminhar requisições com passthrough](../../domains/software-0007/software/testes/msw-passthrough-real-response.md)
+865. [MSW: construir respostas com HttpResponse](../../domains/software-0007/software/testes/msw-httpresponse-construction.md)
+866. [MSW: casar URLs e extrair parâmetros](../../domains/software-0007/software/testes/msw-url-patterns-and-params.md)
+867. [MSW: ler corpo de requisição em handler assíncrono](../../domains/software-0007/software/testes/msw-async-handler-and-body.md)
+868. [MSW: compartilhar handlers entre testes, dev e Storybook](../../domains/software-0007/software/testes/msw-shared-handlers-across-environments.md)
+869. [MSW: simular erros por teste com overrides](../../domains/software-0007/software/testes/msw-per-test-error-overrides.md)
+
+### Supertest — requisições HTTP, agentes, asserções e ciclo do servidor
+
+870. [Supertest: manter sessão com request.agent](../../domains/software-0007/software/testes/supertest-agent-persistent-cookies.md)
+871. [Supertest: encadear expectativas de resposta](../../domains/software-0007/software/testes/supertest-chained-expectations.md)
+872. [Supertest: enviar corpo JSON com send](../../domains/software-0007/software/testes/supertest-send-json-body.md)
+873. [Supertest: decidir entre callback e promessa](../../domains/software-0007/software/testes/supertest-end-callback-error-handling.md)
+874. [Supertest: enviar arquivos com attach](../../domains/software-0007/software/testes/supertest-multipart-attach.md)
+875. [Supertest: definir autenticação por cabeçalho](../../domains/software-0007/software/testes/supertest-auth-headers-set.md)
+876. [Supertest: limitar tempo de resposta em teste](../../domains/software-0007/software/testes/supertest-timeouts.md)
+877. [Supertest: verificar respostas binárias](../../domains/software-0007/software/testes/supertest-binary-buffer-parsing.md)
+878. [Supertest: entender o ciclo do servidor efêmero](../../domains/software-0007/software/testes/supertest-server-lifecycle.md)
+879. [Supertest: testar a aplicação no limite certo](../../domains/software-0007/software/testes/supertest-against-express-router.md)
+
+### Minitest — asserções, spec, mocks, ciclo de vida e paralelização
+
+880. [Minitest: reconhecer testes por classe e prefixo](../../domains/software-0007/software/testes/minitest-test-class-method-naming.md)
+881. [Minitest: escolher a asserção adequada ao valor](../../domains/software-0007/software/testes/minitest-core-assertions.md)
+882. [Minitest: inspecionar a exceção capturada](../../domains/software-0007/software/testes/minitest-assert-raises.md)
+883. [Minitest: preparar e limpar cada caso](../../domains/software-0007/software/testes/minitest-setup-teardown.md)
+884. [Minitest: usar a DSL de spec](../../domains/software-0007/software/testes/minitest-spec-dsl.md)
+885. [Minitest: isolar colaboradores com mock e stub](../../domains/software-0007/software/testes/minitest-mock-and-stub.md)
+886. [Minitest: paralelizar testes com segurança](../../domains/software-0007/software/testes/minitest-parallelize-me.md)
+887. [Minitest: reproduzir a ordem aleatória](../../domains/software-0007/software/testes/minitest-random-order-and-seed.md)
+888. [Minitest: usar skip e flunk com intenção](../../domains/software-0007/software/testes/minitest-skip-and-flunk.md)
+889. [Minitest: escolher a forma de execução](../../domains/software-0007/software/testes/minitest-reporters-and-run.md)
+
+### JaCoCo — agente, contadores, relatórios, verificação e instrumentação offline
+
+890. [JaCoCo: medir cobertura com o agente Java](../../domains/software-0007/software/testes/jacoco-agent-on-the-fly.md)
+891. [JaCoCo: interpretar os contadores](../../domains/software-0007/software/testes/jacoco-counters-meaning.md)
+892. [JaCoCo: usar cobertura de ramos para decisões](../../domains/software-0007/software/testes/jacoco-branch-vs-line.md)
+893. [JaCoCo: escolher o formato de relatório](../../domains/software-0007/software/testes/jacoco-report-formats.md)
+894. [JaCoCo: verificar cobertura com regras](../../domains/software-0007/software/testes/jacoco-check-rules-limits.md)
+895. [JaCoCo: avaliar a instrumentação offline](../../domains/software-0007/software/testes/jacoco-offline-instrumentation.md)
+896. [JaCoCo: consolidar arquivos de execução](../../domains/software-0007/software/testes/jacoco-merge-exec-files.md)
+897. [JaCoCo: excluir código gerado da medição](../../domains/software-0007/software/testes/jacoco-excludes-filtering.md)
+898. [JaCoCo: tratar cobertura como política, não como meta](../../domains/software-0007/software/testes/jacoco-thresholds-policy.md)
+899. [JaCoCo: integrar a medição ao ciclo de build](../../domains/software-0007/software/testes/jacoco-build-integration.md)
+
+### Maestro — fluxos YAML, comandos, tags, reuso e evidências
+
+900. [Maestro: estruturar um fluxo em YAML](../../domains/software-0007/software/testes/maestro-flow-yaml-structure.md)
+901. [Maestro: controlar estado do aplicativo entre passos](../../domains/software-0007/software/testes/maestro-launch-and-state.md)
+902. [Maestro: escolher alvos de toque](../../domains/software-0007/software/testes/maestro-tapon-selectors.md)
+903. [Maestro: afirmar visibilidade e esperar condição](../../domains/software-0007/software/testes/maestro-assertions-and-waits.md)
+904. [Maestro: reutilizar fluxos com runFlow](../../domains/software-0007/software/testes/maestro-runflow-subflows.md)
+905. [Maestro: preencher campos e controlar teclado](../../domains/software-0007/software/testes/maestro-input-and-keyboard.md)
+906. [Maestro: organizar fluxos com tags](../../domains/software-0007/software/testes/maestro-tags-and-filters.md)
+907. [Maestro: repetir passos e tratar variações](../../domains/software-0007/software/testes/maestro-repeat-and-conditions.md)
+908. [Maestro: registrar evidências da execução](../../domains/software-0007/software/testes/maestro-screenshots-artifacts.md)
+909. [Maestro: esperar animação e alcançar itens distantes](../../domains/software-0007/software/testes/maestro-wait-animation-and-scroll.md)
+
+### Karate — feature files, asserções, configuração, paralelismo e mocks
+
+910. [Karate: escrever API tests em Gherkin com steps embutidos](../../domains/software-0007/software/testes/karate-gherkin-builtin-steps.md)
+911. [Karate: usar match e marcadores fuzzy](../../domains/software-0007/software/testes/karate-match-assertions.md)
+912. [Karate: separar configuração por ambiente](../../domains/software-0007/software/testes/karate-config-js.md)
+913. [Karate: reutilizar features com call e read](../../domains/software-0007/software/testes/karate-call-and-read.md)
+914. [Karate: executar features em paralelo](../../domains/software-0007/software/testes/karate-parallel-runner.md)
+915. [Karate: parametrizar cenários com tabelas e arquivos](../../domains/software-0007/software/testes/karate-data-driven.md)
+916. [Karate: selecionar cenários por tags](../../domains/software-0007/software/testes/karate-tags-selection.md)
+917. [Karate: simular serviços com o servidor mock](../../domains/software-0007/software/testes/karate-mock-server.md)
+918. [Karate: registrar evidências do passo](../../domains/software-0007/software/testes/karate-print-and-debug.md)
+919. [Karate: consumir o relatório da execução](../../domains/software-0007/software/testes/karate-reports-artifacts.md)
+
+### Swift Testing — macros, suítes, traits, parametrização e migração
+
+920. [Swift Testing: marcar testes com @Test](../../domains/software-0007/software/testes/swift-testing-test-macro.md)
+921. [Swift Testing: distinguir expect e require](../../domains/software-0007/software/testes/swift-testing-expect-and-require.md)
+922. [Swift Testing: organizar suítes e ciclo de vida](../../domains/software-0007/software/testes/swift-testing-suites-and-lifecycle.md)
+923. [Swift Testing: parametrizar com arguments](../../domains/software-0007/software/testes/swift-testing-parameterized-tests.md)
+924. [Swift Testing: controlar testes com traits](../../domains/software-0007/software/testes/swift-testing-traits.md)
+925. [Swift Testing: agrupar e filtrar por tags](../../domains/software-0007/software/testes/swift-testing-tags.md)
+926. [Swift Testing: serializar apenas o necessário](../../domains/software-0007/software/testes/swift-testing-serialized.md)
+927. [Swift Testing: escrever testes assíncronos](../../domains/software-0007/software/testes/swift-testing-async-tests.md)
+928. [Swift Testing: migrar casos do XCTest](../../domains/software-0007/software/testes/swift-testing-migration-from-xctest.md)
+929. [Swift Testing: executar pela ferramenta de linha de comando](../../domains/software-0007/software/testes/swift-testing-swift-test-cli.md)
+
+### MSTest — estrutura, dados, ciclo de vida, paralelização e configuração
+
+930. [MSTest: reconhecer a estrutura de um teste](../../domains/software-0007/software/testes/mstest-testclass-and-testmethod.md)
+931. [MSTest: fornecer casos inline com DataRow](../../domains/software-0007/software/testes/mstest-datarow-inline.md)
+932. [MSTest: gerar dados com DynamicData](../../domains/software-0007/software/testes/mstest-dynamicdata-provider.md)
+933. [MSTest: respeitar a ordem do ciclo de vida](../../domains/software-0007/software/testes/mstest-lifecycle-order.md)
+934. [MSTest: usar TestContext para informações de execução](../../domains/software-0007/software/testes/mstest-testcontext.md)
+935. [MSTest: afirmar valores e exceções](../../domains/software-0007/software/testes/mstest-assertions-and-exceptions.md)
+936. [MSTest: configurar paralelização](../../domains/software-0007/software/testes/mstest-parallelization.md)
+937. [MSTest: limitar tempo e tratar repetição](../../domains/software-0007/software/testes/mstest-timeout-and-retry.md)
+938. [MSTest: classificar testes para seleção](../../domains/software-0007/software/testes/mstest-categories-and-filtering.md)
+939. [MSTest: escolher o arquivo de configuração](../../domains/software-0007/software/testes/mstest-runsettings-vs-testconfig.md)
+
+### cargo-nextest — isolamento, perfis, retries, partições e relatórios
+
+940. [nextest: isolar cada teste em processo próprio](../../domains/software-0007/software/testes/nextest-process-per-test.md)
+941. [nextest: separar perfis local e de integração contínua](../../domains/software-0007/software/testes/nextest-profiles.md)
+942. [nextest: usar retries com política explícita](../../domains/software-0007/software/testes/nextest-retries-and-flaky-result.md)
+943. [nextest: detectar e interromper testes lentos](../../domains/software-0007/software/testes/nextest-slow-timeout.md)
+944. [nextest: selecionar testes com filtros](../../domains/software-0007/software/testes/nextest-filtersets.md)
+945. [nextest: dividir a suíte em shards de CI](../../domains/software-0007/software/testes/nextest-partitioning.md)
+946. [nextest: publicar resultado em JUnit XML](../../domains/software-0007/software/testes/nextest-junit-report.md)
+947. [nextest: reutilizar binários com archive](../../domains/software-0007/software/testes/nextest-archives.md)
+948. [nextest: reconhecer o limite dos doctests](../../domains/software-0007/software/testes/nextest-doctests-boundary.md)
+949. [nextest: listar e reexecutar testes ignorados](../../domains/software-0007/software/testes/nextest-listing-and-ignored.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 840 notas 10–849 das tranches 2–14 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 849/2.000 notas válidas, restando 1.151 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 940 notas 10–949 das tranches 2–15 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 949/2.000 notas válidas, restando 1.051 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
