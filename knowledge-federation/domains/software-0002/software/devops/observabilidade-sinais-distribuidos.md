@@ -8,8 +8,9 @@ confianca: alta
 ultima_verificacao: 2026-10-01
 validade: estavel
 status: candidata
-revisao_humana: pendente
-revisor: ""
+revisao_humana: aprovada
+revisor: usuario-da-sessao
+data_revisao_humana: 2026-10-02
 fontes: ["https://opentelemetry.io/docs/concepts/signals/", "https://opentelemetry.io/docs/specs/otel/overview/", "https://opentelemetry.io/docs/concepts/signals/metrics/", "https://opentelemetry.io/docs/security/handling-sensitive-data/"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 aliases: [Sinais de observabilidade, Telemetria distribuída]

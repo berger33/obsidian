@@ -1,18 +1,19 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-01T22:44:41+00:00`
+Executada em: `2026-10-02T02:24:34+00:00`
 
-> Um resultado aprovado significa apenas que a nota passou por verificações automatizadas de estrutura, conteúdo mínimo, fontes específicas e ausência de marcadores de template. **Não comprova a veracidade das afirmações.** A validação factual e a aprovação humana permanecem separadas.
+> O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.
 
 ## Arquivos Markdown ativos
 
 - Escopo de notas: `knowledge-federation/domains`
 - Escopo de resolução de links: `knowledge-federation`, `knowledge-federation/domains`
 - MOCs: fora do gate de qualidade; servem apenas como navegação.
-- Arquivos avaliados: **108**
-- Candidatas prontas para revisão humana: **8**
-- Com revisão humana aprovada e identificada no frontmatter: **0**
-- Notas válidas aprovadas (gate + revisão humana): **0**
+- Arquivos avaliados: **239**
+- Candidatas aprovadas no gate e prontas para revisão factual: **139**
+- Com revisão factual humana aprovada: **49**
+- Com revisão factual por IA aprovada e identificada: **90**
+- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **139**
 - Com pendências de qualidade: **100**
 - Critério aplicado: mínimo de 100 palavras, seções de conteúdo, 2 fontes HTTPS específicas, links wiki resolvidos e sem frases de placeholder conhecidas.
 
@@ -24,14 +25,145 @@ Executada em: `2026-10-01T22:44:41+00:00`
 
 ### Candidatas prontas para revisão
 
-- `knowledge-federation/domains/software-0002/software/apis/contrato-openapi-http.md` — 372 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/backend/idempotencia-http-api.md` — 421 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/backend/timeouts-retries-backoff-jitter.md` — 428 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/dados/migracoes-expand-contract.md` — 400 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/devops/gates-de-qualidade-no-merge.md` — 426 palavras; 3 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/devops/observabilidade-sinais-distribuidos.md` — 425 palavras; 4 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/devops/sli-slo-orcamento-de-erro.md` — 413 palavras; 2 fontes específicas; revisão humana: pendente.
-- `knowledge-federation/domains/software-0002/software/testes/contract-testing-consumer-provider.md` — 410 palavras; 2 fontes específicas; revisão humana: pendente.
+- `knowledge-federation/domains/software-0002/software/apis/contrato-openapi-http.md` — 372 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/backend/idempotencia-http-api.md` — 421 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/backend/timeouts-retries-backoff-jitter.md` — 428 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/dados/migracoes-expand-contract.md` — 400 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/devops/gates-de-qualidade-no-merge.md` — 426 palavras; 3 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/devops/observabilidade-sinais-distribuidos.md` — 425 palavras; 4 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/devops/sli-slo-orcamento-de-erro.md` — 413 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0002/software/testes/contract-testing-consumer-provider.md` — 410 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/apis/problem-details-rfc9457.md` — 430 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/apis/rate-limit-http-429.md` — 453 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/dados/sql-parametrizacao-consultas.md` — 412 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/seguranca/cookies-seguranca-sessao-http.md` — 423 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/seguranca/csrf-token-protecao-web.md` — 466 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/seguranca/hashing-senhas-argon2id.md` — 475 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/seguranca/oauth-pkce-fluxo-codigo.md` — 463 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0003/software/web/cors-origem-nao-autorizacao.md` — 430 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/apis/concorrencia-otimista-etag-if-match.md` — 425 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/apis/paginacao-por-cursor-api.md` — 443 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/backend/entrega-kafka-at-least-once-consumidor-idempotente.md` — 468 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/backend/evolucao-esquemas-eventos-avro-registry.md` — 476 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/backend/outbox-transacional-publicacao-eventos.md` — 454 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/dados/explain-analyze-planos-consulta-postgresql.md` — 433 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/dados/indice-btree-multicolunas-postgresql.md` — 427 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0004/software/dados/mvcc-isolamento-transacoes-postgresql.md` — 442 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/deployment-rolling-update-kubernetes.md` — 397 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/hpa-autoscaling-kubernetes.md` — 425 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/networkpolicy-kubernetes-isolamento.md` — 414 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/pdb-disponibilidade-kubernetes.md` — 422 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/probes-kubernetes-liveness-readiness-startup.md` — 403 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/rbac-kubernetes-serviceaccounts.md` — 390 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/requests-limits-cpu-memoria-kubernetes.md` — 451 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0005/software/kubernetes/secrets-kubernetes-protecao-dados.md` — 421 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/cache-busting-assets-immutable.md` — 397 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/cache-control-diretivas-armazenamento-http.md` — 385 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/cache-respostas-autenticadas-shared.md` — 403 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/freshness-age-cache-http.md` — 402 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/invalidacao-cache-metodos-unsafe.md` — 432 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/revalidacao-cache-etag-if-none-match.md` — 388 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/stale-while-revalidate-if-error.md` — 427 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0006/software/web/variantes-cache-vary-http.md` — 380 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/acceptance-criteria-as-test-conditions.md` — 252 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/acceptance-test-driven-development.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/acceptance-testing-validation.md` — 340 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/behavior-driven-development.md` — 265 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/black-box-testing-specification-based.md` — 241 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/chaos-experiments-steady-state-blast-radius.md` — 414 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/checklist-based-testing.md` — 260 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/ci-feedback-testes-regressao.md` — 401 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/cobertura-branches-statement-interpretacao.md` — 390 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/collaboration-based-test-approach.md` — 243 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/combinatorial-testing-pairwise-t-way.md` — 409 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/component-integration-testing-interfaces.md` — 326 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/component-testing-isolation.md` — 322 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/confirmation-testing-after-fix.md` — 262 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/decision-table-testing-regras-condicionais.md` — 424 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/defect-report-reproducibility-severity-priority.md` — 418 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/devops-testing-continuous-feedback.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/differential-testing-comparacao-implementacoes.md` — 402 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/early-frequent-stakeholder-feedback.md` — 334 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/error-defect-failure-root-cause.md` — 384 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/error-guessing-experience.md` — 255 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/essential-skills-for-testers.md` — 258 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/experience-based-testing-techniques.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/exploratory-testing-aprendizado-design-execucao.md` — 385 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/fixtures-pytest-ciclo-vida-escopos.md` — 385 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/functional-testing-quality-characteristics.md` — 262 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/fundamental-test-activities.md` — 349 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/fuzzing-coverage-guided-libfuzzer.md` — 418 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/good-testing-practices-across-sdlc.md` — 277 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/independence-of-testing-levels.md` — 271 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/maintenance-testing-change-scope.md` — 277 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/maintenance-testing-triggers.md` — 254 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/mcdc-coverage-condicoes-independentes.md` — 378 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/metamorphic-testing-oracle-relations.md` — 435 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/mutation-testing-eficacia-testes.md` — 402 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/nonfunctional-testing-quality-attributes.md` — 269 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/particionamento-equivalencia-valores-fronteira.md` — 438 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/performance-testing-modelagem-carga.md` — 408 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/piramide-testes-estrategia-contexto.md` — 396 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/property-based-testing-hypothesis.md` — 410 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/regression-test-prioritization-risco-impacto.md` — 430 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/regression-testing-change-effects.md` — 257 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/requirements-test-traceability.md` — 404 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/retirement-testing-data-archival.md` — 258 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-author-feedback-correction.md` — 256 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-leader-responsibility.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-manager-resources.md` — 243 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-moderator-facilitator.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-process-activities.md` — 339 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-reviewer-role.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-role-allocation-context.md` — 267 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-roles-responsibilities.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-scribe-recorder.md` — 249 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-success-factors.md` — 347 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/review-types-formality-purpose.md` — 387 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/risk-based-testing-priorizacao-risco.md` — 423 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/schema-based-api-testing-schemathesis-openapi.md` — 394 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/sdlc-impact-on-testing.md` — 300 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/session-based-testing-charters-debriefs.md` — 402 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/shift-left-testing.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/shrinking-contraexemplos-hypothesis.md` — 396 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/snapshot-testing-jest-revisao.md` — 379 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/state-transition-testing-coverage.md` — 444 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/static-testing-work-products.md` — 341 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/static-vs-dynamic-testing.md` — 340 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/system-integration-testing-external-systems.md` — 319 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/system-testing-requirements.md` — 334 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-automation-investment-maintenance-risks.md` — 398 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-case-prioritization-dependencies.md` — 390 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-data-privacidade-sinteticos.md` — 405 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-doubles-fakes-stubs-spies-mocks.md` — 427 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-driven-development.md` — 277 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-effort-estimation-techniques.md` — 364 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-entry-exit-criteria.md` — 426 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-environment-configuration-management.md` — 384 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-first-approaches-tdd-atdd-bdd.md` — 281 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-levels-overview.md` — 340 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-objectives-context.md` — 372 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-oracles-resultados-esperados.md` — 415 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-planning-objetivos-escopo-comunicacao.md` — 443 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-process-context-tailoring.md` — 348 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-progress-metrics-relatorios-conclusao.md` — 406 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-tool-categories.md` — 242 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-tool-introduction-and-risk.md` — 284 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/test-tools-beyond-automation.md` — 250 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/teste-acessibilidade-automatizada-revisao-humana.md` — 409 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testes-flaky-determinismo.md` — 466 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testes-hermeticos-dependencias.md` — 433 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testes-stateful-model-based-hypothesis.md` — 393 palavras; 2 fontes específicas; revisão factual: humana aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-migrations-and-platform-upgrades.md` — 269 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-principles-contextual.md` — 355 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-retrospectives-process-improvement.md` — 269 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-roles-management-and-testing.md` — 342 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-sequential-and-iterative-sdlc.md` — 298 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testing-vs-debugging.md` — 379 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/testware-artifacts.md` — 343 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/user-story-three-cs.md` — 251 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/white-box-testing-structure-and-limits.md` — 268 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0007/software/testes/whole-team-approach-quality.md` — 260 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 
 ### Amostra de notas com pendências
 
@@ -92,4 +224,4 @@ A auditoria do ledger usa os campos `summary`, `body_seed` e `title` para detect
 
 ## Próximo passo
 
-Expandir as candidatas em lotes pequenos, revisar cada afirmação contra as fontes citadas e registrar `revisao_humana: aprovada` e o identificador do revisor somente após essa conferência. Não usar contagem de IDs, links ou arquivos como substituto da contagem de conteúdo validado.
+Para candidatas novas, conferir afirmações e ressalvas nas fontes citadas; registrar separadamente revisão humana (`revisao_humana`, `revisor`) ou revisão por IA (`revisao_ia`, `revisor_ia`, `data_revisao_ia`, `relatorio_revisao_ia`). Não rotular revisão por IA como humana nem usar IDs, links ou arquivos como substituto de conteúdo validado.

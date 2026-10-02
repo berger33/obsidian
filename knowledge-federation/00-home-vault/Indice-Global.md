@@ -1,13 +1,19 @@
 ---
 tipo: indice-global
-ultima_verificacao: 2026-09-30
+ultima_verificacao: 2026-10-02
 tags: [indice, global, ledger-1m]
 ---
 # Índice Global — Knowledge Federation (inventário legado de 1 milhão)
 
 > As contagens abaixo descrevem registros, arquivos e pacotes. A auditoria identificou texto-template em todos os 1.000.000 registros virtuais; não são notas válidas. Consulte [[note-quality-audit]] e [[MOC-Confiabilidade-e-Contratos]].
 
-Atualizado em: 2026-10-01T20:22:44
+Atualizado em: 2026-10-02
+
+## Estado editorial do diretório ativo
+
+- Arquivos Markdown em `domains/`: **169** (100 sementes legadas + 69 notas autorais).
+- Candidatas aprovadas no gate automatizado: **69**; aprovação factual humana registrada: **49**; 20 aguardam revisão.
+- Os lotes 0004–0006 e as 29 notas atuais do lote `software-testes-2000-0001` acrescentam 53 notas autorais sobre dados distribuídos, Kubernetes, cache HTTP e testes; veja [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila humana](../exports/reports/human-review-queue.md).
 
 ## Resumo Executivo
 
@@ -16,7 +22,7 @@ Atualizado em: 2026-10-01T20:22:44
 - **Total de entradas no inventário:** 1.000.100
 - **Arquivos sequenciais materializados:** 5.000 lotes / **1.000.000 arquivos**; não equivalem a notas válidas
 - **Study Packs históricos:** 78 × 200 = **15.600 arquivos de nota**; não validados
-- **Arquivos de nota representados no TAR atual:** **1.015.608** (1.000.000 placeholders + 15.600 arquivos dos Study Packs + 8 candidatas; sem MOCs/relatórios; não são notas válidas)
+- **Arquivos de nota representados no TAR histórico:** **1.015.608** (1.000.000 placeholders + 15.600 arquivos dos Study Packs + 8 candidatas incluídas na data do empacotamento; não são notas válidas; os lotes ativos 0003–0006 e o lote 0007 não estão no TAR, somando 51 notas autorais fora dele)
 - **Notas com revisão humana registrada:** 0 no checkpoint legado
 - **Conteúdo operacional em domínios regulados:** **0**
 

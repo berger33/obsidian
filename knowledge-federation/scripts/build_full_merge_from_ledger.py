@@ -126,7 +126,7 @@ def main():
 
 Gerado em: {manifest['generated_at']}
 
-> Este TAR representa arquivos e registros exportados; não certifica qualidade editorial. O ledger legado contém texto-template. Arquivos materializados não devem ser contados como notas válidas sem passar pelo gate e por revisão humana.
+> Este TAR representa arquivos e registros exportados; não certifica qualidade editorial. O ledger legado contém texto-template. Arquivos materializados não devem ser contados como notas válidas sem passar pelo gate e por revisão factual humana ou por IA registrada separadamente.
 
 - `00-home-vault/`: navegação e índices do inventário.
 - `00-vault-consolidado/`: 78 Study Packs e 15.600 arquivos de nota gerados a partir do ledger; auditoria de links é apenas estrutural.

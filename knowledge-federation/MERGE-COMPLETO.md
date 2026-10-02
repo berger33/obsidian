@@ -2,7 +2,9 @@
 
 Data de rebuild e verificação end-to-end: 2026-10-01
 
-> **Ressalva de qualidade:** o arquivo inclui 1.000.000 de arquivos-placeholder derivados do catálogo. A auditoria encontrou marcadores de template em todos os registros virtuais do checkpoint. O TAR também inclui oito notas candidatas ao gate automatizado; elas ainda aguardam revisão humana. **Arquivos, IDs, MOCs, links e candidatas não são notas válidas aprovadas.**
+> **Ressalva de qualidade:** o arquivo inclui 1.000.000 de arquivos-placeholder derivados do catálogo. A auditoria encontrou marcadores de template em todos os registros virtuais do checkpoint. O TAR é um snapshot reconstruído em 2026-10-01 e inclui oito notas no estado candidato daquela data; as cópias ativas correspondentes foram aprovadas pelo usuário em 2026-10-02, mas o TAR não foi reconstruído e preserva os frontmatters antigos. **Os placeholders e snapshots não atualizados não são notas válidas aprovadas.**
+
+As contagens e os estados detalhados neste documento descrevem o snapshot do arquivo construído em 2026-10-01. No diretório ativo, 49 notas desse conjunto já têm revisão factual humana aprovada em 2026-10-02; o TAR permanece inalterado e não reflete essas decisões.
 
 ## Artefato
 

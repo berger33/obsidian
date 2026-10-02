@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit whether note files are substantive enough to enter human review."""
+"""Audit whether note files are substantive enough for factual review."""
 from __future__ import annotations
 
 import argparse
@@ -98,7 +98,9 @@ def unresolved_wikilinks(content: str, known_stems: set[str], known_paths: set[s
 def render_report(results: list[dict], ledger: dict | None, roots: list[Path], link_roots: list[Path], min_words: int, min_sources: int) -> str:
     passed = [result for result in results if result["ready_for_review"]]
     failed = [result for result in results if not result["ready_for_review"]]
-    reviewed = [result for result in passed if result["human_reviewed"]]
+    human_reviewed = [result for result in passed if result["human_reviewed"]]
+    ai_reviewed = [result for result in passed if result["ai_reviewed"]]
+    valid_reviewed = [result for result in passed if result["valid_reviewed"]]
     issue_counts = Counter(
         error.split(":", 1)[0]
         for result in failed
@@ -110,7 +112,7 @@ def render_report(results: list[dict], ledger: dict | None, roots: list[Path], l
         "",
         f"Executada em: `{stamp}`",
         "",
-        "> Um resultado aprovado significa apenas que a nota passou por verificações automatizadas de estrutura, conteúdo mínimo, fontes específicas e ausência de marcadores de template. **Não comprova a veracidade das afirmações.** A validação factual e a aprovação humana permanecem separadas.",
+        "> O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.",
         "",
         "## Arquivos Markdown ativos",
         "",
@@ -118,9 +120,10 @@ def render_report(results: list[dict], ledger: dict | None, roots: list[Path], l
         f"- Escopo de resolução de links: {', '.join(f'`{root.relative_to(REPO_ROOT)}`' if root.is_relative_to(REPO_ROOT) else f'`{root}`' for root in link_roots)}",
         "- MOCs: fora do gate de qualidade; servem apenas como navegação.",
         f"- Arquivos avaliados: **{len(results):,}**",
-        f"- Candidatas prontas para revisão humana: **{len(passed):,}**",
-        f"- Com revisão humana aprovada e identificada no frontmatter: **{len(reviewed):,}**",
-        f"- Notas válidas aprovadas (gate + revisão humana): **{len(reviewed):,}**",
+        f"- Candidatas aprovadas no gate e prontas para revisão factual: **{len(passed):,}**",
+        f"- Com revisão factual humana aprovada: **{len(human_reviewed):,}**",
+        f"- Com revisão factual por IA aprovada e identificada: **{len(ai_reviewed):,}**",
+        f"- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **{len(valid_reviewed):,}**",
         f"- Com pendências de qualidade: **{len(failed):,}**",
         f"- Critério aplicado: mínimo de {min_words} palavras, seções de conteúdo, {min_sources} fontes HTTPS específicas, links wiki resolvidos e sem frases de placeholder conhecidas.",
         "",
@@ -134,8 +137,13 @@ def render_report(results: list[dict], ledger: dict | None, roots: list[Path], l
     if passed:
         lines.extend(["### Candidatas prontas para revisão", ""])
         for result in passed:
+            review_state = (
+                "humana aprovada" if result["human_reviewed"]
+                else "por IA aprovada" if result["ai_reviewed"]
+                else "pendente"
+            )
             lines.append(
-                f"- `{result['path']}` — {result['word_count']} palavras; {result['source_count']} fontes específicas; revisão humana: {'registrada' if result['human_reviewed'] else 'pendente'}."
+                f"- `{result['path']}` — {result['word_count']} palavras; {result['source_count']} fontes específicas; revisão factual: {review_state}."
             )
         lines.append("")
 
@@ -170,7 +178,7 @@ def render_report(results: list[dict], ledger: dict | None, roots: list[Path], l
     lines.extend([
         "## Próximo passo",
         "",
-        "Expandir as candidatas em lotes pequenos, revisar cada afirmação contra as fontes citadas e registrar `revisao_humana: aprovada` e o identificador do revisor somente após essa conferência. Não usar contagem de IDs, links ou arquivos como substituto da contagem de conteúdo validado.",
+        "Para candidatas novas, conferir afirmações e ressalvas nas fontes citadas; registrar separadamente revisão humana (`revisao_humana`, `revisor`) ou revisão por IA (`revisao_ia`, `revisor_ia`, `data_revisao_ia`, `relatorio_revisao_ia`). Não rotular revisão por IA como humana nem usar IDs, links ou arquivos como substituto de conteúdo validado.",
         "",
     ])
     return "\n".join(lines)
@@ -247,11 +255,13 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(report, encoding="utf-8")
     ready = sum(1 for result in results if result["ready_for_review"])
-    valid = sum(1 for result in results if result["ready_for_review"] and result["human_reviewed"])
+    valid = sum(1 for result in results if result["ready_for_review"] and result["valid_reviewed"])
+    human = sum(1 for result in results if result["ready_for_review"] and result["human_reviewed"])
+    ai = sum(1 for result in results if result["ready_for_review"] and result["ai_reviewed"])
     print(f"Relatório: {out}")
     print(
         f"Arquivos: {len(results)} | candidatas para revisão: {ready} | "
-        f"aprovadas por revisão humana: {valid} | com pendências: {len(results) - ready}"
+        f"aprovadas por revisão humana: {human} | por IA: {ai} | válidas pelo protocolo: {valid} | com pendências de gate: {len(results) - ready}"
     )
     if ledger is not None:
         print(

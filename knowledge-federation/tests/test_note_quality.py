@@ -11,6 +11,7 @@ from note_quality import assess_markdown, inspect_ledger_database  # noqa: E402
 from kf_common import init_db  # noqa: E402
 from generate_virtual_notes import ensure_virtual_schema  # noqa: E402
 from audit_note_quality import markdown_link_index, unresolved_wikilinks  # noqa: E402
+from audit_batch import suggested_batch_status  # noqa: E402
 from materialize_batch import require_catalog_stub_opt_in  # noqa: E402
 
 
@@ -100,6 +101,27 @@ Em lotes futuros, expanda a nota com fontes iniciais a verificar.
         self.assertFalse(assess_markdown(note)["human_reviewed"])
         note = note.replace('revisor: ""', "revisor: revisao-tecnica")
         self.assertTrue(assess_markdown(note)["human_reviewed"])
+
+    def test_ai_review_requires_explicit_approval_reviewer_date_and_report(self) -> None:
+        reviewed = GOOD_NOTE.replace(
+            'revisor: ""',
+            'revisor: ""\nrevisao_ia: aprovada\nrevisor_ia: "Arena.ai Agent Mode"\n'
+            'data_revisao_ia: 2026-10-01\nrelatorio_revisao_ia: "exports/reports/ai-review.md"',
+        )
+        result = assess_markdown(reviewed, "ai-reviewed.md")
+        self.assertTrue(result["ai_reviewed"])
+        self.assertFalse(result["human_reviewed"])
+        self.assertTrue(result["valid_reviewed"])
+
+        incomplete = reviewed.replace('relatorio_revisao_ia: "exports/reports/ai-review.md"', "")
+        result = assess_markdown(incomplete, "ai-reviewed-incomplete.md")
+        self.assertFalse(result["ai_reviewed"])
+        self.assertFalse(result["valid_reviewed"])
+
+    def test_batch_can_complete_with_ai_review_without_human_approval(self) -> None:
+        self.assertEqual(suggested_batch_status(True, True, 20, 20), "complete")
+        self.assertEqual(suggested_batch_status(True, True, 20, 19), "ready_for_review")
+        self.assertEqual(suggested_batch_status(False, True, 20, 20), "needs_review")
 
     def test_catalog_stub_materialization_requires_explicit_opt_in(self) -> None:
         with self.assertRaisesRegex(SystemExit, "Bloqueado"):

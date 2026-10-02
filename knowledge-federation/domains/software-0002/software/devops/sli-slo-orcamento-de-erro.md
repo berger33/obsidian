@@ -8,8 +8,9 @@ confianca: alta
 ultima_verificacao: 2026-10-01
 validade: volatil
 status: candidata
-revisao_humana: pendente
-revisor: ""
+revisao_humana: aprovada
+revisor: usuario-da-sessao
+data_revisao_humana: 2026-10-02
 fontes: ["https://sre.google/workbook/slo-document/", "https://sre.google/workbook/alerting-on-slos/"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 aliases: [SLI, SLO e orçamento de erro]

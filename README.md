@@ -2,37 +2,36 @@
 
 Repositório de vaults em português brasileiro, com taxonomia para Engenharia de Software, IA, Vibe Coding, Jogos, Negócio/Produto, Cannabis Medicinal em abordagem educacional/regulatória e Micologia segura.
 
-## Estado da meta: 1 milhão de notas válidas
+## Meta editorial ativa: 2.000.000 de notas válidas
 
-O merge trouxe um checkpoint com **1.000.000 de registros virtuais de catálogo**. Isso não significa 1.000.000 de notas válidas: a auditoria do SQLite identificou texto-template em todos os 1.000.000 registros. A contagem de arquivos e links dos pacotes antigos também não certifica conteúdo.
+A meta atual é **1.000 lotes de 2.000 notas substantivas**. Cada nota só conta depois de passar pelo gate automatizado e receber revisão factual registrada por uma pessoa ou por IA; os dois tipos de revisão permanecem separados. A aprovação por IA não é aprovação humana. O relatório final será publicado ao término do escopo, não como resultado parcial.
 
 | Métrica auditada | Total | O que representa |
 |---|---:|---|
-| Registros virtuais no ledger | 1.000.000 | Inventário de IDs; não contar como conteúdo válido |
-| Registros virtuais com marcadores de template | 1.000.000 | Sumários e sementes genéricos |
-| Arquivos Markdown ativos em `knowledge-federation/domains/` | 108 | 100 sementes antigas + 8 notas autorais recentes |
-| Candidatas aprovadas no gate automatizado | 8 | Aguardam revisão factual humana |
-| Notas com revisão humana registrada | 0 | Nenhuma plenamente validada ainda |
-| Registros do checkpoint marcados como materializados | 8.000 | Materialização não é validação editorial |
+| Meta | 2.000.000 | 1.000 lotes completos × 2.000 notas qualificadas |
+| Lotes completos | 0 / 1.000 | O primeiro lote ainda está em andamento |
+| Notas válidas contabilizadas | 139 / 2.000.000 (0,00695%) | 49 com aprovação humana histórica + 90 com revisão factual por IA |
+| Notas com revisão humana registrada | 49 | Aprovações anteriores do usuário; não ampliadas a conteúdo novo |
+| Notas com revisão factual por IA registrada | 90 | Revisões do lote atual, com relatório próprio; não são humanas |
+| Primeiro lote `software-testes-2000-0001` | 99 / 2.000 | 9 aprovadas por humano + 90 por IA; faltam 1.901 notas substantivas |
+| Arquivos Markdown ativos em `knowledge-federation/domains/` | 239 | 100 notas legadas com pendências + 139 notas autorais substantivas |
+| Notas legadas fora da contagem | 100 | Ainda têm falhas de conteúdo/fontes; consulte a fila de remediação |
 
-**A meta de 1.000.000 de notas válidas ainda não foi atingida.** O projeto está migrando de contagem por volume para lotes menores, auditáveis e com fontes específicas. Veja [`knowledge-federation/STATUS-CONSOLIDACAO-1M.md`](knowledge-federation/STATUS-CONSOLIDACAO-1M.md) e o [relatório de qualidade](knowledge-federation/exports/reports/note-quality-audit.md).
+O checkpoint histórico preserva **1.000.000 de registros virtuais de catálogo**, com marcadores de template nos 1.000.000 registros, e 8.000 caminhos marcados como materializados. Isso não equivale a notas válidas nem avança a meta de 2 milhões. Os pacotes antigos permanecem disponíveis para inspeção e recuperação, não como prova de conteúdo validado.
 
 ## Artefatos históricos do merge
 
-Os pacotes continuam disponíveis para inspeção e recuperação. Seus números indicam entradas/arquivos gerados a partir do ledger, não notas editorialmente validadas.
-
 | Pacote | Tamanho aproximado | Uso / ressalva |
 |---|---:|---|
-| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 33,1 MB | Merge reconstruído e testado: lotes e vaults históricos + 8 notas candidatas ainda sem aprovação humana |
-| `knowledge-federation/archives/study-vault-1m-packs.zip` | 19 MB | 78 Study Packs / arquivos gerados do ledger; não assumir que sejam 15.600 notas validadas |
-| `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | 24 MB | Checkpoint compacto do catálogo SQLite; 1.000.000 de registros virtuais |
-| `knowledge-federation/archives/starter-vault-prioritario.zip` | 1,1 MB | Recorte de entrada; a quantidade de arquivos não é selo de qualidade |
-| `vault-desenvolvimento-software-com-ia/` | ativo | Vault autoral amplo, mantido separadamente do ledger da meta de 1 milhão |
+| `knowledge-federation/archives/merge-completo-materializado-1m.tar.xz` | 33,1 MB | Snapshot histórico de lotes e vaults; inclui conteúdo-template/candidatas antigas, não 1 milhão de notas válidas |
+| `knowledge-federation/archives/study-vault-1m-packs.zip` | 19 MB | 78 Study Packs e arquivos derivados do ledger; não assumir que sejam notas validadas |
+| `knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` | 24 MB | Checkpoint SQLite do catálogo histórico de 1 milhão de registros virtuais |
+| `knowledge-federation/archives/starter-vault-prioritario.zip` | 1,1 MB | Recorte de entrada; quantidade de arquivos não é selo de qualidade |
+| `vault-desenvolvimento-software-com-ia/` | ativo | Vault autoral amplo, mantido separadamente do checkpoint histórico |
 
 ### Extrair lotes históricos sem criar 1 milhão de arquivos de uma vez
 
 ```bash
-# Exemplo: extrair apenas um intervalo de lotes
 mkdir -p /tmp/merge-parcial
 tar -xJf knowledge-federation/archives/merge-completo-materializado-1m.tar.xz \
   -C /tmp/merge-parcial MERGE-COMPLETO/10-lotes/0001-0100
@@ -45,21 +44,21 @@ python3 knowledge-federation/scripts/ledger_stats.py
 python3 knowledge-federation/scripts/query_checkpoint.py "agentes" --domain ia --limit 20
 ```
 
-## Retomada com gate de qualidade
+## Retomada editorial e relatórios
 
-O primeiro lote de retomada adiciona 8 notas de software sobre confiabilidade, contratos de API, observabilidade, SLOs, migrações e checks de merge. Todas passaram por verificações automatizadas de estrutura e fontes; a revisão humana/factual ainda está pendente.
+O lote em andamento é `software-testes-2000-0001`: 99 notas materiais já passaram pelo gate e revisão factual (9 humanas + 90 IA), com meta de 2.000. A [auditoria global](knowledge-federation/exports/reports/note-quality-audit.md), o [manifesto do lote](knowledge-federation/exports/batches/software-testes-2000-0001.md), os relatórios factuais por IA das [tranches 2–3](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001.md), [4](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) e [6](knowledge-federation/exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), o [registro de revisões](knowledge-federation/exports/reports/human-review-queue.md), a [fila legada](knowledge-federation/exports/reports/legacy-remediation-queue.md), o [plano de execução contínua](knowledge-federation/PLANO-CONTINUO-1M.md) e o [MOC de testes](knowledge-federation/00-home-vault/MOCs/MOC-Testes-Software-0007.md) mantêm o estado auditável.
 
 ```bash
-# Testes do gate de qualidade
+# Testes do gate
 python3 -m unittest discover -s knowledge-federation/tests -v
 
-# Reauditar notas ativas e o checkpoint compactado
+# Reauditar notas ativas e o checkpoint histórico
 python3 knowledge-federation/scripts/audit_note_quality.py \
   --path knowledge-federation/domains \
   --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-O passe automatizado exige também wikilinks resolvidos e significa **pronta para revisão**, não “fato verificado”. A nota só deve ser promovida após checagem das fontes por pessoa revisora identificada no frontmatter. O fluxo e os critérios estão em [`knowledge-federation/README.md`](knowledge-federation/README.md).
+O gate verifica frontmatter, conteúdo mínimo, seções, fontes específicas, wikilinks e marcadores de template; não comprova a verdade das afirmações. Para contar, cada nota deve ter revisão factual registrada. Revisão humana usa `revisao_humana`/`revisor`; revisão por IA usa `revisao_ia`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`. Veja [`knowledge-federation/README.md`](knowledge-federation/README.md) para o protocolo e os comandos.
 
 ## Segurança em domínios regulados
 

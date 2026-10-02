@@ -1,14 +1,21 @@
 # Knowledge Federation
 
-Federação de conhecimento em Markdown para Obsidian, organizada por domínio e mantida em lotes retomáveis.
+Federação de conhecimento em Markdown para Obsidian, organizada por domínio e mantida em lotes auditáveis.
 
-## Estado real após o merge
+## Meta editorial ativa
 
-O checkpoint preserva **1.000.000 de registros virtuais de catálogo**, mas eles não equivalem a um milhão de notas válidas: a auditoria encontrou marcadores de conteúdo-template nos 1.000.000 registros. O checkpoint indica 8.000 registros materializados; a materialização, por si só, não comprova conteúdo útil. O lote inicial de 100 notas físicas também falha nos critérios editoriais atuais.
+A meta confirmada é **1.000 lotes × 2.000 notas substantivas = 2.000.000 de notas válidas**. A revisão humana não é obrigatória para notas novas; cada nota que contar precisa passar pelo gate automatizado e receber revisão factual humana ou por IA, registrada separadamente. Uma revisão por IA nunca é apresentada como aprovação humana.
 
-A retomada mudou para lotes pequenos com fontes específicas e gate de qualidade. O primeiro lote piloto tem 8 notas autorais em `domains/software-0002/`; todas passaram pelos testes estruturais automatizados e aguardam revisão humana/factual. Nenhuma está contabilizada como validada por revisor.
+O checkpoint legado ainda contém 1.000.000 de registros virtuais de catálogo, mas a auditoria encontrou marcadores de template nos 1.000.000 registros. Eles não equivalem a notas válidas e não avançam a meta editorial.
 
-Consulte [`STATUS-CONSOLIDACAO-1M.md`](STATUS-CONSOLIDACAO-1M.md) e [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md) para números e pendências.
+- Arquivos Markdown ativos: **239** (100 notas legadas com pendências + 139 notas autorais substantivas).
+- Notas válidas pelo protocolo atual: **139** (49 aprovações humanas históricas + 90 revisões factuais por IA).
+- Progresso: **139 / 2.000.000 (0,00695%)**; faltam 1.999.861 notas válidas.
+- Lotes completos: **0 / 1.000**.
+- Lote em andamento `software-testes-2000-0001`: **99 / 2.000** notas válidas; 9 humanas e 90 por IA; faltam 1.901 notas materiais.
+- As **100** notas legadas com pendências continuam excluídas.
+
+Consulte os [manifestos de lote](exports/batches/), as [auditorias e relatórios](exports/reports/), o [registro separado de revisões](exports/reports/human-review-queue.md), a [fila de remediação legada](exports/reports/legacy-remediation-queue.md), o [plano para 2 milhões](PLANO-CONTINUO-1M.md) e o [status auditado](STATUS-CONSOLIDACAO-1M.md). Os relatórios factuais por IA do lote atual estão em [`exports/reports/ai-review-software-testes-2000-0001.md`](exports/reports/ai-review-software-testes-2000-0001.md) (tranches 2–3), [`exports/reports/ai-review-software-testes-2000-0001-tranche-04.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md) (tranche 4), [`exports/reports/ai-review-software-testes-2000-0001-tranche-05.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md) (tranche 5) e [`exports/reports/ai-review-software-testes-2000-0001-tranche-06.md`](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md) (tranche 6).
 
 ## Auditoria de qualidade
 
@@ -22,20 +29,21 @@ python3 knowledge-federation/scripts/audit_note_quality.py \
   --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz
 ```
 
-O gate exige frontmatter, no mínimo 100 palavras, seções de explicação/exemplo/limites/verificação, duas fontes HTTPS específicas, wikilinks resolvidos e ausência de marcadores de template conhecidos. Um passe indica **candidata para revisão**, não verificação factual. A contagem de notas validadas exige revisão humana registrada no frontmatter.
+O gate exige frontmatter, no mínimo 100 palavras, seções de explicação/exemplo/limites/verificação, duas fontes HTTPS específicas, wikilinks resolvidos e ausência de marcadores conhecidos de template. O passe automático apenas atesta esses critérios; não comprova a verdade das afirmações. A contagem válida também requer revisão factual registrada.
 
-Para conferir a qualidade de outro cofre ou pasta, repita `--path`:
+### Metadados de revisão
 
-```bash
-python3 knowledge-federation/scripts/audit_note_quality.py \
-  --path knowledge-federation/domains/software-0002 \
-  --path outro-cofre/01-Notas
-```
+- Humana: `revisao_humana: aprovada` e `revisor`, exclusivamente após aprovação humana real.
+- IA: `revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`, após conferência factual contra fontes.
 
-## Pipeline legado e cautela
+Os relatórios mostram separadamente aprovações humanas e revisões por IA. Notas sem revisão factual permanecem candidatas e não contam.
 
-`generate_seed_manifest.py` e `generate_batch.py` foram feitos para gerar sementes estruturais. Eles não produzem automaticamente conteúdo final validado. `audit_batch.py` agora mantém um lote em `needs_review` até passar pelos gates e só marca `complete` quando há aprovação humana identificada. Não escale a geração de sementes nem use contagens do ledger como contagem de notas válidas.
+## Pipeline de lotes
+
+`generate_seed_manifest.py` e `generate_batch.py` foram feitos para gerar sementes estruturais; não produzem automaticamente conteúdo final validado. `audit_batch.py` mantém lotes em `needs_review` se houver falhas estruturais/de qualidade e só os marca `complete` quando todas as notas passam o gate e têm revisão factual humana ou por IA registrada. A fonte do tipo de revisão continua no frontmatter; o estado genérico no ledger não substitui essa distinção.
+
+Não escale a geração de sementes nem use contagens do ledger, IDs ou links como contagem de notas válidas. Um lote só conta como completo quando contém 2.000 notas substantivas qualificadas.
 
 ## Segurança
 
-Domínios regulados, como cannabis medicinal e micologia/psilocibina, devem permanecer educacionais, científicos, legais, documentais e não operacionais. Qualquer conteúdo regulado precisa de revisão especializada adicional.
+Domínios regulados, como cannabis medicinal e micologia/psilocibina, devem permanecer educacionais, científicos, legais, documentais e não operacionais. Qualquer conteúdo regulado pode exigir revisão especializada adicional.
