@@ -14,6 +14,7 @@ from audit_note_quality import markdown_link_index, unresolved_wikilinks  # noqa
 from audit_batch import suggested_batch_status  # noqa: E402
 from materialize_batch import require_catalog_stub_opt_in  # noqa: E402
 from prose_audit import repeated_substantive_sentences  # noqa: E402
+from _build_tranche15 import DATA_DIR, DATE, parse_group, render_note  # noqa: E402
 
 
 GOOD_NOTE = """---
@@ -64,6 +65,17 @@ class NoteQualityTests(unittest.TestCase):
         self.assertGreaterEqual(result["word_count"], 100)
         self.assertEqual(result["source_count"], 2)
         self.assertFalse(result["human_reviewed"])
+
+    def test_tranche_builder_leaves_factual_review_pending(self) -> None:
+        context, rows = parse_group(DATA_DIR / "01-pytest-xdist.txt")
+        number, content, quality = render_note(context, rows, 0, rows[0])
+        self.assertEqual(number, 850)
+        self.assertTrue(quality["ready_for_review"], quality["errors"])
+        self.assertIn(f"ultima_verificacao: {DATE}", content)
+        self.assertIn("revisao_ia: pendente", content)
+        self.assertIn('revisor_ia: ""', content)
+        self.assertIn('data_revisao_ia: ""', content)
+        self.assertNotIn("revisao_ia: aprovada", content)
 
     def test_shared_audit_flags_repeated_substantive_prose_but_ignores_sources(self) -> None:
         sentence = "A repeated sentence explains meaningful behavior and an observable result across scenarios."

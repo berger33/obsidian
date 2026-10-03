@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 849 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 849 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 840 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 949 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 949 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 940 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1062,6 +1062,138 @@
 848. [[python-isolated-asyncio-testcase-lifecycle]] — `IsolatedAsyncioTestCase` permite escrever setup, teste e teardown assíncronos mantendo o contrato de TestCase.
 849. [[python-unittest-assertlogs-context]] — `assertLogs()` captura registros de logging de um logger durante um bloco e permite verificar nível e conteúdo sem interceptar stdout.
 
+## Tranche 15 — test runners, cobertura e qualidade de dados
+
+### pytest-xdist — distribuição, workers e isolamento de execução
+
+850. [[pytest-xdist-algoritmos-de-distribuicao]] — `--dist` define como o controlador entrega itens coletados aos workers; não é apenas um ajuste de velocidade, porque alguns modos preservam afinidade por módulo, arquivo ou grupo.
+851. [[pytest-xdist-fixture-de-sessao-por-worker]] — O escopo `session` do pytest descreve a duração dentro de um processo worker; não cria, por si só, um singleton compartilhado entre todos os processos de pytest-xdist.
+852. [[pytest-xdist-worker-id-para-recursos-isolados]] — Fixtures e variáveis de identidade do xdist permitem distinguir processos durante a execução, útil quando cada worker precisa de um banco, arquivo de log ou namespace descartável.
+853. [[pytest-xdist-testrun-uid-para-concorrencia]] — `testrun_uid` distingue uma sessão xdist inteira, enquanto a identidade do worker distingue processos dentro dela; juntos formam uma chave mais segura para recursos em CI concorrente.
+854. [[pytest-xdist-grupos-de-testes-com-estado-compartilhado]] — O marcador `xdist_group` permite declarar afinidade entre testes que precisam compartilhar processo ou recurso, desde que a execução use o distribuidor `loadgroup`.
+855. [[pytest-xdist-coleta-deterministica-entre-workers]] — O controlador depende de uma coleção consistente: os workers coletam os itens e seus identificadores, e a coordenação pressupõe que a lista resultante corresponda entre processos.
+856. [[pytest-xdist-limite-de-reinicios-de-worker]] — Quando um processo worker quebra, pytest-xdist pode reiniciá-lo e registrar a falha associada ao teste; `--max-worker-restart` limita essa recuperação ou a desativa com zero.
+857. [[pytest-xdist-captura-de-saida-nao-e-stdout-direto]] — A opção tradicional `-s` ou `--capture=no` não funciona com pytest-xdist, porque os testes acontecem em processos workers e a saída precisa ser controlada pelo protocolo do plugin.
+858. [[pytest-xdist-ordem-global-nao-garantida]] — Com `--dist=load`, os itens pendentes são enviados ao worker disponível, sem garantia de ordem global; a execução paralela deve ser correta para qualquer escalonamento admissível.
+859. [[pytest-xdist-workers-remotos-exigem-ambiente-equivalente]] — pytest-xdist pode executar workers em contas ou máquinas remotas, mas a distribuição só é reproduzível se esses ambientes puderem coletar e executar a mesma suíte com dependências e recursos compatíveis.
+
+### cargo-nextest — seleção, partições, retries e execução em CI
+
+860. [[cargo-nextest-slice-versus-hash]] — Particionamento divide uma execução em buckets para vários jobs de CI; `slice` e `hash` distribuem os testes por critérios diferentes, portanto não são intercambiáveis.
+861. [[cargo-nextest-hash-bin-id-e-identidade-do-teste]] — A partição `hash` usa a identidade do binário e o nome do teste para decidir o bucket, o que evita depender apenas da posição ordinal numa lista.
+862. [[cargo-nextest-count-partition-depreciada]] — A partição por `count` está depreciada; código de CI novo deve escolher entre as estratégias atuais e deixar explícita a política de estabilidade ou balanceamento.
+863. [[cargo-nextest-filtersets-e-seletores-cargo]] — O DSL de filtersets seleciona testes com predicados como package, test e dependências; quando também se fornece um filtro de substring tradicional, os dois conjuntos precisam ser satisfeitos.
+864. [[cargo-nextest-deps-e-selecao-de-subgrafo]] — Predicados de dependência do filterset permitem selecionar testes ligados a um pacote sem escrever manualmente uma lista frágil de crates.
+865. [[cargo-nextest-grupos-para-recursos-limitados]] — Grupos de teste do nextest oferecem uma forma de limitar quantos casos associados a um recurso podem rodar simultaneamente, mesmo que o restante da suíte use mais paralelismo.
+866. [[cargo-nextest-perfis-com-defaults-e-overrides]] — Perfis do nextest agrupam opções de execução e podem aplicar overrides por teste, permitindo que ambiente e comportamento sejam declarados em configuração revisável.
+867. [[cargo-nextest-retry-e-sinal-de-teste-flaky]] — `--retries` repete um teste que falhou; se ele passar em uma tentativa posterior, o nextest o marca como flaky e pode incluí-lo nos relatórios.
+868. [[cargo-nextest-junit-relatorio-com-tentativas]] — A exportação JUnit pode comunicar ao CI detalhes de testes que foram repetidos, permitindo distinguir passagem direta, recuperação após falha e falha persistente.
+869. [[cargo-nextest-archive-exige-checkout-compativel]] — `cargo nextest archive` pode transferir binários de teste e artefatos relacionados para outro job, mas o archive não leva o código-fonte do projeto.
+
+### coverage.py — medição, contextos, subprocessos e interpretação de relatórios
+
+870. [[coverage-py-contexto-dinamico-por-teste]] — Coverage.py pode registrar contexto dinâmico para identificar qual função de teste executou cada linha, indo além do total agregado de cobertura.
+871. [[coverage-py-contextos-estaticos-para-fases]] — Contextos estáticos permitem rotular uma medição inteira com uma fase, ambiente ou finalidade, enquanto contextos dinâmicos podem identificar testes individuais.
+872. [[coverage-py-combinar-dados-de-multiplos-processos]] — Com execuções paralelas, cada processo pode gravar seu próprio arquivo de dados; a combinação agrega essas medições para produzir uma visão coerente do conjunto.
+873. [[coverage-py-subprocessos-e-instrumentacao]] — Processos filhos não herdam automaticamente todo estado Python do processo pai; a medição precisa de uma estratégia de propagação e os arquivos resultantes precisam ser combinados.
+874. [[coverage-py-branch-partial-e-pragma-no-branch]] — Branch coverage acompanha transições possíveis entre linhas e pode marcar uma saída não executada como partial branch mesmo quando as statements visíveis parecem cobertas.
+875. [[coverage-py-exclusao-de-codigo-afeta-o-total]] — Padrões de exclusão mudam o denominador do relatório e podem também eliminar uma alternativa de branch, portanto a configuração faz parte da interpretação da métrica.
+876. [[coverage-py-source-detecta-arquivos-nao-executados]] — Configurar `source` delimita o código que será medido e permite que o relatório encontre arquivos Python elegíveis que não foram importados durante a suíte.
+877. [[coverage-py-contexto-de-cobertura-nao-e-assertividade]] — Uma linha registrada como coberta prova que o interpreter passou por ela durante a medição, não que o teste tenha confirmado a saída, a exceção ou o estado que deveria resultar.
+878. [[coverage-py-relatorios-formatados-e-fail-under]] — O mesmo conjunto de dados de execução pode ser exibido em saídas distintas; `fail_under` transforma o percentual total em condição de saída do comando de relatório.
+879. [[coverage-py-caminhos-equivalentes-entre-runners]] — Builds em diretórios diferentes podem registrar o mesmo arquivo-fonte com caminhos absolutos distintos, fragmentando a cobertura combinada sem uma regra de equivalência.
+
+### Pest 5 — datasets, Tia, execução paralela e browser tests
+
+880. [[pest-datasets-parametros-nomeados]] — Datasets nomeados permitem executar um mesmo corpo de teste com diversos inputs, e arrays associativos podem ser mapeados às variáveis do closure pelo nome.
+881. [[pest-dataset-bound-depois-de-beforeeach]] — Um dataset bound pode ser resolvido após o hook `beforeEach`, útil quando os registros de entrada dependem de banco ou de outro estado montado para cada caso.
+882. [[pest-ci-ignora-testes-focados-com-only]] — O seletor `->only()` é útil durante desenvolvimento, mas pode deixar a suíte quase toda de fora se uma marca de foco acidental chegar ao branch.
+883. [[pest-sharding-balanceado-por-tempo]] — Sharding divide testes entre jobs de CI; Pest pode balancear os shards pelo tempo medido quando o arquivo de durações é gerado e versionado no projeto.
+884. [[pest-parallel-nao-isola-recursos-externos]] — A flag `--parallel` executa casos em vários processos; a melhora de tempo só é sustentável quando os testes toleram execução simultânea e não disputam estado mutável sem coordenação.
+885. [[pest-tia-baseline-nao-substitui-suite-integral]] — Tia usa informação de cobertura para relacionar testes a arquivos e selecionar os casos afetados por mudanças; a primeira execução precisa estabelecer o baseline que guiará as próximas.
+886. [[pest-tia-elegibilidade-e-cobertura-dos-casos-reproduzidos]] — O Tia associa casos e dependências com base em dados de execução; a documentação informa que resultados reproduzidos mantêm as linhas e branches cobertos nos casos armazenados.
+887. [[pest-browser-testes-reais-com-playwright]] — O plugin de browser permite visitar páginas e interagir com elementos por texto, seletor CSS ou atributo de teste, cobrindo comportamento que um teste de controller não observa.
+888. [[pest-browser-espera-timeout-e-flakiness]] — Browser tests esperam que uma interação ou elemento se torne disponível; a configuração documentada do Pest fornece timeout padrão que pode ser aumentado quando a aplicação realmente precisa dele.
+889. [[pest-arquitetura-tests-propriedade-de-regras]] — Testes de arquitetura verificam propriedades estruturais sobre classes e namespaces, como dependências proibidas ou convenções de organização, em vez de observar uma única entrada e saída funcional.
+
+### Deno test — permissões, sanitizers, seleção e cobertura integrada
+
+890. [[deno-test-descoberta-de-arquivos-e-pastas]] — Sem caminhos explícitos, `deno test` procura módulos de teste usando convenções de nome e também reconhece scripts dentro de diretórios `__tests__`.
+891. [[deno-test-permissoes-minimas-por-teste]] — O runner permite limitar permissões por teste, então um caso pode demonstrar que uma função não consegue ler arquivo, acessar rede ou usar outra capacidade fora do contrato.
+892. [[deno-test-steps-com-subcasos-hierarquicos]] — `t.step` permite decompor um teste em etapas nomeadas, fazendo com que preparação e ações relacionadas apareçam como unidades subordinadas no resultado do runner.
+893. [[deno-test-sanitizers-recursos-e-operacoes]] — Os sanitizers podem apontar operações assíncronas pendentes e recursos não fechados, problemas que assertions de valor não capturam; em Deno 2.8, op e resource sanitizers são opt-in por padrão segundo a documentação atual.
+894. [[deno-test-timeout-cobre-loop-sincrono-e-promise]] — A opção `timeout` limita a duração de um teste e a documentação afirma que detecta tanto promises que nunca resolvem quanto loops síncronos que não cedem controle.
+895. [[deno-test-affected-tests-nao-substituem-ci-completa]] — `--changed` e `--related` ajudam a selecionar módulos afetados por alterações do git ou dependências declaradas, acelerando o ciclo local.
+896. [[deno-test-filter-e-sharding-com-inventario]] — Filtros por nome restringem casos dentro dos módulos descobertos, enquanto sharding separa o conjunto selecionado em partes para jobs diferentes.
+897. [[deno-test-coverage-raw-data-e-relatorio-limpo]] — `deno test --coverage` coleta dados brutos em diretório configurável e o comando `deno coverage` produz o relatório; a coleta pode acumular arquivos de execuções anteriores.
+898. [[deno-coverage-limites-por-metrica-e-exportacao]] — O comando de relatório exibe métricas de linha, branch e função, podendo aplicar thresholds para fazer o job falhar quando uma meta configurada não é atingida.
+899. [[deno-test-snapshot-atualizacao-com-diff-revisavel]] — Snapshots registram uma representação esperada para comparação posterior; atualizar um snapshot muda o valor que futuros runs consideram correto e por isso é uma alteração de teste, não uma correção automática.
+
+### Kotest 6.2 — isolamento, concorrência, dados e configuração
+
+900. [[kotest-isolation-instance-per-root]] — O isolation mode decide quantas instâncias de uma Spec o engine cria; `InstancePerRoot` cria uma nova instância para cada teste de nível superior e compartilha essa instância com seus descendentes.
+901. [[kotest-concorrencia-de-testes-e-estado-mutavel]] — Kotest permite configurar concorrência de specs e de testes raiz separadamente; por padrão, testes dentro de uma spec executam sequencialmente no dispatcher descrito.
+902. [[kotest-data-testing-com-casos-derivados]] — Data-driven testing gera casos automaticamente a partir de linhas de entrada, mas as funções disponíveis dependem do estilo de Spec e podem criar containers ou testes folha.
+903. [[kotest-nomes-estaveis-para-linhas-de-dados]] — O nome de um teste gerado a partir dos dados depende normalmente de `toString()` da entrada; isso só é confiável quando a representação é estável e informativa para aquele alvo.
+904. [[kotest-retries-com-delay-na-configuracao-compartilhada]] — A configuração compartilhada pode definir quantidade de retries e intervalo para testes de uma Spec, com possibilidade de sobrescrever a configuração em casos individuais.
+905. [[kotest-shared-test-config-com-defaults-locais]] — `DefaultTestConfig` compartilha opções entre casos de uma spec e permite que configuração direta de um teste tenha precedência sobre defaults herdados.
+906. [[kotest-prepare-spec-e-instancias-recriadas]] — Hooks e extensions podem ser chamados uma vez por classe ou para cada instância, distinção importante quando `InstancePerRoot` recria a Spec para grupos diferentes.
+907. [[kotest-platforms-defaults-de-concorrencia]] — Os modos de concorrência descritos na documentação do Kotest têm suporte dependente da plataforma; os destinos que não oferecem esses modos continuam executando testes sequencialmente.
+908. [[kotest-filter-por-tags-sem-perder-casos]] — Tags agrupam casos por dimensão como banco, plataforma ou custo, e filtros de inclusão/exclusão selecionam um subconjunto antes da execução.
+909. [[kotest-test-discovery-filtro-vazio-como-falha]] — Filtros por spec, teste ou tag podem deixar o plano de execução sem nenhum caso; em CI, esse resultado pode parecer sucesso se o projeto não o trata como erro.
+
+### dbt testing v2 — data tests, unit tests e políticas de falha
+
+910. [[dbt-data-test-consulta-retorna-registros-que-falham]] — Um data test passa quando sua query não retorna registros que violem a regra; cada linha devolvida funciona como evidência concreta de falha que pode ser investigada.
+911. [[dbt-singular-e-generic-com-fronteiras-de-reuso]] — Teste singular é uma query SQL de uma regra específica; teste genérico recebe argumentos e reutiliza uma mesma definição em modelos, colunas e recursos diferentes.
+912. [[dbt-arguments-obrigatorios-em-data-tests-v2]] — A sintaxe de parâmetros de generic data tests em dbt v2 exige que os valores fiquem sob `arguments`, em vez de aparecerem como propriedades irmãs do nome do teste.
+913. [[dbt-severity-error-if-e-warn-if]] — Configurações `severity`, `error_if` e `warn_if` controlam como o dbt classifica as linhas retornadas pelo teste e quando uma quantidade aceitável se torna erro ou aviso.
+914. [[dbt-store-failures-e-ciclo-de-vida]] — `store_failures` persiste os registros devolvidos pela query de teste como uma relation, permitindo investigar evidências depois da execução.
+915. [[dbt-where-limita-populacao-sem-mudar-regra]] — O config `where` permite aplicar a regra a um subconjunto das linhas do recurso, útil quando dados históricos ou partições antigas não pertencem ao contrato operacional atual.
+916. [[dbt-fail-calc-e-limite-de-registros-armazenados]] — `fail_calc` escolhe a expressão usada para calcular falhas, enquanto `limit` restringe o volume de linhas retornadas ou armazenadas para a execução do teste.
+917. [[dbt-test-select-data-unit-e-singular]] — O comando `dbt test` executa data tests e unit tests existentes, e os seletor `test_type` distingue tipos de teste durante uma execução parcial.
+918. [[dbt-unit-tests-antes-de-materializar-modelo]] — Unit tests de dbt verificam transformações do modelo usando entradas simuladas antes que a tabela final precise ser materializada, em contraste com data tests que inspecionam dados construídos.
+919. [[dbt-warnings-nao-devem-virar-politica-permanente]] — Configurar severity de warning pode manter uma migração em andamento sem bloquear toda a build, mas transforma uma violação em sinal não bloqueante até a política mudar.
+
+### Mock Service Worker — handlers, ciclo de vida e isolamento de mocks de rede
+
+920. [[msw-setup-server-nao-cria-servidor-http]] — Apesar do nome, `setupServer` não inicia um socket HTTP de aplicação; em Node, o MSW intercepta requests feitos por APIs compatíveis no processo.
+921. [[msw-listen-onunhandledframe-com-politica-explicita]] — `server.listen` recebe estratégia `onUnhandledFrame` para decidir como tratar requests ou conexões WebSocket que não correspondem aos handlers.
+922. [[msw-use-como-override-de-comportamento]] — `server.use` adiciona handlers em runtime que podem sobrescrever a resposta base, permitindo representar erro ou estado específico no teste que precisa dele.
+923. [[msw-reset-handlers-restaura-lista-inicial]] — Sem argumentos, `resetHandlers()` remove handlers adicionados em runtime e restaura a lista inicial passada a `setupServer`; quando recebe novos handlers, estes substituem a lista inicial.
+924. [[msw-restore-handlers-nao-e-reset-handlers]] — `restoreHandlers()` volta a marcar handlers configurados para uso único como não consumidos, permitindo que eles interceptem uma solicitação futura outra vez.
+925. [[msw-close-restaura-fronteira-de-processo]] — `server.close()` desabilita a camada de interceptação instalada para testes, por isso integrações Node costumam iniciar uma vez, resetar entre testes e fechar no teardown final.
+926. [[msw-boundary-isolar-state-por-contexto-async]] — A API `boundary()` permite envolver uma função de modo que o estado do servidor seja delimitado no contexto assíncrono daquela chamada, útil quando execuções concorrentes precisam de overrides independentes.
+927. [[msw-handlers-happy-path-e-override-por-teste]] — A prática recomendada é manter respostas de sucesso no módulo base de handlers e aplicar overrides de rede sob demanda onde o cenário especial é exercitado.
+928. [[msw-http-handlers-no-ponto-de-vista-do-cliente]] — Handlers de HTTP do MSW descrevem método e URL a interceptar e resolvem uma resposta através de Request/HttpResponse, mantendo o contrato de chamada no lado consumidor.
+929. [[msw-handlers-organizados-por-dominio]] — Uma suíte grande pode manter handlers em módulos de domínio e compor as listas em um ponto de entrada, em vez de concentrar cada endpoint num único arquivo.
+
+### node:test — execução nativa, isolamento, mocks e relatórios
+
+930. [[node-test-isolamento-processo-por-arquivo]] — Com isolamento em processo, o runner executa cada arquivo descoberto num processo filho; quando esse modo é desligado, os módulos compartilham o processo e contexto do runner.
+931. [[node-test-concurrency-por-arquivo-e-por-caso]] — O runner tem níveis diferentes de concorrência: `--test-concurrency` limita arquivos de teste executados em paralelo, enquanto opções de `test()` controlam casos assíncronos dentro do runner.
+932. [[node-test-name-pattern-e-filtros-de-casos]] — `--test-name-pattern` filtra testes por uma expressão regular, e o nome de testes e subtestes pode fazer parte do resultado da seleção.
+933. [[node-test-t-contexto-para-recursos-descartaveis]] — O callback de um teste recebe `TestContext`, que pode fornecer helpers e registro de limpeza; usar esse escopo reduz risco de deixar recursos abertos depois de uma assertion falhar.
+934. [[node-test-mocks-com-restauracao-do-contexto]] — Os mocks do test runner podem ser obtidos do contexto do caso, permitindo que o estado de mock seja associado ao lifecycle daquela execução.
+935. [[node-test-fake-timers-com-avanco-explicito]] — `MockTimers` permite habilitar APIs de timer selecionadas e avançar o relógio controlado, acelerando testes que verificam atraso, retry ou timeout.
+936. [[node-test-randomize-seed-para-diagnosticar-ordem]] — Randomizar testes pode expor dependência de ordem; uma seed persistida converte a descoberta em uma execução que pode ser reproduzida durante a depuração.
+937. [[node-test-shard-distribuicao-de-arquivos]] — A flag `--test-shard` divide os arquivos de teste descobertos em partes, permitindo executar uma fração da suíte em cada job de uma matriz de CI.
+938. [[node-test-reporters-e-saidas-de-ci]] — O CLI aceita reporter de teste e destino do reporter, permitindo separar saída humana de logs estruturados para ferramentas de integração.
+939. [[node-test-coverage-nativa-com-limites]] — O test runner do Node expõe coleta e limites nativos para line, branch e function coverage, evitando instalar um instrumentador adicional para métricas básicas.
+
+### pgTAP — assertions SQL, TAP plans e integração com pg_prove
+
+940. [[pgtap-plano-fixo-e-finish]] — O plano TAP anuncia quantos testes o script pretende executar; a função `finish()` valida o resultado e encerra a produção de TAP para que casos omitidos não passem despercebidos.
+941. [[pgtap-no-plan-enfraquece-contagem-prevista]] — `no_plan()` deixa o número de assertions em aberto, possibilitando testes cuja quantidade só é conhecida durante a execução, mas elimina a verificação prévia da contagem esperada.
+942. [[pgtap-assertions-de-esquema-antes-do-conteudo]] — pgTAP oferece funções como `has_table`, `has_column` e `col_type_is` para testar existência e tipo de estruturas, produzindo diagnósticos vinculados ao catálogo do PostgreSQL.
+943. [[pgtap-results-eq-semantica-de-conjunto-e-ordem]] — Comparações de resultados podem verificar igualdade de consultas levando em conta se a ordem ou multiplicidade das linhas faz parte do comportamento esperado.
+944. [[pgtap-throws-ok-contrato-de-excecao]] — Assertions de exceção permitem testar que uma operação SQL incorreta é rejeitada, incluindo código de erro ou mensagem esperada conforme a função escolhida.
+945. [[pgtap-skip-e-todo-explicam-excecoes-do-plano]] — Diretivas TAP `skip` e `todo` registram exceções explícitas no plano de teste, permitindo que uma verificação condicional ou uma falha conhecida continue visível no output.
+946. [[pgtap-sql-script-em-transacao-com-rollback]] — Scripts SQL de teste podem iniciar transação, declarar plano, executar assertions, finalizar e fazer rollback, de forma que alterações transitórias não contaminem o banco de desenvolvimento.
+947. [[pgtap-pg-prove-e-tap-harness]] — `pg_prove` executa scripts SQL ou funções xUnit, coleta o output TAP e usa um harness para resumir sucesso e falha da coleção.
+948. [[pgtap-runtests-xunit-setup-e-teardown]] — A função `runtests()` encontra e executa funções de teste, gera plano TAP e oferece suporte a startup, shutdown, setup, teardown e rollback entre testes.
+949. [[pgtap-runtests-schema-e-match-filtros]] — Para funções de teste no banco, `pg_prove --runtests` pode usar `--schema` e `--match` para determinar quais rotinas serão encontradas e executadas.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 849/849 notas e as 849 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 840 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (849 notas substantivas; 1.151 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md) e [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 949/949 notas e as 949 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica no lote e 940 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (949 notas substantivas; 1.051 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md), [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md) e [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

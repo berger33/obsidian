@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-02
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **849 / 2.000 (42,45%)**
-- Gate automatizado: **849/849 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 14)
+- Notas efetivamente redigidas até agora: **949 / 2.000 (47,45%)**
+- Gate automatizado: **949/949 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 15)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/849**
-- Revisão factual por IA: **840/849**
-- Contabilizadas como válidas: **849/849**
+- Revisão factual humana: **9/949**
+- Revisão factual por IA: **940/949**
+- Contabilizadas como válidas: **949/949**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 840 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–14 (840 notas, IDs 10–849) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 940 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–15 (940 notas, IDs 10–949) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-14.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-14.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-15.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 849 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.151 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 949 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.051 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1057,6 +1057,138 @@
 848. [Python unittest: isolar ciclo de vida de caso assíncrono](../../domains/software-0007/software/testes/python-isolated-asyncio-testcase-lifecycle.md)
 849. [Python unittest: capturar logs do escopo da operação](../../domains/software-0007/software/testes/python-unittest-assertlogs-context.md)
 
+## Tranche 15 — test runners, cobertura e qualidade de dados (100 notas; revisão factual por IA registrada)
+
+### pytest-xdist — distribuição, workers e isolamento
+
+850. [pytest-xdist: escolher o algoritmo de distribuição pela afinidade do teste](../../domains/software-0007/software/testes/pytest-xdist-algoritmos-de-distribuicao.md)
+851. [pytest-xdist: não confundir escopo de sessão com execução única](../../domains/software-0007/software/testes/pytest-xdist-fixture-de-sessao-por-worker.md)
+852. [pytest-xdist: derivar recursos temporários da identidade do worker](../../domains/software-0007/software/testes/pytest-xdist-worker-id-para-recursos-isolados.md)
+853. [pytest-xdist: combinar testrun_uid e worker_id para separar execuções](../../domains/software-0007/software/testes/pytest-xdist-testrun-uid-para-concorrencia.md)
+854. [pytest-xdist: manter testes relacionados no mesmo worker com loadgroup](../../domains/software-0007/software/testes/pytest-xdist-grupos-de-testes-com-estado-compartilhado.md)
+855. [pytest-xdist: manter a coleta idêntica em todos os workers](../../domains/software-0007/software/testes/pytest-xdist-coleta-deterministica-entre-workers.md)
+856. [pytest-xdist: tratar reinício de worker como recuperação limitada](../../domains/software-0007/software/testes/pytest-xdist-limite-de-reinicios-de-worker.md)
+857. [pytest-xdist: planejar diagnósticos sem depender de -s](../../domains/software-0007/software/testes/pytest-xdist-captura-de-saida-nao-e-stdout-direto.md)
+858. [pytest-xdist: remover dependência de ordem na distribuição load](../../domains/software-0007/software/testes/pytest-xdist-ordem-global-nao-garantida.md)
+859. [pytest-xdist: tratar workers remotos como ambientes de teste reais](../../domains/software-0007/software/testes/pytest-xdist-workers-remotos-exigem-ambiente-equivalente.md)
+
+### cargo-nextest — seleção, partições e execução em CI
+
+860. [cargo-nextest: escolher partição slice ou hash conforme a estabilidade](../../domains/software-0007/software/testes/cargo-nextest-slice-versus-hash.md)
+861. [cargo-nextest: entender a chave estável da partição hash](../../domains/software-0007/software/testes/cargo-nextest-hash-bin-id-e-identidade-do-teste.md)
+862. [cargo-nextest: substituir count por um particionamento documentado](../../domains/software-0007/software/testes/cargo-nextest-count-partition-depreciada.md)
+863. [cargo-nextest: combinar filtersets e filtros de substring conscientemente](../../domains/software-0007/software/testes/cargo-nextest-filtersets-e-seletores-cargo.md)
+864. [cargo-nextest: usar deps e rdeps para delimitar um subgrafo de crates](../../domains/software-0007/software/testes/cargo-nextest-deps-e-selecao-de-subgrafo.md)
+865. [cargo-nextest: limitar concorrência de testes que disputam o mesmo recurso](../../domains/software-0007/software/testes/cargo-nextest-grupos-para-recursos-limitados.md)
+866. [cargo-nextest: usar perfis para separar política local e de CI](../../domains/software-0007/software/testes/cargo-nextest-perfis-com-defaults-e-overrides.md)
+867. [cargo-nextest: registrar retry como evidência de flakiness, não como cura](../../domains/software-0007/software/testes/cargo-nextest-retry-e-sinal-de-teste-flaky.md)
+868. [cargo-nextest: preservar no JUnit falhas anteriores e retries](../../domains/software-0007/software/testes/cargo-nextest-junit-relatorio-com-tentativas.md)
+869. [cargo-nextest: separar build e execução com archive sem esquecer fontes](../../domains/software-0007/software/testes/cargo-nextest-archive-exige-checkout-compativel.md)
+
+### coverage.py — contextos, subprocessos e relatórios
+
+870. [coverage.py: associar linhas executadas ao teste que passou por elas](../../domains/software-0007/software/testes/coverage-py-contexto-dinamico-por-teste.md)
+871. [coverage.py: marcar fases de execução com contextos estáticos](../../domains/software-0007/software/testes/coverage-py-contextos-estaticos-para-fases.md)
+872. [coverage.py: combinar arquivos paralelos antes de interpretar a cobertura](../../domains/software-0007/software/testes/coverage-py-combinar-dados-de-multiplos-processos.md)
+873. [coverage.py: propagar medição a subprocessos de forma configurada](../../domains/software-0007/software/testes/coverage-py-subprocessos-e-instrumentacao.md)
+874. [coverage.py: usar pragma no branch para desvios estruturalmente parciais](../../domains/software-0007/software/testes/coverage-py-branch-partial-e-pragma-no-branch.md)
+875. [coverage.py: revisar como exclusões alteram statements e branches reportados](../../domains/software-0007/software/testes/coverage-py-exclusao-de-codigo-afeta-o-total.md)
+876. [coverage.py: declarar source para incluir módulos sem execução](../../domains/software-0007/software/testes/coverage-py-source-detecta-arquivos-nao-executados.md)
+877. [coverage.py: não interpretar linha executada como comportamento validado](../../domains/software-0007/software/testes/coverage-py-contexto-de-cobertura-nao-e-assertividade.md)
+878. [coverage.py: escolher formato de relatório e aplicar limite de cobertura](../../domains/software-0007/software/testes/coverage-py-relatorios-formatados-e-fail-under.md)
+879. [coverage.py: mapear caminhos de checkout ao combinar workers](../../domains/software-0007/software/testes/coverage-py-caminhos-equivalentes-entre-runners.md)
+
+### Pest 5 — datasets, Tia e browser testing
+
+880. [Pest 5: mapear datasets associativos por nome de parâmetro](../../domains/software-0007/software/testes/pest-datasets-parametros-nomeados.md)
+881. [Pest 5: criar dataset bound depois do setup de cada teste](../../domains/software-0007/software/testes/pest-dataset-bound-depois-de-beforeeach.md)
+882. [Pest 5: fazer o job de CI ignorar focos locais marcados only](../../domains/software-0007/software/testes/pest-ci-ignora-testes-focados-com-only.md)
+883. [Pest 5: atualizar tempos para distribuir shards por duração](../../domains/software-0007/software/testes/pest-sharding-balanceado-por-tempo.md)
+884. [Pest 5: desenhar testes independentes antes de habilitar parallel](../../domains/software-0007/software/testes/pest-parallel-nao-isola-recursos-externos.md)
+885. [Pest 5: manter Tia como aceleração local e suíte completa como contrato de CI](../../domains/software-0007/software/testes/pest-tia-baseline-nao-substitui-suite-integral.md)
+886. [Pest 5: interpretar a cobertura preservada por Tia como trilha reproduzível](../../domains/software-0007/software/testes/pest-tia-elegibilidade-e-cobertura-dos-casos-reproduzidos.md)
+887. [Pest 5: reservar browser tests para fluxos que exigem navegador real](../../domains/software-0007/software/testes/pest-browser-testes-reais-com-playwright.md)
+888. [Pest 5: tornar explícitas esperas de elementos em testes de browser](../../domains/software-0007/software/testes/pest-browser-espera-timeout-e-flakiness.md)
+889. [Pest 5: expressar regras arquiteturais como testes executáveis](../../domains/software-0007/software/testes/pest-arquitetura-tests-propriedade-de-regras.md)
+
+### Deno test — permissões, sanitizers e cobertura
+
+890. [Deno test: alinhar nome e localização às regras de descoberta](../../domains/software-0007/software/testes/deno-test-descoberta-de-arquivos-e-pastas.md)
+891. [Deno test: conceder a cada teste só as permissões externas necessárias](../../domains/software-0007/software/testes/deno-test-permissoes-minimas-por-teste.md)
+892. [Deno test: usar steps para estruturar uma operação com fases](../../domains/software-0007/software/testes/deno-test-steps-com-subcasos-hierarquicos.md)
+893. [Deno test: reativar sanitizers para detectar recursos e operações vazados](../../domains/software-0007/software/testes/deno-test-sanitizers-recursos-e-operacoes.md)
+894. [Deno test: colocar deadline em testes que podem pendurar](../../domains/software-0007/software/testes/deno-test-timeout-cobre-loop-sincrono-e-promise.md)
+895. [Deno test: usar affected tests como feedback incremental, não como cobertura final](../../domains/software-0007/software/testes/deno-test-affected-tests-nao-substituem-ci-completa.md)
+896. [Deno test: auditar filtro e shard como duas dimensões da seleção](../../domains/software-0007/software/testes/deno-test-filter-e-sharding-com-inventario.md)
+897. [Deno test: limpar perfis de cobertura antes de medir uma nova suíte](../../domains/software-0007/software/testes/deno-test-coverage-raw-data-e-relatorio-limpo.md)
+898. [Deno coverage: separar limiares de linhas, branches e funções](../../domains/software-0007/software/testes/deno-coverage-limites-por-metrica-e-exportacao.md)
+899. [Deno test: revisar snapshots atualizados como fixtures de contrato](../../domains/software-0007/software/testes/deno-test-snapshot-atualizacao-com-diff-revisavel.md)
+
+### Kotest 6.2 — isolamento, concorrência e data-driven testing
+
+900. [Kotest 6.2: preferir InstancePerRoot para isolamento de estado por raiz](../../domains/software-0007/software/testes/kotest-isolation-instance-per-root.md)
+901. [Kotest 6.2: habilitar concorrência só depois de definir segurança de estado](../../domains/software-0007/software/testes/kotest-concorrencia-de-testes-e-estado-mutavel.md)
+902. [Kotest 6.2: escolher withXXX de acordo com estilo e tipo de nó](../../domains/software-0007/software/testes/kotest-data-testing-com-casos-derivados.md)
+903. [Kotest 6.2: tornar nomes de casos de dados estáveis e legíveis](../../domains/software-0007/software/testes/kotest-nomes-estaveis-para-linhas-de-dados.md)
+904. [Kotest 6.2: configurar retries sem apagar o sinal de falha intermitente](../../domains/software-0007/software/testes/kotest-retries-com-delay-na-configuracao-compartilhada.md)
+905. [Kotest 6.2: centralizar defaults sem impedir ajustes por caso](../../domains/software-0007/software/testes/kotest-shared-test-config-com-defaults-locais.md)
+906. [Kotest 6.2: escolher listener de setup conforme o número de instâncias](../../domains/software-0007/software/testes/kotest-prepare-spec-e-instancias-recriadas.md)
+907. [Kotest 6.2: evitar aplicar expectativa JVM a todas as plataformas](../../domains/software-0007/software/testes/kotest-platforms-defaults-de-concorrencia.md)
+908. [Kotest 6.2: usar tags como classificação sem transformar filtro em suíte completa](../../domains/software-0007/software/testes/kotest-filter-por-tags-sem-perder-casos.md)
+909. [Kotest 6.2: tornar uma suíte vazia uma falha explícita](../../domains/software-0007/software/testes/kotest-test-discovery-filtro-vazio-como-falha.md)
+
+### dbt v2 — data tests, unit tests e severidade
+
+910. [dbt data tests: escrever a consulta a partir da linha que viola o contrato](../../domains/software-0007/software/testes/dbt-data-test-consulta-retorna-registros-que-falham.md)
+911. [dbt data tests: decidir quando um teste singular deve virar genérico](../../domains/software-0007/software/testes/dbt-singular-e-generic-com-fronteiras-de-reuso.md)
+912. [dbt v2: colocar argumentos de testes genéricos no bloco arguments](../../domains/software-0007/software/testes/dbt-arguments-obrigatorios-em-data-tests-v2.md)
+913. [dbt data tests: formular limites de erro e warning a partir da contagem de falhas](../../domains/software-0007/software/testes/dbt-severity-error-if-e-warn-if.md)
+914. [dbt data tests: armazenar linhas que falharam para análise controlada](../../domains/software-0007/software/testes/dbt-store-failures-e-ciclo-de-vida.md)
+915. [dbt data tests: usar where para limitar a população avaliada](../../domains/software-0007/software/testes/dbt-where-limita-populacao-sem-mudar-regra.md)
+916. [dbt data tests: separar cálculo do status de limite do resultado guardado](../../domains/software-0007/software/testes/dbt-fail-calc-e-limite-de-registros-armazenados.md)
+917. [dbt test: filtrar deliberadamente data, unit, singular ou generic tests](../../domains/software-0007/software/testes/dbt-test-select-data-unit-e-singular.md)
+918. [dbt unit tests: testar lógica de modelo com inputs controlados](../../domains/software-0007/software/testes/dbt-unit-tests-antes-de-materializar-modelo.md)
+919. [dbt data tests: definir prazo de revisão para alertas de qualidade](../../domains/software-0007/software/testes/dbt-warnings-nao-devem-virar-politica-permanente.md)
+
+### MSW — handlers, ciclo de vida e isolamento de rede
+
+920. [MSW em Node.js: entender o que setupServer realmente intercepta](../../domains/software-0007/software/testes/msw-setup-server-nao-cria-servidor-http.md)
+921. [MSW: falhar ou avisar para frames de rede sem handler](../../domains/software-0007/software/testes/msw-listen-onunhandledframe-com-politica-explicita.md)
+922. [MSW: usar server.use para acrescentar overrides locais a um cenário](../../domains/software-0007/software/testes/msw-use-como-override-de-comportamento.md)
+923. [MSW: distinguir resetHandlers sem argumentos de substituição da lista](../../domains/software-0007/software/testes/msw-reset-handlers-restaura-lista-inicial.md)
+924. [MSW: usar restoreHandlers para rearmar handlers de uso único](../../domains/software-0007/software/testes/msw-restore-handlers-nao-e-reset-handlers.md)
+925. [MSW: fechar a interceptação depois da suite](../../domains/software-0007/software/testes/msw-close-restaura-fronteira-de-processo.md)
+926. [MSW: criar boundary quando handlers de runtime precisam de escopo assíncrono](../../domains/software-0007/software/testes/msw-boundary-isolar-state-por-contexto-async.md)
+927. [MSW: manter sucesso padrão central e estados excepcionais perto do teste](../../domains/software-0007/software/testes/msw-handlers-happy-path-e-override-por-teste.md)
+928. [MSW: descrever request handler por método e recurso externo](../../domains/software-0007/software/testes/msw-http-handlers-no-ponto-de-vista-do-cliente.md)
+929. [MSW: compor handlers por domínio sem concentrar toda a rede num arquivo](../../domains/software-0007/software/testes/msw-handlers-organizados-por-dominio.md)
+
+### node:test — execução, isolamento e reporters
+
+930. [node:test: compreender o isolamento padrão entre arquivos de teste](../../domains/software-0007/software/testes/node-test-isolamento-processo-por-arquivo.md)
+931. [node:test: separar concorrência de arquivos e subtestes](../../domains/software-0007/software/testes/node-test-concurrency-por-arquivo-e-por-caso.md)
+932. [node:test: usar filtro de nome sem confundir seleção com descoberta](../../domains/software-0007/software/testes/node-test-name-pattern-e-filtros-de-casos.md)
+933. [node:test: registrar teardown no contexto do caso](../../domains/software-0007/software/testes/node-test-t-contexto-para-recursos-descartaveis.md)
+934. [node:test: preferir mocks vinculados ao contexto para restauração automática](../../domains/software-0007/software/testes/node-test-mocks-com-restauracao-do-contexto.md)
+935. [node:test: avançar fake timers em vez de esperar tempo real](../../domains/software-0007/software/testes/node-test-fake-timers-com-avanco-explicito.md)
+936. [node:test: repetir uma ordem aleatória com seed registrada](../../domains/software-0007/software/testes/node-test-randomize-seed-para-diagnosticar-ordem.md)
+937. [node:test: coordenar shards sem sobrepor arquivos entre jobs](../../domains/software-0007/software/testes/node-test-shard-distribuicao-de-arquivos.md)
+938. [node:test: escolher reporter e destino sem perder diagnósticos](../../domains/software-0007/software/testes/node-test-reporters-e-saidas-de-ci.md)
+939. [node:test: gerar cobertura nativa separada por dimensão](../../domains/software-0007/software/testes/node-test-coverage-nativa-com-limites.md)
+
+### pgTAP — assertions SQL, planos TAP e pg_prove
+
+940. [pgTAP: declarar plano para detectar assertions não executadas](../../domains/software-0007/software/testes/pgtap-plano-fixo-e-finish.md)
+941. [pgTAP: reservar no_plan para quantidade realmente indeterminada](../../domains/software-0007/software/testes/pgtap-no-plan-enfraquece-contagem-prevista.md)
+942. [pgTAP: verificar contrato de schema com assertions específicas](../../domains/software-0007/software/testes/pgtap-assertions-de-esquema-antes-do-conteudo.md)
+943. [pgTAP: escolher comparação de resultados que corresponda ao contrato](../../domains/software-0007/software/testes/pgtap-results-eq-semantica-de-conjunto-e-ordem.md)
+944. [pgTAP: validar SQLSTATE e mensagem de operações que devem falhar](../../domains/software-0007/software/testes/pgtap-throws-ok-contrato-de-excecao.md)
+945. [pgTAP: representar temporariamente testes ignorados ou conhecidos como TODO](../../domains/software-0007/software/testes/pgtap-skip-e-todo-explicam-excecoes-do-plano.md)
+946. [pgTAP: isolar efeitos de script com transação e rollback](../../domains/software-0007/software/testes/pgtap-sql-script-em-transacao-com-rollback.md)
+947. [pg_prove: usar TAP::Harness para agregar scripts de teste](../../domains/software-0007/software/testes/pgtap-pg-prove-e-tap-harness.md)
+948. [pgTAP: organizar funções xUnit com runtests e lifecycle explícito](../../domains/software-0007/software/testes/pgtap-runtests-xunit-setup-e-teardown.md)
+949. [pgTAP: revisar schema e regex antes de executar funções xUnit](../../domains/software-0007/software/testes/pgtap-runtests-schema-e-match-filtros.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 840 notas 10–849 das tranches 2–14 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 849/2.000 notas válidas, restando 1.151 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 940 notas 10–949 das tranches 2–15 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 949/2.000 notas válidas, restando 1.051 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
