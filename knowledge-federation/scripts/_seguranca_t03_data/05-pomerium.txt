@@ -1,0 +1,157 @@
+0241|pomerium-arquitetura-identity-aware-access-proxy-beyondcorp-zero-trust|Pomerium: arquitetura do *Identity-Aware Access Proxy* baseado nos princípios Google BeyondCorp e NIST Zero Trust|Conforme documentado na página oficial *What is Pomerium?* (`pomerium.com/docs`) e no README do repositório (`pomerium/pomerium`, escrito em Go sob licença Apache 2.0), o **Pomerium** é um proxy reverso sensível à identidade e ao contexto (*Identity and Context-Aware Access Proxy*), construído sobre o motor de proxy **Envoy** e os princípios do **Google BeyondCorp** e **NIST Zero Trust Architecture (SP 800-207)**.|VPNs corporativas tradicionais concedem acesso no nível da rede (Camada 3): uma vez conectado à VPN, o dispositivo do usuário enxerga toda a sub-rede interna e as aplicações internas muitas vezes confiam implicitamente em qualquer pacote que venha da rede interna.|O Pomerium substitui a confiança baseada em localização de rede por **acesso sem cliente (*clientless access*) com verificação contínua por requisição**: cada requisição HTTP/gRPC/TCP para um serviço interno passa por três etapas obrigatórias — **1. Authenticate** (via seu IdP OIDC: Okta, Entra ID, Google, GitHub, Auth0, Keycloak), **2. Authorize** (avaliação de políticas de identidade, grupos, claims e estado do dispositivo no *Policy Engine*) e **3. Proxy** (encaminhamento seguro com injeção de identidade criptográfica)!|```yaml
+# Exemplo de configuração de rota protegida no config.yaml do Pomerium Core:
+authenticate_service_url: https://authenticate.internal.corp
+idp_provider: oidc
+idp_provider_url: https://dex.internal.corp/dex
+idp_client_id: pomerium-proxy
+
+routes:
+  - from: https://grafana.internal.corp
+    to: http://grafana.monitoring.svc.cluster.local:3000
+    policy:
+      - allow:
+          and:
+            - domain:
+                is: internal.corp
+```|Como detalha a documentação oficial (`pomerium.com/docs`), o **Pomerium Core** é o servidor open-source e motor de data-plane auto-gerenciado, podendo operar em modo *All-in-One* ou distribuído em componentes independentes (`Authenticate`, `Authorize`, `Proxy` e `Databroker`).|Execute `pomerium --version` e acesse uma rota protegida verificando o redirecionamento automático para o IdP.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0242|pomerium-policy-language-ppl-operadores-allow-deny-and-or-not-nor|Pomerium Policy Language (`PPL`): autorização declarativa com operadores lógicos (`allow`/`deny`, `and`, `or`, `not`, `nor`) e critérios de contexto|O motor de autorização do Pomerium utiliza a **Pomerium Policy Language (PPL)** — uma linguagem declarativa em YAML ou JSON estruturada em blocos **`allow`** e **`deny`** compostos pelos quatro operadores lógicos **`and`**, **`or`**, **`not`** e **`nor`**, avaliando critérios ricos como **`email`**, **`user`**, **`domain`**, **`claim`** (qualquer claim do IdP, como `claim/groups` ou `claim/department`), **`day_of_week`**, **`time_of_day`**, **`source_ip`** e **`device`**!|Sistemas de proxy simples que só validam "usuário logado = permitido" não impedem que um prestador externo autenticado no mesmo tenant OIDC acesse um painel administrativo restrito à equipe de SRE.|Na PPL, uma rota só é autorizada se pelo menos uma regra **`allow`** avaliar como verdadeira **E nenhuma regra `deny`** avaliar como verdadeira (*Deny overrides Allow*); além disso, cada critério suporta matchers de comparação como `is`, `contains`, `starts_with`, `ends_with` e `in`!|```yaml
+routes:
+  - from: https://argocd.internal.corp
+    to: https://argocd-server.argocd.svc.cluster.local:443
+    policy:
+      - allow:
+          and:
+            - domain:
+                is: internal.corp
+            - claim/groups:
+                has: platform-sre
+      - deny:
+          or:
+            - claim/employment_type:
+                is: contractor
+```|Por padrão, o Pomerium opera em modo **Deny-by-Default**: se você criar uma rota `from` -> `to` sem declarar nenhuma cláusula `policy` (e sem `allow_public_unauthenticated_access: true`), todas as requisições serão negadas com `403 Forbidden`!|Teste sua política PPL acessando a rota com diferentes usuários e inspecione os logs de decisão de auditoria (`authorize-log`) do Pomerium.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0243|pomerium-jwt-assertion-header-x-pomerium-jwt-assertion-verificacao-upstream|Pomerium Identity Propagation (`X-Pomerium-Jwt-Assertion`): assinatura criptográfica da identidade do usuário para a aplicação backend|Quando o Pomerium autoriza e encaminha uma requisição para o serviço protegido (`to:`), ele pode injetar o cabeçalho HTTP **`X-Pomerium-Jwt-Assertion`** contendo um **JSON Web Token (JWT) assinado criptograficamente pelo Pomerium** (com chave privada ES256 definida em `signing_key`) que atesta o `sub`, `email`, `name`, `groups` e `sid` do usuário autenticado!|Confiar em cabeçalhos em texto puro como `X-Forwarded-User: admin@corp.com` sem assinatura criptográfica é perigoso: se qualquer outro serviço dentro do cluster conseguir conectar-se diretamente à porta HTTP da aplicação backend pulando o proxy, ele poderá forjar `X-Forwarded-User` para personificar qualquer usuário!|Ao validar a assinatura do JWT contido em **`X-Pomerium-Jwt-Assertion`** contra o endpoint público JWKS do Pomerium (`https://authenticate.internal.corp/.well-known/pomerium/jwks.json`), a aplicação backend tem prova criptográfica Fim-a-Fim de que aquela requisição passou pelo Pomerium e pertence àquele usuário.|```bash
+# Inspecionando a chave pública de verificação do cabeçalho X-Pomerium-Jwt-Assertion exposta pelo Pomerium:
+curl -sS https://authenticate.internal.corp/.well-known/pomerium/jwks.json | jq .
+```|Configure **`pass_identity_headers: true`** na rota (ou globalmente) e liste as claims desejadas em **`jwt_claims_headers`** para que o Pomerium assine e propague o `X-Pomerium-Jwt-Assertion` para o serviço upstream.|Decodifique e valide o JWT recebido no cabeçalho `X-Pomerium-Jwt-Assertion` no seu serviço backend usando a chave pública do `jwks.json`.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0244|pomerium-mtls-downstream-upstream-client-certificates-device-identity|Pomerium `mTLS` Downstream (Certificados de Cliente/Dispositivo) e Upstream (Criptografia Mútua Proxy -> Backend)|O Pomerium suporta **Mutual TLS (mTLS)** em ambas as pontas da conexão: 1) **Downstream mTLS** (entre o navegador/dispositivo do usuário e o Pomerium, usando `downstream_mtls` para exigir um certificado X.509 de cliente emitido pela PKI de dispositivos da empresa além do login OIDC); e 2) **Upstream mTLS** (entre o Pomerium Proxy e o serviço interno de destino, usando `tls_client_cert_file` / `tls_custom_ca_file`).|Em uma arquitetura Zero Trust rigorosa (BeyondCorp), possuir apenas o login/senha e MFA do usuário não garante que o acesso esteja partindo de um laptop corporativo gerenciado (MDM); exigir um certificado de cliente de dispositivo em `downstream_mtls` bloqueia o acesso a partir de computadores pessoais não gerenciados.|Com `downstream_mtls.enforcement: policy` (ou `reject_connection`), você pode usar critérios de certificado de cliente diretamente dentro da política PPL (como **`invalid_client_certificate`**) para exigir certificado de dispositivo apenas nas rotas mais críticas de produção!|```yaml
+downstream_mtls:
+  ca_file: /etc/pomerium/certs/device-fleet-ca.pem
+  enforcement: policy
+
+routes:
+  - from: https://prod-db-admin.internal.corp
+    to: https://db-admin.internal.svc.cluster.local:8443
+    tls_custom_ca_file: /etc/pomerium/certs/internal-service-ca.pem
+    tls_client_cert_file: /etc/pomerium/certs/pomerium-client.crt
+    tls_client_key_file: /etc/pomerium/certs/pomerium-client.key
+    policy:
+      - allow:
+          and:
+            - domain:
+                is: internal.corp
+      - deny:
+          or:
+            - invalid_client_certificate: true
+```|Ao configurar `downstream_mtls.crl_file` (ou validação de revogação), o Pomerium rejeita imediatamente certificados de laptops corporativos que foram reportados como perdidos ou roubados.|Teste o acesso à rota com e sem o certificado de cliente instalado (`curl --cert client.crt --key client.key ...`).|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0245|pomerium-acesso-tcp-ssh-rdp-postgres-tunelamento-autenticado|Pomerium Rotas `TCP` (`tcp+https://`): acesso Zero-Trust a bancos de dados (`PostgreSQL`, `Redis`), `SSH` e `RDP` sem VPN|Além de aplicações web HTTP/HTTPS e gRPC, o Pomerium protege **qualquer serviço baseado em TCP puro** (como **SSH**, **PostgreSQL**, **MySQL**, **Redis**, **Kubernetes API** e **RDP**) encapsulando a conexão TCP sobre um túnel HTTPS autenticado e autorizado por identidade (**`from: tcp+https://host:porta`**)!|Muitas empresas conseguem colocar suas aplicações web atrás de um proxy SSO, mas mantêm um servidor de VPN legado aberto apenas porque os engenheiros precisam conectar-se via SSH ou cliente SQL (`psql`) em bancos de dados internos.|Com uma rota `from: tcp+https://postgres.internal.corp:5432` -> `to: tcp://10.0.20.15:5432`, o engenheiro usa a CLI **`pomerium-cli tcp`** (ou suporte nativo `ProxyCommand` no `~/.ssh/config`): a CLI abre o navegador para autenticar no IdP com MFA, estabelece um listener local em `127.0.0.1` e o Pomerium valida a política PPL antes de permitir o túnel TCP!|```yaml
+# Protegendo um servidor SSH e um banco PostgreSQL internos via túnel TCP+HTTPS do Pomerium:
+routes:
+  - from: tcp+https://ssh-bastion.internal.corp:22
+    to: tcp://10.10.1.50:22
+    policy:
+      - allow:
+          and:
+            - claim/groups:
+                has: infra-ssh-access
+```|Para conexões SSH, configure no `~/.ssh/config` do desenvolvedor a diretiva `ProxyCommand pomerium-cli tcp %h:%p`, tornando o comando `ssh usuario@ssh-bastion.internal.corp` 100% transparente!|Teste iniciar o listener local com `pomerium-cli tcp ssh-bastion.internal.corp:22 --listen 127.0.0.1:2222`.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0246|pomerium-kubernetes-ingress-controller-gateway-api-crd-annotations|Pomerium Kubernetes Ingress Controller e Gateway API: definição declarativa de rotas e políticas via `Ingress` Annotations e CRDs|Em clusters Kubernetes, o **Pomerium Ingress Controller** permite declarar rotas Zero-Trust e políticas de autorização PPL diretamente nos objetos nativos **`Ingress`** do Kubernetes (`ingressClassName: pomerium` + anotações `ingress.pomerium.io/*`) ou recursos da **Kubernetes Gateway API**!|Manter um arquivo `config.yaml` monolítico separado dos manifests Kubernetes de cada microsserviço obriga uma equipe central a editar a configuração do proxy toda vez que uma squad cria um novo serviço interno.|Com o Pomerium Ingress Controller, a própria squad declara o `Ingress` do seu serviço no repositório GitOps com a anotação **`ingress.pomerium.io/policy`** (em YAML PPL), e o controlador sincroniza automaticamente a rota e a política com o `Databroker` do Pomerium em tempo real!|```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-internal-ui
+  namespace: monitoring
+  annotations:
+    ingress.pomerium.io/pass_identity_headers: "true"
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - domain:
+                is: internal.corp
+            - claim/groups:
+                has: observability-readers
+spec:
+  ingressClassName: pomerium
+  tls:
+    - hosts:
+        - prometheus.internal.corp
+      secretName: prometheus-tls
+  rules:
+    - host: prometheus.internal.corp
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-server
+                port:
+                  number: 9090
+```|Para proteger a comunicação entre o Pomerium Proxy e o Pod de destino dentro do cluster, use a anotação `ingress.pomerium.io/secure_upstream: "true"` quando o Pod backend já servir HTTPS.|Verifique o status de reconciliação do objeto Ingress executando `kubectl describe ingress prometheus-internal-ui -n monitoring`.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0247|pomerium-arquitetura-distribuida-authenticate-authorize-proxy-databroker|Pomerium Arquitetura de Serviços Distribuídos (`Authenticate`, `Authorize`, `Proxy` e `Databroker`): isolamento e escalabilidade|Para implantações de produção de alta escala, o Pomerium Core pode ser desmembrado (via variável `SERVICES=` ou Helm chart) em quatro serviços independentes comunicando-se via gRPC autenticado por `shared_secret`: **`proxy`** (data-plane Envoy na borda), **`authenticate`** (fluxos OAuth2/OIDC com o IdP), **`authorize`** (motor de avaliação de políticas PPL e OPA) e **`databroker`** (armazenamento de estado de sessões, rotas e diretórios).|Escalar todo o monolito quando apenas o tráfego de data-plane (`proxy`) aumentou 10x desperdiça recursos, além de expor as credenciais OAuth2 do IdP (`idp_client_secret`) nos pods de borda.|Na topologia distribuída: 1) apenas os pods **`proxy`** e **`authenticate`** recebem tráfego externo; 2) apenas o **`authenticate`** precisa das credenciais do IdP; 3) o **`authorize`** avalia políticas em memória com baixa latência; e 4) o **`databroker`** persiste o estado em backend durável!|```bash
+# Exemplo de variáveis de ambiente para iniciar uma réplica dedicada apenas ao data-plane (Proxy) do Pomerium:
+export SERVICES="proxy"
+export AUTHORIZE_SERVICE_URL="https://authorize.pomerium.svc.cluster.local:5443"
+export DATABROKER_SERVICE_URL="https://databroker.pomerium.svc.cluster.local:5443"
+export SHARED_SECRET="base64-encoded-32-byte-secret..."
+pomerium -config /etc/pomerium/config.yaml
+```|Gere o `shared_secret` e o `cookie_secret` com exatamente **32 bytes aleatórios codificados em Base64** (`head -c32 /dev/urandom | base64`) e rotacione-os periodicamente.|Verifique a saúde individual de cada serviço nos endpoints `/ping` e `/healthz` do Pomerium.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0248|pomerium-integracao-kubernetes-dashboard-api-impersonation-serviceaccount|Pomerium para Acesso Zero-Trust a `Kubernetes API` e Dashboards Internos: injeção de credenciais upstream e cabeçalhos `Impersonate-*`|O Pomerium permite proteger APIs e painéis que possuem seu próprio sistema de autenticação (como o **Kubernetes API Server**, **Grafana**, ** Kibana** ou aplicações legadas) combinando a autenticação do usuário final no Pomerium com a injeção controlada de cabeçalhos de autorização upstream (`set_request_headers`, `remove_request_headers` ou `kubernetes_service_account_token`).|Quando um painel interno espera receber o usuário autenticado via cabeçalho HTTP (`X-WEBAUTH-USER` no Grafana) ou via *Kubernetes User Impersonation* (`Impersonate-User` e `Impersonate-Group`), permitir que o cliente externo envie esses cabeçalhos diretamente permitiria escalação de privilégio.|O Pomerium **remove automaticamente** qualquer cabeçalho de identidade enviado pelo cliente externo e injeta os valores verificados da sessão OIDC (ou o token da ServiceAccount do Pomerium configurado na rota) diretamente na chamada ao upstream!|```yaml
+routes:
+  - from: https://kibana.internal.corp
+    to: http://kibana.logging.svc.cluster.local:5601
+    pass_identity_headers: true
+    remove_request_headers:
+      - X-WEBAUTH-USER
+    # O Grafana lê X-Pomerium-Claim-Email (configurado em jwt_claims_headers: ["email"])
+    jwt_claims_headers:
+      - email
+      - groups
+    policy:
+      - allow:
+          and:
+            - domain:
+                is: internal.corp
+```|Ao usar `jwt_claims_headers: ["email", "groups"]`, o Pomerium injeta automaticamente os cabeçalhos limpos `X-Pomerium-Claim-Email` e `X-Pomerium-Claim-Groups` (descartando qualquer cabeçalho `X-Pomerium-*` que o navegador externo tente enviar!).|Teste enviar um cabeçalho forjado `curl -H "X-Pomerium-Claim-Email: admin@internal.corp"` e confirme que o Pomerium o sobrescreve com a identidade real da sessão.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0249|pomerium-cors-websocket-timeout-headers-seguranca-hsts-csp|Pomerium Controles de Tráfego HTTP/WebSockets (`allow_websockets`, `timeout`, `idle_timeout`) e Cabeçalhos de Segurança (`set_response_headers`)|Por ser construído sobre o **Envoy Proxy**, o Pomerium oferece controle granular de protocolo por rota: suporte explícito a **WebSockets (`allow_websockets: true`)**, **SPDY (`allow_spdy: true`)** — essencial para `kubectl exec` e `kubectl port-forward` —, configuração de **`timeout`** e **`idle_timeout`** para streams longos, reescrita de caminho (`prefix_rewrite` / `regex_rewrite`) e injeção de cabeçalhos HTTP de segurança na resposta (`set_response_headers`).|Aplicações interativas modernas (como terminais web no Rancher/Argo CD, JupyterHub, VS Code Server / coder) dependem de conexões WebSocket persistentes; se o proxy reverso não habilitar o upgrade WebSocket explicitamente ou cortar a conexão após 30 segundos, o terminal web cairá constantemente.|Ativando `allow_websockets: true` na rota específica, o Pomerium autentica e autoriza o handshake HTTP inicial contra a política PPL antes de estabelecer o túnel WebSocket bidirecional.|```yaml
+routes:
+  - from: https://vscode.internal.corp
+    to: http://code-server.dev.svc.cluster.local:8080
+    allow_websockets: true
+    idle_timeout: 1h
+    set_response_headers:
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      X-Frame-Options: "DENY"
+      X-Content-Type-Options: "nosniff"
+    policy:
+      - allow:
+          and:
+            - claim/groups:
+                has: engineering
+```|Habilite `allow_websockets: true` e `allow_spdy: true` apenas nas rotas de aplicações que realmente utilizam esses protocolos, mantendo a superfície de protocolo mínima nas demais rotas.|Verifique os cabeçalhos HTTP retornados na rota com `curl -I https://vscode.internal.corp`.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium
+0250|pomerium-auditoria-continua-authorize-logs-otel-metricas-prometheus|Pomerium Verificação Contínua e Observabilidade (`authorize_log`, `access_log`, `Prometheus` e `OpenTelemetry` Tracing)|Conforme destacado no README oficial (*"every single action is verified before allowed to execute"*), o Pomerium emite logs estruturados em JSON para cada decisão de autorização (**`authorize-log`**) e para cada requisição HTTP/TCP encaminhada (**`http-access`**), além de exportar métricas **Prometheus (`metrics_address`)** e traces distribuídos **OpenTelemetry (`tracing_provider`)**.|Em uma VPN tradicional, os logs de segurança mostram apenas "Alice conectou na VPN às 09:00 e desconectou às 18:00", sem visibilidade de quais endpoints internos ela acessou nem quais requisições foram negadas por política.|Nos logs de decisão `authorize-log` do Pomerium, cada linha JSON registra o `request-id`, `user`, `email`, `ip`, `http-host`, `http-method`, `http-path`, **`allow: true|false`**, **`deny: true|false`** e as razões exatas da política avaliada, fornecendo trilha de auditoria completa para SOC 2, ISO 27001 e PCI-DSS!|```yaml
+# Habilitando logs JSON detalhados e métricas Prometheus no config.yaml do Pomerium:
+log_level: info
+proxy_log_level: info
+metrics_address: 0.0.0.0:9090
+authorize_log_fields:
+  - request-id
+  - ip
+  - user
+  - email
+  - http-method
+  - http-host
+  - http-path
+  - allow
+  - deny
+```|Ative a coleta do endpoint Prometheus `:9090/metrics` do Pomerium e crie alertas para picos na métrica de requisições negadas por política (`403 Forbidden`) ou erros de comunicação com o IdP upstream.|Filtre os eventos de autorização nos logs do Pomerium com `jq 'select(.service == "authorize")'`.|https://www.pomerium.com/docs;https://raw.githubusercontent.com/pomerium/pomerium/main/README.md;https://github.com/pomerium/pomerium

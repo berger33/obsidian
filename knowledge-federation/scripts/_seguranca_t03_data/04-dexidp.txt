@@ -1,0 +1,161 @@
+0231|dexidp-arquitetura-cncf-federated-openid-connect-provider-connectors|CNCF Dex: arquitetura do provedor OpenID Connect federado (*Identity Broker*) baseado em `Connectors`|Conforme documentado no README oficial (`dexidp/dex`, projeto Sandbox da CNCF escrito em Go sob licença Apache 2.0) e em `dexidp.io/docs/connectors/`, o **Dex** é um serviço de identidade federado que utiliza **OpenID Connect (OIDC)** para prover autenticação padronizada a aplicações clientes, atuando como um *shim / broker* para provedores de identidade upstream através de **Connectors**.|Em ecossistemas cloud-native (como Kubernetes API Server, Argo CD, Grafana, Kubeflow, Harbor e Gangway), cada ferramenta espera autenticar usuários via OpenID Connect moderno, mas muitas empresas armazenam suas identidades em diretórios **LDAP / Active Directory**, **GitHub Organizations**, **GitLab**, **Google Workspace** ou múltiplos provedores distintos.|Com o Dex, todas as suas aplicações clientes implementam **apenas um protocolo (OpenID Connect falando com o Dex)**, enquanto o Dex traduz e delega a autenticação para qualquer conector configurado (`ldap`, `oidc`, `github`, `gitlab`, `microsoft`, `google`, `atlassian-crowd`, `openshift`), emitindo `id_token` JWT assinados com as claims padronizadas (`sub`, `email`, `email_verified`, `groups`, `name`)!|```yaml
+# Trecho central do config.yaml do Dex definindo o issuer OIDC e o armazenamento em CRDs do Kubernetes:
+issuer: https://dex.internal.corp/dex
+storage:
+  type: kubernetes
+  config:
+    inCluster: true
+web:
+  https: 0.0.0.0:5556
+  tlsCert: /etc/dex/tls/tls.crt
+  tlsKey: /etc/dex/tls/tls.key
+```|Como destaca o README oficial, o Dex pode rodar de forma 100% nativa sobre qualquer cluster Kubernetes usando **Custom Resource Definitions (`storage.type: kubernetes`)**, sem exigir a manutenção de um banco de dados SQL externo!|Consulte `curl -sS https://dex.internal.corp/dex/.well-known/openid-configuration | jq .` para validar os endpoints OIDC expostos pelo Dex.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0232|dexidp-autenticacao-kubernetes-apiserver-oidc-kubectl-kubelogin-rbac|Dex + Kubernetes API Server: autenticação OIDC para `kubectl` (`kubelogin`) com mapeamento de grupos para `ClusterRoleBinding`|Conforme destacado na seção *Kubernetes and Dex* do README oficial, um dos casos de uso primordiais do Dex é alimentar a autenticação de usuários humanos no **`kube-apiserver` do Kubernetes** através das flags nativas `--oidc-issuer-url`, `--oidc-client-id`, `--oidc-username-claim` e `--oidc-groups-claim=groups`.|Como o Kubernetes não possui um banco de dados de usuários humanos embutido, compartilhar arquivos `kubeconfig` contendo certificados X.509 estáticos de `system:masters` que nunca podem ser revogados individualmente nem exigem login corporativo é um risco grave de segurança.|Integrando o `kube-apiserver` ao Dex e utilizando o plugin de credenciais **`kubectl oidc-login` (`int128/kubelogin`)**, o engenheiro executa `kubectl get pods`, autentica-se no seu IdP corporativo via navegador, recebe um `id_token` + `refresh_token` assinado pelo Dex contendo seus grupos (`"groups": ["sre-prod", "devs"]`) e o Kubernetes aplica o RBAC (`RoleBinding` / `ClusterRoleBinding`) diretamente sobre esses grupos!|```yaml
+# Flags do kube-apiserver para confiar nos ID Tokens emitidos pelo Dex:
+# --oidc-issuer-url=https://dex.internal.corp/dex
+# --oidc-client-id=kubernetes-kubectl
+# --oidc-username-claim=email
+# --oidc-groups-claim=groups
+
+# Vinculando um grupo retornado pelo Dex ao papel cluster-admin via ClusterRoleBinding:
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-sre-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: Group
+    name: "sre-prod"
+    apiGroup: rbac.authorization.k8s.io
+```|Atenção à nota oficial em `dexidp.io/docs/connectors/`: clientes que dependem de acesso offline e renovação silenciosa de sessão — como o **`kubectl`** — exigem um conector que **suporte `refresh_tokens`** (como `ldap`, `oidc`, `github`, `gitlab`, `microsoft`).|Inspecione as claims do JWT recebido pelo `kubelogin` para confirmar a presença do array `groups` e do `aud: "kubernetes-kubectl"`.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0233|dexidp-conector-ldap-active-directory-usersearch-groupsearch-starttls|Dex Conector `LDAP` (`ldap`): integração segura com Active Directory / OpenLDAP via `userSearch`, `groupSearch` e `startTLS` / `rootCA`|Na matriz oficial de conectores (`dexidp.io/docs/connectors/`), o conector **`ldap`** possui status **`stable`** e suporte completo a `refresh tokens`, `groups claim` e `preferred_username claim`, permitindo expor diretórios **OpenLDAP**, **FreeIPA** e **Microsoft Active Directory** como um provedor OpenID Connect moderno.|Muitos sistemas empresariais legados ou diretórios internos falam apenas LDAPv3, enquanto plataformas modernas como Argo CD ou Kubernetes suportam apenas OIDC; o conector `ldap` do Dex faz essa ponte realizando a busca do usuário (`userSearch`), validando o bind da senha e buscando os grupos (`groupSearch`) em uma única transação.|No bloco `connectors:` do Dex, configure sempre **`insecureNoSSL: false`** (com `startTLS: true` na porta `389` ou LDAPS na porta `636`) e forneça o certificado da autoridade certificadora interna em **`rootCA`** (ou `rootCAData`), garantindo que as senhas dos usuários nunca trafeguem em texto claro até o servidor LDAP.|```yaml
+connectors:
+  - type: ldap
+    name: Active Directory Corporativo
+    id: ad-corp
+    config:
+      host: ldap.internal.corp:636
+      insecureNoSSL: false
+      rootCA: /etc/dex/certs/corp-ca.pem
+      bindDN: cn=dex-svc,ou=svc,dc=internal,dc=corp
+      bindPW: $DEX_LDAP_BIND_PASSWORD
+      userSearch:
+        baseDN: ou=Users,dc=internal,dc=corp
+        filter: "(objectClass=person)"
+        username: sAMAccountName
+        idAttr: DN
+        emailAttr: mail
+        nameAttr: displayName
+      groupSearch:
+        baseDN: ou=Groups,dc=internal,dc=corp
+        filter: "(objectClass=group)"
+        userMatchers:
+          - userAttr: DN
+            groupAttr: member
+        nameAttr: cn
+```|Referencie a senha da conta de serviço LDAP usando variável de ambiente (`$DEX_LDAP_BIND_PASSWORD`) injetada via Kubernetes Secret, nunca comitando a senha em texto plano no ConfigMap do Dex.|Faça um login de teste selecionando o conector LDAP e inspecione o `id_token` emitido para confirmar o preenchimento de `email` e `groups`.|https://dexidp.io/docs/connectors/;https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://github.com/dexidp/dex
+0234|dexidp-conectores-github-gitlab-orgs-teams-groups-filtragem|Dex Conectores `GitHub` e `GitLab`: controle de acesso baseado em Organizações, Teams (`org:team`) e Grupos de engenharia|Os conectores **`github`** (`stable`) e **`gitlab`** (`beta`) do Dex permitem autenticar desenvolvedores usando suas identidades do GitHub (ou GitHub Enterprise) e GitLab, restringindo o login apenas a membros de **Organizações (`orgs`)** e **Equipes (`teams`)** específicas e populando automaticamente a claim `groups` do `id_token` no formato `<org>:<team>`!|Se você configurar um OAuth App do GitHub sem restringir a propriedade **`orgs`** no conector do Dex, **qualquer conta pública do GitHub no mundo** conseguirá autenticar-se no Dex e obter um `id_token` válido!|Declarando `orgs: [{name: "minha-empresa", teams: ["platform", "security"]}]` no conector `github`, o Dex consulta a API do GitHub durante o login, rejeita qualquer usuário que não pertença às equipes listadas e inclui `"groups": ["minha-empresa:platform", "minha-empresa:security"]` no JWT assinado.|```yaml
+connectors:
+  - type: github
+    id: github
+    name: GitHub Corporativo
+    config:
+      clientID: $GITHUB_CLIENT_ID
+      clientSecret: $GITHUB_CLIENT_SECRET
+      redirectURI: https://dex.internal.corp/dex/callback
+      orgs:
+        - name: minha-org-engenharia
+          teams:
+            - platform-sre
+            - appsec-team
+      loadAllGroups: false
+```|Para que o Dex inclua as claims `groups` no token quando o cliente solicitar `scope: openid profile email groups`, garanta que a organização GitHub autorizou o OAuth App com permissão `read:org`.|Teste o login com um usuário membro da equipe listada e um usuário externo à equipe, confirmando que o segundo é bloqueado no callback do Dex.|https://dexidp.io/docs/connectors/;https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://github.com/dexidp/dex
+0235|dexidp-conector-oidc-upstream-okta-entra-google-alerta-saml|Dex Conector `OIDC` Upstream vs Alerta de Segurança sobre o Conector `SAML 2.0`|Na tabela oficial de conectores do README do Dex (`dexidp/dex`), o conector **`oidc`** permite encadear o Dex a provedores OpenID Connect corporativos (como Okta, Microsoft Entra ID / Azure AD, Google Cloud Identity, Keycloak ou Salesforce), enquanto a linha do conector **`SAML 2.0`** traz um alerta explícito de segurança no README oficial: **`WARNING: Unmaintained and likely vulnerable to auth bypasses (#1884)`**!|Em ambientes corporativos onde o provedor central (Okta, Entra ID, Keycloak, PingFederate) suporta tanto SAML 2.0 quanto OpenID Connect, escolher o conector `saml` no Dex por hábito legado expõe a autenticação a riscos documentados na biblioteca XML/SAML subjacente, além de perder suporte a `refresh_tokens` e `preferred_username`!|Sempre prefira o conector **`oidc`** (ou **`microsoft`** para Entra ID) ao integrar o Dex com provedores de identidade corporativos modernos: além de evitar o parser SAML XML, o conector `oidc` suporta `refresh_tokens`, busca de `userInfo` e propagação de `groups`.|```yaml
+connectors:
+  - type: oidc
+    id: okta-oidc
+    name: Okta SSO
+    config:
+      issuer: https://corp.okta.com
+      clientID: $OKTA_OIDC_CLIENT_ID
+      clientSecret: $OKTA_OIDC_CLIENT_SECRET
+      redirectURI: https://dex.internal.corp/dex/callback
+      scopes:
+        - openid
+        - profile
+        - email
+        - groups
+      insecureEnableGroups: true
+```|No conector `oidc` do Dex, a flag `insecureEnableGroups: true` é necessária para instruir o Dex a repassar a claim `groups` recebida do IdP upstream; certifique-se de que você confia 100% nos nomes de grupos emitidos por aquele IdP upstream.|Verifique na configuração do seu Dex que nenhum conector `type: saml` está em uso quando o provedor suporta `type: oidc`.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0236|dexidp-staticclients-trustedpeers-cross-client-trust-aud-azp|Dex `staticClients` e `trustedPeers`: delegação de tokens entre serviços (*Cross-Client Trust*) com claims `aud` e `azp`|No Dex, cada aplicação cliente é cadastrada em **`staticClients`** (ou via API gRPC) com `id`, `name`, `secret` e `redirectURIs`, e pode declarar uma lista **`trustedPeers`** indicando quais outros clientes registrados têm permissão de solicitar ao Dex um `id_token` emitido **em nome deste cliente (`audience`)**!|Em uma plataforma onde o usuário faz login no dashboard web (`client_id: web-portal`), mas o backend do `web-portal` precisa fazer chamadas autenticadas ao `kube-apiserver` (`client_id: kubernetes-kubectl`) em nome daquele usuário, o `kube-apiserver` rejeitaria um token cuja audiência (`aud`) fosse apenas `web-portal`.|Configurando `trustedPeers: ["web-portal"]` no cliente `kubernetes-kubectl`, o `web-portal` pode solicitar o escopo especial **`audience:server:client_id:kubernetes-kubectl`**: o Dex emite então um `id_token` com **`"aud": "kubernetes-kubectl"`** e **`"azp": "web-portal"`** (*Authorized Party*), permitindo delegação segura e auditável entre serviços!|```yaml
+staticClients:
+  - id: web-portal
+    name: "Portal Interno de Engenharia"
+    redirectURIs:
+      - "https://portal.internal.corp/oauth2/callback"
+    secretEnv: PORTAL_CLIENT_SECRET
+
+  - id: kubernetes-kubectl
+    name: "Kubernetes API Server"
+    redirectURIs:
+      - "http://localhost:8000"
+    secretEnv: K8S_CLIENT_SECRET
+    trustedPeers:
+      - web-portal
+```|Use sempre `secretEnv` (que lê o segredo do cliente de uma variável de ambiente) em vez de `secret` literal em arquivos de configuração do Dex.|Solicite o escopo `openid email groups audience:server:client_id:kubernetes-kubectl` a partir do `web-portal` e valide as claims `aud` e `azp` do JWT retornado.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0237|dexidp-scopes-offline-access-refresh-tokens-expiry-rotation|Dex Escopos (`offline_access`, `groups`, `federated:id`) e Políticas de Expiração (`expiry`): controle de sessão e `refreshTokens`|O Dex controla o ciclo de vida das credenciais emitidas através do bloco **`expiry`** no `config.yaml`, governando o tempo de vida dos códigos de autorização, dos `idTokens` (padrão `24h`), das chaves de assinatura (`signingKeys`, ex.: `6h`) e a política de expiração e rotação de **`refreshTokens`** (`disableRotation`, `reuseInterval`, `validIfNotUsedFor`, `absoluteLifetime`).|Deixar um `id_token` JWT válido por 24 horas sem possibilidade de revogação antes do `exp` amplia a janela de risco caso o token vaze; é muito mais seguro definir `idTokens: "15m"` ou `"1h"` e renovar via `refresh_token` (`scope: offline_access`), que pode ser revogado a qualquer momento no armazenamento do Dex!|Por padrão, o Dex rotaciona o `refresh_token` a cada uso, mas permite configurar `reuseInterval` (ex.: `5s`) para evitar falhas quando múltiplas abas ou processos clientes tentam usar o mesmo `refresh_token` simultaneamente.|```yaml
+expiry:
+  signingKeys: "6h"
+  idTokens: "1h"
+  authRequests: "24h"
+  deviceRequests: "5m"
+  refreshTokens:
+    disableRotation: false
+    reuseInterval: "5s"
+    validIfNotUsedFor: "168h" # Expira após 7 dias de inatividade
+    absoluteLifetime: "720h"  # Expira obrigatoriamente após 30 dias
+```|Desative o banco de senhas estáticas de teste (**`enablePasswordDB: false`**) e remova qualquer entrada `staticPasswords` antes de subir o Dex em ambientes de staging ou produção.|Verifique o campo `exp - iat` de um `id_token` emitido pelo Dex confirmando que corresponde ao valor configurado em `expiry.idTokens`.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0238|dexidp-storage-backends-kubernetes-crd-postgres-sqlite-etcd|Dex Backends de Armazenamento (`storage`): `kubernetes` (CRDs nativos) vs `postgres` / `mysql` / `etcd` em Alta Disponibilidade|O Dex armazena códigos de autorização temporários, sessões de `refresh_token`, chaves criptográficas JWKS em rotação e clientes dinâmicos em um backend configurável na seção **`storage`** (`kubernetes`, `postgres`, `mysql`, `sqlite3`, `etcd` ou `memory`).|Executar múltiplas réplicas do Dex para Alta Disponibilidade (HA) usando `storage.type: memory` ou `sqlite3` local faz com que cada pod gere chaves JWKS diferentes e desconheça os códigos de autorização emitidos pelas outras réplicas, quebrando os fluxos de login!|Quando o Dex roda dentro de um cluster Kubernetes, o backend **`storage.type: kubernetes`** (`inCluster: true`) cria e gerencia automaticamente Custom Resource Definitions (`signingkeys.dex.coreos.com`, `authrequests.dex.coreos.com`, `refreshtokens.dex.coreos.com`, `oauth2clients.dex.coreos.com`) no próprio `etcd` do Kubernetes, permitindo rodar 3+ réplicas stateless do Dex sem provisionar banco externo!|```yaml
+# Configuração de storage PostgreSQL com TLS para implantações do Dex fora do Kubernetes ou de altíssimo volume:
+storage:
+  type: postgres
+  config:
+    host: postgres.internal.corp
+    port: 5432
+    database: dex
+    user: dex_user
+    password: $DEX_POSTGRES_PASSWORD
+    ssl:
+      mode: verify-full
+      caFile: /etc/dex/certs/db-ca.crt
+```|Se usar `storage.type: kubernetes`, proteja o namespace onde o Dex roda com RBAC estrito para que nenhum outro ServiceAccount ou usuário possa listar ou ler os CRDs `signingkeys.dex.coreos.com` (que contêm as chaves privadas de assinatura JWKS) e `refreshtokens.dex.coreos.com`!|Execute `kubectl get crd | grep dex.coreos.com` para verificar os recursos criados pelo backend Kubernetes do Dex.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0239|dexidp-grpc-api-mtls-gerenciamento-dinamico-clientes-revogacao|Dex API Administrativa `gRPC` com `mTLS`: criação dinâmica de clientes OAuth2 e revogação de Refresh Tokens|Além do servidor HTTP/HTTPS OIDC (porta `5556`), o Dex pode expor uma **API gRPC administrativa** (tipicamente na porta `5557`) protegida por **mTLS (`clientCA`)** para criar, atualizar e deletar clientes OAuth2 dinamicamente, gerenciar senhas (se o conector local estiver ativo) e listar/revogar `refresh_tokens` de usuários sem reiniciar o servidor.|Em plataformas multi-tenant onde novos serviços ou clusters são provisionados automaticamente por operadores Kubernetes, reiniciar o Dex a cada novo cliente adicionado em `staticClients` é inviável.|Configurando `grpc.tlsCert`, `grpc.tlsKey` e **`grpc.tlsClientCA`** no `config.yaml`, o Dex exige autenticação mútua por certificado X.509 de cliente em toda chamada gRPC, garantindo que apenas o controlador autorizado possa registrar novos clientes OAuth2.|```yaml
+grpc:
+  addr: 0.0.0.0:5557
+  tlsCert: /etc/dex/grpc-tls/server.crt
+  tlsKey: /etc/dex/grpc-tls/server.key
+  tlsClientCA: /etc/dex/grpc-tls/client-ca.crt
+  reflection: false
+```|Nunca exponha a porta gRPC (`5557`) sem `tlsClientCA` configurado nem através do Ingress público: ela é uma API administrativa de controle interno do cluster.|Verifique que conexões à porta `5557` sem um certificado assinado pela `tlsClientCA` são rejeitadas durante o handshake TLS.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex
+0240|dexidp-token-exchange-rfc8693-aws-sts-irsa-workload-identity|Dex como Emissor OIDC para `AWS STS` (`AssumeRoleWithWebIdentity`) e Federação de Identidades Multi-Serviço|Conforme destacado na seção *ID Tokens* do README oficial (*"Systems that can already consume OpenID Connect ID Tokens issued by dex include: Kubernetes, AWS STS"*), como os ID Tokens emitidos pelo Dex seguem estritamente o padrão OpenID Connect 1.0 e expõem o endpoint público de descoberta (`/.well-known/openid-configuration` e `/keys`), eles podem ser consumidos diretamente pelo **AWS Security Token Service (AWS STS)** e outros provedores de nuvem para troca por credenciais temporárias!|Distribuir chaves estáticas de longo prazo (`AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY`) para desenvolvedores ou serviços on-premises acessarem recursos na AWS cria risco permanente de vazamento.|Ao cadastrar a URL do `issuer` do seu Dex como um **IAM OpenID Connect Identity Provider** na conta AWS, um desenvolvedor ou serviço autenticado no Dex chama `sts:AssumeRoleWithWebIdentity` passando o `id_token` do Dex e recebe credenciais temporárias da AWS STS restritas por condições sobre `sub`, `aud` ou `email`!|```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::123456789012:oidc-provider/dex.internal.corp/dex"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "dex.internal.corp/dex:aud": "aws-sts-cli"
+        }
+      }
+    }
+  ]
+}
+```|Para que o AWS STS possa validar a assinatura dos tokens emitidos pelo Dex, os endpoints públicos `/.well-known/openid-configuration` e `/keys` do Dex precisam ser acessíveis via HTTPS com certificado emitido por uma CA pública confiável.|Teste `aws sts assume-role-with-web-identity --role-arn <ARN> --role-session-name test --web-identity-token <DEX_ID_TOKEN>`.|https://raw.githubusercontent.com/dexidp/dex/master/README.md;https://dexidp.io/docs/connectors/;https://github.com/dexidp/dex

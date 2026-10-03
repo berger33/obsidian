@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), WAF/NSM, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos, DAST e identidade/autorização (OAuth2/OIDC/ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs), DFIR, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **200 / 2.000 (10,00%)**
-- Gate automatizado: **200/200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 2)
-- Revisão factual humana: **0/200**
-- Revisão factual por IA: **200/200**
-- Contabilizadas como válidas: **200/200**
-- Revisor das 200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–2 (200 notas, IDs 1–200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **300 / 2.000 (15,00%)**
+- Gate automatizado: **300/300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 3)
+- Revisão factual humana: **0/300**
+- Revisão factual por IA: **300/300**
+- Contabilizadas como válidas: **300/300**
+- Revisor das 300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–3 (300 notas, IDs 1–300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-02.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-02.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-03.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-03.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md)
 
-Existem 200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.800 restantes.
+Existem 300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.700 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -284,6 +284,138 @@ Existem 200 notas materiais listadas abaixo; não há IDs reservados, placeholde
 199. [Suricata Análise Forense de `PCAP` (`-r`) e Automação via Unix Socket (`suricatasc`): processamento em lote de capturas de tráfego](../../domains/software-0009/software/seguranca/suricata-analise-offline-pcap-replay-regressao-ci-unix-socket.md)
 200. [Suricata `Datasets`, `Thresholds`, `Suppress` e `Flowbits`: correlação de estado entre pacotes, listas dinâmicas e controle de ruído](../../domains/software-0009/software/seguranca/suricata-datasets-thresholding-suppress-rate-filter-correlacao-ioc.md)
 
+## Tranche 3 — Zeek Network Security Monitor, CNCF KubeArmor, Aqua Security Tracee, CNCF Dex, Pomerium, CNCF in-toto, PyCQA Bandit, Securego `gosec`, VirusTotal YARA / YARA-X e Rapid7 Velociraptor (100 notas; revisão factual por IA registrada)
+
+### Zeek Network Security Monitor (arquitetura em duas camadas *Event Engine* e *Script Interpreter*, logs transacionais interligados por `uid`/`fuid`, `FAF`, `Notice`, `Intel`, `Spicy`, `zkg` e `SumStats`)
+
+201. [Zeek Network Security Monitor: arquitetura em duas camadas (*Event Engine* e *Script Interpreter*) para análise semântica de rede](../../domains/software-0009/software/seguranca/zeeknsm-arquitetura-event-engine-script-interpreter-nsm.md)
+202. [Zeek Logs Transacionais e Correlação por `uid` (`conn.log`, `dns.log`, `http.log`, `ssl.log`, `files.log`): pivotamento forense no SOC](../../domains/software-0009/software/seguranca/zeeknsm-logs-transacionais-conn-dns-http-ssl-files-x509-uid.md)
+203. [Zeek Scripting Language: programação orientada a eventos com tipos nativos de rede (`addr`, `subnet`, `port`, `interval`, `set` e `table`)](../../domains/software-0009/software/seguranca/zeeknsm-linguagem-scripts-eventos-tipos-nativos-addr-subnet-port-table.md)
+204. [Zeek File Analysis Framework (`FAF`): dissecção agnóstica de protocolo, detecção de MIME (`file_sniff`) e cálculo de hashes (`MD5`, `SHA1`, `SHA256`)](../../domains/software-0009/software/seguranca/zeeknsm-file-analysis-framework-faf-extracao-arquivos-hashing-mime.md)
+205. [Zeek Notice Framework (`notice.log`): geração de alertas contextuais (`NOTICE`), deduplicação por `suppress_for` e hooks de resposta](../../domains/software-0009/software/seguranca/zeeknsm-notice-framework-alertas-notice-log-action-alarm-hook.md)
+206. [Zeek Intelligence Framework (`intel.log`): ingestão em tempo real de Indicadores de Comprometimento (`ADDR`, `DOMAIN`, `URL`, `FILE_HASH`, `CERT_HASH`)](../../domains/software-0009/software/seguranca/zeeknsm-intelligence-framework-ioc-matching-ips-domains-hashes-cif.md)
+207. [Zeek Arquitetura de Cluster (`zeekctl` / `node.cfg`): papéis de `Manager`, `Logger`, `Proxy` e `Workers` com `AF_PACKET` e `lb_procs`](../../domains/software-0009/software/seguranca/zeeknsm-arquitetura-cluster-zeekctl-manager-logger-proxy-workers.md)
+208. [Zeek `Spicy`: gerador moderno de parsers seguros em C++ para protocolos de rede e formatos de arquivo customizados](../../domains/software-0009/software/seguranca/zeeknsm-spicy-parser-generator-gramaticas-seguras-protocolos-arquivos.md)
+209. [Zeek Package Manager (`zkg`): instalação de pacotes comunitários (`JA3`, `JA4`, `MITRE ATT&CK BZAR`, `hassh`, `cve-detectors`)](../../domains/software-0009/software/seguranca/zeeknsm-package-manager-zkg-ja3-ja4-bzar-mitre-attack-extensoes.md)
+210. [Zeek `SumStats` (Summary Statistics Framework): agregação estatística distribuída para detectar Port Scans, DGA e Beaconing](../../domains/software-0009/software/seguranca/zeeknsm-summary-statistics-sumstats-deteccao-anomalias-scans-exfiltracao.md)
+
+### CNCF KubeArmor (sistema cloud-native de segurança em runtime com bloqueio inline via Linux Security Modules `AppArmor`/`BPF-LSM`/`SELinux` e telemetria `eBPF`, CRDs `ksp`/`csp`/`hsp` e CLI `karmor`)
+
+211. [CNCF KubeArmor: arquitetura de segurança em runtime com bloqueio inline no kernel via `Linux Security Modules (LSMs)` e `eBPF`](../../domains/software-0009/software/seguranca/kubearmor-arquitetura-cncf-runtime-security-enforcement-lsm-ebpf.md)
+212. [KubeArmor `KubeArmorPolicy` (`ksp`): anatomia da política para Pods/Containers (`selector`, `process`, `file`, `network`, `capabilities`, `action`)](../../domains/software-0009/software/seguranca/kubearmor-crd-kubearmorpolicy-especificacao-selector-process-file-network.md)
+213. [KubeArmor Controle Fino de Execução de Processos: `fromSource`, `ownerOnly` e `matchDirectories` recursivos](../../domains/software-0009/software/seguranca/kubearmor-restricao-processos-fromsource-owneronly-recursive.md)
+214. [KubeArmor Proteção de Arquivos e Segredos (`file`): `readOnly: true`, vínculo `fromSource` e blindagem do Token da ServiceAccount](../../domains/software-0009/software/seguranca/kubearmor-protecao-arquivos-sensi-readonly-fromsource-serviceaccount-token.md)
+215. [KubeArmor Controle de Rede (`network`) e Linux Capabilities (`capabilities`) por Executável (`fromSource`)](../../domains/software-0009/software/seguranca/kubearmor-restricao-rede-capabilities-socket-icmp-tcp-udp-por-processo.md)
+216. [KubeArmor Postura *Zero-Trust Whitelisting* (`action: Allow` + `kubearmor-file-posture` / `kubearmor-Visibility`): modelo de privilégio mínimo](../../domains/software-0009/software/seguranca/kubearmor-politicas-default-posture-allow-whitelist-least-permissive.md)
+217. [KubeArmor `KubeArmorClusterPolicy` (`csp`): políticas de segurança em nível de cluster através de múltiplos namespaces](../../domains/software-0009/software/seguranca/kubearmor-cluster-security-policy-csp-governanca-multi-namespace.md)
+218. [KubeArmor `KubeArmorHostPolicy` (`hsp`): hardening de Nós Kubernetes e Servidores Linux Bare-Metal/VM](../../domains/software-0009/software/seguranca/kubearmor-host-security-policy-hsp-protecao-nodes-vms-systemd-kubelet.md)
+219. [KubeArmor CLI (`karmor`): streaming de telemetria e alertas (`karmor logs`), perfilamento (`karmor profile`) e `karmor recommend`](../../domains/software-0009/software/seguranca/kubearmor-cli-karmor-logs-profile-recommend-telemetria-tempo-real.md)
+220. [KubeArmor Matriz de LSMs (`BPF-LSM` vs `AppArmor` vs `SELinux`): escolha de sistema operacional de nó em `EKS`, `GKE`, `AKS` e `RKE`](../../domains/software-0009/software/seguranca/kubearmor-matriz-lsm-bpf-lsm-apparmor-selinux-gke-eks-aks.md)
+
+### Aqua Security Tracee (segurança em runtime e investigação forense para Linux e Kubernetes com `eBPF`, arquitetura *Everything is an Event*, políticas CRD/YAML, captura forense e modelo de segurança)
+
+221. [Aqua Security Tracee: arquitetura unificada *"Everything is an Event"* para segurança em runtime e forense com `eBPF`](../../domains/software-0009/software/seguranca/tracee-arquitetura-aqua-security-ebpf-runtime-security-forensics.md)
+222. [Tracee Políticas de Detecção (`Policies`): intercambiabilidade entre formato `Kubernetes CRD` (`tracee.aquasec.com/v1beta1`) e `Plain YAML`](../../domains/software-0009/software/seguranca/tracee-policies-yaml-kubernetes-crd-vs-plain-format-64-policies.md)
+223. [Tracee Escopos de Política (`scope`): filtragem no kernel por `container`, `host`, árvore de processos (`tree`), `executable` e `uid`](../../domains/software-0009/software/seguranca/tracee-policy-scopes-container-not-container-tree-pid-executable.md)
+224. [Tracee Filtros de Eventos (`rules[].filters`): operadores sobre `data.*`, `retval`, `uid`, `comm` e wildcards `*` de prefixo/sufixo](../../domains/software-0009/software/seguranca/tracee-event-filters-data-args-retval-context-operators-prefix-suffix.md)
+225. [Tracee Assinaturas de Segurança Embutidas: detecção de execução *Fileless* (`mem_prot_alert`), *Rootkits* (` hooked_syscall`), `anti_debugging` e Escape](../../domains/software-0009/software/seguranca/tracee-built-in-security-events-signatures-fileless-rootkit-escape.md)
+226. [Tracee Captura Forense Automática (`--capture` / `output.artifacts`): coleta de binários executados, dumps de memória, arquivos e `PCAP`](../../domains/software-0009/software/seguranca/tracee-forensic-capture-artifacts-executables-memory-pcap-files.md)
+227. [Tracee Visibilidade de Rede via eBPF (`net_packet_dns`, `net_packet_http`, `net_flow_tcp_begin`): inspeção sem proxy ou sidecar](../../domains/software-0009/software/seguranca/tracee-eventos-rede-ebpf-dns-http-net-packet-flow-visibilidade.md)
+228. [Tracee Criação de Assinaturas Customizadas: escrita de detectores próprios consumindo o pipeline de eventos do Tracee](../../domains/software-0009/software/seguranca/tracee-assinaturas-customizadas-golang-cel-extensibilidade-deteccao.md)
+229. [Tracee em Kubernetes: implantação via Helm DaemonSet, CRDs `Policy` (`tracee.aquasec.com/v1beta1`) e roteamento de saída (`json`, `webhook`, `forward`)](../../domains/software-0009/software/seguranca/tracee-implantacao-kubernetes-helm-daemonset-postee-webhook-siem.md)
+230. [Tracee Modelo de Ameaças e Segurança (*Security Model*): resistência contra adversários em *userspace* e detecção de ameaças em *kernel*](../../domains/software-0009/software/seguranca/tracee-modelo-seguranca-adversario-userspace-vs-kernel-garantias.md)
+
+### CNCF Dex (provedor OpenID Connect federado baseado em `Connectors` para LDAP, GitHub, GitLab e OIDC upstream, autenticação `kube-apiserver`, `staticClients`/`trustedPeers` e CRDs Kubernetes)
+
+231. [CNCF Dex: arquitetura do provedor OpenID Connect federado (*Identity Broker*) baseado em `Connectors`](../../domains/software-0009/software/seguranca/dexidp-arquitetura-cncf-federated-openid-connect-provider-connectors.md)
+232. [Dex + Kubernetes API Server: autenticação OIDC para `kubectl` (`kubelogin`) com mapeamento de grupos para `ClusterRoleBinding`](../../domains/software-0009/software/seguranca/dexidp-autenticacao-kubernetes-apiserver-oidc-kubectl-kubelogin-rbac.md)
+233. [Dex Conector `LDAP` (`ldap`): integração segura com Active Directory / OpenLDAP via `userSearch`, `groupSearch` e `startTLS` / `rootCA`](../../domains/software-0009/software/seguranca/dexidp-conector-ldap-active-directory-usersearch-groupsearch-starttls.md)
+234. [Dex Conectores `GitHub` e `GitLab`: controle de acesso baseado em Organizações, Teams (`org:team`) e Grupos de engenharia](../../domains/software-0009/software/seguranca/dexidp-conectores-github-gitlab-orgs-teams-groups-filtragem.md)
+235. [Dex Conector `OIDC` Upstream vs Alerta de Segurança sobre o Conector `SAML 2.0`](../../domains/software-0009/software/seguranca/dexidp-conector-oidc-upstream-okta-entra-google-alerta-saml.md)
+236. [Dex `staticClients` e `trustedPeers`: delegação de tokens entre serviços (*Cross-Client Trust*) com claims `aud` e `azp`](../../domains/software-0009/software/seguranca/dexidp-staticclients-trustedpeers-cross-client-trust-aud-azp.md)
+237. [Dex Escopos (`offline_access`, `groups`, `federated:id`) e Políticas de Expiração (`expiry`): controle de sessão e `refreshTokens`](../../domains/software-0009/software/seguranca/dexidp-scopes-offline-access-refresh-tokens-expiry-rotation.md)
+238. [Dex Backends de Armazenamento (`storage`): `kubernetes` (CRDs nativos) vs `postgres` / `mysql` / `etcd` em Alta Disponibilidade](../../domains/software-0009/software/seguranca/dexidp-storage-backends-kubernetes-crd-postgres-sqlite-etcd.md)
+239. [Dex API Administrativa `gRPC` com `mTLS`: criação dinâmica de clientes OAuth2 e revogação de Refresh Tokens](../../domains/software-0009/software/seguranca/dexidp-grpc-api-mtls-gerenciamento-dinamico-clientes-revogacao.md)
+240. [Dex como Emissor OIDC para `AWS STS` (`AssumeRoleWithWebIdentity`) e Federação de Identidades Multi-Serviço](../../domains/software-0009/software/seguranca/dexidp-token-exchange-rfc8693-aws-sts-irsa-workload-identity.md)
+
+### Pomerium (proxy de acesso Zero-Trust sensível à identidade e ao contexto inspirado no Google BeyondCorp, linguagem `PPL`, `X-Pomerium-Jwt-Assertion`, `mTLS` downstream/upstream e túneis TCP)
+
+241. [Pomerium: arquitetura do *Identity-Aware Access Proxy* baseado nos princípios Google BeyondCorp e NIST Zero Trust](../../domains/software-0009/software/seguranca/pomerium-arquitetura-identity-aware-access-proxy-beyondcorp-zero-trust.md)
+242. [Pomerium Policy Language (`PPL`): autorização declarativa com operadores lógicos (`allow`/`deny`, `and`, `or`, `not`, `nor`) e critérios de contexto](../../domains/software-0009/software/seguranca/pomerium-policy-language-ppl-operadores-allow-deny-and-or-not-nor.md)
+243. [Pomerium Identity Propagation (`X-Pomerium-Jwt-Assertion`): assinatura criptográfica da identidade do usuário para a aplicação backend](../../domains/software-0009/software/seguranca/pomerium-jwt-assertion-header-x-pomerium-jwt-assertion-verificacao-upstream.md)
+244. [Pomerium `mTLS` Downstream (Certificados de Cliente/Dispositivo) e Upstream (Criptografia Mútua Proxy -> Backend)](../../domains/software-0009/software/seguranca/pomerium-mtls-downstream-upstream-client-certificates-device-identity.md)
+245. [Pomerium Rotas `TCP` (`tcp+https://`): acesso Zero-Trust a bancos de dados (`PostgreSQL`, `Redis`), `SSH` e `RDP` sem VPN](../../domains/software-0009/software/seguranca/pomerium-acesso-tcp-ssh-rdp-postgres-tunelamento-autenticado.md)
+246. [Pomerium Kubernetes Ingress Controller e Gateway API: definição declarativa de rotas e políticas via `Ingress` Annotations e CRDs](../../domains/software-0009/software/seguranca/pomerium-kubernetes-ingress-controller-gateway-api-crd-annotations.md)
+247. [Pomerium Arquitetura de Serviços Distribuídos (`Authenticate`, `Authorize`, `Proxy` e `Databroker`): isolamento e escalabilidade](../../domains/software-0009/software/seguranca/pomerium-arquitetura-distribuida-authenticate-authorize-proxy-databroker.md)
+248. [Pomerium para Acesso Zero-Trust a `Kubernetes API` e Dashboards Internos: injeção de credenciais upstream e cabeçalhos `Impersonate-*`](../../domains/software-0009/software/seguranca/pomerium-integracao-kubernetes-dashboard-api-impersonation-serviceaccount.md)
+249. [Pomerium Controles de Tráfego HTTP/WebSockets (`allow_websockets`, `timeout`, `idle_timeout`) e Cabeçalhos de Segurança (`set_response_headers`)](../../domains/software-0009/software/seguranca/pomerium-cors-websocket-timeout-headers-seguranca-hsts-csp.md)
+250. [Pomerium Verificação Contínua e Observabilidade (`authorize_log`, `access_log`, `Prometheus` e `OpenTelemetry` Tracing)](../../domains/software-0009/software/seguranca/pomerium-auditoria-continua-authorize-logs-otel-metricas-prometheus.md)
+
+### CNCF in-toto (framework de integridade da cadeia de suprimentos de software, `root.layout`, `functionaries`, *Artifact Rules* `MATCH`/`CREATE`/`DISALLOW`, `in-toto-run`/`verify` e *Attestation Framework v1*)
+
+251. [CNCF in-toto: arquitetura de integridade fim-a-fim da cadeia de suprimentos (`Layout`, `Functionaries`, `Steps`, `Links` e `Inspections`)](../../domains/software-0009/software/seguranca/intoto-arquitetura-cncf-supply-chain-integrity-layout-functionaries-links.md)
+252. [in-toto Artifact Rules (`MATCH`, `CREATE`, `MODIFY`, `DELETE`, `ALLOW`, `DISALLOW`, `REQUIRE`): encadeamento criptográfico entre etapas](../../domains/software-0009/software/seguranca/intoto-artifact-rules-materials-products-match-create-disallow.md)
+253. [in-toto Execução de Etapas (`in-toto-run` vs `in-toto-record start`/`stop`): captura de hashes de `materials`, comando e `products`](../../domains/software-0009/software/seguranca/intoto-run-vs-intoto-record-geracao-metadados-link-assinados.md)
+254. [in-toto `Inspections` e `in-toto-verify`: desempacotamento e validação criptográfica no momento da instalação pelo cliente](../../domains/software-0009/software/seguranca/intoto-inspections-verificacao-final-in-toto-verify-untar.md)
+255. [in-toto Attestation Framework (`v1`): arquitetura das camadas `Envelope (DSSE)`, `Statement`, `subject` e `predicate`](../../domains/software-0009/software/seguranca/intoto-attestation-framework-v1-statement-subject-predicate-dsse.md)
+256. [in-toto Attestation Predicates: catálogo oficial de predicados (`SLSA Provenance`, `SPDX`/`CycloneDX SBOM`, `Vuln Scan`, `VSA` e `Test Result`)](../../domains/software-0009/software/seguranca/intoto-predicates-catalogo-slsa-provenance-cyclonedx-spdx-vuln-vsa.md)
+257. [in-toto Envelope de Assinatura `DSSE` (*Dead Simple Signing Envelope*) e `PAE`: proteção contra ataques de confusão de parser e tipo](../../domains/software-0009/software/seguranca/intoto-dsse-dead-simple-signing-envelope-pae-prevencao-ambiguidade.md)
+258. [in-toto Assinaturas e Quorum (`in-toto-sign` e `threshold`): exigência de múltiplas assinaturas independentes em `Layout` e `Steps`](../../domains/software-0009/software/seguranca/intoto-sign-assinatura-multiplas-chaves-thresholds-gpg-ssh-ed25519.md)
+259. [in-toto SDKs e Protobuf Bindings (`in-toto-golang`, `in-toto-rs`, `Python`, `Java`): geração e validação de atestados em código](../../domains/software-0009/software/seguranca/intoto-bindings-go-python-rust-java-protobuf-validacao-programatica.md)
+260. [in-toto + `SLSA`, `Witness` e `Sigstore`: implementação prática de cadeias verificáveis do commit ao Kubernetes](../../domains/software-0009/software/seguranca/intoto-interseccao-slsa-witness-archivista-sigstore-admission-control.md)
+
+### PyCQA Bandit (analisador estático de segurança `SAST` para Python baseado em `AST`, configuração em `pyproject.toml`/`bandit.yaml`, supressão granular `# nosec Bxxx`, plugins `B1xx`–`B7xx` e baseline)
+
+261. [PyCQA Bandit: arquitetura do analisador estático de segurança (`SAST`) para Python baseado na árvore sintática (`AST`)](../../domains/software-0009/software/seguranca/bandit-arquitetura-pycqa-sast-python-ast-nodes-plugins.md)
+262. [Bandit Configuração Declarativa (`pyproject.toml`, `bandit.yaml` e `.bandit`): controle de `exclude_dirs`, `tests` e `skips`](../../domains/software-0009/software/seguranca/bandit-configuracao-pyproject-toml-bandit-yaml-ini-tests-skips.md)
+263. [Bandit Supressão Segura de Falsos Positivos (`# nosec B602, B607`): por que nunca usar `# nosec` genérico sem ID](../../domains/software-0009/software/seguranca/bandit-supressao-granular-nosec-id-especifico-prevencao-cegueira.md)
+264. [Bandit Prevenção de Command Injection (`B602`–`B607`): `subprocess` com `shell=True`, `os.system` e customização do plugin](../../domains/software-0009/software/seguranca/bandit-injecao-comandos-subprocess-shell-true-b602-b605-os-system.md)
+265. [Bandit Desserialização Insegura e XML (`B301` `pickle`, `B506` `yaml.load`, `B314`–`B320` XXE `defusedxml`)](../../domains/software-0009/software/seguranca/bandit-desserializacao-insegura-pickle-yaml-load-marshal-b301-b506.md)
+266. [Bandit Criptografia, PRNG e TLS (`B303`/`B324` MD5/SHA1, `B311` `random` vs `secrets`, `B501` `verify=False` e `B502` SSL/TLS)](../../domains/software-0009/software/seguranca/bandit-criptografia-fraca-random-hashes-md5-sha1-tls-b303-b311-b501.md)
+267. [Bandit AppSec Web (`B608` SQL Injection, `B701` Jinja2 `autoescape`, `B201` Flask Debug, `B104` Bind `0.0.0.0` e `B105`–`B107` Senhas)](../../domains/software-0009/software/seguranca/bandit-sql-injection-jinja2-xss-flask-debug-hardcoded-passwords.md)
+268. [Bandit Filtragem por Severidade (`-l`/`-ll`/`-lll`), Confiança (`-i`/`-ii`/`-iii`) e Adoção Incremental com `--baseline` (`-b`)](../../domains/software-0009/software/seguranca/bandit-filtragem-severidade-confianca-ll-ii-baseline-legado.md)
+269. [Bandit Formatos de Saída (`json`, `sarif`, `xml`, `html`, `custom`) e Integração com `pre-commit` e GitHub Code Scanning](../../domains/software-0009/software/seguranca/bandit-formatos-relatorio-sarif-json-custom-pre-commit-ci.md)
+270. [Bandit Extensibilidade: criação de Plugins AST Customizados (`@test.checks('Call')`) para regras internas de segurança](../../domains/software-0009/software/seguranca/bandit-escrita-plugins-ast-customizados-entry-points-blacklist.md)
+
+### Securego `gosec` (analisador de segurança para Go combinando regras `AST`, analisadores `SSA` e *Taint Analysis* `G701`–`G710`, categorias `G1xx`–`G7xx`, configuração JSON, `#nosec` e SARIF)
+
+271. [Securego `gosec`: arquitetura em três motores (`AST`, `SSA` e `Taint Analysis`) para análise estática de segurança em Go](../../domains/software-0009/software/seguranca/gosec-arquitetura-securego-ast-ssa-taint-analysis-golang.md)
+272. [`gosec` Motor de *Taint Analysis* (`G701`–`G710`): rastreamento de fluxo de dados de entradas HTTP até sinks perigosos](../../domains/software-0009/software/seguranca/gosec-taint-analysis-g701-a-g710-sqli-cmdi-ssrf-xss-path-traversal.md)
+273. [`gosec` Analisadores `SSA`: detecção de *HTTP Smuggling* (`G113`), *Integer Overflow* (`G115`), *Context Leak* (`G118`) e *TOCTOU* (`G122`)](../../domains/software-0009/software/seguranca/gosec-analisadores-ssa-g113-http-smuggling-g115-integer-overflow-g118-context.md)
+274. [`gosec` Hardening de Serviços Web e Serialização: exposição de segredos em JSON/YAML (`G117`), `ParseMultipartForm` (`G120`) e Cookies (`G124`)](../../domains/software-0009/software/seguranca/gosec-seguranca-http-cookies-serializacao-segredos-g117-g120-g124.md)
+275. [`gosec` Segurança de Sistema de Arquivos (`G110` *Decompression Bomb*, `G301`–`G307` Permissões Octais e `G305` *Zip Slip*)](../../domains/software-0009/software/seguranca/gosec-seguranca-filesystem-permissoes-zip-slip-decompression-bomb-g110-g301-g307.md)
+276. [`gosec` Criptografia, TLS e SSH (`G401`–`G408` e `G501`–`G507`): `crypto/rand`, `MinVersion: tls.VersionTLS13`, IVs hardcoded e SSH](../../domains/software-0009/software/seguranca/gosec-criptografia-tls-ssh-g401-a-g408-math-rand-vs-crypto-rand.md)
+277. [`gosec` Configuração Fina por Regra (`-conf config.json`): ajuste de entropia em `G101`, allowlist de erros em `G104` e permissões em `G301`/`G306`](../../domains/software-0009/software/seguranca/gosec-configuracao-regras-json-g101-entropia-g104-erros-allowlist.md)
+278. [`gosec` Supressões Auditáveis (`// #nosec Gxxx -- justificativa`) e Rastreamento com `-track-suppressions`](../../domains/software-0009/software/seguranca/gosec-supressao-anotacoes-nosec-justificativa-tracking-suppressions.md)
+279. [`gosec` Seleção de Escopo na CLI: `-severity`, `-confidence`, `-include`/`-exclude`, `-tests` e `-tags` de compilação](../../domains/software-0009/software/seguranca/gosec-filtragem-severity-confidence-include-exclude-tests-build-tags.md)
+280. [`gosec` em Pipelines CI/CD: GitHub Actions com `SARIF`, módulos privados (`GOPRIVATE`) e integração com `golangci-lint` / Bazel `nogo`](../../domains/software-0009/software/seguranca/gosec-integracao-github-actions-sarif-private-modules-golangci-lint.md)
+
+### VirusTotal YARA e YARA-X (motor de *Pattern Matching* para pesquisa de malware e Threat Hunting, strings hexadecimais com jumps/wildcards/not, modificadores `xor`/`base64`, módulos `pe`/`elf`/`math` e `yarac`)
+
+281. [VirusTotal YARA e YARA-X: arquitetura do motor de *Pattern Matching* para pesquisa de malware e anatomia de regras (`meta`, `strings`, `condition`)](../../domains/software-0009/software/seguranca/yarasig-arquitetura-virustotal-yara-yara-x-anatomia-regras-meta-strings-condition.md)
+282. [YARA Hexadecimal Strings (`{ ... }`): uso de *nibble wildcards* (`?`), operador *not* (`~`), *jumps* (`[X-Y]`) e alternativas (`( A | B )`)](../../domains/software-0009/software/seguranca/yarasig-hexadecimal-strings-wildcards-not-jumps-alternatives.md)
+283. [YARA Text Strings e Modificadores de Ofuscação: `nocase`, `wide`, `ascii`, `fullword`, `xor(min-max)`, `base64` e `base64wide`](../../domains/software-0009/software/seguranca/yarasig-text-strings-modificadores-nocase-wide-ascii-xor-base64-fullword.md)
+284. [YARA Expressões em `condition`: contadores (`#a`), offsets (`@a[i]`), `at`, `in`, `of them`, `filesize` e leitura de inteiros (`uint16`, `uint32`)](../../domains/software-0009/software/seguranca/yarasig-conditions-contadores-offsets-at-in-filesize-entrypoint-uint.md)
+285. [YARA Módulos Embutidos (`import "pe"`, `"elf"`, `"math"`, `"hash"`, `"dotnet"`): inspeção de imports, seções, entropia, imphash e assinaturas Authenticode](../../domains/software-0009/software/seguranca/yarasig-modulos-pe-elf-math-hash-cuckoo-dotnet-inspecao-estrutural.md)
+286. [YARA Organização Modular de Rulesets: `private rule`, `global rule`, Strings Anônimas (`$`) e `include`](../../domains/software-0009/software/seguranca/yarasig-private-rules-global-rules-tags-anonymous-strings-modularizacao.md)
+287. [YARA Execução Avançada na CLI: pré-compilação com `yarac`, variáveis externas (`-d var=valor`) e varredura de Memória de Processos (`yara rules.yar <PID>`)](../../domains/software-0009/software/seguranca/yarasig-compilacao-binaria-yarac-external-variables-d-varredura-processos-pid.md)
+288. [YARA Engenharia de Performance: escolha de *Atoms* para o motor Aho-Corasick, perigos de Regex abertas (`.*`) e `short-circuit`](../../domains/software-0009/software/seguranca/yarasig-otimizacao-performance-atoms-aho-corasick-regex-bounded-profiling.md)
+289. [YARA Automação em Python (`yara-python` e `yara_x`): compilação em memória, callbacks de `matches` e proteção por `timeout`](../../domains/software-0009/software/seguranca/yarasig-automacao-python-yara-python-yara-x-callbacks-timeout.md)
+290. [YARA no Ecossistema DFIR/SOC: integração com `Velociraptor`, `osquery`, `ClamAV`, `LimaCharlie` e curadoria com `YARA-CI` / `YARA Forge`](../../domains/software-0009/software/seguranca/yarasig-ecossistema-yarahq-yara-forge-yargen-yara-ci-integracoes.md)
+
+### Rapid7 Velociraptor (plataforma open-source de `DFIR` e visibilidade de endpoints movida por `VQL` — *Velociraptor Query Language*, `Artifacts`, `Hunts`, *Offline Collector*, `ETW`/`eBPF`/`Sigma`, `$MFT` e API `gRPC`)
+
+291. [Rapid7 Velociraptor: arquitetura da plataforma open-source de `DFIR` e visibilidade de endpoints movida por `VQL`](../../domains/software-0009/software/seguranca/velociraptor-arquitetura-dfir-endpoint-visibility-vql-client-server.md)
+292. [Velociraptor Query Language (`VQL`): consultas reativas com plugins geradores de linhas (`pslist`, `glob`, `parse_mft`, `yara`) e `foreach()`](../../domains/software-0009/software/seguranca/velociraptor-vql-velociraptor-query-language-plugins-functions-foreach.md)
+293. [Velociraptor `Artifacts` e `Artifact Exchange`: empacotamento YAML de queries VQL (`CLIENT`, `SERVER`, `CLIENT_EVENT`, `SERVER_EVENT`)](../../domains/software-0009/software/seguranca/velociraptor-artifacts-yaml-client-server-events-artifact-exchange.md)
+294. [Velociraptor `Hunts` em Escala e Controle de Recursos no Endpoint: `ops_per_second`, limite de CPU (`max_cpu`) e `timeout`](../../domains/software-0009/software/seguranca/velociraptor-hunting-at-scale-controle-recursos-cpu-iops-rate-limiting.md)
+295. [Velociraptor `Offline Collector`: geração de binário autônomo pré-configurado para triagem forense com upload cifrado (`ZIP` / `S3` / `Azure`)](../../domains/software-0009/software/seguranca/velociraptor-offline-collector-triagem-sem-agente-zip-criptografado-s3.md)
+296. [Velociraptor Detecção em Tempo Real (`CLIENT_EVENT`): monitoramento contínuo via `ETW` (Windows), `eBPF` (Linux) e regras `Sigma`](../../domains/software-0009/software/seguranca/velociraptor-monitoramento-tempo-real-client-events-etw-ebpf-sigma.md)
+297. [Velociraptor Perícia Forense de Disco (`ntfs`, `raw_ntfs`, `$MFT`, `$UsnJrnl` e Análise de Imagens de Disco via `remapping`)](../../domains/software-0009/software/seguranca/velociraptor-pericia-ntfs-raw-accessor-mft-usnjrnl-vss-virtual-client.md)
+298. [Velociraptor `Notebooks` Colaborativos e Exportação (`Timesketch`, `Splunk`, `Elastic` e `S3`): análise pós-coleta sem reinterrogar o host](../../domains/software-0009/software/seguranca/velociraptor-notebooks-interativos-pos-processamento-vql-timesketch-siem.md)
+299. [Velociraptor Orquestração de Ferramentas de Terceiros (`Tools`) e Resposta Ativa (`Windows.Remediation.Quarantine`)](../../domains/software-0009/software/seguranca/velociraptor-orquestracao-ferramentas-externas-thor-hayabusa-cybertriage-quarantine.md)
+300. [Velociraptor Automação SOAR via `gRPC API` (`pyvelociraptor`), `Orgs` Multi-Tenant e Governança `RBAC` / `OIDC`](../../domains/software-0009/software/seguranca/velociraptor-automacao-grpc-api-pyvelociraptor-rbac-orgs-multi-tenant.md)
+
 ## Critérios e próximo passo
 
-As 200 notas 1–200 das tranches 1–2 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 200/2.000 notas válidas, restando 1.800 notas materiais.
+As 300 notas 1–300 das tranches 1–3 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 300/2.000 notas válidas, restando 1.700 notas materiais.

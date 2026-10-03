@@ -1,6 +1,6 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-03T19:31:07+00:00`
+Executada em: `2026-10-03T19:59:43+00:00`
 
 > O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.
 
@@ -9,11 +9,11 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - Escopo de notas: `knowledge-federation/domains`
 - Escopo de resolução de links: `knowledge-federation`, `knowledge-federation/domains`
 - MOCs: fora do gate de qualidade; servem apenas como navegação.
-- Arquivos avaliados: **4,340**
-- Candidatas aprovadas no gate e prontas para revisão factual: **4,240**
+- Arquivos avaliados: **4,440**
+- Candidatas aprovadas no gate e prontas para revisão factual: **4,340**
 - Com revisão factual humana aprovada: **49**
-- Com revisão factual por IA aprovada e identificada: **4,191**
-- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **4,240**
+- Com revisão factual por IA aprovada e identificada: **4,291**
+- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **4,340**
 - Com pendências de qualidade: **100**
 - Critério aplicado: mínimo de 100 palavras, seções de conteúdo, 2 fontes HTTPS específicas, links wiki resolvidos e sem frases de placeholder conhecidas.
 
@@ -4085,6 +4085,16 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/authelia-regulation-protecao-forca-bruta-max-retries-find-time-ban-time.md` — 309 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/authelia-session-redis-sentinel-cluster-storage-postgres-encryption-key.md` — 320 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/authelia-teste-politicas-cli-access-control-check-policy-ci.md` — 286 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-arquitetura-pycqa-sast-python-ast-nodes-plugins.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-configuracao-pyproject-toml-bandit-yaml-ini-tests-skips.md` — 318 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-criptografia-fraca-random-hashes-md5-sha1-tls-b303-b311-b501.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-desserializacao-insegura-pickle-yaml-load-marshal-b301-b506.md` — 296 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-escrita-plugins-ast-customizados-entry-points-blacklist.md` — 300 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-filtragem-severidade-confianca-ll-ii-baseline-legado.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-formatos-relatorio-sarif-json-custom-pre-commit-ci.md` — 304 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-injecao-comandos-subprocess-shell-true-b602-b605-os-system.md` — 278 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-sql-injection-jinja2-xss-flask-debug-hardcoded-passwords.md` — 296 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/bandit-supressao-granular-nosec-id-especifico-prevencao-cegueira.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/cerbos-api-checkresources-batch-avaliacao-multiplos-recursos-acoes.md` — 325 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/cerbos-api-planresources-query-plan-ast-filtros-banco-orm.md` — 366 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/cerbos-arquitetura-stateless-pdp-pbac-abac-rbac-cloud-native.md` — 356 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4125,6 +4135,16 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/deptrack-policy-engine-seguranca-licencas-risco-operacional.md` — 342 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/deptrack-repositorio-outdated-components-private-vuln-db-operacao-v5.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/deptrack-vex-vulnerability-exploitability-exchange-cyclonedx-triagem.md` — 340 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-arquitetura-cncf-federated-openid-connect-provider-connectors.md` — 327 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-autenticacao-kubernetes-apiserver-oidc-kubectl-kubelogin-rbac.md` — 314 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-conector-ldap-active-directory-usersearch-groupsearch-starttls.md` — 328 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-conector-oidc-upstream-okta-entra-google-alerta-saml.md` — 345 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-conectores-github-gitlab-orgs-teams-groups-filtragem.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-grpc-api-mtls-gerenciamento-dinamico-clientes-revogacao.md` — 305 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-scopes-offline-access-refresh-tokens-expiry-rotation.md` — 310 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-staticclients-trustedpeers-cross-client-trust-aud-azp.md` — 295 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-storage-backends-kubernetes-crd-postgres-sqlite-etcd.md` — 305 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/dexidp-token-exchange-rfc8693-aws-sts-irsa-workload-identity.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-allowlist-global-paths-regexes-stopwords-padroes.md` — 300 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-allowlists-gitleaksignore-fingerprints-comentarios-allow.md` — 297 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-arquitetura-deteccao-segredos-git-dir-stdin.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4135,6 +4155,36 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-formatos-relatorio-sarif-junit-json-csv-template.md` — 289 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-pre-commit-hook-prevencao-commits-locais-skip.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/gitleaks-varredura-commits-especificos-git-log-options-ci-pr.md` — 319 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-analisadores-ssa-g113-http-smuggling-g115-integer-overflow-g118-context.md` — 368 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-arquitetura-securego-ast-ssa-taint-analysis-golang.md` — 338 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-configuracao-regras-json-g101-entropia-g104-erros-allowlist.md` — 291 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-criptografia-tls-ssh-g401-a-g408-math-rand-vs-crypto-rand.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-filtragem-severity-confidence-include-exclude-tests-build-tags.md` — 322 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-integracao-github-actions-sarif-private-modules-golangci-lint.md` — 309 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-seguranca-filesystem-permissoes-zip-slip-decompression-bomb-g110-g301-g307.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-seguranca-http-cookies-serializacao-segredos-g117-g120-g124.md` — 316 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-supressao-anotacoes-nosec-justificativa-tracking-suppressions.md` — 302 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/gosec-taint-analysis-g701-a-g710-sqli-cmdi-ssrf-xss-path-traversal.md` — 357 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-arquitetura-cncf-supply-chain-integrity-layout-functionaries-links.md` — 355 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-artifact-rules-materials-products-match-create-disallow.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-attestation-framework-v1-statement-subject-predicate-dsse.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-bindings-go-python-rust-java-protobuf-validacao-programatica.md` — 311 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-dsse-dead-simple-signing-envelope-pae-prevencao-ambiguidade.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-inspections-verificacao-final-in-toto-verify-untar.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-interseccao-slsa-witness-archivista-sigstore-admission-control.md` — 362 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-predicates-catalogo-slsa-provenance-cyclonedx-spdx-vuln-vsa.md` — 319 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-run-vs-intoto-record-geracao-metadados-link-assinados.md` — 337 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/intoto-sign-assinatura-multiplas-chaves-thresholds-gpg-ssh-ed25519.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-arquitetura-cncf-runtime-security-enforcement-lsm-ebpf.md` — 352 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-cli-karmor-logs-profile-recommend-telemetria-tempo-real.md` — 311 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-cluster-security-policy-csp-governanca-multi-namespace.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-crd-kubearmorpolicy-especificacao-selector-process-file-network.md` — 279 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-host-security-policy-hsp-protecao-nodes-vms-systemd-kubelet.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-matriz-lsm-bpf-lsm-apparmor-selinux-gke-eks-aks.md` — 346 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-politicas-default-posture-allow-whitelist-least-permissive.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-protecao-arquivos-sensi-readonly-fromsource-serviceaccount-token.md` — 309 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-restricao-processos-fromsource-owneronly-recursive.md` — 311 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/kubearmor-restricao-rede-capabilities-socket-icmp-tcp-udp-por-processo.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/nuclei-anatomia-template-yaml-info-http-matchers-extractors.md` — 315 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/nuclei-arquitetura-scanner-vulnerabilidades-templates-yaml-zero-false-positives.md` — 330 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/nuclei-authenticated-scans-secrets-file-headers-variables-ci-cd.md` — 341 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4205,6 +4255,16 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/owaspcrs-thresholds-severidades-critical-error-warning-notice-calibragem.md` — 341 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/owaspcrs-tratamento-falsos-positivos-ctl-ruleremovetargetbyid-before-after.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/owaspcrs-validacao-protocolo-http-911-920-metodos-content-type-charset.md` — 329 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-acesso-tcp-ssh-rdp-postgres-tunelamento-autenticado.md` — 300 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-arquitetura-distribuida-authenticate-authorize-proxy-databroker.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-arquitetura-identity-aware-access-proxy-beyondcorp-zero-trust.md` — 362 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-auditoria-continua-authorize-logs-otel-metricas-prometheus.md` — 285 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-cors-websocket-timeout-headers-seguranca-hsts-csp.md` — 292 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-integracao-kubernetes-dashboard-api-impersonation-serviceaccount.md` — 304 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-jwt-assertion-header-x-pomerium-jwt-assertion-verificacao-upstream.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-kubernetes-ingress-controller-gateway-api-crd-annotations.md` — 295 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-mtls-downstream-upstream-client-certificates-device-identity.md` — 328 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/pomerium-policy-language-ppl-operadores-allow-deny-and-or-not-nor.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/prowler-arquitetura-open-cloud-security-platform-cspm-multi-cloud.md` — 329 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/prowler-attack-paths-cartography-neo4j-amazon-neptune-grafos.md` — 362 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/prowler-auditoria-kubernetes-clusters-kubeconfig-in-cluster-rbac-pss.md` — 303 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4245,6 +4305,16 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/suricata-inspecao-tls-fingerprinting-ja3-ja4-sni-certificados-c2.md` — 343 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/suricata-modo-ips-inline-af-packet-nfqueue-acao-drop-reject.md` — 383 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/suricata-tuning-performance-runmodes-workers-af-packet-ebpf-hyperscan.md` — 379 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-arquitetura-aqua-security-ebpf-runtime-security-forensics.md` — 370 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-assinaturas-customizadas-golang-cel-extensibilidade-deteccao.md` — 390 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-built-in-security-events-signatures-fileless-rootkit-escape.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-event-filters-data-args-retval-context-operators-prefix-suffix.md` — 329 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-eventos-rede-ebpf-dns-http-net-packet-flow-visibilidade.md` — 362 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-forensic-capture-artifacts-executables-memory-pcap-files.md` — 362 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-implantacao-kubernetes-helm-daemonset-postee-webhook-siem.md` — 338 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-modelo-seguranca-adversario-userspace-vs-kernel-garantias.md` — 385 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-policies-yaml-kubernetes-crd-vs-plain-format-64-policies.md` — 326 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/tracee-policy-scopes-container-not-container-tree-pid-executable.md` — 343 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-analise-profunda-credenciais-analyze-iam-permissions.md` — 330 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-arquitetura-concorrencia-process-flow-chunks-decoders-detectors.md` — 314 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-arquitetura-discovery-classification-validation-analysis.md` — 346 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4255,6 +4325,26 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-varredura-postman-jenkins-elasticsearch-jira-slack-enterprise.md` — 277 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-verificacao-assinatura-cosign-checksums-supply-chain.md` — 311 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/trufflehog-verificacao-ativa-credenciais-results-verified-unverified-no-verification.md` — 315 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-arquitetura-dfir-endpoint-visibility-vql-client-server.md` — 330 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-artifacts-yaml-client-server-events-artifact-exchange.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-automacao-grpc-api-pyvelociraptor-rbac-orgs-multi-tenant.md` — 322 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-hunting-at-scale-controle-recursos-cpu-iops-rate-limiting.md` — 372 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-monitoramento-tempo-real-client-events-etw-ebpf-sigma.md` — 353 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-notebooks-interativos-pos-processamento-vql-timesketch-siem.md` — 361 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-offline-collector-triagem-sem-agente-zip-criptografado-s3.md` — 352 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-orquestracao-ferramentas-externas-thor-hayabusa-cybertriage-quarantine.md` — 364 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-pericia-ntfs-raw-accessor-mft-usnjrnl-vss-virtual-client.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/velociraptor-vql-velociraptor-query-language-plugins-functions-foreach.md` — 318 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-arquitetura-virustotal-yara-yara-x-anatomia-regras-meta-strings-condition.md` — 351 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-automacao-python-yara-python-yara-x-callbacks-timeout.md` — 338 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-compilacao-binaria-yarac-external-variables-d-varredura-processos-pid.md` — 350 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-conditions-contadores-offsets-at-in-filesize-entrypoint-uint.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-ecossistema-yarahq-yara-forge-yargen-yara-ci-integracoes.md` — 326 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-hexadecimal-strings-wildcards-not-jumps-alternatives.md` — 354 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-modulos-pe-elf-math-hash-cuckoo-dotnet-inspecao-estrutural.md` — 323 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-otimizacao-performance-atoms-aho-corasick-regex-bounded-profiling.md` — 404 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-private-rules-global-rules-tags-anonymous-strings-modularizacao.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/yarasig-text-strings-modificadores-nocase-wide-ascii-xor-base64-fullword.md` — 363 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-active-scan-policy-strength-threshold-technologies-tuning.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-alert-filter-triagem-falsos-positivos-rebaixamento-risco.md` — 320 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-arquitetura-zed-attack-proxy-dast-passive-active-scanner.md` — 338 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -4265,6 +4355,16 @@ Executada em: `2026-10-03T19:31:07+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-job-tests-assertions-exitstatus-report-sarif-quality-gates.md` — 323 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-passive-scan-config-passive-scan-wait-fila-assincrona.md` — 336 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zaproxy-requestor-sequence-har-import-prune-fluxos-multi-step.md` — 326 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-arquitetura-cluster-zeekctl-manager-logger-proxy-workers.md` — 361 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-arquitetura-event-engine-script-interpreter-nsm.md` — 376 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-file-analysis-framework-faf-extracao-arquivos-hashing-mime.md` — 340 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-intelligence-framework-ioc-matching-ips-domains-hashes-cif.md` — 340 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-linguagem-scripts-eventos-tipos-nativos-addr-subnet-port-table.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-logs-transacionais-conn-dns-http-ssl-files-x509-uid.md` — 320 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-notice-framework-alertas-notice-log-action-alarm-hook.md` — 325 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-package-manager-zkg-ja3-ja4-bzar-mitre-attack-extensoes.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-spicy-parser-generator-gramaticas-seguras-protocolos-arquivos.md` — 337 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0009/software/seguranca/zeeknsm-summary-statistics-sumstats-deteccao-anomalias-scans-exfiltracao.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 
 ### Amostra de notas com pendências
 
