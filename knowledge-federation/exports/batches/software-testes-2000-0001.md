@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1559 / 2.000 (77,95%)**
-- Gate automatizado: **1559/1559 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 21)
+- Notas efetivamente redigidas até agora: **1659 / 2.000 (82,95%)**
+- Gate automatizado: **1659/1659 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 22)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1559**
-- Revisão factual por IA: **1550/1559**
-- Contabilizadas como válidas: **1559/1559**
+- Revisão factual humana: **9/1659**
+- Revisão factual por IA: **1650/1659**
+- Contabilizadas como válidas: **1659/1659**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1550 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–21 (1550 notas, IDs 10–1559) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1650 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–22 (1650 notas, IDs 10–1659) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-21.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-21.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-22.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-22.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1559 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 441 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1659 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 341 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1991,6 +1991,138 @@
 1558. [Jazzer: sementes vindas de parâmetros do JUnit](../../domains/software-0007/software/testes/jazzer-seeding-junit.md)
 1559. [Jazzer: sanitizers que denunciam a vulnerabilidade](../../domains/software-0007/software/testes/jazzer-sanitizers-hooks.md)
 
+## Tranche 22 — suítes de shell e PowerShell, BDD em .NET, asserções fluent, property testing, mocks e simulação de HTTP e cobertura gcov (100 notas; revisão factual por IA registrada)
+
+### bats-core — testes TAP para scripts de shell
+
+1560. [bats-core: testes TAP nativos para Bash](../../domains/software-0007/software/testes/bats-what-it-is.md)
+1561. [bats-core: a suíte é um script Bash](../../domains/software-0007/software/testes/bats-test-syntax.md)
+1562. [bats-core: cada linha viva é uma asserção](../../domains/software-0007/software/testes/bats-errexit-assertions.md)
+1563. [bats-core: run captura status e saída](../../domains/software-0007/software/testes/bats-run-status-output.md)
+1564. [bats-core: ganchos por teste e por arquivo](../../domains/software-0007/software/testes/bats-setup-teardown.md)
+1565. [bats-core: tags, filtros e modo foco](../../domains/software-0007/software/testes/bats-tagging.md)
+1566. [bats-core: o que fica marcado roda sozinho](../../domains/software-0007/software/testes/bats-focus-mode.md)
+1567. [bats-core: --jobs com GNU parallel](../../domains/software-0007/software/testes/bats-parallel.md)
+1568. [bats-core: pretty, TAP, tap13 e JUnit](../../domains/software-0007/software/testes/bats-formatters.md)
+1569. [bats-core: do repositório parado ao fork comunitário](../../domains/software-0007/software/testes/bats-fork-history.md)
+
+### Pester — testes e mocks em PowerShell
+
+1570. [Pester: testar e mockar PowerShell num só pacote](../../domains/software-0007/software/testes/pester-what-it-is.md)
+1571. [Pester: convenção de nome é o registro](../../domains/software-0007/software/testes/pester-naming-discovery.md)
+1572. [Pester: instalação pelo gallery e importação](../../domains/software-0007/software/testes/pester-install-module.md)
+1573. [Pester: Describe, Context e It aninhados](../../domains/software-0007/software/testes/pester-dsl-blocks.md)
+1574. [Pester: asserções Should e a mensagem de falha](../../domains/software-0007/software/testes/pester-assertions-should.md)
+1575. [Pester: Mock substitui qualquer comando](../../domains/software-0007/software/testes/pester-mock-basics.md)
+1576. [Pester: Should-Invoke, -Times e -Verifiable](../../domains/software-0007/software/testes/pester-mock-verification.md)
+1577. [Pester: o mock vale onde foi declarado](../../domains/software-0007/software/testes/pester-mock-scoping.md)
+1578. [Pester: natives, $PesterBoundParameters e classes](../../domains/software-0007/software/testes/pester-mock-advanced.md)
+1579. [Pester: cobertura com New-PesterConfiguration](../../domains/software-0007/software/testes/pester-coverage.md)
+
+### Reqnroll — BDD Gherkin para .NET
+
+1580. [Reqnroll: BDD Gherkin nativo para .NET](../../domains/software-0007/software/testes/reqnroll-what-it-is.md)
+1581. [Reqnroll: sistemas, .NETs e quatro executores](../../domains/software-0007/software/testes/reqnroll-platforms-runners.md)
+1582. [Reqnroll: o que muda de nome vindo do SpecFlow](../../domains/software-0007/software/testes/reqnroll-rename-migration.md)
+1583. [Reqnroll: DataTable, assistentes e o container DI](../../domains/software-0007/software/testes/reqnroll-datatable-assist.md)
+1584. [Reqnroll: expressões Cucumber embutidas](../../domains/software-0007/software/testes/reqnroll-cucumber-expressions.md)
+1585. [Reqnroll: plugins portados e Actions de automação](../../domains/software-0007/software/testes/reqnroll-plugins-actions.md)
+1586. [Reqnroll: Living Documentation ficou de fora](../../domains/software-0007/software/testes/reqnroll-livingdoc.md)
+1587. [Reqnroll: Scenario Outlines sob MsTest geram testes data-driven](../../domains/software-0007/software/testes/reqnroll-mstest-outline.md)
+1588. [Reqnroll: licença, patrocínio e linhagem](../../domains/software-0007/software/testes/reqnroll-license-sponsors.md)
+1589. [Reqnroll: por onde começar segundo o próprio projeto](../../domains/software-0007/software/testes/reqnroll-setup-guides.md)
+
+### FluentAssertions — asserções legíveis para .NET
+
+1590. [FluentAssertions: asserções como frases em C#](../../domains/software-0007/software/testes/fa-what-it-is.md)
+1591. [FluentAssertions: coleções com predicado e because](../../domains/software-0007/software/testes/fa-collections-predicate.md)
+1592. [FluentAssertions: exceção como regra de negócio](../../domains/software-0007/software/testes/fa-exceptions-business-rules.md)
+1593. [FluentAssertions: Which entra no grafo de objetos](../../domains/software-0007/software/testes/fa-which-chaining.md)
+1594. [FluentAssertions: AssertionScope acumula falhas](../../domains/software-0007/software/testes/fa-assertion-scope.md)
+1595. [FluentAssertions: detecta o framework de teste por baixo](../../domains/software-0007/software/testes/fa-framework-detection.md)
+1596. [FluentAssertions: o nome da variável no erro](../../domains/software-0007/software/testes/fa-subject-identification.md)
+1597. [FluentAssertions: BeEquivalentTo entre DTOs](../../domains/software-0007/software/testes/fa-beequivalent-to.md)
+1598. [FluentAssertions: por valor ou por membros](../../domains/software-0007/software/testes/fa-value-semantics.md)
+1599. [FluentAssertions: modelando a equivalência com opções](../../domains/software-0007/software/testes/fa-equivalency-options.md)
+
+### jqwik — property-based testing na plataforma JUnit 5
+
+1600. [jqwik: um engine de properties na plataforma JUnit](../../domains/software-0007/software/testes/jqwik-what-it-is.md)
+1601. [jqwik: ligando o motor no Gradle](../../domains/software-0007/software/testes/jqwik-gradle-setup.md)
+1602. [jqwik: @Property, @ForAll e os mil tries](../../domains/software-0007/software/testes/jqwik-property-forall.md)
+1603. [jqwik: anatomia do relatório de falsificação](../../domains/software-0007/software/testes/jqwik-failure-report.md)
+1604. [jqwik: instância nova, hooks e closeables](../../domains/software-0007/software/testes/jqwik-lifecycle.md)
+1605. [jqwik: @Example é uma property de um try](../../domains/software-0007/software/testes/jqwik-example-annotation.md)
+1606. [jqwik: restringindo a geração aleatória](../../domains/software-0007/software/testes/jqwik-constraints.md)
+1607. [jqwik: @Provide e o catálogo Arbitraries](../../domains/software-0007/software/testes/jqwik-provide.md)
+1608. [jqwik: shrinking, discard ratio e dados fixos](../../domains/software-0007/software/testes/jqwik-shrinking-assumptions.md)
+1609. [jqwik: configuração central e módulos de nicho](../../domains/software-0007/software/testes/jqwik-config-modules.md)
+
+### Kotest property testing — propriedades em Kotlin
+
+1610. [Kotest: propriedades com duas funções, forAll e checkAll](../../domains/software-0007/software/testes/kotest-proptest-what.md)
+1611. [Kotest: checkAll com asserções infixas](../../domains/software-0007/software/testes/kotest-checkall-assertions.md)
+1612. [Kotest: mil iterações por padrão, ajustáveis por argumento](../../domains/software-0007/software/testes/kotest-iterations.md)
+1613. [Kotest: generators automáticos e Arb explícitos](../../domains/software-0007/software/testes/kotest-generators.md)
+1614. [Kotest: PropTestConfig e a tolerância a falhas](../../domains/software-0007/software/testes/kotest-config-maxfailure.md)
+1615. [Kotest: listeners por iteração e hex para não imprimíveis](../../domains/software-0007/software/testes/kotest-config-listeners-hex.md)
+1616. [Kotest: semente da geração e seed fixa](../../domains/software-0007/software/testes/kotest-seeds.md)
+1617. [Kotest: reexecução automática dos seeds que falharam](../../domains/software-0007/software/testes/kotest-rerun-seeds.md)
+1618. [Kotest: propriedade dentro de spec e versão da doc](../../domains/software-0007/software/testes/kotest-proptest-in-specs.md)
+1619. [Kotest: tipos nos parâmetros são o registro de generators](../../domains/software-0007/software/testes/kotest-proptest-generators-typing.md)
+
+### Tavern — testes de API declarativos em YAML
+
+1620. [Tavern: testes de API escritos em YAML](../../domains/software-0007/software/testes/tavern-what-it-is.md)
+1621. [Tavern: test_name e stages como vocabulário](../../domains/software-0007/software/testes/tavern-yaml-structure.md)
+1622. [Tavern: o nome do arquivo é o discovery](../../domains/software-0007/software/testes/tavern-file-naming.md)
+1623. [Tavern: instalar como plugin e colher o ecossistema](../../domains/software-0007/software/testes/tavern-pytest-integration.md)
+1624. [Tavern: tavern-ci para cron e shell](../../domains/software-0007/software/testes/tavern-standalone-cli.md)
+1625. [Tavern: estenda em Python quando o YAML aperta](../../domains/software-0007/software/testes/tavern-extensibility.md)
+1626. [Tavern: contra Postman, Insomnia e pyresttest](../../domains/software-0007/software/testes/tavern-vs-postman.md)
+1627. [Tavern: a biblioteca embutível](../../domains/software-0007/software/testes/tavern-python-library.md)
+1628. [Tavern: exemplos e documentação viva](../../domains/software-0007/software/testes/tavern-examples-ecosystem.md)
+1629. [Tavern: três protocolos, um formato YAML](../../domains/software-0007/software/testes/tavern-grpc-mqtt.md)
+
+### responses — mocking da biblioteca requests
+
+1630. [responses: mockar o requests sem tocar na rede](../../domains/software-0007/software/testes/responses-what-it-is.md)
+1631. [responses: add() com objeto ou argumentos diretos](../../domains/software-0007/software/testes/responses-register-interface.md)
+1632. [responses: atalhos por verbo HTTP](../../domains/software-0007/software/testes/responses-shortcuts.md)
+1633. [responses: RequestsMock como contexto](../../domains/software-0007/software/testes/responses-context-manager.md)
+1634. [responses: URL sem match é ConnectionError](../../domains/software-0007/software/testes/responses-connection-error.md)
+1635. [responses: o catálogo de parâmetros do Response](../../domains/software-0007/software/testes/responses-parameters.md)
+1636. [responses: match() com matchers combináveis](../../domains/software-0007/software/testes/responses-matchers.md)
+1637. [responses: deixar alguns requests passarem](../../domains/software-0007/software/testes/responses-passthru.md)
+1638. [responses: o histórico em responses.calls](../../domains/software-0007/software/testes/responses-calls-inspection.md)
+1639. [responses: add_callback para respostas dinâmicas](../../domains/software-0007/software/testes/responses-callback.md)
+
+### Hoverfly — simulação de APIs por proxy
+
+1640. [Hoverfly: simulações de API num binário](../../domains/software-0007/software/testes/hoverfly-what-it-is.md)
+1641. [Hoverfly: o par hoverfly + hoverctl](../../domains/software-0007/software/testes/hoverfly-two-binaries.md)
+1642. [Hoverfly: capture grava o tráfego real](../../domains/software-0007/software/testes/hoverfly-capture-mode.md)
+1643. [Hoverfly: exportar filtrando por URL](../../domains/software-0007/software/testes/hoverfly-export-simulation.md)
+1644. [Hoverfly: sequências para APIs com estado](../../domains/software-0007/software/testes/hoverfly-stateful-capture.md)
+1645. [Hoverfly: simulate é o replay sem rede](../../domains/software-0007/software/testes/hoverfly-simulate-mode.md)
+1646. [Hoverfly: o mapa dos Key Concepts](../../domains/software-0007/software/testes/hoverfly-concepts-map.md)
+1647. [Hoverfly: os problemas que a doc já prevê](../../domains/software-0007/software/testes/hoverfly-troubleshooting.md)
+1648. [Hoverfly: binding Java e middleware de qualquer linguagem](../../domains/software-0007/software/testes/hoverfly-java-bindings.md)
+1649. [Hoverfly: build e testes de contribuição](../../domains/software-0007/software/testes/hoverfly-dev-setup.md)
+
+### gcovr — cobertura de gcov em texto e XML
+
+1650. [gcovr: o gcov resumido em texto e XML](../../domains/software-0007/software/testes/gcovr-what-it-is.md)
+1651. [gcovr: três passos do build ao relatório](../../domains/software-0007/software/testes/gcovr-getting-started.md)
+1652. [gcovr: a raiz é o filtro padrão](../../domains/software-0007/software/testes/gcovr-root-filter.md)
+1653. [gcovr: quinze formatos, uma flag cada](../../domains/software-0007/software/testes/gcovr-output-formats.md)
+1654. [gcovr: excluir linha, branch e função](../../domains/software-0007/software/testes/gcovr-exclusions.md)
+1655. [gcovr: configuração em arquivo, chave por opção](../../domains/software-0007/software/testes/gcovr-config-file.md)
+1656. [gcovr: o parser do gcov por trás do número](../../domains/software-0007/software/testes/gcovr-gcov-parser.md)
+1657. [gcovr: receitas de build difícil](../../domains/software-0007/software/testes/gcovr-cookbook.md)
+1658. [gcovr: ciclo de release visível na doc](../../domains/software-0007/software/testes/gcovr-versions.md)
+1659. [gcovr: quando lcov basta e quando não](../../domains/software-0007/software/testes/gcovr-vs-lcov.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1550 notas 10–1559 das tranches 2–21 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1559/2.000 notas válidas, restando 441 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1650 notas 10–1659 das tranches 2–22 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1659/2.000 notas válidas, restando 341 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
