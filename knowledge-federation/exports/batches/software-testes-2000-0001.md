@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1859 / 2.000 (92,95%)**
-- Gate automatizado: **1859/1859 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 24)
+- Notas efetivamente redigidas até agora: **1959 / 2.000 (97,95%)**
+- Gate automatizado: **1959/1959 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 25)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1859**
-- Revisão factual por IA: **1850/1859**
-- Contabilizadas como válidas: **1859/1859**
+- Revisão factual humana: **9/1959**
+- Revisão factual por IA: **1950/1959**
+- Contabilizadas como válidas: **1959/1959**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1850 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–24 (1850 notas, IDs 10–1859) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1950 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–25 (1950 notas, IDs 10–1959) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-24.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-24.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md), [`tranche 23`](../reports/ai-review-software-testes-2000-0001-tranche-23.md) e [`tranche 24`](../reports/ai-review-software-testes-2000-0001-tranche-24.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-25.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-25.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md), [`tranche 23`](../reports/ai-review-software-testes-2000-0001-tranche-23.md), [`tranche 24`](../reports/ai-review-software-testes-2000-0001-tranche-24.md) e [`tranche 25`](../reports/ai-review-software-testes-2000-0001-tranche-25.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1859 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 141 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1959 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 41 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -2387,6 +2387,138 @@
 1858. [Standalone mode com Docker e mocks em YAML](../../domains/software-0007/software/testes/httpmock-standalone-yaml.md)
 1859. [Núcleo assíncrono, APIs sync e async — e a letra miúda](../../domains/software-0007/software/testes/httpmock-async-license-meta.md)
 
+## Tranche 25 — Capybara, Mink, Radamsa, CBMC, KLEE, Creusot, Dredd, gock, quickcheck e Codeception (100 notas; revisão factual por IA registrada)
+
+### Capybara — simulação de usuário real e drivers plugáveis para aplicações web em Ruby
+
+1860. [Capybara: simular um usuário real interagindo com a aplicação web](../../domains/software-0007/software/testes/capybara-what-it-is.md)
+1861. [Quatro benefícios declarados: zero setup em Rails/Rack, troca de backend e sincronização](../../domains/software-0007/software/testes/capybara-key-benefits.md)
+1862. [Setup com Ruby 3.0+, gem capybara, capybara/rails e Capybara.app](../../domains/software-0007/software/testes/capybara-setup-ruby-rack-rails.md)
+1863. [Configuração do servidor Puma e o modo Silent no Rails 5.0+](../../domains/software-0007/software/testes/capybara-puma-server.md)
+1864. [Integração com Cucumber: cucumber-rails, within e a tag @javascript](../../domains/software-0007/software/testes/capybara-cucumber-integration.md)
+1865. [Integração com RSpec 3.5+: spec/features, spec/system e metadados type](../../domains/software-0007/software/testes/capybara-rspec-feature-system.md)
+1866. [Seleção de driver no RSpec com js: true e driver: :selenium](../../domains/software-0007/software/testes/capybara-rspec-js-driver-switching.md)
+1867. [A DSL de aceitação embutida: feature, background, scenario e given](../../domains/software-0007/software/testes/capybara-acceptance-dsl-aliases.md)
+1868. [Navegação, escopo com within, formulários e matchers em view specs](../../domains/software-0007/software/testes/capybara-dsl-scoping-and-matchers.md)
+1869. [Arquitetura do guia oficial: seletores, exactness, sessões nomeadas e canal de suporte](../../domains/software-0007/software/testes/capybara-architecture-topics-and-support.md)
+
+### Mink — emulador e controlador de navegador unificado para testes web em PHP
+
+1870. [Mink: controlador e emulador de navegador para aplicações web em PHP](../../domains/software-0007/software/testes/mink-what-it-is.md)
+1871. [Instalação via Composer: pacote base sem drivers por padrão](../../domains/software-0007/software/testes/mink-composer-install-no-drivers.md)
+1872. [O catálogo de oito drivers na documentação e a dupla recomendada](../../domains/software-0007/software/testes/mink-eight-drivers-catalog.md)
+1873. [Registro de múltiplas sessões e setDefaultSessionName](../../domains/software-0007/software/testes/mink-sessions-and-default-session.md)
+1874. [Misturar sessões no mesmo teste para simular múltiplos usuários](../../domains/software-0007/software/testes/mink-mixing-sessions-multiuser.md)
+1875. [Fluxo básico de navegação e interação: visit, getPage, findLink, click e getContent](../../domains/software-0007/software/testes/mink-visit-page-findlink-click.md)
+1876. [Arquitetura extensível por DriverInterface: o caso MyCustomDriver](../../domains/software-0007/software/testes/mink-custom-driver-extensibility.md)
+1877. [Os oito guias temáticos da documentação oficial](../../domains/software-0007/software/testes/mink-topical-guides-map.md)
+1878. [Integrações oficiais: Behat MinkExtension e phpunit-mink](../../domains/software-0007/software/testes/mink-behat-and-phpunit-integrations.md)
+1879. [Governança, canais comunitários e desenvolvimento do repositório](../../domains/software-0007/software/testes/mink-governance-contributors-and-channels.md)
+
+### Radamsa — fuzzer black-box e mutador de entradas por linha de comando
+
+1880. [Radamsa: gerador de casos de teste para testes de robustez](../../domains/software-0007/software/testes/radamsa-what-it-is.md)
+1881. [Abordagem estritamente black-box e origem no Protos Genome Project](../../domains/software-0007/software/testes/radamsa-black-box-and-protos-origin.md)
+1882. [Requisitos de SO e build que gera um binário único sem dependências externas](../../domains/software-0007/software/testes/radamsa-build-single-binary.md)
+1883. [O modelo mental do cat UNIX que quebra dados no caminho](../../domains/software-0007/software/testes/radamsa-unix-cat-pipe-model.md)
+1884. [Entropia de /dev/urandom por padrão e reprodutibilidade com -s / --seed](../../domains/software-0007/software/testes/radamsa-urandom-and-seed-flag.md)
+1885. [Mutação semântica de números textuais: o caso 4294967296 e inteiros gigantes](../../domains/software-0007/software/testes/radamsa-textual-number-mutator.md)
+1886. [Geração de múltiplas saídas com -n e unicidade estatística](../../domains/software-0007/software/testes/radamsa-multiple-outputs-flag-n.md)
+1887. [O laço shell de captura de falha: arquivo fuzzed e código de saída > 127](../../domains/software-0007/software/testes/radamsa-crash-loop-exit-gt-127.md)
+1888. [Trade-off entre fuzzing em pipe contínuo e uma execução por arquivo](../../domains/software-0007/software/testes/radamsa-streaming-vs-per-run-tradeoff.md)
+1889. [Amostras múltiplas e modos TCP cliente/servidor](../../domains/software-0007/software/testes/radamsa-multi-sample-and-network-capabilities.md)
+
+### CBMC — verificação formal de modelos limitados para C e C++
+
+1890. [CBMC: Bounded Model Checker para programas C e C++](../../domains/software-0007/software/testes/cbmc-what-it-is.md)
+1891. [Cobertura de padrões C89 a C23, extensões de compilador, SystemC e Verilog](../../domains/software-0007/software/testes/cbmc-language-standards-and-extensions.md)
+1892. [O que e como verifica: bounds, ponteiros, exceções, asserções e loop unwinding](../../domains/software-0007/software/testes/cbmc-verified-properties-and-unwinding.md)
+1893. [Política entre releases testadas para produção e a branch develop](../../domains/software-0007/software/testes/cbmc-releases-vs-develop-branch.md)
+1894. [Instalação no Windows: binários .msi e Visual C++ redistributables](../../domains/software-0007/software/testes/cbmc-windows-msi-and-vcredist.md)
+1895. [Três caminhos de instalação no Linux e a ressalva de ABI da libc/libc++](../../domains/software-0007/software/testes/cbmc-linux-install-abi-caveat.md)
+1896. [Instalação no macOS com Homebrew: upgrade automático, brew pin e tap histórico](../../domains/software-0007/software/testes/cbmc-macos-homebrew-pin-and-tap.md)
+1897. [Fluxo de contribuição: branch a partir de develop e CODING_STANDARD.md](../../domains/software-0007/software/testes/cbmc-contributing-workflow-develop.md)
+1898. [Compilação a partir do código-fonte via COMPILING.md e qualidade monitorada](../../domains/software-0007/software/testes/cbmc-compilers-and-build-from-source.md)
+1899. [Licenciamento sob 4-clause BSD license](../../domains/software-0007/software/testes/cbmc-license-4-clause-bsd.md)
+
+### KLEE — máquina virtual simbólica sobre bitcode LLVM
+
+1900. [KLEE: máquina virtual simbólica sobre LLVM e seus dois componentes centrais](../../domains/software-0007/software/testes/klee-what-it-is-and-two-components.md)
+1901. [Duas infraestruturas de replay em código nativo: biblioteca simples e ambiente POSIX](../../domains/software-0007/software/testes/klee-replay-native-infrastructures.md)
+1902. [Ordem da linha de comando e detecção de integer overflow via clang -fsanitize](../../domains/software-0007/software/testes/klee-cli-order-and-integer-overflow-sanitize.md)
+1903. [Ambiente simbólico: -sym-arg, -sym-args, -sym-stdin e -sym-stdout](../../domains/software-0007/software/testes/klee-symbolic-environment-args-and-stdio.md)
+1904. [Arquivos simbólicos e injeção de falhas de I/O: -sym-files, -save-all-writes, -max-fail e -fd-fail](../../domains/software-0007/software/testes/klee-symbolic-files-writes-and-failures.md)
+1905. [As quatro heurísticas principais de busca e as seis variantes de NURS](../../domains/software-0007/software/testes/klee-four-main-search-heuristics.md)
+1906. [Heurística padrão interleaved (random-path + nurs:covnew) e busca em lote (-use-batching-search)](../../domains/software-0007/software/testes/klee-default-interleaving-and-batching-search.md)
+1907. [Política de chamadas a funções externas: none, concrete (padrão) e all](../../domains/software-0007/software/testes/klee-external-call-policy.md)
+1908. [Cinco opções de inicialização: entry-point, env-file, optimize, output-dir e run-in-dir](../../domains/software-0007/software/testes/klee-startup-options.md)
+1909. [Mapa das demais seções de controle: Solver Chain, klee_assume, estatísticas, memória e saída por eventos](../../domains/software-0007/software/testes/klee-diagnostic-and-control-sections-map.md)
+
+### Creusot — verificador dedutivo para Rust via Coma e Why3
+
+1910. [Creusot: verificador dedutivo para código Rust](../../domains/software-0007/software/testes/creusot-what-it-is.md)
+1911. [A arquitetura de tradução: de Rust para Coma e a plataforma Why3](../../domains/software-0007/software/testes/creusot-coma-and-why3-pipeline.md)
+1912. [Dois degraus de verificação: ausência de panics/overflows e correção funcional por anotações](../../domains/software-0007/software/testes/creusot-safety-vs-functional-correctness.md)
+1913. [Os cinco exemplos de entrada na suíte oficial do repositório](../../domains/software-0007/software/testes/creusot-canonical-examples-suite.md)
+1914. [Projetos reais verificados com Creusot: CreuSAT e Krabka](../../domains/software-0007/software/testes/creusot-real-world-projects-creusat-krabka.md)
+1915. [Instalação de usuário em cinco passos: rustup, opam, ./INSTALL e cargo creusot --help](../../domains/software-0007/software/testes/creusot-installation-rustup-opam-install.md)
+1916. [Fluxo de atualização do Creusot: git pull, opam update e ./INSTALL](../../domains/software-0007/software/testes/creusot-upgrading-workflow.md)
+1917. [Base científica e citação acadêmica: publicação no ICFEM'22](../../domains/software-0007/software/testes/creusot-icfem22-academic-citation.md)
+1918. [Trinca de aprendizado oficial: Guide, API creusot-std, Tutorial e Devlog](../../domains/software-0007/software/testes/creusot-learning-resources-guide-api-tutorial.md)
+1919. [Comunidade no Zulip do Why3, GitHub Discussions e guia CONTRIBUTING.md](../../domains/software-0007/software/testes/creusot-community-zulip-discussions-and-hacking.md)
+
+### Dredd — validação de implementações de API HTTP contra documentos de especificação
+
+1920. [Dredd: validar o documento de descrição da API contra a implementação do backend](../../domains/software-0007/software/testes/dredd-what-it-is.md)
+1921. [Os três formatos de descrição de API: API Blueprint, OpenAPI 2 e OpenAPI 3 experimental](../../domains/software-0007/software/testes/dredd-supported-api-description-formats.md)
+1922. [CLI agnóstico de linguagem de backend: testar qualquer stack HTTP](../../domains/software-0007/software/testes/dredd-language-agnostic-architecture.md)
+1923. [Hooks para setup e teardown em sete linguagens (e guia para adicionar novas)](../../domains/software-0007/software/testes/dredd-seven-hooks-languages.md)
+1924. [Instalação com npm install -g dredd e o fluxo de três passos do Quick Start](../../domains/software-0007/software/testes/dredd-npm-install-and-quickstart-flow.md)
+1925. [Suporte multiplataforma e integração com Travis CI, CircleCI, Jenkins e AppVeyor](../../domains/software-0007/software/testes/dredd-interactive-init-and-ci-systems.md)
+1926. [O fluxo Design-First e o princípio de manter a documentação honesta](../../domains/software-0007/software/testes/dredd-design-first-and-honest-docs-workflow.md)
+1927. [Como o Dredd valida cada passo: requisição derivada da doc contra resposta do backend](../../domains/software-0007/software/testes/dredd-step-by-step-response-validation.md)
+1928. [Canais oficiais de referência: dredd.org/en/latest e releases no GitHub](../../domains/software-0007/software/testes/dredd-documentation-and-changelog-channels.md)
+1929. [Contribuição ao projeto e criação de novos runners de hooks](../../domains/software-0007/software/testes/dredd-contributing-and-extending-hooks.md)
+
+### gock — interceptação e mocking declarativo de HTTP em Go via RoundTripper
+
+1930. [gock: mocking HTTP versátil e sem dependências para clientes net/http em Go](../../domains/software-0007/software/testes/gock-what-it-is.md)
+1931. [Como o gock funciona: RoundTripper, fila FIFO e modo de rede real opcional](../../domains/software-0007/software/testes/gock-how-it-mocks-four-steps.md)
+1932. [Ciclo de vida no teste: defer gock.Off() e verificação de pendências com gock.IsDone()](../../domains/software-0007/software/testes/gock-defer-off-and-isdone.md)
+1933. [Dica de precedência: declarar mocks mais concretos antes dos genéricos](../../domains/software-0007/software/testes/gock-ordering-concrete-before-generic.md)
+1934. [Concorrência e condições de corrida: declarar mocks antes de disparar goroutines](../../domains/software-0007/software/testes/gock-concurrency-and-race-conditions-caveat.md)
+1935. [Clientes customizados: gock.InterceptClient(client) uma vez e defer gock.RestoreClient(client)](../../domains/software-0007/software/testes/gock-custom-http-client-intercept-and-restore.md)
+1936. [Matching de cabeçalhos com expressões regulares: MatchHeader e HeaderPresent](../../domains/software-0007/software/testes/gock-header-and-regex-matching.md)
+1937. [Matching de parâmetros de URL com MatchParam](../../domains/software-0007/software/testes/gock-query-params-matching.md)
+1938. [Matching de payload e resposta JSON com Post, MatchType("json") e JSON(...)](../../domains/software-0007/software/testes/gock-json-body-matching-and-reply.md)
+1939. [Recursos avançados da lista de Features: persistência/TTL, atrasos, filtros/maps e compatibilidade](../../domains/software-0007/software/testes/gock-ttl-persistence-delays-and-filters.md)
+
+### quickcheck — testes baseados em propriedades e shrinking por busca binária em Rust
+
+1940. [quickcheck em Rust: testes baseados em propriedades e shrinking por busca binária](../../domains/software-0007/software/testes/quickcheck-what-it-is.md)
+1941. [Duas formas de declarar propriedades: a macro quickcheck! e o atributo #[quickcheck]](../../domains/software-0007/software/testes/quickcheck-macro-vs-attribute.md)
+1942. [Diagnóstico com RUST_LOG=quickcheck e as features padrão use_logging e regex](../../domains/software-0007/software/testes/quickcheck-logging-and-default-features.md)
+1943. [Política de MSRV (Rust 1.85.0) e o papel de rand como dependência pública](../../domains/software-0007/software/testes/quickcheck-msrv-policy-and-rand.md)
+1944. [Compatibilidade SemVer: implementações de Arbitrary podem mudar e achar bugs novos](../../domains/software-0007/software/testes/quickcheck-arbitrary-compatibility-caveat.md)
+1945. [Por que propriedades são polimórficas: o trait Testable e a função quickcheck](../../domains/software-0007/software/testes/quickcheck-testable-trait-polymorphism.md)
+1946. [Descartar entradas fora do subdomínio com TestResult::discard() e TestResult::from_bool](../../domains/software-0007/software/testes/quickcheck-discarding-test-results.md)
+1947. [Como funciona o shrinking no quickcheck: busca binária sobre listas e números](../../domains/software-0007/software/testes/quickcheck-binary-search-shrinking.md)
+1948. [Quando escolher quickcheck, quando escolher proptest e quando ir para fuzzing](../../domains/software-0007/software/testes/quickcheck-vs-proptest-and-fuzzing-alternatives.md)
+1949. [Duplo licenciamento MIT / UNLICENSE e documentação completa em docs.rs](../../domains/software-0007/software/testes/quickcheck-licensing-and-api-docs.md)
+
+### Codeception — testes unitários, funcionais e de aceitação em estilo unificado para PHP
+
+1950. [Codeception: um único framework PHP para as suítes Unit, Functional e Acceptance](../../domains/software-0007/software/testes/codeception-what-it-is-and-three-suites.md)
+1951. [A tabela oficial de sete dimensões entre Unit, Functional e Acceptance Tests](../../domains/software-0007/software/testes/codeception-comparison-table-seven-dimensions.md)
+1952. [Acceptance Tests: testar qualquer site pela perspectiva do usuário no navegador](../../domains/software-0007/software/testes/codeception-acceptance-tests-user-perspective.md)
+1953. [Functional Tests: emular requisições em PHP sem servidor web e inspecionar e-mail e banco](../../domains/software-0007/software/testes/codeception-functional-tests-no-webserver.md)
+1954. [Unit Tests sobre o PHPUnit e o uso de `$this->tester`](../../domains/software-0007/software/testes/codeception-unit-tests-on-top-of-phpunit.md)
+1955. [A regra de três famílias de métodos da sintaxe: Actions, Assertions (see/dontSee) e Grabbers (grab)](../../domains/software-0007/software/testes/codeception-syntax-actions-assertions-grabbers.md)
+1956. [Atores (`UnitTester`, `FunctionalTester`, `AcceptanceTester`), módulos e o comando `codecept build`](../../domains/software-0007/software/testes/codeception-actors-modules-and-codecept-build.md)
+1957. [O formato Cest: geração com `generate:cest`, métodos públicos de teste e hooks `_before` / `_after`](../../domains/software-0007/software/testes/codeception-cest-format-generate-and-hooks.md)
+1958. [Execução com `codecept run` e relatório passo a passo em inglês com `--steps`](../../domains/software-0007/software/testes/codeception-run-and-steps-flag.md)
+1959. [Suporte nativo a BDD/Gherkin e o mapa dos 17 capítulos da documentação oficial](../../domains/software-0007/software/testes/codeception-bdd-gherkin-and-guides-map.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1850 notas 10–1859 das tranches 2–24 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1859/2.000 notas válidas, restando 141 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1950 notas 10–1959 das tranches 2–25 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1959/2.000 notas válidas, restando 41 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
