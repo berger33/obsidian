@@ -1,0 +1,211 @@
+=== NOTE: 621 | tetragon-ebpf-observabilidade-seguranca-runtime-enforcement | Cilium Tetragon: observabilidade de segurança e runtime enforcement em tempo real com eBPF ===
+ONE_LINER: O Cilium Tetragon é um componente baseado em eBPF que realiza observabilidade de segurança em tempo real e aplicação de políticas (runtime enforcement) diretamente no kernel Linux com consciência nativa de Kubernetes.
+IMPORTANCE: Ferramentas de segurança em espaço de usuário que interceptam chamadas de sistema (`syscalls`) via `ptrace` ou auditoria assíncrona sofrem alto overhead de troca de contexto, são vulneráveis a condições de corrida (TOCTOU) na fronteira usuário/kernel e detectam ataques apenas depois que a operação maliciosa já foi concluída. Segundo a documentação oficial do Cilium Tetragon, aplicar filtragem e bloqueio diretamente em eBPF dentro do kernel reduz drasticamente o custo de observação e permite interromper processos violadores antes mesmo que a chamada de sistema retorne.
+HOW_IT_WORKS: O Tetragon carrega sensores eBPF em pontos estratégicos do kernel Linux (funções internas via `kprobes`, `tracepoints` e `uprobes`), coletando eventos críticos de segurança — como execução e término de processos, atividade de chamadas de sistema, acesso a arquivos, mudanças de credenciais/capabilities e conexões de rede — e correlacionando o estado do kernel com identidades do Kubernetes (`namespace`, `pod`, `container`, rótulos e workloads). Como toda a filtragem por caminhos de arquivos, sockets, nomes de binários, namespaces e capabilities ocorre no próprio kernel via eBPF, apenas os eventos relevantes são enviados ao agente em user space (formato JSON/gRPC), enquanto ações de bloqueio ou terminação (`SIGKILL`) são executadas sincronicamente pelo kernel em tempo real.
+EXAMPLE:
+```bash
+# Instalação do Cilium Tetragon no Kubernetes via Helm e observação de eventos em tempo real com a CLI tetra
+helm repo add cilium https://helm.cilium.io
+helm repo update
+helm install tetragon cilium/tetragon -n kube-system
+
+kubectl exec -ti -n kube-system ds/tetragon -c tetragon -- tetra getevents -o compact
+```
+TRADE_OFFS: Como o Tetragon opera carregando programas eBPF diretamente no kernel do nó hospedeiro, ele exige privilégios administrativos no DaemonSet e versões de kernel Linux modernas com suporte a BTF (BPF Type Format); além disso, políticas de enforcement mal calibradas que aplicam `Sigkill` em funções críticas do kernel podem encerrar processos legítimos da aplicação se não forem testadas previamente em modo de apenas observação.
+VERIFY: Verifique se o DaemonSet `tetragon` está em estado `Running` no namespace `kube-system` e execute `tetra status` e `tetra getevents -o compact` para confirmar o fluxo de eventos em tempo real enriquecidos com metadados de pods.
+LINKS: [[tetragon-ciclo-vida-processos-process-exec-exit-arvore]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]] | [[tetragon-enforcement-kernel-sigkill-override-bloqueio-tempo-real]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 622 | tetragon-ciclo-vida-processos-process-exec-exit-arvore | Cilium Tetragon: observabilidade completa do ciclo de vida de processos com process_exec e process_exit ===
+ONE_LINER: O Cilium Tetragon gera por padrão eventos `process_exec` e `process_exit` no kernel, mantendo o rastreamento completo da árvore de ancestralidade, argumentos, binários, UID/GID e capabilities de cada processo.
+IMPORTANCE: Em investigações forenses e detecção de intrusão em containers, saber apenas que um binário suspeito como `curl` ou `nc` abriu um socket de rede é insuficiente sem saber qual processo pai o invocou (por exemplo, um worker Java ou Node.js explorado via execução remota de código), com quais privilégios ele iniciou e qual foi seu código de saída. De acordo com o README oficial do Tetragon, os sensores de ciclo de vida de processo vêm ativados por padrão para fornecer visibilidade contínua do nascimento ao término de cada processo.
+HOW_IT_WORKS: Ao enganchar nos pontos internos do kernel Linux responsáveis pela criação (`execve`) e finalização (`exit`) de tarefas, o Tetragon constrói e mantém em mapas eBPF uma tabela de processos correlacionada com metadados do container e do pod Kubernetes. Cada evento `process_exec` registra um `exec_id` único, o `parent_exec_id` (permitindo reconstruir toda a árvore genealógica do processo desde o init do container), o caminho do binário, argumentos de linha de comando, diretório de trabalho (`cwd`), namespaces Linux, capabilities (`permitted`, `effective`, `inheritable`) e credenciais de usuário, enquanto `process_exit` captura o sinal ou código de retorno exato no encerramento.
+EXAMPLE:
+```bash
+# Filtrar eventos process_exec e process_exit de um namespace ou pod específico usando a CLI tetra
+tetra getevents --server-address unix:///var/run/tetragon/tetragon.sock \
+  -o compact --namespace default --pods backend-api
+```
+TRADE_OFFS: Capturar todos os eventos `process_exec` e `process_exit` em nós que executam pipelines de CI/CD ou scripts shell intensivos (que criam milhares de subprocessos de curta duração por segundo) pode gerar alto volume de logs JSON na saída do agente; nesses ambientes, recomenda-se configurar filtros de exportação (allowlist/denylist) para suprimir processos efêmeros conhecidos e benignos.
+VERIFY: Execute um comando interativo dentro de um pod monitorado (por exemplo, `kubectl exec pod-teste -- ls /tmp`) e confirme na saída do `tetra getevents` a emissão imediata do par `process_exec` e `process_exit` com a árvore de processo pai correspondente.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]] | [[tetragon-tetra-cli-inspecao-eventos-filtros-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 623 | tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel | Cilium Tetragon: CRD TracingPolicy e rastreamento genérico com kprobes, tracepoints e uprobes ===
+ONE_LINER: O recurso customizado `TracingPolicy` (e `TracingPolicyNamespaced`) do Cilium Tetragon permite instrumentar dinamicamente qualquer função do kernel (`process_kprobe`), tracepoint (`process_tracepoint`) ou função de usuário (`process_uprobe`) sem recompilar o agente.
+IMPORTANCE: Nenhuma ferramenta de segurança consegue prever ou codificar estaticamente todas as funções do kernel que diferentes equipes precisarão monitorar para casos de uso específicos de rede, arquivos, criptografia ou chamadas internas. Segundo a documentação oficial do Tetragon (`Overview`), nada sobre quais funções são rastreadas ou quais filtros são aplicados está engessado no motor: os usuários definem políticas declarativas `TracingPolicy` que engancham profundamente em estruturas do kernel onde aplicações em user space não conseguem manipular nem falsificar os argumentos.
+HOW_IT_WORKS: Quando um manifesto `TracingPolicy` (escopo de cluster) ou `TracingPolicyNamespaced` (restrito a um namespace Kubernetes) é aplicado na API do Kubernetes, o operador/agente do Tetragon compila e anexa os sensores eBPF correspondentes aos seletores definidos (`kprobes`, `tracepoints`, `uprobes` ou `lsm`). Na especificação da política, o administrador declara a função alvo (por exemplo, `tcp_connect`, `security_file_permission` ou `sys_enter`), os tipos dos argumentos do kernel que devem ser extraídos (como `sock`, `file`, `int`, `char_buf`) e os seletores (`selectors`) que filtram no próprio eBPF por `matchPIDs`, `matchArgs`, `matchBinaries`, `matchCapabilities` ou `matchNamespaces` antes de emitir eventos `process_kprobe`, `process_tracepoint` ou `process_uprobe`.
+EXAMPLE:
+```yaml
+# Exemplo de TracingPolicyNamespaced monitorando chamadas tcp_connect no kernel via kprobe
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: monitor-conexoes-tcp
+  namespace: producao
+spec:
+  kprobes:
+    - call: "tcp_connect"
+      syscall: false
+      args:
+        - index: 0
+          type: "sock"
+```
+TRADE_OFFS: Enganchar `kprobes` em funções internas do kernel que são executadas milhões de vezes por segundo (como funções de leitura/escrita de pacotes ou alocação de páginas) sem especificar seletores restritivos (`matchArgs`, `matchBinaries` ou `podSelector`) no eBPF pode introduzir latência mensurável nas chamadas de sistema do nó; além disso, assinaturas de funções internas do kernel (`kprobes` não-syscall) podem variar entre versões principais do kernel Linux.
+VERIFY: Aplique a `TracingPolicy` com `kubectl apply -f policy.yaml`, liste as políticas carregadas no agente com `tetra tracingpolicy list` e verifique a geração de eventos `process_kprobe` quando o workload realiza a operação monitorada.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-enforcement-kernel-sigkill-override-bloqueio-tempo-real]] | [[tetragon-monitoramento-arquivos-credenciais-execucao-privilegiada]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 624 | tetragon-enforcement-kernel-sigkill-override-bloqueio-tempo-real | Cilium Tetragon: runtime enforcement síncrono no kernel com ações Sigkill e Override ===
+ONE_LINER: O Cilium Tetragon executa aplicação de políticas de segurança (runtime enforcement) diretamente no kernel via eBPF, permitindo encerrar processos (`Sigkill`) ou sobrescrever o retorno de funções (`Override`) antes que a operação seja concluída.
+IMPORTANCE: Em arquiteturas de segurança reativas baseadas em agentes de espaço de usuário, quando o evento de uma escalada de privilégio ou leitura de segredo chega ao agente externo para análise, o atacante já concluiu a syscall e pode ter exfiltrado os dados pela rede. Conforme a documentação oficial do Tetragon (`eBPF Kernel Aware`), executar a política dentro do kernel permite matar o processo ou bloquear a chamada no exato instante da violação, antes que o processo tenha chance de concluir a syscall ou executar instruções adicionais.
+HOW_IT_WORKS: Dentro dos seletores (`selectors`) de uma `TracingPolicy`, além de filtrar argumentos e metadados de processo/Kubernetes no eBPF, o administrador pode configurar `matchActions`. A ação `Sigkill` instrui o programa eBPF no kernel a enviar imediatamente um sinal `SIGKILL` não-ignorável ao processo atual assim que a condição da regra é satisfeita na função monitorada. Já a ação `Override` (utilizada em conjunto com `fmod_ret` / error injection em funções de segurança ou syscalls suportadas pelo kernel) altera o valor de retorno da função para um código de erro POSIX (como `-EPERM` / `-1`), negando a operação específica sem necessariamente derrubar o processo inteiro.
+EXAMPLE:
+```yaml
+# Trecho de TracingPolicy que bloqueia e encerra processos que tentem modificar /etc/passwd em um pod
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: bloquear-escrita-etc-passwd
+  namespace: default
+spec:
+  kprobes:
+    - call: "security_file_permission"
+      syscall: false
+      args:
+        - index: 0
+          type: "file"
+        - index: 1
+          type: "int"
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: "Equal"
+              values:
+                - "/etc/passwd"
+            - index: 1
+              operator: "Equal"
+              values:
+                - "2" # MAY_WRITE
+          matchActions:
+            - action: Sigkill
+```
+TRADE_OFFS: A ação `Sigkill` termina abruptamente o processo infrator no kernel (resultando em saída `Killed` / código 137), o que pode derrubar todo o container se o processo atingido for o PID 1 da aplicação; por isso, recomenda-se sempre validar novas políticas inicialmente apenas com a ação padrão `Post` (emissão de evento de observabilidade) e auditar falsos positivos antes de ativar `Sigkill` ou `Override` em produção.
+VERIFY: Em um ambiente de homologação, aplique a política com `matchActions` e tente executar a ação proibida dentro de um pod de teste, verificando que o comando é imediatamente interrompido (`Killed` ou `Operation not permitted`) e que o evento no `tetra getevents` registra a ação tomada.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]] | [[tetragon-monitoramento-arquivos-credenciais-execucao-privilegiada]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 625 | tetragon-monitoramento-arquivos-credenciais-execucao-privilegiada | Cilium Tetragon: monitoramento de acesso a arquivos sensíveis, credenciais Linux e execução privilegiada ===
+ONE_LINER: O Cilium Tetragon fornece casos de uso nativos baseados em eBPF para auditar e restringir o acesso a arquivos sensíveis (FIM), alterações de credenciais/capabilities de processos Linux e execuções privilegiadas.
+IMPORTANCE: Ataques pós-exploração em containers frequentemente envolvem a leitura de tokens de ServiceAccount do Kubernetes (`/var/run/secrets/kubernetes.io/serviceaccount/token`), modificação de binários do sistema ou escalada de privilégios no kernel (alterando o `uid` para `0` ou adquirindo `CAP_SYS_ADMIN`). Segundo o README e a visão geral oficial do Tetragon, enganchar diretamente nas funções de verificação de segurança do kernel (LSM / VFS / credenciais) evita as falhas clássicas do rastreamento de syscalls, onde ponteiros em espaço de usuário podem ser alterados maliciosamente por atacantes ou falhar por page faults.
+HOW_IT_WORKS: Para monitoramento de acesso a arquivos (`filename access`), o Tetragon engancha em funções internas do Virtual File System (VFS) e Linux Security Modules (como `security_file_permission`, `security_mmap_file` e `security_path_truncate`), onde a estrutura `struct file` do kernel já foi resolvida de forma imutável, permitindo filtrar por caminhos exatos ou prefixos de diretórios. Para monitoramento de credenciais e execução privilegiada (`linux-process-credentials` e `privileged-execution`), o Tetragon inspeciona as estruturas `struct cred` e namespaces do kernel em `commit_creds` ou durante a transição de processos, detectando imediatamente quando uma tarefa adquire novas capabilities Linux, muda de namespace (container escape) ou altera seu UID/GID efetivo.
+EXAMPLE:
+```bash
+# Observar eventos de leitura/escrita em arquivos sensíveis monitorados em JSON via CLI tetra
+tetra getevents -o json --namespace producao --event-types PROCESS_KPROBE | jq .process_kprobe
+```
+TRADE_OFFS: Monitorar leituras em diretórios inteiros de alto tráfego (como `/usr/lib` ou `/var/log`) sem filtrar por binários ou operações de escrita pode gerar milhares de eventos por segundo; para File Integrity Monitoring (FIM) eficiente em produção, deve-se restringir `matchArgs` a caminhos críticos (como `/etc/`, `/root/.ssh/`, tokens de segredos) ou filtrar apenas máscaras de escrita (`MAY_WRITE` / `MAY_APPEND`).
+VERIFY: Aplique uma política de monitoramento de arquivos sensíveis ou credenciais e execute um teste controlado de leitura do arquivo monitorado, confirmando que o evento gerado inclui o caminho completo do arquivo, o binário executor, o pod e as capabilities do processo.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]] | [[tetragon-enforcement-kernel-sigkill-override-bloqueio-tempo-real]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 626 | tetragon-observabilidade-rede-sockets-processos-ebpf | Cilium Tetragon: observabilidade de rede correlacionando sockets TCP/UDP diretamente a processos e pods ===
+ONE_LINER: O Cilium Tetragon associa estruturas de sockets do kernel (`struct sock`) aos processos, binários e pods Kubernetes que abriram ou transmitiram dados na conexão, eliminando pontos cegos na observabilidade de rede.
+IMPORTANCE: Fluxos tradicionais de rede (NetFlow, logs de CNI ou capturas de pacotes) informam que o IP de um pod conversou com um endereço externo suspeito na porta 443, mas não conseguem responder qual processo específico e qual linha de comando dentro daquele pod iniciaram a conexão — se foi o binário oficial da aplicação Go ou um script Python baixado por um invasor. De acordo com a documentação oficial do Tetragon, o estado em eBPF une sockets a processos no momento exato da chamada no kernel.
+HOW_IT_WORKS: Ao instrumentar funções da pilha de rede do kernel Linux (como `tcp_connect`, `tcp_close`, `tcp_sendmsg` ou `udp_sendmsg`) por meio de uma `TracingPolicy` com argumentos do tipo `sock` ou `skb`, o Tetragon extrai os endereços IP de origem e destino, portas TCP/UDP, família de protocolo e estatísticas de bytes enviados/recebidos, e cruza automaticamente esses dados no kernel com o `exec_id` do processo em execução. O evento resultante entregue ao espaço de usuário mostra em um único registro JSON tanto os metadados de camada 3/4 da conexão quanto o binário completo, argumentos, UID, árvore de processos pai e identidade do pod Kubernetes.
+EXAMPLE:
+```bash
+# Inspecionar eventos de rede e processos asociados ao pod frontend-web com a CLI tetra
+kubectl exec -n kube-system daemonset/tetragon -- \
+  tetra getevents -o compact --pods frontend-web
+```
+TRADE_OFFS: Rastrear apenas o estabelecimento e o fechamento de conexões (`tcp_connect` e `tcp_close`) possui overhead quase nulo no kernel; porém, enganchar em funções por pacote ou por mensagem (como `tcp_sendmsg` ou `tcp_recvmsg`) sem agregação em mapa eBPF ou filtro por IP/porta em serviços de alto throughput pode gerar volume excessivo de eventos no ring buffer do eBPF.
+VERIFY: Com uma política de observabilidade de conexões TCP ativa, execute `curl https://example.com` dentro de um pod e confirme no `tetra getevents` que o evento reporta o IP/porta de destino associado exatamente ao binário `/usr/bin/curl` e ao pod correspondente.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-ciclo-vida-processos-process-exec-exit-arvore]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 627 | tetragon-consciencia-kubernetes-identidades-pods-namespaces | Cilium Tetragon: consciência nativa de Kubernetes com enriquecimento por Pod, Namespace e Workload ===
+ONE_LINER: O Cilium Tetragon integra o estado do kernel Linux com metadados do Kubernetes para filtrar políticas e enriquecer eventos por `namespace`, `pod`, `container`, rótulos (`podSelector`) e controladores (Deployment/DaemonSet).
+IMPORTANCE: Em um nó Kubernetes que hospeda dezenas de pods de diferentes equipes, eventos brutos do kernel contendo apenas números de PID, cgroup ID ou inode de mount namespace são difíceis de interpretar para analistas de SOC e impossíveis de usar para criar regras de segurança específicas por microsserviço. Segundo o README oficial do Tetragon, o componente é nativamente Kubernetes-aware, permitindo configurar detecção e bloqueio em relação a workloads individuais.
+HOW_IT_WORKS: O agente do Tetragon em cada nó monitora a API do Kubernetes (ou o estado local do kubelet/container runtime) e mapeia os identificadores de cgroups e namespaces do container para o objeto Pod correspondente. Esse mapeamento opera em duas direções: (1) no enriquecimento de eventos de saída, anexando automaticamente nome do pod, namespace, imagem do container, labels e workload pai a cada evento `process_exec`, `process_kprobe` ou `process_exit`; e (2) na filtragem em-kernel de políticas `TracingPolicy` e `TracingPolicyNamespaced`, onde o uso de `podSelector` ou escopo de namespace restringe a avaliação do sensor eBPF apenas aos containers pertencentes aos pods selecionados.
+EXAMPLE:
+```yaml
+# TracingPolicy aplicando monitoramento apenas a pods com o rótulo app=pagamentos-api
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: politica-pagamentos
+  namespace: financeiro
+spec:
+  podSelector:
+    matchLabels:
+      app: pagamentos-api
+  kprobes:
+    - call: "security_bprm_check"
+      syscall: false
+```
+TRADE_OFFS: O uso de `TracingPolicyNamespaced` e `podSelector` é essencial em clusters multi-tenant porque impede que uma política criada para proteger um serviço específico afete todos os outros pods do nó; contudo, o operador `tetragon-operator` e o RBAC de leitura de pods precisam estar saudáveis para que os novos pods criados recebam o mapeamento de cgroup imediato na inicialização.
+VERIFY: Inspecione um evento bruto em JSON (`tetra getevents -o json | jq .process_exec.process.pod`) e confirme a presença dos campos `namespace`, `name`, `container.image.id`, `pod_labels` e `workload`.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel]] | [[inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 628 | tetragon-tetra-cli-inspecao-eventos-filtros-kubernetes | Cilium Tetragon: uso da CLI Tetra para inspeção de eventos, filtros e administração de sensores ===
+ONE_LINER: A CLI `tetra` conecta-se ao servidor gRPC do agente Cilium Tetragon para transmitir eventos em tempo real, filtrar por pods, namespaces ou processos e gerenciar políticas `TracingPolicy`.
+IMPORTANCE: Durante a resposta a um incidente de segurança ou durante o desenvolvimento de uma nova `TracingPolicy`, engenheiros de plataforma precisam visualizar imediatamente os eventos capturados pelo kernel em formato legível no terminal, sem aguardar a indexação em um SIEM externo. De acordo com a documentação oficial do Tetragon, a ferramenta `tetra` (disponível tanto dentro do container do Tetragon quanto como binário standalone) é a interface primária de linha de comando para interagir com o daemon.
+HOW_IT_WORKS: O binário `tetra` comunica-se via gRPC (por padrão através do socket UNIX `/var/run/tetragon/tetragon.sock` ou porta TCP local) com o daemon do Tetragon. O subcomando `tetra getevents` consome o stream de eventos de observabilidade e segurança, oferecendo dois modos principais de saída: `-o json` (eventos completos estruturados com todos os argumentos do kernel, credenciais e metadados Kubernetes) e `-o compact` (visão resumida em uma linha por evento com ícones indicativos de processo, rede, arquivo ou sinal). Além disso, `tetragetevents` aceita flags de filtragem no servidor (`--namespace`, `--pods`, `--processes`, `--event-types`), e subcomandos como `tetra status` e `tetra tracingpolicy` permitem inspecionar a saúde do agente e testar políticas localmente.
+EXAMPLE:
+```bash
+# Executar a CLI tetra para visualizar apenas eventos em formato compacto de um namespace específico
+kubectl exec -ti -n kube-system ds/tetragon -c tetragon -- \
+  tetra getevents -o compact --namespace kube-system
+
+# Verificar o status do daemon Tetragon via socket gRPC
+kubectl exec -ti -n kube-system ds/tetragon -c tetragon -- \
+  tetra status
+```
+TRADE_OFFS: Executar `tetra getevents` sem filtros em um nó de produção movimentado transmite todos os eventos capturados pelo daemon naquele nó através da sessão `kubectl exec`, consumindo largura de banda do apiserver; usar as flags `--namespace`, `--pods` ou `--event-types` delega o filtro ao servidor gRPC do Tetragon antes da serialização para o terminal.
+VERIFY: Execute `tetra status` dentro do pod do Tetragon para confirmar `Health status: running` e teste `tetra getevents -o compact` para observar a decodificação em tempo real dos eventos do nó.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-ciclo-vida-processos-process-exec-exit-arvore]] | [[tetragon-exportacao-logs-json-metricas-prometheus-siem]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 629 | tetragon-implantacao-kubernetes-linux-docker-standalone | Cilium Tetragon: implantação em Kubernetes (DaemonSet) e em hosts Linux via Docker ou pacotes nativos ===
+ONE_LINER: O Cilium Tetragon pode ser implantado em clusters Kubernetes via Helm como um DaemonSet ou executado diretamente em servidores Linux via container Docker ou pacotes de sistema para proteção de hosts bare-metal e VMs.
+IMPORTANCE: A superfície de ataque de uma infraestrutura moderna não se restringe a clusters Kubernetes: servidores Linux standalone, nós de bancos de dados, runners de CI/CD em máquinas virtuais e instâncias de borda também exigem observabilidade de segurança e runtime enforcement via eBPF. Segundo o README oficial do Tetragon (`Getting started`), o projeto suporta tanto a implantação nativa em Kubernetes quanto a execução direta em Linux e Docker.
+HOW_IT_WORKS: Em Kubernetes, o Helm chart `cilium/tetragon` implanta o `tetragon-operator` (que gerencia os CRDs `TracingPolicy` e `TracingPolicyNamespaced`) e o DaemonSet `tetragon` em cada nó do cluster, montando `/sys/kernel/btf/vmlinux`, `/sys/fs/bpf` e `/proc` do hospedeiro para carregar os sensores eBPF e enriquecer eventos com metadados de pods. Em servidores Linux fora do Kubernetes, o Tetragon pode ser executado como um container privilegiado (`quay.io/cilium/tetragon`) compartilhando o namespace de PID e os diretórios de BPF/BTF do host, ou instalado diretamente como serviço systemd a partir de pacotes `.deb`/`.rpm`/tarball, carregando políticas `TracingPolicy` a partir de arquivos YAML locais no disco.
+EXAMPLE:
+```bash
+# Execução do Cilium Tetragon em um host Linux via Docker com carregamento de políticas locais
+docker run -d --name tetragon --privileged --pid=host --cgroupns=host \
+  -v /sys/kernel/btf/vmlinux:/var/lib/tetragon/btf:ro \
+  -v /sys/fs/bpf:/sys/fs/bpf \
+  quay.io/cilium/tetragon:latest
+
+# Uso da CLI tetra dentro do container Docker no host Linux
+docker exec -ti tetragon tetra getevents -o compact
+```
+TRADE_OFFS: Quando executado em hosts Linux puros ou Docker sem Kubernetes, os campos de enriquecimento específicos de Kubernetes (`pod`, `namespace`, `workload`) não estarão presentes nos eventos (embora o ID do container e os namespaces Linux continuem sendo reportados), e as políticas devem usar o tipo `TracingPolicy` padrão sem seletores exclusivos de pods Kubernetes (`podSelector`).
+VERIFY: No host Linux ou no cluster Kubernetes, confirme nos logs de inicialização do Tetragon que o arquivo BTF do kernel (`vmlinux`) foi detectado com sucesso e que os sensores base (`base_sensor`) foram carregados no kernel sem erros do verificador eBPF.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tetra-cli-inspecao-eventos-filtros-kubernetes]] | [[inspektor-modos-operacao-kubectl-gadget-ig-linux-gadgetctl]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon
+
+=== NOTE: 630 | tetragon-exportacao-logs-json-metricas-prometheus-siem | Cilium Tetragon: exportação de eventos JSON com rotação, filtros de exportação e métricas Prometheus ===
+ONE_LINER: O Cilium Tetragon exporta eventos de segurança estruturados em JSON (para stdout/arquivos com rotação e filtros de allowlist/denylist) e métricas operacionais e de políticas para o Prometheus.
+IMPORTANCE: Para que a observabilidade em eBPF alimente pipelines corporativos de detecção e resposta (SIEM, SOAR, Grafana Loki, Elasticsearch ou Splunk) sem saturar a rede nem o armazenamento de logs, o agente precisa filtrar, rotacionar e exportar os eventos de forma estruturada e expor métricas de saúde do próprio subsistema eBPF. Conforme a documentação oficial do Tetragon, o componente integra-se nativamente a sistemas de métricas, logging e tracing.
+HOW_IT_WORKS: No DaemonSet do Kubernetes, o pod do Tetragon escreve os eventos de segurança em um arquivo JSON rotacionado (por exemplo, `/var/run/tetragon/tetragon.log`) e utiliza um container sidecar leve (`export-stdout`) para transmitir esse fluxo ao `stdout` do pod, onde coletores padrão como Fluent Bit, Vector ou Grafana Alloy podem coletá-lo e enviá-lo ao SIEM/Loki. Para controlar o volume de dados exportados, o administrador configura listas de permissão (`exportAllowList`) e de bloqueio (`exportDenyList`) baseadas em tipos de evento, namespaces, nomes de binários ou expressões regulares. Simultaneamente, o Tetragon expõe um endpoint `/metrics` para o Prometheus contendo contadores de eventos por tipo, estatísticas de erros ou perdas em mapas/ring buffers eBPF e contadores de ações de enforcement (`Sigkill`/`Override`) disparadas por `TracingPolicy`.
+EXAMPLE:
+```yaml
+# Trecho de values.yaml do Helm chart do Tetragon configurando filtros de exportação e métricas Prometheus
+tetragon:
+  prometheus:
+    enabled: true
+    port: 2112
+  exportAllowList: |-
+    {"event_set":["PROCESS_EXEC","PROCESS_EXIT","PROCESS_KPROBE"]}
+  exportDenyList: |-
+    {"health_check":true}
+    {"namespace":["", "kube-system"]}
+```
+TRADE_OFFS: Embora os filtros `exportAllowList` e `exportDenyList` reduzam drasticamente o volume de logs JSON gravados em disco e enviados à rede (economizando custos de ingestão no SIEM), a filtragem de exportação ocorre no agente em user space; para eventos de altíssima frequência (como syscalls de leitura/escrita ou pacotes), o filtro principal deve sempre ser definido dentro dos `selectors` da `TracingPolicy` para que o descarte ocorra no próprio eBPF no kernel.
+VERIFY: Consulte o endpoint de métricas do Tetragon (`curl -s http://localhost:2112/metrics | grep tetragon_`) para verificar contadores de eventos processados e confirme nos logs do container `export-stdout` que eventos de health check ou namespaces excluídos na `exportDenyList` não estão sendo emitidos.
+LINKS: [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]] | [[tetragon-tetra-cli-inspecao-eventos-filtros-kubernetes]] | [[prometheus-exporters-node-exporter-blackbox-instrumentacao]]
+SOURCES: https://raw.githubusercontent.com/cilium/tetragon/main/README.md | https://tetragon.io/docs/overview/ | https://github.com/cilium/tetragon

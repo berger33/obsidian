@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **600 / 2.000 (30,00%)**
-- Gate automatizado: **600/600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 6)
-- Revisão factual humana: **0/600**
-- Revisão factual por IA: **600/600**
-- Contabilizadas como válidas: **600/600**
-- Revisor das 600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–6 (600 notas, IDs 1–600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **700 / 2.000 (35,00%)**
+- Gate automatizado: **700/700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 7)
+- Revisão factual humana: **0/700**
+- Revisão factual por IA: **700/700**
+- Contabilizadas como válidas: **700/700**
+- Revisor das 700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–7 (700 notas, IDs 1–700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-06.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-06.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-07.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-07.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1400 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1300 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -810,6 +810,138 @@
 599. [Desenvolvimento local (nomad agent -dev), manifestos Terraform de referência e arquitetura de produção](../../domains/software-0008/software/devops/nomad-local-dev-agent-and-terraform-cloud-reference-manifests.md)
 600. [Licenciamento BUSL-1.1, Nomad Enterprise, repositório web-unified-docs e ressalvas do Public Roadmap](../../domains/software-0008/software/devops/nomad-busl-1-1-license-nomad-enterprise-and-public-roadmap-governance.md)
 
+## Tranche 7 — Grafana Mimir, Grafana Pyroscope, Cilium Tetragon, Inspektor Gadget, Kubescape, OpenCost, Flux Flagger, Kubernetes Descheduler, OpenContainer runc e Containers crun (100 notas; revisão factual por IA registrada)
+
+### Grafana Mimir (armazenamento escalável multi-tenant de longo prazo para Prometheus)
+
+601. [Grafana Mimir: arquitetura monolítica, microsserviços e armazenamento de longo prazo para Prometheus](../../domains/software-0008/software/devops/mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus.md)
+602. [Grafana Mimir: caminho de escrita com Distributor, Ingester e replicação em quórum](../../domains/software-0008/software/devops/mimir-caminho-escrita-distributor-ingester-replicacao-quorum.md)
+603. [Grafana Mimir: caminho de leitura com Query-Frontend, Query-Scheduler, Querier e Query Sharding](../../domains/software-0008/software/devops/mimir-caminho-leitura-query-frontend-scheduler-querier-sharding.md)
+604. [Grafana Mimir: Store-Gateway, Compactor, binary index-header e bucket index em blocos TSDB](../../domains/software-0008/software/devops/mimir-store-gateway-compactor-indice-binario-blocos-tsdb.md)
+605. [Grafana Mimir: Hash Rings e protocolo gossip Memberlist para coordenação distribuída](../../domains/software-0008/software/devops/mimir-hash-ring-memberlist-gossip-descoberta-estado.md)
+606. [Grafana Mimir: multi-tenancy nativo, isolamento por X-Scope-OrgID, limites de QoS e Overrides-Exporter](../../domains/software-0008/software/devops/mimir-multi-tenancy-isolamento-limites-overrides-exporter.md)
+607. [Grafana Mimir: Ruler e Alertmanager opcionais para avaliação de regras e alertas multi-tenant](../../domains/software-0008/software/devops/mimir-ruler-alertmanager-avaliacao-regras-multi-tenant.md)
+608. [Grafana Mimir: motor de consulta PromQL do Mimir (MQE) e redução de consumo de memória](../../domains/software-0008/software/devops/mimir-motor-consulta-promql-otimizacoes-memoria.md)
+609. [Grafana Mimir: migração a partir de Prometheus, Thanos ou Cortex com compatibilidade de blocos TSDB](../../domains/software-0008/software/devops/mimir-migracao-prometheus-thanos-cortex-blocos-tsdb.md)
+610. [Grafana Mimir: operação em produção com Mixins, dashboards, alertas e runbooks empacotados](../../domains/software-0008/software/devops/mimir-operacao-producao-dashboards-alertas-runbooks-mixins.md)
+
+### Grafana Pyroscope (plataforma de continuous profiling e arquitetura v2 em Object Storage)
+
+611. [Grafana Pyroscope 2.0: plataforma de continuous profiling e arquitetura v2 nativa em Object Storage](../../domains/software-0008/software/devops/pyroscope-continuous-profiling-arquitetura-v2-object-storage.md)
+612. [Grafana Pyroscope v2: caminho de escrita stateless com Distributor e Segment-Writer](../../domains/software-0008/software/devops/pyroscope-caminho-escrita-distributor-segment-writer-metastore.md)
+613. [Grafana Pyroscope v2: Metastore com consenso Raft e fusão em segundo plano via Compaction-Worker](../../domains/software-0008/software/devops/pyroscope-compactacao-compaction-worker-metastore-raft.md)
+614. [Grafana Pyroscope v2: caminho de leitura com Query-Frontend, Query-Backend e geração paralela de Flame Graphs](../../domains/software-0008/software/devops/pyroscope-caminho-leitura-query-frontend-backend-flame-graphs.md)
+615. [Grafana Pyroscope: instrumentação e coleta de perfis via SDKs, Grafana Alloy e OpenTelemetry eBPF Profiler](../../domains/software-0008/software/devops/pyroscope-coleta-perfis-sdks-grafana-alloy-opentelemetry-ebpf.md)
+616. [Grafana Pyroscope: visualização e análise sem consultas com Grafana Profiles Drilldown](../../domains/software-0008/software/devops/pyroscope-grafana-profiles-drilldown-exploracao-queryless.md)
+617. [Grafana Pyroscope v2: formato de blocos, distribuição adaptativa de dados e índice de metadados](../../domains/software-0008/software/devops/pyroscope-formatos-bloco-indice-metadados-distribuicao-dados.md)
+618. [Grafana Pyroscope: modos de implantação monolítico e de microsserviços em Kubernetes com Helm](../../domains/software-0008/software/devops/pyroscope-modos-implantacao-monolitico-microsservicos-kubernetes.md)
+619. [Grafana Pyroscope: migração da arquitetura v1 (ingesters com disco) para v2 (object storage direto)](../../domains/software-0008/software/devops/pyroscope-migracao-v1-para-v2-sem-perda-dados.md)
+620. [Grafana Pyroscope: uso proativo e reativo de continuous profiling para otimizar CPU, memória e I/O](../../domains/software-0008/software/devops/pyroscope-casos-uso-proativo-reativo-otimizacao-cpu-memoria-io.md)
+
+### Cilium Tetragon (observabilidade de segurança e runtime enforcement em tempo real com eBPF)
+
+621. [Cilium Tetragon: observabilidade de segurança e runtime enforcement em tempo real com eBPF](../../domains/software-0008/software/devops/tetragon-ebpf-observabilidade-seguranca-runtime-enforcement.md)
+622. [Cilium Tetragon: observabilidade completa do ciclo de vida de processos com process_exec e process_exit](../../domains/software-0008/software/devops/tetragon-ciclo-vida-processos-process-exec-exit-arvore.md)
+623. [Cilium Tetragon: CRD TracingPolicy e rastreamento genérico com kprobes, tracepoints e uprobes](../../domains/software-0008/software/devops/tetragon-tracingpolicy-kprobes-tracepoints-uprobes-kernel.md)
+624. [Cilium Tetragon: runtime enforcement síncrono no kernel com ações Sigkill e Override](../../domains/software-0008/software/devops/tetragon-enforcement-kernel-sigkill-override-bloqueio-tempo-real.md)
+625. [Cilium Tetragon: monitoramento de acesso a arquivos sensíveis, credenciais Linux e execução privilegiada](../../domains/software-0008/software/devops/tetragon-monitoramento-arquivos-credenciais-execucao-privilegiada.md)
+626. [Cilium Tetragon: observabilidade de rede correlacionando sockets TCP/UDP diretamente a processos e pods](../../domains/software-0008/software/devops/tetragon-observabilidade-rede-sockets-processos-ebpf.md)
+627. [Cilium Tetragon: consciência nativa de Kubernetes com enriquecimento por Pod, Namespace e Workload](../../domains/software-0008/software/devops/tetragon-consciencia-kubernetes-identidades-pods-namespaces.md)
+628. [Cilium Tetragon: uso da CLI Tetra para inspeção de eventos, filtros e administração de sensores](../../domains/software-0008/software/devops/tetragon-tetra-cli-inspecao-eventos-filtros-kubernetes.md)
+629. [Cilium Tetragon: implantação em Kubernetes (DaemonSet) e em hosts Linux via Docker ou pacotes nativos](../../domains/software-0008/software/devops/tetragon-implantacao-kubernetes-linux-docker-standalone.md)
+630. [Cilium Tetragon: exportação de eventos JSON com rotação, filtros de exportação e métricas Prometheus](../../domains/software-0008/software/devops/tetragon-exportacao-logs-json-metricas-prometheus-siem.md)
+
+### Inspektor Gadget (framework e ferramentas eBPF em imagens OCI para Kubernetes e Linux)
+
+631. [Inspektor Gadget: conjunto de ferramentas e framework eBPF para inspeção em Kubernetes e Linux](../../domains/software-0008/software/devops/inspektor-framework-ebpf-inspecao-kubernetes-linux.md)
+632. [Inspektor Gadget: empacotamento de programas eBPF em imagens OCI (Gadgets) e distribuição via Artifact Hub](../../domains/software-0008/software/devops/inspektor-gadgets-imagens-oci-build-artifact-hub.md)
+633. [Inspektor Gadget: enriquecimento bidirecional de metadados Kubernetes e filtragem in-kernel de alto desempenho](../../domains/software-0008/software/devops/inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf.md)
+634. [Inspektor Gadget: módulos WebAssembly (WASM) e arquitetura de Operadores customizáveis](../../domains/software-0008/software/devops/inspektor-webassembly-wasm-pos-processamento-operadores.md)
+635. [Inspektor Gadget: modos de operação com kubectl-gadget, binário ig, kubectl debug node e cliente remoto gadgetctl](../../domains/software-0008/software/devops/inspektor-modos-operacao-kubectl-gadget-ig-linux-gadgetctl.md)
+636. [Inspektor Gadget: catálogo de Gadgets para rastreamento (trace), top consumidores, snapshots e profiling](../../domains/software-0008/software/devops/inspektor-catalogo-gadgets-trace-top-snapshot-profile.md)
+637. [Inspektor Gadget: coleta e exportação declarativa de métricas e logs eBPF para OpenTelemetry e Prometheus](../../domains/software-0008/software/devops/inspektor-exportacao-telemetria-opentelemetry-prometheus-declarativa.md)
+638. [Inspektor Gadget: verificação de assinaturas de imagens OCI, SBOMs e restrição de Gadgets permitidos](../../domains/software-0008/software/devops/inspektor-seguranca-verificacao-assinaturas-sbom-restricao-gadgets.md)
+639. [Inspektor Gadget: requisitos de kernel Linux (>= 5.10), BTF (BPF Type Format) e biblioteca cilium/ebpf](../../domains/software-0008/software/devops/inspektor-requisitos-kernel-linux-btf-core-cilium-ebpf.md)
+640. [Inspektor Gadget: uso como biblioteca Golang embarcável e integração de runtime no ecossistema CNCF](../../domains/software-0008/software/devops/inspektor-integracao-biblioteca-golang-kubescape-ecossistema.md)
+
+### Kubescape (plataforma CNCF Incubating de segurança Kubernetes do desenvolvimento ao runtime)
+
+641. [Kubescape: plataforma CNCF Incubating de segurança Kubernetes com OPA e Regolibrary](../../domains/software-0008/software/devops/kubescape-plataforma-seguranca-kubernetes-opa-regolibrary.md)
+642. [Kubescape: varredura de vulnerabilidades (CVEs) em imagens de container com Grype e inferência multi-arquitetura](../../domains/software-0008/software/devops/kubescape-varredura-vulnerabilidades-imagens-grype-multi-arch.md)
+643. [Kubescape: auto-remediação de manifestos (kubescape fix) e patching de imagens com Copacetic (kubescape patch)](../../domains/software-0008/software/devops/kubescape-auto-remediacao-fix-manifestos-patching-copacetic.md)
+644. [Kubescape: controle de admissão nativo com Validating Admission Policies (VAP) baseadas em CEL](../../domains/software-0008/software/devops/kubescape-validating-admission-policies-cel-kubernetes.md)
+645. [Kubescape Operator: monitoramento contínuo in-cluster de configuração, CVEs e runtime via Helm](../../domains/software-0008/software/devops/kubescape-operador-in-cluster-monitoramento-continuo-helm.md)
+646. [Kubescape: detecção de ameaças em runtime com eBPF (Inspektor Gadget) e geração de NetworkPolicies](../../domains/software-0008/software/devops/kubescape-monitoramento-runtime-ebpf-network-policies-prometheus.md)
+647. [Kubescape: operação offline/air-gapped (kubescape download) e proteção de metadados com pseudonimização e criptografia](../../domains/software-0008/software/devops/kubescape-execucao-offline-air-gapped-protecao-metadados.md)
+648. [Kubescape: servidor MCP (Model Context Protocol) para consulta de vulnerabilidades e postura via agentes de IA](../../domains/software-0008/software/devops/kubescape-mcp-server-integracao-agentes-ia.md)
+649. [Kubescape: integração em pipelines CI/CD com GitHub Actions, GitLab CI, Jenkins, MegaLinter e relatórios SARIF/JUnit](../../domains/software-0008/software/devops/kubescape-integracao-cicd-github-actions-gitlab-megalinter-sarif.md)
+650. [Kubescape: filtragem de escopo por namespaces, execução de controles individuais e gerenciamento de cache](../../domains/software-0008/software/devops/kubescape-filtros-escopo-namespaces-controles-config-cache.md)
+
+### OpenCost (monitoramento e alocação open-source de custos em Kubernetes e multi-cloud na CNCF)
+
+651. [OpenCost: especificação aberta e implementação em Go para monitoramento de custos em Kubernetes e nuvem](../../domains/software-0008/software/devops/opencost-monitoramento-custos-kubernetes-multi-cloud-cncf.md)
+652. [OpenCost: modelo de alocação de custos in-cluster para CPU, GPU, memória, PersistentVolumes e recursos ociosos](../../domains/software-0008/software/devops/opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus.md)
+653. [OpenCost: precificação dinâmica via APIs de Cloud Billing (AWS, Azure, GCP), custos de carbono e CSV on-premises](../../domains/software-0008/software/devops/opencost-precificacao-dinamica-cloud-billing-csv-on-prem.md)
+654. [OpenCost: rastreamento de custos de inferência de IA para vLLM e llm-d por milhão de tokens e KV cache](../../domains/software-0008/software/devops/opencost-rastreamento-custos-inferencia-ia-vllm-tokens-kv-cache.md)
+655. [OpenCost: arquitetura de OpenCost Plugins para monitorar custos externos de SaaS e observabilidade (Datadog)](../../domains/software-0008/software/devops/opencost-plugins-custos-externos-datadog-saas.md)
+656. [OpenCost: servidor MCP (Model Context Protocol) opt-in na porta 8081 para agentes de IA](../../domains/software-0008/software/devops/opencost-mcp-server-agentes-ia-ferramentas-custos.md)
+657. [OpenCost: métricas de eficiência de recursos e recomendações de rightsizing com buffer_multiplier](../../domains/software-0008/software/devops/opencost-eficiencia-recursos-rightsizing-buffer-multiplier.md)
+658. [OpenCost: contabilidade detalhada por tipos de ativos (Node, Disk, LoadBalancer, Network, Cloud e ClusterManagement)](../../domains/software-0008/software/devops/opencost-tipos-ativos-node-disk-loadbalancer-network-clustermanagement.md)
+659. [OpenCost: integração com Prometheus e requisitos de consulta global em topologias HA (Thanos, Mimir, Cortex)](../../domains/software-0008/software/devops/opencost-integracao-prometheus-ha-thanos-mimir-cortex.md)
+660. [OpenCost: fluxo de desenvolvimento com Tilt, interface web (opencost-ui) e CLI kubectl-cost](../../domains/software-0008/software/devops/opencost-desenvolvimento-local-tilt-ui-kubectl-cost.md)
+
+### Flux Flagger (operador CNCF Graduated de entrega progressiva Canary, A/B e Blue/Green)
+
+661. [Flux Flagger: operador CNCF Graduated de entrega progressiva para Kubernetes](../../domains/software-0008/software/devops/flagger-entrega-progressiva-kubernetes-flux-cncf.md)
+662. [Flux Flagger: anatomia do CRD Canary, sincronização de ConfigMaps/Secrets e máquina de estados](../../domains/software-0008/software/devops/flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets.md)
+663. [Flux Flagger: estratégias de implantação Canary, A/B Testing e Blue/Green com Traffic Mirroring](../../domains/software-0008/software/devops/flagger-estrategias-canary-ab-testing-blue-green-mirroring.md)
+664. [Flux Flagger: matriz de integrações com Service Meshes, Ingress Controllers, Gateway API e SMI](../../domains/software-0008/software/devops/flagger-integracao-service-mesh-ingress-gateway-api-smi.md)
+665. [Flux Flagger: validação de KPIs com verificações nativas e MetricTemplates customizados no Prometheus](../../domains/software-0008/software/devops/flagger-analise-metricas-prometheus-metrictemplate-kpis.md)
+666. [Flux Flagger: webhooks de ciclo de vida, geração de tráfego com loadtester, Helm test e manual gating](../../domains/software-0008/software/devops/flagger-webhooks-testes-carga-conformidade-manual-gating.md)
+667. [Flux Flagger: alertas de entregas progressivas para Slack, Microsoft Teams, Discord e Flux Notification API](../../domains/software-0008/software/devops/flagger-alertas-notificacoes-slack-teams-discord-flux.md)
+668. [Flux Flagger: coordenação de HorizontalPodAutoscaler (HPA) entre implantações primária e canário](../../domains/software-0008/software/devops/flagger-integracao-hpa-autoscaling-primario-canario.md)
+669. [Flux Flagger: configuração de serviços ClusterIP, portDiscovery, timeouts e regras HTTP no Canary](../../domains/software-0008/software/devops/flagger-configuracao-servico-port-discovery-timeouts-rewrites.md)
+670. [Flux Flagger: operação em produção com skipAnalysis, afinidade de sessão em Gateway API e compatibilidade GitOps Toolkit](../../domains/software-0008/software/devops/flagger-monitoramento-operacional-skip-analysis-session-affinity.md)
+
+### Kubernetes Descheduler (rebalanceamento de pods por políticas de evicção e utilização de nós)
+
+671. [Kubernetes Descheduler: rebalanceamento contínuo de clusters via evicção coordenada com o kube-scheduler](../../domains/software-0008/software/devops/descheduler-rebalanceamento-pods-kubernetes-kube-scheduler.md)
+672. [Kubernetes Descheduler: configuração top-level da DeschedulerPolicy, limites de evicção e metricsProviders](../../domains/software-0008/software/devops/descheduler-politica-top-level-limites-eviccao-provedores-metricas.md)
+673. [Kubernetes Descheduler: plugin DefaultEvictor, políticas podProtections e filtros de nodeFit e minReplicas](../../domains/software-0008/software/devops/descheduler-default-evictor-pod-protections-filtros.md)
+674. [Kubernetes Descheduler: arquitetura de perfis e pontos de extensão Deschedule versus Balance](../../domains/software-0008/software/devops/descheduler-pontos-extensao-deschedule-balance-perfis.md)
+675. [Kubernetes Descheduler: estratégias de balanceamento de recursos LowNodeUtilization e HighNodeUtilization](../../domains/software-0008/software/devops/descheduler-low-high-node-utilization-thresholds-balanceamento.md)
+676. [Kubernetes Descheduler: espalhamento de réplicas com RemoveDuplicates e RemovePodsViolatingTopologySpreadConstraint](../../domains/software-0008/software/devops/descheduler-remove-duplicates-topology-spread-constraints.md)
+677. [Kubernetes Descheduler: correção de violações de afinidade, anti-afinidade e taints de nós](../../domains/software-0008/software/devops/descheduler-violacoes-affinity-anti-affinity-node-taints.md)
+678. [Kubernetes Descheduler: higiene operacional de pods com PodLifeTime, RemovePodsHavingTooManyRestarts e RemoveFailedPods](../../domains/software-0008/software/devops/descheduler-pod-lifetime-restarts-failed-pods-higiene.md)
+679. [Kubernetes Descheduler: modos de implantação (Job, CronJob, Deployment) via Helm, Kustomize e alinhamento de versão](../../domains/software-0008/software/devops/descheduler-implantacao-job-cronjob-deployment-helm-kustomize.md)
+680. [Kubernetes Descheduler: filtragem granular por namespaces, seletores de labels, prioridade e PodDisruptionBudgets](../../domains/software-0008/software/devops/descheduler-filtragem-labels-namespaces-prioridade-pdb.md)
+
+### OpenContainer runc (ferramenta CLI e runtime de referência para containers OCI no Linux)
+
+681. [OpenContainer runc: ferramenta CLI e runtime de referência para criar e executar containers segundo a especificação OCI](../../domains/software-0008/software/devops/runc-runtime-oci-referencia-linux-especificacao.md)
+682. [OpenContainer runc: criação de OCI Bundles com rootfs e geração de config.json via runc spec](../../domains/software-0008/software/devops/runc-oci-bundle-rootfs-config-json-runc-spec.md)
+683. [OpenContainer runc: operações de ciclo de vida OCI (create, start, list, delete) versus comando composto run](../../domains/software-0008/software/devops/runc-ciclo-vida-create-start-list-delete-run.md)
+684. [OpenContainer runc: execução de containers rootless com User Namespaces (CONFIG_USER_NS)](../../domains/software-0008/software/devops/runc-containers-rootless-user-namespaces-configuracao.md)
+685. [OpenContainer runc: segurança de caminhos com a biblioteca Rust libpathrs e filtragem de syscalls com libseccomp](../../domains/software-0008/software/devops/runc-seguranca-path-safety-libpathrs-seccomp.md)
+686. [OpenContainer runc: customização de compilação com RUNC_BUILDTAGS, EXTRA_VERSION e tags obsoletas](../../domains/software-0008/software/devops/runc-compilacao-build-tags-nocriu-obsoletos.md)
+687. [OpenContainer runc: integração com supervisores systemd, cgroup v2 e Checkpoint/Restore com CRIU](../../domains/software-0008/software/devops/runc-supervisores-systemd-cgroup-v2-checkpoint-criu.md)
+688. [OpenContainer runc: suíte de testes isolada em container (make test, BATS, rootless) e gestão de dependências Go](../../domains/software-0008/software/devops/runc-testes-integracao-bats-rootless-go-modules.md)
+689. [OpenContainer runc: verificação de releases assinadas com runc.keyring, auditoria Cure53 e processo de segurança OCI](../../domains/software-0008/software/devops/runc-assinatura-releases-gpg-keyring-auditoria-seguranca.md)
+690. [OpenContainer runc: gerenciamento de terminais pseudo-TTY (--console-socket), descritores stdio e capabilities](../../domains/software-0008/software/devops/runc-gerenciamento-terminais-tty-console-socket-stdio.md)
+
+### Containers crun (runtime OCI rápido e de baixo consumo de memória escrito em C)
+
+691. [Containers crun: runtime OCI escrito inteiramente em C para alta performance e baixo footprint de memória](../../domains/software-0008/software/devops/crun-runtime-oci-linguagem-c-baixo-consumo-memoria.md)
+692. [Containers crun: comandos de ciclo de vida OCI, diretórios de estado, mounts dinâmicos e update de recursos](../../domains/software-0008/software/devops/crun-comandos-cli-estado-mounts-dinamicos-update.md)
+693. [Containers crun: opções globais de diagnóstico, backends de log (file, journald, syslog) e formatos text/json](../../domains/software-0008/software/devops/crun-logging-global-options-journald-syslog-json.md)
+694. [Containers crun: gerenciamento de cgroups (cgroupfs, systemd) e anotações de subgrupo e delegação em cgroup v2](../../domains/software-0008/software/devops/crun-gerenciamento-cgroups-v2-systemd-subgroup-delegation.md)
+695. [Containers crun: Checkpoint e Restore de containers com CRIU, pre-dumps incrementais e restauração LSM](../../domains/software-0008/software/devops/crun-checkpoint-restore-criu-pre-dump-gerenciamento.md)
+696. [Containers crun: extensões de anotações OCI para seccomp avançado, pidfd e handlers nativos para WebAssembly (wasm) e libkrun (krun)](../../domains/software-0008/software/devops/crun-extensoes-oci-seccomp-annotations-handlers-wasm-krun.md)
+697. [Containers crun: anotações OCI para contextos de mount SELinux, preservação de grupos, logs de hooks e pidfd receiver](../../domains/software-0008/software/devops/crun-anotacoes-selinux-grupos-hooks-pidfd.md)
+698. [Containers crun: compilação com Autotools, geração de parser via libocispec, biblioteca compartilhada libcrun e bindings Lua](../../domains/software-0008/software/devops/crun-compilacao-autotools-libcrun-shared-dependencies.md)
+699. [Containers crun: builds estáticos reprodutíveis com Nix, automação Ansible e verificação GPG com crun.keyring](../../domains/software-0008/software/devops/crun-builds-estaticos-reprodutiveis-nix-verificacao-gpg.md)
+700. [Containers crun: execução de processos adicionais (crun exec) com isolamento de sub-cgroup, capabilities, AppArmor e SELinux](../../domains/software-0008/software/devops/crun-execucao-processos-exec-capabilities-lsm-sub-cgroups.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 600 notas 1–600 das tranches 1–6 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 600/2.000 notas válidas, restando 1400 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 700 notas 1–700 das tranches 1–7 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 700/2.000 notas válidas, restando 1300 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

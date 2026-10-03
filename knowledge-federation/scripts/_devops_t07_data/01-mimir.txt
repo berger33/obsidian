@@ -1,0 +1,205 @@
+=== NOTE: 601 | mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus | Grafana Mimir: arquitetura monolítica, microsserviços e armazenamento de longo prazo para Prometheus ===
+ONE_LINER: O Grafana Mimir (distribuído sob licença AGPL-3.0-only) fornece armazenamento multi-tenant de longo prazo e escalabilidade horizontal para métricas do Prometheus até 1 bilhão de séries temporais ativas.
+IMPORTANCE: Instâncias isoladas do Prometheus enfrentam limites verticais de memória, disco local e ausência de visão global entre múltiplos clusters. Segundo a documentação oficial do Grafana Mimir, o projeto resolve essa barreira ao desacoplar ingestão, consulta e compactação sobre object storage (AWS S3, GCS, Azure Blob Storage, OpenStack Swift ou S3-compatível), permitindo começar com um único binário sem dependências externas no modo monolítico (`-target=all`) ou escalar cada componente independentemente em modo de microsserviços.
+HOW_IT_WORKS: Conforme a documentação de arquitetura do Grafana Mimir, o sistema divide sua operação em componentes especializados que interagem em cluster: `distributor`, `ingester`, `querier`, `query-frontend`, `query-scheduler`, `store-gateway` e `compactor`, além de componentes opcionais (`alertmanager`, `ruler` e `overrides-exporter`). No modo monolítico, todos esses componentes rodam dentro de um único processo de sistema operacional, ideal para avaliação rápida, desenvolvimento ou implantações de pequeno e médio porte; já no modo de microsserviços, cada papel é implantado em conjuntos separados de pods Kubernetes, permitindo escalar leitura, escrita e compactação de forma isolada.
+EXAMPLE:
+```bash
+# Execução local do Grafana Mimir em modo monolítico com configuração mínima
+mimir -config.file=mimir-monolithic.yaml -target=all
+
+# Verificação de prontidão e estado dos componentes internos via HTTP
+curl -s http://localhost:8080/ready
+curl -s http://localhost:8080/services
+```
+TRADE_OFFS: O modo de microsserviços oferece isolamento de falhas e elasticidade granular para centenas de milhões de séries ativas, porém introduz complexidade operacional significativa em malhas de rede gRPC, balanceamento de carga e dimensionamento de múltiplos Deployments e StatefulSets. Por outro lado, manter o modo monolítico em cargas massivas acopla picos de consultas pesadas ao consumo de memória do caminho de escrita (`ingester`), podendo degradar a ingestão se não houver limites rígidos por tenant.
+VERIFY: Consulte o endpoint `/ready` e a página administrativa `/services` na porta HTTP do Mimir para confirmar que todos os módulos configurados em `-target` atingiram o estado `RUNNING` sem erros de inicialização de armazenamento de objetos.
+LINKS: [[mimir-caminho-escrita-distributor-ingester-replicacao-quorum]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]] | [[prometheus-tsdb-blocos-wal-compactacao-retencao]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 602 | mimir-caminho-escrita-distributor-ingester-replicacao-quorum | Grafana Mimir: caminho de escrita com Distributor, Ingester e replicação em quórum ===
+ONE_LINER: O caminho de escrita do Grafana Mimir recebe amostras via remote write no `distributor`, valida limites por tenant e replica cada série em múltiplos `ingesters` (tipicamente fator 3) com confirmação por quórum.
+IMPORTANCE: Perder métricas de produção durante a falha repentina de um nó ou reinicialização de pod compromete alertas críticos de SLO e auditorias de capacidade. De acordo com a documentação do Grafana Mimir, a replicação síncrona de amostras recebidas garante alta disponibilidade na ingestão e permite atualizações ou downgrades contínuos com zero downtime, sem exigir sistemas externos de filas como Apache Kafka no caminho padrão de escrita.
+HOW_IT_WORKS: Quando servidores Prometheus ou agentes Grafana Alloy enviam lotes HTTP POST via protocolo Prometheus Remote Write para o `distributor`, este componente stateless valida a conformidade dos rótulos, aplica limites de taxa e cardinalidade do tenant (`X-Scope-OrgID`) e realiza o sharding das séries usando um hash ring distribuído mantido via protocolo gossip (memberlist) ou armazenamento KV (Consul/etcd). Para cada série temporal, o `distributor` envia as amostras em paralelo via gRPC para `N` `ingesters` distintos (por padrão 3 réplicas em zonas de disponibilidade separadas) e aguarda confirmação de pelo menos um quórum (`floor(N/2) + 1`, ou seja, 2 de 3) antes de retornar sucesso `200 OK` ao cliente.
+EXAMPLE:
+```yaml
+# Trecho de configuração mimir.yaml para replicação de ingesters com zone awareness
+distributor:
+  pool:
+    health_check_ingesters: true
+ingester:
+  ring:
+    replication_factor: 3
+    zone_awareness_enabled: true
+    kvstore:
+      store: memberlist
+```
+TRADE_OFFS: A replicação com fator 3 triplica o consumo de memória RAM e CPU na camada de `ingester` e aumenta o tráfego de rede intra-cluster gRPC entre zonas de disponibilidade. Se `zone_awareness_enabled` estiver ativo mas uma zona inteira ficar sem capacidade ou com número insuficiente de instâncias saudáveis, escritas podem falhar por falta de quórum caso o anel não esteja balanceado simetricamente entre as zonas.
+VERIFY: Inspecione a interface web do anel em `/ingester/ring` para verificar se todos os `ingesters` estão no estado `ACTIVE` com tokens distribuídos entre zonas distintas e monitore a métrica `cortex_distributor_received_samples_total` versus amostras descartadas.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-hash-ring-memberlist-gossip-descoberta-estado]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 603 | mimir-caminho-leitura-query-frontend-scheduler-querier-sharding | Grafana Mimir: caminho de leitura com Query-Frontend, Query-Scheduler, Querier e Query Sharding ===
+ONE_LINER: O caminho de leitura do Grafana Mimir paraleliza consultas PromQL dividindo intervalos de tempo e fragmentando séries (query sharding) através do `query-frontend`, `query-scheduler` e múltiplos `queriers`.
+IMPORTANCE: Consultas PromQL de alta cardinalidade ou que abrangem semanas de dados históricos facilmente esgotam a memória e a CPU de um único avaliador sequencial. Segundo a documentação oficial do Grafana Mimir, o motor de consulta paraleliza extensivamente a execução para que agregações globais sobre múltiplas instâncias do Prometheus completem em baixa latência mesmo sob alta concorrência de painéis Grafana.
+HOW_IT_WORKS: Quando uma consulta PromQL chega ao `query-frontend`, ele aplica políticas de QoS por tenant, divide consultas de longo alcance em fatias de tempo menores (por exemplo, janelas de 24 horas), decompõe expressões agregáveis em múltiplas subconsultas paralelas via query sharding e verifica o cache de resultados. As subconsultas são enfileiradas no `query-scheduler` (componente opcional que desacopla o gerenciamento de filas do escalonamento do frontend), de onde trabalhadores stateless `querier` puxam tarefas para execução. Cada `querier` busca dados recentes diretamente dos `ingesters` (via gRPC) e dados históricos de blocos TSDB através dos `store-gateways` (ou diretamente do object storage), fundindo e deduplicando as amostras antes de devolver o resultado parcial ao `query-frontend`.
+EXAMPLE:
+```bash
+# Consulta PromQL enviada ao endpoint compatível com Prometheus no Query-Frontend do Mimir
+curl -G -s http://localhost:8080/prometheus/api/v1/query_range \
+  -H "X-Scope-OrgID: tenant-producao" \
+  --data-urlencode 'query=sum by (cluster) (rate(http_requests_total[5m]))' \
+  --data-urlencode 'start=2026-10-01T00:00:00Z' \
+  --data-urlencode 'end=2026-10-02T00:00:00Z' \
+  --data-urlencode 'step=60s'
+```
+TRADE_OFFS: Ativar o query sharding acelera drasticamente agregações pesadas (`sum`, `count`, `avg`), mas multiplica o número de subconsultas internas processadas pelos `queriers` e `store-gateways`; se a fila do `query-scheduler` e a concorrência máxima por `querier` (`-querier.max-concurrent`) não forem dimensionadas proporcionalmente, consultas simples e curtas podem sofrer contenção atrás de dezenas de fragmentos de uma única consulta analítica.
+VERIFY: Analise as métricas `cortex_query_frontend_queries_total` e `cortex_query_scheduler_queue_duration_seconds` para confirmar que o particionamento temporal e o query sharding estão distribuindo subconsultas entre múltiplos `queriers` sem acúmulo de fila.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]] | [[mimir-motor-consulta-promql-otimizacoes-memoria]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 604 | mimir-store-gateway-compactor-indice-binario-blocos-tsdb | Grafana Mimir: Store-Gateway, Compactor, binary index-header e bucket index em blocos TSDB ===
+ONE_LINER: O `compactor` do Grafana Mimir mescla e deduplica blocos TSDB no object storage gerando um `bucket-index`, enquanto o `store-gateway` mantém cabeçalhos binários de índice (`index-header`) para acelerar leituras históricas.
+IMPORTANCE: Como cada réplica de `ingester` envia blocos TSDB de 2 horas para o armazenamento de objetos, um cluster com 3 réplicas e dezenas de ingesters produziria milhares de pequenos blocos redundantes por dia, tornando consultas de longo prazo lentas e caras em chamadas de API S3/GCS. A documentação de arquitetura do Mimir detalha como o `compactor` e o `store-gateway` trabalham em conjunto com índices otimizados para reduzir drasticamente o uso de memória e a latência de leitura.
+HOW_IT_WORKS: Periodicamente, o `compactor` consolida múltiplos blocos de 2 horas do mesmo tenant em blocos maiores e deduplicados, removendo amostras repetidas enviadas pelas réplicas de `ingester`, e atualiza o arquivo de metadados `bucket-index.json.gz` por tenant para evitar listagens custosas de buckets (`LIST` no S3). Já o `store-gateway`, organizado em um hash ring com replicação configurável, descobre os blocos pelo `bucket-index`, baixa apenas um subconjunto compacto do índice TSDB chamado binary `index-header` para o disco local e serve fatias de séries e chunks sob demanda aos `queriers`, além de aproveitar caches em memória (memcached/redis) para páginas de índice e chunks.
+EXAMPLE:
+```yaml
+# Configuração do blocks_storage, compactor e store_gateway no Grafana Mimir
+blocks_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-tsdb-prod
+  bucket_store:
+    sync_dir: /data/tsdb-sync
+    index_header_lazy_loading_enabled: true
+compactor:
+  data_dir: /data/compactor
+  sharding_ring:
+    kvstore:
+      store: memberlist
+store_gateway:
+  sharding_ring:
+    replication_factor: 3
+```
+TRADE_OFFS: O carregamento preguiçoso (`index_header_lazy_loading_enabled`) economiza tempo de inicialização e memória nos `store-gateways`, mas a primeira consulta a um bloco frio sofre latência adicional enquanto o `index-header` é mapeado via `mmap`. Além disso, falhas prolongadas no `compactor` deixam blocos pequenos e duplicados acumularem no bucket, elevando o consumo de RAM dos `store-gateways` e degradando o tempo de resposta das consultas históricas.
+VERIFY: Verifique o endpoint `/store-gateway/ring` e `/compactor/ring`, e monitore a métrica `cortex_compactor_runs_failed_total` (deve permanecer em `0`) e `cortex_bucket_store_blocks_loaded` para assegurar que os blocos estão sendo compactados e carregados corretamente.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-caminho-leitura-query-frontend-scheduler-querier-sharding]] | [[prometheus-tsdb-blocos-wal-compactacao-retencao]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 605 | mimir-hash-ring-memberlist-gossip-descoberta-estado | Grafana Mimir: Hash Rings e protocolo gossip Memberlist para coordenação distribuída ===
+ONE_LINER: O Grafana Mimir utiliza estruturas de Hash Ring distribuídas sincronizadas via protocolo gossip Memberlist (ou KV stores como Consul e etcd) para sharding, replicação e descoberta de componentes stateful e stateless.
+IMPORTANCE: Em um sistema distribuído que processa até 1 bilhão de séries ativas, rotear cada série consistente para os mesmos `ingesters` ou dividir blocos e regras entre `store-gateways`, `compactors`, `rulers` e `alertmanagers` exige um mecanismo de consenso leve que não se torne gargalo nem dependa obrigatoriamente de bancos de dados externos. Segundo a documentação de arquitetura do Mimir, os hash rings e o Memberlist resolvem esse problema mantendo uma topologia convergente entre todos os nós do cluster.
+HOW_IT_WORKS: Cada componente participante gera um conjunto de números aleatórios de 32 bits chamados tokens e os registra na estrutura de dados do anel correspondente (`ingester`, `store-gateway`, `compactor`, `ruler`, `alertmanager`). Para determinar qual instância é responsável por uma série ou bloco, o Mimir calcula o hash da chave (por exemplo, os rótulos da métrica ou o ID do bloco) e localiza o próximo token maior no anel. Quando configurado com `store: memberlist`, os nós formam um cluster gossip sobre TCP/UDP (tipicamente na porta `7946`), propagando deltas de estado (`JOINING`, `ACTIVE`, `LEAVING`, `UNHEALTHY`) e batimentos cardíacos periódicos sem precisar manter um cluster Consul ou etcd dedicado.
+EXAMPLE:
+```yaml
+# Configuração de memberlist e hash ring no Grafana Mimir
+memberlist:
+  bind_port: 7946
+  join_members:
+    - dns+mimir-gossip-ring.mimir.svc.cluster.local:7946
+ingester:
+  ring:
+    kvstore:
+      store: memberlist
+    heartbeat_period: 15s
+    heartbeat_timeout: 1m
+```
+TRADE_OFFS: O protocolo gossip Memberlist é eventualmente consistente: durante partições de rede transitórias ou inicializações simultâneas de dezenas de pods, visões ligeiramente divergentes do anel podem causar breves períodos de escrita em réplicas extras ou falhas temporárias de quórum. Para que o Memberlist funcione corretamente no Kubernetes, o serviço headless (`clusterIP: None`) usado em `join_members` precisa resolver os IPs individuais de todos os pods participantes (incluindo `publishNotReadyAddresses: true`).
+VERIFY: Acesse as páginas `/memberlist` e `/ingester/ring` na interface HTTP administrativa do Mimir para inspecionar a saúde dos membros do cluster gossip, o número de mensagens trocadas e a ausência de tokens órfãos em estado `UNHEALTHY`.
+LINKS: [[mimir-caminho-escrita-distributor-ingester-replicacao-quorum]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]] | [[consul-service-discovery-dns-http-health-checks]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/ | https://github.com/grafana/mimir
+
+=== NOTE: 606 | mimir-multi-tenancy-isolamento-limites-overrides-exporter | Grafana Mimir: multi-tenancy nativo, isolamento por X-Scope-OrgID, limites de QoS e Overrides-Exporter ===
+ONE_LINER: O Grafana Mimir isola métricas e consultas de múltiplas equipes por meio do cabeçalho HTTP `X-Scope-OrgID`, aplicando limites globais ou por tenant e expondo essas cotas via componente `overrides-exporter`.
+IMPORTANCE: Compartilhar um único cluster de armazenamento de métricas entre dezenas de unidades de negócio reduz drasticamente custos de infraestrutura, mas introduz o risco de "vizinho barulhento" (noisy neighbor), onde um serviço com explosão de cardinalidade derruba a ingestão ou as consultas de toda a empresa. De acordo com a documentação do Grafana Mimir, o suporte nativo a multi-tenancy e controles avançados de QoS garantem que a capacidade do cluster seja dividida de forma justa e segura entre tenants independentes.
+HOW_IT_WORKS: Quando `multitenancy_enabled: true` é definido, todas as requisições de escrita (Remote Write) e leitura (PromQL, regras, alertas) devem informar o identificador do tenant no cabeçalho `X-Scope-OrgID` (podendo especificar múltiplos tenants separados por `|` em consultas federadas de leitura). No armazenamento de objetos, os blocos TSDB e os índices de cada tenant são gravados em prefixos de diretório estritamente separados. O administrador define limites padrão (`limits`) e pode sobrescrever cotas específicas por tenant em um arquivo de `runtime_config` recarregado dinamicamente sem reiniciar processos; o componente opcional `overrides-exporter` lê esse arquivo e expõe os limites vigentes como métricas Prometheus para uso em dashboards de capacidade e alertas preventivos.
+EXAMPLE:
+```yaml
+# Exemplo de runtime-config.yaml com overrides de limites por tenant no Mimir
+overrides:
+  tenant-pagamentos:
+    ingestion_rate: 100000
+    max_global_series_per_user: 5000000
+    max_fetched_series_per_query: 250000
+  tenant-homologacao:
+    ingestion_rate: 10000
+    max_global_series_per_user: 200000
+```
+TRADE_OFFS: O Grafana Mimir confia no valor do cabeçalho `X-Scope-OrgID` que recebe, não implementando autenticação de usuários ou validação criptográfica de credenciais por conta própria; por isso, em ambientes de produção multi-tenant, é obrigatório posicionar um proxy reverso autenticador (como NGINX, Envoy ou Grafana Enterprise Metrics gateway) na frente do Mimir para injetar `X-Scope-OrgID` a partir de tokens verificados.
+VERIFY: Consulte o endpoint `/runtime_config?mode=diff` no Mimir para confirmar que as sobrescritas por tenant foram carregadas em tempo de execução e verifique as métricas `cortex_limits_overrides` geradas pelo `overrides-exporter`.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-caminho-escrita-distributor-ingester-replicacao-quorum]] | [[mimir-ruler-alertmanager-avaliacao-regras-multi-tenant]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 607 | mimir-ruler-alertmanager-avaliacao-regras-multi-tenant | Grafana Mimir: Ruler e Alertmanager opcionais para avaliação de regras e alertas multi-tenant ===
+ONE_LINER: Os componentes opcionais `ruler` e `alertmanager` do Grafana Mimir avaliam regras de gravação (recording rules) e regras de alerta por tenant de forma distribuída e altamente disponível sobre o armazenamento global.
+IMPORTANCE: Quando métricas de múltiplos clusters Kubernetes são centralizadas no Grafana Mimir, avaliar regras de gravação e alertas diretamente nos servidores Prometheus locais impede correlações globais entre regiões e exige sincronizar arquivos de regras em dezenas de instâncias. Segundo a documentação de arquitetura do Mimir, os módulos `ruler` e `alertmanager` integram a avaliação de regras e o roteamento de notificações diretamente à arquitetura escalável e multi-tenant do Mimir.
+HOW_IT_WORKS: O componente `ruler` armazena os grupos de regras de cada tenant no object storage e utiliza um hash ring próprio para distribuir os grupos de regras entre as réplicas de `ruler` disponíveis no cluster, avaliando periodicamente as expressões PromQL (internamente ou despachando para o `query-frontend`) e gravando as séries resultantes de volta no caminho de escrita dos `ingesters`. Quando uma regra de alerta dispara, o `ruler` notifica o `alertmanager` multi-tenant do Mimir, que também opera em cluster replicado via hash ring e memberlist, deduplicando alertas, aplicando silenciamentos (`silences`), agrupamentos e enviando notificações para receptores externos (Slack, PagerDuty, Webhook) conforme a configuração individual de cada tenant.
+EXAMPLE:
+```bash
+# Uso da CLI mimirtool para carregar regras e configuração de Alertmanager de um tenant
+mimirtool rules load ./regras-slo.yaml \
+  --address=http://localhost:8080 \
+  --id=tenant-producao
+
+mimirtool alertmanager load ./alertmanager-tenant.yaml \
+  --address=http://localhost:8080/alertmanager \
+  --id=tenant-producao
+```
+TRADE_OFFS: Avaliar milhares de regras pesadas simultaneamente no `ruler` em intervalos curtos (como 15s) pode gerar picos periódicos de leitura e escrita no cluster Mimir; para evitar que o `ruler` sobrecarregue os `ingesters` ou `store-gateways`, recomenda-se configurar o `ruler` para enviar suas consultas através do `query-frontend` (`-ruler.query-frontend.address`), aproveitando o cache, o escalonamento de filas e a paralelização de consultas.
+VERIFY: Execute `mimirtool rules check` e `mimirtool rules list` contra o endpoint do `ruler`, e inspecione `/ruler/ring` e `/multitenant_alertmanager/ring` para confirmar que os grupos de regras e os estados de alerta estão distribuídos e ativos.
+LINKS: [[mimir-multi-tenancy-isolamento-limites-overrides-exporter]] | [[mimir-caminho-leitura-query-frontend-scheduler-querier-sharding]] | [[prometheus-alertmanager-agrupamento-inibicao-silenciamento]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir
+
+=== NOTE: 608 | mimir-motor-consulta-promql-otimizacoes-memoria | Grafana Mimir: motor de consulta PromQL do Mimir (MQE) e redução de consumo de memória ===
+ONE_LINER: O Mimir Query Engine (MQE) estende e otimiza a avaliação de PromQL evitando buscas caras no índice invertido TSDB e processando fluxos de séries com menor alocação de memória nos `queriers` e `store-gateways`.
+IMPORTANCE: No motor PromQL tradicional do Prometheus, consultas que agregam centenas de milhares de séries temporais materializam grandes estruturas em memória e realizam buscas repetitivas no índice invertido do TSDB, frequentemente causando erros de Out-Of-Memory (OOM) nos `queriers`. Conforme a documentação de arquitetura avançada do Grafana Mimir, o Mimir Query Engine e as otimizações de busca em `store-gateway` reduzem o consumo de memória em até 64% e aceleram consultas de alta cardinalidade.
+HOW_IT_WORKS: O Mimir Query Engine opera como um avaliador compatível com PromQL projetado especificamente para cargas distribuídas e multi-tenant. Ele implementa streaming e decodificação otimizada de blocos e chunks entre `store-gateways`, `ingesters` e `queriers`, além de contornar buscas desnecessárias no índice invertido quando os seletores de rótulos permitem varreduras diretas mais eficientes no cabeçalho binário (`binary index-header`). Combinado ao query sharding do `query-frontend`, o MQE consegue agregar subconjuntos disjuntos de séries em paralelo sem precisar manter todas as séries descomprimidas simultaneamente na memória heap de um único processo Go.
+EXAMPLE:
+```bash
+# Consulta PromQL de alta cardinalidade executada pelo motor de consulta do Mimir
+curl -G -s http://localhost:8080/prometheus/api/v1/query \
+  -H "X-Scope-OrgID: tenant-global" \
+  --data-urlencode 'query=topk(10, sum by (pod, namespace) (rate(container_cpu_usage_seconds_total[5m])))' \
+  --data-urlencode 'stats=all'
+```
+TRADE_OFFS: Embora o motor de consulta do Mimir reduza substancialmente o footprint de memória por consulta, expressões com seletores regex não ancorados (como `{pod=~".*api.*"}`) sobre milhões de séries ainda exigem varredura extensa de postagens no índice; nesses casos, configurar limites defensivos como `max_fetched_series_per_query` e `max_fetched_chunk_bytes_per_query` continua essencial para proteger a estabilidade dos `queriers`.
+VERIFY: Adicione o parâmetro `stats=all` nas requisições HTTP à API de consulta do Mimir e monitore o perfil de memória (`go_memstats_heap_inuse_bytes`) e a latência `cortex_querier_request_duration_seconds` nos pods `querier` e `store-gateway`.
+LINKS: [[mimir-caminho-leitura-query-frontend-scheduler-querier-sharding]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]] | [[prometheus-promql-seletores-vetores-operadores-agregacao]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/ | https://github.com/grafana/mimir
+
+=== NOTE: 609 | mimir-migracao-prometheus-thanos-cortex-blocos-tsdb | Grafana Mimir: migração a partir de Prometheus, Thanos ou Cortex com compatibilidade de blocos TSDB ===
+ONE_LINER: O Grafana Mimir suporta migração direta a partir de Prometheus, Thanos ou Cortex graças à compatibilidade com o protocolo Remote Write, APIs HTTP do Prometheus e formato de blocos TSDB em object storage.
+IMPORTANCE: Organizações que já acumularam meses ou anos de métricas históricas em buckets S3/GCS usando Thanos ou Cortex, ou em discos locais do Prometheus, não podem descartar seu histórico de observabilidade nem reescrever centenas de dashboards Grafana e regras de alerta ao adotar o Mimir. A documentação oficial do Grafana Mimir fornece caminhos diretos de migração para preservar tanto o fluxo em tempo real quanto os blocos históricos.
+HOW_IT_WORKS: Para ingestão em tempo real, basta apontar a seção `remote_write` dos servidores Prometheus existentes (ou agentes Grafana Alloy) para o endpoint `/api/v1/push` do `distributor` do Mimir, informando o cabeçalho `X-Scope-OrgID` se multi-tenancy estiver ativo. Para migrar dados históricos do Prometheus ou do Thanos, os blocos TSDB de 2 horas (ou blocos já compactados pelo Thanos sem downsampling incompatível) são copiados para a pasta do tenant no bucket de objetos do Mimir (`<bucket>/<tenant-id>/`), onde o `compactor` e o `store-gateway` passam a indexá-los no `bucket-index` e servi-los junto às novas métricas; na migração a partir do Cortex com armazenamento em blocos, a estrutura de diretórios e APIs já é diretamente compatível.
+EXAMPLE:
+```yaml
+# Configuração no prometheus.yml para enviar métricas via remote_write ao Grafana Mimir
+remote_write:
+  - url: http://mimir-distributor.mimir.svc.cluster.local:8080/api/v1/push
+    headers:
+      X-Scope-OrgID: cluster-prod-br
+    queue_config:
+      capacity: 10000
+      max_shards: 50
+      max_samples_per_send: 2000
+```
+TRADE_OFFS: Ao importar blocos históricos gerados pelo Thanos para o bucket do Mimir, blocos que sofreram downsampling específico do Thanos (resoluções de 5m e 1h) não são utilizados pelo motor de leitura padrão do Mimir, devendo-se manter apenas os blocos TSDB de resolução bruta (raw) para evitar desperdício de armazenamento e inconsistências de compactação. Além disso, durante a transição com escrita dupla (dual-writing), o tráfego de rede de saída dos servidores Prometheus dobra.
+VERIFY: Após apontar o `remote_write` e sincronizar os blocos históricos no bucket, execute uma consulta `query_range` no Mimir cobrindo o período anterior e posterior ao corte para validar que não há lacunas temporais nem duplicação de séries nos gráficos do Grafana.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-store-gateway-compactor-indice-binario-blocos-tsdb]] | [[prometheus-remote-write-read-federacao-longo-prazo]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/ | https://github.com/grafana/mimir
+
+=== NOTE: 610 | mimir-operacao-producao-dashboards-alertas-runbooks-mixins | Grafana Mimir: operação em produção com Mixins, dashboards, alertas e runbooks empacotados ===
+ONE_LINER: O Grafana Mimir disponibiliza um conjunto oficial de dashboards Grafana, regras de alerta Prometheus e runbooks operacionais (Mimir Mixin) para monitorar a saúde de ingestão, leitura, anéis e compactação em produção.
+IMPORTANCE: Operar um banco de dados distribuído de séries temporais em larga escala exige visibilidade imediata sobre a latência do caminho de escrita, saturação de caches, falhas de compactação e desequilíbrios nos hash rings. Segundo o README oficial do Grafana Mimir, os dashboards de melhores práticas, alertas e runbooks empacotados com o projeto facilitam o monitoramento contínuo da saúde do próprio cluster Mimir em produção.
+HOW_IT_WORKS: Cada componente do Mimir expõe métricas internas detalhadas no formato Prometheus em `/metrics` (incluindo métricas de latência de gRPC/HTTP, filas do `query-scheduler`, contadores de amostras por tenant, utilização de memória da JVM/Go runtime e estado do memberlist). O Mimir Mixin (escrito em Jsonnet) compila essas métricas em painéis especializados para escrita (`Writes`), leitura (`Reads`), `Compactor`, `Object Store`, `Ruler`, `Alertmanager` e `Rollout` (acompanhamento de atualizações sem downtime), acompanhados de regras de alerta pré-calibradas com links diretos para runbooks de diagnóstico e mitigação.
+EXAMPLE:
+```bash
+# Verificação rápida de métricas críticas expostas pelo próprio Grafana Mimir
+curl -s http://localhost:8080/metrics | grep -E "^(cortex_ingester_memory_series|cortex_compactor_runs_completed_total|cortex_request_duration_seconds_bucket)" | head -n 15
+
+# Validação das regras de alerta do Mimir Mixin com mimirtool
+mimirtool rules check ./mimir-mixin-alerts.yaml
+```
+TRADE_OFFS: Monitorar um cluster Mimir de produção a partir dele mesmo (auto-monitoramento no mesmo cluster) cria uma dependência circular perigosa: se os `ingesters` ou o `alertmanager` do cluster principal pararem de funcionar, os alertas que notificariam a equipe de SRE sobre a queda também falharão; por isso, a recomendação de produção é enviar as métricas e os alertas do cluster Mimir principal para uma instância Prometheus ou Mimir de meta-monitoramento separada.
+VERIFY: Confirme que os dashboards do Mimir Mixin estão populados no Grafana e que os alertas de meta-monitoramento (como `MimirIngesterReachingSeriesLimit` e `MimirCompactorHasNotSuccessfullyCleanedUpBlocks`) estão ativos em um avaliador independente.
+LINKS: [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]] | [[mimir-ruler-alertmanager-avaliacao-regras-multi-tenant]] | [[grafana-provisioning-datasources-dashboards-alerting-codigo]]
+SOURCES: https://raw.githubusercontent.com/grafana/mimir/main/README.md | https://grafana.com/docs/mimir/latest/references/architecture/components.md | https://github.com/grafana/mimir

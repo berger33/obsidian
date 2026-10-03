@@ -5,12 +5,12 @@ Atualizado em 2026-10-03. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 ## Estado atual
 
 - Meta ativa: **500 lotes de 2.000 notas = 1.000.000 notas válidas**.
-- Notas válidas globais: **2640** (49 aprovações humanas históricas + 2591 revisões factuais por IA).
-- Progresso: **2640 / 1.000.000 (0,2640%)**; faltam **997.360** notas válidas.
+- Notas válidas globais: **2740** (49 aprovações humanas históricas + 2691 revisões factuais por IA).
+- Progresso: **2740 / 1.000.000 (0,2740%)**; faltam **997.260** notas válidas.
 - Lotes completos: **1 / 500** (`software-testes-2000-0001`).
 - Primeiro lote `software-testes-2000-0001`: **2000 / 2.000 (100%)** notas válidas (9 humanas + 1991 IA); concluído (`complete`).
-- Segundo lote atual `software-devops-2000-0002`: **600 / 2.000 (30,00%)** notas válidas (600 IA nas tranches 1–6); faltam **1400** notas substantivas.
-- Arquivos Markdown ativos: **2740**; 100 com pendências de qualidade, excluídos da contagem.
+- Segundo lote atual `software-devops-2000-0002`: **700 / 2.000 (35,00%)** notas válidas (700 IA nas tranches 1–7); faltam **1300** notas substantivas.
+- Arquivos Markdown ativos: **2840**; 100 com pendências de qualidade, excluídos da contagem.
 - O checkpoint legado com 1.000.000 de registros virtuais continua fora da contagem de conteúdo válido.
 
 ## Dez passos e andamento
@@ -21,12 +21,12 @@ Atualizado em 2026-10-03. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 | 2 | Implementar registro de revisão por IA sem promovê-la a humana | **Concluído** | `note_quality.py`, `audit_note_quality.py` e `audit_batch.py` reconhecem revisor, data e relatório de IA. |
 | 3 | Preservar aprovações humanas já concedidas | **Concluído** | As 49 aprovações históricas permanecem limitadas às notas aprovadas pelo usuário. |
 | 4 | Conferir factual e registrar notas 10–2000 do primeiro lote | **Concluído (tranches 2–26)** | 1991 revisões por IA em relatórios das tranches 2–26, além das 9 aprovações humanas. |
-| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2 (`software-devops-2000-0002`): 600/600 no gate (600 IA). Global: 2740 arquivos, 2640 válidas, 100 com pendências legadas; veja a [reconciliação da tranche 6 do lote 2](exports/reports/batch-reconciliation-software-devops-2000-0002-tranche-06.md). |
+| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2 (`software-devops-2000-0002`): 700/700 no gate (700 IA). Global: 2840 arquivos, 2740 válidas, 100 com pendências legadas; veja a [reconciliação da tranche 7 do lote 2](exports/reports/batch-reconciliation-software-devops-2000-0002-tranche-07.md). |
 | 6 | Remediar as 100 notas legadas | **Inventário concluído; remediação pendente** | Reconstruir com fontes próprias ou mantê-las fora da contagem; não corrigir cosmeticamente em massa. |
 | 7 | Completar o lote `software-testes-2000-0001` até 2.000 notas | **Concluído** | 2000/2.000 (100%); todas as 2.000 notas substantivas contam com gate aprovado, fontes verificadas e revisão factual registrada (`complete`). |
-| 8 | Abrir lotes subsequentes de 2.000 notas | **Em andamento (lote 2 em 30%)** | Segundo lote `software-devops-2000-0002` com 600/2.000 notas válidas nas tranches 1–6; restam 1400 notas neste lote e 498 lotes subsequentes. |
+| 8 | Abrir lotes subsequentes de 2.000 notas | **Em andamento (lote 2 em 35%)** | Segundo lote `software-devops-2000-0002` com 700/2.000 notas válidas nas tranches 1–7; restam 1300 notas neste lote e 498 lotes subsequentes. |
 | 9 | Consolidar contagens por tranche, lote e global | **Contínuo** | Atualizar manifestos, relatórios, fila e MOC após auditoria; distinguir gate, revisão humana e revisão por IA. |
-| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 2640 notas válidas, 1/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
+| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 2740 notas válidas, 1/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
 
 ## Regra de continuidade e contagem
 

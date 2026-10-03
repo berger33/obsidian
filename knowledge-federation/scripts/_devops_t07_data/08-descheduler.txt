@@ -1,0 +1,246 @@
+=== NOTE: 671 | descheduler-rebalanceamento-pods-kubernetes-kube-scheduler | Kubernetes Descheduler: rebalanceamento contínuo de clusters via evicção coordenada com o kube-scheduler ===
+ONE_LINER: O Descheduler para Kubernetes (`sigs.k8s.io/descheduler`) identifica pods agendados em nós subótimos devido a mudanças dinâmicas no cluster e os despeja (evicts) para que o `kube-scheduler` padrão os reagende em nós melhores.
+IMPORTANCE: O `kube-scheduler` toma sua decisão apenas no instante exato em que um pod pendente aparece para agendamento. Como clusters Kubernetes são altamente dinâmicos — alguns nós ficam sobrecarregados ou subutilizados ao longo do tempo, labels e taints são adicionados ou removidos de nós, nós falham concentrando pods em outros servidores ou novos nós entram no cluster —, a decisão original de agendamento deixa de ser ideal, exigindo o Descheduler para restaurar o equilíbrio.
+HOW_IT_WORKS: Conforme documentado no README oficial do projeto, o Descheduler pode ser executado dentro do cluster como um `Job`, `CronJob` ou `Deployment` (ou instalado via Helm chart oficial e Kustomize), rodando como um pod crítico no namespace `kube-system` para evitar ser despejado por si mesmo ou pelo kubelet. Com base em uma `DeschedulerPolicy` configurável, ele avalia os nós e pods ativos e invoca a API de Eviction nos pods que devem ser movidos; o Descheduler **não agenda** diretamente os substitutos dos pods despejados, delegando essa responsabilidade inteiramente ao `kube-scheduler` padrão quando o controlador pai (Deployment, ReplicaSet, StatefulSet) recria o pod.
+EXAMPLE:
+```bash
+# Instalação do Descheduler como CronJob usando Kustomize a partir do repositório oficial
+kustomize build 'github.com/kubernetes-sigs/descheduler/kubernetes/cronjob?ref=release-1.34' | kubectl apply -f -
+
+# Verificação dos pods e jobs do Descheduler no namespace kube-system
+kubectl get cronjob,jobs,pods -n kube-system -l app=descheduler
+```
+TRADE_OFFS: Como o Descheduler apenas despeja o pod e confia no `kube-scheduler` para reagendá-lo, se as estratégias do Descheduler estiverem desalinhadas com os predicados e prioridades do `kube-scheduler`, um pod despejado pode acabar sendo reagendado exatamente no mesmo nó de onde saiu (ou causar flapping contínuo entre dois nós), gerando disrupção sem ganho real de balanceamento.
+VERIFY: Execute o Descheduler como `Job` ou aguarde a execução do `CronJob` no namespace `kube-system` e inspecione `kubectl logs -n kube-system -l app=descheduler` para verificar a contagem de pods avaliados e despejados em cada ciclo.
+LINKS: [[descheduler-politica-top-level-limites-eviccao-provedores-metricas]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[kubernetes-scheduler-affinity-taints-tolerations-topology]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 672 | descheduler-politica-top-level-limites-eviccao-provedores-metricas | Kubernetes Descheduler: configuração top-level da DeschedulerPolicy, limites de evicção e metricsProviders ===
+ONE_LINER: A configuração de nível superior da `DeschedulerPolicy` (`descheduler/v1alpha2`) define limites globais de segurança (`maxNoOfPodsToEvictPerNode`, `maxNoOfPodsToEvictPerNamespace`, `maxNoOfPodsToEvictTotal`), `gracePeriodSeconds` e provedores de métricas (`KubernetesMetrics` e `Prometheus`).
+IMPORTANCE: Executar um ciclo de desagendamento sem limites máximos de evicção pode despejar centenas de pods simultaneamente em um nó ou namespace durante uma mudança de topologia, causando indisponibilidade em cascata. Segundo a documentação oficial do Descheduler, as chaves top-level da política aplicam travas de segurança transversais a todas as estratégias habilitadas e configuram a coleta de utilização real de recursos.
+HOW_IT_WORKS: No topo do objeto `DeschedulerPolicy`, o administrador pode restringir o impacto de cada ciclo de rescheduling com `maxNoOfPodsToEvictPerNode` (máximo de pods despejados de cada nó somando todas as estratégias), `maxNoOfPodsToEvictPerNamespace` (máximo por namespace) e `maxNoOfPodsToEvictTotal` (máximo total por ciclo), além de `nodeSelector`, `evictionFailureEventNotification` e `gracePeriodSeconds`. Para estratégias que baseiam decisões no consumo real de recursos em vez de apenas `requests`, o campo `metricsProviders` (que substitui o campo depreciado `metricsCollector`) permite habilitar duas fontes: `KubernetesMetrics` (Kubernetes Metrics Server) e `Prometheus` (apontando para `prometheus.url` com autenticação via token in-cluster ou `secretReference` contendo a chave `prometheusAuthToken`).
+EXAMPLE:
+```yaml
+# Configuração top-level de uma DeschedulerPolicy com limites de evicção e provedor Prometheus
+apiVersion: "descheduler/v1alpha2"
+kind: "DeschedulerPolicy"
+maxNoOfPodsToEvictPerNode: 10
+maxNoOfPodsToEvictPerNamespace: 20
+maxNoOfPodsToEvictTotal: 50
+gracePeriodSeconds: 60
+metricsProviders:
+  - source: Prometheus
+    prometheus:
+      url: http://prometheus-kube-prometheus-prometheus.prom.svc.cluster.local
+      authToken:
+        secretReference:
+          namespace: "kube-system"
+          name: "authtoken"
+```
+TRADE_OFFS: Conforme documentado na tabela de configuração top-level do Descheduler, a configuração padrão de RBAC do Descheduler permite ler Secrets apenas no namespace `kube-system`; portanto, se `prometheus.authToken.secretReference.namespace` apontar para um Secret em outro namespace (como `monitoring`), é obrigatório estender explicitamente as regras de `ClusterRole`/`Role` do Descheduler para evitar erros de permissão.
+VERIFY: Aplique o ConfigMap contendo a `DeschedulerPolicy` e valide nos logs do Descheduler que os limites `maxNoOfPodsToEvict*` e a conexão com os `metricsProviders` foram inicializados sem avisos de depreciação ou falhas de autenticação.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[descheduler-low-high-node-utilization-thresholds-balanceamento]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 673 | descheduler-default-evictor-pod-protections-filtros | Kubernetes Descheduler: plugin DefaultEvictor, políticas podProtections e filtros de nodeFit e minReplicas ===
+ONE_LINER: O plugin `DefaultEvictor` atua nos extension points `filter` e `preEvictionFilter`, governando quais pods podem ser despejados por meio da estrutura `podProtections` (`defaultDisabled` e `extraEnabled`), `nodeFit`, `minReplicas`, `minPodAge` e `noEvictionPolicy`.
+IMPORTANCE: Despejar inadvertidamente pods críticos de sistema (como `kube-dns`), pods gerenciados por `DaemonSet`, pods com armazenamento local (`emptyDir`/hostPath) ou pods que não possuem outro nó compatível disponível no cluster causaria perda de dados ou pods travados em estado `Pending`. De acordo com o README oficial do Descheduler, o `DefaultEvictor` protege esses workloads por padrão e substitui flags booleanas antigas (agora depreciadas) pela configuração estruturada `podProtections`.
+HOW_IT_WORKS: Por padrão, o `DefaultEvictor` protege contra evicção quatro categorias de pods, que só podem ser despejadas se listadas explicitamente em `podProtections.defaultDisabled`: `"PodsWithLocalStorage"`, `"DaemonSetPods"`, `"SystemCriticalPods"` e `"FailedBarePods"` (substituindo as flags depreciadas `evictLocalStoragePods`, `evictDaemonSetPods`, `evictSystemCriticalPods` e `evictFailedBarePods`). De forma complementar, o administrador pode ativar proteções adicionais em `podProtections.extraEnabled`: `"PodsWithPVC"` (com filtro opcional por `protectedStorageClasses`), `"PodsWithoutPDB"` (protege pods que não possuem `PodDisruptionBudget`) e `"PodsWithResourceClaims"`. Além disso, `nodeFit: true` verifica se existe pelo menos um outro nó no cluster onde o pod cabe antes de despejá-lo, `minReplicas` ignora controladores com poucas réplicas, `minPodAge` protege pods recém-criados e `noEvictionPolicy` (`Preferred` ou `Mandatory`) respeita a anotação `descheduler.alpha.kubernetes.io/prefer-no-eviction`.
+EXAMPLE:
+```yaml
+# Configuração recomendada do DefaultEvictor com podProtections, nodeFit e minReplicas
+profiles:
+  - name: DefaultProfile
+    pluginConfig:
+      - name: "DefaultEvictor"
+        args:
+          nodeFit: true
+          minReplicas: 2
+          minPodAge: "10m"
+          podProtections:
+            extraEnabled:
+              - "PodsWithoutPDB"
+              - "PodsWithPVC"
+            config:
+              PodsWithPVC:
+                protectedStorageClasses:
+                  - name: local-nvme-sc
+```
+TRADE_OFFS: Manter `nodeFit: false` (o valor padrão) significa que o Descheduler pode despejar um pod que viola uma regra mesmo quando todos os demais nós do cluster estão cheios ou incompatíveis, deixando o pod substituto em estado `Pending`; por isso, habilitar `nodeFit: true` e `extraEnabled: ["PodsWithoutPDB"]` é altamente recomendado em clusters de produção.
+VERIFY: Inspecione os logs do Descheduler em nível verboso para confirmar que pods com PVCs das classes protegidas, pods sem PDB ou pods que não passariam no `nodeFit` são filtrados pelo `DefaultEvictor` antes da chamada de evicção.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-politica-top-level-limites-eviccao-provedores-metricas]] | [[descheduler-pontos-extensao-deschedule-balance-perfis]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 674 | descheduler-pontos-extensao-deschedule-balance-perfis | Kubernetes Descheduler: arquitetura de perfis e pontos de extensão Deschedule versus Balance ===
+ONE_LINER: A `DeschedulerPolicy` organiza as estratégias em perfis (`profiles`) que implementam dois pontos de extensão principais além dos filtros do Evictor: `Deschedule` (avaliação sequencial pod a pod) e `Balance` (avaliação coletiva de grupos e distribuição entre nós).
+IMPORTANCE: Algumas regras de reagendamento dependem exclusivamente do estado individual de um pod (por exemplo, se ele violou um taint de nó, teve muitos restarts ou excedeu seu tempo de vida), enquanto outras exigem olhar para o conjunto de réplicas ou para a distribuição de carga entre todos os nós do cluster (como espalhar duplicatas ou equilibrar utilização de nós). O README oficial do Descheduler separa claramente essas duas categorias nos extension points `deschedule` e `balance`.
+HOW_IT_WORKS: Dentro de `profiles[]`, cada perfil define sua lista `pluginConfig` (argumentos passados para cada plugin) e ativa os plugins desejados nos pontos de extensão sob `plugins`: `filter` e `preEvictionFilter` (onde o `DefaultEvictor` vem habilitado por padrão), `deschedule` e `balance`. Os **Deschedule Plugins** processam os pods um a um sequencialmente (`RemovePodsViolatingInterPodAntiAffinity`, `RemovePodsViolatingNodeAffinity`, `RemovePodsViolatingNodeTaints`, `RemovePodsHavingTooManyRestarts`, `PodLifeTime`, `RemoveFailedPods`). Já os **Balance Plugins** analisam todos os pods ou grupos de pods para decidir quais despejar com base na distribuição desejada (`RemoveDuplicates`, `LowNodeUtilization`, `HighNodeUtilization`, `RemovePodsViolatingTopologySpreadConstraint`).
+EXAMPLE:
+```yaml
+# Estrutura de um perfil na DeschedulerPolicy habilitando plugins nos pontos deschedule e balance
+apiVersion: "descheduler/v1alpha2"
+kind: "DeschedulerPolicy"
+profiles:
+  - name:ProducaoRebalance
+    pluginConfig:
+      - name: "DefaultEvictor"
+        args:
+          nodeFit: true
+      - name: "RemoveDuplicates"
+      - name: "RemovePodsViolatingNodeTaints"
+    plugins:
+      deschedule:
+        enabled:
+          - "RemovePodsViolatingNodeTaints"
+      balance:
+        enabled:
+          - "RemoveDuplicates"
+```
+TRADE_OFFS: Ao combinar múltiplos perfis ou múltiplos plugins `deschedule` e `balance` na mesma execução, a ordem de declaração importa: os plugins são executados na sequência definida e compartilham os tetos globais de evicção (`maxNoOfPodsToEvictPerNode` / `Total`); se o primeiro plugin atingir o limite máximo de evicções do nó, os plugins subsequentes não poderão despejar mais pods naquele nó até o próximo ciclo.
+VERIFY: Verifique nos logs de execução do Descheduler a ordem de invocação de cada perfil e confirme que os plugins listados em `plugins.deschedule.enabled` e `plugins.balance.enabled` foram executados sem erros de configuração.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[descheduler-remove-duplicates-topology-spread-constraints]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 675 | descheduler-low-high-node-utilization-thresholds-balanceamento | Kubernetes Descheduler: estratégias de balanceamento de recursos LowNodeUtilization e HighNodeUtilization ===
+ONE_LINER: Os plugins de balanceamento `LowNodeUtilization` (espalhamento de carga de nós sobrecarregados para nós subutilizados) e `HighNodeUtilization` (compactação/bin-packing de nós subutilizados) usam `thresholds` e `targetThresholds` de CPU, memória e pods.
+IMPORTANCE: Em clusters com número fixo de nós ou logo após a entrada de novos nós vazios, alguns servidores acumulam 85% de alocação enquanto outros ficam em 15% (`LowNodeUtilization`); inversamente, em clusters elásticos com Cluster Autoscaler sob baixa demanda, espalhar poucos pods em muitos nós impede o scale-down das máquinas subutilizadas (`HighNodeUtilization`). Segundo o README oficial do Descheduler, essas duas estratégias opostas de `balance` resolvem ambos os cenários.
+HOW_IT_WORKS: No **`LowNodeUtilization`**, configuram-se dois patamares sob `nodeResourceUtilizationThresholds`: `thresholds` (limite inferior) e `targetThresholds` (limite superior) em porcentagem de capacidade alocável para `cpu`, `memory`, `pods` e recursos estendidos. Um nó cujo uso está abaixo de `thresholds` para **todos** os recursos é considerado subutilizado; um nó cujo uso está acima de `targetThresholds` para **qualquer** recurso é considerado sobreutilizado; nós entre as duas faixas são considerados adequadamente utilizados. O plugin despeja pods dos nós sobreutilizados na esperança de que sejam reagendados nos nós subutilizados. Já o **`HighNodeUtilization`** atua na direção oposta (compactação): identifica nós subutilizados abaixo de `thresholds` e despeja seus pods para que se concentrem nos demais nós mais cheios, liberando nós vazios para remoção pelo autoscaler.
+EXAMPLE:
+```yaml
+# Configuração do plugin LowNodeUtilization para balancear CPU, memória e contagem de pods entre nós
+  - name: "LowNodeUtilization"
+    args:
+      thresholds:
+        cpu: 20
+        memory: 20
+        pods: 20
+      targetThresholds:
+        cpu: 50
+        memory: 50
+        pods: 50
+```
+TRADE_OFFS: Nunca habilite `LowNodeUtilization` e `HighNodeUtilization` simultaneamente para o mesmo conjunto de nós sem compreendê-los, pois o primeiro tenta espalhar carga enquanto o segundo tenta compactar carga; além disso, se `HighNodeUtilization` for usado em conjunto com o `kube-scheduler` padrão configurado com `LeastAllocated` (espalhamento padrão), os pods despejados de nós vazios voltarão a ser espalhados a menos que o scheduler utilize perfil `MostAllocated`.
+VERIFY: Monitore a distribuição de `kubectl top nodes` e `kubectl describe nodes` (seção `Allocated resources`) antes e depois do ciclo do Descheduler para validar que a diferença de alocação entre os nós convergiu para a faixa entre `thresholds` e `targetThresholds`.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-politica-top-level-limites-eviccao-provedores-metricas]] | [[descheduler-pontos-extensao-deschedule-balance-perfis]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 676 | descheduler-remove-duplicates-topology-spread-constraints | Kubernetes Descheduler: espalhamento de réplicas com RemoveDuplicates e RemovePodsViolatingTopologySpreadConstraint ===
+ONE_LINER: Os plugins de balanceamento `RemoveDuplicates` e `RemovePodsViolatingTopologySpreadConstraint` garantem a alta disponibilidade das aplicações despejando réplicas concentradas no mesmo nó ou que violem restrições de distribuição topológica entre zonas e nós.
+IMPORTANCE: Quando um nó worker falha temporariamente em um cluster Kubernetes, os pods de um `Deployment` ou `StatefulSet` que rodavam nele são recriados nos nós sobreviventes, fazendo com que múltiplas réplicas do mesmo serviço acabem empilhadas no mesmo nó ou na mesma zona de disponibilidade; quando o nó que falhou volta a ficar `Ready`, o Kubernetes não move os pods de volta sozinho. O README oficial do Descheduler documenta os plugins `RemoveDuplicates` e `RemovePodsViolatingTopologySpreadConstraint` para corrigir esse desbalanceamento.
+HOW_IT_WORKS: O plugin **`RemoveDuplicates`** verifica se existe mais de um pod associado ao mesmo `ReplicaSet` (RS), `ReplicationController` (RC), `StatefulSet` ou `Job` rodando no mesmo nó; se houver duplicatas e outros nós estiverem disponíveis, os pods extras são despejados para melhorar o espalhamento (aceitando o parâmetro opcional `excludeOwnerKinds`, onde incluir `ReplicaSet` exclui pods criados por Deployments). Já o plugin **`RemovePodsViolatingTopologySpreadConstraint`** inspeciona os pods que declaram `spec.topologySpreadConstraints` (por exemplo, `maxSkew: 1` por `topology.kubernetes.io/zone` ou `kubernetes.io/hostname`) e despeja o número mínimo de pods dos domínios sobrecarregados para restaurar o `maxSkew` exigido.
+EXAMPLE:
+```yaml
+# Configuração dos plugins RemoveDuplicates e RemovePodsViolatingTopologySpreadConstraint no perfil
+    pluginConfig:
+      - name: "RemoveDuplicates"
+        args:
+          excludeOwnerKinds:
+            - "Job"
+      - name: "RemovePodsViolatingTopologySpreadConstraint"
+        args:
+          constraints:
+            - DoNotSchedule
+            - ScheduleAnyway
+    plugins:
+      balance:
+        enabled:
+          - "RemoveDuplicates"
+          - "RemovePodsViolatingTopologySpreadConstraint"
+```
+TRADE_OFFS: Se um `Deployment` possuir mais réplicas do que o número total de nós disponíveis no cluster (por exemplo, 10 réplicas em um cluster de 4 nós), sempre haverá múltiplas réplicas no mesmo nó; o `RemoveDuplicates` calcula o teto ideal por nó para evitar despejos inúteis, mas exige atenção especial quando combinado com afinidades restritivas de nó.
+VERIFY: Verifique a distribuição de pods de um Deployment com `kubectl get pods -o wide` após simular a drenagem (`kubectl drain`) e retorno (`kubectl uncordon`) de um nó e rodar um ciclo do Descheduler.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-pontos-extensao-deschedule-balance-perfis]] | [[kubernetes-scheduler-affinity-taints-tolerations-topology]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 677 | descheduler-violacoes-affinity-anti-affinity-node-taints | Kubernetes Descheduler: correção de violações de afinidade, anti-afinidade e taints de nós ===
+ONE_LINER: Os plugins `RemovePodsViolatingNodeAffinity`, `RemovePodsViolatingInterPodAntiAffinity` e `RemovePodsViolatingNodeTaints` despejam pods cujas regras originais de posicionamento deixaram de ser satisfeitas após mudanças em labels, taints ou vizinhança de pods.
+IMPORTANCE: No Kubernetes, regras como `requiredDuringSchedulingIgnoredDuringExecution` (para `nodeAffinity` e `podAntiAffinity`) e taints com efeito `NoSchedule` ou `PreferNoSchedule` são avaliadas apenas no agendamento (`DuringScheduling`) e ignoradas durante a execução (`IgnoredDuringExecution`). Segundo o README oficial do Descheduler, quando administradores alteram labels/taints nos nós ou novos pods mudam a vizinhança, esses três plugins `deschedule` impõem o cumprimento das regras em tempo de execução.
+HOW_IT_WORKS: (1) **`RemovePodsViolatingNodeAffinity`** avalia pods com `nodeAffinity` do tipo `requiredDuringSchedulingIgnoredDuringExecution` (ou `preferredDuringSchedulingIgnoredDuringExecution` se configurado) e os despeja caso o nó atual não satisfaça mais os seletores de rótulos ou caso surja um nó que atenda à preferência; (2) **`RemovePodsViolatingInterPodAntiAffinity`** identifica pods que possuem regras de anti-afinidade entre pods e estão co-localizados no mesmo nó/topologia com pods conflitantes, despejando-os para separar os pares; e (3) **`RemovePodsViolatingNodeTaints`** despeja pods que estão rodando em nós que receberam taints `NoSchedule` (ou `PreferNoSchedule` quando `includePreferNoSchedule: true`) para os quais o pod não possui `tolerations` correspondentes.
+EXAMPLE:
+```yaml
+# Habilitação dos plugins de correção de afinidade, anti-afinidade e taints na DeschedulerPolicy
+    pluginConfig:
+      - name: "RemovePodsViolatingNodeAffinity"
+        args:
+          nodeAffinityType:
+            - "requiredDuringSchedulingIgnoredDuringExecution"
+      - name: "RemovePodsViolatingInterPodAntiAffinity"
+      - name: "RemovePodsViolatingNodeTaints"
+        args:
+          includePreferNoSchedule: true
+    plugins:
+      deschedule:
+        enabled:
+          - "RemovePodsViolatingNodeAffinity"
+          - "RemovePodsViolatingInterPodAntiAffinity"
+          - "RemovePodsViolatingNodeTaints"
+```
+TRADE_OFFS: Ao habilitar `RemovePodsViolatingNodeTaints` ou `RemovePodsViolatingNodeAffinity`, é crucial que `nodeFit: true` esteja ativo no `DefaultEvictor`; caso contrário, se um administrador aplicar um taint `NoSchedule` ou remover um label de todos os nós do pool por engano, o Descheduler despejará os pods mesmo não havendo nenhum outro nó elegível no cluster para recebê-los.
+VERIFY: Adicione um taint `manutencao=true:NoSchedule` a um nó worker onde roda um Deployment de teste sem toleration correspondente, execute o Descheduler e confirme que o pod é despejado e reagendado em um nó sem o taint.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[kubernetes-scheduler-affinity-taints-tolerations-topology]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 678 | descheduler-pod-lifetime-restarts-failed-pods-higiene | Kubernetes Descheduler: higiene operacional de pods com PodLifeTime, RemovePodsHavingTooManyRestarts e RemoveFailedPods ===
+ONE_LINER: Os plugins `PodLifeTime`, `RemovePodsHavingTooManyRestarts` e `RemoveFailedPods` automatizam a higiene operacional do cluster despejando ou limpando pods antigos, pods presos em loops de reinicialização (`CrashLoopBackOff`) e pods em fase `Failed`.
+IMPORTANCE: Em clusters de longa duração, pods em fase `Failed` (de Jobs ou execuções antigas) acumulam objetos na API do Kubernetes, pods com vazamentos lentos de recursos ou caches estagnados beneficiam-se de reciclagem periódica por idade (`PodLifeTime`), e pods sofrendo dezenas de restarts consecutivos em um nó com problema local intermitente precisam ser movidos para outro nó (`RemovePodsHavingTooManyRestarts`). O README oficial do Descheduler detalha esses três plugins do ponto de extensão `deschedule`.
+HOW_IT_WORKS: (1) **`PodLifeTime`** despeja pods mais antigos que `maxPodLifeTimeSeconds`, permitindo filtrar por estados/condições (como `Pending`, `Running`, `ContainerCreating`, `PodInitializing`), códigos de saída e tipos de controladores; (2) **`RemovePodsHavingTooManyRestarts`** despeja pods cuja soma de reinicializações de containers (incluindo opcionalmente initContainers via `includingInitContainers: true`) atinge ou supera `podRestartThreshold`, podendo restringir por estados de execução; e (3) **`RemoveFailedPods`** remove pods que terminaram na fase `Failed`, filtrando por razões específicas (`reasons`, como `NodeAffinity`, `Evicted`, `OutOfcpu`), códigos de saída (`exitCodes`), idade mínima (`minPodLifetimeSeconds`) e exclusão de `ownerKinds`.
+EXAMPLE:
+```yaml
+# Configuração dos plugins de higiene operacional (restarts excessivos, tempo de vida e pods falhos)
+    pluginConfig:
+      - name: "RemovePodsHavingTooManyRestarts"
+        args:
+          podRestartThreshold: 50
+          includingInitContainers: true
+      - name: "PodLifeTime"
+        args:
+          maxPodLifeTimeSeconds: 604800 # 7 dias
+      - name: "RemoveFailedPods"
+        args:
+          minPodLifetimeSeconds: 3600
+          includingInitContainers: true
+```
+TRADE_OFFS: Usar `RemovePodsHavingTooManyRestarts` quando um pod está em `CrashLoopBackOff` por causa de um bug de código ou variável de ambiente inválida (e não por falha do nó local) fará com que o pod seja despejado e continue falhando no novo nó; por isso, configure um `podRestartThreshold` razoável (ex.: 50 ou 100) em conjunto com `minPodAge` no `DefaultEvictor`.
+VERIFY: Verifique nos logs do Descheduler a limpeza de pods em fase `Failed` com mais de 1 hora e a reciclagem ordenada de pods que atingiram `maxPodLifeTimeSeconds` respeitando os `PodDisruptionBudgets`.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[descheduler-pontos-extensao-deschedule-balance-perfis]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 679 | descheduler-implantacao-job-cronjob-deployment-helm-kustomize | Kubernetes Descheduler: modos de implantação (Job, CronJob, Deployment) via Helm, Kustomize e alinhamento de versão ===
+ONE_LINER: O Descheduler pode ser implantado no namespace `kube-system` como `Job`, `CronJob` ou `Deployment` (via manifestos base, Kustomize ou Helm chart oficial a partir da v0.18.0), exigindo alinhamento entre a versão da imagem `registry.k8s.io/descheduler/descheduler` e a versão da documentação/cluster.
+IMPORTANCE: Diferentes equipes de plataforma operam o rebalanceamento do cluster em cadências distintas: algumas preferem rodar uma tarefa agendada apenas na janela de madrugada (`CronJob`), outras disparam manualmente após uma manutenção de nós (`Job`), e outras mantêm um loop contínuo com intervalo fixo (`Deployment`). Segundo o README oficial do Descheduler, todos os três formatos são suportados nativamente e empacotados no Helm chart oficial no Artifact Hub.
+HOW_IT_WORKS: Os manifestos oficiais instalam três componentes base no `kube-system`: `rbac.yaml` (ServiceAccount e ClusterRole/ClusterRoleBinding com permissões para listar nós/pods e criar `pods/eviction`), `configmap.yaml` (contendo a `DeschedulerPolicy`) e o manifesto de workload (`job.yaml`, `cronjob.yaml` ou `deployment.yaml`). O pod do Descheduler é configurado como um pod crítico no `kube-system` para não ser despejado por si mesmo nem pelo kubelet. Além disso, o README destaca o mapeamento estrito de versões: cada série `v0.XX.x` do Descheduler (por exemplo, `v0.36.0`, `v0.35.x`, `v0.34.x`) corresponde à branch `release-1.XX` do Kubernetes, devendo-se seguir a sintaxe da `DeschedulerPolicy` da respectiva branch de release.
+EXAMPLE:
+```bash
+# Implantação manual como CronJob aplicando os manifestos de RBAC, ConfigMap e CronJob
+kubectl create -f kubernetes/base/rbac.yaml
+kubectl create -f kubernetes/base/configmap.yaml
+kubectl create -f kubernetes/cronjob/cronjob.yaml
+```
+TRADE_OFFS: Ao atualizar a imagem `registry.k8s.io/descheduler/descheduler` entre versões menores (por exemplo, de `v0.30.x` para `v0.35.x`), campos depreciados da `DeschedulerPolicy` (como flags booleanas antigas do `DefaultEvictor` substituídas por `podProtections` ou mudanças de versão da API de política) podem impedir o binário de iniciar se o `ConfigMap` não for atualizado conforme a tabela de releases do README.
+VERIFY: Confirme a versão da imagem em execução com `kubectl get deploy,cronjob -n kube-system -o wide` e valide que a sintaxe da `DeschedulerPolicy` no `ConfigMap` corresponde exatamente à branch de release da imagem.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-politica-top-level-limites-eviccao-provedores-metricas]] | [[helm-charts-estrutura-templates-values-ciclo-vida]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler
+
+=== NOTE: 680 | descheduler-filtragem-labels-namespaces-prioridade-pdb | Kubernetes Descheduler: filtragem granular por namespaces, seletores de labels, prioridade e PodDisruptionBudgets ===
+ONE_LINER: O Descheduler permite restringir o escopo de avaliação e evicção usando `namespaceLabelSelector`, `labelSelector`, `priorityThreshold`, anotações `prefer-no-eviction` e respeito nativo a `PodDisruptionBudgets` (PDBs).
+IMPORTANCE: Em um cluster Kubernetes corporativo, nem todos os workloads devem ser submetidos às mesmas regras de rebalanceamento: jobs de treinamento de machine learning ou bancos de dados transacionais não devem ser interrompidos por uma otimização de `LowNodeUtilization`, enquanto microsserviços stateless HTTP podem ser movidos livremente desde que seus `PodDisruptionBudgets` sejam respeitados. O README oficial do Descheduler documenta os múltiplos filtros de escopo e proteção.
+HOW_IT_WORKS: Como a remoção de pods pelo Descheduler utiliza a sub-recurso oficial `Eviction` da API do Kubernetes, o `kube-apiserver` valida automaticamente qualquer `PodDisruptionBudget` (PDB) associado ao pod, rejeitando o despejo caso o orçamento de disrupção esteja esgotado (e o `DefaultEvictor` permite ainda proteger pods sem PDB via `podProtections.extraEnabled: ["PodsWithoutPDB"]`). Adicionalmente, tanto no `DefaultEvictor` quanto em plugins individuais, o administrador pode configurar `namespaceLabelSelector` e `labelSelector` para incluir apenas namespaces/pods específicos, definir `priorityThreshold` para nunca despejar pods acima de determinada `PriorityClass`, e usar `noEvictionPolicy: "Mandatory"` ou `"Preferred"` para pods marcados com a anotação `descheduler.alpha.kubernetes.io/prefer-no-eviction`.
+EXAMPLE:
+```yaml
+# Filtragem por labels de pod, prioridade máxima e política obrigatória para a anotação prefer-no-eviction
+  - name: "DefaultEvictor"
+    args:
+      nodeFit: true
+      noEvictionPolicy: "Mandatory"
+      priorityThreshold:
+        value: 10000
+      labelSelector:
+        matchExpressions:
+          - key: "tier"
+            operator: In
+            values: ["stateless-web", "worker"]
+```
+TRADE_OFFS: Se um `PodDisruptionBudget` estiver mal configurado no cluster com `maxUnavailable: 0` ou `minAvailable: 100%`, a API de Eviction do Kubernetes bloqueará permanentemente todas as tentativas de despejo daquele Deployment pelo Descheduler (e também bloqueará drenagens de nós via `kubectl drain`), gerando eventos de falha de evicção se `evictionFailureEventNotification: true` estiver habilitado.
+VERIFY: Adicione a anotação `descheduler.alpha.kubernetes.io/prefer-no-eviction: ""` a um pod elegível para despejo com `noEvictionPolicy: "Mandatory"` e confirme nos logs do Descheduler que o pod foi preservado no nó.
+LINKS: [[descheduler-rebalanceamento-pods-kubernetes-kube-scheduler]] | [[descheduler-default-evictor-pod-protections-filtros]] | [[descheduler-pontos-extensao-deschedule-balance-perfis]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/descheduler/master/README.md | https://github.com/kubernetes-sigs/descheduler/blob/master/charts/descheduler/README.md | https://github.com/kubernetes-sigs/descheduler

@@ -1,0 +1,181 @@
+=== NOTE: 641 | kubescape-plataforma-seguranca-kubernetes-opa-regolibrary | Kubescape: plataforma CNCF Incubating de segurança Kubernetes com OPA e Regolibrary ===
+ONE_LINER: O Kubescape (projeto CNCF Incubating criado pela ARMO, sob licença Apache-2.0) é uma plataforma open-source de segurança Kubernetes que avalia clusters, manifestos YAML, Helm charts e repositórios Git contra frameworks como NSA-CISA, MITRE ATT&CK e CIS Benchmarks.
+IMPORTANCE: Ambientes Kubernetes sofrem frequentemente com configurações inseguras em manifestos de deploy (containers rodando como root, ausência de limites de recursos, RBAC excessivamente permissivo ou falta de NetworkPolicies) que abrem brechas desde o código até a produção. Segundo o README oficial do Kubescape, a ferramenta fornece cobertura completa de segurança "shift-left to runtime", combinando gerenciamento de postura (KSPM), hardening, varredura de vulnerabilidades e segurança em tempo de execução.
+HOW_IT_WORKS: No modo CLI standalone, o Kubescape utiliza o motor de avaliação de políticas **Open Policy Agent (OPA)** em conjunto com a **Regolibrary** (`kubescape/regolibrary`), uma biblioteca mantida pela comunidade com centenas de controles de segurança escritos em Rego e organizados em frameworks de conformidade (`nsa`, `mitre`, `cis-v1.23-t1.0.1`, entre outros). O comando `kubescape scan` pode inspecionar um cluster ativo via `kubeconfig`, arquivos YAML locais, diretórios Kustomize, gráficos Helm ou URLs de repositórios Git, calculando pontuações de conformidade (`--compliance-threshold`) e gerando relatórios em formatos `json`, `junit`, `sarif` (para GitHub Code Scanning), `html`, `pdf` ou `csv`.
+EXAMPLE:
+```bash
+# Escanear um cluster Kubernetes contra o framework NSA-CISA exigindo nota mínima de conformidade 80
+kubescape scan framework nsa --compliance-threshold 80
+
+# Escanear manifestos locais e exportar resultado em formato SARIF para CI/CD
+kubescape scan ./k8s-manifests/ --format sarif --output results.sarif
+```
+TRADE_OFFS: Executar `kubescape scan` diretamente em pipelines de CI sobre manifestos YAML estáticos (sem acesso ao cluster) valida excelentes práticas de segurança dos workloads, mas não consegue avaliar controles que dependem do estado vivo do control plane, da configuração de argumentos do `kube-apiserver`/`kubelet` nos nós ou de objetos RBAC já instalados no cluster; por isso, a varredura shift-left no Git deve ser complementada pela varredura in-cluster.
+VERIFY: Execute `kubescape list frameworks` e `kubescape list controls` para verificar a biblioteca de controles carregada e rode `kubescape scan` em um diretório de manifestos validando o código de saída (`0` quando acima do threshold, `1` quando abaixo).
+LINKS: [[kubescape-varredura-vulnerabilidades-imagens-grype-multi-arch]] | [[kubescape-auto-remediacao-fix-manifestos-patching-copacetic]] | [[kubescape-operador-in-cluster-monitoramento-continuo-helm]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 642 | kubescape-varredura-vulnerabilidades-imagens-grype-multi-arch | Kubescape: varredura de vulnerabilidades (CVEs) em imagens de container com Grype e inferência multi-arquitetura ===
+ONE_LINER: O subcomando `kubescape scan image` integra o motor Anchore Grype para detectar CVEs em imagens de container públicas ou privadas, com suporte a banco de vulnerabilidades offline e inferência de plataforma multi-arquitetura.
+IMPORTANCE: Um manifesto Kubernetes perfeitamente endurecido (non-root, read-only root filesystem) ainda pode ser comprometido se a imagem de container que ele executa contiver bibliotecas de sistema ou pacotes de linguagem com vulnerabilidades críticas conhecidas (CVEs). De acordo com o README oficial do Kubescape, unificar a análise de configuração do Kubernetes e a varredura de vulnerabilidades de imagens via Grype em uma única ferramenta simplifica a governança de segurança no CI/CD e no cluster.
+HOW_IT_WORKS: Ao executar `kubescape scan image <imagem>`, o Kubescape utiliza internamente o scanner **Grype** para inspecionar as camadas da imagem OCI e cruzar os pacotes instalados com o banco de dados de CVEs. Para imagens multi-arquitetura (image index), pode-se especificar explicitamente a variante com `--platform linux/amd64` ou `linux/arm64`; além disso, durante varreduras de workloads no cluster com `--scan-images`, o Kubescape consegue inferir automaticamente a plataforma da imagem a partir dos nós onde os pods estão agendados, `nodeSelector` e `nodeAffinity` (permitindo sobrescrever com `--image-platform`). Em ambientes air-gapped, o scanner pode apontar para um container local do banco Grype via `--grype-db-url`.
+EXAMPLE:
+```bash
+# Escanear uma variante específica de arquitetura de uma imagem de container com saída detalhada
+kubescape scan image nginx:1.27 --platform linux/amd64 -v
+
+# Escanear usando um banco de dados Grype offline rodando localmente na porta 8080
+docker run -d --rm -p 8080:8080 quay.io/kubescape/grype-offline-db:v6-latest
+kubescape scan image --grype-db-url http://localhost:8080/databases/ nginx:latest
+```
+TRADE_OFFS: Habilitar a varredura de imagens de todos os workloads durante um `kubescape scan` de cluster completo exige baixar e descompactar as camadas de cada imagem referenciada pelos pods, o que aumenta substancialmente o tempo de execução, o tráfego de rede e o uso de disco temporário em comparação com uma varredura puramente de manifestos YAML.
+VERIFY: Execute `kubescape scan image nginx:1.21` e confirme a exibição da tabela de vulnerabilidades encontradas agrupadas por severidade (`Critical`, `High`, `Medium`, `Low`) e disponibilidade de versão corrigida (`Fixed in`).
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-auto-remediacao-fix-manifestos-patching-copacetic]] | [[kubescape-execucao-offline-air-gapped-protecao-metadados]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 643 | kubescape-auto-remediacao-fix-manifestos-patching-copacetic | Kubescape: auto-remediação de manifestos (kubescape fix) e patching de imagens com Copacetic (kubescape patch) ===
+ONE_LINER: O Kubescape vai além da detecção ao corrigir automaticamente configurações inseguras em manifestos YAML (`kubescape fix`) e aplicar patches de segurança em imagens de container vulneráveis usando o Copacetic e BuildKit (`kubescape patch`).
+IMPORTANCE: Relatórios de segurança que apenas listam centenas de falhas de configuração YAML e CVEs de sistema operacional frequentemente acumulam backlog porque os desenvolvedores precisam descobrir manualmente qual campo adicionar no Deployment ou aguardar a equipe base reconstruir um Dockerfile inteiro. Segundo o README oficial do Kubescape, os subcomandos `fix` e `patch` automatizam a remediação tanto na camada de configuração quanto na camada de imagem OCI.
+HOW_IT_WORKS: Para auto-remediação de manifestos, o usuário primeiro executa `kubescape scan /caminho/manifestos --format json --output results.json` e em seguida roda `kubescape fix results.json` (com opções `--dry-run`, `--no-confirm` ou `--output-dir ./fixed` para preservar os originais; se o JSON veio de um scan de cluster vivo, os manifestos corrigidos são apenas impressos no stdout para eventual `kubectl apply -f -`). Para patching de imagens de container, o comando `kubescape patch --image <imagem> --tag <imagem-patched>` utiliza a ferramenta **Copacetic** e requer um daemon `buildkitd` ativo para atualizar apenas os pacotes de nível de sistema operacional vulneráveis em uma nova camada sobre a imagem existente, sem precisar do Dockerfile original.
+EXAMPLE:
+```bash
+# Gerar relatório JSON de manifestos locais e visualizar as correções automáticas em modo dry-run
+kubescape scan ./manifests --format json --output results.json
+kubescape fix results.json --dry-run
+
+# Aplicar patch de vulnerabilidades de SO em uma imagem usando buildkitd e Copacetic
+sudo buildkitd &
+sudo kubescape patch --image nginx:1.22 --tag nginx:1.22-patched -v
+```
+TRADE_OFFS: O `kubescape fix` aplica valores seguros recomendados nos manifestos (como `allowPrivilegeEscalation: false`, `runAsNonRoot: true` ou limites de recursos), o que pode quebrar aplicações legadas que realmente tentam escrever na raiz do filesystem ou iniciar processos como UID 0 se não forem validadas em staging; já o `kubescape patch` (via Copacetic) corrige apenas vulnerabilidades de pacotes de sistema operacional (apt/apk/yum), não atualizando bibliotecas de aplicação compiladas (como módulos Go, JARs Java ou pacotes npm).
+VERIFY: Após executar `kubescape fix results.json --output-dir ./fixed`, rode `kubescape scan ./fixed` novamente para comprovar a redução de controles falhos; para imagens, escaneie a tag gerada (`kubescape scan image nginx:1.22-patched`) e confirme a eliminação dos CVEs de SO corrigíveis.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-varredura-vulnerabilidades-imagens-grype-multi-arch]] | [[trivy-scanner-vulnerabilidades-containers-sbom-configuracoes]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 644 | kubescape-validating-admission-policies-cel-kubernetes | Kubescape: controle de admissão nativo com Validating Admission Policies (VAP) baseadas em CEL ===
+ONE_LINER: O subcomando `kubescape vap` implanta uma biblioteca de políticas CEL (Common Expression Language) e gera bindings de `ValidatingAdmissionPolicy` nativos do Kubernetes para bloquear recursos inseguros no `kube-apiserver`.
+IMPORTANCE: Escanear o cluster periodicamente detecta configurações inseguras depois que os pods já foram implantados, enquanto controladores de admissão baseados em webhooks HTTP externos adicionam latência às requisições da API e criam pontos únicos de falha se o pod do webhook cair. De acordo com o README oficial do Kubescape, o suporte a Validating Admission Policies (VAP) utiliza o mecanismo in-process do próprio Kubernetes baseado em CEL para impor controles da Regolibrary diretamente na admissão.
+HOW_IT_WORKS: O comando `kubescape vap deploy-library` gera os manifestos contendo o conjunto de regras `ValidatingAdmissionPolicy` traduzidas para expressões CEL, que podem ser aplicadas diretamente no cluster via `kubectl apply -f -`. Uma vez que a biblioteca está presente no cluster, o administrador ativa políticas específicas para namespaces ou tipos de recursos usando `kubescape vap create-policy-binding --name <nome> --policy <id-controle> --namespace <ns>`, criando objetos `ValidatingAdmissionPolicyBinding` que instruem o `kube-apiserver` a rejeitar ou auditar imediatamente qualquer `CREATE`/`UPDATE` que viole o controle (como `c-0016` — proibição de containers privilegiados).
+EXAMPLE:
+```bash
+# Implantar a biblioteca de Validating Admission Policies (CEL) do Kubescape no cluster
+kubescape vap deploy-library | kubectl apply -f -
+
+# Criar e aplicar um Policy Binding para o controle c-0016 em um namespace específico
+kubescape vap create-policy-binding \
+  --name bloquear-privilegiados-prod \
+  --policy c-0016 \
+  --namespace producao | kubectl apply -f -
+```
+TRADE_OFFS: As `ValidatingAdmissionPolicies` baseadas em CEL são avaliadas dentro do próprio processo do `kube-apiserver` com altíssima performance e sem dependência de webhooks de rede, porém exigem versões modernas do Kubernetes onde a API `admissionregistration.k8s.io/v1` (ou `v1beta1`) esteja habilitada e não suportam mutação de objetos nem consultas externas a registries de imagens durante a admissão.
+VERIFY: Verifique os recursos criados com `kubectl get validatingadmissionpolicies,validatingadmissionpolicybindings` e tente aplicar um Pod que viole o controle vinculado no namespace alvo para confirmar a rejeição imediata pelo `kube-apiserver`.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-operador-in-cluster-monitoramento-continuo-helm]] | [[kyverno-validating-admission-policy-cel-geracao]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 645 | kubescape-operador-in-cluster-monitoramento-continuo-helm | Kubescape Operator: monitoramento contínuo in-cluster de configuração, CVEs e runtime via Helm ===
+ONE_LINER: O Kubescape Operator (instalado via Helm chart `kubescape/kubescape-operator`) executa varreduras contínuas de configuração e vulnerabilidades de imagens em todos os workloads do cluster, além de análise de runtime com eBPF.
+IMPORTANCE: Um cluster Kubernetes é dinâmico: novos deployments são aplicados, imagens mudam, configurações de RBAC sofrem drift manual e novas vulnerabilidades (CVEs) são descobertas diariamente em imagens que já estavam rodando há semanas. Segundo a seção `Architecture` e `In-Cluster Operator` do README oficial do Kubescape, o modo Operator monitora continuamente o cluster e armazena os resultados como Custom Resources do Kubernetes para consulta via `kubectl`, CLI ou MCP server.
+HOW_IT_WORKS: Implantado no namespace `kubescape` através do Helm chart `kubescape/kubescape-operator`, o operador coordena múltiplos microsserviços internos no cluster: escaneamento contínuo de postura e configuração contra os frameworks NSA/MITRE/CIS, varredura de CVEs e geração de SBOMs para todas as imagens de container em execução, detecção de ameaças em tempo de execução baseada em eBPF, geração automática de `NetworkPolicies` e exportação de métricas para o Prometheus. Além dos agendamentos automáticos, o administrador pode disparar varreduras sob demanda no operador usando a CLI com `kubescape operator scan configurations` e `kubescape operator scan vulnerabilities`.
+EXAMPLE:
+```bash
+# Instalar o Kubescape Operator no cluster Kubernetes via Helm
+helm repo add kubescape https://kubescape.github.io/helm-charts/
+helm repo update
+helm upgrade --install kubescape kubescape/kubescape-operator \
+  --namespace kubescape \
+  --create-namespace
+
+# Disparar manualmente uma varredura de configurações e vulnerabilidades no operador
+kubescape operator scan configurations
+kubescape operator scan vulnerabilities
+```
+TRADE_OFFS: O Kubescape Operator armazena manifestos detalhados de vulnerabilidades, SBOMs e relatórios de configuração como objetos customizados no cluster (por meio de seu componente de storage/aggregated API server); em clusters com milhares de pods e imagens distintas, é fundamental dimensionar corretamente os recursos de memória e disco dos componentes do operador para evitar pressão sobre o armazenamento de estado.
+VERIFY: Verifique se todos os pods no namespace `kubescape` estão `Running` (`kubectl get pods -n kubescape`) e consulte os relatórios gerados no cluster após acionar `kubescape operator scan configurations`.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-monitoramento-runtime-ebpf-network-policies-prometheus]] | [[kubescape-mcp-server-integracao-agentes-ia]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 646 | kubescape-monitoramento-runtime-ebpf-network-policies-prometheus | Kubescape: detecção de ameaças em runtime com eBPF (Inspektor Gadget) e geração de NetworkPolicies ===
+ONE_LINER: No modo Operator, o Kubescape utiliza monitoramento em tempo de execução baseado em eBPF via Inspektor Gadget para detectar ameaças em containers, gerar perfis de aplicação, sintetizar `NetworkPolicies` e exportar métricas Prometheus.
+IMPORTANCE: Criar `NetworkPolicies` do Kubernetes manualmente para dezenas de microsserviços é propenso a erros que bloqueiam tráfego legítimo, e confiar apenas em varreduras estáticas de imagens não detecta ataques zero-day ou execuções anômalas em memória. De acordo com o README oficial do Kubescape, o operador combina telemetria eBPF em tempo real (construída sobre o Inspektor Gadget) para observar o comportamento real de cada workload e transformá-lo em políticas de rede e alertas de runtime.
+HOW_IT_WORKS: O agente de nó do Kubescape (executado como DaemonSet pelo `kubescape-operator`) utiliza o framework eBPF do **Inspektor Gadget** para observar chamadas de sistema, processos executados, arquivos abertos, capabilities utilizadas e conexões de rede de entrada e saída de cada pod durante um período de aprendizado. Com base nesse perfil comportamental observado no kernel, o Kubescape: (1) gera recomendações precisas de `NetworkPolicy` de menor privilégio refletindo apenas as comunicações reais do serviço; (2) identifica quais pacotes e arquivos da imagem são efetivamente carregados em memória (relevância de vulnerabilidades em runtime); e (3) dispara alertas de detecção de ameaças quando um container executa um processo, abre um arquivo ou estabelece uma conexão fora do seu perfil aprendido, além de expor a postura de segurança como métricas Prometheus.
+EXAMPLE:
+```bash
+# Verificar os pods do operador Kubescape (incluindo o agente de nó eBPF) e inspecionar objetos gerados
+kubectl get pods -n kubescape
+kubectl get networkneighborhoods,applicationprofiles -A
+```
+TRADE_OFFS: Para que a geração automática de `NetworkPolicies` e a detecção de anomalias baseada em perfis (`ApplicationProfile`) não gerem falsos positivos em produção, o período de aprendizado inicial precisa cobrir todos os fluxos legítimos do serviço (incluindo rotinas periódicas, jobs de backup e caminhos de erro raros); encerrar o aprendizado prematuramente fará com que tarefas agendadas legítimas sejam sinalizadas como comportamento anômalo.
+VERIFY: No cluster com o `kubescape-operator` ativo, verifique a criação dos recursos de perfil comportamental e de vizinhança de rede para os pods em execução e valide a exposição de métricas no endpoint Prometheus do operador.
+LINKS: [[kubescape-operador-in-cluster-monitoramento-continuo-helm]] | [[inspektor-integracao-biblioteca-golang-kubescape-ecossistema]] | [[cilium-network-policies-l3-l4-l7-identidade-seguranca]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 647 | kubescape-execucao-offline-air-gapped-protecao-metadados | Kubescape: operação offline/air-gapped (kubescape download) e proteção de metadados com pseudonimização e criptografia ===
+ONE_LINER: O Kubescape suporta ambientes totalmente desconectados via `kubescape download artifacts` / `--use-artifacts-from` e protege dados sensíveis de relatórios com pseudonimização determinística (`--hide`) ou criptografia (`--encrypt` / `kubescape decrypt`).
+IMPORTANCE: Clusters Kubernetes em setores financeiro, governamental, defesa e telecomunicações frequentemente operam em redes air-gapped sem acesso à internet para baixar a Regolibrary, e suas políticas de segurança da informação proíbem exportar relatórios JSON contendo nomes reais de namespaces, workloads e contas internas sem anonimização ou criptografia. O README oficial do Kubescape documenta comandos nativos tanto para operação offline quanto para proteção de metadados de relatórios.
+HOW_IT_WORKS: Para operação offline, o engenheiro executa em uma máquina conectada `kubescape download artifacts --output /caminho/offline` (ou `kubescape download framework nsa --output nsa.json`) para salvar localmente todos os frameworks e controles Rego, e depois executa a varredura no ambiente isolado passando `kubescape scan --use-artifacts-from /caminho/offline`. Para proteção de metadados em relatórios, a flag `--hide` aplica pseudonimização determinística aos identificadores sensíveis do cluster na saída, enquanto a flag `--encrypt` (usada com a variável de ambiente `KUBESCAPE_MASTER_KEY` contendo uma passphrase de pelo menos 16 caracteres) criptografa os metadados sensíveis dentro do relatório JSON, permitindo descriptografá-los posteriormente de forma autorizada com `kubescape decrypt encrypted-report.json`.
+EXAMPLE:
+```bash
+# Baixar artefatos de controles e frameworks para uso em ambiente air-gapped
+kubescape download artifacts --output ./kubescape-offline-artifacts
+kubescape scan --use-artifacts-from ./kubescape-offline-artifacts
+
+# Gerar relatório JSON com metadados sensíveis criptografados e descriptografar
+export KUBESCAPE_MASTER_KEY="minha-chave-mestra-segura-2026"
+kubescape scan --encrypt --format json --output encrypted-report.json
+kubescape decrypt encrypted-report.json > decrypted-report.json
+```
+TRADE_OFFS: Ao utilizar `--use-artifacts-from` em ambientes air-gapped, os controles de segurança avaliados ficam congelados na versão dos artefatos baixados; a equipe de segurança precisa estabelecer uma rotina periódica para atualizar o pacote de artefatos da Regolibrary e a imagem `quay.io/kubescape/grype-offline-db` para não ficar cega a novos controles do Kubernetes e novos CVEs.
+VERIFY: Execute `kubescape scan --hide --format json --output hidden.json` e inspecione o arquivo gerado para confirmar que os nomes reais dos recursos foram pseudonimizados de forma consistente.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-varredura-vulnerabilidades-imagens-grype-multi-arch]] | [[skopeo-sync-espelhamento-registries-air-gapped-yaml]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 648 | kubescape-mcp-server-integracao-agentes-ia | Kubescape: servidor MCP (Model Context Protocol) para consulta de vulnerabilidades e postura via agentes de IA ===
+ONE_LINER: O subcomando `kubescape mcpserver` inicia um servidor Model Context Protocol (MCP) que expõe os manifestos de vulnerabilidades (CVEs) e de varredura de configuração do cluster para assistentes de IA.
+IMPORTANCE: Em clusters com centenas de microsserviços, cruzar manualmente relatórios de configuração e listas de CVEs para responder perguntas como "quais deployments em produção possuem vulnerabilidades críticas com correção disponível e também rodam como root?" exige escrever múltiplos scripts `jq` sobre CRDs extensos. Segundo o README oficial do Kubescape, o servidor MCP integrado permite que assistentes de IA consultem diretamente a postura de segurança do cluster em linguagem natural usando ferramentas padronizadas.
+HOW_IT_WORKS: Quando executado com `kubescape mcpserver`, o binário do Kubescape conecta-se ao cluster Kubernetes onde o Kubescape Operator armazena seus relatórios de segurança e expõe cinco ferramentas MCP estruturadas para clientes compatíveis: `list_vulnerability_manifests` (descobre os manifestos de vulnerabilidade disponíveis), `list_vulnerabilities_in_manifest` (lista os CVEs contidos em um manifesto específico), `list_vulnerability_matches_for_cve` (obtém detalhes completos das ocorrências de um CVE específico), `list_configuration_security_scan_manifests` (lista os resultados de varreduras de segurança de configuração) e `get_configuration_security_scan_manifest` (retorna os detalhes de conformidade e controles falhos de um manifesto específico).
+EXAMPLE:
+```bash
+# Iniciar o servidor MCP do Kubescape para integração com assistentes de IA
+kubescape mcpserver
+```
+TRADE_OFFS: O servidor MCP do Kubescape lê os recursos customizados gerados pelo Kubescape Operator dentro do cluster usando as credenciais do `kubeconfig` local; portanto, ele requer que o operador in-cluster esteja instalado e com as varreduras de vulnerabilidades e configuração habilitadas, e o acesso ao `mcpserver` deve ser restrito a operadores autorizados, pois expõe o inventário completo de vulnerabilidades exploráveis do ambiente.
+VERIFY: Com o `kubescape-operator` ativo no cluster, inicie `kubescape mcpserver` em um cliente MCP e invoque a ferramenta `list_configuration_security_scan_manifests` para confirmar o retorno dos manifestos de scan do cluster.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-operador-in-cluster-monitoramento-continuo-helm]] | [[opencost-mcp-server-agentes-ia-ferramentas-custos]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 649 | kubescape-integracao-cicd-github-actions-gitlab-megalinter-sarif | Kubescape: integração em pipelines CI/CD com GitHub Actions, GitLab CI, Jenkins, MegaLinter e relatórios SARIF/JUnit ===
+ONE_LINER: O Kubescape integra-se a pipelines de CI/CD (GitHub Actions, GitLab CI, Jenkins e MegaLinter) utilizando limites de conformidade (`--compliance-threshold`) e severidade (`--severity-threshold`) com exportação em SARIF e JUnit XML.
+IMPORTANCE: Detectar que um manifesto Kubernetes ou Helm chart viola controles críticos do framework NSA-CISA ou MITRE apenas depois que ele foi aplicado em produção gera retrabalho e janelas de exposição desnecessárias. De acordo com o README oficial do Kubescape, embutir a validação diretamente nos pull requests (inclusive por meio de agregadores como o MegaLinter, que aciona o Kubescape automaticamente ao detectar arquivos Kubernetes) garante segurança shift-left contínua.
+HOW_IT_WORKS: Nos pipelines de integração contínua, a CLI `kubescape scan` avalia os arquivos YAML, diretórios Kustomize ou gráficos Helm modificados no repositório. O engenheiro de DevOps configura gates de aprovação usando `--compliance-threshold <0-100>` (que força código de saída `1` caso a pontuação do framework/controle ou da visão `--view resource|control` fique abaixo do mínimo exigido) ou `--severity-threshold <low|medium|high|critical>` (que falha o job se qualquer controle violado atingir a severidade especificada). Os resultados são gerados com `--format sarif --output results.sarif` para alimentar a aba Security / Code Scanning do GitHub ou `--format junit --output results.xml` para relatórios nativos de testes no GitLab CI e Jenkins.
+EXAMPLE:
+```bash
+# Comando de gate em pipeline CI/CD escaneando um Helm chart com threshold de severidade alta e saída JUnit
+kubescape scan ./charts/meu-servico/ \
+  --severity-threshold high \
+  --format junit \
+  --output kubescape-junit.xml
+```
+TRADE_OFFS: Definir `--severity-threshold medium` ou `--compliance-threshold 95` imediatamente em um repositório legado com dezenas de manifestos antigos bloqueará todos os deploys da equipe; a adoção eficaz em CI/CD recomenda começar com `--severity-threshold critical` (ou escaneando controles específicos com `kubescape scan control C-0005`), usar `kubescape fix` para sanear o passivo e elevar o threshold progressivamente.
+VERIFY: Execute o comando `kubescape scan` com `--compliance-threshold 100` sobre um manifesto de teste sem limites de recursos e confirme que o processo retorna código de saída não-zero (`echo $?` igual a `1`) e gera o arquivo `.sarif` ou `.xml`.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-auto-remediacao-fix-manifestos-patching-copacetic]] | [[github-actions-workflows-eventos-jobs-steps-runners]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape
+
+=== NOTE: 650 | kubescape-filtros-escopo-namespaces-controles-config-cache | Kubescape: filtragem de escopo por namespaces, execução de controles individuais e gerenciamento de cache ===
+ONE_LINER: A CLI do Kubescape permite restringir varreduras por inclusão/exclusão de namespaces (`--include-namespaces` / `--exclude-namespaces`), auditar controles isolados (`kubescape scan control`) e gerenciar configurações em cache (`kubescape config`).
+IMPORTANCE: Em clusters Kubernetes compartilhados de grande porte, escanear todos os namespaces (incluindo `kube-system`, `kube-public` e operadores de terceiros) quando uma equipe de produto deseja validar apenas seus ambientes `staging` e `production` desperdiça tempo e mistura alertas de infraestrutura com problemas da aplicação. O README oficial do Kubescape detalha as flags de escopo, seleção de controles e gerenciamento de cache local.
+HOW_IT_WORKS: Durante uma varredura de cluster, as flags `--include-namespaces production,staging` ou `--exclude-namespaces kube-system,kube-public` filtram os recursos coletados da API do Kubernetes (usando o contexto padrão ou um arquivo alternativo via `--kubeconfig /path/to/kubeconfig`). Quando o objetivo é verificar rapidamente a correção de uma única falha apontada anteriormente, o comando `kubescape scan control <ID-ou-nome> -v` (por exemplo, `C-0005`) avalia apenas aquela regra Rego em vez de rodar um framework inteiro. Já o subcomando `kubescape config` (`view`, `set`, `delete`) gerencia as configurações persistidas localmente em cache pelo cliente CLI.
+EXAMPLE:
+```bash
+# Escanear apenas namespaces de aplicação excluindo componentes de sistema e focar em um controle específico
+kubescape scan control C-0005 -v \
+  --include-namespaces production,staging \
+  --kubeconfig ~/.kube/config
+
+# Visualizar e limpar a configuração em cache da CLI do Kubescape
+kubescape config view
+kubescape config delete
+```
+TRADE_OFFS: Excluir o namespace `kube-system` com `--exclude-namespaces kube-system` é útil para relatórios voltados a equipes de desenvolvimento de aplicações, mas oculta problemas críticos de segurança de infraestrutura (como configurações permissivas do CoreDNS, proxies ou DaemonSets privilegiados); portanto, auditorias de segurança de plataforma devem sempre incluir o `kube-system` em uma execução separada.
+VERIFY: Execute `kubescape list controls --format json | jq '.[0]'` para identificar o ID de um controle e rode `kubescape scan control <ID> --include-namespaces default -v` para inspecionar a avaliação detalhada recurso por recurso.
+LINKS: [[kubescape-plataforma-seguranca-kubernetes-opa-regolibrary]] | [[kubescape-execucao-offline-air-gapped-protecao-metadados]] | [[kubescape-integracao-cicd-github-actions-gitlab-megalinter-sarif]]
+SOURCES: https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://kubescape.io/docs/operator/ | https://github.com/kubescape/kubescape

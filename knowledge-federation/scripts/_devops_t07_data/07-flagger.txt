@@ -1,0 +1,252 @@
+=== NOTE: 661 | flagger-entrega-progressiva-kubernetes-flux-cncf | Flux Flagger: operador CNCF Graduated de entrega progressiva para Kubernetes ===
+ONE_LINER: O Flagger (projeto graduado da CNCF e parte da família de ferramentas GitOps do Flux, sob licença Apache-2.0) é um operador de entrega progressiva que automatiza lançamentos em Kubernetes deslocando tráfego gradualmente enquanto mede métricas e executa testes.
+IMPORTANCE: Em um `Deployment` padrão do Kubernetes com `RollingUpdate`, assim que o novo pod passa no `readinessProbe` básico, o controlador substitui rapidamente todas as réplicas antigas sem verificar se a nova versão causou aumento na taxa de erros HTTP 500 ou degradação na latência P99 sob tráfego real. Segundo o README oficial do Flagger, a ferramenta reduz o risco de introduzir novas versões em produção ao automatizar análises de KPIs e rollbacks imediatos.
+HOW_IT_WORKS: O Flagger recebe como entrada um `Deployment` Kubernetes (e opcionalmente um `HorizontalPodAutoscaler`) por meio do recurso customizado `Canary` (`apiVersion: flagger.app/v1beta1`) e cria e gerencia automaticamente uma série de objetos no cluster: deployments primário (`<nome>-primary`) e canário, serviços `ClusterIP` (`-primary`, `-canary`, `-apex`) e rotas de Service Mesh ou Ingress. O controlador monitora continuamente tanto a imagem do container quanto os `ConfigMaps` e `Secrets` referenciados pelo Deployment; qualquer alteração nesses objetos dispara uma nova análise canário que sincroniza código e configuração apenas se as verificações de métricas e webhooks forem aprovadas.
+EXAMPLE:
+```bash
+# Instalar o Flagger e monitorar o progresso dos recursos Canary no cluster Kubernetes
+kubectl get canaries -A
+kubectl describe canary podinfo -n test
+```
+TRADE_OFFS: Como o Flagger assume o controle do roteamento e cria um deployment `<nome>-primary` espelhado a partir do `Deployment` alvo original, durante o estado estacionário (quando nenhum lançamento está ocorrendo) as réplicas do Deployment alvo original são mantidas em `0` e todo o tráfego de produção é atendido pelo `<nome>-primary`; equipes que não conhecem esse funcionamento podem estranhar ver `0/0` réplicas no Deployment original.
+VERIFY: Execute `kubectl get canaries -n test` e confirme que o recurso `Canary` atingiu o status `Initialized` (e `Succeeded` após uma promoção) e que o deployment `<nome>-primary` está atendendo o tráfego.
+LINKS: [[flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets]] | [[flagger-estrategias-canary-ab-testing-blue-green-mirroring]] | [[flagger-analise-metricas-prometheus-metrictemplate-kpis]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 662 | flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets | Flux Flagger: anatomia do CRD Canary, sincronização de ConfigMaps/Secrets e máquina de estados ===
+ONE_LINER: O recurso customizado `Canary` (`flagger.app/v1beta1`) define o `targetRef`, `autoscalerRef`, configuração de `service` e regras de `analysis` (`interval`, `threshold`, `maxWeight`, `stepWeight`), monitorando inclusive mudanças em `ConfigMaps` e `Secrets`.
+IMPORTANCE: Muitos incidentes graves em produção não decorrem de uma nova imagem de container, mas sim de uma alteração incorreta em um `ConfigMap` ou `Secret` que é aplicada imediatamente a todos os pods existentes. De acordo com o README oficial do Flagger (`Canary CRD`), o operador rastreia todos os `ConfigMaps` e `Secrets` referenciados pelo Deployment e dispara automaticamente uma análise canário controlada quando qualquer um deles muda, promovendo código e configuração de forma atômica.
+HOW_IT_WORKS: Ao criar o objeto `Canary`, o Flagger clona o Deployment em `targetRef` para `<nome>-primary` (assim como clonagens `-primary` dos `ConfigMaps` e `Secrets` montados) e escala o Deployment original para zero. Quando uma nova versão de imagem, `ConfigMap` ou `Secret` é detectada no alvo, o Flagger escala a implantação canário, aguarda os pods ficarem prontos dentro de `progressDeadlineSeconds` (padrão `600s`) e, a cada `analysis.interval` (padrão `60s`), incrementa o peso de tráfego do canário em `stepWeight` até atingir `maxWeight`, validando as métricas a cada passo. Se o número de falhas atingir `threshold`, o Flagger aborta a entrega, zera o tráfego do canário e marca o rollout como `Failed`; se atingir `maxWeight` sem falhas, promove a nova especificação para o `<nome>-primary`, redireciona 100% do tráfego de volta ao primário e recolhe o canário para zero.
+EXAMPLE:
+```yaml
+# Especificação essencial do CRD Canary do Flagger com targetRef, autoscalerRef e analysis
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  provider: istio
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  progressDeadlineSeconds: 60
+  autoscalerRef:
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: podinfo
+  service:
+    port: 9898
+    targetPort: 9898
+    portDiscovery: true
+  analysis:
+    interval: 1m
+    threshold: 10
+    maxWeight: 50
+    stepWeight: 5
+```
+TRADE_OFFS: Durante a janela de análise e promoção (especialmente no momento em que o `<nome>-primary` recebe a atualização final antes do canário ser escalado de volta para zero), o cluster precisa ter capacidade livre de CPU e memória para acomodar simultaneamente as réplicas do primário e as réplicas do canário.
+VERIFY: Altere um valor no `ConfigMap` referenciado pelo Deployment `podinfo` e observe com `kubectl get canary podinfo -w` a transição automática de estado para `Progressing`, seguida pelo incremento gradual de `Canary Weight` até `Succeeded`.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-estrategias-canary-ab-testing-blue-green-mirroring]] | [[flux-gitops-toolkit-source-kustomize-helm-notification]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 663 | flagger-estrategias-canary-ab-testing-blue-green-mirroring | Flux Flagger: estratégias de implantação Canary, A/B Testing e Blue/Green com Traffic Mirroring ===
+ONE_LINER: O Flagger implementa múltiplas estratégias de entrega progressiva: lançamentos Canary (deslocamento gradual de peso), A/B Testing (roteamento por cabeçalhos HTTP e cookies) e Blue/Green (chaveamento de tráfego ou espelhamento/shadowing).
+IMPORTANCE: Nem toda aplicação pode receber divisão percentual aleatória de tráfego: frontends web que exigem consistência visual para um mesmo usuário logado precisam de A/B testing baseado em cookies ou headers, enquanto aplicações em clusters sem Service Mesh ou Ingress com suporte a pesos precisam de validação Blue/Green tradicional ou espelhamento de tráfego (traffic mirroring) sem impacto nas respostas de produção. O README oficial do Flagger documenta a matriz completa de estratégias suportadas.
+HOW_IT_WORKS: A estratégia é determinada pelos parâmetros em `spec.analysis`: (1) **Canary (weighted traffic)**: utiliza `stepWeight` e `maxWeight` para deslocar percentuais crescentes de tráfego em provedores de Service Mesh, Ingress ou Gateway API; (2) **A/B Testing**: utiliza `iterations` em conjunto com `match` (condições de cabeçalhos HTTP ou cookies de sessão) para rotear 100% dos usuários que atendem ao critério para o canário durante `N` ciclos de avaliação; (3) **Blue/Green (traffic switch)**: funciona até mesmo com CNI padrão do Kubernetes (`provider: kubernetes`), executando testes de conformidade e carga contra o serviço `-canary` em `iterations` antes de virar a chave do seletor Kubernetes de uma só vez para o primário atualizado; e (4) **Blue/Green com Traffic Mirroring**: suportado no Istio, duplica uma cópia sombra do tráfego real de produção para o canário sem afetar os clientes enquanto mede taxas de sucesso e latência.
+EXAMPLE:
+```yaml
+# Trecho de spec.analysis no Flagger para estratégia A/B Testing roteando por Header HTTP ou Cookie
+  analysis:
+    interval: 1m
+    iterations: 10
+    threshold: 2
+    match:
+      - headers:
+          x-canary:
+            exact: "insider"
+      - headers:
+          cookie:
+            regex: "^(.*?;)?(type=insider)(;.*)?$"
+```
+TRADE_OFFS: O espelhamento de tráfego (Blue/Green traffic mirroring) só deve ser habilitado em serviços idempotentes de leitura ou cujos efeitos colaterais em bancos de dados e filas externas estejam isolados/mockados na versão canário, pois cada requisição de produção será processada duas vezes (uma pelo primário e outra em segundo plano pelo canário).
+VERIFY: Inspecione os recursos de roteamento gerados pelo Flagger (como `VirtualService` do Istio ou `HTTPRoute` da Gateway API) durante um rollout ativo para confirmar a presença das regras de peso (`weight`), cabeçalhos (`match`) ou espelhamento (`mirror`).
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets]] | [[flagger-integracao-service-mesh-ingress-gateway-api-smi]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 664 | flagger-integracao-service-mesh-ingress-gateway-api-smi | Flux Flagger: matriz de integrações com Service Meshes, Ingress Controllers, Gateway API e SMI ===
+ONE_LINER: O Flagger integra-se nativamente com Service Meshes (Istio, Linkerd, Kuma, Knative), Ingress Controllers (Contour, Gloo, NGINX, Skipper, Traefik, Apache APISIX), Kubernetes CNI e padrões Gateway API (`gatewayapi:v1`) e SMI.
+IMPORTANCE: Organizações adotam diferentes camadas de rede em seus clusters Kubernetes — desde malhas completas como Istio e Linkerd até Ingress Controllers leves como NGINX, Traefik ou APISIX, ou a especificação oficial Kubernetes Gateway API. Segundo o README oficial do Flagger, o campo `spec.provider` abstrai essas diferenças, permitindo usar o mesmo CRD `Canary` independentemente da tecnologia de roteamento subjacente.
+HOW_IT_WORKS: De acordo com o valor configurado em `spec.provider` (`kubernetes`, `istio`, `linkerd`, `kuma`, `knative`, `nginx`, `contour`, `gloo`, `traefik`, `skipper`, `apisix`, `gatewayapi:v1`, `gatewayapi:v1beta1` ou `smi`), o reconciliador do Flagger gera automaticamente os objetos de rede específicos daquele provedor (por exemplo, `VirtualService` e `DestinationRule` no Istio, `TrafficSplit` no Linkerd/SMI, anotações canary de `Ingress` no NGINX, ou `HTTPRoute` com `backendRefs` ponderados na Gateway API) apontando para os serviços `<nome>-primary` e `<nome>-canary`.
+EXAMPLE:
+```yaml
+# Configuração do provedor Gateway API v1 em um recurso Canary do Flagger
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  provider: gatewayapi:v1
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  service:
+    port: 9898
+    gatewayRefs:
+      - name: main-gateway
+        namespace: infra-gateway
+```
+TRADE_OFFS: Nem todos os provedores suportam todas as funcionalidades na matriz oficial do Flagger: por exemplo, `kubernetes` CNI suporta apenas Blue/Green com chaveamento de tráfego (sem pesos graduais nem A/B testing); Blue/Green com traffic mirroring é exclusivo do Istio; e para implementações da Gateway API e NGINX Ingress que não possuem as métricas L7 embutidas padrão, deve-se utilizar `MetricTemplates` customizados do Prometheus para verificar taxa de sucesso e duração de requisições.
+VERIFY: Execute `kubectl get httproutes,virtualservices,ingresses -n test` após a inicialização do `Canary` para confirmar que o Flagger gerou o recurso de roteamento nativo do provedor especificado em `spec.provider`.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-estrategias-canary-ab-testing-blue-green-mirroring]] | [[flagger-analise-metricas-prometheus-metrictemplate-kpis]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 665 | flagger-analise-metricas-prometheus-metrictemplate-kpis | Flux Flagger: validação de KPIs com verificações nativas e MetricTemplates customizados no Prometheus ===
+ONE_LINER: Durante a análise canário, o Flagger valida indicadores de nível de serviço (SLIs) através das verificações nativas `request-success-rate` e `request-duration` e de consultas customizadas definidas em recursos `MetricTemplate`.
+IMPORTANCE: Deslocar tráfego em passos de 5% só protege a produção se o operador souber medir objetivamente se o novo pod está saudável tanto em métricas HTTP de camada 7 quanto em métricas de negócio e infraestrutura (como conexões de banco de dados, filas pendentes ou erros gRPC). Segundo o README oficial do Flagger, o bloco `spec.analysis.metrics` avalia cada métrica contra `thresholdRange` (`min` / `max`) a cada ciclo e incrementa o contador de falhas se os limites forem violados.
+HOW_IT_WORKS: O Flagger inclui duas verificações embutidas para Prometheus na maioria dos provedores de Service Mesh e Ingress: `request-success-rate` (porcentagem mínima de respostas não-5xx, por exemplo `min: 99`) e `request-duration` (latência máxima P99 em milissegundos, por exemplo `max: 500`). Para qualquer outra métrica — ou para implementar checagens de sucesso e latência em provedores Gateway API e NGINX —, o engenheiro cria um CRD `MetricTemplate` contendo a consulta PromQL parametrizada (com variáveis como `{{ target }}`, `{{ namespace }}`, `{{ interval }}`) e a referencia em `spec.analysis.metrics[].templateRef`.
+EXAMPLE:
+```yaml
+# Definição de métricas nativas e referência a MetricTemplate customizado em um Canary do Flagger
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+        interval: 1m
+      - name: request-duration
+        thresholdRange:
+          max: 500
+        interval: 30s
+      - name: "database connections"
+        templateRef:
+          name: db-connections
+        thresholdRange:
+          min: 2
+          max: 100
+        interval: 1m
+```
+TRADE_OFFS: Se a implantação canário não receber nenhuma requisição durante a janela de análise (por exemplo, em um ambiente de homologação sem tráfego de usuários reais e sem webhook de `flagger-loadtester`), as consultas PromQL de taxa de sucesso `rate(...)` retornarão vazio (`NaN`/no data), o que o Flagger trata como falha de verificação de métrica, levando ao rollback do rollout por ausência de tráfego de validação.
+VERIFY: Durante um rollout canário, acompanhe os eventos do recurso com `kubectl describe canary <nome>` para confirmar que as checagens `request-success-rate`, `request-duration` e os `MetricTemplates` estão retornando valores dentro do `thresholdRange`.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-webhooks-testes-carga-conformidade-manual-gating]] | [[prometheus-promql-seletores-vetores-operadores-agregacao]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 666 | flagger-webhooks-testes-carga-conformidade-manual-gating | Flux Flagger: webhooks de ciclo de vida, geração de tráfego com loadtester, Helm test e manual gating ===
+ONE_LINER: O Flagger suporta webhooks HTTP em múltiplas fases do lançamento (`pre-rollout`, `rollout`, `confirm-rollout`, `post-rollout`, `rollback`) para executar testes de conformidade (Helm/ smoke tests), testes de carga (`flagger-loadtester`) e aprovação manual (manual gating).
+IMPORTANCE: Em ambientes de baixa movimentação noturna ou clusters de staging, não há tráfego orgânico suficiente para gerar métricas estatisticamente válidas no Prometheus durante a janela canário; além disso, equipes críticas frequentemente exigem rodar uma suíte de testes de aceitação antes de abrir tráfego ou exigir aprovação humana (gate manual) antes da promoção. O README oficial do Flagger demonstra como os `webhooks` resolvem esses cenários.
+HOW_IT_WORKS: Na lista `spec.analysis.webhooks`, o Flagger faz chamadas HTTP POST para serviços externos ou para o componente oficial `flagger-loadtester` / `flagger-helmtester` em momentos específicos da máquina de estados: (1) webhooks `pre-rollout` executam testes de conformidade ou smoke tests (como `helm test run podinfo -n test`) contra a instância canário antes de rotear qualquer tráfego real; (2) webhooks `rollout` geram tráfego sintético contínuo durante a análise (por exemplo, executando `hey -z 1m -q 10 -c 2` via `flagger-loadtester`) para alimentar as métricas L7; e (3) webhooks de gating manual permitem pausar, aprovar ou retomar (`approve/pause/resume`) a promoção do rollout.
+EXAMPLE:
+```yaml
+# Configuração de webhooks de conformidade (pre-rollout com helmv3) e teste de carga (rollout com hey) no Flagger
+    webhooks:
+      - name: "conformance test"
+        type: pre-rollout
+        url: http://flagger-helmtester.test/
+        timeout: 5m
+        metadata:
+          type: "helmv3"
+          cmd: "test run podinfo -n test"
+      - name: "load test"
+        type: rollout
+        url: http://flagger-loadtester.test/
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://podinfo.test:9898/"
+```
+TRADE_OFFS: O serviço `flagger-loadtester` executa comandos arbitrários passados no campo `metadata.cmd` do webhook (como utilitários `hey`, `curl`, `grpc_health_probe` ou `helm`); portanto, em clusters compartilhados, o pod do `flagger-loadtester` deve ter uma `ServiceAccount` com RBAC estritamente mínimo e ser isolado por `NetworkPolicy` para evitar que usuários mal-intencionados abusem da execução de comandos via manifesto `Canary`.
+VERIFY: Verifique os logs do pod `flagger-loadtester` (`kubectl logs deploy/flagger-loadtester -n test`) durante uma análise canário ativa para confirmar o recebimento do payload do webhook e a execução bem-sucedida dos comandos `pre-rollout` e `rollout`.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-analise-metricas-prometheus-metrictemplate-kpis]] | [[flagger-alertas-notificacoes-slack-teams-discord-flux]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 667 | flagger-alertas-notificacoes-slack-teams-discord-flux | Flux Flagger: alertas de entregas progressivas para Slack, Microsoft Teams, Discord e Flux Notification API ===
+ONE_LINER: O Flagger emite eventos Kubernetes e notificações em tempo real sobre o andamento, avisos e rollbacks de análises canário para Slack, Microsoft Teams, Discord, Rocket e Google Chat através de `AlertProvider` e `alerts` por Canary.
+IMPORTANCE: Como a promoção ou o rollback automático de um lançamento canário no Flagger ocorre de forma autônoma em segundo plano ao longo de vários minutos, a equipe de desenvolvimento e o engenheiro de plantão precisam ser avisados imediatamente se um deploy falhar nas checagens de métricas P99 ou sofrer rollback automático. De acordo com o README oficial do Flagger, o bloco `spec.analysis.alerts` permite rotear alertas filtrados por severidade (`info`, `warn`, `error`) para diferentes canais de chat.
+HOW_IT_WORKS: O administrador declara objetos `AlertProvider` especificando o tipo de canal (`slack`, `msteams`, `discord`, `rocket`, `gchat`), o endereço do webhook (ou `secretRef` contendo a URL do webhook) e o canal de destino. Em seguida, dentro do recurso `Canary`, a seção `spec.analysis.alerts` vincula diferentes públicos a diferentes níveis de severidade via `providerRef`: por exemplo, enviando apenas erros críticos de rollback (`severity: error`) para o Slack da equipe de desenvolvimento, avisos de falha de métrica individual (`severity: warn`) para o Discord de QA, e todos os eventos informativos de início/sucesso (`severity: info`) para o MS Teams do plantão.
+EXAMPLE:
+```yaml
+# Configuração de alertas por severidade dentro de um recurso Canary do Flagger
+    alerts:
+      - name: "dev team Slack"
+        severity: error
+        providerRef:
+          name: dev-slack
+          namespace: flagger
+      - name: "qa team Discord"
+        severity: warn
+        providerRef:
+          name: qa-discord
+      - name: "on-call MS Teams"
+        severity: info
+        providerRef:
+          name: on-call-msteams
+```
+TRADE_OFFS: Configurar `severity: info` no canal principal de resposta a incidentes em um cluster com dezenas de deploys diários gera fadiga de alertas (pois cada novo rollout emite mensagens de início, avanço e conclusão); recomenda-se reservar `severity: error` para canais de plantão/incidentes e manter `severity: info` em canais dedicados de log de auditoria de releases.
+VERIFY: Aplique um `AlertProvider` válido vinculado ao recurso `Canary`, dispare uma atualização de imagem no Deployment alvo e confirme o recebimento das notificações no canal configurado e nos eventos do Kubernetes (`kubectl get events`).
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets]] | [[flux-gitops-toolkit-source-kustomize-helm-notification]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 668 | flagger-integracao-hpa-autoscaling-primario-canario | Flux Flagger: coordenação de HorizontalPodAutoscaler (HPA) entre implantações primária e canário ===
+ONE_LINER: Por meio do campo `spec.autoscalerRef`, o Flagger gerencia um `HorizontalPodAutoscaler` espelhado (`<nome>-primary`) para que a implantação primária e a canário escalem horizontalmente de forma independente e segura durante e após rollouts.
+IMPORTANCE: Se um `HorizontalPodAutoscaler` (HPA) apontar apenas para o `Deployment` original enquanto o Flagger transfere 100% do tráfego de produção para o deployment gerenciado `<nome>-primary`, a aplicação em produção ficará sem autoscaling e cairá sob picos de carga. Segundo o README oficial do Flagger (`Canary CRD`), referenciar o HPA em `spec.autoscalerRef` instrui o Flagger a sincronizar automaticamente o escalonador horizontal entre o canário e o primário.
+HOW_IT_WORKS: Quando `spec.autoscalerRef` aponta para um `HorizontalPodAutoscaler` (`autoscaling/v2`), o Flagger cria na inicialização um HPA correspondente chamado `<nome>-primary` apontando para o deployment `<nome>-primary`. Durante o estado estacionário, o HPA primário escala os pods de produção normalmente com base no tráfego, enquanto o Deployment canário permanece com zero réplicas e seu HPA original fica inativo/pausado. Quando uma análise canário se inicia, o Flagger ativa o escalonamento do canário e, ao promover uma nova versão (incluindo eventuais alterações de `minReplicas`, `maxReplicas` ou métricas no HPA original), sincroniza a especificação atualizada do HPA para o `<nome>-primary`.
+EXAMPLE:
+```yaml
+# Referência ao HorizontalPodAutoscaler v2 dentro do recurso Canary do Flagger
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  autoscalerRef:
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: podinfo
+```
+TRADE_OFFS: Para que o Flagger não entre em conflito com ferramentas de GitOps (como Flux ou Argo CD) que tentam reconciliar o `replicas` do Deployment original para um número fixo (como `replicas: 3`) enquanto o Flagger o mantém em `0`, o manifesto do Deployment no Git deve omitir o campo `spec.replicas` quando gerenciado em conjunto com um HPA e o Flagger.
+VERIFY: Execute `kubectl get hpa -n test` após inicializar o `Canary` e confirme a existência tanto do HPA original `podinfo` quanto do HPA gerenciado `podinfo-primary` apontando para `Deployment/podinfo-primary`.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets]] | [[kubernetes-autoscaling-hpa-vpa-cluster-autoscaler]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 669 | flagger-configuracao-servico-port-discovery-timeouts-rewrites | Flux Flagger: configuração de serviços ClusterIP, portDiscovery, timeouts e regras HTTP no Canary ===
+ONE_LINER: O bloco `spec.service` do CRD `Canary` governa a geração dos serviços `ClusterIP` (`-primary`, `-canary` e `-apex`), descoberta automática de portas (`portDiscovery`) e políticas L7 de roteamento (`match`, `rewrite`, `timeout`, `retries`).
+IMPORTANCE: Microsserviços reais frequentemente expõem múltiplas portas além da porta HTTP principal (como uma porta de métricas Prometheus, uma porta de healthcheck administrativa ou uma porta gRPC) e exigem timeouts e reescritas de URI específicos no Service Mesh ou Ingress. De acordo com o README oficial do Flagger, o bloco `spec.service` centraliza a geração tanto dos Services Kubernetes quanto das regras HTTP do provedor de malha/ingress.
+HOW_IT_WORKS: Quando o Flagger reconcilia `spec.service`, ele cria três serviços `ClusterIP`: `<nome>-primary` (selecionando os pods primários), `<nome>-canary` (selecionando os pods canário) e `<nome>` (o serviço apex). O administrador define `port` (porta do ClusterIP), `targetPort` (nome ou número da porta do container) e `portName` (`http` ou `grpc`, padrão `http`). Quando `portDiscovery: true` (padrão `false`) é habilitado, o Flagger inspeciona o pod template do Deployment e adiciona automaticamente todas as demais portas declaradas nos containers aos serviços ClusterIP gerados. Além disso, os campos `match` (ex.: `uri.prefix`), `rewrite` e `timeout` (ex.: `5s`) são propagados diretamente para o `VirtualService`, `HTTPRoute` ou `Ingress`.
+EXAMPLE:
+```yaml
+# Configuração detalhada de spec.service com portDiscovery, match, rewrite e timeout no Flagger
+  service:
+    name: podinfo
+    port: 9898
+    targetPort: 9898
+    portName: http
+    portDiscovery: true
+    match:
+      - uri:
+          prefix: /
+    rewrite:
+      uri: /
+    timeout: 5s
+```
+TRADE_OFFS: Se `portDiscovery` for mantido no valor padrão `false` e os pods expuserem uma porta secundária (como `9090` para métricas ou `8081` para administração) que outros serviços do cluster tentam acessar via Service Kubernetes, essas portas secundárias não existirão nos serviços `<nome>-primary` e `<nome>-canary` a menos que `portDiscovery: true` ou `port` explícito seja configurado.
+VERIFY: Execute `kubectl get svc -n test` após a criação do `Canary` e inspecione com `kubectl describe svc podinfo-primary -n test` se a porta principal e as portas descobertas via `portDiscovery: true` estão mapeadas para os endpoints corretos.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-crd-canary-ciclo-vida-promocao-configmaps-secrets]] | [[flagger-integracao-service-mesh-ingress-gateway-api-smi]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger
+
+=== NOTE: 670 | flagger-monitoramento-operacional-skip-analysis-session-affinity | Flux Flagger: operação em produção com skipAnalysis, afinidade de sessão em Gateway API e compatibilidade GitOps Toolkit ===
+ONE_LINER: O Flagger oferece controles operacionais como `skipAnalysis: true` para promoções emergenciais diretas, suporte a afinidade de sessão em lançamentos canário via Gateway API e integração contínua com o GitOps Toolkit do Flux v2.
+IMPORTANCE: Durante a mitigação de uma vulnerabilidade crítica ou incidente severo em produção (hotfix), aguardar 20 minutos de passos graduais de análise canário é inaceitável; da mesma forma, aplicações stateful de borda que usam Gateway API exigem afinidade de sessão (sticky sessions) durante o deslocamento de pesos para que um mesmo cliente não alterne entre as versões primária e canário a cada clique. O README oficial do Flagger documenta tanto o controle `skipAnalysis` quanto os recursos de Gateway API e roadmap do GitOps Toolkit.
+HOW_IT_WORKS: Quando `spec.skipAnalysis: true` (padrão `false`) é definido no manifesto `Canary`, o Flagger ignora a avaliação gradual de métricas e webhooks e promove imediatamente a nova versão do Deployment, `ConfigMap` e `Secret` diretamente para o `<nome>-primary`. Para cenários com `provider: gatewayapi:v1`, conforme a tabela de recursos de Networking Interface do README do Flagger, há suporte a implantações canário com afinidade de sessão (`Canary deployments with session affinity`), garantindo persistência de roteamento entre primário e canário. Além disso, o próprio operador Flagger expõe métricas Prometheus sobre o status de todos os canários e integra-se ao ecossistema Flux v2 (`kstatus`, eventos compatíveis com Flux notification API).
+EXAMPLE:
+```bash
+# Aplicar promoção imediata de emergência ignorando a análise gradual (skipAnalysis: true) via patch ou GitOps
+kubectl patch canary podinfo -n test --type=merge -p '{"spec":{"skipAnalysis":true}}'
+
+# Verificar métricas operacionais expostas pelo próprio controlador do Flagger na porta 8080
+kubectl port-forward -n flagger-system deploy/flagger 8080:8080 &
+curl -s http://localhost:8080/metrics | grep flagger_canary_
+```
+TRADE_OFFS: Habilitar `skipAnalysis: true` para aplicar um hotfix emergencial desativa toda a rede de proteção de validação de métricas e rollback automático; se não for revertido para `skipAnalysis: false` no repositório Git logo após o incidente, os próximos lançamentos rotineiros continuarão indo direto para 100% do tráfego sem análise canário.
+VERIFY: Consulte as métricas `flagger_canary_status` e `flagger_canary_weight` no endpoint `/metrics` do controlador Flagger e confirme que o status do recurso `Canary` reflete fielmente as promoções e o peso atual de tráfego.
+LINKS: [[flagger-entrega-progressiva-kubernetes-flux-cncf]] | [[flagger-integracao-service-mesh-ingress-gateway-api-smi]] | [[flux-gitops-toolkit-source-kustomize-helm-notification]]
+SOURCES: https://raw.githubusercontent.com/fluxcd/flagger/main/README.md | https://docs.flagger.app/main/usage/how-it-works | https://github.com/fluxcd/flagger

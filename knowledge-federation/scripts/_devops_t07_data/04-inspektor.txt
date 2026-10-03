@@ -1,0 +1,156 @@
+=== NOTE: 631 | inspektor-framework-ebpf-inspecao-kubernetes-linux | Inspektor Gadget: conjunto de ferramentas e framework eBPF para inspeção em Kubernetes e Linux ===
+ONE_LINER: O Inspektor Gadget (licenciado sob Apache-2.0 para user-space e GPL-2.0 para templates BPF) é um conjunto de ferramentas e framework para coleta de dados e inspeção de sistemas em clusters Kubernetes e hosts Linux usando eBPF.
+IMPORTANCE: Diagnosticar problemas complexos de baixo nível em clusters Kubernetes — como falhas intermitentes de resolução DNS, arquivos abertos por containers efêmeros, drops de pacotes TCP ou chamadas de sistema bloqueadas — usando ferramentas tradicionais de Linux exige instalar pacotes de depuração em cada nó e traduzir manualmente números de PID e inodes para nomes de pods. Segundo o README oficial do Inspektor Gadget, o projeto gerencia o empacotamento, a implantação e a execução de programas eBPF encapsulados em imagens OCI (chamados Gadgets), enriquecendo automaticamente os dados do kernel com recursos de alto nível do Kubernetes.
+HOW_IT_WORKS: O Inspektor Gadget fornece uma arquitetura modular que opera tanto em clusters Kubernetes (através do plugin `kubectl-gadget` e de um DaemonSet no cluster) quanto diretamente em hosts Linux e containers (via binário `ig`), além de permitir controle remoto a partir de macOS ou Windows via `gadgetctl` ou incorporação direta como biblioteca Golang. Para executar os Gadgets oficiais desenvolvidos pelo projeto, o nó hospedeiro precisa rodar pelo menos o kernel Linux 5.10 com suporte a BTF (BPF Type Format) habilitado, permitindo que os programas eBPF sejam compilados uma vez (CO-RE — Compile Once – Run Everywhere) e carregados com segurança em diferentes versões de kernel.
+EXAMPLE:
+```bash
+# Instalação do plugin kubectl-gadget via krew, implantação no cluster e execução do Gadget trace_open
+kubectl krew install gadget
+kubectl gadget deploy
+kubectl gadget run trace_open:latest
+```
+TRADE_OFFS: Como os Gadgets carregam programas eBPF diretamente no kernel Linux do nó hospedeiro, o DaemonSet do Inspektor Gadget no Kubernetes (ou a execução do binário `ig` no Linux) requer privilégios elevados (`sudo` / container `--privileged`) e um kernel >= 5.10 com BTF habilitado; em nós com kernels antigos sem BTF, os Gadgets baseados em CO-RE não poderão ser carregados sem suporte específico.
+VERIFY: Após executar `kubectl gadget deploy`, verifique se os pods do DaemonSet `gadget` estão `Running` no namespace `gadget` e execute `kubectl gadget version` para confirmar que cliente e servidor estão sincronizados.
+LINKS: [[inspektor-gadgets-imagens-oci-build-artifact-hub]] | [[inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf]] | [[inspektor-modos-operacao-kubectl-gadget-ig-linux-gadgetctl]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 632 | inspektor-gadgets-imagens-oci-build-artifact-hub | Inspektor Gadget: empacotamento de programas eBPF em imagens OCI (Gadgets) e distribuição via Artifact Hub ===
+ONE_LINER: No Inspektor Gadget, um Gadget é uma imagem OCI padrão que encapsula um ou mais programas eBPF, um arquivo YAML de metadados e, opcionalmente, módulos WebAssembly (WASM) para pós-processamento.
+IMPORTANCE: Historicamente, distribuir ferramentas eBPF exigia compilar código C no próprio servidor alvo com cabeçalhos do kernel instalados (como nas ferramentas BCC clássicas) ou atualizar todo o binário do agente sempre que um novo script de rastreamento era criado. De acordo com a documentação oficial do Inspektor Gadget (introduzida a partir da v0.31.0 com image-based gadgets), empacotar programas eBPF como imagens OCI permite armazená-los, versioná-los e assiná-los em qualquer registry de containers compatível com a especificação OCI, além de compartilhá-los no Artifact Hub.
+HOW_IT_WORKS: Um desenvolvedor escreve o código eBPF em C (utilizando BTF e CO-RE) e define um arquivo de metadados YAML descrevendo os mapas, campos, parâmetros e operadores associados; em seguida, executa o comando `ig image build` para compilar o bytecode eBPF (e eventual módulo WASM) e empacotá-lo em camadas de uma imagem OCI. O artefato resultante pode ser enviado via `ig image push` para registries como GHCR, Docker Hub ou registries privados e executado em qualquer nó Linux ou cluster Kubernetes simplesmente referenciando sua tag (por exemplo, `trace_open:latest` ou `ghcr.io/inspektor-gadget/gadget/trace_dns:latest`).
+EXAMPLE:
+```bash
+# Construir uma imagem OCI de um Gadget a partir do diretório local e listar imagens locais com o binário ig
+sudo ig image build -t meu-registry.local/gadgets/trace_custom:v1 .
+sudo ig image list
+
+# Executar um Gadget diretamente a partir de sua imagem OCI
+sudo ig run trace_open:latest
+```
+TRADE_OFFS: Como a execução de uma imagem OCI de Gadget envolve carregar bytecode eBPF diretamente no kernel do nó, puxar imagens de registries externos não confiáveis sem verificação representa um risco severo de segurança; por isso, em ambientes de produção, é essencial habilitar os mecanismos de verificação de assinatura de imagens e restrição de Gadgets permitidos do Inspektor Gadget.
+VERIFY: Execute `sudo ig image list` ou `sudo ig image inspect trace_open:latest` para verificar as camadas da imagem OCI do Gadget (bytecode eBPF, metadados e digest SHA-256).
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-webassembly-wasm-pos-processamento-operadores]] | [[inspektor-seguranca-verificacao-assinaturas-sbom-restricao-gadgets]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 633 | inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf | Inspektor Gadget: enriquecimento bidirecional de metadados Kubernetes e filtragem in-kernel de alto desempenho ===
+ONE_LINER: O Inspektor Gadget realiza enriquecimento bidirecional: traduz primitivas de baixo nível do kernel (mount namespaces, PIDs) em conceitos do Kubernetes (pods, containers, DNS) na saída e converte filtros de alto nível em filtros in-kernel no eBPF.
+IMPORTANCE: Os dados coletados pelo eBPF dentro do kernel Linux não possuem nenhum conhecimento nativo sobre abstrações de espaço de usuário como nomes de pods Kubernetes, namespaces, labels ou nomes de containers do runtime. Conforme detalhado na seção `What is enrichment?` do README oficial do Inspektor Gadget, o enriquecimento automático torna a telemetria eBPF imediatamente compreensível para operadores e permite filtrar eventos de alta frequência diretamente no kernel usando apenas nomes de pods ou containers.
+HOW_IT_WORKS: Quando um programa eBPF captura um evento (como a abertura de um arquivo ou um pacote de rede), ele registra primitivas do kernel como o ID do mount namespace (`mntns_id`), o net namespace (`netns_id`) ou o PID. No caminho de saída (kernel para usuário), o operador de enriquecimento do Inspektor Gadget cruza esses identificadores com o estado do container runtime (containerd, CRI-O, Docker) e da API do Kubernetes para anexar `k8s.namespace`, `k8s.podName`, `k8s.containerName` e nomes DNS. No caminho inverso (usuário para kernel), quando o operador executa um Gadget filtrando por `--podname meu-pod` ou `-n producao`, o Inspektor Gadget resolve previamente esse pod para o `mntns_id` ou `netns_id` correspondente e popula um mapa eBPF no kernel, descartando eventos de todos os outros containers antes mesmo que saiam do espaço de kernel.
+EXAMPLE:
+```bash
+# Executar o Gadget trace_open no Kubernetes filtrando in-kernel apenas por um namespace e pod específicos
+kubectl gadget run trace_open:latest \
+  --namespace producao \
+  --podname api-checkout-7d9b8c-x2k9p
+```
+TRADE_OFFS: O enriquecimento automático requer que o daemon do Inspektor Gadget tenha acesso ao socket do container runtime local (CRI) e metadados de pods do nó; se o socket do runtime estiver configurado em um caminho não padrão no nó Kubernetes e não for informado na implantação do `kubectl gadget deploy`, o enriquecimento não conseguirá resolver os `mntns_id` e os campos de container/pod aparecerão vazios.
+VERIFY: Execute `kubectl gadget run trace_open:latest -A` em um cluster de teste e confirme que as colunas `K8S.NAMESPACE`, `K8S.PODNAME` e `K8S.CONTAINERNAME` são preenchidas automaticamente para cada evento de abertura de arquivo.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-webassembly-wasm-pos-processamento-operadores]] | [[tetragon-consciencia-kubernetes-identidades-pods-namespaces]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 634 | inspektor-webassembly-wasm-pos-processamento-operadores | Inspektor Gadget: módulos WebAssembly (WASM) e arquitetura de Operadores customizáveis ===
+ONE_LINER: O Inspektor Gadget utiliza uma arquitetura de Operadores (`operators`) reordenáveis e suporta módulos WebAssembly (WASM) embutidos nos Gadgets para pós-processar dados e estender a lógica em qualquer linguagem compatível com WASM.
+IMPORTANCE: Embora os programas eBPF no kernel sejam ideais para coleta e filtragem ultrarrápida de eventos, o verificador do kernel Linux impõe restrições severas ao código eBPF (como limites de loops, ausência de ponto flutuante e manipulação complexa de strings ou formatação customizada). Segundo o README oficial do Inspektor Gadget, combinar eBPF no kernel com módulos WebAssembly no espaço de usuário permite pós-processar eventos e customizar operadores com segurança e portabilidade dentro da mesma imagem OCI do Gadget.
+HOW_IT_WORKS: No Inspektor Gadget, um **operador** (`operator`) é qualquer componente do framework onde uma ação é executada sobre o ciclo de vida ou sobre os dados de um Gadget. Alguns operadores atuam nos bastidores (como buscar a imagem OCI e carregar os programas eBPF no kernel), enquanto outros são expostos ao usuário (como enriquecimento Kubernetes/container, filtragem, ordenação, exportação para OpenTelemetry/Prometheus e execução WASM) e podem ter sua ordem de execução alterada ou sobrescrita. Quando um Gadget inclui um módulo `.wasm`, o operador WASM executa esse bytecode em um sandbox isolado em user-space para transformar campos, agregar estatísticas complexas ou validar regras antes da exibição ou exportação dos dados.
+EXAMPLE:
+```bash
+# Executar um Gadget inspecionando os parâmetros expostos pelos diferentes operadores ativos (--help)
+kubectl gadget run trace_open:latest --help
+```
+TRADE_OFFS: O pós-processamento em WebAssembly ocorre no espaço de usuário após os eventos terem atravessado o ring buffer ou perf buffer do kernel; portanto, o módulo WASM não substitui a filtragem primária em eBPF: se milhões de eventos irrelevantes forem enviados do kernel para serem descartados apenas dentro do módulo WASM, haverá desperdício significativo de CPU e troca de contexto.
+VERIFY: Inspecione a saída de `kubectl gadget run <gadget>:latest --help` para verificar a lista de flags injetadas dinamicamente por cada operador habilitado (como `oci`, `ebpf`, `kubeipresolver`, `kubemanager`, `wasm`, `cli`).
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-gadgets-imagens-oci-build-artifact-hub]] | [[inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 635 | inspektor-modos-operacao-kubectl-gadget-ig-linux-gadgetctl | Inspektor Gadget: modos de operação com kubectl-gadget, binário ig, kubectl debug node e cliente remoto gadgetctl ===
+ONE_LINER: O Inspektor Gadget opera em múltiplos modos: cluster-wide via `kubectl gadget`, localmente em Linux/containers via `ig`, sem instalação prévia no cluster via `kubectl debug node`, como daemon remoto com `gadgetctl` (macOS/Windows) ou como biblioteca Go.
+IMPORTANCE: Diferentes cenários de resposta a incidentes impõem restrições distintas: em alguns clusters o DaemonSet do Inspektor Gadget já está instalado; em outros clusters de produção trancados não é permitido instalar um DaemonSet permanente, mas o engenheiro precisa depurar um nó específico imediatamente; ou ainda um desenvolvedor em macOS/Windows precisa inspecionar uma VM Linux remota. O README oficial do Inspektor Gadget documenta cada um desses modos de operação.
+HOW_IT_WORKS: (1) No modo Kubernetes implantado, `kubectl gadget deploy` instala o DaemonSet no cluster e `kubectl gadget run` coordena a execução em todos os nós simultaneamente. (2) Para depurar um nó Kubernetes sem instalar o Inspektor Gadget no cluster, usa-se `kubectl debug --profile=sysadmin node/<nome-do-no> -ti --image=ghcr.io/inspektor-gadget/ig:latest -- ig run <gadget>`. (3) Em servidores Linux, o binário `ig` pode ser instalado em `/usr/local/bin/ig` ou executado em um container Docker privilegiado (`--privileged -v /:/host --pid=host`). (4) Para controle remoto a partir de macOS ou Windows, inicia-se `sudo ig daemon --host=tcp://0.0.0.0:1234` na máquina Linux e conecta-se com o binário cliente `gadgetctl run <gadget> --remote-address=tcp://$IP:1234`.
+EXAMPLE:
+```bash
+# Modo sem instalação prévia em Kubernetes usando kubectl debug em um nó específico
+kubectl debug --profile=sysadmin node/worker-node-01 -ti \
+  --image=ghcr.io/inspektor-gadget/ig:latest -- ig run trace_open:latest
+
+# Modo container Docker direto em um host Linux
+docker run -ti --rm --privileged -v /:/host --pid=host \
+  ghcr.io/inspektor-gadget/ig:latest run trace_open:latest
+```
+TRADE_OFFS: Executar `sudo ig daemon --tls-insecure --host=tcp://0.0.0.0:1234` conforme o exemplo básico de quickstart expõe um endpoint TCP sem autenticação mTLS capaz de carregar programas eBPF no kernel da máquina Linux; portanto, a flag `--tls-insecure` só deve ser usada em redes locais de laboratório isoladas, exigindo certificados TLS ou túnel SSH/socket UNIX em ambientes reais.
+VERIFY: Teste a execução local com `sudo ig version` (ou `kubectl gadget version`) e valide que o comando `run trace_open:latest` coleta eventos do kernel e encerra limpando os programas eBPF ao receber `Ctrl+C`.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-gadgets-imagens-oci-build-artifact-hub]] | [[tetragon-implantacao-kubernetes-linux-docker-standalone]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 636 | inspektor-catalogo-gadgets-trace-top-snapshot-profile | Inspektor Gadget: catálogo de Gadgets para rastreamento (trace), top consumidores, snapshots e profiling ===
+ONE_LINER: O catálogo de Gadgets do Inspektor Gadget (hospedado na árvore `/gadgets` e no Artifact Hub) abrange ferramentas de `trace` (DNS, TCP, exec, open, mount), `top` (arquivos, bloco, rede), `snapshot` (processos, sockets) e `profile`.
+IMPORTANCE: Em vez de escrever código C eBPF do zero durante uma indisponibilidade em produção, equipes de SRE e DevOps precisam de um canivete suíço de ferramentas prontas e testadas que cubram os principais subsistemas do kernel Linux (rede, sistema de arquivos, processos, memória e escalonador). Segundo a documentação oficial do Inspektor Gadget, muitos dos Gadgets in-tree evoluíram dos clássicos utilitários BCC (BPF Compiler Collection) e `cilium/ebpf`, adaptados para o modelo de imagens OCI enriquecidas com Kubernetes.
+HOW_IT_WORKS: Os Gadgets são organizados por padrão de observação: (1) **`trace_*`** (como `trace_open`, `trace_exec`, `trace_dns`, `trace_tcp`, `trace_mount`, `trace_oomkill`, `trace_signal`) emitem um fluxo contínuo de eventos cada vez que a ação ocorre no kernel; (2) **`top_*`** (como `top_file`, `top_blockio`, `top_tcp`) agregam contadores em mapas eBPF no kernel e exibem periodicamente os maiores consumidores por pod/container; (3) **`snapshot_*`** (como `snapshot_process`, `snapshot_socket`) utilizam iteradores BPF do kernel para capturar uma fotografia instantânea de todas as tarefas ou sockets ativos; e (4) **`profile_*`** (como `profile_cpu`, `profile_blockio`, `profile_tcprtt`) amostram pilhas ou histogramas de latência para diagnóstico de performance.
+EXAMPLE:
+```bash
+# Rastrear requisições e respostas DNS em tempo real em todos os namespaces do cluster Kubernetes
+kubectl gadget run trace_dns:latest -A
+
+# Capturar um snapshot instantâneo de todos os sockets TCP/UDP abertos nos pods de um namespace
+kubectl gadget run snapshot_socket:latest -n producao
+```
+TRADE_OFFS: Gadgets da categoria `trace_*` que monitoram eventos de alta frequência (como `trace_open` ou `trace_tcp` em todo o cluster com `-A`) geram fluxo intenso de eventos por segundo; para diagnóstico focado sem ruído, recomenda-se começar com Gadgets agregadores (`top_*` ou `profile_*`) para identificar o pod anômalo e, em seguida, rodar `trace_*` filtrado estritamente por `--podname`.
+VERIFY: Execute `kubectl gadget run snapshot_process:latest -n kube-system` e confirme o retorno imediato da lista de processos em execução dentro dos pods do `kube-system` com seus respectivos PIDs e comandos.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-enriquecimento-kernel-kubernetes-filtragem-ebpf]] | [[inspektor-exportacao-telemetria-opentelemetry-prometheus-declarativa]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 637 | inspektor-exportacao-telemetria-opentelemetry-prometheus-declarativa | Inspektor Gadget: coleta e exportação declarativa de métricas e logs eBPF para OpenTelemetry e Prometheus ===
+ONE_LINER: O Inspektor Gadget permite coletar dados de baixo nível do kernel com eBPF e exportá-los continuamente para ferramentas de observabilidade (OpenTelemetry, Prometheus, JSON) via linha de comando ou arquivos de configuração declarativos.
+IMPORTANCE: Usar o Inspektor Gadget apenas em sessões interativas de terminal ajuda durante o troubleshooting manual, mas não preserva métricas históricas de latência de rede, I/O de disco ou eventos de segurança para correlação em dashboards e alertas. Conforme destacado na lista de recursos do README oficial do Inspektor Gadget, o framework suporta exportar dados coletados pelos Gadgets para ferramentas de observabilidade com um comando simples ou via configuração declarativa (modo headless/manifesto).
+HOW_IT_WORKS: Os operadores de exportação do Inspektor Gadget (como os operadores de métricas e logs OpenTelemetry / Prometheus) mapeiam os campos estruturados produzidos pelos mapas e buffers eBPF de um Gadget para métricas (contadores, gauges, histogramas) ou registros de log OTLP. O operador de plataforma pode definir um manifesto YAML declarativo especificando quais imagens OCI de Gadgets devem rodar continuamente em segundo plano, quais filtros de enriquecimento aplicar e para qual endpoint OTLP (`otel-metrics` / `otel-logs`) ou scrape endpoint Prometheus os dados devem ser exportados, transformando qualquer Gadget em um coletor permanente de telemetria eBPF.
+EXAMPLE:
+```bash
+# Executar um Gadget exportando eventos diretamente em formato JSON estruturado para integração com pipelines de log
+kubectl gadget run trace_exec:latest -A -o json
+```
+TRADE_OFFS: Ao exportar métricas de Gadgets eBPF para o Prometheus ou OpenTelemetry, incluir campos de alta cardinalidade do evento (como números de PID efêmeros, portas de origem aleatórias ou caminhos completos de arquivos temporários) como atributos/rótulos de métrica causará explosão de séries temporais no banco de métricas (como Prometheus ou Mimir); apenas rótulos limitados (como `k8s.namespace`, `k8s.podName`, código de erro ou operação) devem ser mapeados para dimensões de métricas.
+VERIFY: Execute um Gadget com saída estruturada (`-o json` ou configuração de exportação OTel) e valide que cada registro emitido contém os atributos de enriquecimento Kubernetes e os campos tipados do evento eBPF.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-webassembly-wasm-pos-processamento-operadores]] | [[opentelemetry-collector-receivers-processors-exporters-pipelines]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 638 | inspektor-seguranca-verificacao-assinaturas-sbom-restricao-gadgets | Inspektor Gadget: verificação de assinaturas de imagens OCI, SBOMs e restrição de Gadgets permitidos ===
+ONE_LINER: O Inspektor Gadget fornece mecanismos de segurança para verificar assinaturas criptográficas das imagens OCI de Gadgets, publicar SBOMs de releases e restringir quais Gadgets podem ser executados no cluster ou host.
+IMPORTANCE: Como um Gadget contém bytecode eBPF que será executado com privilégios de kernel em todos os nós do cluster Kubernetes, permitir que qualquer usuário com permissão de execução rode uma imagem OCI arbitrária da internet criaria um vetor crítico de comprometimento de infraestrutura. De acordo com a seção `Security features` do README oficial do Inspektor Gadget, o projeto integra verificação de ativos (`Verify assets`) e políticas de restrição (`Restricting Gadgets`) para trancar a superfície de execução.
+HOW_IT_WORKS: Por padrão, o Inspektor Gadget verifica a autenticidade das imagens OCI de Gadgets utilizando assinaturas criptográficas (Cosign / chaves públicas oficiais) antes de carregar qualquer programa eBPF no kernel, recusando imagens não assinadas ou adulteradas a menos que a verificação seja explicitamente desabilitada. Além disso, os administradores que implantam o DaemonSet (`kubectl gadget deploy`) ou o `ig daemon` podem configurar filtros de restrição para bloquear ou permitir apenas repositórios, registries ou digests específicos de Gadgets, e todas as releases oficiais do projeto são acompanhadas de arquivos SBOM (Software Bill of Materials, como `ig-linux-amd64-*.bom.json`) para auditoria de cadeia de suprimentos.
+EXAMPLE:
+```bash
+# Implantar o Inspektor Gadget no Kubernetes mantendo a verificação de assinatura de imagens OCI ativa
+kubectl gadget deploy --verify-image=true
+```
+TRADE_OFFS: Ao construir Gadgets customizados internos com `ig image build` para uso em produção, a equipe de plataforma precisa assinar suas próprias imagens OCI com Cosign e fornecer a chave pública correspondente na configuração do Inspektor Gadget (`--public-keys`), caso contrário o daemon rejeitará a imagem customizada durante a validação de assinatura.
+VERIFY: Tente executar uma imagem de Gadget não assinada com a verificação padrão ativa e confirme que o Inspektor Gadget aborta o carregamento do programa eBPF exibindo erro de falha na verificação de assinatura.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-gadgets-imagens-oci-build-artifact-hub]] | [[kubescape-monitoramento-runtime-ebpf-network-policies-prometheus]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 639 | inspektor-requisitos-kernel-linux-btf-core-cilium-ebpf | Inspektor Gadget: requisitos de kernel Linux (>= 5.10), BTF (BPF Type Format) e biblioteca cilium/ebpf ===
+ONE_LINER: Os Gadgets desenvolvidos pelo projeto Inspektor Gadget exigem pelo menos o kernel Linux 5.10 com BTF (BPF Type Format) habilitado e utilizam a biblioteca `cilium/ebpf` em Go para carregar e gerenciar programas CO-RE.
+IMPORTANCE: No passado, ferramentas baseadas em eBPF precisavam instalar o compilador Clang/LLVM e os pacotes `linux-headers` exatos da distribuição em cada nó Kubernetes de produção para compilar o código BPF em tempo de execução, aumentando o tamanho das imagens em centenas de megabytes e o consumo de CPU/memória na inicialização. Segundo a seção `Kernel requirements` e `Thanks` do README oficial do Inspektor Gadget, o uso de BTF e da biblioteca `cilium/ebpf` permite distribuir binários eBPF pré-compilados leves e portáveis.
+HOW_IT_WORKS: Quando o kernel Linux é compilado com `CONFIG_DEBUG_INFO_BTF=y` (disponível por padrão na maioria das distribuições com Linux >= 5.10), ele expõe em `/sys/kernel/btf/vmlinux` a descrição compacta de todas as estruturas de dados e tipos internos daquele kernel exato. Quando o Inspektor Gadget baixa a imagem OCI de um Gadget, o gerenciador em espaço de usuário (construído sobre a biblioteca `cilium/ebpf` em Go) lê o arquivo BTF do kernel local e aplica automaticamente as relocações de offsets de campos (CO-RE) no bytecode eBPF antes de enviá-lo à chamada de sistema `bpf()`, garantindo compatibilidade entre diferentes versões de kernel sem compilador local.
+EXAMPLE:
+```bash
+# Verificar no nó Linux se o kernel atende ao requisito >= 5.10 e se o arquivo BTF vmlinux está disponível
+uname -r
+ls -lh /sys/kernel/btf/vmlinux
+```
+TRADE_OFFS: Embora o requisito base dos Gadgets oficiais seja Linux 5.10 com BTF, Gadgets específicos que utilizam recursos mais recentes do subsistema eBPF (como iteradores BPF avançados, kfuncs ou hooks específicos de rede/segurança) podem exigir versões de kernel ainda mais novas; se o kernel do nó não suportar o tipo de programa (`prog_type`) ou helper exigido pelo Gadget, o verificador do kernel recusará o carregamento naquele nó.
+VERIFY: Confirme a existência de `/sys/kernel/btf/vmlinux` nos nós do cluster Kubernetes e execute um Gadget básico como `trace_open:latest` para validar o carregamento CO-RE via `cilium/ebpf`.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-gadgets-imagens-oci-build-artifact-hub]] | [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://www.inspektor-gadget.io/docs/latest/gadgets/ | https://github.com/inspektor-gadget/inspektor-gadget
+
+=== NOTE: 640 | inspektor-integracao-biblioteca-golang-kubescape-ecossistema | Inspektor Gadget: uso como biblioteca Golang embarcável e integração de runtime no ecossistema CNCF ===
+ONE_LINER: Além de suas CLIs (`kubectl-gadget`, `ig`, `gadgetctl`), o Inspektor Gadget expõe pacotes Golang embarcáveis que permitem a plataformas de segurança da CNCF (como o Kubescape) integrar inspeção eBPF de runtime diretamente em seus operadores.
+IMPORTANCE: Construir do zero um motor de coleta eBPF capaz de carregar imagens OCI, realizar relocações BTF, gerenciar operadores e enriquecer eventos com metadados de container runtimes e Kubernetes exige anos de engenharia especializada de kernel. Conforme documentado no README oficial do Inspektor Gadget (`Code examples`) e no README do Kubescape, o Inspektor Gadget foi projetado como um framework modular cujos pacotes Go podem ser importados diretamente por outras ferramentas cloud-native.
+HOW_IT_WORKS: A arquitetura interna do Inspektor Gadget separa claramente o runtime de execução de Gadgets, o registro de operadores (como enriquecimento de containers/Kubernetes e gerenciamento de imagens OCI) e a camada de apresentação CLI. Desenvolvedores Go podem importar os pacotes de `github.com/inspektor-gadget/inspektor-gadget/pkg/...` (conforme demonstrado no diretório `/examples/` do repositório) para instanciar o runtime programaticamente, carregar Gadgets específicos no kernel e consumir os callbacks de eventos estruturados em structs Go dentro de seu próprio agente — exatamente como o operador in-cluster do Kubescape faz para monitorar chamadas de sistema, processos e tráfego de rede em tempo real para detecção de ameaças e geração de NetworkPolicies.
+EXAMPLE:
+```bash
+# Inspecionar a documentação dos pacotes Go exportados pelo Inspektor Gadget
+go doc github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-context
+```
+TRADE_OFFS: Embarcar o Inspektor Gadget como biblioteca Golang dentro de outro operador Kubernetes significa que o binário hospedeiro passa a herdar os mesmos requisitos de privilégios de sistema (capabilities `CAP_BPF`, `CAP_PERFMON`, `CAP_SYS_ADMIN` ou container privilegiado, acesso ao `/sys/kernel/btf` e ao socket do container runtime) necessários para carregar programas eBPF e enriquecer containers no nó.
+VERIFY: Consulte os exemplos oficiais na pasta `examples/` do repositório `inspektor-gadget/inspektor-gadget` e verifique como operadores integrados (como o `node-agent` do Kubescape) carregam sensores eBPF usando o framework do Inspektor Gadget.
+LINKS: [[inspektor-framework-ebpf-inspecao-kubernetes-linux]] | [[inspektor-webassembly-wasm-pos-processamento-operadores]] | [[kubescape-monitoramento-runtime-ebpf-network-policies-prometheus]]
+SOURCES: https://raw.githubusercontent.com/inspektor-gadget/inspektor-gadget/main/README.md | https://raw.githubusercontent.com/kubescape/kubescape/master/README.md | https://github.com/inspektor-gadget/inspektor-gadget

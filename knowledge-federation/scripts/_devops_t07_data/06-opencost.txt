@@ -1,0 +1,164 @@
+=== NOTE: 651 | opencost-monitoramento-custos-kubernetes-multi-cloud-cncf | OpenCost: especificação aberta e implementação em Go para monitoramento de custos em Kubernetes e nuvem ===
+ONE_LINER: O OpenCost (projeto CNCF Incubating originalmente criado e aberto pela Kubecost, sob licença Apache-2.0) combina uma especificação aberta (`/spec/`) e uma implementação em Golang para monitorar e alocar custos em tempo real e históricos no Kubernetes e em múltiplos provedores de nuvem.
+IMPORTANCE: Em clusters Kubernetes compartilhados por dezenas de aplicações, equipes e departamentos, a fatura mensal consolidada da AWS, Azure ou GCP mostra apenas o custo bruto das máquinas virtuais e discos, sem indicar quanto cada namespace, deployment ou serviço consumiu efetivamente de CPU, RAM, GPU e armazenamento. Segundo o README oficial do OpenCost, o projeto oferece transparência financeira (FinOps) em tempo real tanto para recursos in-cluster quanto para gastos externos de nuvem.
+HOW_IT_WORKS: O OpenCost é instalado e gerenciado exclusivamente por meio do Helm chart oficial (`opencost/opencost`) em qualquer cluster Kubernetes 1.20+ (os manifestos standalone legados foram removidos). Ele coleta métricas de utilização e requisições de recursos via Prometheus, cruza esses dados com os preços dinâmicos sob demanda (ou preços negociados/descontos via APIs de faturamento da AWS, Azure e GCP, ou tabelas CSV customizadas para clusters on-premises) e calcula a alocação de custos por cluster, nó, namespace, controller kind, controller, service ou pod. A interface web oficial é mantida no repositório `opencost/opencost-ui` e o servidor expõe APIs REST de alocação/ativos e um endpoint `/metrics` para o Prometheus.
+EXAMPLE:
+```bash
+# Instalação oficial do OpenCost em um cluster Kubernetes 1.20+ usando exclusivamente o Helm chart
+helm repo add opencost https://opencost.github.io/opencost-helm-chart
+helm repo update
+helm install opencost opencost/opencost --namespace opencost --create-namespace
+```
+TRADE_OFFS: O cálculo de alocação do OpenCost depende diretamente da completude das séries temporais no servidor Prometheus consultado; conforme alerta o README oficial do OpenCost, se o cluster utiliza Prometheus particionado/sharded em alta disponibilidade (HA), a variável `PROMETHEUS_SERVER_ENDPOINT` deve apontar obrigatoriamente para um endpoint de consulta global (como Thanos Query, Cortex ou Grafana Mimir), pois apontar para um único pod Prometheus resultará em dados de custo incompletos ou intermitentes.
+VERIFY: Após instalar o chart `opencost/opencost`, verifique se os pods estão `Running` e consulte a API de alocação ou o endpoint `/metrics` para confirmar a geração de métricas de custo por nó e container.
+LINKS: [[opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus]] | [[opencost-precificacao-dinamica-cloud-billing-csv-on-prem]] | [[opencost-mcp-server-agentes-ia-ferramentas-custos]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 652 | opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus | OpenCost: modelo de alocação de custos in-cluster para CPU, GPU, memória, PersistentVolumes e recursos ociosos ===
+ONE_LINER: O modelo de alocação do OpenCost atribui custos de recursos in-cluster (CPU, GPU, memória RAM, PersistentVolumes e rede) agregados por qualquer dimensão do Kubernetes e exporta métricas de preços de volta ao Prometheus em `/metrics`.
+IMPORTANCE: Atribuir custos apenas pelo `requests` declarado no manifesto do Pod ignora casos em que um container sem `requests` consome toda a CPU livre do nó, enquanto atribuir apenas pelo uso real ignora a capacidade reservada que impediu outros pods de serem agendados. De acordo com a especificação e a documentação oficial do OpenCost, o modelo reconcilia uso real e capacidade solicitada (além de distribuir ou isolar recursos ociosos, `idle`) para fornecer chargeback e showback precisos.
+HOW_IT_WORKS: Para cada janela de tempo (`window`), o motor do OpenCost calcula o custo de cada container multiplicando a duração pelo preço horário do ativo subjacente (nó ou disco) e pelo maior valor entre o uso real medido e o `request` configurado para CPU e memória, além de rastrear alocação de GPUs e `PersistentVolumeClaims` (PVCs). Os usuários podem consultar essas alocações via API REST, interface web (`opencost-ui`), plugin `kubectl cost` ou MCP server, agregando por `cluster`, `node`, `namespace`, `controllerKind`, `controller`, `service`, `pod` ou labels, com opções para compartilhar custos ociosos (`share_idle`) ou exibi-los separadamente (`include_idle`). Adicionalmente, o OpenCost expõe métricas de preços unitários em `/metrics` para que consultas PromQL calculem custos diretamente no Prometheus/Grafana.
+EXAMPLE:
+```bash
+# Consultar a API de alocação do OpenCost agregando custos dos últimos 7 dias por namespace
+kubectl port-forward -n opencost svc/opencost 9003:9003 &
+curl -s "http://localhost:9003/allocation/compute?window=7d&aggregate=namespace&includeIdle=true" | jq .
+```
+TRADE_OFFS: Quando `share_idle=true` é utilizado em relatórios de chargeback corporativo, o custo da capacidade ociosa dos nós Kubernetes (folga mantida para absorver picos de autoscaling) é rateado proporcionalmente entre os namespaces ativos; se um grande namespace for desligado em um cluster com nós fixos, a fatura aparente dos namespaces restantes subirá mesmo sem aumento de consumo próprio, exigindo transparência sobre a parcela `idle`.
+VERIFY: Acesse o endpoint `/metrics` do OpenCost (`curl -s http://localhost:9003/metrics | grep node_cpu_hourly_cost`) e valide que os custos horários de CPU, RAM e GPU por nó estão sendo exportados para o Prometheus.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-precificacao-dinamica-cloud-billing-csv-on-prem]] | [[mimir-arquitetura-monolitica-microsservicos-armazenamento-prometheus]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 653 | opencost-precificacao-dinamica-cloud-billing-csv-on-prem | OpenCost: precificação dinâmica via APIs de Cloud Billing (AWS, Azure, GCP), custos de carbono e CSV on-premises ===
+ONE_LINER: O OpenCost obtém preços dinâmicos de ativos Kubernetes integrando-se às APIs de faturamento de AWS, Azure e GCP, suporta precificação customizada via CSV para clusters on-premises e calcula custos externos de nuvem e de carbono.
+IMPORTANCE: Estimar custos de Kubernetes usando tabelas estáticas de preços públicos de lista (on-demand) distorce a realidade financeira de empresas que utilizam instâncias spot/preemptible, Savings Plans, Reserved Instances, descontos corporativos negociados (EDP) ou servidores bare-metal próprios no data center local. Segundo o README oficial do OpenCost, a plataforma suporta tanto integração direta com billing de nuvem quanto tabelas CSV customizadas para ambientes on-premises.
+HOW_IT_WORKS: Para clusters em nuvem pública, o OpenCost consulta as APIs de preços e exportações de faturamento (AWS Cost and Usage Report / Pricing API, Azure Billing / RateCard, GCP Cloud Billing export no BigQuery) para precificar com exatidão os ativos do cluster (`Node`, `Disk`, `LoadBalancer`, `Network`, `ClusterManagement`) e também monitorar gastos de todos os serviços de nuvem fora do cluster (`Cloud Costs`, como bancos gerenciados RDS/CloudSQL e buckets S3) com crédito e filtragem por provedor, serviço, categoria, região e conta. Além de valores monetários, o OpenCost estima custos de emissões de carbono dos recursos em nuvem. Em data centers on-premises, o administrador fornece um arquivo CSV definindo o custo horário por core de CPU, GB de RAM, GPU e armazenamento por classe/rótulo de nó.
+EXAMPLE:
+```yaml
+# Trecho de configuração de variáveis de ambiente para habilitar ingestão de Cloud Costs no OpenCost
+opencost:
+  exporter:
+    extraEnv:
+      CLOUD_COST_ENABLED: "true"
+      CLOUD_COST_CONFIG_PATH: "/var/cloud-integration/cloud-integration.json"
+```
+TRADE_OFFS: As exportações detalhadas de faturamento dos provedores de nuvem (como AWS CUR no S3 ou GCP Billing no BigQuery) possuem atraso natural de processamento pelo provedor (frequentemente de várias horas até 24–48 horas para reconciliação de descontos e créditos); por isso, o OpenCost exibe estimativas sob demanda em tempo real para o dia corrente e reconcilia os valores exatos faturados à medida que os dados de billing consolidados são ingeridos.
+VERIFY: Consulte a API de ativos e de custos de nuvem do OpenCost (`/assets` e `/cloudCost`) para confirmar se os preços dos nós refletem a região e o tipo de instância corretos do provedor ou a tabela CSV configurada.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus]] | [[opencost-plugins-custos-externos-datadog-saas]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 654 | opencost-rastreamento-custos-inferencia-ia-vllm-tokens-kv-cache | OpenCost: rastreamento de custos de inferência de IA para vLLM e llm-d por milhão de tokens e KV cache ===
+ONE_LINER: O OpenCost oferece rastreamento nativo de custos de inferência de IA para implantações baseadas em vLLM (como `llm-d` e compatíveis), calculando o custo por milhão de tokens (input/output), preço corrigido por KV cache e atribuição de infraestrutura compartilhada.
+IMPORTANCE: Em plataformas de IA generativa rodando sobre Kubernetes com aceleradores GPU de alto custo, saber apenas que um pod `vllm` custou US$ 40 por hora não responde quanto custa cada requisição de modelo, qual é o custo unitário por milhão de tokens de entrada versus saída ou como atribuir o custo da GPU entre múltiplos clientes que compartilham o mesmo servidor de inferência. De acordo com o README oficial do OpenCost, o recurso de AI inference cost tracking resolve essa atribuição econômica diretamente via APIs REST e métricas Prometheus.
+HOW_IT_WORKS: O OpenCost coleta métricas específicas de telemetria dos servidores de inferência compatíveis com **vLLM** e **llm-d** (como volume de tokens de prompt processados, tokens gerados na decodificação, utilização e hits de KV cache e tempo de ocupação de GPU) e combina esses indicadores com o custo real do ativo de GPU/nó no Kubernetes. O modelo calcula: (1) o custo por milhão de tokens separado entre entrada (`input`) e saída (`output`); (2) a precificação corrigida pelo uso de KV cache (refletindo a economia de computação quando prefixos de prompt são reaproveitados em cache); e (3) a atribuição proporcional de infraestrutura compartilhada, expondo esses resultados tanto em endpoints REST quanto em métricas para o Prometheus.
+EXAMPLE:
+```bash
+# Verificar métricas de custo e alocação de GPUs e inferência expostas pelo OpenCost para o Prometheus
+curl -s http://localhost:9003/metrics | grep -E "gpu|vllm|token|inference"
+```
+TRADE_OFFS: Para que o cálculo de custo por milhão de tokens e a correção de KV cache sejam precisos, os pods de inferência vLLM/llm-d precisam estar configurados para expor suas métricas internas ao Prometheus no mesmo intervalo de scrape utilizado pelo OpenCost, e os preços horários das instâncias de GPU (ou partições MIG/time-slicing) devem estar devidamente mapeados no provedor de preços do OpenCost.
+VERIFY: Com um workload vLLM monitorado pelo Prometheus, consulte os endpoints de métricas e APIs de inferência do OpenCost para validar o cálculo do custo unitário por milhão de tokens de input e output.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus]] | [[nomad-agendamento-gpu-dispositivos-workloads-ia-batch]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 655 | opencost-plugins-custos-externos-datadog-saas | OpenCost: arquitetura de OpenCost Plugins para monitorar custos externos de SaaS e observabilidade (Datadog) ===
+ONE_LINER: Por meio do sistema de OpenCost Plugins (`opencost/opencost-plugins`), o OpenCost estende o monitoramento financeiro para incluir custos externos de plataformas SaaS e ferramentas de terceiros, como o Datadog.
+IMPORTANCE: A conta total de operação de uma plataforma cloud-native não se resume à infraestrutura Kubernetes e aos serviços de IaaS da nuvem: licenças e consumo de serviços SaaS externos (como ingestão de logs, métricas customizadas, hosts e APM no Datadog) frequentemente representam uma fatia expressiva do orçamento de engenharia. Segundo o README oficial do OpenCost, o suporte a custos externos via plugins unifica gastos de Kubernetes, nuvem e SaaS na mesma visão.
+HOW_IT_WORKS: Os plugins do OpenCost (mantidos no repositório oficial `github.com/opencost/opencost-plugins`) são executáveis que implementam a interface de custos customizados do OpenCost (comunicando-se via gRPC/protobuf com o core do OpenCost). O plugin consulta a API de faturamento e uso do fornecedor externo (como a API do Datadog), normaliza os dados de consumo e custo por janela de tempo, serviço ou categoria e entrega esses registros ao OpenCost para armazenamento e exibição junto aos custos de cluster e de nuvem.
+EXAMPLE:
+```bash
+# Inspecionar os logs do container do OpenCost para confirmar o carregamento de plugins de custos customizados
+kubectl logs -n opencost deploy/opencost -c opencost | grep -i "plugin"
+```
+TRADE_OFFS: Cada plugin externo exige credenciais de leitura de faturamento/uso da respectiva plataforma SaaS (como `DD_API_KEY` e `DD_APP_KEY` com escopo de billing no Datadog) montadas com segurança via Kubernetes Secrets, além de estar sujeito aos limites de taxa (rate limits) e à granularidade temporal de agregação da API do fornecedor SaaS.
+VERIFY: Após habilitar e configurar o plugin de custos externos no OpenCost, consulte a API de custos customizados para confirmar que as despesas do serviço SaaS (como Datadog) estão sendo ingeridas e listadas por janela temporal.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-precificacao-dinamica-cloud-billing-csv-on-prem]] | [[opencost-mcp-server-agentes-ia-ferramentas-custos]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 656 | opencost-mcp-server-agentes-ia-ferramentas-custos | OpenCost: servidor MCP (Model Context Protocol) opt-in na porta 8081 para agentes de IA ===
+ONE_LINER: O servidor MCP (Model Context Protocol) do OpenCost — desabilitado por padrão (opt-in) e integrado ao Helm chart oficial na porta `8081` — permite que agentes de IA consultem alocações, ativos, custos de nuvem e eficiência via transporte HTTP.
+IMPORTANCE: Engenheiros e analistas de FinOps frequentemente desejam fazer perguntas analíticas complexas a assistentes de IA (como no Cursor ou agentes internos de plataforma) sobre gastos de infraestrutura e oportunidades de rightsizing sem construir integrações sob medida para a API REST do OpenCost. De acordo com o README oficial do OpenCost, o servidor MCP fornece uma interface padronizada com controle total do usuário e superfície de ataque reduzida por ser opt-in.
+HOW_IT_WORKS: Para minimizar a superfície de ataque, o servidor MCP vem **desabilitado por padrão** em todas as implantações do OpenCost e deve ser explicitamente habilitado no Helm chart com `--set opencost.mcp.enabled=true` (podendo customizar a porta padrão `8081` via `--set opencost.mcp.port=9091` e o nível de log com `--set opencost.mcp.extraEnv.MCP_LOG_LEVEL=debug`). Ele utiliza transporte HTTP (`http://opencost.opencost.svc.cluster.local:8081` ou via `port-forward`) e expõe quatro ferramentas principais para agentes de IA: `get_allocation_costs`, `get_asset_costs`, `get_cloud_costs` e `get_efficiency`.
+EXAMPLE:
+```bash
+# Implantar o OpenCost via Helm habilitando o servidor MCP opt-in na porta padrão 8081
+helm install opencost opencost/opencost \
+  --set opencost.mcp.enabled=true
+
+# Expor o servidor MCP localmente para conexão de clientes MCP (como Cursor)
+kubectl port-forward svc/opencost 8081:8081
+```
+TRADE_OFFS: Como o servidor MCP do OpenCost utiliza transporte HTTP direto e expõe dados financeiros detalhados de todas as contas de nuvem (`accountID`), regiões, nós e namespaces do cluster, quando exposto fora do cluster via `LoadBalancer` ou `Ingress` (`http://your-opencost-domain.com:8081`), ele deve obrigatoriamente ser protegido por autenticação/autorização no gateway ou restrito à rede interna/VPN.
+VERIFY: Com `opencost.mcp.enabled=true`, configure o cliente MCP apontando para `http://localhost:8081` (`"type": "http"`) e valide a listagem das ferramentas `get_allocation_costs`, `get_asset_costs`, `get_cloud_costs` e `get_efficiency`.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-eficiencia-recursos-rightsizing-buffer-multiplier]] | [[kubescape-mcp-server-integracao-agentes-ia]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 657 | opencost-eficiencia-recursos-rightsizing-buffer-multiplier | OpenCost: métricas de eficiência de recursos e recomendações de rightsizing com buffer_multiplier ===
+ONE_LINER: O OpenCost analisa a eficiência de utilização de recursos (`get_efficiency`) e gera recomendações de redimensionamento (rightsizing) e economia de custos para pods, namespaces e controladores aplicando um multiplicador de folga (`buffer_multiplier`, padrão `1.2`).
+IMPORTANCE: O superprovisionamento de `requests` de CPU e memória em manifestos Kubernetes é uma das maiores fontes de desperdício em nuvem: equipes solicitam 4 CPUs para um container que usa em média 0.2 CPU, bloqueando capacidade nos nós e forçando o Cluster Autoscaler a provisionar máquinas desnecessárias. Segundo o README oficial do OpenCost, a análise de eficiência calcula recomendações práticas de rightsizing com margem de segurança configurável.
+HOW_IT_WORKS: Ao avaliar a eficiência em uma janela temporal (`window`, como `7d`, `1h` ou `30m`) agregada por `pod`, `namespace` ou `controller`, o OpenCost compara os recursos solicitados (`requests`) e pagos com o consumo efetivo observado nas métricas do Prometheus. Para evitar que a recomendação de rightsizing deixe a aplicação sem folga para pequenos picos, o cálculo aplica o parâmetro `buffer_multiplier` (cujo valor padrão é `1.2`, garantindo 20% de headroom acima do uso base). Para janelas longas de consulta, o parâmetro `step` (por exemplo, `1h` ou `6h`) divide a busca em lotes menores para reduzir o pico de uso de memória durante a análise.
+EXAMPLE:
+```javascript
+// Exemplo oficial de chamada à ferramenta MCP get_efficiency do OpenCost para recomendações de rightsizing
+const efficiency = await mcpClient.callTool('get_efficiency', {
+  window: '7d',
+  aggregate: 'namespace,controller',
+  step: '6h',
+  buffer_multiplier: 1.2
+});
+```
+TRADE_OFFS: Conforme documentado nos parâmetros de `get_efficiency` do OpenCost, definir um `step` menor reduz o pico de consumo de memória ao processar janelas longas em lotes, porém pode aumentar o tempo total de consulta e o número de requisições internas; além disso, workloads com picos extremos e curtíssimos de CPU/memória podem exigir um `buffer_multiplier` maior que `1.2` (por exemplo, `1.5`) para evitar throttling de CPU ou OOMKill.
+VERIFY: Execute uma consulta de eficiência para uma janela de `7d` agregada por `namespace,controller` com `buffer_multiplier: 1.2` e verifique as recomendações de redimensionamento e a economia estimada retornadas para cada controlador.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus]] | [[opencost-mcp-server-agentes-ia-ferramentas-custos]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 658 | opencost-tipos-ativos-node-disk-loadbalancer-network-clustermanagement | OpenCost: contabilidade detalhada por tipos de ativos (Node, Disk, LoadBalancer, Network, Cloud e ClusterManagement) ===
+ONE_LINER: O modelo de ativos do OpenCost (`get_asset_costs` / API `/assets`) classifica e contabiliza individualmente os custos de infraestrutura em seis categorias: `Node`, `Disk`, `LoadBalancer`, `Network`, `Cloud` e `ClusterManagement`.
+IMPORTANCE: Se uma ferramenta de custos Kubernetes contabilizar apenas o preço das máquinas virtuais (`Node`), ela deixará de fora parcelas substanciais da fatura real do cluster: dezenas de volumes EBS/Persistent Disks anexados (`Disk`), balanceadores de carga provisionados por Services do tipo `LoadBalancer`, tráfego de rede cross-AZ/egress (`Network`) e a taxa horária cobrada pelo provedor por cada control plane EKS/AKS/GKE (`ClusterManagement`). O README oficial do OpenCost detalha o suporte completo a todos esses tipos de ativos.
+HOW_IT_WORKS: O motor de ativos do OpenCost inventaria continuamente os recursos provisionados pelo cluster Kubernetes e pela conta de nuvem em cada janela (`window`): (1) **`Node`** registra instâncias de computação com discriminação de custo de CPU, RAM e GPU; (2) **`Disk`** rastreia volumes de armazenamento com detalhamento de bytes usados versus capacidade provisionada; (3) **`LoadBalancer`** contabiliza instâncias de balanceadores de carga com IP e status público/privado; (4) **`Network`** agrega custos e uso de tráfego de rede; (5) **`Cloud`** consolida custos de serviços de nuvem com informações de créditos; e (6) **`ClusterManagement`** registra a taxa de gerenciamento do próprio cluster Kubernetes.
+EXAMPLE:
+```bash
+# Consultar a API de ativos do OpenCost para as últimas 24 horas (1d)
+curl -s "http://localhost:9003/assets?window=1d" | jq .
+```
+TRADE_OFFS: Enquanto os custos de `Node` e `Disk` (PVCs montados) podem ser atribuídos diretamente aos pods agendados naqueles nós e volumes, custos de ativos compartilhados como `ClusterManagement` ou `LoadBalancer` compartilhados por um Ingress Controller exigem políticas claras de rateio organizacional para decidir se serão absorvidos pela equipe de plataforma ou distribuídos entre os tenants.
+VERIFY: Invoque o endpoint `/assets?window=1d` ou a ferramenta MCP `get_asset_costs` com `window: "1d"` e confirme a presença dos ativos `Node`, `Disk`, `LoadBalancer` e `ClusterManagement` com seus respectivos custos horários e totais.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-precificacao-dinamica-cloud-billing-csv-on-prem]] | [[opencost-mcp-server-agentes-ia-ferramentas-custos]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 659 | opencost-integracao-prometheus-ha-thanos-mimir-cortex | OpenCost: integração com Prometheus e requisitos de consulta global em topologias HA (Thanos, Mimir, Cortex) ===
+ONE_LINER: O OpenCost utiliza o Prometheus como fonte primária de telemetria de uso e expõe `/metrics`, exigindo em topologias Prometheus particionadas (sharded/HA) que `PROMETHEUS_SERVER_ENDPOINT` aponte para um endpoint de consulta global como Thanos Query, Cortex ou Grafana Mimir.
+IMPORTANCE: Em clusters Kubernetes de produção, é comum rodar o Prometheus em modo de alta disponibilidade ou com sharding horizontal (`shards > 1`), onde cada pod Prometheus coleta apenas uma fração dos alvos do cluster. Conforme destaca a nota de atenção no README oficial do OpenCost, apontar o OpenCost para um único pod Prometheus em uma configuração sharded causa resultados de exportação e alocação incompletos ou intermitentes.
+HOW_IT_WORKS: O OpenCost executa consultas PromQL periódicas contra o endereço configurado em `PROMETHEUS_SERVER_ENDPOINT` para recuperar métricas do `kube-state-metrics`, `cAdvisor` (kubelet) e do próprio exporter do OpenCost. Quando o ambiente utiliza Prometheus sharded ou múltiplas réplicas HA, o `PROMETHEUS_SERVER_ENDPOINT` deve ser configurado para o componente agregador/global — como o `Thanos Query`, `Cortex` ou o `query-frontend` do `Grafana Mimir` — garantindo que todas as séries de todos os nós e pods estejam visíveis e deduplicadas em um único endpoint compatível com a API HTTP do Prometheus.
+EXAMPLE:
+```bash
+# Instalar o OpenCost via Helm apontando PROMETHEUS_SERVER_ENDPOINT para o Query-Frontend global do Grafana Mimir
+helm install opencost opencost/opencost \
+  --namespace opencost --create-namespace \
+  --set opencost.prometheus.internal.serviceName=mimir-query-frontend \
+  --set opencost.prometheus.internal.namespaceName=mimir \
+  --set opencost.prometheus.internal.port=8080
+```
+TRADE_OFFS: Quando `PROMETHEUS_SERVER_ENDPOINT` aponta para um backend multi-tenant como o Grafana Mimir ou Cortex que exige o cabeçalho `X-Scope-OrgID`, é necessário configurar os cabeçalhos ou credenciais de autenticação correspondentes no chart do OpenCost para que as consultas PromQL do calculador de custos não recebam erro `401`/`400` por ausência de identificação de tenant.
+VERIFY: Verifique os logs do container `opencost` na inicialização para confirmar que a verificação de conectividade com o `PROMETHEUS_SERVER_ENDPOINT` passou sem avisos de métricas ausentes do `kube-state-metrics` ou `cAdvisor`.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[mimir-caminho-leitura-query-frontend-scheduler-querier-sharding]] | [[prometheus-remote-write-read-federacao-longo-prazo]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
+
+=== NOTE: 660 | opencost-desenvolvimento-local-tilt-ui-kubectl-cost | OpenCost: fluxo de desenvolvimento com Tilt, interface web (opencost-ui) e CLI kubectl-cost ===
+ONE_LINER: O ecossistema OpenCost inclui a interface web (`opencost/opencost-ui`), o plugin de linha de comando `kubectl cost` e um ambiente de desenvolvimento local integrado via Tilt (`tilt up` com `tilt-values.yaml`).
+IMPORTANCE: Diferentes perfis de usuários consomem dados de custos de formas distintas: gestores e equipes de FinOps preferem explorar relatórios visuais no navegador (`opencost-ui`), desenvolvedores no terminal preferem inspecionar o custo de seus pods via `kubectl cost`, e contribuidores do projeto precisam subir rapidamente o backend, a UI, o Helm chart e a ingestão de custos de nuvem localmente. O README oficial do OpenCost documenta essas interfaces e o fluxo de desenvolvimento com Tilt.
+HOW_IT_WORKS: Para usuários finais no terminal, o plugin `kubectl cost` (instalável via Krew) consulta a API do OpenCost e exibe tabelas imediatas de custo por namespace, deployment, controller ou pod diretamente na linha de comando. Para visualização web, o container `opencost-ui` serve o painel gráfico que consome as APIs de alocação, ativos e cloud costs. Para desenvolvimento local, ao clonar `opencost` (junto a `opencost-ui` e `opencost-helm-charts` na mesma árvore pai) e executar `tilt up`, o Tilt aplica `tilt-values.yaml` (incluindo `CLOUD_COST_ENABLED: "true"` e `CLOUD_COST_CONFIG_PATH`) para subir o ambiente completo com MCP server e ingestão de cloud costs em minutos.
+EXAMPLE:
+```bash
+# Consultar custos por namespace diretamente no terminal usando o plugin kubectl cost
+kubectl cost namespace --window 7d
+
+# Subir ambiente de desenvolvimento completo do OpenCost localmente com Tilt
+git clone https://github.com/opencost/opencost.git
+cd opencost
+tilt up
+```
+TRADE_OFFS: Conforme documentado nas notas de configuração padrão do README do OpenCost, tanto a UI quanto o Prometheus utilizam por padrão a porta `9090` no ambiente local; portanto, ao acessar ambos simultaneamente na máquina de desenvolvimento via `kubectl port-forward`, é necessário mapear um deles para uma porta local não padrão (por exemplo, `9091:9090`).
+VERIFY: Acesse a interface do `opencost-ui` via port-forward ou execute `kubectl cost pod` para validar que as tabelas de alocação renderizam os custos calculados pelo backend do OpenCost.
+LINKS: [[opencost-monitoramento-custos-kubernetes-multi-cloud-cncf]] | [[opencost-alocacao-recursos-cpu-gpu-memoria-pv-prometheus]] | [[tilt-tiltfile-starlark-orquestracao-desenvolvimento-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/opencost/opencost/develop/README.md | https://www.opencost.io/docs/installation/prometheus | https://github.com/opencost/opencost
