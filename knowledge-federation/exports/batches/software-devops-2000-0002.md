@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **500 / 2.000 (25,00%)**
-- Gate automatizado: **500/500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 5)
-- Revisão factual humana: **0/500**
-- Revisão factual por IA: **500/500**
-- Contabilizadas como válidas: **500/500**
-- Revisor das 500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–5 (500 notas, IDs 1–500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **600 / 2.000 (30,00%)**
+- Gate automatizado: **600/600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 6)
+- Revisão factual humana: **0/600**
+- Revisão factual por IA: **600/600**
+- Contabilizadas como válidas: **600/600**
+- Revisor das 600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–6 (600 notas, IDs 1–600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-05.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-05.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-06.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-06.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1500 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1400 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -678,6 +678,138 @@
 499. [Matriz de compatibilidade de SDKs e distinção entre paradigmas Server-side e Client-side no OpenFeature](../../domains/software-0008/software/devops/openfeature-sdk-compatibility-matrix-server-and-client-paradigms.md)
 500. [Entrega progressiva (Progressive Delivery), kill switches e governança de feature flags em DevOps](../../domains/software-0008/software/devops/openfeature-progressive-delivery-and-safe-degradation-in-devops.md)
 
+## Tranche 6 — LitmusChaos, Chaos Mesh, Tilt, Buildah, Skopeo, Kaniko, Dagger, Vagrant, Consul e Nomad (100 notas; revisão factual por IA registrada)
+
+### LitmusChaos (plataforma cloud-native de Engenharia de Caos na CNCF)
+
+501. [Arquitetura do LitmusChaos: Chaos Control Plane (chaos-center) e Chaos Execution Plane](../../domains/software-0008/software/devops/litmus-control-plane-chaos-center-and-execution-plane.md)
+502. [O recurso customizado ChaosExperiment e o modelo Bring-Your-Own-Chaos (BYOC) no LitmusChaos](../../domains/software-0008/software/devops/litmus-chaosexperiment-custom-resource-and-byoc.md)
+503. [Vinculação de alvo, validação de hipótese de estado estável via probes e Chaos-Operator no ChaosEngine](../../domains/software-0008/software/devops/litmus-chaosengine-steady-state-probes-and-chaos-operator.md)
+504. [Auditoria de execução, status de rollback e métricas Prometheus com ChaosResult e Chaos-exporter](../../domains/software-0008/software/devops/litmus-chaosresult-verdict-rollback-and-prometheus-exporter.md)
+505. [Encadeamento de múltiplos experimentos em Chaos Workflows no LitmusChaos](../../domains/software-0008/software/devops/litmus-chaos-workflows-chaining-serial-and-parallel-experiments.md)
+506. [Compartilhamento e reutilização de experimentos no Chaos Hub (hub.litmuschaos.io)](../../domains/software-0008/software/devops/litmus-chaos-hub-community-charts-and-experiment-sharing.md)
+507. [Os três casos de uso do LitmusChaos: Desenvolvimento, estágios de pipelines CI/CD e SRE em produção](../../domains/software-0008/software/devops/litmus-developer-cicd-and-sre-chaos-use-cases.md)
+508. [Correlação de observabilidade e métricas Prometheus durante experimentos do LitmusChaos](../../domains/software-0008/software/devops/litmus-observability-and-metrics-correlation-in-chaos.md)
+509. [Controles de segurança, RBAC por namespace e contenção de raio de explosão (blast radius) no LitmusChaos](../../domains/software-0008/software/devops/litmus-security-controls-rbac-and-blast-radius-containment.md)
+510. [Governança CNCF, registro em ADOPTERS.md e cadência de reuniões comunitárias e de contribuidores do LitmusChaos](../../domains/software-0008/software/devops/litmus-cncf-governance-adopters-and-community-cadence.md)
+
+### Chaos Mesh (plataforma cloud-native de Engenharia de Caos da CNCF para Kubernetes)
+
+511. [Arquitetura de runtime do Chaos Mesh: Chaos Controller Manager, Chaos Daemon e Chaos Dashboard](../../domains/software-0008/software/devops/chaosmesh-three-runtime-components-controller-daemon-and-dashboard.md)
+512. [Cobertura abrangente de falhas no Chaos Mesh: Pod, Rede, DNS, HTTP, I/O, Clock Skew, Kernel, JVM, Bare-Metal e Nuvens](../../domains/software-0008/software/devops/chaosmesh-broad-fault-coverage-pod-network-io-time-jvm-and-cloud.md)
+513. [Orquestração de experimentos recorrentes, fluxos seriados/paralelos e verificações de saúde com Schedule, Workflow e StatusCheck](../../domains/software-0008/software/devops/chaosmesh-schedule-workflow-and-statuscheck-orchestration.md)
+514. [Execução multi-cluster de experimentos de caos a partir de um cluster de gerenciamento no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-multi-cluster-remote-chaos-execution.md)
+515. [Composição modular com Uber Fx (controllers/fx.go) e pipeline comum de reconciliação no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-uber-fx-composition-and-common-reconciliation-pipeline.md)
+516. [Reconciliação de CRDs filhos de nível de Pod (PodHTTPChaos, PodIOChaos e PodNetworkChaos) no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-pod-level-child-crds-podhttpchaos-podiochaos-podnetworkchaos.md)
+517. [Regras de engenharia de controladores no Chaos Mesh: One writer per field e reconciliação idempotente baseada em nível](../../domains/software-0008/software/devops/chaosmesh-one-writer-per-field-and-idempotent-level-based-reconciliation.md)
+518. [Semântica de erros, RequeueAfter e TerminalError com controller-runtime v0.21 no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-controller-runtime-requeue-and-terminal-error-semantics.md)
+519. [Fluxo de criação de novos tipos de caos (api/v1alpha1, chaosimpl, Fx e make generate) no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-adding-new-top-level-chaos-kinds-and-make-generate.md)
+520. [Instalação em produção via Helm, matriz de releases suportadas e reporte de segurança (SECURITY.md) no Chaos Mesh](../../domains/software-0008/software/devops/chaosmesh-helm-production-installation-and-security-reporting.md)
+
+### Tilt (ambiente de desenvolvimento multi-serviço para equipes que operam no Kubernetes)
+
+521. [O loop de controle do Tilt (tilt up): automação contínua entre alteração de código e atualização no Kubernetes](../../domains/software-0008/software/devops/tilt-kubernetes-for-prod-tilt-for-dev-control-loop.md)
+522. [Atualizações instantâneas sem rebuild de imagem com o recurso Live Update do Tilt](../../domains/software-0008/software/devops/tilt-live-update-in-place-container-sync.md)
+523. [Visibilidade centralizada e agregação de logs multi-serviço na interface Tilt UI](../../domains/software-0008/software/devops/tilt-tilt-ui-aggregated-logs-and-resource-status.md)
+524. [Autoria de Tiltfiles com Starlark e referência da API (docs.tilt.dev/api.html)](../../domains/software-0008/software/devops/tilt-tiltfile-starlark-api-and-declarative-orchestration.md)
+525. [Reutilização de funcionalidades no Tiltfile com o ecossistema Tilt Extensions (tilt-dev/tilt-extensions)](../../domains/software-0008/software/devops/tilt-tilt-extensions-reusable-community-modules.md)
+526. [Guias de boas práticas por linguagem no Tilt: HTML, Node.js, Python, Go, Java e C#](../../domains/software-0008/software/devops/tilt-language-specific-best-practices-nodejs-python-go-java-csharp.md)
+527. [Instalação multi-plataforma do binário tilt (macOS, Linux, Windows e gerenciadores de pacotes)](../../domains/software-0008/software/devops/tilt-one-step-installation-and-package-managers.md)
+528. [Validação automatizada de ambientes multi-serviço em pipelines CI com o Tilt](../../domains/software-0008/software/devops/tilt-tilt-ci-mode-for-ephemeral-integration-testing.md)
+529. [Telemetria anônima de uso do Tilt e controles de privacidade (docs.tilt.dev/telemetry_faq.html)](../../domains/software-0008/software/devops/tilt-anonymized-telemetry-and-privacy-controls.md)
+530. [Política de divulgação privada de vulnerabilidades de segurança do Tilt (security@docker.com)](../../domains/software-0008/software/devops/tilt-security-vulnerability-reporting-to-docker.md)
+
+### Buildah (ferramenta daemonless e biblioteca Go para construção de imagens de contêiner OCI)
+
+531. [Buildah como construtor de imagens OCI e Docker sem daemon no modelo fork-exec](../../domains/software-0008/software/devops/buildah-daemonless-fork-exec-oci-image-builder.md)
+532. [Construção programática de imagens sem Dockerfile com buildah from, run, config e commit](../../domains/software-0008/software/devops/buildah-building-images-without-dockerfiles-from-run-config-commit.md)
+533. [Criação de imagens mínimas do zero (buildah from scratch) e montagem direta do rootfs com buildah mount](../../domains/software-0008/software/devops/buildah-from-scratch-minimal-images-and-host-package-managers.md)
+534. [Execução sem privilégios de root e manipulação de namespaces com buildah unshare](../../domains/software-0008/software/devops/buildah-buildah-unshare-and-rootless-user-namespaces.md)
+535. [Diferença arquitetural entre Buildah e Podman e o conceito de Working Containers](../../domains/software-0008/software/devops/buildah-buildah-versus-podman-specialization-and-working-containers.md)
+536. [Adição de arquivos, diretórios e URLs ao contêiner de trabalho com buildah copy e buildah add](../../domains/software-0008/software/devops/buildah-copy-and-add-content-from-files-urls-and-directories.md)
+537. [Configuração de metadados OCI (entrypoint, cmd, env, port, user, labels e annotations) com buildah config](../../domains/software-0008/software/devops/buildah-image-metadata-configuration-with-buildah-config.md)
+538. [Gerenciamento de ciclo de vida de imagens e registros com buildah pull, push, tag, rm e rmi](../../domains/software-0008/software/devops/buildah-pull-push-tag-and-local-storage-lifecycle.md)
+539. [Construção declarativa a partir de Containerfiles e Dockerfiles com buildah build (buildah bud)](../../domains/software-0008/software/devops/buildah-containerfiles-and-dockerfiles-with-buildah-build.md)
+540. [Diagnóstico e auditoria de configuração com buildah inspect, buildah info e troubleshooting.md](../../domains/software-0008/software/devops/buildah-inspecting-containers-images-and-system-info.md)
+
+### Skopeo (utilitário de linha de comando sem daemon para inspeção, cópia, sincronização e assinatura de imagens de contêiner)
+
+541. [Inspeção remota de manifestos, tags, camadas e configuração com skopeo inspect sem baixar a imagem](../../domains/software-0008/software/devops/skopeo-remote-image-inspection-without-pulling-layers.md)
+542. [Os seis mecanismos de transporte de imagem e armazenamento suportados pelo Skopeo](../../domains/software-0008/software/devops/skopeo-six-container-storage-and-registry-transports.md)
+543. [Promoção e cópia direta de imagens entre registros com skopeo copy sem daemon local](../../domains/software-0008/software/devops/skopeo-registry-to-registry-copy-without-local-daemon.md)
+544. [Sincronização de repositórios para ambientes desconectados (air-gapped) com skopeo sync](../../domains/software-0008/software/devops/skopeo-air-gapped-mirroring-with-skopeo-sync.md)
+545. [Gerenciamento de autenticação em registros com skopeo login, auth.json e flags --creds, --src-creds e --dest-creds](../../domains/software-0008/software/devops/skopeo-authentication-flows-login-auth-json-and-creds-flags.md)
+546. [Marcação de imagens para exclusão em registros com skopeo delete e coleta de lixo](../../domains/software-0008/software/devops/skopeo-deleting-images-and-registry-garbage-collection.md)
+547. [Cálculo local de digest (skopeo manifest-digest) e ferramentas locais de assinatura (generate-sigstore-key, standalone-sign e standalone-verify)](../../domains/software-0008/software/devops/skopeo-manifest-digest-computation-and-sigstore-key-tools.md)
+548. [Interoperabilidade direta com o backend containers-storage de Podman, Buildah e CRI-O](../../domains/software-0008/software/devops/skopeo-containers-storage-interoperability-with-podman-buildah-crio.md)
+549. [Alerta de segurança upstream do Skopeo: ausência de site separado e rejeição de sites falsos não afiliados](../../domains/software-0008/software/devops/skopeo-official-upstream-sources-and-fake-website-warning.md)
+550. [Execução do Skopeo em contêiner (quay.io/skopeo/stable) para pipelines CI/CD e Tekton Tasks](../../domains/software-0008/software/devops/skopeo-container-image-usage-quay-skopeo-stable-in-ci.md)
+
+### Kaniko (ferramenta histórica de build de imagens em userspace no Kubernetes e status de arquivamento upstream)
+
+551. [Execução de Dockerfile em userspace no Kaniko e seu status de projeto arquivado upstream](../../domains/software-0008/software/devops/kaniko-userspace-dockerfile-builds-and-upstream-archival-status.md)
+552. [Como o Kaniko funciona: extração da imagem base e snapshotting do sistema de arquivos em userspace](../../domains/software-0008/software/devops/kaniko-how-kaniko-works-base-image-extraction-and-userspace-snapshotting.md)
+553. [Limitações conhecidas do Kaniko: proibição de copiar o binário executor para outras imagens (como agentes Jenkins)](../../domains/software-0008/software/devops/kaniko-known-issues-official-executor-image-requirement.md)
+554. [Os sete contextos de build suportados pelo Kaniko (dir, tar, stdin, gs, s3, https Azure e git)](../../domains/software-0008/software/devops/kaniko-seven-build-context-sources-and-prefixes.md)
+555. [Cache remoto de camadas (--cache, --cache-repo) e pré-aquecimento local de imagens base (kaniko warmer)](../../domains/software-0008/software/devops/kaniko-remote-layer-caching-and-base-image-warmer.md)
+556. [Execução segura do Kaniko em clusters Kubernetes e dentro do sandbox gVisor (runsc --force)](../../domains/software-0008/software/devops/kaniko-running-kaniko-in-kubernetes-and-gvisor-sandbox.md)
+557. [Configuração de autenticação do Kaniko para Docker Hub, Google GCR, Amazon ECR, Azure ACR e JFrog](../../domains/software-0008/software/devops/kaniko-registry-authentication-docker-hub-gcr-ecr-and-acr.md)
+558. [Builds reprodutíveis (--reproducible), captura de digests (--digest-file) e validação sem push (--no-push, --tar-path)](../../domains/software-0008/software/devops/kaniko-reproducible-builds-digest-files-and-no-push-validation.md)
+559. [Construção de imagens multi-arquitetura (multi-arch) combinando Kaniko e manifest-tool](../../domains/software-0008/software/devops/kaniko-multi-arch-container-manifests-with-manifest-tool.md)
+560. [Configuração de certificados CA privados (/kaniko/ssl/certs/), mTLS de registro e registry mirrors no Kaniko](../../domains/software-0008/software/devops/kaniko-custom-ca-certificates-and-registry-mirrors-configuration.md)
+
+### Dagger (plataforma programável, local-first, repetível e observável para automação de entrega de software e CI/CD)
+
+561. [Os quatro pilares do Dagger: entrega de software programável, local-first, repetível e observável](../../domains/software-0008/software/devops/dagger-programmable-local-first-repeatable-observable-delivery.md)
+562. [A System API multi-linguagem do Dagger e artefatos tipados endereçados por conteúdo](../../domains/software-0008/software/devops/dagger-system-api-and-typed-content-addressed-artifacts.md)
+563. [SDKs nativos gerados a partir do schema para 8 linguagens (Go, Python, TypeScript, PHP, Java, .NET, Elixir e Rust)](../../domains/software-0008/software/devops/dagger-native-sdks-in-eight-languages-and-schema-codegen.md)
+564. [Execução incremental por padrão e cache endereçado por conteúdo no Dagger](../../domains/software-0008/software/devops/dagger-incremental-execution-and-content-addressed-caching.md)
+565. [Observabilidade nativa no Dagger: emissão automática de traces OpenTelemetry, TUI ao vivo e visualização web](../../domains/software-0008/software/devops/dagger-built-in-opentelemetry-tracing-tui-and-observability.md)
+566. [Orquestração de serviços efêmeros (bancos de dados, APIs) e túneis de rede em funções em sandbox no Dagger](../../domains/software-0008/software/devops/dagger-composable-workflows-services-and-network-tunnels.md)
+567. [Desenvolvimento Dogfooding ("Dagger-in-Dagger") com dagger shell playground e dagger check](../../domains/software-0008/software/devops/dagger-dagger-in-dagger-playground-and-self-hosted-ci.md)
+568. [Exploração interativa do grafo de contêineres e módulos com o REPL (dagger shell)](../../domains/software-0008/software/devops/dagger-interactive-repl-and-dagger-shell-exploration.md)
+569. [Ecossistema de módulos reutilizáveis do Dagger e composição entre diferentes linguagens](../../domains/software-0008/software/devops/dagger-reusable-module-ecosystem-and-cross-language-sharing.md)
+570. [Governança de releases com Changie, geração de código (dagger generate) e DCO no Dagger](../../domains/software-0008/software/devops/dagger-changie-release-notes-and-dco-contribution-checklist.md)
+
+### HashiCorp Vagrant (ferramenta para construção e distribuição de ambientes de desenvolvimento portáteis)
+
+571. [Vagrant e o Vagrantfile para construção de ambientes de desenvolvimento portáteis e reproduzíveis](../../domains/software-0008/software/devops/vagrant-portable-development-environments-and-vagrantfile.md)
+572. [Arquitetura multi-provedor do Vagrant: VirtualBox, VMware, AWS, OpenStack, Docker e LXC](../../domains/software-0008/software/devops/vagrant-multi-provider-architecture-virtualbox-vmware-cloud-and-containers.md)
+573. [Fluxo rápido com vagrant init, vagrant up e download sob demanda de Boxes](../../domains/software-0008/software/devops/vagrant-quickstart-workflow-vagrant-init-and-vagrant-up-boxes.md)
+574. [Dependências obrigatórias de sistema do Vagrant no PATH: bsdtar e curl](../../domains/software-0008/software/devops/vagrant-system-path-dependencies-bsdtar-and-curl.md)
+575. [Aviso oficial de depreciação do HCP Vagrant (novembro de 2026) e continuidade do Vagrant CLI](../../domains/software-0008/software/devops/vagrant-hcp-vagrant-deprecation-notice-november-2026-and-cli-continuity.md)
+576. [Provisionamento automatizado de máquinas com Shell, Ansible, File e Docker no Vagrant](../../domains/software-0008/software/devops/vagrant-automated-provisioning-shell-ansible-docker-and-file.md)
+577. [Compartilhamento de código entre host e convidado com Synced Folders no Vagrant](../../domains/software-0008/software/devops/vagrant-synced-folders-host-guest-code-sharing.md)
+578. [Configuração de rede no Vagrant: Port Forwarding, Private Network (Host-Only) e Public Network (Bridged)](../../domains/software-0008/software/devops/vagrant-networking-port-forwarding-private-and-public-networks.md)
+579. [Ciclo de vida completo do ambiente Vagrant: ssh, suspend, resume, halt, reload e destroy](../../domains/software-0008/software/devops/vagrant-vm-lifecycle-commands-ssh-suspend-halt-reload-and-destroy.md)
+580. [Modelagem de ambientes multi-máquina (Multi-Machine) no Vagrantfile para laboratórios de DevOps e SRE](../../domains/software-0008/software/devops/vagrant-multi-machine-environments-for-devops-and-sre-labs.md)
+
+### HashiCorp Consul (descoberta de serviços, service mesh, API gateway e configuração dinâmica multi-datacenter)
+
+581. [Descoberta de serviços (Service Discovery) via interfaces DNS e HTTP e registro de serviços externos no Consul](../../domains/software-0008/software/devops/consul-service-discovery-via-dns-and-http-interfaces.md)
+582. [Verificação ativa de saúde (Health Checking), prevenção de roteamento para nós falhos e Circuit Breakers no Consul](../../domains/software-0008/software/devops/consul-health-checking-and-circuit-breaker-integration.md)
+583. [Consul Service Mesh: criptografia mTLS automática, autorização baseada em identidade (Intentions) e Transparent Proxy](../../domains/software-0008/software/devops/consul-consul-service-mesh-mtls-and-transparent-proxy.md)
+584. [Gerenciamento de tráfego de entrada (Norte-Sul) e políticas de acesso com Consul API Gateway](../../domains/software-0008/software/devops/consul-consul-api-gateway-north-south-traffic-and-policies.md)
+585. [Arquitetura nativa Multi-Datacenter do Consul para operação multi-região sem configuração complexa](../../domains/software-0008/software/devops/consul-multi-datacenter-awareness-and-wan-federation.md)
+586. [Configuração dinâmica de aplicações e armazenamento de objetos indexados via HTTP API (Consul KV)](../../domains/software-0008/software/devops/consul-dynamic-app-configuration-kv-store-and-watches.md)
+587. [Suporte multi-plataforma (Linux, macOS, FreeBSD, Solaris, Windows) e interface web opcional (Consul UI)](../../domains/software-0008/software/devops/consul-cross-platform-support-and-browser-based-ui.md)
+588. [Guias de implantação do Consul: binário standalone em VMs, Minikube, Kind, Kubernetes em produção e HCP Consul](../../domains/software-0008/software/devops/consul-deployment-topologies-vms-minikube-kind-k8s-and-hcp.md)
+589. [Licenciamento BUSL-1.1 do repositório Consul, edição comunitária vs Consul Enterprise](../../domains/software-0008/software/devops/consul-busl-1-1-licensing-and-consul-enterprise-tier.md)
+590. [Divulgação responsável de vulnerabilidades de segurança no Consul (security@hashicorp.com)](../../domains/software-0008/software/devops/consul-security-vulnerability-disclosure-hashicorp.md)
+
+### HashiCorp Nomad (orquestrador simples e flexível de cargas de trabalho para contêineres, aplicações não containerizadas e VMs)
+
+591. [Orquestração unificada de contêineres (Docker, Podman), binários (exec, Java) e VMs (QEMU) via Task Drivers no Nomad](../../domains/software-0008/software/devops/nomad-pluggable-task-drivers-containers-exec-java-and-qemu.md)
+592. [Arquitetura de binário único autocontido do Nomad sem serviços externos de armazenamento ou coordenação](../../domains/software-0008/software/devops/nomad-single-binary-self-contained-architecture.md)
+593. [Suporte nativo a cargas de IA/ML com Device Plugins para GPUs, FPGAs e TPUs no Nomad](../../domains/software-0008/software/devops/nomad-device-plugins-gpu-fpga-and-tpu-workloads.md)
+594. [Federação nativa Multi-Região e Multi-Cloud em escala global no Nomad](../../domains/software-0008/software/devops/nomad-multi-region-and-multi-cloud-federation-out-of-the-box.md)
+595. [Agendamento concorrente otimista (Optimistic Concurrency) e escalabilidade comprovada em mais de 10.000 nós](../../domains/software-0008/software/devops/nomad-optimistically-concurrent-scheduling-at-10k-nodes-scale.md)
+596. [Integração nativa do Nomad com o ecossistema HashiCorp: Terraform, Consul e Vault](../../domains/software-0008/software/devops/nomad-hashicorp-ecosystem-integration-terraform-consul-vault.md)
+597. [Especificação de Jobs em HCL e os tipos de agendadores do Nomad (service, batch, system e sysbatch)](../../domains/software-0008/software/devops/nomad-job-specification-service-batch-and-system-schedulers.md)
+598. [Operação via Nomad CLI (developer.hashicorp.com/nomad/commands), HTTP API e ecossistema de Plugins](../../domains/software-0008/software/devops/nomad-nomad-cli-api-and-plugin-ecosystem-operations.md)
+599. [Desenvolvimento local (nomad agent -dev), manifestos Terraform de referência e arquitetura de produção](../../domains/software-0008/software/devops/nomad-local-dev-agent-and-terraform-cloud-reference-manifests.md)
+600. [Licenciamento BUSL-1.1, Nomad Enterprise, repositório web-unified-docs e ressalvas do Public Roadmap](../../domains/software-0008/software/devops/nomad-busl-1-1-license-nomad-enterprise-and-public-roadmap-governance.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 500 notas 1–500 das tranches 1–5 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 500/2.000 notas válidas, restando 1500 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 600 notas 1–600 das tranches 1–6 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 600/2.000 notas válidas, restando 1400 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
