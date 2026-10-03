@@ -1,0 +1,151 @@
+=== NOTE: 701 | kata-containers-isolamento-vms-leves-arquitetura | Kata Containers: máquinas virtuais leves com isolamento de hardware e experiência de containers ===
+ONE_LINER: O Kata Containers (projeto open-source licenciado sob Apache-2.0, série 2.0+) constrói uma implementação padronizada de máquinas virtuais leves (lightweight VMs) que se comportam e performam como containers, mas entregam o isolamento de workload e a segurança de VMs.
+IMPORTANCE: Em containers tradicionais baseados apenas em namespaces e cgroups (como no `runc` ou `crun`), todos os containers compartilham o mesmo kernel do sistema operacional hospedeiro; uma única vulnerabilidade de escalada no kernel permite escapar do container para o host. Segundo o README oficial do Kata Containers, encapsular o container/Pod dentro de uma máquina virtual leve isolada por hardware combina a agilidade do ecossistema OCI/CRI com a barreira de segurança de virtualização.
+HOW_IT_WORKS: Quando um gerenciador de containers (como `containerd` ou `CRI-O` no Kubernetes via `RuntimeClass`) solicita a criação de um Pod com Kata Containers, o componente `runtime` (ou `runtime-rs` escrito em Rust), atuando como uma implementação de `containerd shimv2`, inicializa um hipervisor configurado (ou o VMM embutido `dragonball`) usando um kernel Linux guest dedicado e uma imagem de mini-SO (`rootfs` ou `initrd` gerada pelo `osbuilder`). Dentro dessa máquina virtual convidada roda o processo `agent` (`kata-agent`), que recebe comandos do shim no host e configura o ambiente de containers OCI dentro da VM isolada.
+EXAMPLE:
+```bash
+# Verificar no host se o processador e o kernel suportam executar Kata Containers (modo silencioso sem rede)
+kata-runtime check --no-network-checks --verbose
+```
+TRADE_OFFS: Ao contrário de containers nativos que compartilham a memória do kernel do host sem sobrecarga adicional por Pod, cada Pod executado sob Kata Containers instancia um processo de hipervisor, um kernel guest isolado e o `kata-agent`, aumentando o footprint base de memória RAM por Pod e exigindo suporte a extensões de virtualização de hardware no servidor (ou virtualização aninhada habilitada em máquinas virtuais de nuvem).
+VERIFY: Execute `sudo kata-runtime check` como usuário `root` no servidor Linux para validar o suporte de virtualização de hardware e verificar se não há outro hipervisor incompatível em execução.
+LINKS: [[kata-requisitos-hardware-arquiteturas-kata-runtime-check]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[firecracker-microvms-kvm-isolamento-serverless-multitenant]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 702 | kata-requisitos-hardware-arquiteturas-kata-runtime-check | Kata Containers: suporte multi-arquitetura de virtualização e diagnóstico com kata-runtime check ===
+ONE_LINER: O Kata Containers suporta sistemas de 64 bits em quatro arquiteturas (`x86_64`/`amd64` com Intel VT-x ou AMD SVM, `aarch64`/`arm64` com ARM Hyp, `ppc64le` com IBM Power e `s390x` com IBM Z & LinuxONE SIE) e valida o host com `kata-runtime check`.
+IMPORTANCE: Tentar agendar Pods isolados por máquina virtual em nós Kubernetes cujas CPUs não expõem extensões de virtualização de hardware (por exemplo, instâncias de nuvem sem nested virtualization ou sem metal) causa falhas imediatas de criação de sandbox. O README oficial do Kata Containers documenta a matriz de arquiteturas suportadas e o funcionamento detalhado do utilitário de verificação `kata-runtime check`.
+HOW_IT_WORKS: O comando `kata-runtime check` inspeciona as flags do processador, módulos de kernel (`/dev/kvm` ou equivalente da arquitetura) e dependências de sistema para determinar se o host é capaz de criar um Kata Container. Por padrão, o comando exibe apenas uma mensagem resumida de sucesso/falha e conecta-se à rede para verificar no GitHub se há uma versão mais recente do Kata Containers disponível. O operador pode adicionar `--no-network-checks` para desativar a consulta ao GitHub e `--verbose` para listar todas as checagens realizadas; quando executado como usuário `root`, verificações adicionais de privilégio são executadas (incluindo checar se outro hipervisor incompatível está ativo) e os testes de rede são desabilitados automaticamente.
+EXAMPLE:
+```bash
+# Executar validação completa de hardware como root (desativa checagens de rede automaticamente e testa hipervisores)
+sudo kata-runtime check --verbose
+```
+TRADE_OFFS: Executar `kata-runtime check` como um usuário comum sem privilégios de `root` em um script de automação pode tentar realizar conexões HTTP externas para a API do GitHub (que falharão em ambientes corporativos air-gapped se `--no-network-checks` for omitido) e deixará de rodar os testes profundos de conflito de hipervisor no kernel.
+VERIFY: Confirme que `sudo kata-runtime check` retorna código de saída `0` e a mensagem indicando que o sistema é capaz de executar Kata Containers na arquitetura detectada (`amd64`, `arm64`, `ppc64le` ou `s390x`).
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[kata-hipervisores-configuracao-runtime-agent]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 703 | kata-componentes-principais-shimv2-runtime-rs-agent-dragonball | Kata Containers: componentes principais (runtime Go, runtime-rs em Rust, agent e VMM embutido dragonball) ===
+ONE_LINER: O núcleo do Kata Containers compreende o `runtime` (implementação `containerd shimv2` em Go), o `runtime-rs` (versão do runtime em Rust), o processo `agent` dentro da VM/Pod e o VMM embutido opcional `dragonball`.
+IMPORTANCE: Na evolução do Kata Containers 2.0+ (e arquitetura 4.0), unificar o ciclo de vida do Pod em um único processo `shimv2` e oferecer um runtime escrito em Rust com um Virtual Machine Monitor (VMM) integrado reduziu drasticamente o consumo de memória, o número de processos por Pod e a latência de inicialização. A tabela `Main components` do README oficial do Kata Containers descreve o papel de cada um desses componentes centrais.
+HOW_IT_WORKS: (1) **`runtime` (`src/runtime`)**: componente principal invocado pelo gerenciador de containers (`containerd`), fornecendo a implementação `containerd shimv2` em Go; (2) **`runtime-rs` (`src/runtime-rs`)**: implementação moderna do runtime escrita em Rust, projetada para segurança de memória e menor pegada de recursos; (3) **`agent` (`src/agent`)**: processo de gerenciamento (escrito em Rust) que roda dentro da máquina virtual convidada (guest VM / Pod) e configura namespaces, cgroups e processos dos containers solicitados pelo runtime; e (4) **`dragonball` (`src/dragonball`)**: um VMM (Virtual Machine Monitor) integrado e opcional que roda na mesma memória do `runtime-rs`, proporcionando uma experiência out-of-the-box do Kata Containers com otimizações específicas para workloads de containers sem precisar lançar um processo VMM externo separado.
+EXAMPLE:
+```bash
+# Inspecionar os binários instalados do runtime Kata (containerd-shim-kata-v2) no nó Linux
+which containerd-shim-kata-v2 kata-runtime
+containerd-shim-kata-v2 -v
+```
+TRADE_OFFS: Enquanto o `runtime` tradicional em Go (`containerd-shim-kata-v2`) comunica-se com processos hipervisores externos (como QEMU, Cloud Hypervisor ou Firecracker), o uso do `dragonball` acoplado ao `runtime-rs` elimina a fronteira de processo entre o shim e o VMM para máxima eficiência, mas restringe as opções de dispositivos virtuais às funcionalidades suportadas pelo motor `dragonball`.
+VERIFY: Verifique a versão e os caminhos configurados do `containerd-shim-kata-v2` (ou `runtime-rs`) e confirme nos processos do host durante a execução de um Pod que um único shim gerencia a VM inteira do Pod.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-hipervisores-configuracao-runtime-agent]] | [[kata-kernel-guest-osbuilder-mini-os-rootfs-initrd]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 704 | kata-hipervisores-configuracao-runtime-agent | Kata Containers: arquivo único de configuração (configuration.toml) e seleção de hipervisores ===
+ONE_LINER: O Kata Containers utiliza um único arquivo de configuração TOML dividido em seções para o `runtime`, o `agent` e o `hypervisor`, permitindo alternar entre múltiplos hipervisores suportados (QEMU, Cloud Hypervisor, Firecracker, Dragonball).
+IMPORTANCE: Diferentes cargas de trabalho em Kubernetes possuem requisitos distintos de virtualização: funções serverless efêmeras priorizam inicialização ultrarrápida e mínimo footprint (Firecracker ou Dragonball), enquanto workloads corporativos complexos podem exigir hotplug amplo de dispositivos PCI, VFIO/GPUs e múltiplos recursos de hardware (QEMU ou Cloud Hypervisor). Segundo a seção `Configuration` e `Hypervisors` do README oficial do Kata Containers, toda essa parametrização é centralizada no arquivo de configuração do runtime.
+HOW_IT_WORKS: Quando o `containerd` invoca o shim do Kata Containers, o runtime lê o arquivo `configuration.toml` (podendo haver múltiplos arquivos `configuration-<hypervisor>.toml` no nó, cada um mapeado para uma `RuntimeClass` diferente no Kubernetes, como `kata-qemu`, `kata-clh`, `kata-fc` ou `kata-dragonball`). O arquivo contém seções específicas para: (1) o **`hypervisor`** (caminho do binário VMM, caminho do kernel guest, imagem `image` ou `initrd`, número padrão de vCPUs, memória inicial em MiB, compartilhamento de filesystem via `virtio-fs`); (2) o **`agent`** (opções de log, debug e timeouts do `kata-agent` dentro da VM); e (3) o **`runtime`** (flags de rastreamento, intercepção e cgroups no host).
+EXAMPLE:
+```bash
+# Exibir o caminho do arquivo configuration.toml ativo e os diretórios padrão buscados pelo kata-runtime
+kata-runtime --show-default-config-paths
+kata-runtime env
+```
+TRADE_OFFS: Habilitar opções de console de depuração ou logs verbosos na seção do `agent` e do `hypervisor` dentro do `configuration.toml` é valioso para troubleshooting de inicialização da VM guest, porém aumenta o tempo de boot e pode expor acesso de shell dentro da máquina virtual se `debug_console_enabled` for esquecido ativo em produção.
+VERIFY: Execute `kata-runtime env` para inspecionar o JSON/TOML resolvido com todas as configurações ativas de `[hypervisor]`, `[runtime]`, `[agent]` e `[kernel]` antes de criar um container.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[firecracker-microvms-kvm-isolamento-serverless-multitenant]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 705 | kata-kernel-guest-osbuilder-mini-os-rootfs-initrd | Kata Containers: construção de kernel guest e imagens mini-OS (rootfs e initrd) com osbuilder ===
+ONE_LINER: O Kata Containers inclui a ferramenta de infraestrutura `osbuilder` (`tools/osbuilder`) e patches dedicados de kernel (`tools/packaging/kernel`) para construir o kernel Linux guest e imagens enxutas de `rootfs` ou `initrd` que inicializam a VM do Pod.
+IMPORTANCE: Usar uma imagem de sistema operacional de servidor Linux genérica (com centenas de megabytes de pacotes, serviços systemd desnecessários e drivers legados) para dar boot na máquina virtual de cada Pod inviabilizaria a velocidade e a densidade de memória dos Kata Containers. Conforme a tabela `Additional components` do README oficial do Kata Containers, o `osbuilder` e a árvore de kernel otimizada geram um ambiente guest mínimo contendo apenas o necessário para rodar o `kata-agent`.
+HOW_IT_WORKS: O componente **`kernel`** (`tools/packaging/kernel`) mantém as configurações enxutas e patches aplicados ao kernel Linux oficial para acelerar o boot dentro do hipervisor e habilitar recursos como `virtio-fs`, `vsock` e hotplug de memória/CPU. Já a ferramenta **`osbuilder`** (`tools/osbuilder`) constrói uma imagem de "mini O/S" contendo o binário `kata-agent` (frequentemente configurado como o próprio processo `init` da VM para eliminar sobrecarga de inicialização), podendo empacotá-la em dois formatos: (1) uma imagem **`rootfs`** (sistema de arquivos bruto mapeado na VM via `pmem`/`nvdimm` ou dispositivo de bloco Com DAX para economizar RAM compartilhando páginas); ou (2) um arquivo **`initrd`** (initial ramdisk comprimido carregado diretamente em memória pelo hipervisor).
+EXAMPLE:
+```bash
+# Verificar na saída de kata-runtime env qual kernel guest e qual imagem (rootfs ou initrd) estão configurados
+kata-runtime env | grep -A 6 -E "^\[(Kernel|Image|Initrd)\]"
+```
+TRADE_OFFS: O uso de uma imagem `initrd` simplifica o boot em hipervisores ou arquiteturas que não suportam mapeamento DAX/NVDIMM, mas consome memória RAM adicional em cada VM guest porque o ramdisk é descompactado na memória da VM; já o uso de imagem `rootfs` com DAX permite mapear o sistema de arquivos convidado diretamente da memória do host sem duplicar cache de páginas.
+VERIFY: Inspecione os arquivos de kernel (`vmlinux*` ou `vmlinuz*`) e de imagem (`kata-containers.img` ou `kata-containers-initrd.img`) instalados em `/opt/kata/share/kata-containers/` (ou caminho listado em `kata-runtime env`).
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[kata-packaging-kata-deploy-helm-kubernetes-runtimeclass]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 706 | kata-packaging-kata-deploy-helm-kubernetes-runtimeclass | Kata Containers: empacotamento de binários e implantação em Kubernetes com o Helm chart kata-deploy e RuntimeClass ===
+ONE_LINER: O Kata Containers fornece scripts de empacotamento (`tools/packaging`), tarballs de release e o Helm chart oficial `kata-deploy` para instalar automaticamente os binários, hipervisores, kernels e objetos `RuntimeClass` nos nós de um cluster Kubernetes.
+IMPORTANCE: Instalar manualmente binários de hipervisores, kernels guest, imagens `rootfs`, shims `containerd-shim-kata-v2` e editar `/etc/containerd/config.toml` em dezenas de nós workers de um cluster Kubernetes gerenciado é trabalhoso e propenso a desvios de configuração durante o auto-scaling de nós. Segundo a seção `Packaging and releases` do README oficial do Kata Containers, o Helm chart `kata-deploy` automatiza todo esse provisionamento em clusters Kubernetes.
+HOW_IT_WORKS: O diretório `tools/packaging` contém os metadados e scripts que produzem os pacotes estáticos e tarballs de release contendo todos os artefatos necessários (runtimes, hipervisores, kernel guest e rootfs). Quando implantado no Kubernetes via Helm chart `kata-deploy`, um DaemonSet privilegiado copia os artefatos autocontidos do Kata para o sistema de arquivos do nó hospedeiro (tipicamente sob `/opt/kata`), registra dinamicamente os handlers de runtime no `containerd` ou `CRI-O` do nó e cria os objetos `RuntimeClass` na API do Kubernetes (como `kata-qemu`, `kata-clh`, `kata-fc`, `kata-dragonball`). A partir daí, qualquer Pod que especifique `spec.runtimeClassName: kata-qemu` é agendado e isolado automaticamente em uma VM Kata.
+EXAMPLE:
+```yaml
+# Exemplo de Pod Kubernetes solicitando isolamento em VM leve via RuntimeClass do Kata Containers
+apiVersion: v1
+kind: Pod
+metadata:
+  name: workload-isolado-kata
+spec:
+  runtimeClassName: kata-qemu
+  containers:
+    - name: app
+      image: nginx:alpine
+```
+TRADE_OFFS: Ao desinstalar ou atualizar o `kata-deploy` em um cluster Kubernetes ativo, os nós onde já existem Pods rodando com `runtimeClassName: kata-*` precisam ser drenados (`kubectl drain`) antes de remover os binários de `/opt/kata` e reconfigurar o `containerd`, caso contrário os shims das VMs em execução perderão seus binários e configurações de suporte.
+VERIFY: Execute `kubectl get runtimeclasses` para listar as classes criadas pelo `kata-deploy` e rode `kubectl exec workload-isolado-kata -- uname -r` comparando com o `uname -r` do nó worker para comprovar que o Pod enxerga o kernel guest isolado da VM Kata.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-kernel-guest-osbuilder-mini-os-rootfs-initrd]] | [[kata-webhook-admissao-mutacao-pods-runtimeclass]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 707 | kata-ferramentas-diagnostico-kata-ctl-agent-ctl-debug-trace | Kata Containers: ferramentas de diagnóstico e depuração (kata-ctl, agent-ctl, kata-debug e trace-forwarder) ===
+ONE_LINER: O ecossistema de utilitários do Kata Containers inclui `kata-ctl` (comandos avançados e debug), `agent-ctl` (testes de baixo nível do `kata-agent`), `kata-debug` (coleta de diagnósticos em clusters Kubernetes) e `trace-forwarder` (encaminhamento de traces do agente).
+IMPORTANCE: Depurar um container que roda dentro de uma máquina virtual isolada é mais complexo do que depurar um processo local no host, pois o `kata-agent` está separado do host pela fronteira do hipervisor (comunicando-se via `vsock`) e seus traces e estados internos não são visíveis diretamente via `ps` ou `strace` no servidor físico. A tabela `Additional components` do README oficial do Kata Containers apresenta quatro ferramentas dedicadas para resolver essa visibilidade.
+HOW_IT_WORKS: (1) **`kata-ctl` (`src/tools/kata-ctl`)**: utilitário em Rust que fornece comandos avançados de verificação de ambiente, inspeção de métricas, monitoria e facilidades de debug do runtime; (2) **`agent-ctl` (`src/tools/agent-ctl`)**: ferramenta de baixo nível que permite conectar diretamente ao `kata-agent` (via vsock/mock) e enviar requisições da API TT-RPC do agente para testar criação de sandbox e containers de forma isolada; (3) **`kata-debug` (`tools/packaging/kata-debug`)**: utilitário projetado para coletar automaticamente informações de depuração e logs do Kata Containers a partir de nós de um cluster Kubernetes; e (4) **`trace-forwarder` (`src/tools/trace-forwarder`)**: componente auxiliar que recebe spans de tracing distribuído (OpenTelemetry) gerados pelo `kata-agent` dentro da VM guest via `vsock` e os encaminha ao coletor no host.
+EXAMPLE:
+```bash
+# Executar verificações de sistema e ambiente usando o utilitário moderno kata-ctl
+kata-ctl check
+kata-ctl env
+```
+TRADE_OFFS: O uso de `agent-ctl` para enviar comandos diretos ao `kata-agent` de uma VM ou o acionamento de tracing completo via `trace-forwarder` são voltados para ambientes de desenvolvimento, CI e diagnóstico profundo; em produção, o canal de controle `vsock` da VM deve permanecer gerenciado exclusivamente pelo processo `containerd-shim-kata-v2` para evitar inconsistências de estado entre o containerd e o agente guest.
+VERIFY: Execute `kata-ctl version` e `kata-ctl check` no nó hospedeiro para validar o funcionamento do utilitário de diagnóstico em Rust e inspecionar os relatórios de capacidade do host.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[kata-requisitos-hardware-arquiteturas-kata-runtime-check]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 708 | kata-webhook-admissao-mutacao-pods-runtimeclass | Kata Containers: mutating admission webhook (kata-webhook) para injeção transparente de RuntimeClass em Pods ===
+ONE_LINER: O componente utilitário `Webhook` (`tools/testing/kata-webhook`) fornece um controlador de admissão mutante simples para anotar e configurar automaticamente Pods Kubernetes com a `runtimeClassName` do Kata Containers sem alterar manifestos existentes.
+IMPORTANCE: Em grandes organizações ou pipelines de testes de conformidade (como testar charts Helm de terceiros sob isolamento Kata), editar manualmente centenas de manifestos de `Deployment`, `StatefulSet` e `Job` para adicionar o campo `spec.runtimeClassName: kata` é inviável. Conforme listado na tabela `Additional components` do README oficial do Kata Containers, o `kata-webhook` demonstra como automatizar essa transição na camada de admissão do Kubernetes.
+HOW_IT_WORKS: Implantado como um `MutatingAdmissionWebhook` no cluster Kubernetes, o `kata-webhook` intercepta requisições `CREATE` de objetos `Pod` no `kube-apiserver`. Caso o Pod pertença a um namespace monitorado (e não seja um Pod de rede `hostNetwork: true` incompatível com isolamento de VM), o webhook aplica um JSON Patch injetando automaticamente `spec.runtimeClassName` (por exemplo, `kata` ou `kata-qemu`) antes que o objeto seja persistido no `etcd` e agendado nos nós, permitindo rodar cargas de trabalho inteiras dentro de máquinas virtuais Kata de maneira 100% transparente para o desenvolvedor.
+EXAMPLE:
+```bash
+# Verificar se um Pod criado sem runtimeClassName explícito no YAML recebeu a mutação do webhook para kata
+kubectl get pod pod-teste-webhook -o jsonpath='{.spec.runtimeClassName}{"\n"}'
+```
+TRADE_OFFS: Pods que exigem acesso direto ao namespace de rede do nó hospedeiro (`hostNetwork: true`), `hostPID: true` ou montagens privilegiadas de dispositivos físicos do host não podem ser isolados de forma transparente dentro de uma VM guest pelo webhook sem quebrar sua função; por isso, regras de mutação automática de `RuntimeClass` devem sempre excluir namespaces de sistema (`kube-system`) e DaemonSets de infraestrutura/CNI.
+VERIFY: Com o `kata-webhook` ativo em um namespace de homologação, crie um Pod simples (`kubectl run nginx --image=nginx`) e confirme via `kubectl get pod nginx -o yaml` que `runtimeClassName` foi preenchido automaticamente.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-packaging-kata-deploy-helm-kubernetes-runtimeclass]] | [[kubescape-validating-admission-policies-cel-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 709 | kata-arquitetura-4-0-evolucao-rust-seguranca-confidencial | Kata Containers: evolução para a Arquitetura 4.0, unificação em Rust e isolamento de workloads ===
+ONE_LINER: A documentação de design do Kata Containers (incluindo a visão geral da Arquitetura 4.0 em `docs/design/architecture_4.0/architecture.md`) consolida a transição dos componentes críticos (`runtime-rs`, `kata-agent`, `dragonball`) para Rust com foco em segurança de memória, baixo overhead e suporte a computação confidencial.
+IMPORTANCE: Em ambientes multi-tenant hostis e nuvens públicas, o próprio software que gerencia a máquina virtual no host (o shim e o hipervisor) faz parte da base computacional confiável (TCB); reescrever esses componentes em Rust e otimizar a comunicação host-guest reduz vulnerabilidades de corrupção de memória e prepara o caminho para Confidential Containers (TEE). O README oficial do Kata Containers destaca os documentos de design da arquitetura clássica e da Arquitetura 4.0.
+HOW_IT_WORKS: Na evolução arquitetural do Kata Containers, em vez de lançar múltiplos processos auxiliares por container (como ocorria no Kata 1.x com `kata-shim`, `kata-proxy` e `kata-runtime` separados), a arquitetura moderna utiliza um único processo `containerd-shim-kata-v2` por Pod Kubernetes. Com o `runtime-rs` e o `kata-agent` escritos em Rust, o gerenciamento de ciclo de vida OCI, o compartilhamento de diretórios de imagens, a multiplexação sobre `vsock` e o acionamento de hipervisores (ou do VMM interno `dragonball`) ocorrem com tipagem forte e segurança de memória em todas as plataformas de 64 bits suportadas (`x86_64`, `aarch64`, `ppc64le` e `s390x`).
+EXAMPLE:
+```bash
+# Inspecionar na árvore de processos do host que o Pod Kata é representado pelo processo containerd-shim-kata-v2
+ps -ef | grep containerd-shim-kata-v2
+```
+TRADE_OFFS: Como todos os containers pertencentes ao mesmo Pod Kubernetes compartilham a mesma máquina virtual leve (o mesmo sandbox Kata, kernel guest e instância do `kata-agent`), containers dentro do **mesmo** Pod compartilham o kernel convidado entre si; portanto, cargas de trabalho de tenants diferentes com níveis de confiança distintos devem sempre ser alocadas em Pods separados (cada um em sua própria VM Kata).
+VERIFY: Crie um Pod com dois containers usando `runtimeClassName: kata-qemu` e verifique no host que apenas uma única instância de máquina virtual foi iniciada para atender ambos os containers do Pod.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-componentes-principais-shimv2-runtime-rs-agent-dragonball]] | [[youki-runtime-oci-rust-seguranca-memoria]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers
+
+=== NOTE: 710 | kata-ci-testes-integracao-openshift-governanca-seguranca | Kata Containers: suíte de testes de integração, pipelines OpenShift CI, governança comunitária e divulgação de segurança ===
+ONE_LINER: O projeto Kata Containers mantém suítes extensivas de testes (`tests/`), pipelines de integração contínua (`ci-nightly.yaml` e `ci/openshift-ci`), governança aberta em `kata-containers/community` e processo formal de reporte de vulnerabilidades (`SECURITY.md`).
+IMPORTANCE: Garantir que um runtime de máquinas virtuais funcione de forma idêntica em quatro arquiteturas de processador (`amd64`, `arm64`, `ppc64le`, `s390x`), múltiplos hipervisores e dezenas de distribuições Kubernetes/OpenShift exige automação rigorosa de CI e testes de regressão fora dos testes unitários convencionais. O README oficial do Kata Containers documenta essa estrutura de qualidade e governança.
+HOW_IT_WORKS: Além dos testes unitários que vivem junto ao código-fonte de cada componente (`src/runtime`, `src/agent`, `src/runtime-rs`), o diretório raiz `tests/` concentra os testes funcionais, de integração com Kubernetes/containerd/CRI-O e de estabilidade, executados continuamente pelos workflows em `.github/workflows` (como `payload-after-push.yaml` e `ci-nightly.yaml`) e pelas configurações dedicadas para pipelines OpenShift em `ci/openshift-ci/README.md`. A governança técnica, eleições de arquitetura e reuniões comunitárias são coordenadas no repositório `github.com/kata-containers/community`, enquanto problemas de segurança seguem o protocolo responsável definido em `SECURITY.md` em vez de issues públicas.
+EXAMPLE:
+```bash
+# Clonar o repositório oficial do Kata Containers e inspecionar a estrutura de componentes e testes
+git clone https://github.com/kata-containers/kata-containers.git
+ls -la kata-containers/src kata-containers/tools kata-containers/tests
+```
+TRADE_OFFS: Executar a suíte completa de testes de integração de `tests/` localmente requer privilégios de `root`, suporte a KVM ativo e download de imagens de containers e kernels convidados, sendo recomendado utilizar ambientes de máquina virtual dedicados de desenvolvimento ou runners isolados de CI.
+VERIFY: Consulte a documentação em `tests/README.md` e `SECURITY.md` no repositório oficial e verifique os badges de status do OpenSSF Scorecard e do Nightly CI.
+LINKS: [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-requisitos-hardware-arquiteturas-kata-runtime-check]] | [[kata-ferramentas-diagnostico-kata-ctl-agent-ctl-debug-trace]]
+SOURCES: https://raw.githubusercontent.com/kata-containers/kata-containers/main/README.md | https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture_4.0/architecture.md | https://github.com/kata-containers/kata-containers

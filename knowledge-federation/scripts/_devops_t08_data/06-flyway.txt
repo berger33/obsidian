@@ -1,0 +1,171 @@
+=== NOTE: 751 | flyway-migracoes-banco-dados-schema-history-versionamento | Redgate Flyway: controle de versão para bancos de dados baseado em migrações e tabela flyway_schema_history ===
+ONE_LINER: O Flyway (da Redgate, código aberto sob licença Apache-2.0) traz controle de versão para bancos de dados com simplicidade e convenção sobre configuração, rastreando mudanças de esquema na tabela `flyway_schema_history`.
+IMPORTANCE: Enquanto o código de aplicação é versionado em Git com histórico claro de commits e tags, esquemas de banco de dados frequentemente sofrem alterações ad-hoc sem rastreabilidade, tornando impossível recriar o estado exato de um ambiente do zero ou saber quais scripts já rodaram em cada servidor. Segundo o README oficial e a documentação `Getting started with Flyway`, o Flyway permite evoluir o esquema do banco com confiança e facilidade em todas as instâncias.
+HOW_IT_WORKS: Conforme explica a seção `How does Flyway work?` do README oficial: (1) no cenário mais simples, o Flyway conecta-se a um banco de dados vazio e localiza a tabela de histórico (criando a tabela **`flyway_schema_history`** por padrão se ela ainda não existir) para rastrear o estado do banco; (2) em seguida, o Flyway varre o sistema de arquivos ou o classpath da aplicação procurando migrações disponíveis (que podem ser escritas em **SQL** ou **Java**); (3) as migrações são comparadas com a tabela de histórico; e (4) qualquer migração cuja versão seja superior à versão marcada como atual no banco é considerada uma **migração pendente** (`pending migration`), sendo ordenada pelo número de versão e executada sequencialmente enquanto `flyway_schema_history` é atualizada a cada passo.
+EXAMPLE:
+```bash
+# Verificar o estado das migrações aplicadas e pendentes no banco e executar flyway migrate
+flyway -url="jdbc:postgresql://localhost:5432/appdb" -user="postgres" -locations="filesystem:./sql" info
+flyway -url="jdbc:postgresql://localhost:5432/appdb" -user="postgres" -locations="filesystem:./sql" migrate
+```
+TRADE_OFFS: Como o Flyway registra na `flyway_schema_history` um checksum CRC32 de cada script de migração versionada aplicado, alterar mesmo um comentário ou espaço em branco em um arquivo `V1__...sql` que já foi executado em produção fará com que a próxima verificação de integridade (`flyway validate` ou `flyway migrate`) falhe por divergência de checksum; correções futuras devem sempre ser criadas como uma nova versão sequencial (`V2__...sql`, `V3__...sql`).
+VERIFY: Execute `flyway info` após rodar `flyway migrate` e confirme na tabela impressa que todas as migrações listadas apresentam `State: Success` e constam na tabela `flyway_schema_history`.
+LINKS: [[flyway-modos-execucao-cli-docker-java-api-maven-gradle]] | [[flyway-bancos-suportados-relacionais-cloud-data-warehouses]] | [[liquibase-gerenciamento-mudancas-esquema-banco-dados]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 752 | flyway-modos-execucao-cli-docker-java-api-maven-gradle | Redgate Flyway: 5 formas de execução (Command-line, Docker, Java API, Maven e Gradle) ===
+ONE_LINER: O Flyway pode ser executado de cinco maneiras oficiais documentadas no README: utilitário de linha de comando (`CLI`), imagem oficial Docker (`redgate/flyway`), Java API embutida na inicialização da aplicação, plugin Maven e plugin Gradle.
+IMPORTANCE: Equipes poliglotas que escrevem microsserviços em Go, Python, Node.js ou C# não possuem Maven ou Gradle em seus projetos e precisam de uma CLI standalone ou imagem Docker leve para pipelines de CI/CD, enquanto equipes Java/Spring/Quarkus/Micronaut frequentemente preferem acionar o Flyway via Java API programática ou plugins de build. A seção `How can you run Flyway?` do README oficial cobre todas as cinco modalidades.
+HOW_IT_WORKS: (1) **Command-line**: pacote autocontido para Windows, macOS e Linux voltado para usuários não-Java e pipelines sem necessidade de instalar JDK separado; (2) **Docker**: imagem oficial no Docker Hub (`redgate/flyway`) pronta para jobs de CI/CD e Kubernetes; (3) **Java API**: biblioteca (`flyway-core`) invocada programaticamente em Java (`Flyway.configure().dataSource(...).load().migrate()`) para migrar o banco na inicialização da aplicação; (4) **Maven plugin**: integração com ciclos de build Maven (`mvn flyway:migrate`, `mvn flyway:info`); e (5) **Gradle plugin**: tarefas Gradle (`gradle flywayMigrate`, `gradle flywayValidate`).
+EXAMPLE:
+```bash
+# Executar o Flyway via imagem oficial Docker montando o diretório local de scripts SQL em /flyway/sql
+docker run --rm \
+  -v $(pwd)/sql:/flyway/sql \
+  redgate/flyway:latest \
+  -url=jdbc:postgresql://host.docker.internal:5432/appdb \
+  -user=postgres -password=secret \
+  migrate
+```
+TRADE_OFFS: Ao usar a **Java API** para rodar `flyway.migrate()` automaticamente no boot de cada réplica de um microsserviço em Kubernetes, embora o Flyway utilize locking no banco de dados para evitar que duas réplicas executem a mesma migração ao mesmo tempo, uma migração demorada atrasará a prontidão (`readinessProbe`) de todos os pods; em implantações de larga escala, executar a imagem Docker `redgate/flyway` em um step de CI/CD anterior ao deploy separa o ciclo de esquema do ciclo de réplicas.
+VERIFY: Execute `docker run --rm redgate/flyway -v` (ou `flyway -v` na CLI) para verificar a versão da ferramenta e confirme a leitura do diretório `/flyway/sql` com o comando `info`.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-bancos-suportados-relacionais-cloud-data-warehouses]] | [[liquibase-integracoes-maven-gradle-spring-boot-cicd]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 753 | flyway-bancos-suportados-relacionais-cloud-data-warehouses | Redgate Flyway: ecossistema de mais de 50 bancos de dados relacionais, distribuídos e data warehouses suportados ===
+ONE_LINER: O Flyway suporta mais de 50 motores de bancos de dados, abrangendo SGBDs relacionais clássicos (PostgreSQL, MySQL, MariaDB, Oracle, SQL Server, DB2), bancos SQL distribuídos (CockroachDB, YugabyteDB, TiDB, Google Cloud Spanner) e plataformas analíticas/cloud (Snowflake, BigQuery, Redshift, Databricks, ClickHouse, DuckDB).
+IMPORTANCE: Organizações modernas raramente possuem apenas um banco relacional: é comum operar PostgreSQL ou Aurora no transacional (OLTP), ClickHouse ou DuckDB em telemetria/analytics e Snowflake ou Google BigQuery no data warehouse corporativo; usar uma ferramenta de migração diferente para cada tecnologia fragmenta os pipelines de DevOps. A seção `Supported Databases` do README oficial do Flyway lista toda a matriz suportada.
+HOW_IT_WORKS: O motor do Flyway abstrai as particularidades de dialeto SQL, suporte a transações DDL, mecanismos de lock da tabela `flyway_schema_history` e parsers de scripts específicos para cada plataforma suportada (incluindo delimitadores de procedures PL/SQL no Oracle, `GO` no SQL Server, pacotes modulares como `flyway-database-postgresql`, `flyway-mysql`, `flyway-sqlserver`, `flyway-database-oracle` e conectores para MongoDB, Cassandra, Snowflake, BigQuery e Spanner). Assim, o mesmo fluxo de trabalho (`info`, `validate`, `migrate`) opera de maneira uniforme tanto em bancos transacionais quanto em data warehouses analíticos.
+EXAMPLE:
+```xml
+<!-- No Flyway moderno (Maven), adicionar flyway-core junto ao módulo específico do banco (ex.: PostgreSQL) -->
+<dependencies>
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+</dependencies>
+```
+TRADE_OFFS: Nem todos os bancos suportados pelo Flyway oferecem **DDL transacional** no próprio motor de banco de dados: enquanto o PostgreSQL, o SQL Server e o SQLite permitem fazer rollback automático de um `CREATE TABLE` ou `ALTER TABLE` caso o script falhe na metade, bancos como MySQL, MariaDB e Oracle executam commits implícitos em instruções DDL; nesses bancos sem DDL transacional, se uma migração com 5 instruções DDL falhar na 3ª instrução, a migração ficará com status de falha e exigirá limpeza manual das 2 primeiras estruturas antes de rodar `flyway repair`.
+VERIFY: Consulte a documentação de suporte do banco específico no portal do Flyway e verifique se o módulo correspondente (`flyway-database-*`) está presente no classpath ou diretório `drivers/` da CLI.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-captura-estado-schema-model-disco-diff]] | [[atlasdb-schema-as-code-declarativo-versionado-multibanco]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 754 | flyway-captura-estado-schema-model-disco-diff | Redgate Flyway: captura de estado do esquema em disco (schema model) além de scripts de migração ===
+ONE_LINER: Além de scripts de migração sequenciais, o Flyway suporta capturar o estado de objetos individuais do banco de dados em disco como um **schema model** para MySQL, Oracle, PostgreSQL e SQL Server, facilitando revisões de diff no Git.
+IMPORTANCE: Quando um projeto acumula centenas de arquivos de migração (`V1__...sql` até `V450__...sql`), descobrir qual é a definição atual de uma tabela ou view apenas lendo o repositório Git torna-se difícil, pois uma tabela criada na `V1` pode ter sido alterada nas versões `V42`, `V118` e `V390`. Conforme destaca o parágrafo de abertura do README oficial do Flyway, a captura de estado como um `schema model` em disco resolve exatamente essa visibilidade.
+HOW_IT_WORKS: Para os quatro grandes motores empresariais (**MySQL**, **Oracle**, **PostgreSQL** e **SQL Server**), o fluxo moderno do Flyway permite manter, ao lado da pasta de migrações versionadas, uma representação em nível de objeto do esquema no sistema de arquivos (`schema model`). Quando um desenvolvedor altera uma tabela, view ou stored procedure no seu banco de dados de desenvolvimento, a captura do schema model grava o estado de cada objeto em arquivos individuais versionáveis no Git, permitindo visualizar exatamente o que mudou em cada objeto durante um Pull Request e gerar o script de migração versionada correspondente para o pipeline de produção.
+EXAMPLE:
+```bash
+# Inspecionar a estrutura de um projeto Flyway combinando diretório de migrações SQL e configurações TOML
+ls -la flyway.toml sql/ schema-model/
+```
+TRADE_OFFS: O suporte nativo à captura de estado de esquema em disco (`schema model`) concentra-se nos quatro motores principais (MySQL, Oracle, PostgreSQL e SQL Server) e integra recursos avançados das edições comerciais/Redgate; para os demais motores entre os 50+ bancos suportados na edição Apache 2.0, o controle de versão baseia-se nas migrações versionadas (`V`), repetíveis (`R`) e callbacks.
+VERIFY: Verifique no repositório Git se as alterações no `schema-model/` correspondem exatamente ao efeito líquido das migrações versionadas pendentes em `sql/`.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-bancos-suportados-relacionais-cloud-data-warehouses]] | [[atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 755 | flyway-nomenclatura-migracoes-versionadas-repetiveis-undo | Redgate Flyway: convenção de nomenclatura de migrações Versionadas (V), Repetíveis (R) e Undo (U) ===
+ONE_LINER: Seguindo o princípio de convenção sobre configuração, o Flyway classifica e ordena automaticamente os arquivos SQL pelo prefixo do nome: `V<versão>__<descrição>.sql` (Versioned), `R__<descrição>.sql` (Repeatable) e `U<versão>__<descrição>.sql` (Undo).
+IMPORTANCE: Em ferramentas que exigem manter um arquivo manifesto XML ou YAML central listando manualmente a ordem de todos os scripts SQL, duas branches criadas em paralelo sempre geram conflito de merge na última linha do manifesto central. No Flyway, basta adicionar o arquivo `.sql` no diretório seguindo a convenção de prefixo, sem tocar em nenhum manifesto central.
+HOW_IT_WORKS: Ao escanear os diretórios configurados em `locations`, o Flyway identifica o tipo de cada migração pelo padrão `<Prefixo><Versão>__<Descrição>.sql` (com dois sublinhados `__` separando a versão da descrição): (1) **Migrações Versionadas (`V`)**: ex.: `V1__Create_person_table.sql`, `V2.1__Add_email_column.sql` — são aplicadas **exatamente uma única vez** em ordem crescente de versão para evoluir estruturas (`CREATE`/`ALTER`/`DROP` e migração de dados); (2) **Migrações Repetíveis (`R`)**: ex.: `R__Active_users_view.sql` — não possuem número de versão e são **reaplicadas automaticamente toda vez que seu checksum muda**, sendo ideais para manter `CREATE OR REPLACE VIEW`, functions e procedures; e (3) **Migrações Undo (`U`)**: definem o script inverso para desfazer uma migração versionada de mesmo número.
+EXAMPLE:
+```bash
+# Exemplo de arquivos em sql/ seguindo a convenção oficial de dois sublinhados (__) para V e R
+ls -1 sql/
+# V1__Create_person_table.sql
+# V2__Add_people.sql
+# R__Create_person_summary_view.sql
+```
+TRADE_OFFS: Um erro clássico de iniciantes no Flyway é usar apenas **um** sublinhado (`V1_init.sql`) em vez de **dois** sublinhados (`V1__init.sql`): o Flyway ignora ou rejeita arquivos que não seguem o separador padrão `__`; além disso, migrações repetíveis (`R__*.sql`) sempre são executadas **depois** de todas as migrações versionadas pendentes (`V`), portanto uma migração versionada nunca deve depender de uma view criada apenas em uma migração repetível.
+VERIFY: Execute `flyway info` e verifique nas colunas `Category` (`Versioned` vs `Repeatable`), `Version` e `Description` que todos os arquivos do diretório `sql/` foram reconhecidos na ordem esperada.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair]] | [[liquibase-formatos-changelog-sql-xml-yaml-json-changesets]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 756 | flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair | Redgate Flyway: comandos fundamentais do ciclo de vida (migrate, info, validate, baseline, repair e clean) ===
+ONE_LINER: A operação do Flyway apoia-se em seis comandos principais: `migrate` (aplica pendentes), `info` (detalha status), `validate` (verifica checksums e histórico), `baseline` (adota bancos existentes), `repair` (corrige histórico/checksums) e `clean` (apaga objetos em desenvolvimento).
+IMPORTANCE: Adotar o Flyway em um banco de dados legado que já está em produção há anos exige marcar um ponto de partida (`baseline`) sem tentar recriar tabelas que já existem; da mesma forma, saber validar integridade em CI (`validate`) e bloquear `clean` em produção evita perda catastrófica de dados. A documentação oficial `Getting started with Flyway` detalha cada um desses comandos.
+HOW_IT_WORKS: (1) **`info`**: imprime o estado detalhado e a versão de todas as migrações (aplicadas, pendentes, fora de ordem ou falhas); (2) **`validate`**: verifica se as migrações aplicadas no banco batem em checksum e presença com as disponíveis localmente (executado por padrão antes do `migrate`); (3) **`migrate`**: aplica todas as migrações pendentes até a versão mais recente (ou até `-target`); (4) **`baseline`**: cria a tabela `flyway_schema_history` em um banco não-vazio existente e insere um marcador `« Flyway Baseline »` (ex.: na versão `1`), fazendo o Flyway ignorar scripts `<= baselineVersion` e aplicar apenas versões posteriores; (5) **`repair`**: remove entradas de migrações falhas (em bancos sem DDL transacional) e realinha checksums; e (6) **`clean`**: remove todos os objetos nos schemas configurados (útil em testes locais, mas deve manter `cleanDisabled=true` em produção).
+EXAMPLE:
+```bash
+# Adotar um banco de dados legado existente na versão 1.0 com baseline e verificar com info
+flyway -url="jdbc:postgresql://localhost:5432/legacydb" -user="postgres" -baselineVersion="1.0" baseline
+flyway -url="jdbc:postgresql://localhost:5432/legacydb" -user="postgres" info
+```
+TRADE_OFFS: O comando `flyway clean` apaga **todas** as tabelas, views, procedures e dados dos schemas gerenciados pelo Flyway; por segurança, versões modernas do Flyway já vêm com `flyway.cleanDisabled=true` por padrão, e essa proteção jamais deve ser desativada (`cleanDisabled=false`) em ambientes de homologação compartilhada ou produção.
+VERIFY: Em pipelines de Pull Request, execute `flyway validate` e `flyway info` para garantir que nenhum script antigo foi adulterado antes de autorizar o `flyway migrate`.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-nomenclatura-migracoes-versionadas-repetiveis-undo]] | [[flyway-migracoes-java-jdbc-placeholders-callbacks]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 757 | flyway-migracoes-java-jdbc-placeholders-callbacks | Redgate Flyway: migrações escritas em Java (BaseJavaMigration), substituição de Placeholders e Callbacks ===
+ONE_LINER: Além de scripts SQL puros, o Flyway suporta migrações escritas em Java (`BaseJavaMigration`) para transformações programáticas complexas de dados, substituição dinâmica de variáveis (`${placeholder}`) nos scripts SQL e Callbacks atrelados a eventos do ciclo de vida.
+IMPORTANCE: Certas migrações de dados exigem ler linhas existentes, descriptografar valores, validar estruturas JSON complexas ou calcular hashes que não são possíveis ou viáveis apenas em SQL puro; além disso, scripts SQL frequentemente precisam parametrizar nomes de tabelas, schemas ou roles por ambiente. O README oficial do Flyway destaca que as migrações podem ser escritas em **SQL ou Java**.
+HOW_IT_WORKS: (1) **Java-based migrations**: classes Java que estendem `BaseJavaMigration` (nomeadas como `V3__Anonymize_customer_emails.java`) recebem o objeto `Context` contendo a `Connection` JDBC ativa dentro da transação da migração, permitindo executar lógica Java arbitrária na ordem exata da versão `V3`; (2) **Placeholders**: o Flyway substitui expressões `${meu_placeholder}` dentro dos arquivos `.sql` pelos valores passados via `-placeholders.meu_placeholder=valor` ou variáveis de ambiente `FLYWAY_PLACEHOLDERS_*` (calculando o checksum sobre o script original antes da substituição ou conforme configurado); e (3) **Callbacks**: scripts SQL ou classes Java nomeados com nomes de eventos do ciclo de vida (como `beforeMigrate.sql`, `afterMigrate.sql` ou `afterEachMigrate.sql`) que rodam automaticamente nos ganchos correspondentes.
+EXAMPLE:
+```bash
+# Executar flyway migrate injetando placeholders para parametrizar o ambiente dentro dos scripts SQL
+flyway -url="jdbc:postgresql://localhost:5432/appdb" \
+  -user="postgres" \
+  -placeholders.app_readonly_role="bi_reader_prod" \
+  migrate
+```
+TRADE_OFFS: Migrações escritas em Java (`BaseJavaMigration`) nunca devem instanciar nem usar entidades JPA/Hibernate da aplicação atual para ler ou gravar no banco, pois o modelo de classes Java da aplicação daqui a dois anos terá novas colunas que ainda não existiam na época da migração `V3`, quebrando a execução da `V3` em um banco novo; dentro de `BaseJavaMigration`, use exclusivamente SQL direto via `JdbcTemplate` ou `PreparedStatement` na `context.getConnection()`.
+VERIFY: Teste suas migrações Java e SQL com placeholders executando o ciclo completo do `V1` até a versão atual contra um container de banco de dados limpo em CI.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-modos-execucao-cli-docker-java-api-maven-gradle]] | [[flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 758 | flyway-configuracao-toml-conf-variaveis-ambiente-precedencia | Redgate Flyway: configuração declarativa (flyway.toml e flyway.conf), variáveis FLYWAY_* e precedência ===
+ONE_LINER: O Flyway pode ser configurado por arquivos de projeto (`flyway.toml` moderno ou `flyway.conf` clássico), variáveis de ambiente (`FLYWAY_*`), parâmetros de linha de comando (`-key=value`) e configurações de plugins Maven/Gradle.
+IMPORTANCE: Hardcodar URLs de banco de dados, schemas e políticas de validação diretamente em scripts bash dificulta compartilhar configurações padrão da equipe no Git enquanto se injeta credenciais seguras por ambiente no servidor de CI/CD. A documentação oficial `Getting started with Flyway` detalha o sistema hierárquico de configuração.
+HOW_IT_WORKS: O Flyway permite versionar no repositório as opções estruturais do projeto — como `locations` (`filesystem:./sql`), `schemas`, `table` (nome customizado da tabela de histórico caso não se deseje o padrão `flyway_schema_history`), `baselineOnMigrate` e ambientes (`[environments.default]` no `flyway.toml`) — enquanto credenciais sensíveis e URLs específicas do ambiente de destino são fornecidas via variáveis de ambiente (`FLYWAY_URL`, `FLYWAY_USER`, `FLYWAY_PASSWORD`, `FLYWAY_SCHEMAS`) ou flags de linha de comando (`-url=... -user=...`), onde argumentos de linha de comando têm precedência sobre variáveis de ambiente, que por sua vez sobrescrevem os arquivos de configuração em disco.
+EXAMPLE:
+```toml
+# Exemplo de arquivo flyway.toml versionado no repositório definindo localizações e validação estrita
+[flyway]
+locations = ["filesystem:./sql"]
+validateMigrationNaming = true
+cleanDisabled = true
+
+[environments.default]
+url = "jdbc:postgresql://localhost:5432/devdb"
+schemas = ["public"]
+```
+TRADE_OFFS: Habilitar `validateMigrationNaming = true` no `flyway.toml` (ou `flyway.conf`) é altamente recomendado porque faz o Flyway falhar imediatamente caso encontre no diretório `sql/` algum arquivo mal nomeado (por exemplo, `V1_create_table.sql` com um único sublinhado); sem essa flag ativa, arquivos que não casam com o padrão podem ser silenciosamente ignorados durante o scan, fazendo o desenvolvedor acreditar que sua migração rodou quando na verdade foi pulada.
+VERIFY: Execute `flyway info` com `validateMigrationNaming = true` ativo e confirme que todas as configurações do `flyway.toml` e variáveis `FLYWAY_*` foram carregadas sem avisos.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-nomenclatura-migracoes-versionadas-repetiveis-undo]] | [[flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 759 | flyway-concorrencia-locks-transacoes-out-of-order | Redgate Flyway: controle de concorrência, escopo de transações (group) e migrações fora de ordem (outOfOrder) ===
+ONE_LINER: O Flyway utiliza locks nativos do banco de dados sobre a tabela `flyway_schema_history` para serializar execuções concorrentes, executa cada migração em sua própria transação por padrão (ou agrupadas com `group=true`) e permite controlar branches paralelas com `outOfOrder`.
+IMPORTANCE: Em equipes grandes onde múltiplos desenvolvedores criam branches em paralelo (ex.: a branch A cria `V4__...sql` e é mesclada depois que a branch B já levou `V5__...sql` para homologação), entender como o Flyway lida com migrações fora de ordem e como agrupa transações evita bloqueios inesperados no pipeline. A documentação oficial do Flyway cobre esses comportamentos de execução.
+HOW_IT_WORKS: (1) **Concorrência**: diferentemente de ferramentas que gravam uma flag booleana permanente em uma tabela de lock, o Flyway adquire locks em nível de banco de dados (como `SELECT ... FOR UPDATE` ou advisory locks do SGBD, liberados automaticamente caso a conexão TCP caia) para coordenar múltiplos nós chamando `migrate` ao mesmo tempo; (2) **Escopo transacional**: por padrão (`group=false`), cada migração `V` roda em sua própria transação independente (se a `V5` falhar após a `V4` ter sucesso, a `V4` permanece aplicada e registrada); se `group=true` for configurado (em bancos com DDL transacional como PostgreSQL), todas as migrações pendentes rodam em uma única transação atômica tudo-ou-nada; e (3) **Ordem de versão**: por padrão (`outOfOrder=false`), o Flyway rejeita uma migração `V4` se a `V5` já foi aplicada; ativar `outOfOrder=true` permite aplicar a `V4` atrasada em ambientes de integração.
+EXAMPLE:
+```bash
+# Executar flyway migrate agrupando todas as migrações pendentes em uma única transação atômica (PostgreSQL)
+flyway -url="jdbc:postgresql://localhost:5432/appdb" \
+  -user="postgres" \
+  -group="true" \
+  migrate
+```
+TRADE_OFFS: Algumas instruções SQL específicas (como `CREATE INDEX CONCURRENTLY` ou `VACUUM` no PostgreSQL) são proibidas pelo próprio SGBD de rodar dentro de um bloco de transação (`BEGIN ... COMMIT`); para esses scripts específicos, o Flyway detecta automaticamente (ou permite configurar `executeInTransaction=false` por script) para executá-los fora de uma transação, o que é incompatível com `group=true` para aquele lote.
+VERIFY: Verifique na coluna `State` de `flyway info` se alguma migração foi aplicada como `Out of Order` (`Out of order` vs `Success`) antes de promover a release para produção.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-bancos-suportados-relacionais-cloud-data-warehouses]] | [[flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway
+
+=== NOTE: 760 | flyway-edicoes-community-apache2-teams-enterprise-redgate | Redgate Flyway: código aberto Apache-2.0 no repositório flyway/flyway e ecossistema Redgate ===
+ONE_LINER: O núcleo do Flyway é mantido como software livre sob licença Apache-2.0 no repositório `flyway/flyway` (com artefatos publicados no Maven Central sob `org.flywaydb`), integrando-se à documentação e aos recursos avançados da Redgate.
+IMPORTANCE: Ao selecionar uma ferramenta de migração de banco de dados para padronização corporativa, arquitetos precisam conhecer o licenciamento do código-fonte aberto, onde reportar issues, como consultar as notas de versão e quais recursos pertencem ao núcleo Apache-2.0 versus capacidades estendidas da plataforma Redgate Flyway. O README oficial do repositório `flyway/flyway` documenta essa estrutura.
+HOW_IT_WORKS: Todo o código-fonte aberto do Flyway no repositório `github.com/flyway/flyway` é licenciado sob a **Apache License 2.0** (`LICENSE.md`), publicado no Maven Central (`org.flywaydb:flyway-core`) e no Docker Hub (`redgate/flyway`). O projeto mantém documentação centralizada em `documentation.red-gate.com/flyway`, notas de release detalhadas (`Release Notes`) a cada versão, fórum comunitário oficial da Redgate e rastreamento público de bugs e sugestões de melhoria via GitHub Issues (com política dedicada de divulgação responsável de vulnerabilidades em `SECURITY.md`).
+EXAMPLE:
+```bash
+# Verificar a edição, versão e licença reportadas pelo binário da CLI ou container do Flyway
+flyway -v
+```
+TRADE_OFFS: Ao consultar a documentação oficial em `documentation.red-gate.com/flyway`, observe as marcações de disponibilidade de recursos por tier (Community Apache-2.0 vs Teams/Enterprise), pois determinadas capacidades avançadas de governança corporativa (como geração automatizada de migrações a partir do schema model, drift checks automatizados ou conectores legados específicos em versões antigas) podem exigir licenciamento comercial Redgate.
+VERIFY: Verifique as coordenadas Maven `org.flywaydb:flyway-core` no `pom.xml` ou `build.gradle` e consulte as Release Notes oficiais antes de atualizar entre versões principais do Flyway.
+LINKS: [[flyway-migracoes-banco-dados-schema-history-versionamento]] | [[flyway-modos-execucao-cli-docker-java-api-maven-gradle]] | [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]]
+SOURCES: https://raw.githubusercontent.com/flyway/flyway/main/README.md | https://documentation.red-gate.com/flyway/getting-started-with-flyway | https://github.com/flyway/flyway

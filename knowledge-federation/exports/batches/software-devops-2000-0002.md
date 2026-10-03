@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **700 / 2.000 (35,00%)**
-- Gate automatizado: **700/700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 7)
-- Revisão factual humana: **0/700**
-- Revisão factual por IA: **700/700**
-- Contabilizadas como válidas: **700/700**
-- Revisor das 700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–7 (700 notas, IDs 1–700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **800 / 2.000 (40,00%)**
+- Gate automatizado: **800/800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 8)
+- Revisão factual humana: **0/800**
+- Revisão factual por IA: **800/800**
+- Contabilizadas como válidas: **800/800**
+- Revisor das 800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–8 (800 notas, IDs 1–800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-07.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-07.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-08.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-08.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1300 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1200 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -942,6 +942,138 @@
 699. [Containers crun: builds estáticos reprodutíveis com Nix, automação Ansible e verificação GPG com crun.keyring](../../domains/software-0008/software/devops/crun-builds-estaticos-reprodutiveis-nix-verificacao-gpg.md)
 700. [Containers crun: execução de processos adicionais (crun exec) com isolamento de sub-cgroup, capabilities, AppArmor e SELinux](../../domains/software-0008/software/devops/crun-execucao-processos-exec-capabilities-lsm-sub-cgroups.md)
 
+## Tranche 8 — Kata Containers, AWS Firecracker, Google gVisor, Youki, Liquibase, Redgate Flyway, Ariga Atlas, Bytebase, Nix e Earthly (100 notas; revisão factual por IA registrada)
+
+### Kata Containers (máquinas virtuais leves com isolamento de hardware e experiência de containers OCI/CRI)
+
+701. [Kata Containers: máquinas virtuais leves com isolamento de hardware e experiência de containers](../../domains/software-0008/software/devops/kata-containers-isolamento-vms-leves-arquitetura.md)
+702. [Kata Containers: suporte multi-arquitetura de virtualização e diagnóstico com kata-runtime check](../../domains/software-0008/software/devops/kata-requisitos-hardware-arquiteturas-kata-runtime-check.md)
+703. [Kata Containers: componentes principais (runtime Go, runtime-rs em Rust, agent e VMM embutido dragonball)](../../domains/software-0008/software/devops/kata-componentes-principais-shimv2-runtime-rs-agent-dragonball.md)
+704. [Kata Containers: arquivo único de configuração (configuration.toml) e seleção de hipervisores](../../domains/software-0008/software/devops/kata-hipervisores-configuracao-runtime-agent.md)
+705. [Kata Containers: construção de kernel guest e imagens mini-OS (rootfs e initrd) com osbuilder](../../domains/software-0008/software/devops/kata-kernel-guest-osbuilder-mini-os-rootfs-initrd.md)
+706. [Kata Containers: empacotamento de binários e implantação em Kubernetes com o Helm chart kata-deploy e RuntimeClass](../../domains/software-0008/software/devops/kata-packaging-kata-deploy-helm-kubernetes-runtimeclass.md)
+707. [Kata Containers: ferramentas de diagnóstico e depuração (kata-ctl, agent-ctl, kata-debug e trace-forwarder)](../../domains/software-0008/software/devops/kata-ferramentas-diagnostico-kata-ctl-agent-ctl-debug-trace.md)
+708. [Kata Containers: mutating admission webhook (kata-webhook) para injeção transparente de RuntimeClass em Pods](../../domains/software-0008/software/devops/kata-webhook-admissao-mutacao-pods-runtimeclass.md)
+709. [Kata Containers: evolução para a Arquitetura 4.0, unificação em Rust e isolamento de workloads](../../domains/software-0008/software/devops/kata-arquitetura-4-0-evolucao-rust-seguranca-confidencial.md)
+710. [Kata Containers: suíte de testes de integração, pipelines OpenShift CI, governança comunitária e divulgação de segurança](../../domains/software-0008/software/devops/kata-ci-testes-integracao-openshift-governanca-seguranca.md)
+
+### AWS Firecracker (Virtual Machine Monitor minimalista sobre Linux KVM para microVMs serverless e multi-tenant)
+
+711. [AWS Firecracker: tecnologia de virtualização de microVMs sobre KVM para workloads serverless e multi-tenant](../../domains/software-0008/software/devops/firecracker-microvms-kvm-isolamento-serverless-multitenant.md)
+712. [AWS Firecracker: configuração da microVM via API OpenAPI (vCPUs, memória, CPU templates e boot)](../../domains/software-0008/software/devops/firecracker-api-openapi-configuracao-vcpu-memoria-boot.md)
+713. [AWS Firecracker: dispositivos de bloco, interfaces de rede, re-scan dinâmico de disco e Rate Limiters virtio](../../domains/software-0008/software/devops/firecracker-dispositivos-bloco-rede-rate-limiters-rescan.md)
+714. [AWS Firecracker: dispositivos vsock, entropia, pmem, serviço de metadados MMDS e hotplug de memória/PCI](../../domains/software-0008/software/devops/firecracker-vsock-entropy-pmem-metadata-hotplug.md)
+715. [AWS Firecracker: defesa em profundidade em produção com o processo Jailer e filtros seccomp por thread](../../domains/software-0008/software/devops/firecracker-jailer-isolamento-cgroups-namespaces-seccomp.md)
+716. [AWS Firecracker: paginação sob demanda (demand fault paging) e oversubscription de CPU e memória](../../domains/software-0008/software/devops/firecracker-demand-fault-paging-oversubscription-cpu-memoria.md)
+717. [AWS Firecracker: matriz de plataformas bare-metal testadas (Intel, AMD, ARM Graviton) e requisitos de kernel](../../domains/software-0008/software/devops/firecracker-plataformas-testadas-intel-amd-graviton-kernels.md)
+718. [AWS Firecracker: especificação de performance verificada em CI e sistema de logging e métricas via API](../../domains/software-0008/software/devops/firecracker-especificacao-performance-logging-metricas.md)
+719. [AWS Firecracker: integração com runtimes de containers e microVMs (Kata Containers e Flintlock)](../../domains/software-0008/software/devops/firecracker-integracao-container-runtimes-kata-flintlock.md)
+720. [AWS Firecracker: cadência de releases, configuração segura do host (prod-host-setup) e política de segurança](../../domains/software-0008/software/devops/firecracker-cadencia-releases-politica-seguranca-prod-host-setup.md)
+
+### Google gVisor (kernel de aplicação em espaço de usuário escrito em Go, Sentry, Gofer e runtime OCI runsc)
+
+721. [Google gVisor: kernel de aplicação em espaço de usuário escrito em Go (Sentry, Gofer e runsc)](../../domains/software-0008/software/devops/gvisor-arquitetura-sentry-gofer-application-kernel.md)
+722. [Google gVisor: plataformas de interceptação de syscalls e page faults (Systrap padrão e KVM)](../../domains/software-0008/software/devops/gvisor-plataformas-interceptacao-systrap-kvm.md)
+723. [Google gVisor: integração do runtime OCI runsc e containerd-shim-runsc-v1 com Docker e Kubernetes](../../domains/software-0008/software/devops/gvisor-runtime-oci-runsc-docker-kubernetes-containerd.md)
+724. [Google gVisor: modelo de defesa em profundidade, fronteiras do que o gVisor não protege e Runtime Monitoring](../../domains/software-0008/software/devops/gvisor-defesa-profundidade-limites-protecao-runtime-monitoring.md)
+725. [Google gVisor: pilha de rede em espaço de usuário (Netstack) e importação via branch sintética @go](../../domains/software-0008/software/devops/gvisor-pilha-rede-userspace-netstack-importacao-branch-go.md)
+726. [Google gVisor: sistema de build com Bazel/Docker, requisitos (Linux 5.6+) e execução de testes (incluindo macOS)](../../domains/software-0008/software/devops/gvisor-build-bazel-docker-testes-macos.md)
+727. [Google gVisor: isolamento de sistema de arquivos com o processo sidecar Gofer, VFS em Go e pivot_root](../../domains/software-0008/software/devops/gvisor-isolamento-sistema-arquivos-gofer-mount-namespaces.md)
+728. [Google gVisor: tabela própria de PIDs no Sentry, tradução de syscalls não 1-para-1 e elasticidade de memória](../../domains/software-0008/software/devops/gvisor-gerenciamento-processos-pids-memoria-dinamica.md)
+729. [Google gVisor: modelo de privilégios na inicialização do runsc, queda de privilégios e modo rootless](../../domains/software-0008/software/devops/gvisor-modos-privilegio-reexecucao-rootless-network-none.md)
+730. [Google gVisor: verificadores estáticos de código Go (nogo), governança, ADOPTERS.md e política de segurança](../../domains/software-0008/software/devops/gvisor-analise-estatica-nogo-governanca-adopters.md)
+
+### Youki (implementação CNCF da especificação OCI Runtime em Rust, libcontainer e oci-spec-rs)
+
+731. [Youki: implementação da especificação OCI Runtime em Rust na CNCF](../../domains/software-0008/software/devops/youki-runtime-oci-rust-seguranca-memoria.md)
+732. [Youki: análise de desempenho e benchmark de ciclo de vida com hyperfine frente ao runc e crun](../../domains/software-0008/software/devops/youki-benchmarks-performance-hyperfine-runc-crun.md)
+733. [Youki: requisitos de compilação (Rust edition 2024, Linux >= 5.3), dependências de sistema e automação com just](../../domains/software-0008/software/devops/youki-compilacao-just-dependencias-linux-rust.md)
+734. [Youki: geração de especificação (youki spec) e operações de ciclo de vida OCI (create, state, start, list, delete)](../../domains/software-0008/software/devops/youki-ciclo-vida-containers-spec-create-start-state-delete.md)
+735. [Youki: execução de containers em modo rootless e integração com Docker e Podman](../../domains/software-0008/software/devops/youki-containers-rootless-integracao-docker-podman.md)
+736. [Youki: crate oci-spec-rs para serialização e validação tipada das especificações OCI Runtime e Image em Rust](../../domains/software-0008/software/devops/youki-oci-spec-rs-tipagem-forte-especificacao-rust.md)
+737. [Youki: arquitetura modular em Rust e biblioteca libcontainer para gerenciamento de namespaces, cgroups e syscalls](../../domains/software-0008/software/devops/youki-arquitetura-interna-libcontainer-crates-workspaces.md)
+738. [Youki: ambientes de desenvolvimento com Vagrant (rootless e rootful), GitHub Codespaces e testes de integração OCI](../../domains/software-0008/software/devops/youki-desenvolvimento-multiplataforma-vagrant-codespaces-testes-oci.md)
+739. [Youki: validação nos testes end-to-end do containerd e uso como runtime em clusters Kubernetes](../../domains/software-0008/software/devops/youki-integracao-containerd-kubernetes-e2e-producao.md)
+740. [Youki: diagnóstico de capacidades do host (CAP_BPF, CAP_PERFMON, CAP_CHECKPOINT_RESTORE) e cgroups via youki info](../../domains/software-0008/software/devops/youki-inspecao-capacidades-kernel-bpf-checkpoint-restore-info.md)
+
+### Liquibase (versionamento, rastreamento e implantação de mudanças de esquema de banco de dados e arquitetura 5.0+)
+
+741. [Liquibase: plataforma de versionamento, rastreamento e implantação de mudanças de esquema de banco de dados](../../domains/software-0008/software/devops/liquibase-gerenciamento-mudancas-esquema-banco-dados.md)
+742. [Liquibase 5.0+: separação entre Liquibase Community (licença FSL) e Liquibase Secure (comercial)](../../domains/software-0008/software/devops/liquibase-mudancas-versao-5-0-licenca-fsl-community-secure.md)
+743. [Liquibase 5.0+: remoção de drivers embutidos por padrão e instalação via Liquibase Package Manager (LPM)](../../domains/software-0008/software/devops/liquibase-gerenciamento-drivers-lpm-breaking-change-5-0.md)
+744. [Liquibase: execução em containers Docker, variáveis LIQUIBASE_COMMAND_* e distribuição multi-registry](../../domains/software-0008/software/devops/liquibase-execucao-docker-variaveis-ambiente-registries.md)
+745. [Liquibase: cadência de releases trimestrais da comunidade (Fev, Mai, Ago, Nov) e Nightly Builds da branch main](../../domains/software-0008/software/devops/liquibase-cadencia-releases-trimestrais-nightly-builds.md)
+746. [Liquibase: automação e integrações com Maven, Gradle, Ant, Spring Boot, GitHub Actions e Spinnaker](../../domains/software-0008/software/devops/liquibase-integracoes-maven-gradle-spring-boot-cicd.md)
+747. [Liquibase: formatos de Changelog (SQL, XML, YAML, JSON), ordenação de Changesets e Checksums](../../domains/software-0008/software/devops/liquibase-formatos-changelog-sql-xml-yaml-json-changesets.md)
+748. [Liquibase: estratégias de reversão de esquema (rollback por tag, contagem ou data) e validação prévia](../../domains/software-0008/software/devops/liquibase-estrategias-rollback-reversao-segura-mudancas.md)
+749. [Liquibase: guia prático de atualização do Liquibase 4.x para 5.0+ em pipelines e produção](../../domains/software-0008/software/devops/liquibase-migracao-4-x-para-5-0-checklist-producao.md)
+750. [Liquibase: governança de publicação de releases no Sonatype/Maven Central com gate de múltiplos aprovadores](../../domains/software-0008/software/devops/liquibase-governanca-publicacao-sonatype-aprovadores.md)
+
+### Redgate Flyway (controle de versão para bancos de dados baseado em migrações SQL/Java e flyway_schema_history)
+
+751. [Redgate Flyway: controle de versão para bancos de dados baseado em migrações e tabela flyway_schema_history](../../domains/software-0008/software/devops/flyway-migracoes-banco-dados-schema-history-versionamento.md)
+752. [Redgate Flyway: 5 formas de execução (Command-line, Docker, Java API, Maven e Gradle)](../../domains/software-0008/software/devops/flyway-modos-execucao-cli-docker-java-api-maven-gradle.md)
+753. [Redgate Flyway: ecossistema de mais de 50 bancos de dados relacionais, distribuídos e data warehouses suportados](../../domains/software-0008/software/devops/flyway-bancos-suportados-relacionais-cloud-data-warehouses.md)
+754. [Redgate Flyway: captura de estado do esquema em disco (schema model) além de scripts de migração](../../domains/software-0008/software/devops/flyway-captura-estado-schema-model-disco-diff.md)
+755. [Redgate Flyway: convenção de nomenclatura de migrações Versionadas (V), Repetíveis (R) e Undo (U)](../../domains/software-0008/software/devops/flyway-nomenclatura-migracoes-versionadas-repetiveis-undo.md)
+756. [Redgate Flyway: comandos fundamentais do ciclo de vida (migrate, info, validate, baseline, repair e clean)](../../domains/software-0008/software/devops/flyway-comandos-ciclo-vida-info-validate-migrate-baseline-repair.md)
+757. [Redgate Flyway: migrações escritas em Java (BaseJavaMigration), substituição de Placeholders e Callbacks](../../domains/software-0008/software/devops/flyway-migracoes-java-jdbc-placeholders-callbacks.md)
+758. [Redgate Flyway: configuração declarativa (flyway.toml e flyway.conf), variáveis FLYWAY_* e precedência](../../domains/software-0008/software/devops/flyway-configuracao-toml-conf-variaveis-ambiente-precedencia.md)
+759. [Redgate Flyway: controle de concorrência, escopo de transações (group) e migrações fora de ordem (outOfOrder)](../../domains/software-0008/software/devops/flyway-concorrencia-locks-transacoes-out-of-order.md)
+760. [Redgate Flyway: código aberto Apache-2.0 no repositório flyway/flyway e ecossistema Redgate](../../domains/software-0008/software/devops/flyway-edicoes-community-apache2-teams-enterprise-redgate.md)
+
+### Ariga Atlas (ferramenta Schema-as-Code declarativa e versionada com linting, testes e suporte a 16 ORMs)
+
+761. [Ariga Atlas: ferramenta Schema-as-Code agnóstica de linguagem para gerenciamento declarativo e versionado de bancos de dados](../../domains/software-0008/software/devops/atlasdb-schema-as-code-declarativo-versionado-multibanco.md)
+762. [Ariga Atlas: inspeção de esquemas (atlas schema inspect) em HCL, SQL dividido por arquivo, JSON e diagramas ERD Mermaid](../../domains/software-0008/software/devops/atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd.md)
+763. [Ariga Atlas: fluxo declarativo (atlas schema diff e atlas schema apply) com dev-url para normalização](../../domains/software-0008/software/devops/atlasdb-fluxo-declarativo-schema-apply-diff-plan.md)
+764. [Ariga Atlas: fluxo versionado com geração automática de migrações (atlas migrate diff, lint e apply)](../../domains/software-0008/software/devops/atlasdb-fluxo-versionado-migrate-diff-lint-apply.md)
+765. [Ariga Atlas: análise estática e linting de migrações (atlas migrate lint) com mais de 50 analisadores de risco](../../domains/software-0008/software/devops/atlasdb-linting-migracoes-50-analisadores-seguranca.md)
+766. [Ariga Atlas: carregamento automático de esquema a partir de 16 ORMs em Go, TypeScript, Python, Java, C#/.NET e PHP](../../domains/software-0008/software/devops/atlasdb-integracao-16-orms-go-ts-python-java-dotnet-php.md)
+767. [Ariga Atlas: testes automatizados de esquemas e migrações (atlas schema test e atlas migrate test) com .test.hcl](../../domains/software-0008/software/devops/atlasdb-testes-unitarios-esquema-migracoes-test-hcl.md)
+768. [Ariga Atlas: Security-as-Code para bancos de dados (roles, users, permissions e Row-Level Security em HCL)](../../domains/software-0008/software/devops/atlasdb-seguranca-como-codigo-rbac-roles-permissions-rls.md)
+769. [Ariga Atlas: integrações cloud-native com Terraform Provider, Kubernetes Operator e GitHub Actions/GitLab CI](../../domains/software-0008/software/devops/atlasdb-integracao-cloud-native-terraform-kubernetes-operator-cicd.md)
+770. [Ariga Atlas: arquitetura de edições do Atlas (código base Apache-2.0, binário oficial e recursos avançados)](../../domains/software-0008/software/devops/atlasdb-edicoes-community-apache2-binario-atlas-cloud.md)
+
+### Bytebase (plataforma open-source de governança de banco de dados, SQL Review, RBAC/JIT, Masking e MCP Server)
+
+771. [Bytebase: plataforma open-source de governança de banco de dados como plano de controle único para humanos e agentes de IA](../../domains/software-0008/software/devops/bytebase-plataforma-governanca-banco-dados-humanos-ia.md)
+772. [Bytebase: gerenciamento de mudanças de esquema (DDL) e dados (DML) via GUI ou GitOps com mais de 200 regras de SQL Lint](../../domains/software-0008/software/devops/bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint.md)
+773. [Bytebase: controle de acesso com SQL Editor web, RBAC granular, acesso Just-in-Time (JIT) e Dynamic Data Masking](../../domains/software-0008/software/devops/bytebase-controle-acesso-rbac-jit-dynamic-data-masking.md)
+774. [Bytebase: conformidade, trilha de auditoria completa, classificação de dados e políticas como código com Terraform Provider](../../domains/software-0008/software/devops/bytebase-compliance-auditoria-classificacao-dados-terraform.md)
+775. [Bytebase: governança para agentes de IA com MCP Server, Text-to-SQL no SQL Editor e Page Agent](../../domains/software-0008/software/devops/bytebase-integracao-ia-mcp-server-text-to-sql-page-agent.md)
+776. [Bytebase: opções de implantação (Self-hosted via Docker/Kubernetes vs Bytebase Cloud) e banco de metadados PostgreSQL](../../domains/software-0008/software/devops/bytebase-arquitetura-implantacao-self-hosted-vs-cloud-postgres.md)
+777. [Bytebase: pipelines de rollout multi-ambiente (Test, Staging, Prod) e mudanças em lote para bancos multi-tenant/sharded](../../domains/software-0008/software/devops/bytebase-rollout-multi-ambiente-batch-change-multi-tenant.md)
+778. [Bytebase: detecção automática de desvio de esquema (Schema Drift Detection) e histórico unificado de revisões](../../domains/software-0008/software/devops/bytebase-deteccao-schema-drift-sincronizacao-changelogs.md)
+779. [Bytebase: governança unificada para bancos relacionais, NoSQL (MongoDB, Redis) e analíticos (Snowflake, ClickHouse, Spanner)](../../domains/software-0008/software/devops/bytebase-bancos-suportados-relacionais-nosql-analiticos.md)
+780. [Bytebase: modelo open-source e diferenças entre as edições Community, Pro e Enterprise](../../domains/software-0008/software/devops/bytebase-edicoes-community-pro-enterprise-licenciamento.md)
+
+### Nix (gerenciador de pacotes puramente funcional, armazenamento imutável em /nix/store e ambientes reprodutíveis)
+
+781. [Nix: gerenciador de pacotes puramente funcional e armazenamento imutável em /nix/store](../../domains/software-0008/software/devops/nix-gerenciador-pacotes-puramente-funcional-nix-store.md)
+782. [Nix: criação de ambientes de shell efêmeros e aninhados com nix-shell -p e execução via --run](../../domains/software-0008/software/devops/nix-ambientes-efemeros-nix-shell-pacotes-isolados.md)
+783. [Nix: ambientes 100% reprodutíveis com nix-shell --pure e fixação de commit do Nixpkgs (-I nixpkgs=...)](../../domains/software-0008/software/devops/nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs.md)
+784. [Nix: modelo híbrido source/binário, derivações (.drv) e cache binário oficial (cache.nixos.org)](../../domains/software-0008/software/devops/nix-cache-binario-cache-nixos-org-derivacoes-source.md)
+785. [Nix: gerenciamento de ciclo de vida de armazenamento e coleta de lixo com nix-collect-garbage](../../domains/software-0008/software/devops/nix-garbage-collection-limpeza-espaco-disco-nix-store.md)
+786. [Nix: ambientes de desenvolvimento declarativos versionados no repositório (shell.nix e flake.nix)](../../domains/software-0008/software/devops/nix-arquivos-shell-nix-flakes-ambientes-declarativos.md)
+787. [Nix: descoberta de pacotes no Nixpkgs (search.nixos.org e nix search) e suporte multiplataforma (Linux, WSL e macOS)](../../domains/software-0008/software/devops/nix-busca-pacotes-search-nixos-org-multiplataforma.md)
+788. [Nix: builds herméticos em sandbox (isolamento de rede e sistema de arquivos durante a compilação)](../../domains/software-0008/software/devops/nix-builds-hermeticos-sandbox-isolamento-derivacoes.md)
+789. [Nix: perfis de usuário, atualizações transacionais atômicas e rollbacks instantâneos via árvores de symlinks](../../domains/software-0008/software/devops/nix-perfis-atualizacoes-atomicas-rollbacks-symlinks.md)
+790. [Nix: ecossistema e evolução do projeto (NixOS, nix-direnv, geração de imagens OCI e arquitetura C++/Meson)](../../domains/software-0008/software/devops/nix-ecossistema-nixos-darwin-home-manager-direnv.md)
+
+### Earthly (framework de automação de builds reprodutíveis em containers sobre BuildKit com Earthfile)
+
+791. [Earthly: framework de automação de builds baseado em containers combinando Dockerfile e Makefile](../../domains/software-0008/software/devops/earthly-automacao-build-containers-earthfile-reprodutivel.md)
+792. [Earthly: estrutura do Earthfile (VERSION 0.8, base target, indentação e invocação de targets com +)](../../domains/software-0008/software/devops/earthly-sintaxe-earthfile-targets-dependencias-build.md)
+793. [Earthly: exportação de artefatos entre targets e para o host (SAVE ARTIFACT ... AS LOCAL) e imagens (SAVE IMAGE)](../../domains/software-0008/software/devops/earthly-artefatos-save-artifact-as-local-save-image.md)
+794. [Earthly: composição de builds em monorepos e entre múltiplos repositórios Git remotos](../../domains/software-0008/software/devops/earthly-imports-monorepos-multi-repositorios-remotos.md)
+795. [Earthly: adoção incremental e reutilização de Dockerfiles existentes com FROM DOCKERFILE](../../domains/software-0008/software/devops/earthly-reutilizacao-dockerfiles-existentes-from-dockerfile.md)
+796. [Earthly: builds e imagens multiplataforma (linux/amd64 e linux/arm64) em um único comando BUILD --platform](../../domains/software-0008/software/devops/earthly-builds-multiplataforma-linux-amd64-arm64.md)
+797. [Earthly: injeção segura de segredos em tempo de build (RUN --secret) e publicação condicional (RUN --push)](../../domains/software-0008/software/devops/earthly-gerenciamento-segredos-run-secret-push-seguranca.md)
+798. [Earthly: testes de integração com containers e Docker Compose dentro do build usando WITH DOCKER](../../domains/software-0008/software/devops/earthly-integracao-docker-in-docker-with-docker-testes.md)
+799. [Earthly: paralelismo automático por DAG no BuildKit, mounts de cache (--mount type=cache) e funções reutilizáveis (FUNCTION)](../../domains/software-0008/software/devops/earthly-execucao-paralela-dag-buildkit-cache-camadas.md)
+800. [Earthly: camada agnóstica sobre qualquer CI (GitHub Actions, GitLab CI, CircleCI, Jenkins, Tekton) e modo interativo de debug (-i)](../../domains/software-0008/software/devops/earthly-integracao-qualquer-ci-github-actions-gitlab-jenkins.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 700 notas 1–700 das tranches 1–7 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 700/2.000 notas válidas, restando 1300 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 800 notas 1–800 das tranches 1–8 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 800/2.000 notas válidas, restando 1200 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

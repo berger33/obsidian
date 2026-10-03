@@ -1,0 +1,172 @@
+=== NOTE: 741 | liquibase-gerenciamento-mudancas-esquema-banco-dados | Liquibase: plataforma de versionamento, rastreamento e implantação de mudanças de esquema de banco de dados ===
+ONE_LINER: O Liquibase permite às equipes rastrear, versionar, ordenar automaticamente, implantar e reverter (rollback) mudanças de esquema de banco de dados usando changelogs declarativos ou SQL integrados a ferramentas de CI/CD.
+IMPORTANCE: Aplicar scripts SQL manualmente em bancos de dados de produção causa erros humanos, atrasos em releases e divergência (drift) entre ambientes de desenvolvimento, homologação e produção, sem registro confiável de quais scripts já rodaram em cada instância. Segundo o README oficial do Liquibase, a ferramenta elimina erros e atrasos ao ordenar scripts automaticamente para implantação e controlar mudanças de esquema para versões específicas.
+HOW_IT_WORKS: O Liquibase organiza as alterações de banco de dados em arquivos chamados **changelogs** (escritos em SQL anotado, XML, YAML ou JSON) compostos por unidades atômicas chamadas **changesets** (identificadas por `author` e `id`). Quando o comando `liquibase update` é executado contra um banco de dados via JDBC, o Liquibase verifica a tabela de rastreamento de histórico no banco (`DATABASECHANGELOG`) e a tabela de controle de concorrência (`DATABASECHANGELOGLOCK`), aplica em ordem estrita apenas os changesets pendentes que ainda não foram executados, registra o checksum e a data de execução de cada um (visível via `liquibase history`) e suporta reversão controlada via comandos de `rollback`.
+EXAMPLE:
+```bash
+# Fluxo oficial de exemplo do README usando o banco em memória H2 incluído na CLI do Liquibase
+liquibase init start-h2
+liquibase update
+liquibase history
+```
+TRADE_OFFS: Como o Liquibase utiliza a tabela `DATABASECHANGELOGLOCK` para garantir que apenas uma instância do Liquibase aplique migrações por vez no mesmo banco de dados, se um processo `liquibase update` for morto abruptamente por queda de rede ou OOMKill em um pod de CI/CD no meio de uma migração, o lock pode permanecer preso (`LOCKED = true`), exigindo verificar o estado e executar `liquibase release-locks` antes da próxima tentativa.
+VERIFY: Execute `liquibase status --verbose` antes do deploy para listar os changesets pendentes e `liquibase history` após o `liquibase update` para confirmar a aplicação bem-sucedida de todas as mudanças.
+LINKS: [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]] | [[liquibase-gerenciamento-drivers-lpm-breaking-change-5-0]] | [[flyway-migracoes-banco-dados-schema-history-versionamento]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 742 | liquibase-mudancas-versao-5-0-licenca-fsl-community-secure | Liquibase 5.0+: separação entre Liquibase Community (licença FSL) e Liquibase Secure (comercial) ===
+ONE_LINER: A partir do Liquibase 5.0, o projeto estabeleceu uma separação clara entre a edição `liquibase/liquibase` (Liquibase Community, licenciada sob Functional Source License — FSL) e a edição comercial `liquibase/liquibase-secure` (antigo Pro), mantendo a série 4.x sob Apache-2.0.
+IMPORTANCE: Equipes de arquitetura, DevOps e compliance jurídico que atualizam pipelines de CI/CD ou imagens Docker do Liquibase 4.x para o Liquibase 5.0+ precisam compreender as mudanças de licenciamento (de Apache 2.0 na 4.x para FSL na 5.0 Community) e a mudança do nome da imagem comercial (de `liquibase-pro` para `liquibase-secure`). O README principal e o `docker/README.md` oficial do Liquibase detalham essa matriz.
+HOW_IT_WORKS: De acordo com a documentação oficial de licenciamento no repositório: (1) **Liquibase 4 (`4.x`)**: permanece sob licença **Apache 2.0** e continua disponível como imagem oficial do Docker Hub (`docker pull liquibase:4.x` ou `liquibase/liquibase:4.x`); (2) **Liquibase 5.0+ Community (`liquibase/liquibase`)**: distribuído sob a **Functional Source License (FSL)** (`FSL-1.1-ALv2`), que permite uso gratuito para migrações de banco de dados com acesso total ao código-fonte, proíbe uso comercial que concorra com produtos/serviços da Liquibase e converte-se automaticamente para Apache 2.0 após dois anos; e (3) **Liquibase 5.0+ Secure (`liquibase/liquibase-secure`)**: edição comercial que exige uma chave de licença válida e adiciona recursos empresariais como Policy Checks, Quality Checks e Advanced Rollback.
+EXAMPLE:
+```bash
+# Pull explícito da imagem Liquibase 5.0+ Community (FSL) versus Liquibase 4.x (Apache 2.0)
+docker pull liquibase/liquibase:5.0.1
+docker pull liquibase:4.x
+```
+TRADE_OFFS: Conforme documentado na matriz de disponibilidade de imagens (`docker/README.md`), para o Liquibase 5.0+ a imagem não está disponível na biblioteca oficial raiz do Docker (`_/liquibase`), devendo-se puxar obrigatoriamente do namespace da comunidade (`liquibase/liquibase`, `ghcr.io/liquibase/liquibase` ou `public.ecr.aws/liquibase/liquibase`); além disso, clientes que possuem chave de licença comercial não devem mais injetar a chave na imagem Community, devendo migrar para a imagem `liquibase/liquibase-secure`.
+VERIFY: Verifique nos Dockerfiles e pipelines de CI/CD qual tag de imagem está sendo utilizada (`liquibase:4.x`, `liquibase/liquibase:5.0` ou `liquibase/liquibase-secure:5.0`) e confirme a conformidade com o modelo de licença da organização.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-gerenciamento-drivers-lpm-breaking-change-5-0]] | [[liquibase-cadencia-releases-trimestrais-nightly-builds]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 743 | liquibase-gerenciamento-drivers-lpm-breaking-change-5-0 | Liquibase 5.0+: remoção de drivers embutidos por padrão e instalação via Liquibase Package Manager (LPM) ===
+ONE_LINER: Como breaking change a partir do Liquibase 5.0, a edição Community e sua imagem Docker (`liquibase/liquibase`) não incluem mais drivers de banco de dados ou extensões por padrão, exigindo adicioná-los explicitamente via Liquibase Package Manager (`lpm add --global`).
+IMPORTANCE: Atualizar a imagem Docker de `liquibase/liquibase:4.x` para `liquibase/liquibase:5.0` ou `:latest` sem ajustar a instalação de drivers JDBC quebrará imediatamente os jobs de migração em produção com erros de driver não encontrado para PostgreSQL, MySQL, SQL Server ou Oracle. A seção `Breaking Change: Drivers and Extensions No Longer Included` em `docker/README.md` documenta exatamente como migrar.
+HOW_IT_WORKS: Para manter a distribuição enxuta e modular no Liquibase 5.0+, os drivers JDBC e extensões foram desacoplados da imagem base `liquibase/liquibase`. Os usuários devem agora adicionar explicitamente os drivers necessários construindo uma imagem derivada com o **Liquibase Package Manager (LPM)** usando `RUN lpm add postgresql --global`, `RUN lpm add mysql --global` ou `RUN lpm add mssql --global` (ou montando os JARs de extensões/drivers no container). Como conveniência adicional, para bancos MySQL ainda é suportada a instalação em tempo de execução passando a variável de ambiente `-e INSTALL_MYSQL=true`.
+EXAMPLE:
+```dockerfile
+# Dockerfile oficial recomendado para Liquibase 5.0+ adicionando drivers JDBC via LPM
+FROM liquibase/liquibase:latest
+RUN lpm add postgresql --global && \
+    lpm add mysql --global && \
+    lpm add mssql --global
+```
+TRADE_OFFS: Embora usar `-e INSTALL_MYSQL=true` em tempo de execução no `docker run` funcione para testes rápidos, baixar drivers da internet a cada execução de container em pipelines de CI/CD ou Jobs do Kubernetes adiciona latência e cria dependência de conectividade externa; em produção, construa sempre uma imagem customizada com `RUN lpm add <driver> --global` armazenada no registry interno.
+VERIFY: Construa a imagem derivada com `lpm add` e execute um teste de validação (`liquibase validate`) contra o banco de homologação para confirmar que o driver JDBC é carregado com sucesso.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]] | [[liquibase-execucao-docker-variaveis-ambiente-registries]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 744 | liquibase-execucao-docker-variaveis-ambiente-registries | Liquibase: execução em containers Docker, variáveis LIQUIBASE_COMMAND_* e distribuição multi-registry ===
+ONE_LINER: As imagens oficiais do Liquibase são publicadas simultaneamente no Docker Hub (`liquibase/liquibase`), GitHub Container Registry (`ghcr.io/liquibase/liquibase`) e Amazon ECR Public (`public.ecr.aws/liquibase/liquibase`), aceitando configuração direta por variáveis `LIQUIBASE_COMMAND_*`.
+IMPORTANCE: Em pipelines cloud-native (Kubernetes Jobs, Argo Workflows, GitHub Actions, AWS CodeBuild), passar senhas de banco de dados como argumentos visíveis na linha de comando ou sofrer com limites de taxa (rate limit) de pull anônimo de um único registry público causa riscos de segurança e falhas de infraestrutura. O documento `docker/README.md` detalha os três registries oficiais e o uso de variáveis de ambiente.
+HOW_IT_WORKS: As imagens de container do Liquibase Community são construídas a partir do diretório `docker/` do repositório principal `liquibase/liquibase` (tendo substituído o antigo repositório depreciado `liquibase/docker`). Ao executar o container, o diretório local contendo os changelogs é montado em `/liquibase/changelog` e os parâmetros de conexão e execução são injetados via variáveis de ambiente `LIQUIBASE_COMMAND_URL` (ex.: `jdbc:postgresql://localhost:5432/mydb`), `LIQUIBASE_COMMAND_USERNAME` e `LIQUIBASE_COMMAND_PASSWORD`, seguidos do subcomando desejado (`validate`, `status`, `update`, `rollback`).
+EXAMPLE:
+```bash
+# Validar e aplicar um changelog montado via volume usando variáveis de ambiente LIQUIBASE_COMMAND_*
+docker run --rm \
+  -v /caminho/para/changelog:/liquibase/changelog \
+  -e LIQUIBASE_COMMAND_URL="jdbc:postgresql://test-db:5432/testdb" \
+  -e LIQUIBASE_COMMAND_USERNAME="dbuser" \
+  -e LIQUIBASE_COMMAND_PASSWORD="dbpassword" \
+  ghcr.io/liquibase/liquibase:5.0.1 validate
+```
+TRADE_OFFS: Lembre-se de que na imagem padrão `liquibase/liquibase:5.0+` os drivers JDBC não vêm pré-instalados; portanto, ao executar o comando `docker run` acima contra o PostgreSQL, você deve usar uma imagem onde `lpm add postgresql --global` já foi executado ou montar o JAR do driver JDBC no classpath do container.
+VERIFY: Execute o container com o subcomando `validate` antes de rodar `update` em não-produção para verificar que a sintaxe do changelog e as variáveis de ambiente foram reconhecidas sem erros.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-gerenciamento-drivers-lpm-breaking-change-5-0]] | [[liquibase-integracoes-maven-gradle-spring-boot-cicd]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 745 | liquibase-cadencia-releases-trimestrais-nightly-builds | Liquibase: cadência de releases trimestrais da comunidade (Fev, Mai, Ago, Nov) e Nightly Builds da branch main ===
+ONE_LINER: A partir da versão 5.0.2, o Liquibase Community opera com duas vias de distribuição: builds contínuos da branch `main` no GitHub (`releases/tag/nightly`) para acesso antecipado e releases estáveis trimestrais (fevereiro, maio, agosto e novembro) para produção.
+IMPORTANCE: Equipes corporativas de banco de dados precisam de um calendário previsível de lançamentos estáveis para planejar janelas de atualização e homologação, enquanto desenvolvedores que aguardam uma correção de bug recém-mesclada precisam testar o binário imediatamente sem esperar meses. A seção `Release Cadence and Access` do README oficial do Liquibase documenta esse modelo duplo.
+HOW_IT_WORKS: (1) **Quarterly Community Releases**: lançadas trimestralmente nos meses de **fevereiro, maio, agosto e novembro** (como a `v5.0.3` em maio de 2026 e a release planejada de agosto de 2026), fornecendo versões estáveis prontas para produção em todos os canais oficiais (GitHub Releases, Maven Central, gerenciadores de pacotes e registries de containers); e (2) **Main Branch Builds on GitHub (Nightly builds)**: atualizadas automaticamente após cada execução bem-sucedida de testes na branch padrão `main`, publicando `liquibase-nightly.tar.gz` (Linux/macOS) e `liquibase-nightly.zip` (Windows) na tag `https://github.com/liquibase/liquibase/releases/tag/nightly`.
+EXAMPLE:
+```bash
+# Atualizar um clone local antigo da branch master para a nova branch padrão main conforme instrução oficial do README
+git branch -m master main && git fetch origin && git branch -u origin/main main
+```
+TRADE_OFFS: Os artefatos `liquibase-nightly` refletem o estado mais recente da branch `main` e destinam-se exclusivamente a testes antecipados e feedback comunitário; em pipelines de produção e dependências Maven/Gradle de aplicações críticas, fixe sempre uma versão trimestral estável (como `5.0.3`).
+VERIFY: Consulte `liquibase --version` no seu ambiente e verifique na página de releases do GitHub se a versão instalada corresponde à release trimestral estável vigente.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]] | [[liquibase-governanca-publicacao-sonatype-aprovadores]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 746 | liquibase-integracoes-maven-gradle-spring-boot-cicd | Liquibase: automação e integrações com Maven, Gradle, Ant, Spring Boot, GitHub Actions e Spinnaker ===
+ONE_LINER: O Liquibase integra-se nativamente a ferramentas de build Java (Maven, Gradle, Ant), frameworks de aplicação (Spring Boot) e orquestradores de CI/CD (GitHub Actions, Spinnaker e workflows customizados), além de suportar extensões gratuitas para bancos adicionais.
+IMPORTANCE: Diferentes arquiteturas de software aplicam migrações de banco em momentos distintos: monolitos e microsserviços Spring Boot menores às vezes executam migrações na inicialização da aplicação ou no build Maven/Gradle, enquanto arquiteturas Kubernetes de alta escala executam o Liquibase como um estágio dedicado de CI/CD no GitHub Actions ou Spinnaker antes do deploy dos pods. A seção `Liquibase Automation and Integrations` do README oficial documenta essas opções.
+HOW_IT_WORKS: Quando integrado via **Maven** (`liquibase-maven-plugin`), **Gradle** ou **Ant**, metas como `liquibase:update`, `liquibase:status` e `liquibase:rollback` fazem parte do ciclo de build do projeto. No **Spring Boot**, a presença da dependência `liquibase-core` no classpath aciona automaticamente a avaliação do changelog configurado em `spring.liquibase.change-log` durante o boot do contexto Spring. Em pipelines de entrega contínua, o Liquibase fornece exemplos e plugins oficiais para **GitHub Actions** (`liquibase/liquibase-github-action-example`) e **Spinnaker** (`liquibase/liquibase-spinnaker-plugin`). Para bancos de dados que não fazem parte do núcleo embutido do Liquibase Community, extensões gratuitas podem ser baixadas do diretório oficial de extensões.
+EXAMPLE:
+```xml
+<!-- Exemplo de declaração de dependência do Liquibase Core no Maven Central -->
+<dependency>
+    <groupId>org.liquibase</groupId>
+    <artifactId>liquibase-core</artifactId>
+    <version>5.0.3</version>
+</dependency>
+```
+TRADE_OFFS: Executar migrações automaticamente dentro da inicialização da aplicação (`Spring Boot` auto-configuration) quando um Deployment Kubernetes sobe 20 réplicas simultaneamente faz com que 20 pods disputem o lock na tabela `DATABASECHANGELOGLOCK` (e uma migração DDL demorada pode fazer o `livenessProbe`/`startupProbe` do Kubernetes matar o pod no meio da alteração de esquema); em produção Kubernetes, é mais seguro desativar a migração no boot da aplicação e executá-la em um step de CI/CD ou Kubernetes Job/initContainer controlado.
+VERIFY: Em projetos Maven/Gradle ou pipelines GitHub Actions, execute o objetivo de validação (`validate` / `status`) para confirmar que o plugin localiza o arquivo de changelog raiz e conecta ao banco alvo.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-execucao-docker-variaveis-ambiente-registries]] | [[github-actions-workflows-eventos-jobs-steps-runners]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 747 | liquibase-formatos-changelog-sql-xml-yaml-json-changesets | Liquibase: formatos de Changelog (SQL, XML, YAML, JSON), ordenação de Changesets e Checksums ===
+ONE_LINER: O Liquibase suporta changelogs escritos em SQL, XML, YAML ou JSON (como demonstrado nos diretórios `examples/sql` e `examples/xml` da distribuição), rastreando cada `changeset` individualmente por `id`, `author`, caminho do arquivo e hash MD5/checksum na tabela `DATABASECHANGELOG`.
+IMPORTANCE: Algumas equipes de engenharia preferem escrever DDL diretamente em SQL puro para aproveitar recursos específicos do SGBD, enquanto outras preferem formatos abstratos (XML, YAML, JSON) que geram o SQL adequado para múltiplos bancos e oferecem geração automática de comandos de rollback para operações comuns. O README oficial do Liquibase destaca o uso de `examples/sql` e `examples/xml` no guia prático.
+HOW_IT_WORKS: Independentemente do formato escolhido (SQL formatado com comentários `--liquibase formatted sql` e `--changeset autor:id`, ou estruturas XML/YAML/JSON), o Liquibase lê a lista ordenada de changesets declarados no changelog mestre (que pode incluir diretórios ou sub-arquivos com `include`/`includeAll`). Para cada changeset, o Liquibase calcula um checksum sobre seu conteúdo normalizado: se o par `(id, author, filename)` ainda não consta na tabela `DATABASECHANGELOG`, o changeset é executado dentro de uma transação (sempre que o banco suportar DDL transacional) e registrado; se já consta na tabela, o Liquibase compara o checksum atual com o gravado no banco e aborta com erro de validação caso um changeset já aplicado tenha sido modificado retroativamente.
+EXAMPLE:
+```sql
+--liquibase formatted sql
+
+--changeset devops:001-create-orders-table
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    status VARCHAR(32) NOT NULL
+);
+--rollback DROP TABLE orders;
+```
+TRADE_OFFS: Nunca edite o conteúdo SQL de um `changeset` que já foi aplicado em ambientes compartilhados ou produção, pois a divergência de checksum na tabela `DATABASECHANGELOG` bloqueará os próximos deploys (`Validation Failed: change sets check sum`); para alterar uma tabela existente, adicione sempre um novo `changeset` sequencial ao final do changelog (modelo append-only).
+VERIFY: Execute `liquibase validate` e `liquibase update-sql` (que imprime no terminal o SQL exato que seria executado sem alterar o banco) para revisar os changesets antes de aplicar `liquibase update`.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-estrategias-rollback-reversao-segura-mudancas]] | [[flyway-migracoes-banco-dados-schema-history-versionamento]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 748 | liquibase-estrategias-rollback-reversao-segura-mudancas | Liquibase: estratégias de reversão de esquema (rollback por tag, contagem ou data) e validação prévia ===
+ONE_LINER: O Liquibase permite reverter alterações de banco de dados de forma controlada (`rollback`, `rollback-count`, `rollback-to-date`) utilizando instruções de rollback auto-geradas (em changelogs XML/YAML/JSON) ou blocos `--rollback` explícitos (em changelogs SQL).
+IMPORTANCE: Quando o deploy de uma nova versão de aplicação apresenta falhas críticas em produção e precisa ser revertido, reverter apenas a imagem do container no Kubernetes pode não ser suficiente se a migração de banco de dados alterou estruturas ou constraints incompatíveis com a versão anterior do código. Segundo o README oficial do Liquibase, facilitar o rollback de mudanças é um dos pilares centrais da ferramenta.
+HOW_IT_WORKS: Para changesets declarativos (XML, YAML, JSON) que contêm apenas operações reversíveis puras (como `createTable`, `addColumn` ou `createIndex`), o Liquibase consegue deduzir automaticamente a instrução inversa (`DROP TABLE`, `DROP COLUMN`, `DROP INDEX`). Já para changesets escritos em SQL formatado (`--liquibase formatted sql`) ou para operações destrutivas/complexas, o autor declara explicitamente a cláusula `--rollback <SQL>` (ou `<rollback>` no XML/YAML). Ao executar um rollback apontando para uma tag criada previamente (`liquibase tag v1.4.0` -> `liquibase rollback v1.4.0`) ou um número de changesets (`liquibase rollback-count 1`), o Liquibase executa os scripts inversos em ordem reversa e remove as linhas correspondentes da tabela `DATABASECHANGELOG`.
+EXAMPLE:
+```bash
+# Marcar o estado atual do banco com uma tag de versão, aplicar update e simular o SQL de rollback (future-rollback-sql)
+liquibase tag release-2026-10
+liquibase update
+liquibase future-rollback-sql
+```
+TRADE_OFFS: Reverter um `createTable` executando `DROP TABLE` apaga permanentemente quaisquer linhas que tenham sido inseridas naquela tabela durante os minutos em que a versão nova esteve no ar; por isso, em sistemas críticos 24x7, prefira o padrão **expand-and-contract** (migrações retrocompatíveis onde a versão `N` adiciona colunas opcionais sem quebrar a versão `N-1`) e valide sempre os scripts de reversão antes do deploy usando `liquibase future-rollback-sql`.
+VERIFY: Inclua `liquibase future-rollback-sql` no seu pipeline de CI/CD para garantir que nenhum changeset novo seja mesclado sem possuir um caminho de rollback válido definido.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-formatos-changelog-sql-xml-yaml-json-changesets]] | [[atlasdb-linting-migracoes-50-analisadores-seguranca]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 749 | liquibase-migracao-4-x-para-5-0-checklist-producao | Liquibase: guia prático de atualização do Liquibase 4.x para 5.0+ em pipelines e produção ===
+ONE_LINER: A migração do Liquibase 4.x para 5.0+ segue um roteiro de 6 etapas documentado oficialmente: revisão de licença (Apache 2.0 vs FSL/Comercial), escolha da edição (`liquibase/liquibase` vs `liquibase/liquibase-secure`), atualização de referência de imagem, adição de drivers via LPM, validação em não-produção e rollout em produção.
+IMPORTANCE: Organizações que possuem dezenas de pipelines usando `FROM liquibase/liquibase:4.x` ou `FROM liquibase/liquibase-pro:4.x` precisam de um procedimento passo a passo para atualizar para a geração 5.0 sem interromper deploys de banco de dados. A seção `Upgrading from Liquibase 4 to 5.0` em `docker/README.md` descreve exatamente essas 6 etapas.
+HOW_IT_WORKS: O procedimento oficial compreende: **Step 1**: entender os requisitos de licença (4.x é Apache 2.0; 5.0 Community é FSL; 5.0 Secure é comercial); **Step 2**: escolher a edição (Community se não precisar de recursos enterprise e aceitar a FSL; Secure se tiver licença comercial e precisar de Policy Checks, Quality Checks ou Advanced Rollback); **Step 3**: atualizar a referência da imagem (`liquibase/liquibase:4.x` -> `liquibase/liquibase:5.0`, ou `liquibase/liquibase-pro:4.x` -> `liquibase/liquibase-secure:5.0`); **Step 4**: atualizar a instalação de drivers adicionando `RUN lpm add <db> --global` no Dockerfile (já que a 5.0+ não inclui drivers por padrão); **Step 5**: testar primeiro em não-produção executando `liquibase:5.0 validate` contra um banco de teste; e **Step 6**: concluir a migração em produção.
+EXAMPLE:
+```bash
+# Etapa 5 do guia oficial de migração: validar changelogs existentes contra um banco de teste usando Liquibase 5.0
+docker run --rm \
+  -v $(pwd)/changelog:/liquibase/changelog \
+  -e LIQUIBASE_COMMAND_URL="jdbc:postgresql://test-db:5432/testdb" \
+  -e LIQUIBASE_COMMAND_USERNAME="username" \
+  -e LIQUIBASE_COMMAND_PASSWORD="password" \
+  meu-registry.interno/liquibase-com-drivers:5.0 validate
+```
+TRADE_OFFS: Se uma organização não puder adotar a Functional Source License (FSL) da versão 5.0 Community por políticas internas que exigem estritamente licenças aprovadas pela OSI no momento imediato da adoção (sem aguardar a conversão de 2 anos da FSL para Apache 2.0) e não possuir licença comercial do Liquibase Secure, ela pode permanecer na série `liquibase:4.x` (Apache 2.0) ou avaliar ferramentas sob Apache 2.0.
+VERIFY: Após atualizar a imagem para `5.0` com os drivers instalados via LPM, execute `liquibase validate` e `liquibase status` em ambiente de staging e confirme zero regressões na leitura da tabela `DATABASECHANGELOG` existente.
+LINKS: [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]] | [[liquibase-gerenciamento-drivers-lpm-breaking-change-5-0]] | [[liquibase-execucao-docker-variaveis-ambiente-registries]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase
+
+=== NOTE: 750 | liquibase-governanca-publicacao-sonatype-aprovadores | Liquibase: governança de publicação de releases no Sonatype/Maven Central com gate de múltiplos aprovadores ===
+ONE_LINER: O pipeline de publicação de releases do Liquibase (`/workflow/release-published.yml`) implementa um controle de governança onde a publicação de uma release no GitHub pausa após a etapa `Setup` e exige a aprovação manual de no mínimo 2 aprovadores antes de liberar o deploy no Maven Central/Sonatype e registries.
+IMPORTANCE: Em ferramentas de banco de dados baixadas milhões de vezes do Maven Central e Docker Hub para rodar com credenciais administrativas de produção, proteger o pipeline de release contra publicações acidentais ou comprometimento de uma única conta de mantenedor (princípio dos quatro olhos / two-person rule) é uma prática exemplar de segurança de engenharia de release. A seção `Publish Release Manual Trigger to Sonatype` do README oficial do Liquibase documenta esse mecanismo.
+HOW_IT_WORKS: Quando um Product Owner (PO) ou Team Leader publica uma release em `github.com/liquibase/liquibase/releases/`, o workflow `release-published.yml` é disparado. O workflow para imediatamente após a etapa `Setup` e envia um e-mail para a lista de `approvers` configurada no job `manual_trigger_deployment`. É obrigatório um **mínimo de 2 aprovadores** (`minimum of 2 approvers`) verificando a versão exata no PR (como `Deploying vX.Y.Z to sonatype`) para que os jobs subsequentes — `deploy_maven`, `deploy_javadocs`, `publish_to_github_packages`, entre outros — sejam autorizados a executar.
+EXAMPLE:
+```yaml
+# Padrão de governança de release inspirado no workflow release-published.yml do Liquibase (exigindo 2 aprovadores no environment)
+jobs:
+  deploy_maven:
+    needs: [setup, manual_trigger_deployment]
+    environment:
+      name: sonatype-production-release
+```
+TRADE_OFFS: Exigir aprovação manual síncrona de pelo menos dois mantenedores seniores adiciona uma etapa de coordenação humana entre a criação da tag e a disponibilidade imediata dos artefatos no Maven Central, mas elimina o risco de que um disparo equivocado publique pacotes imutáveis incorretos nos repositórios globais.
+VERIFY: Ao consumir uma nova release do Liquibase a partir do Maven Central ou GitHub Releases, verifique a conclusão de todos os jobs do workflow `release-published.yml` e a integridade dos pacotes publicados.
+LINKS: [[liquibase-gerenciamento-mudancas-esquema-banco-dados]] | [[liquibase-cadencia-releases-trimestrais-nightly-builds]] | [[github-actions-seguranca-oidc-permissions-secrets-pinning]]
+SOURCES: https://raw.githubusercontent.com/liquibase/liquibase/master/README.md | https://raw.githubusercontent.com/liquibase/liquibase/main/docker/README.md | https://github.com/liquibase/liquibase

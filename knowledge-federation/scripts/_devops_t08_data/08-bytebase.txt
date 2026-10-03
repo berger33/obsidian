@@ -1,0 +1,167 @@
+=== NOTE: 771 | bytebase-plataforma-governanca-banco-dados-humanos-ia | Bytebase: plataforma open-source de governança de banco de dados como plano de controle único para humanos e agentes de IA ===
+ONE_LINER: O Bytebase (`bytebase/bytebase`) é uma plataforma open-source de governança de banco de dados construída para a era da IA, atuando como um plano de controle único (`single control plane`) entre operadores humanos, agentes de IA e bancos de dados.
+IMPORTANCE: Em organizações modernas, desenvolvedores humanos, pipelines de CI/CD e agentes de IA (via MCP ou assistentes de código) precisam consultar e alterar dezenas de bancos de dados diferentes; sem um plano de controle centralizado, credenciais de banco ficam espalhadas, queries sensíveis vazam dados de produção (PII) e alterações DDL sem revisão causam incidentes. Segundo o README oficial do Bytebase, a plataforma unifica gerenciamento de mudanças, controle de acesso e conformidade em um único lugar.
+HOW_IT_WORKS: Escrito em Go (backend) e TypeScript/Vue (frontend) e empacotado em um único binário/container (`bytebase/bytebase`), o Bytebase posiciona-se entre os usuários/agentes e uma ampla frota de SGBDs (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle, MongoDB, Redis, Snowflake, ClickHouse, TiDB, OceanBase, Google Cloud Spanner, CockroachDB, entre outros). A plataforma estrutura sua governança em três pilares centrais: (1) **Change Management** (fluxos de revisão e implantação GUI ou GitOps com mais de 200 regras de lint SQL); (2) **Access Control** (SQL Editor integrado com RBAC fino, acesso Just-in-Time e mascaramento dinâmico de dados); e (3) **Compliance** (auditoria completa, classificação de dados e políticas como código via Terraform Provider).
+EXAMPLE:
+```bash
+# Iniciar o Bytebase rapidamente via Docker expondo a interface web e API na porta 8080 e persistindo dados em ~/.bytebase/data
+docker run --rm --init \
+  --name bytebase \
+  --publish 8080:8080 --pull always \
+  --volume ~/.bytebase/data:/var/opt/bytebase \
+  bytebase/bytebase:latest
+```
+TRADE_OFFS: Ao rodar o container do Bytebase em produção, nunca omita o mapeamento de volume persistente (`--volume ~/.bytebase/data:/var/opt/bytebase` ou um PersistentVolumeClaim no Kubernetes via Helm chart `bytebase/bytebase`) ou a configuração de um banco PostgreSQL externo de metadados (`--pg`), pois sem persistência todas as políticas, históricos de issues e logs de auditoria serão perdidos ao reiniciar o container.
+VERIFY: Após iniciar o container (ou instalar via `helm install bytebase bytebase/bytebase`), acesse `http://localhost:8080` e verifique o carregamento do console administrativo do Bytebase.
+LINKS: [[bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]] | [[bytebase-integracao-ia-mcp-server-text-to-sql-page-agent]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 772 | bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint | Bytebase: gerenciamento de mudanças de esquema (DDL) e dados (DML) via GUI ou GitOps com mais de 200 regras de SQL Lint ===
+ONE_LINER: O pilar de **Change Management** do Bytebase automatiza fluxos de revisão, aprovação e rollout de alterações de esquema (`DDL`) e dados (`DML`) através de interface gráfica (GUI) ou GitOps (GitHub, GitLab, Bitbucket, Azure DevOps) com mais de 200 regras de linting SQL.
+IMPORTANCE: Diferentemente de ferramentas CLI que cobrem apenas migrações de esquema (`DDL`) via código, no dia a dia operacional as equipes também precisam executar correções pontuais de dados (`DML`, como corrigir registros corrompidos em produção) sob revisão e aprovação auditável. Conforme documentado na seção `Key Features -> Change Management` do README oficial do Bytebase, a plataforma governa tanto DDL quanto DML com análise automática de risco.
+HOW_IT_WORKS: Quando uma alteração de banco de dados é submetida — seja criando uma **Issue** diretamente na interface web do Bytebase (fluxo GUI), seja abrindo um Pull Request/Merge Request em um repositório conectado ao GitHub, GitLab, Bitbucket ou Azure DevOps (fluxo GitOps) — o motor de **SQL Review** do Bytebase avalia o script contra **mais de 200 regras configuráveis de SQL lint** (verificando convenções de nomenclatura, ausência de `WHERE` em `UPDATE`/`DELETE`, chaves primárias obrigatórias, tipos proibidos e compatibilidade retroativa). Após passar nas regras de lint e nas aprovações exigidas para cada ambiente (ex.: `Test` -> `Staging` -> `Prod`), o Bytebase executa o rollout progressivo entre os ambientes e suporta geração de rollback para DML/DDL.
+EXAMPLE:
+```bash
+# Instalar o Bytebase em um cluster Kubernetes usando o repositório oficial de Helm charts
+helm repo add bytebase https://bytebase.github.io/bytebase
+helm repo update
+helm install bytebase bytebase/bytebase --namespace bytebase --create-namespace
+```
+TRADE_OFFS: Para que o fluxo GitOps do Bytebase consiga receber eventos de push e postar comentários de SQL Review automaticamente nos Pull Requests do GitHub ou GitLab self-hosted, a instância do Bytebase precisa ter uma URL externa configurada (`--external-url`) acessível pelos webhooks do servidor Git corporativo.
+VERIFY: No console do Bytebase, configure um template de **SQL Review** ativando regras de bloqueio para `SELECT *` ou `DELETE` sem cláusula `WHERE` e crie uma Issue de teste para validar que o linter barra a execução.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]] | [[atlasdb-linting-migracoes-50-analisadores-seguranca]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 773 | bytebase-controle-acesso-rbac-jit-dynamic-data-masking | Bytebase: controle de acesso com SQL Editor web, RBAC granular, acesso Just-in-Time (JIT) e Dynamic Data Masking ===
+ONE_LINER: O pilar de **Access Control** do Bytebase fornece um SQL Editor integrado baseado em navegador com controle de acesso baseado em papéis (RBAC) fino, concessão de acesso temporário Just-in-Time (JIT) e mascaramento dinâmico de dados (`Dynamic Data Masking`) em tempo de consulta.
+IMPORTANCE: Compartilhar senhas de usuários do banco de produção com desenvolvedores para que eles usem clientes desktop locais (DBeaver, pgAdmin, DataGrip) expõe todas as tabelas de clientes a vazamentos de dados pessoais (LGPD/GDPR) e impede revogar o acesso automaticamente após o término de um chamado de suporte. A seção `Key Features -> Access Control` do README oficial do Bytebase soluciona esse problema centralizando o acesso no SQL Editor governado.
+HOW_IT_WORKS: Em vez de distribuir credenciais diretas do banco de dados aos engenheiros, os usuários autenticam-se no Bytebase (via SSO/OIDC/LDAP) e utilizam o **SQL Editor** integrado: (1) **Fine-grained RBAC**: permissões podem ser concedidas no nível de projeto, instância, banco de dados ou tabela específica (somente leitura vs exportação); (2) **Just-in-Time (JIT) Access**: quando um engenheiro precisa consultar um banco restrito de produção para investigar um incidente, ele solicita acesso temporário com tempo de expiração definido (ex.: 2 horas) aprovado pelo responsável; e (3) **Dynamic Data Masking**: colunas sensíveis (como CPF, e-mail, telefone ou cartão) são mascaradas automaticamente em tempo de execução da query (`SELECT`) de acordo com o papel do usuário, sem alterar os dados reais gravados no disco do banco.
+EXAMPLE:
+```sql
+-- Quando um desenvolvedor executa SELECT no SQL Editor do Bytebase com Dynamic Data Masking ativo na coluna email:
+SELECT id, full_name, email FROM customers LIMIT 5;
+-- O resultado exibido mascara automaticamente o e-mail (ex.: "j***@empresa.com") sem tocar no dado original no SGBD.
+```
+TRADE_OFFS: O mascaramento dinâmico de dados (`Dynamic Data Masking`) é aplicado pelo motor de proxy/reescrita de consulta do SQL Editor do Bytebase; se um usuário ainda possuir a senha bruta do banco de dados e conexão de rede direta à porta `5432`/`3306` por fora do Bytebase, ele contornará o mascaramento — portanto, a rede do banco de produção deve aceitar conexões humanas apenas a partir do Bytebase.
+VERIFY: Configure uma regra de mascaramento semântico na coluna `email` de uma tabela de teste no Bytebase, acesse o SQL Editor com um perfil de desenvolvedor e confirme que o `SELECT` retorna os valores mascarados.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-compliance-auditoria-classificacao-dados-terraform]] | [[atlasdb-seguranca-como-codigo-rbac-roles-permissions-rls]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 774 | bytebase-compliance-auditoria-classificacao-dados-terraform | Bytebase: conformidade, trilha de auditoria completa, classificação de dados e políticas como código com Terraform Provider ===
+ONE_LINER: O pilar de **Compliance** do Bytebase registra trilhas de auditoria completas de quem fez o quê e quando, classifica dados sensíveis em todo o catálogo e permite codificar políticas de governança usando o **Bytebase Terraform Provider**.
+IMPORTANCE: Auditorias de conformidade (SOC 2, ISO 27001, PCI-DSS, LGPD, HIPAA) exigem comprovar exatamente quais consultas foram executadas em produção, quem aprovou cada mudança de esquema ou acesso JIT, quais colunas contêm dados pessoais e que as regras de aprovação são aplicadas de forma consistente em todos os ambientes. A seção `Key Features -> Compliance` do README oficial do Bytebase descreve essas capacidades.
+HOW_IT_WORKS: (1) **Audit Logging**: todas as ações realizadas na plataforma — logins, consultas executadas no SQL Editor, exportações de dados, solicitações de acesso JIT, aprovações de Issues DDL/DML e alterações de configuração — são gravadas em logs de auditoria pesquisáveis; (2) **Data Classification**: permite mapear e rotular colunas de tabelas de acordo com o nível de sensibilidade (ex.: `PII`, `Financial`, `Confidential`) e vincular esses rótulos automaticamente a regras de mascaramento dinâmico; e (3) **Terraform Provider (`registry.terraform.io/providers/bytebase/bytebase`)**: permite declarar ambientes, instâncias de bancos de dados, projetos, grupos de usuários, papéis RBAC, regras de SQL Review e políticas de mascaramento como código Terraform versionado no Git.
+EXAMPLE:
+```hcl
+# Exemplo de uso do Bytebase Terraform Provider para codificar um ambiente de produção com política de aprovação
+terraform {
+  required_providers {
+    bytebase = {
+      source = "bytebase/bytebase"
+    }
+  }
+}
+
+resource "bytebase_environment" "prod" {
+  resource_id = "prod"
+  title       = "Production"
+  order       = 3
+}
+```
+TRADE_OFFS: Gerenciar políticas do Bytebase simultaneamente via cliques manuais na interface web e via `terraform apply` causará conflitos de estado (drift) na próxima execução do Terraform; uma vez adotado o Bytebase Terraform Provider para governar ambientes, papéis e regras de SQL Review, trate o repositório Terraform como a única fonte da verdade para essas configurações.
+VERIFY: Execute `terraform plan` com o provider `bytebase/bytebase` configurado contra a API da sua instância Bytebase para validar a sincronização declarativa das políticas de governança.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]] | [[terraform-providers-plugins-versionamento-lockfile]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 775 | bytebase-integracao-ia-mcp-server-text-to-sql-page-agent | Bytebase: governança para agentes de IA com MCP Server, Text-to-SQL no SQL Editor e Page Agent ===
+ONE_LINER: Projetado para a era da IA, o Bytebase oferece um **MCP Server** oficial (`docs.bytebase.com/ai/mcp-server`), assistência **Text-to-SQL** integrada ao SQL Editor e um **Page Agent** capaz de executar fluxos de múltiplos passos na interface por linguagem natural.
+IMPORTANCE: Conectar agentes de IA (como Claude Code, Cursor ou agentes autônomos via Model Context Protocol — MCP) diretamente ao banco de dados de produção usando uma string de conexão com usuário `root`/`postgres` é extremamente perigoso: o agente pode ler dados pessoais sem mascaramento ou executar um `DROP`/`UPDATE` destrutivo. Segundo a seção `AI Integration` do README oficial do Bytebase, colocar o Bytebase como plano de controle entre os agentes de IA e os bancos de dados aplica as mesmas barreiras de governança humanas aos agentes.
+HOW_IT_WORKS: O Bytebase disponibiliza três integrações nativas de IA: (1) **MCP Server**: expõe operações de banco de dados para clientes compatíveis com o Model Context Protocol (MCP) passando obrigatoriamente pelas políticas de RBAC, Dynamic Data Masking, SQL Review e Audit Logging do Bytebase; (2) **Text-to-SQL**: assistente embutido no SQL Editor que conhece o esquema do banco selecionado e gera ou explica consultas SQL complexas a partir de linguagem natural; e (3) **Page Agent**: agente interativo embutido na interface web do Bytebase que executa workflows multi-etapas na plataforma (como criar issues de migração, solicitar acesso ou configurar projetos) via comandos em linguagem natural.
+EXAMPLE:
+```bash
+# Verificar a conectividade da API do Bytebase que serve o plano de controle para humanos e clientes MCP Server
+curl -sSf http://localhost:8080/healthz
+```
+TRADE_OFFS: Ao habilitar o **MCP Server** para agentes de IA ou o recurso **Text-to-SQL** conectado a um provedor de LLM externo, certifique-se de que a conta de serviço usada pelo agente MCP possua permissões estritas de menor privilégio (somente leitura com Dynamic Data Masking ativo em produção) e que alterações de esquema ou dados solicitadas por agentes de IA passem pelo fluxo de criação de Issue com revisão de SQL Lint e aprovação humana.
+VERIFY: Conecte um cliente MCP ao endpoint do MCP Server do Bytebase usando uma conta de serviço restrita e confirme nos logs de auditoria do Bytebase que todas as consultas feitas pelo agente de IA foram registradas e mascaradas.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]] | [[bytebase-compliance-auditoria-classificacao-dados-terraform]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/ai/mcp-server | https://github.com/bytebase/bytebase
+
+=== NOTE: 776 | bytebase-arquitetura-implantacao-self-hosted-vs-cloud-postgres | Bytebase: opções de implantação (Self-hosted via Docker/Kubernetes vs Bytebase Cloud) e banco de metadados PostgreSQL ===
+ONE_LINER: O Bytebase pode ser consumido como serviço gerenciado (**Bytebase Cloud**) ou auto-hospedado (**Self-hosted** via Docker ou Helm chart no Kubernetes), suportando armazenamento de metadados em PostgreSQL embutido no container ou em instância PostgreSQL externa (`--pg`).
+IMPORTANCE: Equipes de plataforma precisam escolher entre a agilidade de não gerenciar infraestrutura (Bytebase Cloud) ou manter todo o tráfego de banco de dados dentro da VPC privada corporativa (Self-hosted), além de configurar alta disponibilidade para o banco de metadados do próprio Bytebase. A página oficial `Self-host vs. Cloud` (`docs.bytebase.com/get-started/self-host-vs-cloud`) compara ambos os modelos.
+HOW_IT_WORKS: (1) **Bytebase Cloud**: hospedado e atualizado pela equipe do Bytebase, permitindo provisionar uma instância em segundos para avaliar ou gerenciar bancos acessíveis; (2) **Self-hosted**: implantado dentro da rede privada da organização via imagem Docker `bytebase/bytebase` ou Helm chart `bytebase/bytebase` no Kubernetes. No modo self-hosted, por padrão o container inicializa um PostgreSQL embutido gravando no diretório `/var/opt/bytebase`; para ambientes de produção críticos, o operador passa a flag `--pg="postgresql://user:pwd@host:5432/bytebase"` (ou variável `PG_URL`) para que o Bytebase armazene seu estado em um cluster PostgreSQL externo gerenciado (como AWS RDS, Cloud SQL ou CloudNativePG) com backups e réplicas.
+EXAMPLE:
+```bash
+# Iniciar o Bytebase em produção apontando para um banco PostgreSQL externo de metadados via --pg
+docker run --init \
+  --name bytebase-prod \
+  --publish 8080:8080 \
+  --volume ~/.bytebase/data:/var/opt/bytebase \
+  bytebase/bytebase:latest \
+  --pg "postgresql://bytebase:secret@pg-meta.internal:5432/bytebase"
+```
+TRADE_OFFS: Ao usar o Bytebase Cloud para gerenciar bancos de dados que residem em sub-redes privadas de nuvem (AWS VPC, GCP VPC, Azure VNet), é necessário configurar conectividade segura (peering/bastion/whitelist de IP); já o modo Self-hosted roda dentro da própria VPC ao lado dos bancos de dados privados sem expor portas de banco para a internet.
+VERIFY: Nos logs de inicialização do container `bytebase`, confirme a conexão bem-sucedida ao banco de metadados PostgreSQL externo configurado em `--pg` e verifique o endpoint `/healthz`.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint]] | [[bytebase-edicoes-community-pro-enterprise-licenciamento]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 777 | bytebase-rollout-multi-ambiente-batch-change-multi-tenant | Bytebase: pipelines de rollout multi-ambiente (Test, Staging, Prod) e mudanças em lote para bancos multi-tenant/sharded ===
+ONE_LINER: O Bytebase modela o ciclo de entrega através de ambientes ordenados (`Environment`) e suporta mudanças em lote (**Batch Change**) sobre dezenas ou centenas de bancos de dados com esquema idêntico (arquiteturas database-per-tenant ou sharding).
+IMPORTANCE: Em arquiteturas SaaS onde cada cliente corporativo possui seu próprio banco de dados isolado (`database-per-tenant`) ou onde uma tabela é particionada em 64 shards físicos, aplicar uma migração DDL sequencialmente à mão em 200 bancos de dados é lento e arriscado: se um shard falhar ou for esquecido, a aplicação inteira sofre erros de esquema inconsistente. A documentação de Change Management do Bytebase aborda nativamente esse cenário.
+HOW_IT_WORKS: No Bytebase, os bancos de dados são organizados dentro de **Projects** e associados a um **Environment** (por exemplo, `Dev` -> `Staging` -> `Prod`), onde cada ambiente define suas próprias políticas de SQL Review e regras de aprovação (ex.: deploy automático em `Dev`/`Staging` e aprovação obrigatória de DBA/Owner em `Prod`). Para arquiteturas multi-tenant ou sharded, o Bytebase permite agrupar múltiplos bancos de dados em um **Database Group** (por atributos, labels ou expressões) e criar uma única Issue que executa o rollout da mudança em estágios progressivos (canary shard -> lotes seguintes) em todos os bancos do grupo, monitorando o sucesso de cada tenant individualmente.
+EXAMPLE:
+```hcl
+# Exemplo de definição de projeto e fluxo de ambientes no Bytebase via Terraform Provider
+resource "bytebase_project" "saas_core" {
+  resource_id = "saas-core"
+  title       = "SaaS Multi-Tenant Core"
+}
+```
+TRADE_OFFS: Ao executar uma mudança DDL em lote sobre centenas de bancos de dados pertencentes à mesma instância física de servidor PostgreSQL ou MySQL, disparar todas as migrações com concorrência ilimitada ao mesmo tempo pode causar pico de CPU e I/O no servidor físico; configure o rollout em estágios graduais para controlar a taxa de aplicação entre os tenants.
+VERIFY: Crie uma Issue selecionando múltiplos bancos de dados de homologação em um grupo multi-tenant no Bytebase e acompanhe na matriz de execução o progresso individual de cada instância.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint]] | [[bytebase-deteccao-schema-drift-sincronizacao-changelogs]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 778 | bytebase-deteccao-schema-drift-sincronizacao-changelogs | Bytebase: detecção automática de desvio de esquema (Schema Drift Detection) e histórico unificado de revisões ===
+ONE_LINER: O Bytebase monitora periodicamente o esquema real dos bancos de dados gerenciados, comparando-o com o último estado registrado pelas Issues do Bytebase para detectar e alertar automaticamente sobre **Schema Drift** (alterações feitas por fora da plataforma).
+IMPORTANCE: Mesmo quando uma empresa adota uma plataforma de governança de banco de dados, durante um incidente de madrugada um administrador ainda pode conectar-se diretamente ao banco com uma conta de emergência e criar um índice ou alterar uma coluna sem registrar no pipeline; se esse desvio (`schema drift`) passar despercebido, a próxima migração planejada falhará. O motor de Change Management do Bytebase rastreia e detecta essas divergências.
+HOW_IT_WORKS: Sempre que o Bytebase aplica uma Issue de alteração de esquema (`DDL`), ele grava um snapshot estruturado da versão atual do esquema no histórico do banco de dados. Em segundo plano, um job periódico de sincronização inspeciona o catálogo real dos bancos de dados conectados e compara o esquema vivo com o último snapshot esperado: caso encontre qualquer tabela, coluna ou índice criado, modificado ou removido por fora do fluxo do Bytebase, a plataforma levanta um alerta de **Schema Drift**, exibindo o diff exato entre o esquema esperado e o esquema real para que a equipe reconcilie a linha de base (`baseline`).
+EXAMPLE:
+```sql
+-- Exemplo: se alguém executar diretamente no psql fora do Bytebase:
+ALTER TABLE orders ADD COLUMN manual_hotfix_flag BOOLEAN DEFAULT false;
+-- O detector de Schema Drift do Bytebase sinaliza a divergência no painel do banco de dados orders.
+```
+TRADE_OFFS: Para que a detecção de Schema Drift seja eficaz e raramente acionada, revogue permissões de `CREATE`/`ALTER`/`DROP` das contas pessoais de desenvolvedores e mantenha as credenciais de escrita de esquema restritas exclusivamente à conta de serviço do Bytebase (e a um procedimento formal de break-glass auditado).
+VERIFY: No painel de um banco de dados de homologação conectado ao Bytebase, acione `Sync Now` após realizar uma alteração manual externa de teste e verifique o alerta de drift com o diff SQL correspondente.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint]] | [[atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 779 | bytebase-bancos-suportados-relacionais-nosql-analiticos | Bytebase: governança unificada para bancos relacionais, NoSQL (MongoDB, Redis) e analíticos (Snowflake, ClickHouse, Spanner) ===
+ONE_LINER: O Bytebase oferece suporte unificado a uma matriz ampla de bancos de dados transacionais relacionais (PostgreSQL, MySQL, SQL Server, Oracle, MariaDB), bancos SQL distribuídos/NewSQL (TiDB, OceanBase, CockroachDB, Google Cloud Spanner), NoSQL (MongoDB, Redis) e motores analíticos (Snowflake, ClickHouse, Databricks).
+IMPORTANCE: Em ferramentas tradicionais baseadas em JDBC puro projetadas apenas para tabelas relacionais SQL, bancos NoSQL amplamente usados em produção (como MongoDB e Redis) ficam totalmente de fora da governança de acesso, mascaramento de dados e revisão de mudanças. O README oficial do Bytebase destaca na sua matriz visual o suporte integrado a todos esses motores sob o mesmo plano de controle.
+HOW_IT_WORKS: O Bytebase implementa drivers e analisadores específicos para cada família de banco de dados conectada: (1) para motores relacionais e NewSQL (**PostgreSQL**, **MySQL**, **MariaDB**, **SQL Server**, **Oracle**, **TiDB**, **OceanBase**, **CockroachDB**, **Spanner**), fornece inspeção completa de esquema, mais de 200 regras de SQL Lint, DDL/DML rollback e mascaramento dinâmico de colunas; (2) para motores analíticos (**Snowflake**, **ClickHouse**), governa consultas no SQL Editor, controle de acesso JIT e mudanças de estrutura; e (3) para motores NoSQL (**MongoDB**, **Redis**), centraliza a execução controlada de comandos/queries, permissões RBAC e trilha de auditoria sem expor credenciais diretas das instâncias.
+EXAMPLE:
+```bash
+# Verificar no container do Bytebase a disponibilidade imediata de todos os conectores embutidos no binário único
+docker exec bytebase bytebase --version
+```
+TRADE_OFFS: Como todos os conectores já vêm compilados dentro do binário único em Go do Bytebase (`bytebase/bytebase`), o operador não precisa baixar nem gerenciar arquivos `.jar` de drivers JDBC separados (como ocorre no Liquibase 5.0+ ou Flyway), mas o conjunto exato de regras de SQL Lint aplicáveis varia conforme a gramática suportada pelo parser de cada motor (PostgreSQL e MySQL possuem a maior cobertura de regras de lint).
+VERIFY: Conecte uma instância PostgreSQL e uma instância Redis ou MongoDB de laboratório no console do Bytebase e valide a execução governada de consultas pelo SQL Editor em ambas.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]] | [[flyway-bancos-suportados-relacionais-cloud-data-warehouses]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase
+
+=== NOTE: 780 | bytebase-edicoes-community-pro-enterprise-licenciamento | Bytebase: modelo open-source e diferenças entre as edições Community, Pro e Enterprise ===
+ONE_LINER: O Bytebase é desenvolvido abertamente no repositório `bytebase/bytebase` e distribuído em uma única imagem/binário que opera por padrão na edição gratuita **Community** e desbloqueia recursos avançados nas edições **Pro** e **Enterprise** mediante licença.
+IMPORTANCE: Ao planejar a adoção do Bytebase como plano de controle de banco de dados, arquitetos e gestores precisam saber quais funcionalidades estão disponíveis gratuitamente na edição Community auto-hospedada e quais recursos corporativos (como SSO empresarial avançado, fluxos de aprovação customizados multi-nível, Dynamic Data Masking avançado e JIT access em larga escala) pertencem aos planos Pro e Enterprise. A documentação oficial `Self-host vs. Cloud` e `Pricing` detalha esse modelo.
+HOW_IT_WORKS: Diferentemente de produtos que exigem reinstalar outra imagem de container para mudar de edição, o Bytebase empacota todas as capacidades na mesma imagem oficial `bytebase/bytebase:latest`. Sem chave de licença, a instância roda na edição **Community**, oferecendo gerenciamento de mudanças GUI/GitOps, SQL Review com regras de lint, SQL Editor e suporte aos bancos de dados suportados. Para equipes maiores que necessitam de fluxos de rollout e aprovação customizados (**Pro**) ou organizações com requisitos estritos de segurança como SSO/SCIM, RBAC granular, Dynamic Data Masking, Just-in-Time Access, Audit Log estendido e SLA dedicado (**Enterprise**), basta carregar a chave de licença no painel administrativo da própria instância.
+EXAMPLE:
+```bash
+# Inspecionar a imagem oficial única bytebase/bytebase que atende às edições Community, Pro e Enterprise
+docker image inspect bytebase/bytebase:latest --format '{{.Config.ExposedPorts}} {{.Config.Entrypoint}}'
+```
+TRADE_OFFS: O repositório `bytebase/bytebase` utiliza um modelo open-core (onde o núcleo do produto está sob licença aberta Apache-2.0 e o diretório de extensões proprietárias Enterprise reside na árvore com licença comercial específica); portanto, se uma equipe decidir redistribuir versões modificadas do Bytebase comercialmente, deve observar os arquivos `LICENSE` de cada diretório do repositório.
+VERIFY: Acesse `Settings -> Subscription` no console do Bytebase auto-hospedado para verificar o plano ativo da instância (`Community`, `Pro` ou `Enterprise`) e os limites aplicáveis.
+LINKS: [[bytebase-plataforma-governanca-banco-dados-humanos-ia]] | [[bytebase-arquitetura-implantacao-self-hosted-vs-cloud-postgres]] | [[liquibase-mudancas-versao-5-0-licenca-fsl-community-secure]]
+SOURCES: https://raw.githubusercontent.com/bytebase/bytebase/main/README.md | https://docs.bytebase.com/get-started/self-host-vs-cloud | https://github.com/bytebase/bytebase

@@ -1,0 +1,156 @@
+=== NOTE: 781 | nix-gerenciador-pacotes-puramente-funcional-nix-store | Nix: gerenciador de pacotes puramente funcional e armazenamento imutável em /nix/store ===
+ONE_LINER: O Nix (criado por Eelco Dolstra e licenciado sob LGPL-2.1) é um gerenciador de pacotes puramente funcional para sistemas Unix que trata pacotes como valores em linguagens funcionais puras, construindo-os a partir de funções sem efeitos colaterais e armazenando-os com hashes criptográficos em `/nix/store`.
+IMPORTANCE: Gerenciadores de pacotes tradicionais (`apt`, `yum`, `brew`, `pip` global) sobrescrevem arquivos em diretórios compartilhados como `/usr/bin` e `/usr/lib`: atualizar uma biblioteca pode quebrar outros programas, duas versões da mesma dependência não podem coexistir facilmente e um build que funciona na máquina de um desenvolvedor falha em outra por diferenças ocultas no sistema. Segundo o README oficial do Nix (`NixOS/nix`), a abordagem puramente funcional garante que pacotes nunca mudem após serem construídos e que todas as entradas de um build sejam declaradas explicitamente.
+HOW_IT_WORKS: No Nix, cada pacote ou ambiente é descrito por uma expressão na linguagem Nix que avalia para uma **derivação** (`/nix/store/<hash>-<nome>.drv`). Os artefatos resultantes são gravados em diretórios imutáveis e isolados dentro de **`/nix/store/<hash>-<nome>-<versão>`**, onde `<hash>` é um hash criptográfico calculado sobre **todas** as entradas envolvidas na construção do pacote (código-fonte, script de build, compilador, flags, `glibc` e todas as dependências transitivas). Se qualquer dependência ou flag mudar, o hash muda e o pacote é instalado em um novo caminho em `/nix/store` sem sobrescrever o anterior, permitindo coexistência de múltiplas versões, atualizações atômicas e rollbacks instantâneos.
+EXAMPLE:
+```bash
+# Inspecionar a versão do Nix instalada e listar entradas imutáveis endereçadas por hash em /nix/store
+nix --version
+ls -d /nix/store/* | head -n 5
+```
+TRADE_OFFS: Como nenhuma versão antiga em `/nix/store` é sobrescrita ao atualizar pacotes ou entrar em novos ambientes de desenvolvimento (`nix-shell`), o uso de disco em `/nix/store` cresce continuamente ao longo do tempo até que o usuário ou um timer automático execute o coletor de lixo do Nix (`nix-collect-garbage -d`) para remover caminhos que não são mais referenciados por nenhum perfil ou raiz ativa (`gcroots`).
+VERIFY: Execute `nix path-info --sigs $(which nix)` (ou inspecione um caminho em `/nix/store`) para verificar o hash criptográfico e as referências exatas do pacote no Nix Store.
+LINKS: [[nix-ambientes-efemeros-nix-shell-pacotes-isolados]] | [[nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs]] | [[nix-cache-binario-cache-nixos-org-derivacoes-source]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 782 | nix-ambientes-efemeros-nix-shell-pacotes-isolados | Nix: criação de ambientes de shell efêmeros e aninhados com nix-shell -p e execução via --run ===
+ONE_LINER: O comando `nix-shell -p <pacotes>` cria ambientes de linha de comando ad-hoc e efêmeros onde ferramentas são disponibilizadas imediatamente no `$PATH` sem alterar a configuração global do sistema, suportando sessões aninhadas e execução não interativa com `--run`.
+IMPORTANCE: Desenvolvedores frequentemente precisam usar utilitários específicos (`jq`, `kubectl`, `helm`, `git`, `neovim`, `nodejs`) para um projeto ou script de CI sem poluir o sistema operacional hospedeiro e sem deixar pacotes órfãos instalados para sempre. O tutorial oficial `Ad hoc shell environments` (`nix.dev/tutorials/first-steps/ad-hoc-shell-environments`) demonstra como o `nix-shell` resolve esse fluxo em segundos.
+HOW_IT_WORKS: Quando o usuário executa `nix-shell -p cowsay lolcat`, o Nix resolve as derivações dos pacotes solicitados no conjunto de pacotes Nixpkgs, baixa os binários pré-compilados do cache (ou compila se necessário) para `/nix/store` e inicia uma nova sessão de shell interativa (`[nix-shell:~]$`) onde a variável de ambiente `$PATH` foi modificada para apontar para os diretórios `/nix/store/.../bin` daqueles pacotes. Ao sair da sessão com `exit` ou `Ctrl+D`, os programas desaparecem imediatamente do `$PATH` do sistema (embora permaneçam em cache em `/nix/store` para uso instantâneo futuro). É possível abrir **sessões aninhadas** (rodar `nix-shell -p git` dentro de um `nix-shell` já ativo para adicionar pacotes temporariamente) ou rodar um único comando não interativo passando `--run "<comando>"`.
+EXAMPLE:
+```bash
+# Executar um comando único dentro de um ambiente efêmero contendo cowsay e lolcat sem alterar o sistema global
+nix-shell -p cowsay lolcat --run "cowsay Hello, Nix! | lolcat"
+```
+TRADE_OFFS: Por padrão, o comando `nix-shell -p <pacote>` sem flags adicionais cria um ambiente **impuro**, o que significa que ele preserva as variáveis de ambiente e o `$PATH` que já existiam no sistema hospedeiro; assim, se um programa não foi solicitado no `-p`, mas já está instalado globalmente no host, ele continuará acessível dentro do `nix-shell` padrão, podendo mascarar dependências esquecidas.
+VERIFY: Execute `which cowsay` fora do `nix-shell` (confirmando que não está no `$PATH` global) e em seguida execute `nix-shell -p cowsay --run "which cowsay"` para verificar que o binário é resolvido diretamente de `/nix/store/<hash>-cowsay-.../bin/cowsay`.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs]] | [[nix-garbage-collection-limpeza-espaco-disco-nix-store]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 783 | nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs | Nix: ambientes 100% reprodutíveis com nix-shell --pure e fixação de commit do Nixpkgs (-I nixpkgs=...) ===
+ONE_LINER: Combinar a flag `--pure` do `nix-shell` (que descarta a maioria das variáveis de ambiente do host) com `-I nixpkgs=https://github.com/NixOS/nixpkgs/tarball/<commit>` garante que um comando execute exatamente com as mesmas versões de pacotes e bibliotecas em qualquer máquina.
+IMPORTANCE: Apenas rodar `nix-shell -p git` em duas máquinas diferentes não garante reprodutibilidade absoluta: uma máquina pode ter utilitários extras no `$PATH` do host e pode estar apontando para um canal `nixpkgs` de 2024, enquanto a outra aponta para `nixpkgs` de 2026. A seção `Towards reproducibility` do guia oficial `nix.dev` demonstra como eliminar ambas as fontes de variação.
+HOW_IT_WORKS: Dois mecanismos complementares tornam o ambiente determinístico: (1) a flag **`--pure`** limpa a maioria das variáveis de ambiente herdadas do sistema hospedeiro ao iniciar o shell, de modo que apenas os binários declarados explicitamente em `-p` (e utilitários básicos do ambiente padrão `stdenv`) existem no `$PATH` (tentar rodar um comando instalado no host que não foi listado em `-p` falha com `command not found`); e (2) a flag **`-I nixpkgs=<url-tarball-commit>`** instrui o Nix a buscar a definição dos pacotes de uma revisão Git exata e imutável do repositório `NixOS/nixpkgs` (por exemplo, o commit `2a601aafdc5605a5133a2ca506a34a3a73377247`), garantindo bit a bit as mesmas versões de `git`, `neovim` e `nodejs` hoje ou daqui a cinco anos.
+EXAMPLE:
+```bash
+# Executar git --version em um ambiente nix-shell puro (--pure) fixado em um commit exato do Nixpkgs
+nix-shell -p git --run "git --version" --pure \
+  -I nixpkgs=https://github.com/NixOS/nixpkgs/tarball/2a601aafdc5605a5133a2ca506a34a3a73377247
+```
+TRADE_OFFS: Quando você executa `nix-shell --pure`, variáveis de ambiente do usuário no host — como `SSH_AUTH_SOCK`, configurações de proxy corporativo (`HTTPS_PROXY`), `KUBECONFIG` ou `AWS_PROFILE` — são limpas para garantir pureza; se um script precisar de uma variável específica do host dentro de um shell puro, é necessário preservá-la explicitamente com `--keep NOME_DA_VARIAVEL`.
+VERIFY: Execute o comando `nix-shell -p git --run "git --version" --pure -I nixpkgs=https://github.com/NixOS/nixpkgs/tarball/2a601aafdc5605a5133a2ca506a34a3a73377247` em duas máquinas diferentes e confirme que ambas imprimem exatamente `git version 2.42.0`.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-ambientes-efemeros-nix-shell-pacotes-isolados]] | [[nix-arquivos-shell-nix-flakes-ambientes-declarativos]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 784 | nix-cache-binario-cache-nixos-org-derivacoes-source | Nix: modelo híbrido source/binário, derivações (.drv) e cache binário oficial (cache.nixos.org) ===
+ONE_LINER: Embora o Nix seja conceitualmente um sistema baseado em código-fonte (onde expressões Nix descrevem como compilar cada derivação `.drv` a partir do zero), na prática ele opera de forma transparente como gerenciador binário consultando `https://cache.nixos.org` pelo hash de saída.
+IMPORTANCE: Se um gerenciador de pacotes funcional obrigasse o desenvolvedor a compilar localmente o GCC, a `glibc`, o LLVM, o Rust e o Node.js a partir do código-fonte toda vez que entrasse em um `nix-shell`, cada ambiente levaria horas para iniciar. O tutorial oficial `nix.dev` e o manual do Nix explicam como o endereçamento por hash em `/nix/store` viabiliza a substituição transparente por binários pré-compilados.
+HOW_IT_WORKS: Quando o Nix avalia uma expressão de pacote, ele primeiro instancia os arquivos de derivação (`/nix/store/<hash>.drv`) que descrevem todas as entradas do grafo de build e calcula antecipadamente o caminho de saída esperado em `/nix/store/<output-hash>-<nome>`. Antes de iniciar qualquer compilação local, o Nix consulta os substituters configurados (por padrão, o cache binário global oficial **`https://cache.nixos.org`**): se aquele exato `<output-hash>` já foi compilado pela infraestrutura de CI do NixOS (Hydra), o Nix simplesmente baixa e verifica a assinatura criptográfica do arquivo `.narinfo`/`.nar` (ex.: `copying path '/nix/store/...-cowsay-3.04' from 'https://cache.nixos.org'...`); caso o pacote tenha flags customizadas inéditas, o Nix compila localmente em sandbox de forma transparente.
+EXAMPLE:
+```bash
+# Verificar a configuração de substituters (caches binários) e chaves públicas confiáveis do Nix no sistema
+nix config show | grep -E "^(substituters|trusted-public-keys)"
+```
+TRADE_OFFS: Se você fixar `-I nixpkgs=...` em um commit recém-empurrado há poucos minutos na branch `master` do `NixOS/nixpkgs` que ainda não terminou de ser compilado pelo cluster Hydra para `cache.nixos.org`, o Nix tentará compilar os pacotes localmente a partir do código-fonte; por isso, ao fixar revisões do Nixpkgs, escolha commits de branches de canal (`nixos-unstable`, `nixpkgs-unstable` ou `nixos-24.05`) que já passaram pelos testes e já estão populados no cache binário.
+VERIFY: Ao executar `nix-shell -p hello`, observe nas mensagens de log que o Nix imprime `copying path '/nix/store/...' from 'https://cache.nixos.org'...` em vez de `building '/nix/store/...drv'`.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-ambientes-efemeros-nix-shell-pacotes-isolados]] | [[nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 785 | nix-garbage-collection-limpeza-espaco-disco-nix-store | Nix: gerenciamento de ciclo de vida de armazenamento e coleta de lixo com nix-collect-garbage ===
+ONE_LINER: Como os pacotes baixados em sessões `nix-shell` permanecem armazenados em `/nix/store` para reutilização imediata após o fechamento do shell, o comando `nix-collect-garbage` varre o grafo de referências e libera espaço em disco removendo caminhos sem raízes ativas (`GC roots`).
+IMPORTANCE: Em máquinas de desenvolvedores e especialmente em runners de CI/CD com discos SSD de tamanho limitado, testar dezenas de versões diferentes de compiladores e ferramentas via `nix-shell` acumula gigabytes de caminhos antigos em `/nix/store`. A seção `Garbage collection` do guia oficial `nix.dev` documenta como liberar esse espaço com segurança.
+HOW_IT_WORKS: O Nix mantém um diretório de raízes do coletor de lixo (`/nix/var/nix/gcroots`), que aponta para os perfis de usuários atualmente instalados, gerações do sistema operacional e ambientes ativos. Quando uma sessão efêmera `nix-shell -p cowsay lolcat` é encerrada com `exit`, os caminhos `/nix/store/...-cowsay` e `/nix/store/...-lolcat` continuam no disco (fazendo com que uma segunda chamada a `nix-shell -p cowsay` seja instantânea, sem baixar nada da rede), mas deixam de ter uma raiz ativa em `gcroots`. Ao executar **`nix-collect-garbage`**, o Nix percorre o grafo a partir das raízes ativas e apaga de `/nix/store` todos os caminhos "mortos" (não referenciados), informando quantos store paths foram deletados e quantos MiB foram liberados.
+EXAMPLE:
+```bash
+# Executar o coletor de lixo do Nix para remover de /nix/store todos os pacotes sem raízes ativas (ex.: de nix-shells encerrados)
+nix-collect-garbage
+
+# Remover também gerações antigas de perfis de usuário antes de coletar o lixo
+nix-collect-garbage -d
+```
+TRADE_OFFS: Se você executar `nix-collect-garbage` todos os dias em sua estação de trabalho sem registrar raízes persistentes (como perfis `nix-env`/`nix profile` ou diretórios `.direnv` de projetos), na próxima vez que entrar no `nix-shell` do seu projeto o Nix precisará baixar novamente os pacotes de `cache.nixos.org`.
+VERIFY: Execute `nix-store --gc --print-dead` para listar quais caminhos em `/nix/store` seriam removidos sem apagá-los de fato, e depois rode `nix-collect-garbage` verificando a mensagem `... store paths deleted, ... MiB freed`.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-ambientes-efemeros-nix-shell-pacotes-isolados]] | [[nix-cache-binario-cache-nixos-org-derivacoes-source]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 786 | nix-arquivos-shell-nix-flakes-ambientes-declarativos | Nix: ambientes de desenvolvimento declarativos versionados no repositório (shell.nix e flake.nix) ===
+ONE_LINER: Em vez de digitar longos comandos `nix-shell -p ... -I nixpkgs=...` manualmente no terminal, projetos versionam no Git um arquivo declarativo `shell.nix` (ou `flake.nix` com `flake.lock`) que define pacotes, variáveis de ambiente e hooks de inicialização do projeto.
+IMPORTANCE: Quando um novo engenheiro clona um repositório ou um job de CI inicia, ele não deve precisar consultar uma wiki desatualizada para descobrir quais 15 pacotes e qual commit do Nixpkgs o projeto exige; basta rodar `nix-shell` (ou `nix develop`) na raiz do repositório. O guia oficial `nix.dev` conecta os ambientes ad-hoc aos ambientes declarativos reprodutíveis.
+HOW_IT_WORKS: No formato clássico **`shell.nix`**, o arquivo importa uma revisão fixada do `nixpkgs` (`fetchTarball`) e chama a função `mkShell`, declarando na lista `packages` (ou `buildInputs`) todas as ferramentas necessárias (ex.: `go`, `golangci-lint`, `kubectl`, `postgresql`) e em `shellHook` comandos executados automaticamente ao entrar no shell. No formato moderno **Nix Flakes** (`flake.nix` + `flake.lock`), todas as entradas externas (`inputs.nixpkgs.url`) têm seus hashes criptográficos e revisões Git gravados automaticamente no arquivo `flake.lock`, e a saída `devShells.<system>.default` é ativada com `nix develop` sob avaliação pura por padrão.
+EXAMPLE:
+```nix
+# Exemplo de arquivo shell.nix declarativo com revisão do Nixpkgs fixada para ambiente de desenvolvimento DevOps
+let
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/2a601aafdc5605a5133a2ca506a34a3a73377247";
+  pkgs = import nixpkgs { config = {}; overlays = []; };
+in
+pkgs.mkShellNoCC {
+  packages = with pkgs; [
+    git
+    jq
+    kubectl
+    kubernetes-helm
+  ];
+}
+```
+TRADE_OFFS: Usar `pkgs.mkShell` padrão inclui automaticamente o compilador C (`stdenv.cc`, como GCC ou Clang) no ambiente; quando o ambiente de desenvolvimento precisa apenas de ferramentas CLI prontas (`kubectl`, `helm`, `jq`, `terraform`) e não vai compilar código C/C++, usar **`pkgs.mkShellNoCC`** evita baixar o toolchain de compilação C desnecessariamente.
+VERIFY: Salve o arquivo `shell.nix` no diretório do projeto e execute `nix-shell --pure --run "kubectl version --client && jq --version"` para confirmar o provisionamento automático do ambiente a partir do arquivo.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-reprodutibilidade-nix-shell-pure-pinning-nixpkgs]] | [[nix-busca-pacotes-search-nixos-org-multiplataforma]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 787 | nix-busca-pacotes-search-nixos-org-multiplataforma | Nix: descoberta de pacotes no Nixpkgs (search.nixos.org e nix search) e suporte multiplataforma (Linux, WSL e macOS) ===
+ONE_LINER: O Nix suporta sistemas Unix e Unix-like — incluindo **Linux**, **Windows (WSL)** e **macOS** (`x86_64` e `aarch64`/Apple Silicon) — e permite localizar os mais de 100.000 pacotes do repositório `NixOS/nixpkgs` via `search.nixos.org` ou `nix search`.
+IMPORTANCE: Em equipes onde parte dos engenheiros usa laptops macOS (Apple Silicon), parte usa Linux nativo e parte usa Windows com WSL2, ferramentas como `apt` (só Debian/Ubuntu) ou `brew` (focado em macOS, sem isolamento funcional) não oferecem uma definição única de ambiente que funcione nas três plataformas. O guia oficial `nix.dev` documenta o suporte multiplataforma e a busca de atributos de pacotes.
+HOW_IT_WORKS: Quando instalado em Linux, Windows (via WSL) ou macOS, o Nix cria o volume/diretório `/nix/store` e avalia expressões do repositório **`NixOS/nixpkgs`**. Como o nome do pacote no Nixpkgs (o atributo usado em `nix-shell -p <atributo>`) às vezes difere do nome de um binário interno (por exemplo, o comando `dig` faz parte do pacote `bind` ou `dnsutils`), o usuário pode pesquisar o identificador exato no portal oficial **`https://search.nixos.org/`** ou via linha de comando (`nix-env -qaP` / `nix search nixpkgs <termo>`), inspecionando a versão, os binários incluídos (`Programs provided`), as plataformas suportadas (`x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`) e o código-fonte da expressão Nix.
+EXAMPLE:
+```bash
+# Pesquisar pacotes relacionados a "ripgrep" diretamente pela CLI moderna do Nix no catálogo nixpkgs
+nix --extra-experimental-features "nix-command flakes" search nixpkgs ripgrep
+```
+TRADE_OFFS: Embora a imensa maioria das ferramentas de desenvolvimento e DevOps no `nixpkgs` suporte tanto Linux (`*-linux`) quanto macOS (`*-darwin`), pacotes que dependem diretamente de chamadas de sistema exclusivas do kernel Linux (como utilitários de `systemd`, `iptables`, `iproute2` ou ferramentas `eBPF`/`KVM`) são marcados em `meta.platforms = platforms.linux` e só podem ser construídos/executados em Linux ou dentro de uma VM Linux/WSL.
+VERIFY: Antes de adicionar um pacote a um `shell.nix` compartilhado entre desenvolvedores Linux e macOS, consulte a seção `Platforms` do pacote em `https://search.nixos.org/packages` para confirmar suporte a `x86_64-linux` e `aarch64-darwin`.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-ambientes-efemeros-nix-shell-pacotes-isolados]] | [[nix-arquivos-shell-nix-flakes-ambientes-declarativos]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 788 | nix-builds-hermeticos-sandbox-isolamento-derivacoes | Nix: builds herméticos em sandbox (isolamento de rede e sistema de arquivos durante a compilação) ===
+ONE_LINER: Para garantir que o hash de `/nix/store/<hash>-<nome>` reflita 100% das dependências reais do pacote, o Nix executa a compilação de derivações dentro de um **sandbox hermético** sem acesso à internet e sem visão de diretórios do host fora das entradas declaradas.
+IMPORTANCE: Em builds tradicionais (`Makefile`, `Dockerfile` ou scripts bash), um processo de compilação pode ler silenciosamente `/usr/include/openssl` instalado na máquina do desenvolvedor ou baixar um pacote da internet sem verificar hash; meses depois, quando o servidor externo muda ou o build roda em outra máquina, a compilação quebra. O manual de arquitetura do Nix no repositório `NixOS/nix` explica como o sandboxing impede dependências não declaradas.
+HOW_IT_WORKS: Quando o daemon do Nix (`nix-daemon`) constrói uma derivação `.drv` no Linux, ele cria um ambiente isolado usando namespaces de usuário, mount, rede, PID e IPC: (1) **Sistema de arquivos isolado**: dentro do sandbox, diretórios globais como `/usr`, `/bin`, `/lib` e `/home` não existem; apenas os caminhos exatos de `/nix/store/...` que foram explicitamente declarados como entradas daquela derivação são montados em modo somente-leitura, mais um diretório temporário de build; e (2) **Rede bloqueada**: exceto para derivações de saída fixa (`fixed-output derivations`, como `fetchurl`/`fetchTarball` onde o hash SHA-256 exato do download já foi declarado de antemão), nenhum processo de build tem acesso à rede, forçando que todo download seja declarado e verificado por hash antes da fase de compilação.
+EXAMPLE:
+```bash
+# Verificar se o modo sandbox hermético está ativo na configuração do nix-daemon do sistema
+nix config show | grep -E "^sandbox ="
+```
+TRADE_OFFS: Como o sandbox de compilação do Nix bloqueia qualquer conexão de rede durante a fase `buildPhase` de uma derivação normal, ferramentas de linguagens que tentam baixar dependências da internet no meio do `build` (como `go build`, `cargo build` ou `npm install` sem vendor/cache prévio) falharão dentro do sandbox até que as dependências sejam fornecidas via helpers de saída fixa do Nix (`buildGoModule` com `vendorHash`, `rustPlatform.buildRustPackage`, `buildNpmPackage`).
+VERIFY: Execute `nix config show | grep sandbox` e confirme que `sandbox = true` está habilitado para assegurar que todas as derivações locais sejam construídas de forma hermética.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-cache-binario-cache-nixos-org-derivacoes-source]] | [[earthly-automacao-build-containers-earthfile-reprodutivel]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 789 | nix-perfis-atualizacoes-atomicas-rollbacks-symlinks | Nix: perfis de usuário, atualizações transacionais atômicas e rollbacks instantâneos via árvores de symlinks ===
+ONE_LINER: O Nix implementa atualizações atômicas e rollbacks instantâneos construindo uma nova geração de perfil (uma árvore de links simbólicos apontando para `/nix/store`) em segundo plano e trocando um único symlink atômico no final da operação.
+IMPORTANCE: Em gerenciadores de pacotes tradicionais (`apt upgrade` ou `yum update`), se a energia cair ou o processo for interrompido no meio da atualização de 100 pacotes, o sistema fica em um estado meio-atualizado corrompido; além disso, reverter para o estado anterior exige desinstalar e reinstalar pacotes antigos que podem nem estar mais no repositório. A arquitetura do Nix documentada no repositório oficial elimina janelas de estado inconsistente.
+HOW_IT_WORKS: Um **perfil Nix** (`~/.nix-profile`) nunca contém binários copiados diretamente: ele é um link simbólico que aponta para a geração atual (ex.: `/nix/var/nix/profiles/per-user/alice/profile-42-link`), que por sua vez aponta para um diretório imutável em `/nix/store/<hash>-user-environment` contendo symlinks (`bin/`, `share/`) para cada pacote instalado. Quando o usuário instala, remove ou atualiza pacotes, o Nix constrói a geração `43` inteira em `/nix/store` sem tocar na geração `42` em uso; somente quando a geração `43` está 100% pronta no disco, o Nix executa uma chamada `rename(2)` POSIX atômica para atualizar o symlink do perfil de `profile-42-link` para `profile-43-link`. Fazer rollback consiste apenas em apontar o symlink de volta para a geração `42`, em milissegundos.
+EXAMPLE:
+```bash
+# Inspecionar a cadeia de links simbólicos do perfil Nix do usuário apontando para a geração ativa em /nix/store
+ls -la ~/.nix-profile
+readlink -f ~/.nix-profile
+```
+TRADE_OFFS: Como as gerações anteriores do perfil (`profile-41-link`, `profile-42-link`) são mantidas como raízes do coletor de lixo (`gcroots`) para permitir rollback instantâneo a qualquer momento, os pacotes dessas gerações antigas não serão removidos por um `nix-collect-garbage` simples até que você remova as gerações antigas que não deseja mais manter (usando `nix-collect-garbage -d` ou `--delete-older-than 30d`).
+VERIFY: Inspecione `/nix/var/nix/profiles/per-user/$USER/` para visualizar as gerações numeradas de perfil e a transição atômica de links simbólicos.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-garbage-collection-limpeza-espaco-disco-nix-store]] | [[nix-ecossistema-nixos-darwin-home-manager-direnv]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix
+
+=== NOTE: 790 | nix-ecossistema-nixos-darwin-home-manager-direnv | Nix: ecossistema e evolução do projeto (NixOS, nix-direnv, geração de imagens OCI e arquitetura C++/Meson) ===
+ONE_LINER: O gerenciador de pacotes Nix (`NixOS/nix`, escrito em C++ e construído com Meson) é a base da distribuição Linux declarativa **NixOS**, integra-se ao `direnv` para ativação automática de ambientes por diretório e permite construir imagens de container OCI mínimas e reprodutíveis sem Dockerfile.
+IMPORTANCE: Além de criar shells de desenvolvimento (`nix-shell`), os mesmos princípios puramente funcionais do Nix permitem declarar um sistema operacional Linux inteiro em um único arquivo de configuração (**NixOS**), ativar ferramentas automaticamente ao dar `cd` na pasta de um projeto (`nix-direnv`) e gerar imagens Docker/OCI enxutas contendo apenas o fechamento transitivo exato (`closure`) do binário em `/nix/store`. O README oficial do `NixOS/nix` e o portal `nix.dev` documentam esse ecossistema.
+HOW_IT_WORKS: (1) **NixOS**: distribuição Linux construída sobre o gerenciador Nix onde todo o sistema operacional (kernel, módulos, systemd services, usuários, firewall `/etc`) é uma única derivação em `/nix/store`, permitindo atualizações atômicas e rollback do sistema inteiro no menu de boot (GRUB/systemd-boot); (2) **Integração com `direnv` (`use nix` / `use flake`)**: carrega automaticamente as variáveis de ambiente do `shell.nix` ou `flake.nix` assim que o desenvolvedor entra no diretório do projeto no terminal; e (3) **Construção de imagens OCI (`pkgs.dockerTools`)**: gera tarballs de imagens de container camadas-por-derivação sem precisar de um daemon Docker rodando e sem incluir gerenciadores de pacotes ou shells desnecessários na imagem final.
+EXAMPLE:
+```bash
+# Inspecionar o fechamento transitivo (closure) exato de dependências em /nix/store de um binário antes de empacotá-lo
+nix-store -qR $(which git)
+```
+TRADE_OFFS: Como todo binário compilado pelo Nix vincula suas bibliotecas dinâmicas apontando diretamente para caminhos absolutos em `/nix/store/<hash>-glibc-.../lib/ld-linux-x86-64.so.2`, você não pode simplesmente copiar um binário isolado de `/nix/store` para outra máquina sem levar junto o seu fechamento transitivo (`nix-store -qR` / `nix copy`), nem executar um binário pré-compilado genérico baixado da internet no NixOS sem usar `nix-ld` ou `steam-run`/`buildFHSEnv`.
+VERIFY: Execute `nix-store -q --tree $(which nix)` para visualizar a árvore exata de dependências de tempo de execução registradas no cabeçalho RPATH do binário no Nix Store.
+LINKS: [[nix-gerenciador-pacotes-puramente-funcional-nix-store]] | [[nix-arquivos-shell-nix-flakes-ambientes-declarativos]] | [[nix-perfis-atualizacoes-atomicas-rollbacks-symlinks]]
+SOURCES: https://raw.githubusercontent.com/NixOS/nix/master/README.md | https://nix.dev/tutorials/first-steps/ad-hoc-shell-environments | https://github.com/NixOS/nix

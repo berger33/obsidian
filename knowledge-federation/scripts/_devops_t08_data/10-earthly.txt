@@ -1,0 +1,215 @@
+=== NOTE: 791 | earthly-automacao-build-containers-earthfile-reprodutivel | Earthly: framework de automação de builds baseado em containers combinando Dockerfile e Makefile ===
+ONE_LINER: O Earthly (`earthly/earthly`, licenciado sob MPL-2.0) é um framework de automação de builds de propósito geral que utiliza containers para executar pipelines (`Earthfile`), combinando a isolamento e cache em camadas do Dockerfile com a sintaxe de alvos e dependências do Makefile.
+IMPORTANCE: Uma das maiores frustrações em DevOps é o ciclo lento de tentar depurar um pipeline de CI/CD (` Jenkinsfile`, `.github/workflows`, `.gitlab-ci.yml`) que só roda na nuvem através de `git commit && git push`, ou ter scripts que funcionam na máquina do desenvolvedor mas falham no servidor de CI por diferenças de ambiente. Segundo o README oficial do Earthly (`Why Earthly`), os builds são autocontidos, reprodutíveis e idênticos na máquina local e em qualquer CI.
+HOW_IT_WORKS: Construído sobre o **BuildKit** (`moby/buildkit`), o Earthly lê um arquivo chamado **`Earthfile`** (que inicia com a declaração `VERSION 0.8` e uma imagem base global ou por alvo, como `FROM golang:1.21-alpine3.18`). Dentro do `Earthfile`, o engenheiro define receitas chamadas **targets** (como `build:`, `test:`, `docker:`) usando comandos familiares de Dockerfile (`FROM`, `WORKDIR`, `COPY`, `RUN`, `ENV`, `ARG`) combinados a referências de alvos estilo Makefile (`+build`, `COPY +deps/node_modules ./`). Ao executar `earthly +docker` ou `earthly +test`, o Earthly monta um grafo acíclico dirigido (DAG) de execução, roda os passos isolados em containers com paralelismo automático e cacheia cada camada inalterada.
+EXAMPLE:
+```dockerfile
+# Earthfile oficial de exemplo para Go (VERSION 0.8) com targets +build e +docker
+VERSION 0.8
+FROM golang:1.21-alpine3.18
+WORKDIR /go-example
+
+build:
+    COPY main.go .
+    RUN go build -o build/go-example main.go
+    SAVE ARTIFACT build/go-example AS LOCAL build/go-example
+
+docker:
+    COPY +build/go-example .
+    ENTRYPOINT ["/go-example/go-example"]
+    SAVE IMAGE go-example:latest
+```
+TRADE_OFFS: Como todo `RUN` dentro de um `Earthfile` executa dentro de um ambiente de container isolado gerenciado pelo BuildKit, o comando não enxerga automaticamente arquivos da máquina host que não tenham sido explicitamente copiados via `COPY` (ou referenciados de outro target); copiar o diretório raiz inteiro (`COPY . .`) logo na primeira linha antes de instalar dependências invalida o cache de dependências a cada edição de código.
+VERIFY: Instale o binário `earthly` (com Docker ou Podman ativo no host) e execute `earthly github.com/earthly/hello-world+hello` para testar um build remoto reprodutível em um único comando.
+LINKS: [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[earthly-artefatos-save-artifact-as-local-save-image]] | [[buildkit-arquitetura-grafo-llb-concorrencia-cache]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 792 | earthly-sintaxe-earthfile-targets-dependencias-build | Earthly: estrutura do Earthfile (VERSION 0.8, base target, indentação e invocação de targets com +) ===
+ONE_LINER: A gramática do `Earthfile` (`docs.earthly.dev/docs/earthfile`) exige iniciar com `VERSION 0.8`, utiliza os comandos antes do primeiro target como **base target** implícito (`base:`) e identifica invocações de targets pelo prefixo `+` (ex.: `BUILD +build`, `COPY +build/artefato`).
+IMPORTANCE: Diferentemente de um `Dockerfile` tradicional (onde mesmo multi-stage builds são pensados primariamente para produzir uma única imagem de container no final), um `Earthfile` modela todo o ciclo de engenharia — geração de código (`+proto`), linting (`+lint`), testes unitários (`+test`), binários locais (`+build`) e imagens (`+docker`) — como funções modulares que se invocam mutuamente. A referência oficial do `Earthfile` documenta suas regras sintáticas.
+HOW_IT_WORKS: Todo `Earthfile` começa obrigatoriamente com `VERSION 0.8`. Os comandos colocados logo após o `VERSION` e antes da declaração do primeiro `<target>:` constituem a receita do target implícito **`base`**: todos os demais targets definidos no arquivo que não começarem com seu próprio `FROM` herdam automaticamente o estado final do target `base` (por exemplo, `FROM golang:1.21-alpine3.18` e `WORKDIR /app`). O corpo de cada target (`meu-target:`) é delimitado por indentação (4 espaços). Para acionar outros targets como dependências no grafo de build (como um target agregador `all:` que roda build e testes em paralelo), utiliza-se o comando **`BUILD +<target>`**.
+EXAMPLE:
+```dockerfile
+# Earthfile com target agregador 'all:' disparando +lint, +test e +docker em paralelo no grafo BuildKit
+VERSION 0.8
+FROM node:20-alpine
+WORKDIR /app
+
+deps:
+    COPY package.json package-lock.json ./
+    RUN npm ci
+
+lint:
+    FROM +deps
+    COPY src ./src
+    RUN npm run lint
+
+test:
+    FROM +deps
+    COPY src ./src
+    RUN npm test
+
+all:
+    BUILD +lint
+    BUILD +test
+```
+TRADE_OFFS: Quando um target usa `FROM +deps`, ele herda todo o sistema de arquivos, variáveis de ambiente (`ENV`) e diretório de trabalho (`WORKDIR`) produzidos por `+deps`; já quando um target usa apenas `BUILD +lint`, ele garante que `+lint` seja executado no grafo de build, mas não importa os arquivos de `+lint` para o target atual (para importar apenas um arquivo específico sem herdar a imagem inteira, usa-se `COPY +target/arquivo ./`).
+VERIFY: Execute `earthly +all` no diretório contendo o `Earthfile` e observe nos logs com prefixo de cor por target que `+lint` e `+test` reutilizam o cache de `+deps` e rodam concorrentemente.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-artefatos-save-artifact-as-local-save-image]] | [[earthly-execucao-paralela-dag-buildkit-cache-camadas]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 793 | earthly-artefatos-save-artifact-as-local-save-image | Earthly: exportação de artefatos entre targets e para o host (SAVE ARTIFACT ... AS LOCAL) e imagens (SAVE IMAGE) ===
+ONE_LINER: O Earthly utiliza `SAVE ARTIFACT` para expor arquivos gerados dentro de um target para outros targets (`COPY +target/artefato`) ou diretamente para o sistema de arquivos da máquina host (`AS LOCAL`), e `SAVE IMAGE` para exportar imagens de container para o daemon local ou registries (`--push`).
+IMPORTANCE: Em um `Dockerfile` comum, extrair um binário compilado, um relatório de cobertura de testes ou código gerado por `protoc` de dentro de uma etapa intermediária de build para a pasta local do desenvolvedor exige truques manuais com `docker create` + `docker cp` ou flags complexas do `buildx --output`. Na especificação do `Earthfile`, `SAVE ARTIFACT ... AS LOCAL` e `SAVE IMAGE` tornam as saídas cidadãs de primeira classe.
+HOW_IT_WORKS: (1) **`SAVE ARTIFACT <src> [<dest-artifact>] [AS LOCAL <local-path>]`**: marca um arquivo ou diretório produzido pelo target como artefato exportado; qualquer outro target (no mesmo `Earthfile`, em outro diretório ou em outro repositório Git) pode copiá-lo usando `COPY +<target>/<dest-artifact> <destino>`. Se a cláusula `AS LOCAL <local-path>` for incluída e o target fizer parte da cadeia diretamente solicitada pelo usuário, o Earthly grava o arquivo diretamente no disco do host ao final do build com sucesso; e (2) **`SAVE IMAGE [--push] <image-name>:<tag>`**: salva o estado final do sistema de arquivos e metadados (`ENTRYPOINT`, `CMD`, `ENV`, `EXPOSE`) do target como uma imagem Docker local, publicando-a no registry remoto se `--push` for passado na CLI (`earthly --push +docker`).
+EXAMPLE:
+```bash
+# Executar o target +build que contém SAVE ARTIFACT build/go-example AS LOCAL build/go-example
+earthly +build
+ls -lh build/go-example
+```
+TRADE_OFFS: O Earthly só transfere artefatos `AS LOCAL` e imagens `SAVE IMAGE` para o host (e só executa comandos marcados com `--push`) depois que **todos** os passos do grafo de build solicitado terminam com sucesso; se um target `+test` incluído em `earthly +all` falhar, nenhuma imagem é publicada e nenhum artefato parcial sobrescreve os arquivos locais do host (atomicidade das saídas de build).
+VERIFY: Execute `earthly +docker` e em seguida `docker images go-example:latest` para confirmar que a imagem definida em `SAVE IMAGE` foi carregada no daemon de containers local.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[earthly-imports-monorepos-multi-repositorios-remotos]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 794 | earthly-imports-monorepos-multi-repositorios-remotos | Earthly: composição de builds em monorepos e entre múltiplos repositórios Git remotos ===
+ONE_LINER: O Earthly permite referenciar targets, imagens e artefatos de outros diretórios locais (`./subpasta+target`) ou diretamente de repositórios Git remotos (`github.com/org/repo:tag+target`), resolvendo builds complexos de monorepos e polyrepos sem scripts de cola.
+IMPORTANCE: Em arquiteturas de microsserviços (monorepos ou múltiplos repositórios Git), um serviço em Go e um cliente em Python frequentemente precisam importar definições Protobuf ou bibliotecas compartilhadas de outro diretório ou repositório. Conforme destaca a seção `Highlights` do README oficial do Earthly, referenciar targets através de diretórios e repositórios é uma capacidade nativa da sintaxe do Earthfile.
+HOW_IT_WORKS: A referência a um target no Earthly segue o formato `<caminho-ou-repo>+<target>`: (1) **Mesmo Earthfile**: `+build`; (2) **Outro diretório local (Monorepo)**: `./services/auth+docker` ou `../proto+pb-go`; e (3) **Repositório Git remoto (Polyrepo)**: `github.com/org/proto-definitions:v1.2.0+pb-go`. Além disso, a instrução **`IMPORT`** no topo do `Earthfile` permite criar um alias curto (ex.: `IMPORT github.com/earthly/lib/rust:3.0.1 AS rust` ou `IMPORT ./proto`) para invocar targets e funções (`COPY proto+pb-py/pb-py ./pb`) de forma limpa e legível, onde o Earthly clona e cacheia repositórios remotos automaticamente dentro do BuildKit.
+EXAMPLE:
+```dockerfile
+# Exemplo do README oficial do Earthly importando definições Protobuf compiladas de outro diretório (./proto+pb-py)
+VERSION 0.8
+FROM python:3.8-alpine3.12
+WORKDIR /code
+build:
+    COPY ./proto+pb-py/pb-py ./pb
+    COPY main.py ./
+```
+TRADE_OFFS: Ao importar targets de repositórios Git remotos em pipelines de produção (`github.com/org/repo:ref+target`), fixe sempre uma tag imutável ou hash de commit (`:v1.2.0` ou `:a1b2c3d`) em vez de apontar para `:main`, garantindo que mudanças externas no repositório remoto não alterem nem quebrem silenciosamente o seu build.
+VERIFY: Execute `earthly github.com/earthly/hello-world+hello` para verificar como o Earthly resolve, clona no cache isolado e executa um target de um repositório Git remoto sem precisar de `git clone` prévio no host.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[earthly-reutilizacao-dockerfiles-existentes-from-dockerfile]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 795 | earthly-reutilizacao-dockerfiles-existentes-from-dockerfile | Earthly: adoção incremental e reutilização de Dockerfiles existentes com FROM DOCKERFILE ===
+ONE_LINER: A instrução `FROM DOCKERFILE` permite que um target no `Earthfile` herde diretamente a construção de um `Dockerfile` já existente no projeto (incluindo suporte a `--target` de multi-stage e `--build-arg`), facilitando a migração gradual para o Earthly.
+IMPORTANCE: Equipes que já possuem dezenas de `Dockerfile`s funcionando em produção muitas vezes hesitam em adotar uma nova ferramenta de build se isso exigir reescrever todos os seus `Dockerfile`s do zero no primeiro dia. A seção `Highlights` do README oficial do Earthly mostra como `FROM DOCKERFILE` permite reutilizar 100% dos Dockerfiles existentes imediatamente.
+HOW_IT_WORKS: Quando um target declara `FROM DOCKERFILE .` (ou `FROM DOCKERFILE -f Dockerfile.prod --target builder --build-arg GO_VERSION=1.21 ./context`), o Earthly lê o `Dockerfile` especificado, traduz suas instruções para o mesmo grafo BuildKit do Earthly e disponibiliza o sistema de arquivos e metadados resultantes dentro do target do `Earthfile`. A partir daí, o desenvolvedor pode adicionar apenas `SAVE IMAGE minha-app:latest` ou criar novos targets de teste (`+test`) e lint (`+lint`) que herdam daquele `FROM DOCKERFILE`, migrando a lógica para targets nativos do `Earthfile` no seu próprio ritmo.
+EXAMPLE:
+```dockerfile
+# Exemplo oficial do README reutilizando um Dockerfile existente no diretório atual dentro de um Earthfile
+VERSION 0.8
+docker:
+    FROM DOCKERFILE .
+    SAVE IMAGE some-image:latest
+```
+TRADE_OFFS: Embora `FROM DOCKERFILE .` seja excelente para onboarding imediato, um `Dockerfile` monolítico tradicional não expõe artefatos intermediários via `SAVE ARTIFACT`; à medida que o projeto evolui, converter as etapas do `Dockerfile` em targets nativos do `Earthfile` (`+deps`, `+build`, `+test`, `+docker`) destrava o reuso fino de artefatos e o paralelismo máximo entre testes e imagem final.
+VERIFY: Em um repositório que já possua um `Dockerfile`, crie um `Earthfile` mínimo de 4 linhas usando `FROM DOCKERFILE .` e execute `earthly +docker` para validar a geração da imagem.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-artefatos-save-artifact-as-local-save-image]] | [[earthly-builds-multiplataforma-linux-amd64-arm64]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 796 | earthly-builds-multiplataforma-linux-amd64-arm64 | Earthly: builds e imagens multiplataforma (linux/amd64 e linux/arm64) em um único comando BUILD --platform ===
+ONE_LINER: O Earthly permite compilar binários e publicar manifest lists de imagens multi-arquitetura (`linux/amd64`, `linux/arm64`, `linux/arm/v7`) sem alterar o target de build, simplesmente invocando `BUILD --platform=linux/amd64 --platform=linux/arm64 +docker`.
+IMPORTANCE: Com a adoção generalizada de processadores ARM64 tanto em estações de trabalho (Apple Silicon M1/M2/M3/M4) quanto em servidores de nuvem (AWS Graviton, Ampere Altra), publicar imagens de container multiplataforma tornou-se obrigatório para equipes de DevOps. A seção `Multi-Platform Builds` do README oficial do Earthly demonstra como fazer isso de forma declarativa.
+HOW_IT_WORKS: Em um `Earthfile`, um target agregador (como `all:`) pode invocar outro target passando múltiplas flags `--platform`: por exemplo, `BUILD --platform=linux/amd64 --platform=linux/arm64 +build`. O Earthly instancia execuções paralelas do target `+build` para cada arquitetura solicitada (utilizando execução nativa ou emulação QEMU transparente configurada no container BuildKit do Earthly, além de expor argumentos embutidos como `TARGETARCH`, `TARGETOS`, `TARGETPLATFORM` e `USERARCH` para cross-compilation rápida em Go/Rust). Se o target invocado contiver `SAVE IMAGE minha-img:latest`, o Earthly combina automaticamente todas as arquiteturas em uma única **manifest list** multi-arch sob a tag `minha-img:latest`.
+EXAMPLE:
+```dockerfile
+# Exemplo oficial do README construindo imagens multi-arch para linux/amd64 e linux/arm64 em paralelo
+VERSION 0.8
+FROM golang:1.21-alpine3.18
+WORKDIR /go-example
+
+all:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +build
+
+build:
+    COPY main.go .
+    RUN go build -o build/multiarch-service ./cmd/server
+    ENTRYPOINT ["/go-example/build/multiarch-service"]
+    SAVE IMAGE --push user/go-example:latest
+```
+TRADE_OFFS: Compilar código pesado dentro de emulação QEMU (por exemplo, rodar o compilador `amd64` ou `arm64` emulado via binfmt_misc) é funcionalmente simples mas muito mais lento que compilação nativa; para linguagens que suportam cross-compilation nativa (como Go e Rust), é muito mais rápido fixar o container de compilação na arquitetura nativa do host (`FROM --platform=$USERPLATFORM golang:1.21-alpine`) e passar `GOOS=$TARGETOS GOARCH=$TARGETARCH go build`.
+VERIFY: Execute `earthly +all` (ou inspecione com `docker buildx imagetools inspect` após `--push`) para confirmar que o manifesto publicado contém os descritores tanto para `linux/amd64` quanto para `linux/arm64`.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[kaniko-arquitetura-multi-arch-manifest-list-manifest-tool]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 797 | earthly-gerenciamento-segredos-run-secret-push-seguranca | Earthly: injeção segura de segredos em tempo de build (RUN --secret) e publicação condicional (RUN --push) ===
+ONE_LINER: O comando `RUN --secret VAR=secret_id` injeta credenciais apenas na memória daquele comando específico sem jamais gravá-las nas camadas de cache ou na imagem final, enquanto `RUN --push` garante que efeitos colaterais externos só rodem quando `earthly --push` for autorizado.
+IMPORTANCE: Um erro grave de segurança em Dockerfiles tradicionais é passar tokens privados (`GITHUB_TOKEN`, `NPM_TOKEN`, chaves SSH ou credenciais AWS) via `ARG` ou `ENV`: essas credenciais ficam gravadas permanentemente no histórico da imagem (`docker history`) e no cache de camadas. A seção `Cloud Secrets` do README oficial do Earthly mostra como `RUN --secret` e `RUN --push` protegem credenciais e efeitos colaterais.
+HOW_IT_WORKS: (1) **`RUN --secret ENV_VAR=secret_name`** (ou `--mount type=secret,id=secret_name,target=/caminho`): o Earthly solicita o valor do segredo (passado na CLI via `earthly --secret github_token="$GITHUB_TOKEN" +release` ou arquivo `.secret`) ao BuildKit e o expõe exclusivamente para aquele processo `RUN`; o valor nunca faz parte da chave de cache da camada nem é persistido no disco da imagem; e (2) **`RUN --push`** (e `SAVE IMAGE --push`): marca comandos que realizam ações irreversíveis no mundo externo (como `git push`, upload de release para S3/GitHub ou deploy). Por padrão (`earthly +release`), comandos `RUN --push` são pulados; eles só são executados se o operador invocar explicitamente `earthly --push +release` e somente após todos os demais targets do build passarem sem erros.
+EXAMPLE:
+```dockerfile
+# Exemplo oficial do README usando RUN --push e --secret sem vazar o token em camadas da imagem
+VERSION 0.8
+release:
+    FROM alpine:3.18
+    COPY +build/prod-B .
+    RUN --push --secret GITHUB_TOKEN=github_token github-release upload --File prod-B
+```
+TRADE_OFFS: Como comandos `RUN --push` nunca são cacheados e só executam na fase final de exportação quando a flag `--push` é passada na linha de comando, nenhum comando `COPY`, `RUN` normal ou `SAVE ARTIFACT` pode ser declarado **depois** de um `RUN --push` dentro do mesmo target (pois a imagem/artefato já foi finalizada antes da fase de push).
+VERIFY: Execute `earthly +release` (sem `--push`) e confirme nos logs que a etapa `RUN --push` é exibida como ignorada (`--push` não habilitado), protegendo execuções locais acidentais.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-artefatos-save-artifact-as-local-save-image]] | [[buildkit-segredos-ssh-mounts-seguranca-camadas]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 798 | earthly-integracao-docker-in-docker-with-docker-testes | Earthly: testes de integração com containers e Docker Compose dentro do build usando WITH DOCKER ===
+ONE_LINER: O bloco `WITH DOCKER ... END` no `Earthfile` inicializa um daemon Docker isolado dentro do passo de build (pré-carregando imagens de outros targets via `--load` ou subindo uma pilha `docker-compose` via `--compose`) para executar testes de integração end-to-end.
+IMPORTANCE: Como cada passo `RUN` do Earthly já roda dentro de um container BuildKit isolado, tentar rodar `docker run` ou `docker compose up` diretamente em um `RUN` comum para testar a imagem recém-construída contra um banco PostgreSQL ou Redis falha porque não há um daemon Docker rodando dentro do container de build. A especificação oficial do `Earthfile` (`WITH DOCKER`) resolve esse problema de forma declarativa.
+HOW_IT_WORKS: Quando um target declara um bloco **`WITH DOCKER`** encerrado por **`END`**, o Earthly cria um ambiente privilegiado isolado para aquele passo, inicia um daemon Docker interno efêmero e aceita flags declarativas que rodam em paralelo antes do `RUN`: (1) **`--load minha-app:latest=+docker`**: constrói o target `+docker` paralelamente no BuildKit e carrega a imagem resultante dentro do daemon Docker interno sem precisar passar por um registry externo; (2) **`--pull postgres:15`**: faz pull cacheado de imagens auxiliares; e (3) **`--compose docker-compose.yml`**: sobe automaticamente os serviços do Compose antes de executar o comando `RUN` dos testes de integração e derruba tudo ao atingir o `END`.
+EXAMPLE:
+```dockerfile
+# Exemplo de target de teste de integração no Earthfile usando WITH DOCKER e --load da imagem construída em +docker
+VERSION 0.8
+integration-test:
+    FROM docker:24-cli
+    COPY docker-compose.yml .
+    WITH DOCKER --compose docker-compose.yml --load go-example:latest=+docker
+        RUN docker exec test-runner ./run-e2e-tests.sh
+    END
+```
+TRADE_OFFS: Como o bloco `WITH DOCKER ... END` precisa iniciar um daemon Docker aninhado (Docker-in-Docker) para cada execução, o container `earthly-buildkitd` no host precisa rodar com privilégios adequados, e deve-se agrupar os comandos de teste dentro de um único `RUN` no bloco `WITH DOCKER ... END` (já que apenas um único comando `RUN` é permitido por bloco `WITH DOCKER`).
+VERIFY: Execute `earthly +integration-test` e verifique nos logs que o target `+docker` é construído no BuildKit, carregado no daemon interno via `--load` e testado contra os serviços do Compose.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[earthly-integracao-qualquer-ci-github-actions-gitlab-jenkins]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 799 | earthly-execucao-paralela-dag-buildkit-cache-camadas | Earthly: paralelismo automático por DAG no BuildKit, mounts de cache (--mount type=cache) e funções reutilizáveis (FUNCTION) ===
+ONE_LINER: Apoiado no motor BuildKit da próxima geração, o Earthly executa passos independentes em paralelo automaticamente sem o usuário gerenciar locks, suporta diretórios de cache persistentes (`CACHE` / `RUN --mount=type=cache`) e permite abstrair receitas repetitivas com `FUNCTION` e `DO`.
+IMPORTANCE: Em pipelines tradicionais ou Makefiles manuais, paralelizar tarefas sem causar condições de corrida em diretórios compartilhados é difícil, e repetir a mesma sequência de instalação/configuração em 10 targets diferentes gera duplicação de código. O README oficial e a referência do `Earthfile` detalham o paralelismo BuildKit, caches e funções.
+HOW_IT_WORKS: (1) **Paralelismo automático por DAG**: sempre que dois targets ou duas ramificações (`COPY +a/...` e `COPY +b/...`, ou múltiplos `BUILD +...`) não dependem sequencialmente um do outro, o BuildKit agenda e executa suas camadas concorrentemente com isolamento de filesystem; (2) **Cache Mounts (`CACHE /caminho` ou `RUN --mount=type=cache,target=/root/.cache/go-build`)**: preserva diretórios de cache de compiladores e gerenciadores de pacotes entre execuções sucessivas mesmo quando uma camada anterior foi invalidada por mudança de código; e (3) **Funções (`FUNCTION` / `COMMAND` e `DO`)**: permite definir um bloco parametrizado reutilizável (`MINHA_FUNCAO: FUNCTION ...`) e invocá-lo em qualquer target (local ou importado via `IMPORT`) usando `DO +MINHA_FUNCAO --ARG1=valor`.
+EXAMPLE:
+```dockerfile
+# Exemplo de uso de FUNCTION parametrizada invocada com DO e mount de cache de compilação no Earthfile
+VERSION 0.8
+
+GO_BUILD:
+    FUNCTION
+    ARG --required pkg
+    ARG output
+    RUN --mount=type=cache,target=/root/.cache/go-build go build -o ${output} ${pkg}
+
+build-api:
+    FROM golang:1.21-alpine3.18
+    WORKDIR /app
+    COPY . .
+    DO +GO_BUILD --pkg=./cmd/api --output=bin/api
+    SAVE ARTIFACT bin/api
+```
+TRADE_OFFS: Diretórios montados via `RUN --mount=type=cache,target=...` (ou instrução `CACHE`) persistem no volume de cache do daemon BuildKit durante os passos `RUN`, mas **não** são incluídos na imagem final exportada por `SAVE IMAGE` (exceto se configurado o modo específico da instrução `CACHE`); portanto, nunca grave o binário final da aplicação dentro do diretório montado como `type=cache`, copiando-o sempre para o `WORKDIR` normal antes de `SAVE ARTIFACT`.
+VERIFY: Altere uma linha em `main.go` e reexecute `earthly +build-api` para verificar que o cache de compilação em `/root/.cache/go-build` acelera a recompilação incremental.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[buildkit-mounts-cache-bind-tmpfs-otimizacao]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly
+
+=== NOTE: 800 | earthly-integracao-qualquer-ci-github-actions-gitlab-jenkins | Earthly: camada agnóstica sobre qualquer CI (GitHub Actions, GitLab CI, CircleCI, Jenkins, Tekton) e modo interativo de debug (-i) ===
+ONE_LINER: O Earthly não substitui o sistema de CI existente, mas roda no topo de qualquer CI (Jenkins, CircleCI, GitHub Actions, GitLab CI, AWS CodeBuild, Tekton), reduzindo o YAML proprietário do CI a uma única chamada `earthly --ci +all` e oferecendo shell interativo (`earthly -i`) quando um passo falha localmente.
+IMPORTANCE: Quando uma empresa codifica toda a sua lógica de build em 500 linhas de YAML específico do GitHub Actions ou Groovy do Jenkins, torna-se impossível rodar esse pipeline localmente no laptop do engenheiro e caríssimo migrar de provedor de CI (vendor lock-in). Segundo a seção `Works With Every Language, Framework and Build Tool` e `Why Earthly` do README oficial, o Earthly desacopla a lógica de build da plataforma de CI.
+HOW_IT_WORKS: Em vez de manter dezenas de steps específicos do provedor no arquivo `.github/workflows/ci.yml` ou `.gitlab-ci.yml`, toda a lógica de dependências, geração de código, lint, testes e empacotamento fica no **`Earthfile`** do repositório, que serve como **contrato único compartilhado** entre a máquina do desenvolvedor e o CI. No servidor de CI, o workflow apenas instala o binário `earthly` e executa **`earthly --ci +target`** (onde `--ci` ativa configurações ideais para integração contínua, como desabilitar salvamento de artefatos locais desnecessários e exigir que tudo esteja limpo). Localmente, se um comando `RUN` falhar, o desenvolvedor pode executar **`earthly -i +target`** (`--interactive`) para cair automaticamente em um shell interativo dentro do container no exato instante da falha para inspecionar o problema.
+EXAMPLE:
+```bash
+# Executar o target no servidor de integração contínua (--ci) vs abrir shell interativo (-i) em caso de falha local
+earthly --ci +all
+earthly -i +test
+```
+TRADE_OFFS: Em runners de CI efêmeros (onde a máquina virtual do GitHub Actions ou GitLab CI começa com o disco vazio a cada execução), o container `earthly-buildkitd` inicia sem cache local de camadas; para preservar o cache do BuildKit entre diferentes execuções de CI, configure o cache remoto do Earthly (`--remote-cache <image>` em um registry OCI) ou volumes persistentes no runner auto-hospedado.
+VERIFY: Compare a execução de `earthly +all` na sua máquina local com `earthly --ci +all` no pipeline de CI e confirme que ambas executam exatamente os mesmos containers e versões de ferramentas definidos no `Earthfile`.
+LINKS: [[earthly-automacao-build-containers-earthfile-reprodutivel]] | [[earthly-sintaxe-earthfile-targets-dependencias-build]] | [[github-actions-workflows-eventos-jobs-steps-runners]]
+SOURCES: https://raw.githubusercontent.com/earthly/earthly/main/README.md | https://docs.earthly.dev/docs/earthfile | https://github.com/earthly/earthly

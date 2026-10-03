@@ -1,0 +1,200 @@
+=== NOTE: 761 | atlasdb-schema-as-code-declarativo-versionado-multibanco | Ariga Atlas: ferramenta Schema-as-Code agnóstica de linguagem para gerenciamento declarativo e versionado de bancos de dados ===
+ONE_LINER: O Ariga Atlas (`ariga/atlas`) é uma ferramenta agnóstica de linguagem para gerenciar e migrar esquemas de banco de dados segundo princípios modernos de DevOps (`Schema-as-Code`), oferecendo fluxos de trabalho tanto declarativos (estilo Terraform) quanto versionados.
+IMPORTANCE: Em ferramentas tradicionais de migração, os desenvolvedores precisam escrever manualmente cada comando `ALTER TABLE` e revisar mudanças de banco no escuro sem saber se uma instrução SQL vai travar uma tabela em produção ou apagar dados acidentalmente. Segundo o README oficial do Atlas, a ferramenta planeja migrações automaticamente comparando o estado atual com o desejado (em HCL, SQL ou ORM) e analisa os riscos antes da aplicação.
+HOW_IT_WORKS: O Atlas suporta dois fluxos complementares sobre Postgres, MySQL, MariaDB, SQLite, SQL Server, ClickHouse, Snowflake, Redshift, CockroachDB, Spanner e Aurora DSQL: (1) **Declarative migrations**: similar ao Terraform, o comando `atlas schema apply` compara o estado atual do banco ativo com o estado desejado definido em HCL, SQL ou no esquema de um ORM e gera/executa um plano de migração para atingir aquele estado; e (2) **Versioned migrations**: diferentemente de outras ferramentas, o comando `atlas migrate diff` planeja automaticamente as migrações de esquema para o desenvolvedor com base no estado desejado, salvando os arquivos SQL versionados e o arquivo de integridade `atlas.sum` para revisão e execução controlada em CI/CD via `atlas migrate lint` e `atlas migrate apply`.
+EXAMPLE:
+```bash
+# Instalar a CLI do Atlas em Linux/macOS usando o instalador oficial documentado no README
+curl -sSf https://atlasgo.sh | sh
+atlas version
+```
+TRADE_OFFS: O fluxo puramente declarativo (`atlas schema apply`) é excelente para desenvolvimento rápido, ambientes de preview e mudanças diretas, mas quando uma transição de estado é ambígua (por exemplo, renomear uma coluna versus dropar a coluna antiga e criar uma nova vazia) ou exige backfilling customizado de dados em produção crítica, o fluxo **versionado** (`atlas migrate diff` -> revisão/edição do `.sql` -> `atlas migrate lint` -> `atlas migrate apply`) oferece controle determinístico passo a passo.
+VERIFY: Execute `atlas version` após a instalação (via `curl -sSf https://atlasgo.sh | sh`, `brew install ariga/tap/atlas`, Docker `arigaio/atlas` ou `npm i @ariga/atlas`) para validar o binário.
+LINKS: [[atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd]] | [[atlasdb-fluxo-declarativo-schema-apply-diff-plan]] | [[atlasdb-fluxo-versionado-migrate-diff-lint-apply]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 762 | atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd | Ariga Atlas: inspeção de esquemas (atlas schema inspect) em HCL, SQL dividido por arquivo, JSON e diagramas ERD Mermaid ===
+ONE_LINER: O comando `atlas schema inspect` conecta-se a bancos de dados existentes ou lê definições locais e exporta o esquema completo em formato Atlas HCL (padrão), DDL SQL (único ou um arquivo por objeto com `sql . | split`), JSON ou diagramas Entidade-Relacionamento (`Mermaid ERD`).
+IMPORTANCE: Antes de automatizar migrações em um banco de dados existente ou documentar a arquitetura de dados de um sistema, a equipe precisa extrair com precisão todas as tabelas, colunas, índices, chaves estrangeiras, views e funções existentes. A seção `Inspecting schemas` do README oficial do Atlas demonstra os múltiplos formatos de saída suportados por `atlas schema inspect`.
+HOW_IT_WORKS: Ao executar `atlas schema inspect -u "mysql://root:pass@localhost:3306/example" > schema.hcl`, o Atlas inspeciona o catálogo do banco de dados e gera a representação declarativa na linguagem de configuração do Atlas (HCL). Usando a flag `--format`, o mesmo comando pode emitir: (1) **SQL puro** (`--format '{{ sql . }}' > schema.sql`); (2) **SQL dividido em múltiplos arquivos** por tipo e nome de objeto (`--format '{{ sql . | split }}'`, gravando `tables/users.sql`, `views/...`, etc.); (3) **JSON estruturado** (`--format '{{ json . }}' | jq`) para consumo por scripts e ferramentas de governança; ou (4) **Diagramas Mermaid ERD** (`--format '{{ mermaid . }}'`) prontos para renderizar diagramas visuais em Markdown/GitHub/Obsidian.
+EXAMPLE:
+```bash
+# Inspecionar um banco PostgreSQL exportando em HCL, SQL e diagrama Entidade-Relacionamento Mermaid
+atlas schema inspect -u "postgres://postgres:pass@localhost:5432/appdb?sslmode=disable" > schema.hcl
+atlas schema inspect -u "postgres://postgres:pass@localhost:5432/appdb?sslmode=disable" --format '{{ sql . }}' > schema.sql
+atlas schema inspect -u "postgres://postgres:pass@localhost:5432/appdb?sslmode=disable" --format '{{ mermaid . }}' > erd.mmd
+```
+TRADE_OFFS: Quando se inspeciona um servidor de banco de dados inteiro sem especificar o nome do banco/schema na URL de conexão (ex.: `mysql://root:pass@localhost:3306/`), o Atlas inspeciona **todos** os schemas não-sistema do servidor (modo multi-schema realm); se o seu aplicativo gerencia apenas um schema específico, inclua sempre o nome do banco/schema na URL (ou flag `--schema`) para evitar exportar objetos de outros microsserviços.
+VERIFY: Execute `atlas schema inspect -u "sqlite://file.db" --format '{{ mermaid . }}'` e cole o bloco resultante em um documento Markdown para verificar a geração automática do diagrama ERD com tabelas e chaves estrangeiras.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-declarativo-schema-apply-diff-plan]] | [[flyway-captura-estado-schema-model-disco-diff]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 763 | atlasdb-fluxo-declarativo-schema-apply-diff-plan | Ariga Atlas: fluxo declarativo (atlas schema diff e atlas schema apply) com dev-url para normalização ===
+ONE_LINER: No fluxo declarativo do Atlas, `atlas schema diff` compara dois estados de esquema (banco ativo, arquivo `.hcl`/`.sql` ou ORM) e `atlas schema apply` calcula o diff, exibe o SQL planejado e aplica as mudanças após confirmação ou `--auto-approve`.
+IMPORTANCE: Durante o desenvolvimento ou ao gerenciar esquemas declarativos como infraestrutura como código, escrever scripts `ALTER TABLE` manualmente para adicionar cada coluna ou índice é repetitivo e propenso a erros de dialeto SQL. A seção `Declarative Workflow` do README oficial e o guia `Getting Started` (`atlasgo.io/getting-started`) mostram como o Atlas automatiza esse cálculo usando um `dev-url` para normalização.
+HOW_IT_WORKS: Para comparar o estado desejado (ex.: `file://schema.sql` ou `file://schema.hcl`) com o banco alvo (`-u`), o Atlas utiliza um **Dev Database** (`--dev-url "docker://postgres/15/dev"` ou `"docker://mysql/8/dev"`): o Atlas sobe temporariamente um container limpo do motor exato do banco, aplica o esquema desejado nele para que o próprio SGBD normalize tipos, defaults e expressões (ex.: `INT` -> `int(11)` ou `SERIAL` -> `integer` + `sequence`), inspeciona ambos os lados e calcula o plano SQL exato de transição. Com `atlas schema diff --from ... --to ...`, o operador apenas visualiza as diferenças; com `atlas schema apply -u ... --to ...`, o Atlas exibe o plano SQL (`-- Plan:`) e aguarda aprovação interativa (`Apply` / `Abort`) ou aplica diretamente com `--auto-approve`.
+EXAMPLE:
+```bash
+# Comparar e aplicar declarativamente um arquivo schema.sql contra um banco MySQL usando um container Docker efêmero como dev-url
+atlas schema diff \
+  --from "mysql://root:pass@localhost:3306/example" \
+  --to "file://schema.sql" \
+  --dev-url "docker://mysql/8/dev"
+
+atlas schema apply \
+  -u "mysql://root:pass@localhost:3306/example" \
+  --to "file://schema.sql" \
+  --dev-url "docker://mysql/8/dev"
+```
+TRADE_OFFS: O parâmetro `--dev-url` precisa apontar para um banco de dados temporário vazio (preferencialmente usando o driver `docker://...` que cria e destrói um container efêmero automaticamente), pois o Atlas limpa e recria objetos dentro do `dev-url` durante o processo de normalização; **jamais** passe a URL de um banco de produção ou homologação compartilhada como `--dev-url`.
+VERIFY: Após aplicar as mudanças com `atlas schema apply`, execute o mesmo comando uma segunda vez e confirme que o Atlas reporta `Schema isSynced: no changes to be made` (idempotência).
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd]] | [[atlasdb-fluxo-versionado-migrate-diff-lint-apply]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 764 | atlasdb-fluxo-versionado-migrate-diff-lint-apply | Ariga Atlas: fluxo versionado com geração automática de migrações (atlas migrate diff, lint e apply) ===
+ONE_LINER: No fluxo versionado do Atlas, `atlas migrate diff` gera automaticamente os arquivos de migração SQL no diretório `migrations/` (junto ao arquivo de integridade `atlas.sum`) comparando o diretório de migrações existentes com o estado desejado, seguidos por `atlas migrate lint` e `atlas migrate apply`.
+IMPORTANCE: Equipes que exigem controle estrito de cada script SQL versionado no Git não precisam abrir mão da produtividade declarativa: em vez de escrever o arquivo `20261003_add_users.sql` à mão, o desenvolvedor edita o esquema desejado (no seu ORM, SQL ou HCL) e deixa o Atlas calcular e gerar o script versionado automaticamente. A seção `Versioned Workflow` do README oficial do Atlas detalha esse ciclo.
+HOW_IT_WORKS: (1) **Planejamento (`atlas migrate diff`)**: o comando lê todas as migrações já existentes em `--dir "file://migrations"`, aplica-as no `--dev-url` para descobrir o estado atual das migrações, compara com o estado desejado em `--to "file://schema.hcl"` (ou ORM) e grava um novo arquivo `<timestamp>_<name>.sql` contendo apenas o delta necessário, atualizando os hashes criptográficos no arquivo `atlas.sum`; (2) **Verificação (`atlas migrate lint`)**: analisa as novas migrações em busca de mudanças destrutivas ou perigosas; e (3) **Execução (`atlas migrate apply`)**: conecta-se ao banco de destino (`-u`) e aplica em ordem as migrações pendentes do diretório `--dir "file://migrations"`, registrando o progresso na tabela de revisões `atlas_schema_revisions`.
+EXAMPLE:
+```bash
+# Gerar automaticamente uma nova migração versionada a partir do schema.hcl e aplicá-la no banco alvo
+atlas migrate diff create_users \
+  --dir "file://migrations" \
+  --to "file://schema.hcl" \
+  --dev-url "docker://mysql/8/dev"
+
+atlas migrate apply \
+  --dir "file://migrations" \
+  -u "mysql://root:pass@localhost:3306/example"
+```
+TRADE_OFFS: Se um desenvolvedor editar manualmente um arquivo `.sql` dentro do diretório `migrations/` (por exemplo, para adicionar um `UPDATE` de backfilling de dados logo após o `atlas migrate diff`), o hash daquele arquivo deixará de bater com o registrado no `atlas.sum` e o Atlas recusará a execução até que o desenvolvedor execute `atlas migrate hash` para recalcular e assinar o `atlas.sum` atualizado.
+VERIFY: Inspecione o arquivo `migrations/atlas.sum` gerado pelo `atlas migrate diff` e execute `atlas migrate validate --dir "file://migrations"` para confirmar a integridade da cadeia de migrações.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-linting-migracoes-50-analisadores-seguranca]] | [[atlasdb-integracao-16-orms-go-ts-python-java-dotnet-php]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 765 | atlasdb-linting-migracoes-50-analisadores-seguranca | Ariga Atlas: análise estática e linting de migrações (atlas migrate lint) com mais de 50 analisadores de risco ===
+ONE_LINER: O comando `atlas migrate lint` analisa arquivos de migração SQL usando mais de 50 analisadores especializados para detectar alterações destrutivas (`DROP TABLE`/`DROP COLUMN`), mudanças dependentes de dados (adição de índice único ou coluna `NOT NULL` sem default), locks de tabela e regressões de performance.
+IMPORTANCE: Uma migração SQL sintaticamente válida que passa nos testes unitários com 10 linhas de dados pode causar horas de indisponibilidade em produção se tentar adicionar uma coluna `NOT NULL` sem valor padrão, criar um índice único sobre dados duplicados existentes ou adquirir um lock exclusivo em uma tabela de 100 milhões de linhas. A seção `Versioned Workflow` e `What is Atlas?` do README oficial destacam os 50+ analisadores do `atlas migrate lint`.
+HOW_IT_WORKS: Ao executar `atlas migrate lint --dir "file://migrations" --dev-url "docker://mysql/8/dev" --latest 1` (ou comparando com a branch base no Git via `--git-base`), o Atlas simula a aplicação das migrações anteriores e da migração nova no `--dev-url`, inspeciona a árvore sintática (AST) de cada instrução SQL e a evolução do catálogo do SGBD, e executa mais de 50 verificadores específicos do dialeto do banco (MySQL, Postgres, SQL Server, etc.). Caso detecte uma operação destrutiva (ex.: `Dropping non-virtual column "name"`) ou perigosa, o comando imprime diagnósticos detalhados com códigos de referência (ex.: `DS103`, `MF101`) e retorna código de saída diferente de zero para bloquear o Pull Request no CI.
+EXAMPLE:
+```bash
+# Analisar a última migração criada no diretório migrations/ em busca de mudanças destrutivas ou locks perigosos
+atlas migrate lint \
+  --dir "file://migrations" \
+  --dev-url "docker://postgres/15/dev" \
+  --latest 1
+```
+TRADE_OFFS: Quando uma remoção de coluna (`DROP COLUMN`) ou tabela (`DROP TABLE`) é intencional e faz parte da fase final de limpeza (contract) de uma migração em duas etapas já validada pela equipe, o `atlas migrate lint` bloqueará o PR por padrão sob a política de `destructive changes`; nesses casos, o autor deve adicionar a diretiva de comentário explícita (`-- atlas:nolint DS103`) no topo do arquivo SQL daquela migração para documentar e autorizar a exceção de forma auditável.
+VERIFY: Adicione temporariamente uma instrução `ALTER TABLE users DROP COLUMN email;` em uma migração de teste e execute `atlas migrate lint --latest 1` para confirmar que o analisador detecta e bloqueia a mudança destrutiva.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-versionado-migrate-diff-lint-apply]] | [[bytebase-governanca-mudancas-gui-gitops-200-regras-sql-lint]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/versioned/lint | https://github.com/ariga/atlas
+
+=== NOTE: 766 | atlasdb-integracao-16-orms-go-ts-python-java-dotnet-php | Ariga Atlas: carregamento automático de esquema a partir de 16 ORMs em Go, TypeScript, Python, Java, C#/.NET e PHP ===
+ONE_LINER: O Atlas integra-se nativamente a 16 ORMs populares em 6 ecossistemas de linguagens (Go, TypeScript/JavaScript, Python, Java/Kotlin, C#/.NET e PHP), extraindo o esquema diretamente dos modelos de código como fonte da verdade para `schema apply` ou `migrate diff`.
+IMPORTANCE: Em equipes que utilizam ORMs (como GORM, Ent, Prisma, TypeORM, Drizzle, Sequelize, SQLAlchemy, Django, Hibernate, Entity Framework ou Doctrine), manter o esquema duplicado tanto nas classes/structs do ORM quanto em arquivos SQL separados gera retrabalho constante; por outro lado, os utilitários `auto-migrate` embutidos nos próprios ORMs são limitados e inseguros para produção. A seção `Supported ORMs` do README oficial do Atlas resolve esse dilema.
+HOW_IT_WORKS: Por meio de provedores `external_schema` configurados no arquivo `atlas.hcl` (ou drivers nativos), o Atlas lê diretamente as definições do ORM da aplicação em: (1) **Go**: Ent, GORM, Beego, SQLBoiler e Bun; (2) **JavaScript/TypeScript**: Prisma, Sequelize, TypeORM, Drizzle e MikroORM; (3) **Python**: SQLAlchemy, Django e PonyORM; (4) **Java/Kotlin**: Hibernate; (5) **C#/.NET**: Entity Framework Core; e (6) **PHP**: Doctrine. O Atlas converte o modelo do ORM em um esquema alvo (`to = data.external_schema.gorm.url`) e usa seu motor de planejamento e seus 50+ analisadores (`atlas migrate diff` / `atlas migrate lint`) para gerar migrações SQL seguras e auditáveis a partir do código do ORM.
+EXAMPLE:
+```hcl
+# Exemplo de atlas.hcl carregando o esquema diretamente dos modelos SQLAlchemy (Python) ou GORM (Go)
+data "external_schema" "app_orm" {
+  program = [
+    "atlas-provider-sqlalchemy",
+    "--path", "./app/models",
+    "--dialect", "postgresql"
+  ]
+}
+
+env "local" {
+  src = data.external_schema.app_orm.url
+  dev = "docker://postgres/15/dev"
+  migration {
+    dir = "file://migrations"
+  }
+}
+```
+TRADE_OFFS: Quando o esquema é extraído de um ORM via `external_schema`, recursos específicos do banco de dados que o ORM escolhido não consegue expressar em suas anotações de código (como triggers customizadas, políticas de Row-Level Security ou funções PL/pgSQL complexas) precisam ser compostos usando `composite_schema` no Atlas (combinando o schema do ORM com arquivos `.sql`/`.hcl` complementares) para que o Atlas não tente removê-los ao calcular o diff.
+VERIFY: Com o `atlas.hcl` configurado para o seu ORM, execute `atlas schema inspect --env local --url "env://src"` para imprimir em SQL ou HCL o esquema exato extraído das classes/structs do seu código.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-versionado-migrate-diff-lint-apply]] | [[atlasdb-testes-unitarios-esquema-migracoes-test-hcl]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 767 | atlasdb-testes-unitarios-esquema-migracoes-test-hcl | Ariga Atlas: testes automatizados de esquemas e migrações (atlas schema test e atlas migrate test) com .test.hcl ===
+ONE_LINER: O Atlas inclui um framework nativo de testes (`atlas schema test` e `atlas migrate test`) onde arquivos `*.test.hcl` declaram blocos `test "schema"` e `test "migrate"` com asserções `exec` e `catch` executadas contra o banco de desenvolvimento.
+IMPORTANCE: Funções armazenadas, triggers, views complexas, constraints `CHECK` e transformações de dados durante migrações contêm lógica de negócio real dentro do banco de dados; sem uma ferramenta nativa de testes unitários de banco, erros nessa lógica só são descobertos quando a aplicação falha em homologação ou produção. A seção `Testing Schemas and Migrations` do README oficial do Atlas demonstra como escrever e rodar testes de banco.
+HOW_IT_WORKS: O desenvolvedor cria um arquivo `schema.test.hcl` (e referencia `test { schema { src = ["schema.test.hcl"] } }` no `atlas.hcl`). Dentro de um bloco `test "schema" "nome"`, o Atlas provisiona o esquema limpo no `--dev-url` e executa sequencialmente: (1) blocos **`exec`** com instruções SQL (`INSERT`, `SELECT`, `CALL`) e `output` esperado para validar que operações válidas funcionam e retornam o resultado exato; e (2) blocos **`catch`** com instruções SQL que **devem falhar** (por exemplo, inserir um `CHECK` inválido ou `NULL` proibido) verificando a mensagem de erro com `error = "CHECK constraint failed: positive_X"`. De modo análogo, `atlas migrate test` permite injetar dados de semente em uma versão específica da migração, avançar as migrações seguintes e testar se os dados existentes foram transformados corretamente.
+EXAMPLE:
+```hcl
+# Exemplo de teste unitário de esquema no Atlas (schema.test.hcl) validando inserção válida e violação de constraint
+test "schema" "indirection" {
+  exec {
+    sql = "INSERT INTO users (id, age) VALUES (1, 25)"
+  }
+  catch {
+    sql   = "INSERT INTO users (id, age) VALUES (2, -5)"
+    error = "CHECK constraint failed"
+  }
+}
+```
+TRADE_OFFS: Como cada suíte `atlas schema test` e `atlas migrate test` executa instruções SQL reais contra a instância configurada em `dev-url` (como um container Docker Postgres ou MySQL), os testes validam o comportamento real do motor do SGBD (sem mocks falsos), mas exigem que o daemon Docker (ou serviço de banco local de desenvolvimento) esteja ativo no runner de CI.
+VERIFY: Execute `atlas schema test --env local` (ou `atlas migrate test --env local`) e confirme a saída `PASS` para todos os blocos `test` declarados nos arquivos `.test.hcl`.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-declarativo-schema-apply-diff-plan]] | [[atlasdb-seguranca-como-codigo-rbac-roles-permissions-rls]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/testing/schema | https://github.com/ariga/atlas
+
+=== NOTE: 768 | atlasdb-seguranca-como-codigo-rbac-roles-permissions-rls | Ariga Atlas: Security-as-Code para bancos de dados (roles, users, permissions e Row-Level Security em HCL) ===
+ONE_LINER: O Atlas estende o conceito de Schema-as-Code para **Security-as-Code**, permitindo declarar `role`, `user`, `permission` (`GRANT`/`REVOKE`) e `policy` de Row-Level Security (`RLS`) diretamente em HCL com suporte a diff, lint e apply.
+IMPORTANCE: Na maioria das empresas, mesmo quando as tabelas são criadas por migrações automatizadas, a criação de roles de banco de dados, concessão de permissões (`GRANT SELECT, INSERT ON ...`) e políticas de segurança em nível de linha (`Row-Level Security` no PostgreSQL) ainda são feitas manualmente por DBAs via console SQL, gerando permissões excessivas e desvios de auditoria. A seção `Database Security-as-Code` do README oficial do Atlas mostra como codificar essa camada.
+HOW_IT_WORKS: Na definição HCL do esquema do Atlas, além de `table` e `schema`, o engenheiro pode declarar: (1) blocos **`role`** e **`user`**; (2) blocos **`permission`** especificando `for = table.users`, `to = role.app_Team` e `grant = [SELECT, INSERT, UPDATE]`; e (3) blocos **`policy`** (Row-Level Security) dentro da definição da tabela, especificando `for = "ALL"`, `to = [role.app_team]`, a expressão `using = "tenant_id = current_setting('app.current_tenant')::integer"` e `with_check`. O motor do Atlas inspeciona as permissões e políticas RLS atuais do banco e gera automaticamente os comandos `CREATE ROLE`, `GRANT`, `ENABLE ROW LEVEL SECURITY` e `CREATE POLICY`.
+EXAMPLE:
+```hcl
+# Exemplo declarativo de Security-as-Code no Atlas (Role, Permission e Row-Level Security Policy)
+role "app_team" {}
+
+permission "users_perms" {
+  for   = table.users
+  to    = role.app_team
+  grant = [SELECT, INSERT, UPDATE]
+}
+```
+TRADE_OFFS: Como gerenciar roles e `GRANT`s no nível do banco de dados exige que a conexão usada pelo Atlas possua privilégios administrativos (`CREATEROLE` / `SUPERUSER` ou owner dos objetos), em ambientes onde o pipeline de CI/CD da aplicação possui privilégios restritos apenas ao schema de negócio, as declarações globais de roles/usuários podem precisar ser aplicadas por um pipeline de plataforma separado com credenciais de administração.
+VERIFY: Declare uma `policy` de RLS ou `permission` no seu arquivo `.hcl` e execute `atlas schema diff` contra o banco de desenvolvimento para inspecionar os comandos `GRANT` e `CREATE POLICY` gerados no plano.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-declarativo-schema-apply-diff-plan]] | [[bytebase-controle-acesso-rbac-jit-dynamic-data-masking]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 769 | atlasdb-integracao-cloud-native-terraform-kubernetes-operator-cicd | Ariga Atlas: integrações cloud-native com Terraform Provider, Kubernetes Operator e GitHub Actions/GitLab CI ===
+ONE_LINER: O Atlas integra-se a stacks cloud-native por meio do **Atlas Terraform Provider** (gerenciando o esquema dentro do plano do Terraform), do **Atlas Kubernetes Operator** (CRDs `AtlasSchema` e `AtlasMigration`) e de integrações nativas com GitHub Actions, GitLab CI, CircleCI e Bitbucket.
+IMPORTANCE: Quando uma equipe provisiona um banco RDS/CloudSQL via Terraform ou implanta microsserviços no Kubernetes via GitOps (Argo CD / Flux), executar migrações de banco fora do fluxo de IaC/GitOps cria uma desconexão entre o provisionamento da infraestrutura e a evolução do esquema. A seção `Cloud-Native Integrations` do README oficial do Atlas conecta essas camadas.
+HOW_IT_WORKS: (1) **Terraform Provider**: permite declarar recursos `atlas_schema` ou `atlas_migration` no mesmo código Terraform que provisiona o RDS/CloudSQL, fazendo com que `terraform plan` mostre o diff SQL do banco e `terraform apply` aplique o esquema; (2) **Kubernetes Operator**: permite gerenciar esquemas e migrações nativamente no Kubernetes como Custom Resources (`AtlasSchema` para fluxo declarativo e `AtlasMigration` para fluxo versionado), reconciliados continuamente junto aos manifestos da aplicação; e (3) **CI/CD Integrations**: actions e componentes prontos para GitHub Actions, GitLab CI, CircleCI e Bitbucket Pipelines que executam `migrate lint` nos Pull Requests (postando relatórios comentados no PR) e `migrate apply` no merge.
+EXAMPLE:
+```yaml
+# Exemplo de Custom Resource AtlasMigration gerenciado pelo Atlas Kubernetes Operator via GitOps
+apiVersion: db.atlasgo.io/v1alpha1
+kind: AtlasMigration
+metadata:
+  name: app-db-migration
+spec:
+  urlFrom:
+    secretKeyRef:
+      name: db-credentials
+      key: url
+  dir:
+    configMapRef:
+      name: app-migrations-dir
+```
+TRADE_OFFS: Ao gerenciar migrações via **Atlas Kubernetes Operator** ou **Terraform Provider**, o controlador automatizado nunca deve aplicar mudanças destrutivas silenciosamente (`DROP TABLE`/`DROP COLUMN`) sem validação prévia; por isso, o operador e o provider integram verificações de segurança que bloqueiam a aplicação automática de planos destrutivos a menos que explicitamente autorizados pela política configurada.
+VERIFY: Em um cluster Kubernetes com o Atlas Operator instalado, execute `kubectl get atlasmigrations,atlasschemas` e verifique nas condições do status (`Ready=True`) a versão aplicada do esquema.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-fluxo-versionado-migrate-diff-lint-apply]] | [[terraform-providers-plugins-versionamento-lockfile]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
+
+=== NOTE: 770 | atlasdb-edicoes-community-apache2-binario-atlas-cloud | Ariga Atlas: arquitetura de edições do Atlas (código base Apache-2.0, binário oficial e recursos avançados) ===
+ONE_LINER: O repositório `ariga/atlas` publica o código-fonte do núcleo do motor de esquemas sob licença Apache-2.0 (`cmd/atlas-community`), enquanto o binário oficial distribuído pela Ariga (`atlasgo.sh`, Homebrew, Docker `arigaio/atlas`) inclui recursos gratuitos adicionais e integrações opcionais com o Atlas Cloud/Pro.
+IMPORTANCE: Engenheiros de plataforma que compilam ferramentas a partir do código-fonte ou auditam dependências precisam entender a diferença entre compilar o binário comunitário do repositório Git (`cmd/atlas-community`) e instalar a distribuição oficial binária do Atlas. O README do repositório `ariga/atlas` explica como ambas as distribuições funcionam.
+HOW_IT_WORKS: O repositório aberto no GitHub (`github.com/ariga/atlas`) contém a biblioteca Go de inspeção, diff, parser HCL/SQL e o ponto de entrada comunitário sob licença **Apache-2.0**. Os binários oficiais distribuídos em `https://atlasgo.sh`, Homebrew (`ariga/tap/atlas`), Docker (`arigaio/atlas`) e npm (`@ariga/atlas`) fornecem a CLI completa pronta para uso (incluindo analisadores de lint, suporte ampliado a dialetos e objetos avançados como views, functions, triggers e RLS, além de integração com `atlas login` para recursos de equipe e registro de esquemas).
+EXAMPLE:
+```bash
+# Executar o Atlas via container Docker oficial arigaio/atlas inspecionando um banco na rede do host
+docker run --rm arigaio/atlas:latest \
+  schema inspect -u "postgres://postgres:pass@host.docker.internal:5432/appdb?sslmode=disable"
+```
+TRADE_OFFS: Alguns objetos de banco de dados avançados (como `views`, `materialized views`, `functions`, `procedures`, `triggers`, `sequences` e `Security-as-Code` / `schema test`) e conectores corporativos (como Snowflake, Redshift e Spanner) requerem o binário oficial com conta autenticada (`atlas login`) ou licença Atlas Pro, não estando presentes se você compilar apenas o binário mínimo `cmd/atlas-community` sem os módulos estendidos.
+VERIFY: Execute `atlas version` para verificar a edição do binário instalado (`community` vs build oficial da Ariga) e consulte a matriz de funcionalidades em `atlasgo.io`.
+LINKS: [[atlasdb-schema-as-code-declarativo-versionado-multibanco]] | [[atlasdb-inspecao-esquema-hcl-sql-json-mermaid-erd]] | [[flyway-edicoes-community-apache2-teams-enterprise-redgate]]
+SOURCES: https://raw.githubusercontent.com/ariga/atlas/master/README.md | https://atlasgo.io/getting-started | https://github.com/ariga/atlas
