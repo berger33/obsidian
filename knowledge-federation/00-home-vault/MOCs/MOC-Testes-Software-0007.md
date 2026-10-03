@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 1358 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1358 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1349 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1459 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1459 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1450 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1731,6 +1731,139 @@
 1357. [[insta-ci-and-limits]] — A suíte roda na esteira em modo estrito, e a ferramenta de revisão é opcional, mantendo a verificação independente de passos manuais.
 1358. [[insta-vs-other-assertions]] — Instantâneos servem a saídas formatadas e estáveis, enquanto asserções específicas comunicam melhor a intenção de regras de negócio.
 
+## Tranche 20 — especificações de negócio, automação de navegador, dublês, propriedades e carga
+
+### Gauge — especificações em markdown, passos, conceitos e execução paralela
+
+1359. [[gauge-specifications]] — Uma especificação é um arquivo em formato markdown com cabeçalho próprio, uma ou mais seções de cenário e passos como itens de lista.
+1360. [[gauge-steps-implementation]] — Cada passo da especificação corresponde a um método anotado no código do projeto, com parâmetros extraídos do texto do próprio passo.
+1361. [[gauge-concepts]] — Conceitos combinam uma sequência de passos em uma unidade nomeada, declarada em arquivo próprio e usada como qualquer outro passo.
+1362. [[gauge-tags-and-filtering]] — Especificações e cenários podem receber etiquetas, e a execução aceita expressões com conjunção, disjunção e negação sobre elas.
+1363. [[gauge-context-and-hooks]] — A execução oferece ganchos de suíte, especificação, cenário e passo, e um contexto próprio para guardar valores entre passos.
+1364. [[gauge-data-driven]] — Uma tabela antes de um cenário transforma o bloco em várias execuções, uma por linha, com os valores disponíveis nos passos.
+1365. [[gauge-parallel-execution]] — A execução aceita especificações em paralelo, distribuindo-as entre processos ou threads conforme o número de fluxos configurado.
+1366. [[gauge-environments-and-config]] — O projeto mantém diretórios de ambiente com arquivos de propriedades, e uma execução escolhe o ambiente pelo nome.
+1367. [[gauge-reports-and-ci]] — Cada execução gera relatórios, incluindo o formato navegável em HTML e relatórios estruturados de acordo com os plugins instalados.
+1368. [[gauge-limits-and-practices]] — A ferramenta organiza especificações executáveis em linguagem natural, mas não substitui testes de unidade, verificação de contrato nem medição de desempenho.
+
+### Behave — cenários Gherkin, definições de passo, ganchos e fixtures em Python
+
+1369. [[behave-feature-files]] — Cada funcionalidade é descrita em arquivo com estrutura de Gherkin: contexto opcional, cenários e passos com palavras-chave.
+1370. [[behave-step-definitions]] — Funções decoradas associam cada passo do texto a código Python, com parâmetros capturados por expressões no padrão do passo.
+1371. [[behave-context-sharing]] — O contexto é um objeto passado a cada passo, onde valores são guardados para uso posterior dentro do mesmo cenário.
+1372. [[behave-hooks]] — O arquivo de ambiente define funções executadas antes e depois da suíte, da funcionalidade, do cenário e do passo.
+1373. [[behave-tags-and-selection]] — Etiquetas podem ser aplicadas a funcionalidades e cenários, e a execução aceita expressões para incluir ou excluir grupos.
+1374. [[behave-fixtures]] — Fixtures encapsulam preparação e limpeza com rendimento, podendo ser associadas a etiquetas específicas nos ganchos.
+1375. [[behave-configuration]] — A configuração do projeto declara caminhos, formato de saída, comportamento de captura e opções como diretório de relatórios.
+1376. [[behave-reports-and-ci]] — A execução pode gerar relatórios em formatos legíveis e estruturados, e o processo termina com código de saída conforme o resultado.
+1377. [[behave-django-flask-integration]] — A documentação cobre a integração com aplicações web em Python, incluindo preparação de banco de dados de teste e servidor local.
+1378. [[behave-limits-and-practices]] — A ferramenta executa cenários em linguagem natural apoiados por código, sem substituir testes de unidade nem medir desempenho.
+
+### MockServer — expectativas, correspondência, verificação, proxy e contratos
+
+1379. [[ms-expectations]] — Uma expectativa declara o pedido que deve corresponder e a ação a executar, com limites opcionais de número de usos, validade e prioridade.
+1380. [[ms-request-matchers]] — Os correspondentes cobrem método, caminho, consulta, cabeçalhos, cookies e corpo, com comparação exata, por padrão ou por esquema.
+1381. [[ms-verification]] — A verificação consulta os pedidos registrados e confirma a quantidade de ocorrências, podendo exigir um número exato, mínimo ou máximo.
+1382. [[ms-response-verification]] — Quando a verificação inclui correspondência de resposta, a contagem passa a considerar os pares de pedido e resposta registrados no proxy.
+1383. [[ms-proxy-and-record-replay]] — No modo proxy, o pedido é encaminhado ao serviço real e o par pedido e resposta fica registrado, podendo ser recuperado como expectativa reutilizável.
+1384. [[ms-openapi-contract]] — Uma especificação de interface pode gerar expectativas automaticamente e servir como correspondente para verificar se os pedidos recebidos respeitam o contrato.
+1385. [[ms-tests-and-junit]] — O serviço pode ser iniciado durante a suíte, com terminadores e regras de ciclo de vida que sobem e derrubam o servidor por classe ou por execução.
+1386. [[ms-scenarios-and-state]] — Cenários permitem que a resposta mude conforme as interações anteriores, avançando o estado a cada correspondência.
+1387. [[ms-diagnostics-and-logs]] — O serviço expõe os pedidos recebidos, as expectativas registradas e as mensagens de erro de correspondência, consultáveis durante a execução.
+1388. [[ms-limits-and-practices]] — A ferramenta simula e verifica interações em nível de protocolo, sem validar a lógica interna do serviço nem substituir testes de contrato entre consumidor e provedor.
+
+### Keploy — gravação de tráfego, mocks de dependências e repetição na esteira
+
+1389. [[keploy-record-replay]] — A ferramenta observa o tráfego recebido pela aplicação em execução e grava cada pedido com a resposta devolvida como um caso de teste.
+1390. [[keploy-dependency-mocks]] — Durante a gravação, as chamadas de saída da aplicação são capturadas e gravadas como mocks, incluindo banco, cache, filas e serviços externos.
+1391. [[keploy-replay-in-ci]] — No modo de repetição, os pedidos gravados são reenviados, os mocks são servidos no lugar das dependências e o resultado é comparado com o registro.
+1392. [[keploy-test-assertions]] — O caso gravado compara a resposta devolvida na repetição com a resposta registrada, campo a campo, sinalizando diferenças.
+1393. [[keploy-deduplication]] — A ferramenta aplica deduplicação sobre o tráfego gravado, mantendo um conjunto menor de casos representativos.
+1394. [[keploy-coverage-report]] — A execução de repetição pode coletar cobertura de linhas e ramos da aplicação, indicando o que o tráfego gravado exercitou.
+1395. [[keploy-kubernetes-and-sandbox]] — A gravação pode ocorrer em ambiente conteinerizado, capturando tráfego de serviços em execução e reproduzindo-o depois em outro ambiente.
+1396. [[keploy-multi-language]] — A captura ocorre na camada de rede e funciona com aplicações escritas em diferentes linguagens, sem alteração no código da aplicação.
+1397. [[keploy-legacy-and-migration]] — A captura na camada de rede permite gerar verificação para aplicações sem testes e comparar o comportamento antes e depois de uma migração.
+1398. [[keploy-limits-and-practices]] — A gravação cobre os caminhos exercitados e suas dependências, sem substituir testes de unidade nem fluxos de ponta a ponta com sistemas reais.
+
+### Selenide — waits automáticos, coleções, objetos de página e relatórios
+
+1399. [[selenide-basics]] — A biblioteca expõe abertura de página e consulta por seletor com métodos curtos, retornando elementos ou coleções.
+1400. [[selenide-smart-waits]] — Verificações e ações aguardam a condição até o limite configurado, repetindo a consulta em vez de falhar de imediato.
+1401. [[selenide-collections]] — Consultas com cifrão duplo retornam coleções com filtros, verificação de tamanho e extração de textos e atributos.
+1402. [[selenide-page-objects]] — Objetos de página encapsulam os seletores e as operações de cada tela em métodos públicos, sem necessidade de anotações nem inicialização especial.
+1403. [[selenide-conditions]] — As condições cobrem existência, visibilidade, texto exato ou parcial, atributos, valores e estados de habilitação e seleção.
+1404. [[selenide-screenshots-and-reports]] — A biblioteca captura telas em falhas e pode integrar-se a relatórios, com configuração por propriedades do projeto.
+1405. [[selenide-configuration]] — As propriedades definem navegador, endereço remoto, tamanho de janela, limite de espera, captura de tela e pasta de downloads.
+1406. [[selenide-headless-and-parallel]] — A execução pode ocorrer sem interface gráfica e com casos distribuídos em paralelo, desde que cada caso controle o próprio estado.
+1407. [[selenide-migration-from-selenium]] — A biblioteca é construída sobre a interface de navegador e permite substituir esperas e verificações manuais por operações com espera embutida.
+1408. [[selenide-limits-and-practices]] — A biblioteca simplifica a escrita de testes de interface sobre a interface de navegador, sem substituir testes de unidade, de integração nem de desempenho.
+
+### AssertJ — asserções fluentes, coleções, descrições e asserções suaves
+
+1409. [[assertj-fluent-basics]] — A biblioteca oferece um ponto de entrada que devolve um objeto de asserção específico do tipo, com métodos encadeáveis.
+1410. [[assertj-collections]] — Existem asserções próprias para listas, conjuntos, mapas e fluxos, cobrindo conteúdo, ordem, presença de elementos e extração de campos.
+1411. [[assertj-descriptions]] — O encadeamento permite anexar uma descrição que aparece na mensagem de falha, identificando o que estava sendo verificado.
+1412. [[assertj-soft-assertions]] — O objeto de asserções suaves coleta os erros de várias verificações e os reporta juntos ao final do bloco.
+1413. [[assertj-junit-integration]] — A biblioteca oferece integração com o framework de testes, injetando o objeto de asserções suaves e reportando os erros automaticamente ao final do caso.
+1414. [[assertj-custom-assertions]] — O projeto permite estender as classes de asserção para criar verificações específicas do domínio, publicáveis como ponto de entrada próprio.
+1415. [[assertj-exceptions]] — As asserções de exceção verificam tipo, mensagem, causa e presença de trechos na mensagem, sem captura manual de try e catch.
+1416. [[assertj-recursive-and-fields]] — A biblioteca permite comparar objetos campo a campo, ignorando ou incluindo campos escolhidos, e comparar estruturas aninhadas recursivamente.
+1417. [[assertj-database-and-modules]] — Projetos complementares oferecem asserções para tipos de bancos de dados relacionais, coleções de bibliotecas conhecidas e outras estruturas específicas.
+1418. [[assertj-limits-and-practices]] — A biblioteca melhora a expressão e a mensagem das verificações, mas não substitui a escolha do que verificar nem cobre desempenho ou interface.
+
+### MockK — dublês em Kotlin, relaxamento, verificação, slots e corrotinas
+
+1419. [[mockk-basics]] — A biblioteca cria dublês de tipos Kotlin e define o comportamento esperado em blocos que descrevem a chamada e o valor devolvido.
+1420. [[mockk-strict-vs-relaxed]] — No modo estrito, chamadas sem resposta definida falham; no modo relaxado, o dublê devolve valores vazios ou neutros automaticamente.
+1421. [[mockk-verification]] — Blocos de verificação confirmam que a chamada ocorreu, com quantidade exata, faixa de ocorrências e ordem entre chamadas.
+1422. [[mockk-slots-and-capture]] — Um slot registra o valor recebido por uma chamada, permitindo verificar detalhes do argumento depois da execução.
+1423. [[mockk-coroutines]] — As funções de suspensão são configuradas e verificadas por variantes com prefixo próprio, que executam os blocos em contexto de corrotina.
+1424. [[mockk-objects-and-statics]] — A biblioteca cobre objetos únicos, métodos estáticos, funções de nível superior, extensões e construtores, com limpeza explícita ao final.
+1425. [[mockk-configuration]] — Um arquivo de configuração permite definir relaxamento global, registro de chamadas privadas, relaxamento de funções sem retorno e classes que não podem ser dubladas.
+1426. [[mockk-relaxed-unit-and-defaults]] — Além do relaxamento comum, a biblioteca oferece relaxamento de funções sem retorno e possibilidade de configurar respostas padrão por tipo.
+1427. [[mockk-chained-and-hierarchies]] — Dublês podem devolver outros dublês, permitindo representar cadeias de dependências em estruturas complexas.
+1428. [[mockk-limits-and-practices]] — Dublês verificam interações no nível da linguagem, sem substituir testes de integração nem comprovar o comportamento do sistema real.
+
+### fast-check — teste por propriedades, geradores, redução de casos e modelos
+
+1429. [[fc-properties-basics]] — Uma propriedade combina geradores de entrada com um predicado que deve valer para todos os valores produzidos.
+1430. [[fc-arbitraries]] — Os geradores descrevem domínios de valores por tipo, com versões para inteiros, textos, listas, registros, opções e combinações.
+1431. [[fc-custom-arbitraries]] — Geradores existentes podem ser transformados por mapeamento ou encadeados quando a próxima entrada depende do valor anterior.
+1432. [[fc-shrinking]] — Ao encontrar falha, a ferramenta reduz a entrada ao menor caso que ainda reproduz o erro, exibindo o valor mínimo.
+1433. [[fc-seed-and-reproducibility]] — Cada execução usa uma semente, exibida na falha, que permite repetir exatamente a sequência de valores gerados.
+1434. [[fc-model-based]] — A biblioteca permite descrever comandos, modelo de referência e verificações de invariantes para testar sequências de operações.
+1435. [[fc-async-properties]] — Existe variante de propriedade para predicados assíncronos, integrando-se a ambientes de teste com espera pela resolução.
+1436. [[fc-number-of-runs-and-ci]] — A execução permite configurar a quantidade de rodadas, o tempo máximo por caso e a política de falha, e integra-se a executores de teste conhecidos.
+1437. [[fc-integration-with-runners]] — A biblioteca se integra a executores conhecidos, incluindo extensões que produzem casos de teste a partir de propriedades.
+1438. [[fc-limits-and-practices]] — Propriedades verificam invariantes gerais sobre dados gerados, sem provar ausência de erro nem cobrir desempenho ou integração real.
+
+### Robolectric — testes de unidade Android na JVM, sombras e configuração de SDK
+
+1439. [[robolectric-jvm-tests]] — A ferramenta executa código Android na máquina virtual da linguagem, substituindo chamadas ao sistema por implementações próprias.
+1440. [[robolectric-sdk-configuration]] — A execução pode declarar a versão do sistema Android em nível de classe, de pacote ou de arquivo de propriedades.
+1441. [[robolectric-shadows]] — Sombras são implementações próprias que substituem classes do sistema, com métodos que devolvem valores controlados e registram o efeito das chamadas.
+1442. [[robolectric-activity-lifecycle]] — A biblioteca oferece construção controlada de telas, permitindo criar, iniciar, retomar, pausar e destruir conforme o cenário exige.
+1443. [[robolectric-resources-and-qualifiers]] — A execução carrega recursos do projeto e permite escolher qualificadores, como idioma, orientação e densidade de tela.
+1444. [[robolectric-java-version-compatibility]] — Versões recentes da máquina virtual exigem abertura explícita de módulos internos para que a biblioteca acesse classes do sistema.
+1445. [[robolectric-dependencies-and-offline]] — A biblioteca baixa artefatos das versões do sistema em tempo de execução, e o endereço de repositório pode ser configurado.
+1446. [[robolectric-frameworks-integration]] — A execução convive com bibliotecas de asserção, dublês e execução paralela, mantendo o mesmo padrão dos testes comuns.
+1447. [[robolectric-vs-instrumented]] — Testes na JVM rodam rápido e cobrem lógica e ciclo de vida simulado; testes instrumentados exercitam o sistema real em aparelho ou emulador.
+1448. [[robolectric-limits-and-practices]] — A simulação cobre grande parte das interfaces do sistema, mas não reproduz desempenho, hardware, nem o comportamento exato de versões de aparelhos.
+
+### NBomber — carga em .NET, simulações, cenários, limites e relatórios
+
+1449. [[nb-scenarios-basics]] — O cenário descreve a operação a executar em cada iteração, em código da própria linguagem, e devolve o resultado da operação.
+1450. [[nb-load-simulations]] — As simulações descrevem o ritmo de injeção de iterações, incluindo taxa constante, taxa crescente com rampa e número fixo de cópias.
+1451. [[nb-steps-and-metrics]] — Passos separam etapas da operação, cada uma com medidas próprias de latência, contagem e tamanho, agregadas ao resultado do cenário.
+1452. [[nb-warmup-and-duration]] — A execução pode incluir fase de aquecimento antes da medição e define a duração de cada simulação separadamente.
+1453. [[nb-assertions-and-thresholds]] — A execução permite declarar limites sobre as métricas, como percentual de falhas e percentil de latência, avaliados ao final do teste.
+1454. [[nb-reports-and-sinks]] — Cada execução gera relatório navegável, e a integração com sistemas de acompanhamento permite publicar métricas em tempo real.
+1455. [[nb-http-metrics-and-plugins]] — Extensões adicionam métricas específicas de protocolo, como tempos de conexão, reutilização de conexões e volume trafegado.
+1456. [[nb-data-feeds-and-realism]] — A biblioteca permite fornecer dados variados por iteração, aproximando a carga do padrão real de uso.
+1457. [[nb-distributed-cluster]] — A execução pode ser distribuída entre agentes coordenados, somando a carga de várias máquinas e agregando os resultados.
+1458. [[nb-ci-integration]] — A ferramenta integra-se a executores de teste conhecidos, permitindo que a carga faça parte do trabalho automatizado.
+1459. [[nb-limits-and-practices]] — A ferramenta mede carga gerada em código e produz métricas confiáveis, mas não identifica a causa raiz nem substitui a análise de desempenho do sistema.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 1358/1358 notas e as 1358 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1349 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1358 notas substantivas; 642 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-19.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md) e [19](../../exports/reports/ai-review-software-testes-2000-0001-tranche-19.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1459/1459 notas e as 1459 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1450 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1459 notas substantivas; 541 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-20.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md), [19](../../exports/reports/ai-review-software-testes-2000-0001-tranche-19.md) e [20](../../exports/reports/ai-review-software-testes-2000-0001-tranche-20.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
