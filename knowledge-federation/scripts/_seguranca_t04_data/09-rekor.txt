@@ -1,0 +1,107 @@
+TOPIC: Sigstore Rekor — Transparency Log Imutável, Merkle Trees, Trillian/Tiles, Pluggable Types e rekor-monitor
+SOURCES: https://raw.githubusercontent.com/sigstore/rekor/main/README.md | https://raw.githubusercontent.com/sigstore/rekor/main/types.md | https://docs.sigstore.dev/rekor/overview/
+
+===NOTE===
+0381|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian|Sigstore Rekor: Arquitetura do Transparency Log Imutável de Cadeia de Suprimentos e Árvores de Merkle|**Rekor** (do grego *"Record"*, projeto Sigstore / Linux Foundation sob Apache-2.0) é um livro-razão de transparência (*Transparency Log*) imutável, *append-only* e criptograficamente verificável para registrar assinaturas e metadados da cadeia de suprimentos de software.|Impede ataques furtivos de assinatura retroativa ou uso silencioso de chaves comprometidas: toda assinatura registrada torna-se auditável publicamente com um carimbo de tempo confiável (`IntegratedTime`) que não pode ser apagado nem alterado.|O servidor Rekor valida matematicamente a assinatura e o manifesto enviados via API REST (`/api/v1/log/entries`) antes de aceitá-los e inseri-los em uma árvore de Merkle gerenciada pelo backend **Trillian** (no Rekor v1) ou por **Tile-Based Logs / Trillian-Tessera** (na arquitetura Rekor v2 `rekor-tiles`), retornando um `LogIndex`, `UUID` e um `SignedEntryTimestamp` (SET).|```bash
+# Consultar informações da árvore de Merkle atual (TreeSize e RootHash assinado) da instância Rekor
+rekor-cli loginfo --rekor_server https://rekor.sigstore.dev --format json | jq .
+```|O Rekor armazena apenas hashes, assinaturas, chaves públicas/certificados e metadados de atestação (com limite de 100 KB por entrada na instância pública `rekor.sigstore.dev`), nunca o binário ou imagem de container em si.|Execute `rekor-cli loginfo` e confirme a validação criptográfica do `SignedTreeHead` (STH) usando a chave pública do log (`/api/v1/log/publicKey`).|rekor-tipos-pluggable-hashedrekord-intoto-dsse-jar-rpm-tuf, rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth, fulcio-arquitetura-sigstore-ca-oidc-short-lived-certificates
+
+===NOTE===
+0382|rekor-tipos-pluggable-hashedrekord-intoto-dsse-jar-rpm-tuf|Sigstore Rekor: Esquemas Pluggable Types (`hashedrekord`, `rekord`, `intoto`, `dsse`, `jar`, `rpm` e `tuf`)|O Rekor valida cada entrada contra um esquema tipado (*Pluggable Types* em `pkg/types`), incluindo `hashedrekord`, `rekord`, `intoto`, `dsse`, `jar`, `rpm`, `alpine`, `helm`, `rfc3161` e `tuf`, além de múltiplos formatos de PKI (`x509`, `minisign`, `ssh`, `pgp`).|Diferente de um banco de dados genérico onde qualquer JSON arbitrário pode ser salvo, o Rekor recusa a inserção se a assinatura criptográfica não corresponder exatamente ao hash SHA-256 e à chave pública/certificado declarados no tipo.|O tipo padrão usado pelo `cosign` para assinar imagens e blobs é o **`hashedrekord`** (que recebe apenas o digest SHA-256 do artefato, a assinatura e o certificado X.509/chave pública, sem precisar enviar o arquivo inteiro ao servidor), enquanto atestações SLSA e SBOMs assinados utilizam os tipos **`dsse`** ou **`intoto`**.|```bash
+# Assinar um artefato com chave ECDSA P-256 e registrar no Rekor usando o tipo hashedrekord
+DIGEST=$(sha256sum release.tar.gz | awk '{print $1}')
+openssl dgst -sha256 -sign ec_private.pem -out release.sig release.tar.gz
+
+rekor-cli upload \
+  --type hashedrekord \
+  --artifact-hash "${DIGEST}" \
+  --signature release.sig \
+  --pki-format x509 \
+  --public-key ec_public.pem
+```|Usar o tipo legado `rekord` (em vez de `hashedrekord`) exige fazer upload do artefato completo para que o servidor calcule o hash, o que falha para binários grandes e expõe o conteúdo do artefato ao servidor.|Consulte a entrada criada com `rekor-cli get --log-index <index> --format json` e confirme que `Body.HashedRekordObj.data.hash.value` contém o SHA-256 exato.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-operacoes-rekor-cli-upload-get-search-verify, intoto-dsse-dead-simple-signing-envelope-pae-prevencao-ambiguidade
+
+===NOTE===
+0383|rekor-operacoes-rekor-cli-upload-get-search-verify|Sigstore Rekor: Operação com `rekor-cli` (`upload`, `get`, `search` e `verify`) por Hash, Chave ou E-mail|A ferramenta de linha de comando `rekor-cli` permite registrar entradas (`upload`), recuperar registros por UUID ou índice (`get`), pesquisar todas as assinaturas associadas a um hash SHA-256, chave pública ou e-mail OIDC (`search`) e validar provas de inclusão (`verify`).|Permite que equipes de resposta a incidentes respondam imediatamente: *"quais artefatos foram assinados pela identidade `dev@empresa.com` nas últimas 48 horas?"* ou *"este binário possui entrada autêntica no log de transparência?"*.|O comando `rekor-cli search` consulta o índice de busca reversa (`/api/v1/index/retrieve`) passando `--sha sha256:<hash>`, `--email usuario@dominio.com` ou `--public-key chave.pub`, retornando a lista de UUIDs de todas as entradas correspondentes registradas no log.|```bash
+# Pesquisar no Rekor todas as entradas associadas ao digest SHA-256 de um binário ou a um e-mail OIDC
+rekor-cli search --sha sha256:3d80236772ca7c5405e398a4d685e715859260a8733070b86de7322e233c68d2
+
+rekor-cli search --email release-bot@corp.example.com
+
+# Inspecionar e verificar criptograficamente a prova de inclusão de uma entrada pelo índice
+rekor-cli verify --log-index 12849502
+```|O comando `rekor-cli get` recupera o conteúdo da entrada mas **não** valida a prova matemática de inclusão na árvore de Merkle; para verificação criptográfica de auditoria, execute sempre `rekor-cli verify`.|Execute `rekor-cli verify --artifact release.tar.gz --signature release.sig --public-key ec_public.pem` e confirme a saída da `Inclusion Proof` com o caminho de hashes da raiz.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-tipos-pluggable-hashedrekord-intoto-dsse-jar-rpm-tuf, rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth
+
+===NOTE===
+0384|rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth|Sigstore Rekor: Provas Criptográficas de Árvore de Merkle (`Inclusion Proof`, `Consistency Proof`, `STH` e `SET`)|A confiança no Rekor baseia-se em três primitivas criptográficas verificáveis pelo cliente sem precisar confiar cegamente no operador do servidor: **Signed Entry Timestamp (SET)**, **Inclusion Proof** e **Consistency Proof** entre **Signed Tree Heads (STH)**.|Impede ataques de *split-view* ou reescrita de histórico: se o servidor tentasse remover ou alterar uma entrada antiga, o `RootHash` da árvore de Merkle mudaria e quebraria a prova de consistência contra qualquer cliente que guardou um STH anterior.|O **SET** é uma promessa assinada pelo Rekor no instante do upload contendo o `IntegratedTime` (análoga ao SCT do Certificate Transparency). A **Inclusion Proof** fornece os nós irmãos do caminho da folha até a raiz da árvore de Merkle (`RootHash`), provando que a entrada realmente faz parte da árvore. Já a **Consistency Proof** (`/api/v1/log/proof`) prova matematicamente que a árvore no tamanho $N_2$ é uma extensão estritamente *append-only* da árvore anterior no tamanho $N_1$.|```bash
+# Obter e verificar prova de consistência entre um checkpoint antigo (first-size) e o estado atual
+rekor-cli logproof \
+  --first-size 10000000 \
+  --last-size 12000000 \
+  --rekor_server https://rekor.sigstore.dev
+```|Confiar apenas no `SignedEntryTimestamp` (SET) sem verificar a `Inclusion Proof` (ou sem monitorar a árvore) confia que o servidor incorporará a promessa na árvore; os bundles Sigstore modernos já embutem a `Inclusion Proof` completa junto ao SET.|Execute `rekor-cli logproof --last-size <TreeSize>` e confirme a validação matemática da consistência da árvore.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-monitoramento-continuo-rekor-monitor-checkpoints-identidades, fulcio-modelo-seguranca-revogacao-timestamps-rekor-verificacao
+
+===NOTE===
+0385|rekor-evolucao-rekor-v2-tile-based-logs-trillian-tessera|Sigstore Rekor: Evolução do Rekor v1 (Trillian gRPC + MySQL) para Rekor v2 (`rekor-tiles` e `Trillian-Tessera`)|A arquitetura **Rekor v2** (`sigstore/rekor-tiles`) substitui a pilha complexa do Rekor v1 (Trillian Log Server + Trillian Signer + MySQL + Redis) por um log baseado em ladrilhos estáticos (**Tile-Based Log** especificação C2SP `tlog-tiles`) construído sobre a biblioteca **Trillian-Tessera**.|Reduz drasticamente o custo operacional e de infraestrutura ao permitir que as folhas e subárvores da árvore de Merkle sejam servidas diretamente como arquivos estáticos imutáveis (*tiles*) a partir de Object Storage (GCS, S3 ou POSIX) e CDNs.|Em um *Tile-Based Log*, os nós internos da árvore de Merkle são agrupados em ladrilhos (*tiles*) de altura fixa endereçáveis por caminho determinístico (`/tile/<level>/<index>`). Os clientes verificam provas de inclusão e consistência buscando apenas alguns *tiles* cacheáveis em CDN e o arquivo `/checkpoint` assinado, eliminando cálculos dinâmicos pesados de banco de dados a cada leitura.|```bash
+# Inspecionar o checkpoint assinado (C2SP tlog-checkpoint) de uma instância Rekor / Tessera
+curl -sS https://rekor.sigstore.dev/api/v1/log \
+  | jq -r '.signedTreeHead'
+```|Durante a coexistência de múltiplos shards do Rekor (v1 sharding e v2 tiles), os clientes verificadores devem usar o `trusted_root.json` distribuído via Sigstore TUF para validar o `LogID` e a chave pública correta de cada shard histórico ou ativo.|Verifique o campo `treeID` e `signedTreeHead` retornados por `/api/v1/log` (incluindo o array `inactiveShards`) e confirme que todos os shards constam no bundle TUF.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth, rekor-auto-hospedagem-privada-trillian-kms-sharding-offline-bundles
+
+===NOTE===
+0386|rekor-monitoramento-continuo-rekor-monitor-checkpoints-identidades|Sigstore Rekor: Auditoria e Monitoramento Contínuo com `rekor-monitor` (Consistência e Identidades OIDC)|Um *Transparency Log* só cumpre sua garantia de segurança se for continuamente auditado por monitores independentes: o **`sigstore/rekor-monitor`** verifica periodicamente tanto a integridade matemática da árvore (provas de consistência entre checkpoints) quanto o surgimento de assinaturas para identidades específicas.|Se a conta OIDC de um mantenedor ou um workflow do GitHub Actions sofrer comprometimento e for usada para assinar um artefato malicioso via Fulcio, o certificado e a assinatura aparecerão obrigatoriamente no Rekor e serão detectados pelo `rekor-monitor`.|Executado como um GitHub Actions agendado ou CronJob Kubernetes, o `rekor-monitor` persiste o último checkpoint verificado, valida a `Consistency Proof` até o novo `TreeSize` e varre todas as entradas novas buscando correspondências com os `Subject Alternative Names` (e-mails ou URIs de workflows), emissores OIDC ou fingerprints de chaves configurados.|```yaml
+# Configuração de identidades monitoradas pelo rekor-monitor para alertas de segurança
+monitoredValues:
+  certIdentities:
+    - certSubject: "https://github.com/org-corp/payments-service/.github/workflows/release.yml@refs/tags/.*"
+      issuers:
+        - "https://token.actions.githubusercontent.com"
+    - certSubject: "security-release@corp.example.com"
+      issuers:
+        - "https://accounts.google.com"
+```|Executar o `rekor-monitor` sem persistir o arquivo de checkpoint anterior entre as execuções impede a validação de consistência histórica (*split-view detection*) entre execuções consecutivas.|Execute o binário `rekor-monitor` com `--once=true` apontando para um arquivo de identidades de teste e confirme a validação do checkpoint e a geração de log de entradas encontradas.|rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth, fulcio-arquitetura-sigstore-ca-oidc-short-lived-certificates, fulcio-extensoes-x509-oids-57264-github-actions-ci-claims
+
+===NOTE===
+0387|rekor-integracao-assinatura-ssh-minisign-x509-openpgp|Sigstore Rekor: Registro de Assinaturas Não-Fulcio (`ssh-keygen -Y sign`, `minisign` e X.509 Tradicional)|Embora faça parte do ecossistema Sigstore junto ao Fulcio, o Rekor funciona de forma totalmente independente para registrar assinaturas criadas com chaves **SSH Ed25519** (`ssh-keygen -Y sign`), **Minisign** (`minisign -S`), **X.509/PKIX** (`openssl dgst`) ou **OpenPGP/GPG**.|Permite que projetos que já utilizam chaves SSH ou Minisign obtenham um carimbo de tempo imutável (`IntegratedTime`) e transparência pública de todas as releases assinadas sem alterar seu formato de chave.|Ao invocar `rekor-cli upload --artifact <file> --signature <sig> --pki-format=<ssh|minisign|x509|pgp> --public-key=<pub>`, o Rekor valida a assinatura específica do formato escolhido (por exemplo, o envelope `-----BEGIN SSH SIGNATURE-----` com namespace `file`) e grava a entrada `rekord` ou `hashedrekord` no log.|```bash
+# Assinar um arquivo de release com chave SSH Ed25519 e registrar a assinatura no Rekor
+ssh-keygen -Y sign -n file -f ~/.ssh/id_ed25519 CHECKSUMS.txt
+
+rekor-cli upload \
+  --artifact CHECKSUMS.txt \
+  --signature CHECKSUMS.txt.sig \
+  --pki-format=ssh \
+  --public-key=~/.ssh/id_ed25519.pub
+```|No formato SSH (`--pki-format=ssh`), o Rekor espera que a assinatura tenha sido gerada com o namespace `-n file`; usar um namespace arbitrário diferente sem correspondência no verificador causará falha de validação.|Execute `rekor-cli get --uuid <uuid>` na entrada recém-criada e verifique que `signature.format` consta como `"ssh"` (ou `"minisign"`) com a chave pública preservada em Base64.|rekor-tipos-pluggable-hashedrekord-intoto-dsse-jar-rpm-tuf, rekor-operacoes-rekor-cli-upload-get-search-verify, intoto-sign-assinatura-multiplas-chaves-thresholds-gpg-ssh-ed25519
+
+===NOTE===
+0388|rekor-api-rest-openapi-entries-retrieve-index-search|Sigstore Rekor: API REST v1 (`/api/v1/log`, `/api/v1/log/entries`, `/api/v1/index/retrieve`) e Limites Operacionais|O servidor Rekor expõe uma API REST padronizada sob especificação OpenAPI (Swagger) com SLO de 99,5% de disponibilidade na instância pública para os endpoints `/api/v1/log`, `/api/v1/log/publicKey`, `/api/v1/log/proof`, `/api/v1/log/entries` e `/api/v1/log/entries/retrieve`.|Permite integrar verificação de transparência diretamente em controladores de admissão Kubernetes, gerenciadores de pacotes (npm provenance, PyPI, Homebrew, Maven) e portais de auditoria sem depender do binário `rekor-cli`.|Uma chamada `POST /api/v1/index/retrieve` com payload JSON `{"hash": "sha256:..."}` retorna a lista de UUIDs de entradas; em seguida, `POST /api/v1/log/entries/retrieve` busca os corpos completos em lote (incluindo o `body` codificado em Base64, o `integratedTime` Unix epoch e o objeto `verification` com a `inclusionProof`).|```bash
+# Consultar a API REST do Rekor via curl pelo hash SHA-256 e decodificar o corpo da entrada
+ENTRY_UUID=$(curl -sS -X POST https://rekor.sigstore.dev/api/v1/index/retrieve \
+  -H "Content-Type: application/json" \
+  -d '{"hash":"sha256:3d80236772ca7c5405e398a4d685e715859260a8733070b86de7322e233c68d2"}' | jq -r '.[0]')
+
+curl -sS "https://rekor.sigstore.dev/api/v1/log/entries/${ENTRY_UUID}" \
+  | jq -r 'to_entries[0].value.body' | base64 -d | jq .
+```|O índice de busca (`/api/v1/index/retrieve`) na instância pública é um auxílio de descoberta (*best-effort*) e não um componente criptográfico; sistemas de produção devem armazenar o Sigstore Bundle junto ao artefato em vez de depender de buscas por índice em tempo de execução.|Execute a chamada `curl` acima contra `/api/v1/log/entries/<uuid>` e confirme a presença do objeto `.verification.inclusionProof` na resposta JSON.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth, rekor-auto-hospedagem-privada-trillian-kms-sharding-offline-bundles
+
+===NOTE===
+0389|rekor-auto-hospedagem-privada-trillian-kms-sharding-offline-bundles|Sigstore Rekor: Auto-Hospedagem Privada (`rekor-server`), KMS Signing, Limite `--max_request_body_size` e Sharding|Organizações que não podem publicar metadados de builds proprietários (nomes de pacotes internos, e-mails de engenheiros ou SBOMs maiores que o limite público de 100 KB) no `rekor.sigstore.dev` implantam uma instância privada do **`rekor-server`**.|Permite manter todas as garantias criptográficas de não-repúdio e auditoria imutável dentro da rede corporativa e aumentar o limite de tamanho de atestações (`--max_request_body_size`) para acomodar SBOMs extensos.|O `rekor-server` conecta-se a um Trillian Log Server (ou backend Tessera), assina os `SignedTreeHeads` e `SignedEntryTimestamps` usando uma chave privada protegida em HSM/Cloud KMS (`--rekor_server.signer=gcpkms://...`, AWS KMS, Azure Key Vault ou HashiCorp Vault) e suporta rotação de árvores via `--sharding_config` sem invalidar entradas de árvores anteriores.|```bash
+# Iniciar rekor-server corporativo assinando a árvore via Cloud KMS e aceitando atestações de até 2 MB
+rekor-server serve \
+  --trillian_log_server.address=trillian-logserver.internal.corp \
+  --trillian_log_server.port=8090 \
+  --trillian_log_server.tlog_id=482910492 \
+  --rekor_server.signer="awskms:///arn:aws:kms:us-east-1:111122223333:key/mrk-9a8b7c" \
+  --max_request_body_size=2097152
+```|Usar `--rekor_server.signer=memory` gera uma chave efêmera em RAM que é perdida no primeiro restart do pod, invalidando permanentemente a verificação de todas as entradas gravadas anteriormente; use sempre Cloud KMS ou HSM em produção.|Consulte `rekor-cli loginfo --rekor_server https://rekor.internal.corp` e distribua a chave pública do log no repositório TUF interno dos verificadores.|rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian, rekor-evolucao-rekor-v2-tile-based-logs-trillian-tessera, fulcio-implantacao-privada-certificate-maker-kms-pkcs11-tuf
+
+===NOTE===
+0390|rekor-sigstore-bundle-verificacao-offline-signed-timestamps|Sigstore Rekor: Formato Sigstore Bundle (`.sigstore.json`) e Verificação 100% Offline de Inclusão e Tempo|O formato padronizado **Sigstore Bundle** (`application/vnd.dev.sigstore.bundle.v0.3+json`) empacota em um único arquivo JSON a assinatura do artefato, o certificado de curta duração do Fulcio e a entrada completa do Rekor (incluindo o `SignedEntryTimestamp` e a `InclusionProof` com checkpoint).|Elimina a necessidade de que clusters Kubernetes de produção ou ambientes *air-gapped* façam chamadas de rede para `rekor.sigstore.dev` no momento do deploy: toda a prova matemática necessária para verificação offline já viaja junto ao artefato.|O verificador offline (`cosign verify --offline` ou SDKs `sigstore-go`/`sigstore-python`) lê o `trusted_root.json` local, verifica que a `InclusionProof` do bundle reconstrói o `RootHash` assinado pela chave pública do Rekor, extrai o `IntegratedTime` autenticado e confirma que o certificado Fulcio estava dentro da sua janela de validade de 10 minutos naquele exato instante.|```bash
+# Inspecionar a prova de inclusão do Rekor e o carimbo de tempo embutidos em um Sigstore Bundle offline
+jq '{
+  mediaType,
+  logIndex: .verificationMaterial.tlogEntries[0].logIndex,
+  integratedTime: .verificationMaterial.tlogEntries[0].integratedTime,
+  hasInclusionProof: (.verificationMaterial.tlogEntries[0].inclusionProof != null)
+}' artifact.sigstore.json
+```|Um bundle que contenha apenas o `SignedEntryTimestamp` (promessa) sem o objeto `.inclusionProof` não satisfaz políticas rigorosas de verificação de árvore de Merkle v0.3; gere bundles sempre com versões modernas dos clientes Sigstore.|Execute a inspeção `jq` acima sobre o arquivo `.sigstore.json` e confirme `"hasInclusionProof": true` e a validação do artefato em rede isolada (`--offline`).|rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth, fulcio-modelo-seguranca-revogacao-timestamps-rekor-verificacao, fulcio-arquitetura-sigstore-ca-oidc-short-lived-certificates

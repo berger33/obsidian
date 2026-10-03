@@ -1,0 +1,108 @@
+TOPIC: Brakeman — SAST para Ruby on Rails, Fluxo de Dados, Mass Assignment, SQLi, XSS e CI/CD
+SOURCES: https://raw.githubusercontent.com/presidentbeef/brakeman/main/README.md | https://raw.githubusercontent.com/presidentbeef/brakeman/main/OPTIONS.md | https://github.com/presidentbeef/brakeman/tree/main/docs/warning_types
+
+===NOTE===
+0321|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast|Brakeman: Arquitetura de Análise Estática *Whole-Program* para Aplicações Ruby on Rails|Brakeman é o analisador estático de segurança (SAST) especializado em aplicações Ruby on Rails (versões 2.3.x a 8.x), realizando análise de programa inteiro (*whole-program analysis*) sem necessidade de executar o servidor ou carregar o banco de dados.|Diferente de linters genéricos de Ruby que olham arquivo por arquivo isoladamente, o Brakeman correlaciona `config/routes.rb`, inicializadores, `Gemfile.lock`, *models* ActiveRecord, *controllers* e *templates* ERB/Haml/Slim para rastrear entradas do usuário até sinks perigosos.|O scanner converte o código Ruby em S-expressions (via `ruby_parser` / `prism`), resolve heranças de classes, propaga constantes e variáveis de instância (`@record`) entre ações de controllers e views, e executa dezenas de verificações (`Checks`) em paralelo usando threads dedicadas.|```bash
+# Executar todas as verificações (incluindo checks opcionais) com relatório JSON e console colorido
+brakeman -A --color -o /dev/stdout -o brakeman-report.json /srv/rails-app
+```|Usar `--only-files` ou excluir diretórios inteiros de `app/models` ou `app/controllers` com `--skip-files` degrada a análise *whole-program* porque variáveis de instância populadas nos controllers deixarão de ser rastreadas nas views.|Execute `brakeman -q -f json` na raiz do projeto Rails e inspecione a chave `scan_info` para confirmar o número de controllers, models e templates analisados com `errors: []`.|brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching, brakeman-prevencao-sql-injection-activerecord-interpolacao-arel, brakeman-integracao-ci-cd-sarif-compare-json-brakeman-yml
+
+===NOTE===
+0322|brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching|Brakeman: Níveis de Confiança (`High`, `Medium`, `Weak`) e Sensibilidade de Fluxo (`--branch-limit`)|O Brakeman classifica cada alerta em três níveis de confiança (`High`, `Medium` e `Weak`) com base na certeza de que um dado controlado pelo usuário (`params`, `cookies`, `request.env`) atinge diretamente uma operação insegura.|Permite bloquear *pull requests* imediatamente em alertas `High` (`-w3`) sem paralisar a engenharia com alertas especulativos onde uma variável intermediária pode ou não conter entrada não confiável.|Um alerta recebe confiança **High** (`-w3`) quando `params[:id]` é interpolado diretamente em um sink perigoso ou quando uma configuração booleana crítica está desativada; **Medium** (`-w2`) quando uma variável local/instância é usada de modo inseguro sem certeza absoluta de origem externa; e **Weak** (`-w1`) quando a entrada do usuário passa por transformações indiretas ou atributos de banco. O motor rastreia ramificações condicionais (`if`/`case`) até `--branch-limit 5` por padrão.|```bash
+# Falhar o pipeline apenas para alertas de confiança High (-w3) mantendo análise completa de branches
+brakeman -w3 --branch-limit 10 --no-pager
+```|Usar `--faster` (equivalente a `--skip-libs --no-branching`) acelera a execução em monorepos gigantes, mas desativa a sensibilidade de fluxo em expressões `if/else` e ignora código em `lib/`, podendo ocultar vulnerabilidades reais.|Execute `brakeman -w2 -f json | jq '.warnings | group_by(.confidence) | map({confidence: .[0].confidence, total: length})'` para auditar a distribuição de alertas por nível de confiança.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-gerenciamento-falsos-positivos-brakeman-ignore-interativo, brakeman-integracao-ci-cd-sarif-compare-json-brakeman-yml
+
+===NOTE===
+0323|brakeman-prevencao-sql-injection-activerecord-interpolacao-arel|Brakeman: Detecção de SQL Injection (`CheckSQL`) em ActiveRecord, Interpolação de Strings e Arel|A verificação `CheckSQL` do Brakeman detecta injeção de SQL em métodos do ActiveRecord (`where`, `find_by_sql`, `order`, `group`, `having`, `pluck`, `joins`, `lock`) e em chamadas `Arel.sql()` quando strings interpoladas incorporam parâmetros não parametrizados.|No Rails, passar um Hash (`User.where(email: params[:email])`) ou placeholders (`where("email = ?", params[:email])`) é seguro, mas interpolar Ruby (`where("email = '#{params[:email]}'")`) ou passar `params[:sort]` diretamente em `order()` permite injeção de SQL.|O Brakeman inspeciona a árvore sintática de todas as chamadas a escopos e métodos de consulta do ActiveRecord, diferenciando strings literais estáticas e placeholders `?`/`:named` de interpolações `#{...}` ou concatenações `+` envolvendo `params`, `cookies` ou chamadas encadeadas.|```ruby
+# INSEGURO — Aciona alerta Brakeman CheckSQL (High Confidence):
+User.where("role = '#{params[:role]}' AND active = 1")
+
+# SEGURO — Consulta parametrizada com Hash ou bind parameters:
+User.where(role: params[:role], active: true)
+```|Envolver uma string interpolada em `Arel.sql("direction #{params[:dir]}")` apenas silencia o `ActiveRecord::UnknownAttributeReference` do Rails em tempo de execução, mas continua vulnerável a SQL Injection e é corretamente sinalizado pelo Brakeman.|Execute `brakeman -t SQL` no repositório e confirme `0` alertas de SQL Injection, usando `--sql-safe-methods` apenas para wrappers formalmente auditados que validam contra *allowlists* estritas.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-mass-assignment-strong-parameters-permit-attr-accessible, brakeman-command-injection-ssrf-open-redirect-dynamic-render
+
+===NOTE===
+0324|brakeman-deteccao-xss-templates-erb-raw-html-safe-link-to|Brakeman: Detecção de Cross-Site Scripting (`CheckCrossSiteScripting`, `raw`, `html_safe` e `link_to`)|As verificações de XSS do Brakeman (`CheckCrossSiteScripting`, `CheckLinkTo`, `CheckLinkToHref`, `CheckContentTag` e `CheckJSONEncoding`) identificam pontos onde o escape automático de HTML do Rails é contornado ou insuficiente.|Embora o Rails escape `<%= ... %>` por padrão desde a versão 3, o uso de `raw()`, `.html_safe`, `<%== ... %>` ou `link_to "Perfil", params[:website]` (que permite URIs `javascript:`) reintroduz XSS refletido e armazenado.|O Brakeman rastreia dados de `params`, `cookies` e atributos de modelos (`@user.bio`) até os templates de visualização. Se um valor não sanitizado recebe `.html_safe` ou `raw`, ou se `link_to` recebe uma URL dinâmica sem validação de protocolo HTTP/HTTPS, o scanner emite alerta detalhando o caminho do controller até a linha exata da view.|```erb
+<%# INSEGURO — XSS via html_safe e URI javascript: em link_to %>
+<div class="bio"><%= @user.bio.html_safe %></div>
+<%= link_to "Site externo", params[:return_url] %>
+
+<%# SEGURO — Escape padrão do ERB e sanitização com allowlist de protocolo %>
+<div class="bio"><%= sanitize(@user.bio, tags: %w[b i p]) %></div>
+```|Passar a flag `--ignore-model-output` suprime alertas de XSS originados de atributos do banco de dados (`@user.bio`), o que oculta vulnerabilidades de *Stored XSS* caso os dados do modelo provenham de formulários públicos.|Execute `brakeman -t CrossSiteScripting,LinkTo,ContentTag` sem `--ignore-model-output` e valide que nenhum atributo de usuário usa `.html_safe` ou `raw` sem sanitizador explícito.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching, brakeman-csrf-forgery-protection-sessoes-cookies-ssl-headers
+
+===NOTE===
+0325|brakeman-mass-assignment-strong-parameters-permit-attr-accessible|Brakeman: Detecção de Mass Assignment e Abuso de Strong Parameters (`permit!` e Chaves Sensíveis)|As verificações `CheckMassAssignment` e `CheckPermitAttributes` do Brakeman auditam o uso de *Strong Parameters* (`params.require(...).permit(...)`) nos controllers Rails para impedir atribuição em massa de colunas privilegiadas.|Chamar `params.permit!` libera recursivamente todos os parâmetros enviados pelo cliente para `User.new()` ou `user.update()`, permitindo que um atacante sobrescreva campos como `admin: true`, `role_id` ou `account_balance`.|Além de sinalizar qualquer uso de `.permit!` (confiança `High`), o `CheckPermitAttributes` inspeciona os símbolos passados para `.permit(:name, :email, :role, :is_admin)` e emite alertas sempre que atributos sensíveis de controle de acesso ou chaves estrangeiras de ownership (`:account_id`, `:admin`, `:role`) são expostos à edição pelo usuário.|```ruby
+# INSEGURO — Aciona CheckMassAssignment (High) e CheckPermitAttributes:
+def update
+  @user.update(params.require(:user).permit!)
+end
+
+# SEGURO — Allowlist explícita restrita apenas a campos editáveis pelo próprio usuário:
+def user_params
+  params.require(:user).permit(:display_name, :time_zone)
+end
+```|Mesmo usando `.permit(:role)` explicitamente sem `.permit!`, permitir atributos de autorização em endpoints compartilhados entre usuários comuns e administradores cria escalação vertical de privilégio.|Execute `brakeman -t MassAssignment,PermitAttributes` e confirme que nenhuma action utiliza `permit!` nem inclui atributos de privilégio nas listas `.permit(...)` públicas.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-prevencao-sql-injection-activerecord-interpolacao-arel, brakeman-command-injection-ssrf-open-redirect-dynamic-render
+
+===NOTE===
+0326|brakeman-command-injection-ssrf-open-redirect-dynamic-render|Brakeman: Command Injection (`CheckExecute`), SSRF, Path Traversal (`CheckSendFile`) e Dynamic Render|O Brakeman audita chamadas de execução de processos (`system`, `exec`, crases `` `...` ``, `Open3`, `Kernel.open`), acesso a arquivos (`send_file`, `File.read`), renderização dinâmica (`render params[:page]`) e redirecionamentos (`redirect_to params[:next]`).|Em Ruby, `Kernel.open(params[:path])` não apenas permite *Path Traversal*, mas executa comandos de shell arbitrários se o parâmetro começar com um caractere pipe (`|id`); igualmente, `render file: params[:template]` permite leitura e execução de arquivos arbitrários (RCE/LFI).|As verificações `CheckExecute`, `CheckFileAccess`, `CheckSendFile`, `CheckRender` e `CheckRedirect` rastreiam entradas externas até essas APIs e verificam se há invocação de shell (string única vs múltiplos argumentos em `system("convert", src, dst)`), se `redirect_to` aplica `allow_other_host: false` (padrão no Rails 7+) e se caminhos passam por `File.basename` ou validação estrita.|```ruby
+# INSEGURO — Invoca /bin/sh e permite Command Injection (CheckExecute High):
+system("pdftotext #{params[:pdf_name]} output.txt")
+
+# SEGURO — Passa argumentos separados sem shell e restringe o nome do arquivo:
+safe_pdf = File.basename(params[:pdf_name].to_s)
+system("pdftotext", "--", File.join("/var/uploads", safe_pdf), "/tmp/output.txt")
+```|Usar `URI.open` (que herda o comportamento legado de `open-uri` em versões antigas) ou construir URLs HTTP internas com parâmetros de usuário permite *Server-Side Request Forgery* (SSRF) contra endpoints de metadados de nuvem (`169.254.169.254`).|Execute `brakeman -t Execute,FileAccess,SendFile,Render,Redirect` e elimine todas as chamadas de shell por interpolação de string e usos de `Kernel.open`.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-desserializacao-insegura-yaml-marshal-oj-eval-send, brakeman-prevencao-sql-injection-activerecord-interpolacao-arel
+
+===NOTE===
+0327|brakeman-desserializacao-insegura-yaml-marshal-oj-eval-send|Brakeman: Desserialização Insegura (`YAML.load`, `Marshal.load`, `CSV`), `eval` e `send` Dinâmico|As verificações `CheckDeserialize`, `CheckYAML`, `CheckEvaluation` e `CheckSend` do Brakeman detectam execução remota de código (RCE) via desserialização de objetos Ruby arbitrários, avaliação de código dinâmico e invocação reflexiva de métodos.|Em Ruby, `Marshal.load`, `YAML.load` (em versões do Psych anteriores ao Psych 4 onde equivalia a `unsafe_load`) e `Oj.load` (no modo `:object` padrão) instanciam *gadgets* arbitrários na memória que executam comandos do sistema operacional durante a desserialização ou coleta de lixo.|O Brakeman verifica chamadas a `Marshal.load`, `YAML.unsafe_load`, `YAML.load` com entrada externa, `eval`/`instance_eval`/`class_eval`/`module_eval`, `constantize` (`params[:klass].constantize`) e `public_send`/`send(params[:action])`, alertando sempre que o nome da classe, método ou payload serializado puder ser influenciado pelo cliente.|```ruby
+# INSEGURO — RCE por desserialização e reflexão dinâmica:
+data = Marshal.load(Base64.decode64(cookies[:state]))
+target = params[:handler].constantize.new
+target.send(params[:operation], data)
+
+# SEGURO — YAML.safe_load com classes restritas e despacho por mapa fixo:
+data = YAML.safe_load(payload, permitted_classes: [Date, Symbol])
+```|Chamar `public_send(params[:method])` achando que é seguro contra métodos privados ainda permite ao atacante invocar métodos públicos destrutivos herdados de `Object` ou `ActiveRecord::Base` (como `destroy` ou `exit`).|Execute `brakeman -t Deserialize,YAML,Evaluation,Send,UnsafeReflection` e confirme `0` ocorrências no código de aplicação.|brakeman-command-injection-ssrf-open-redirect-dynamic-render, brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-csrf-forgery-protection-sessoes-cookies-ssl-headers
+
+===NOTE===
+0328|brakeman-csrf-forgery-protection-sessoes-cookies-ssl-headers|Brakeman: Auditoria de CSRF (`protect_from_forgery`), Sessões, Cookies, `force_ssl` e Regex (`\A...\z`)|O Brakeman audita as configurações globais de segurança do Rails em `ApplicationController` e `config/environments/production.rb`, incluindo proteção CSRF (`CheckForgerySetting`), `force_ssl` (`CheckForceSSL`), segredos de sessão (`CheckSessionSettings`) e âncoras de regex (`CheckValidationRegex`).|Em Ruby, expressões regulares de validação de modelo que usam `^...$` em vez de `\A...\z` validam apenas uma linha individual da string, permitindo que um atacante injete payloads maliciosos após uma quebra de linha (`\n`).|O `CheckValidationRegex` inspeciona todas as chamadas `validates_format_of` / `validates ..., format: { with: /.../ }` nos models ActiveRecord e alerta sempre que `^` ou `$` são usados no lugar de `\A` e `\z`. Paralelamente, `CheckForgerySetting` verifica se `protect_from_forgery with: :exception` está presente e se `skip_before_action :verify_authenticity_token` foi aplicado indevidamente em controllers baseados em sessão.|```ruby
+# INSEGURO — Permite bypass via newline ("user@corp.com\n<script>...") — CheckValidationRegex:
+validates :email, format: { with: /^[a-z0-9._%+-]+@corp\.com$/i }
+
+# SEGURO — Valida o início e o fim absolutos da string inteira com \A e \z:
+validates :email, format: { with: /\A[a-z0-9._%+-]+@corp\.com\z/i }
+```|Desativar `verify_authenticity_token` em um controller que aceita tanto tokens Bearer quanto cookies de sessão expõe os usuários autenticados via navegador a ataques de Cross-Site Request Forgery (CSRF).|Execute `brakeman -t ForgerySetting,SessionSettings,ForceSSL,ValidationRegex` e valide que todas as regexes de modelo usam `\A...\z` e que `config.force_ssl = true` está ativo em produção.|brakeman-deteccao-xss-templates-erb-raw-html-safe-link-to, brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-gerenciamento-falsos-positivos-brakeman-ignore-interativo
+
+===NOTE===
+0329|brakeman-gerenciamento-falsos-positivos-brakeman-ignore-interativo|Brakeman: Gestão Auditável de Falsos Positivos com `config/brakeman.ignore` (`-I` e `--show-ignored`)|O Brakeman gerencia exceções e falsos positivos através do arquivo estruturado `config/brakeman.ignore`, mantido pelo modo interativo (`brakeman -I`), onde cada alerta ignorado é vinculado a um `fingerprint` criptográfico e a uma nota justificativa (`note`).|Diferente de comentários inline que silenciam uma linha inteira para qualquer tipo de problema futuro, o `fingerprint` do `brakeman.ignore` é específico para aquele tipo de alerta, arquivo e expressão AST, voltando a alertar se o código mudar de forma insegura.|Ao executar `brakeman -I`, o engenheiro de segurança inspeciona cada alerta, escolhe ignorá-lo e registra a justificativa técnica obrigatória no JSON `config/brakeman.ignore`. Durante auditorias periódicas, `brakeman --show-ignored` lista todos os alertas suprimidos sem alterar o código de saída do pipeline.|```json
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "8c2f4b91e0a3d5f7123456789abcdef0123456789abcdef0123456789abcdef0",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/report_query.rb",
+      "line": 42,
+      "note": "Coluna validada contra allowlist estática ALLOWED_COLUMNS na linha 38"
+    }
+  ]
+}
+```|Aceitar entradas em `config/brakeman.ignore` com o campo `"note": ""` vazio em *pull requests* impede a rastreabilidade de auditoria; exija em CI que toda entrada de `ignored_warnings` possua uma justificativa não vazia.|Execute `jq -e '.ignored_warnings | all(.note != null and (.note | length > 10))' config/brakeman.ignore` no pipeline de CI para garantir que toda supressão está documentada.|brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching, brakeman-integracao-ci-cd-sarif-compare-json-brakeman-yml, brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast
+
+===NOTE===
+0330|brakeman-integracao-ci-cd-sarif-compare-json-brakeman-yml|Brakeman: Configuração Declarativa (`config/brakeman.yml`), Comparação Delta (`--compare`) e SARIF no CI/CD|O Brakeman suporta configuração declarativa versionada em `config/brakeman.yml`, comparação diferencial entre scans (`--compare baseline.json`) e exportação nativa em formato SARIF (`-f sarif`) para integração com GitHub Code Scanning.|Em monorepos Rails legados com dezenas de alertas antigos, o modo `--compare` permite bloquear *pull requests* que introduzam qualquer alerta novo (`new` warnings > 0) enquanto a dívida técnica anterior é reduzida gradualmente.|O comando `brakeman -C` exporta as flags de linha de comando para `config/brakeman.yml`. No pipeline de CI, o Brakeman gera `brakeman.sarif` para anotações inline no GitHub Pull Request ou executa `brakeman --compare main-report.json -o diff.json`, que separa os achados em duas listas: `fixed` (corrigidos) e `new` (introduzidos no branch).|```yaml
+# config/brakeman.yml versionado no repositório Rails
+---
+:run_all_checks: true
+:confidence_level: 2
+:exit_on_warn: true
+:exit_on_error: true
+:ignore_file: config/brakeman.ignore
+:output_files:
+  - tmp/brakeman.sarif
+  - tmp/brakeman.json
+```|Se o pipeline de CI for executado com `--no-exit-on-warn` para apenas fazer upload do arquivo SARIF e o GitHub Advanced Security não estiver configurado como *required status check*, alertas críticos passarão no merge sem bloqueio.|Execute `brakeman -c config/brakeman.yml` no CI e valide que o processo retorna exit code `0` e gera `tmp/brakeman.sarif` com `runs[0].results` vazio para alertas ativos.|brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast, brakeman-gerenciamento-falsos-positivos-brakeman-ignore-interativo, brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching

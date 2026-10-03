@@ -1,0 +1,107 @@
+TOPIC: Cisco ClamAV — Motor Antivírus Open-Source, clamd, freshclam, clamonacc e Assinaturas
+SOURCES: https://raw.githubusercontent.com/Cisco-Talos/clamav/main/README.md | https://docs.clamav.net/manual/Usage.html | https://docs.clamav.net/manual/Signatures.html
+
+===NOTE===
+0311|clamav-arquitetura-libclamav-clamd-clamscan-freshclam|ClamAV: Arquitetura do Motor `libclamav`, Daemon `clamd`, `clamscan` e `freshclam`|ClamAV (Cisco Talos, GPLv2) é o motor antivírus open-source padrão para inspeção de malware, trojans e artefatos maliciosos em gateways de e-mail, pipelines de upload de arquivos e servidores Linux/containers.|Fornece inspeção profunda de dezenas de formatos de arquivo (PE, ELF, Mach-O, PDF, Office OLE2/OOXML, ZIP/7z/TAR) descompactando recursivamente containers antes de aplicar assinaturas e heurísticas.|A biblioteca central `libclamav` pode ser invocada em modo *one-shot* pelo utilitário `clamscan` (que carrega o banco de assinaturas na RAM a cada execução) ou mantida residente na memória pelo daemon multi-thread `clamd`, que atende requisições rápidas de clientes leves como `clamdscan`, `clamonacc` e `clamav-milter`, enquanto o `freshclam` sincroniza os bancos `.cvd`/`.cld`.|```bash
+# Verificar configuração consolidada do ClamAV e estado dos bancos de assinaturas
+clamconf -n
+
+# Executar varredura rápida via socket do daemon clamd passando descritor de arquivo
+clamdscan --fdpass --multiscan /var/spool/uploads/
+```|Invocar `clamscan` diretamente a cada upload HTTP em produção consome centenas de megabytes de RAM e vários segundos de CPU por chamada para compilar o banco de assinaturas; use sempre `clamd` + `clamdscan` ou protocolo TCP/Unix socket.|Execute `clamdscan --ping 3` e `clamconf` para validar que o daemon `clamd` responde imediatamente com as bases `main.cvd`, `daily.cvd` e `bytecode.cvd` carregadas.|clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-atualizacao-freshclam-cvd-cld-private-local-mirrors, clamav-varredura-tempo-real-clamonacc-fanotify-on-access-linux
+
+===NOTE===
+0312|clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites|ClamAV: Configuração do `clamd.conf`, Protocolo `INSTREAM` e Limites Anti-Zip-Bomb|O arquivo `clamd.conf` governa os sockets de escuta (`LocalSocket` Unix ou `TCPSocket`), o pool de threads (`MaxThreads`) e os limites defensivos de descompressão do daemon `clamd`.|Impede que arquivos malformados ou bombas de descompressão (*zip bombs* / *billion laughs*) esgotem a memória ou travem as threads de inspeção do servidor de segurança.|Microserviços remotos enviam buffers de arquivos em memória diretamente ao `clamd` via comando `zINSTREAM\0` sobre TCP (porta `3310`) sem compartilhar disco. Parâmetros como `MaxScanSize`, `MaxFileSize`, `MaxRecursion` e `MaxFiles` limitam rigorosamente a profundidade de arquivos compactados aninhados e o volume total extraído por varredura.|```ini
+# /etc/clamav/clamd.conf
+LocalSocket /run/clamav/clamd.ctl
+LocalSocketMode 660
+TCPSocket 3310
+TCPAddr 127.0.0.1
+MaxThreads 16
+MaxScanSize 150M
+MaxFileSize 50M
+MaxRecursion 16
+MaxFiles 10000
+AlertExceededMax yes
+```|Expor `TCPSocket 3310` em interfaces de rede sem firewall permite que qualquer host envie comandos `SHUTDOWN` ou `RELOAD` não autenticados ao `clamd`; restrinja `TCPAddr` ou use `NetworkPolicy`/mTLS.|Envie `printf "zPING\0" | nc -U /run/clamav/clamd.ctl` e confirme o retorno `PONG`, verificando também os limites ativos com `clamconf | grep -E "MaxScanSize|MaxRecursion"`.|clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-monitoramento-performance-clamdtop-filas-threads-memoria, clamav-integracao-pipelines-upload-api-milter-icap-s3
+
+===NOTE===
+0313|clamav-atualizacao-freshclam-cvd-cld-private-local-mirrors|ClamAV: Atualização Segura de Bases (`freshclam`), Arquivos `.cvd`/`.cld` e Mirrors Privados|O utilitário e daemon `freshclam` baixa e verifica criptograficamente atualizações incrementais (`.cdiff`) e bancos completos (`main.cvd`, `daily.cvd`, `bytecode.cvd`) a partir da CDN oficial ou de mirrors internos.|Frotas com dezenas de nós ou containers realizando download direto da CDN pública sofrem *rate-limiting* (HTTP 429/403) por IP compartilhado; o uso de um mirror privado local resolve o bloqueio e permite ambientes *air-gapped*.|O `freshclam` consulta registros DNS TXT (`current.cvd.clamav.net`) para descobrir se há novas versões antes de baixar deltas `.cdiff` para atualizar arquivos `.cld` locais e notificar o `clamd` via `NotifyClamd /etc/clamav/clamd.conf`. Em redes corporativas, a ferramenta `cvdupdate` hospeda um espelho HTTP interno alimentando `PrivateMirror` nos clientes.|```ini
+# /etc/clamav/freshclam.conf configurado com mirror interno e reload automático do clamd
+DatabaseDirectory /var/lib/clamav
+UpdateLogFile /var/log/clamav/freshclam.log
+Checks 24
+PrivateMirror https://clamav-mirror.internal.corp/cvds
+ScriptedUpdates yes
+NotifyClamd /etc/clamav/clamd.conf
+```|Ao usar `PrivateMirror`, o `freshclam` desativa automaticamente consultas DNS TXT públicas e downloads `.cdiff` se `ScriptedUpdates no` for definido, exigindo que o mirror interno sirva os arquivos `.cvd` completos e `dns.txt`.|Execute `freshclam --verbose` e inspecione `sigtool --info /var/lib/clamav/daily.cld` (ou `.cvd`) para confirmar a data de compilação recente e a validação da assinatura digital.|clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-assinaturas-customizadas-hdb-ndb-ldb-yara-sigtool
+
+===NOTE===
+0314|clamav-varredura-tempo-real-clamonacc-fanotify-on-access-linux|ClamAV: Varredura On-Access em Tempo Real (`clamonacc`) via Linux `fanotify`|O daemon `clamonacc` provê proteção em tempo real (*On-Access Scanning*) em servidores Linux interceptando eventos de abertura e execução de arquivos no kernel via API `fanotify` e submetendo-os ao `clamd`.|Permite bloquear sincronicamente (`OnAccessPrevention yes`) a leitura ou execução de um webshell ou binário malicioso recém-gravado no disco antes que o processo solicitante receba o descritor de arquivo.|O `clamonacc` registra marcas `fanotify` nos diretórios ou pontos de montagem configurados (`OnAccessIncludePath` / `OnAccessMountPath`). Sempre que um processo fora da lista de exclusão (`OnAccessExcludeUname clamav`) abre ou fecha um arquivo modificado, o `clamonacc` envia o arquivo ao `clamd` e, em caso de infecção, nega a syscall `open()` (`EACCES`) e move/remove o artefato se configurado.|```ini
+# Trecho do /etc/clamav/clamd.conf para On-Access Scanning com prevenção ativa
+OnAccessIncludePath /var/www/uploads
+OnAccessIncludePath /home
+OnAccessExcludeUname clamav
+OnAccessPrevention yes
+OnAccessExtraScanning yes
+OnAccessMaxFileSize 25M
+```|Habilitar `OnAccessMountPath /` com `OnAccessPrevention yes` ao mesmo tempo é incompatível no `fanotify` e pode causar *deadlock* no sistema operacional se o próprio `clamd` ou bibliotecas do sistema forem interceptados.|Inicie `clamonacc --foreground --log=/var/log/clamav/clamonacc.log`, grave um arquivo de teste com a string padrão EICAR em `/var/www/uploads` e confirme que a leitura subsequente é negada pelo kernel.|clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-heuristicas-dlp-macros-ole2-pdf-encrypted-archives
+
+===NOTE===
+0315|clamav-assinaturas-customizadas-hdb-ndb-ldb-yara-sigtool|ClamAV: Escrita de Assinaturas Customizadas (`.hdb`, `.hsb`, `.ndb`, `.ldb`, `.yar`) e `sigtool`|O ClamAV suporta múltiplos formatos de assinaturas locais em `/var/lib/clamav/`: hashes de arquivo (`.hdb`/`.hsb`), assinaturas de bytes com offset e wildcards (`.ndb`), expressões lógicas combinadas (`.ldb`) e regras YARA (`.yar`).|Permite às equipes de resposta a incidentes bloquear instantaneamente novas variantes de malware, anexos de phishing específicos da organização ou binários comprometidos antes da publicação nas bases globais.|O utilitário `sigtool` gera assinaturas de hash (`sigtool --md5` / `--sha256` salvos em `.hsb`), converte strings em hexadecimal (`sigtool --hex-dump`) e descompacta bancos `.cvd` para auditoria (`sigtool --unpack`). Já as assinaturas lógicas `.ldb` combinam múltiplas sub-assinaturas com operadores booleanos, contadores de ocorrência e restrições de tipo de alvo (`Target:1` para PE, `Target:0` para qualquer arquivo).|```bash
+# Gerar assinatura SHA-256 (.hsb) de um binário malicioso coletado pelo SOC
+sigtool --sha256 /tmp/sample-dropper.bin > /var/lib/clamav/soc-custom-ioc.hsb
+
+# Testar a nova assinatura diretamente contra a amostra usando clamscan -d
+clamscan -d /var/lib/clamav/soc-custom-ioc.hsb /tmp/sample-dropper.bin
+```|Um erro de sintaxe em um arquivo `.ndb`, `.ldb` ou `.yar` customizado colocado em `/var/lib/clamav/` pode impedir a recarga do `clamd`; valide sempre qualquer regra nova com `clamscan -d <arquivo-regra>` antes de movê-la para produção.|Execute `clamscan -d /var/lib/clamav/soc-custom-ioc.hsb /tmp/sample-dropper.bin` e confirme a detecção `UNOFFICIAL` com código de saída `1`.|clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-bytecode-signatures-bc-clambc-llvm-runtime-sandbox, clamav-atualizacao-freshclam-cvd-cld-private-local-mirrors
+
+===NOTE===
+0316|clamav-bytecode-signatures-bc-clambc-llvm-runtime-sandbox|ClamAV: Assinaturas de Bytecode (`.cbc`), Sandbox Runtime e Depuração com `clambc`|Assinaturas de Bytecode (`.cbc`) do ClamAV são programas restritos escritos em um dialeto C seguro, compilados para bytecode LLVM e executados em uma máquina virtual/JIT isolada dentro da `libclamav`.|Permitem implementar desempacotadores (*unpackers*) complexos, decodificadores de ofuscação aritmética e verificações estruturais de cabeçalhos PE/PDF que são impossíveis de expressar apenas com regex ou padrões `.ldb`.|O motor de bytecode impõe limites estritos de segurança: ausência de chamadas de sistema arbitrárias, acesso de memória restrito aos buffers do arquivo inspecionado e *timeout* rigoroso em milissegundos (`BytecodeTimeout` no `clamd.conf`). O utilitário `clambc` inspeciona os metadados, o código intermediário e executa testes isolados de arquivos `.cbc`.|```bash
+# Extrair e inspecionar assinaturas .cbc do banco oficial bytecode.cvd
+mkdir -p /tmp/clam-bc && cd /tmp/clam-bc
+sigtool --unpack /var/lib/clamav/bytecode.cvd
+clambc --info /tmp/clam-bc/Polite.cbc
+```|Por motivos de segurança (`BytecodeSecurity TrustSigned` por padrão), o `clamd` só carrega bytecodes `.cbc` assinados digitalmente pela equipe Cisco Talos, a menos que `--bytecode-unsigned=yes` seja explicitamente habilitado em ambientes de laboratório.|Execute `clamconf | grep -i bytecode` e confirme que `Bytecode = "yes"` e `BytecodeSecurity = "TrustSigned"` estão ativos no daemon de produção.|clamav-assinaturas-customizadas-hdb-ndb-ldb-yara-sigtool, clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites
+
+===NOTE===
+0317|clamav-heuristicas-dlp-macros-ole2-pdf-encrypted-archives|ClamAV: Alertas Heurísticos, Bloqueio de Macros OLE2, Arquivos Criptografados e Prevenção de DLP|Além de assinaturas exatas de malware, a `libclamav` possui motores heurísticos configuráveis para detectar macros VBA em documentos Office (`AlertOLE2Macros`), arquivos ZIP/PDF protegidos por senha (`AlertEncrypted`) e padrões de vazamento de dados (`StructuredDataDetection`).|Atacantes frequentemente enviam anexos `.zip` ou `.pdf` cifrados com a senha escrita no corpo do e-mail para cegar scanners antivírus; alertar ou reter arquivos criptografados fecha esse vetor de evasão.|No `clamd.conf`, diretivas `HeuristicAlerts yes` e `AlertPhishingSSLMismatch yes` ativam detecções comportamentais com prefixo `Heuristics.*`, enquanto `AlertEncryptedArchive yes` e `AlertEncryptedDoc yes` sinalizam containers opacos como `Heuristics.Encrypted.Zip` ou `Heuristics.Encrypted.PDF`. O módulo DLP detecta números de cartão de crédito (validados por algoritmo de Luhn) e SSNs acima de uma contagem mínima (`StructuredMinCreditCardCount`).|```ini
+# /etc/clamav/clamd.conf — endurecimento heurístico para gateway de arquivos e e-mail
+HeuristicAlerts yes
+HeuristicScanPrecedence yes
+AlertOLE2Macros yes
+AlertEncrypted yes
+AlertEncryptedArchive yes
+AlertEncryptedDoc yes
+AlertPhishingSSLMismatch yes
+AlertPhishingCloak yes
+```|Ativar `AlertEncrypted yes` ou `AlertOLE2Macros yes` em diretórios de departamentos financeiros que trocam planilhas `.xlsm` legítimas ou relatórios bancários com senha exige tratamento diferenciado (quarentena para revisão em vez de deleção silenciosa).|Teste `clamscan --alert-encrypted=yes arquivo-com-senha.zip` e confirme que o scanner emite `Heuristics.Encrypted.Zip FOUND` e retorna código de saída `1`.|clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-integracao-pipelines-upload-api-milter-icap-s3, clamav-gerenciamento-falsos-positivos-ign2-fp-clamsubmit
+
+===NOTE===
+0318|clamav-integracao-pipelines-upload-api-milter-icap-s3|ClamAV: Integração em Gateways de E-mail (`clamav-milter`), Servidores ICAP e Eventos S3/API|O ClamAV integra-se nativamente a servidores SMTP Postfix/Sendmail via `clamav-milter`, a proxies corporativos/WAFs via adaptadores ICAP (`c-icap-clamav`) e a pipelines de upload em nuvem (S3/MinIO/Kubernetes) via sidecars TCP `INSTREAM`.|Garante que nenhum anexo de e-mail ou arquivo enviado por usuários externos seja disponibilizado para consumo da aplicação ou de outros usuários antes de receber um veredito `OK` do scanner.|No Postfix, o `clamav-milter` intercepta a mensagem SMTP em trânsito, encaminha os anexos ao `clamd` e aplica a ação configurada (`OnInfected Reject` ou `Quarantine`). Em arquiteturas de armazenamento de objetos (AWS S3 ou MinIO), um worker assíncrono consome eventos `ObjectCreated`, faz *stream* do objeto para o container `clamd:3310` e aplica a tag `av-status=CLEAN` ou move o objeto infectado para um bucket de quarentena isolado.|```ini
+# /etc/clamav/clamav-milter.conf integrado ao Postfix e ao daemon clamd
+MilterSocket inet:8893@127.0.0.1
+ClamdSocket unix:/run/clamav/clamd.ctl
+OnInfected Reject
+OnFail Defer
+AddHeader Replace
+LogInfected Full
+```|Configurar `OnFail Accept` no `clamav-milter` ou no gateway de upload permite que malwares atravessem livremente caso o daemon `clamd` seja morto pelo OOM Killer; prefira `OnFail Defer` (HTTP 503 / SMTP 4xx temporário) para falhar de forma segura.|Envie um anexo de teste contendo a string de verificação EICAR pelo pipeline de upload ou gateway SMTP e confirme a rejeição imediata e o registro do evento no log de auditoria.|clamav-arquitetura-libclamav-clamd-clamscan-freshclam, clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-heuristicas-dlp-macros-ole2-pdf-encrypted-archives
+
+===NOTE===
+0319|clamav-monitoramento-performance-clamdtop-filas-threads-memoria|ClamAV: Monitoramento Operacional com `clamdtop`, Pool de Memória e Dimensionamento em Containers|O utilitário `clamdtop` e os comandos de controle `STATS`/`VERSION` do socket do `clamd` expõem em tempo real o uso das filas de varredura, a ocupação das threads (`MaxThreads`), a latência das requisições e o consumo de memória dos bancos.|O banco de assinaturas do ClamAV consome mais de `1,2 GiB` de RAM base e, durante recargas concorrentes de banco (`ConcurrentDatabaseReload yes`), o pico de memória dobra temporariamente (`~2,4 GiB`), causando mortes por `OOMKilled` em pods Kubernetes subdimensionados.|O comando `clamdtop` conecta-se ao socket Unix ou TCP do `clamd` e exibe quais arquivos estão sendo processados por cada thread ativa e o estado dos *mempools* internos. Em containers com menos de `2,5 GiB` de limite de memória, desabilitar `ConcurrentDatabaseReload no` evita que duas cópias completas do banco coexistam na RAM durante atualizações do `freshclam`, ao custo de pausar novas varreduras por alguns segundos durante o reload.|```bash
+# Consultar estatísticas de threads, filas e memória diretamente no socket do clamd
+printf "nSTATS\n" | socat - UNIX-CONNECT:/run/clamav/clamd.ctl
+
+# Monitorar interativamente o daemon clamd no terminal
+clamdtop /run/clamav/clamd.ctl
+```|Definir `limits.memory` abaixo de `2Gi` em um Deployment Kubernetes do ClamAV com `ConcurrentDatabaseReload yes` padrão derrubará o pod toda vez que o `freshclam` atualizar o banco `daily.cld`.|Verifique a saída de `printf "nSTATS\n" | socat - UNIX-CONNECT:/run/clamav/clamd.ctl` e confirme `QUEUE: 0 items` e a ausência de eventos `OOMKilled` após um comando `RELOAD`.|clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites, clamav-atualizacao-freshclam-cvd-cld-private-local-mirrors, clamav-arquitetura-libclamav-clamd-clamscan-freshclam
+
+===NOTE===
+0320|clamav-gerenciamento-falsos-positivos-ign2-fp-clamsubmit|ClamAV: Supressão Auditável de Falsos Positivos (`.ign2` e `.fp`) e Submissão com `clamsubmit`|O ClamAV permite suprimir falsos positivos de forma controlada através de listas de exclusão por hash SHA-256 do arquivo confiável (`.fp` / `.sfp`) ou pelo nome exato da assinatura problemática (`.ign2`).|Desligar todo o scanner antivírus em um pipeline porque um único pacote interno ou instalador legítimo disparou uma assinatura heurística expõe toda a aplicação; o arquivo `.fp` permite liberar exclusivamente aquele artefato imutável.|Criar um arquivo `local-whitelist.fp` (ou `.hsb` com extensão `.fp`) em `/var/lib/clamav/` contendo `hash:tamanho:nome` instrui a `libclamav` a declarar limpa apenas aquela sequência exata de bytes. Já um arquivo `local.ign2` contendo o nome da assinatura (ex.: `Win.Trojan.Generic-12345`) desativa aquela regra específica globalmente enquanto o falso positivo é reportado à equipe Cisco Talos via `clamsubmit`.|```bash
+# Gerar entrada .fp baseada em hash para liberar apenas um binário interno específico
+sigtool --sha256 /opt/releases/internal-installer.exe > /var/lib/clamav/internal-whitelist.fp
+
+# Recarregar o banco de dados do clamd sem reiniciar o daemon
+clamdscan --reload
+```|Usar `.ign2` para silenciar assinaturas genéricas amplas desprotege todos os usuários contra aquela família de malware; prefira sempre `.fp` por hash SHA-256 do arquivo falso positivo específico.|Execute `clamdscan /opt/releases/internal-installer.exe` após `clamdscan --reload` e confirme que o arquivo passa com status `OK` enquanto outros testes continuam sendo detectados.|clamav-assinaturas-customizadas-hdb-ndb-ldb-yara-sigtool, clamav-heuristicas-dlp-macros-ole2-pdf-encrypted-archives, clamav-arquitetura-libclamav-clamd-clamscan-freshclam

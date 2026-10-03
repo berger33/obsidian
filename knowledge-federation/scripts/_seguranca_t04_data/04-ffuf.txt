@@ -1,0 +1,101 @@
+TOPIC: ffuf (Fuzz Faster U Fool) — Web Fuzzing em Go, Auto-Calibration, Matchers, Filters e Multi-Wordlist
+SOURCES: https://raw.githubusercontent.com/ffuf/ffuf/master/README.md | https://raw.githubusercontent.com/ffuf/ffuf/master/ffufrc.example | https://github.com/ffuf/ffuf/wiki
+
+===NOTE===
+0331|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos|ffuf: Arquitetura de Web Fuzzing Rápido em Go, Keyword `FUZZ` e Descoberta de Conteúdo (`-e` e `-D`)|`ffuf` (*Fuzz Faster U Fool*, MIT) é um fuzzer web de alta performance escrito em Go que substitui marcadores de posição (`FUZZ` ou keywords customizadas) na URL (`-u`), cabeçalhos HTTP (`-H`) ou corpo de requisição (`-d`) usando goroutines concorrentes.|Permite descobrir diretórios ocultos, arquivos de backup esquecidos (`.bak`, `.env`, `.git/config`) e endpoints de API não documentados em testes de intrusão autorizados e pipelines de DAST.|Ao receber `-w wordlist.txt -u https://alvo.corp/FUZZ -e .php,.bak,.json`, o `ffuf` expande cada entrada da wordlist com as extensões especificadas (ou substitui `%EXT%` quando `-D` *DirSearch compatibility mode* está ativo), dispara requisições concorrentes (`-t 40` por padrão) e exibe apenas respostas que satisfazem os *matchers* e não são descartadas pelos *filters*.|```bash
+# Descoberta de diretórios e artefatos sensíveis ignorando comentários da wordlist (-ic)
+ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-medium-words.txt \
+  -u https://staging.internal.corp/FUZZ \
+  -e .json,.yaml,.bak \
+  -ic -t 40 -c
+```|Executar `ffuf` com `-t 40` sem limite de taxa (`-rate`) contra servidores de homologação frágeis ou protegidos por WAF pode causar negação de serviço acidental ou bloqueio imediato do IP de origem.|Execute `ffuf -V` e rode um teste controlado com `-maxtime 30 -s` contra um ambiente de homologação autorizado, verificando que apenas caminhos existentes são listados na saída.|ffuf-matchers-filters-status-size-words-lines-regex-time, ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404, ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo
+
+===NOTE===
+0332|ffuf-matchers-filters-status-size-words-lines-regex-time|ffuf: Precisão com Matchers (`-mc`, `-ms`, `-mw`, `-ml`, `-mr`, `-mt`) e Filters (`-fc`, `-fs`, `-fw`, `-fl`, `-fr`, `-ft`)|O `ffuf` oferece dois conjuntos simétricos de seleção de respostas HTTP: **Matchers** (o que incluir) e **Filters** (o que excluir), operando sobre status code, tamanho em bytes, contagem de palavras, contagem de linhas, regex no corpo/headers e tempo até o primeiro byte (TTFB).|Aplicações web modernas (SPAs React/Vue e gateways de API) frequentemente retornam `HTTP 200 OK` para rotas inexistentes (*soft 404*) com tamanho de bytes variável, mas com um número fixo de palavras (`-fw`) ou linhas (`-fl`).|Por padrão, `-mc 200-299,301,302,307,401,403,405,500` está ativo com operador de conjunto `-mmode or` e `-fmode or`. O analista pode combinar múltiplos filtros (ex.: `-fc 404,403 -fw 128 -fmode or` para descartar respostas que tenham status 404/403 **ou** exatamente 128 palavras) ou usar `-mt >2000` para detectar vulnerabilidades de injeção baseadas em tempo (*time-based blind injection*).|```bash
+# Fazer match em todos os status codes (-mc all), mas filtrar páginas padrão de 42 linhas ou contendo "Route not found"
+ffuf -w api-endpoints.txt \
+  -u https://api.staging.corp/v2/FUZZ \
+  -mc all \
+  -fl 42 \
+  -fr "Route not found"
+```|Usar `-fs` (filtro por tamanho exato em bytes) quando a página de erro reflete o próprio caminho requisitado (`Cannot GET /caminho`) falha porque cada palavra da wordlist tem comprimento diferente; nesses casos, filtre por palavras (`-fw`) ou linhas (`-fl`).|Compare a saída de uma requisição inválida manual e aplique `-fw <palavras>` no `ffuf`, confirmando que 100% dos *soft 404* são suprimidos.|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos, ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404, ffuf-descoberta-virtual-hosts-vhost-host-header-sni
+
+===NOTE===
+0333|ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404|ffuf: Auto-Calibration (`-ac`, `-acs`, `-acc` e `-ach`) para Eliminação Automática de Falso Positivo|O recurso de *Auto-Calibration* (`-ac`) do `ffuf` envia sondas preliminares com strings aleatórias inexistentes antes do fuzzing principal para aprender automaticamente o tamanho, número de palavras ou linhas das respostas de erro padrão do servidor.|Elimina a necessidade de inspecionar manualmente o *baseline* de erro de cada alvo, sendo indispensável ao varrer dezenas de hosts diferentes em lote (`-ach` *per-host autocalibration*).|Quando `-ac` é ativado, o `ffuf` testa payloads sintéticos (ex.: `randomtest`, `.htaccessrandom`, `adminrandom`) e configura dinamicamente filtros `-fs`, `-fw` ou `-fl` correspondentes. O operador pode adicionar strings customizadas de calibração com `-acc` ou estratégias específicas com `-acs`, e ativar `-ach` quando múltiplos domínios são testados na mesma execução.|```bash
+# Fuzzing multi-host com auto-calibração individual por host (-ach)
+ffuf -w hosts.txt:HOST -w paths.txt:PATH \
+  -u https://HOST/PATH \
+  -ac -ach \
+  -mc 200,301,302,403
+```|Se uma string de auto-calibração customizada (`-acc admin`) coincidir com um endpoint realmente existente no servidor, o `ffuf` calibrará o filtro sobre uma resposta válida e poderá ocultar achados legítimos de mesmo tamanho.|Execute `ffuf` com `-ac -v` e verifique no cabeçalho inicial da execução quais filtros automáticos (`Calibrated filter: ...`) foram registrados antes do início da wordlist.|ffuf-matchers-filters-status-size-words-lines-regex-time, ffuf-descoberta-virtual-hosts-vhost-host-header-sni, ffuf-modos-multi-wordlist-clusterbomb-pitchfork-sniper-encoders
+
+===NOTE===
+0334|ffuf-descoberta-virtual-hosts-vhost-host-header-sni|ffuf: Descoberta de Virtual Hosts (`Host: FUZZ`) sem Registros DNS Públicos e TLS SNI (`-sni`)|O `ffuf` descobre *Virtual Hosts* (vhosts) internos hospedados em proxies reversos Nginx, Apache, Envoy ou ALB mesmo quando os subdomínios não estão publicados no DNS público, realizando fuzzing no cabeçalho HTTP `Host: FUZZ.dominio.corp`.|Muitas organizações ocultam painéis administrativos (`admin.interno.corp`, `staging-api.corp`) apenas omitindo o registro DNS público, mas apontam o proxy reverso da borda para o mesmo IP público que aceita o cabeçalho `Host`.|Ao enviar requisições para o endereço IP ou domínio principal (`-u https://203.0.113.10`) variando `-H "Host: FUZZ.corp.internal"`, o servidor HTTP seleciona o bloco `server_name` correspondente se o vhost existir, retornando um tamanho de resposta ou código de status diferente do vhost padrão (*default_server*), que é descartado via `-ac` ou `-fs`.|```bash
+# Descobrir virtual hosts internos em um proxy reverso filtrando a resposta padrão com -ac
+ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt \
+  -u https://203.0.113.10/ \
+  -H "Host: FUZZ.corp.internal" \
+  -sni corp.internal \
+  -ac -mc all
+```|Se a flag `-r` (seguir redirecionamentos HTTP 301/302) estiver habilitada durante a descoberta de vhosts sem DNS público, o `ffuf` tentará resolver o novo hostname via DNS e falhará; mantenha `-r` desabilitado ao testar vhosts não registrados.|Execute o comando sem `-r` e confirme que vhosts existentes aparecem com `Status: 200` ou `Status: 302` (exibindo o `Location` com `-v`) e tamanho distinto do vhost padrão.|ffuf-matchers-filters-status-size-words-lines-regex-time, ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404, subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas
+
+===NOTE===
+0335|ffuf-fuzzing-parametros-get-post-json-headers-raw-request|ffuf: Fuzzing de Parâmetros GET, Payloads POST JSON, Headers Customizados e Requisições Raw (`-request`)|O `ffuf` permite testar descoberta de parâmetros ocultos (`?FUZZ=1`), valores de parâmetros (`?id=FUZZ`), campos de objetos JSON via `-X POST -d` e requisições HTTP brutas exportadas de proxies interceptadores via `-request`.|Permite identificar parâmetros de depuração esquecidos (`?debug=true`, `?admin=1`, `X-Forwarded-For`), *Mass Assignment* em APIs REST/GraphQL e vulnerabilidades de *Insecure Direct Object Reference* (IDOR).|Com a flag `-request req.txt -request-proto https`, o analista salva uma requisição complexa autenticada (com múltiplos cookies, headers CSRF e corpo multipart ou GraphQL) em um arquivo texto, insere a keyword `FUZZ` nos pontos desejados e executa o `ffuf` sem precisar reconstruir dezenas de flags `-H` e `-b` na linha de comando.|```bash
+# Fuzzing de propriedades ocultas em um endpoint POST JSON usando requisição raw
+ffuf -request /tmp/api-patch-user.http \
+  -request-proto https \
+  -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt \
+  -ac -mc all -fc 400
+```|Ao realizar fuzzing de parâmetros de escrita (`POST`, `PUT`, `DELETE`) em ambientes compartilhados, payloads bem-sucedidos podem alterar estados de contas ou disparar notificações em massa; prefira métodos idempotentes ou contas de teste isoladas.|Verifique com `-replay-proxy http://127.0.0.1:8080` que apenas as requisições que produziram *match* são reenviadas para inspeção detalhada.|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos, ffuf-modos-multi-wordlist-clusterbomb-pitchfork-sniper-encoders, ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc
+
+===NOTE===
+0336|ffuf-modos-multi-wordlist-clusterbomb-pitchfork-sniper-encoders|ffuf: Modos Multi-Wordlist (`clusterbomb`, `pitchfork`, `sniper`) e Encoders (`-enc`)|Quando múltiplas wordlists são associadas a keywords distintas (`-w w1.txt:KEY1 -w w2.txt:KEY2`), o `ffuf` opera nos modos `-mode clusterbomb` (produto cartesiano) ou `-mode pitchfork` (pareamento linha a linha), aplicando encoders encadeados (`-enc`).|Permite testar combinações de `PARAM=VAL` e refletir o valor exato na resposta (`-mr "VAL"`) ou iterar pares sincronizados de credenciais/tokens de teste codificados em URL-encode ou Base64 em tempo real.|No modo `clusterbomb` (padrão), uma wordlist de 100 parâmetros e outra de 50 valores geram `100 × 50 = 5.000` requisições. No modo `pitchfork`, ambas as wordlists avançam juntas pelo mesmo índice (`1..N`). A flag `-enc 'VAL:urlencode b64encode'` aplica codificações sucessivas sobre a keyword antes da substituição na requisição HTTP.|```bash
+# Testar reflexão de parâmetros (XSS/Open Redirect) combinando nomes de parâmetros e payloads codificados
+ffuf -w params.txt:PARAM -w payloads.txt:VAL \
+  -mode clusterbomb \
+  -enc 'VAL:urlencode' \
+  -u "https://app.staging.corp/search?PARAM=VAL" \
+  -mr "canary7391"
+```|O modo `clusterbomb` cresce geometricamente com o número de wordlists: combinar três wordlists de 1.000 linhas gera `1.000.000.000` de requisições; dimensione o produto cartesiano antes de iniciar o job.|Calcule o número esperado de requisições (`wc -l` das wordlists) e valide no banner de inicialização do `ffuf` o progresso total `[:: Progress: 0/N ::]`.|ffuf-fuzzing-parametros-get-post-json-headers-raw-request, ffuf-matchers-filters-status-size-words-lines-regex-time, ffuf-mutadores-externos-input-cmd-radamsa-ffuf-num
+
+===NOTE===
+0337|ffuf-recursao-automatica-recursion-depth-strategy-maxtime-job|ffuf: Varredura Recursiva (`-recursion`, `-recursion-depth`, `-recursion-strategy`) e `-maxtime-job`|O modo recursivo do `ffuf` (`-recursion`) enfileira automaticamente novos jobs de fuzzing sempre que descobre um subdiretório válido, respeitando a profundidade máxima (`-recursion-depth`) e o limite de tempo por subdiretório (`-maxtime-job`).|Automatiza o mapeamento de árvores profundas de APIs (`/api/v1/admin/reports/...`) sem exigir que o analista reinicie manualmente o scanner para cada subdiretório encontrado.|A flag `-recursion-strategy` oferece dois comportamentos: `default` (que só entra em recursão quando o servidor responde com redirecionamento indicando diretório, ex.: `301 Moved Permanently` de `/admin` para `/admin/`) e `greedy` (que entra em recursão para **qualquer** resultado que der *match*, essencial para APIs REST que não emitem `301` em prefixos de rota).|```bash
+# Descoberta recursiva até profundidade 2 com limite de 60 segundos por subdiretório
+ffuf -w /usr/share/seclists/Discovery/Web-Content/common.txt \
+  -u https://api.staging.corp/FUZZ \
+  -recursion -recursion-depth 2 \
+  -recursion-strategy default \
+  -maxtime-job 60 -ac
+```|Usar `-recursion-strategy greedy` sem uma calibração rigorosa (`-ac` ou filtros de status/tamanho) causa explosão de jobs na fila porque qualquer falso positivo de página gerará uma nova varredura completa da wordlist.|Pressione `ENTER` para entrar no console interativo durante a execução e digite `queueshow` para inspecionar os jobs de recursão enfileirados e descartar ramos irrelevantes com `queuedel`.|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos, ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo, ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404
+
+===NOTE===
+0338|ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo|ffuf: Controle de Taxa (`-rate`, `-p`, `-t`), Circuit Breakers (`-sf`, `-se`, `-sa`) e Modo Interativo|O `ffuf` controla a pressão sobre o servidor alvo através de limite estrito de requisições por segundo (`-rate`), atraso com jitter (`-p "0.1-0.5"`), goroutines (`-t`) e disjuntores de parada automática (`-sf`, `-se`, `-sa`).|Impede que o scanner continue disparando milhares de requisições inúteis após ser bloqueado por um WAF (quando >95% das respostas passam a retornar `403 Forbidden`) ou quando o serviço alvo sofre *timeouts* em cascata.|A flag `-sf` interrompe a execução se mais de 95% das respostas retornarem `HTTP 403`; `-se` para em caso de erros espúrios de rede/TLS; e `-sa` combina ambos. Durante a execução, pressionar `ENTER` pausa o processo e abre o shell interativo, permitindo ajustar `rate 20`, adicionar filtros em tempo real (`afs 1042`, `afc 429`) e retomar (`resume`) sem perder o progresso.|```bash
+# Executar fuzzing controlado a 25 req/s com parada automática em bloqueio de WAF (-sf) ou erros (-se)
+ffuf -w endpoints.txt \
+  -u https://portal.staging.corp/FUZZ \
+  -t 10 -rate 25 -p "0.05-0.15" \
+  -sf -se -ac
+```|Em pipelines de CI/CD ou scripts automatizados sem terminal anexado, lembre-se de passar `-noninteractive` para desabilitar o listener de teclado do console interativo.|Teste o ajuste dinâmico em terminal local pressionando `ENTER`, executando `rate 10` e `show`, e confirmando que a taxa de disparo se estabiliza em 10 req/s.|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos, ffuf-recursao-automatica-recursion-depth-strategy-maxtime-job, ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc
+
+===NOTE===
+0339|ffuf-mutadores-externos-input-cmd-radamsa-ffuf-num|ffuf: Geração Dinâmica de Payloads e Fuzzing Mutacional com `--input-cmd`, `--input-num` e `$FFUF_NUM`|A opção `--input-cmd` substitui wordlists estáticas pela saída padrão de um comando externo invocado para cada caso de teste (de `1` até `--input-num`), expondo o índice atual na variável de ambiente `$FFUF_NUM`.|Permite acoplar mutadores estruturais como `radamsa`, geradores de tokens sequenciais ou scripts Python customizados diretamente ao motor HTTP concorrente e aos filtros do `ffuf`.|Para cada iteração, o `ffuf` define `FFUF_NUM=<índice>` (usado como `--seed` reprodutível pelo mutador) ou lê payloads pré-gerados em disco (`cat payloads/$FFUF_NUM.json`). Quando um resultado produz *match*, o `ffuf` exibe a posição numérica e um `FFUFHASH` que pode ser recuperado posteriormente com `ffuf -search <FFUFHASH>`.|```bash
+# Pré-gerar 500 mutações JSON com radamsa e testá-las via --input-cmd filtrando HTTP 400
+mkdir -p /tmp/mutated && radamsa -n 500 -o /tmp/mutated/%n.json seed-order.json
+
+ffuf --input-cmd 'cat /tmp/mutated/$FFUF_NUM.json' \
+  --input-num 500 \
+  -H "Content-Type: application/json" \
+  -X POST -u https://api.staging.corp/v1/orders \
+  -mc 500,200 -fc 400
+```|Invocar um binário pesado em `--input-cmd` milhares de vezes cria gargalo de *fork/exec* no sistema operacional; pré-gerar os arquivos antes do scan ou usar wordlists canalizadas é ordens de grandeza mais rápido.|Recupere o payload exato que causou um erro `HTTP 500` consultando o `FFUFHASH` retornado na saída com `ffuf -search <FFUFHASH>`.|ffuf-fuzzing-parametros-get-post-json-headers-raw-request, ffuf-modos-multi-wordlist-clusterbomb-pitchfork-sniper-encoders, ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc
+
+===NOTE===
+0340|ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc|ffuf: Padronização com `ffufrc` (`-config`), Artefatos de Resposta (`-od`), Relatórios (`-of all`) e `-replay-proxy`|O `ffuf` suporta perfis declarativos TOML (`$XDG_CONFIG_HOME/ffuf/ffufrc` ou `-config`), gravação completa de cabeçalhos e corpos das respostas encontradas (`-od`), múltiplos formatos de relatório (`-of json|ejson|html|md|csv|all`) e `-replay-proxy`.|Garante rastreabilidade forense durante testes de segurança: cada achado fica registrado em JSON/HTML com o corpo bruto salvo em disco (`-od`) e reenviado opcionalmente a um proxy de auditoria (ZAP, Caido ou Burp) via `-replay-proxy`.|Diferente da flag `-x` (que envia **todo** o tráfego ruidoso da wordlist pelo proxy, degradando a performance), a flag `-replay-proxy http://127.0.0.1:8080` envia pelo proxy **exclusivamente** as requisições que passaram pelos *matchers* e *filters*. Já `-or` (*output required*) evita criar arquivos de relatório vazios quando nenhum endpoint é encontrado.|```bash
+# Executar scan usando perfil TOML corporativo, salvando relatórios e replay apenas dos matches
+ffuf -config /etc/security/ffufrc-staging.toml \
+  -w /usr/share/seclists/Discovery/Web-Content/api-endpoints.txt \
+  -u https://api.staging.corp/FUZZ \
+  -o /tmp/ffuf-results/scan-api -of all -or \
+  -od /tmp/ffuf-results/raw-bodies \
+  -replay-proxy http://127.0.0.1:8080
+```|Ao usar um arquivo `ffufrc` padrão em `~/.config/ffuf/ffufrc`, lembre-se de que flags repetíveis como `-H` passadas na linha de comando são **concatenadas** às do arquivo de configuração em vez de substituí-las.|Verifique `/tmp/ffuf-results/scan-api.json` com `jq '.results | length'` e confirme que o diretório `-od` contém apenas os pares request/response das URLs validadas.|ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos, ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo, ffuf-fuzzing-parametros-get-post-json-headers-raw-request

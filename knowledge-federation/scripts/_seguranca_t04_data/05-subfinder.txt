@@ -1,0 +1,106 @@
+TOPIC: ProjectDiscovery Subfinder — Enumeração Passiva de Subdomínios e Gestão de Superfície de Ataque Externa (EASM)
+SOURCES: https://raw.githubusercontent.com/projectdiscovery/subfinder/dev/README.md | https://docs.projectdiscovery.io/opensource/subfinder/overview | https://github.com/projectdiscovery/subfinder/blob/dev/v2/examples/main.go
+
+===NOTE===
+0341|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas|Subfinder: Arquitetura de Enumeração Passiva de Subdomínios e Descoberta de Superfície Externa (EASM)|`subfinder` (ProjectDiscovery, MIT) é uma ferramenta modular escrita em Go projetada especificamente para enumeração passiva de subdomínios usando dezenas de fontes públicas, transparência de certificados (CT Logs) e APIs de inteligência de ameaças.|Por operar de forma estritamente passiva por padrão, descobre ativos externos esquecidos (*shadow IT*, ambientes de homologação e subdomínios órfãos) em segundos sem enviar nenhum pacote diretamente para a infraestrutura do domínio investigado.|O motor consulta paralelamente provedores gratuitos (como `crtsh`, `anubis`, `hackertarget`, `waybackarchive`, `rapiddns`) e provedores autenticados via chave de API, deduplica os resultados em memória e emite a lista consolidada de FQDNs em `stdout`, arquivo (`-o`) ou JSON Lines (`-oJ`).|```bash
+# Listar todas as fontes passivas disponíveis e enumerar subdomínios de um domínio corporativo
+subfinder -ls
+subfinder -d example.corp -silent -o subdomains-passive.txt
+```|Como fontes passivas incluem registros históricos de certificados e DNS que podem já ter sido desativados, a lista bruta do `subfinder` deve ser resolvida via DNS (`-nW` ou `dnsx`) antes de acionar scanners ativos.|Execute `subfinder -d example.corp -cs -oJ | jq -r '. | "\(.host) <- \(.source)"'` para auditar quais fontes passivas retornaram cada subdomínio.|subfinder-configuracao-provedores-api-keys-provider-config-yaml, subfinder-selecao-fontes-recursive-all-exclude-sources-max-results, httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit
+
+===NOTE===
+0342|subfinder-configuracao-provedores-api-keys-provider-config-yaml|Subfinder: Configuração de Chaves de API e Rotação de Credenciais em `provider-config.yaml` (`-pc`)|O arquivo `~/.config/subfinder/provider-config.yaml` (ou definido via `-pc` / variável de ambiente `SUBFINDER_PROVIDER_CONFIG`) armazena chaves de API para dezenas de fontes de inteligência (Chaos, SecurityTrails, Censys, Shodan, VirusTotal, GitHub, PassiveTotal).|Sem chaves de API configuradas, apenas fontes gratuitas públicas são consultadas; adicionar chaves com suporte a rotação automática multiplica a cobertura de ativos descobertos em auditorias de *External Attack Surface Management* (EASM).|Cada provedor no `provider-config.yaml` aceita uma lista YAML de credenciais. Quando múltiplas chaves são fornecidas para o mesmo provedor (ex.: vários Personal Access Tokens do GitHub ou chaves do Shodan), o `subfinder` seleciona e rotaciona entre elas para distribuir o consumo de cota.|```yaml
+# ~/.config/subfinder/provider-config.yaml (permissão recomendada chmod 600)
+chaos:
+  - ${PDCP_API_KEY}
+securitytrails:
+  - ${SECURITYTRAILS_API_KEY}
+shodan:
+  - ${SHODAN_KEY_PRIMARY}
+  - ${SHODAN_KEY_SECONDARY}
+censys:
+  - ${CENSYS_APP_ID}:${CENSYS_SECRET}
+```|Nunca versione o arquivo `provider-config.yaml` com chaves reais no repositório Git; injete-o como Secret montado em memória no runner de CI/CD via `SUBFINDER_PROVIDER_CONFIG=/run/secrets/provider-config.yaml`.|Execute `subfinder -ls` e verifique quais provedores aparecem marcados como configurados e prontos para uso.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-selecao-fontes-recursive-all-exclude-sources-max-results, subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao
+
+===NOTE===
+0343|subfinder-selecao-fontes-recursive-all-exclude-sources-max-results|Subfinder: Seleção Granular de Fontes (`-s`, `-es`, `-all`, `-recursive`) e Paginação (`-mr`)|O `subfinder` permite controlar exatamente quais fontes passivas são acionadas usando inclusão explícita (`-s`), exclusão (`-es`), ativação completa (`-all`) ou filtragem apenas de fontes compatíveis com subdomínios multinível (`-recursive`).|Ao investigar um subdomínio de terceiro ou quarto nível (ex.: `dev.us-east-1.api.corp.com`), muitas fontes passivas só indexam o domínio raiz (`corp.com`); a flag `-recursive` seleciona apenas provedores capazes de consultar prefixos hierárquicos profundos.|A flag `-all` habilita todas as fontes suportadas (incluindo provedores mais lentos de arquivo web), enquanto `-es waybackarchive,commoncrawl` exclui fontes lentas quando o tempo de resposta é prioritário. Já `-mr <N>` (`-max-results`) limita o número de resultados buscados em fontes paginadas para evitar esgotar créditos de API em domínios gigantes.|```bash
+# Enumerar apenas fontes rápidas de CT Logs e DNS para subdomínios recursivos com limite de paginação
+subfinder -d k8s.us-east.example.corp \
+  -recursive \
+  -es waybackarchive \
+  -mr 5000 \
+  -o k8s-subdomains.txt
+```|Usar `-all` sem configurar `-timeout` e `-max-time` adequados em listas com centenas de domínios (`-dL`) pode atrasar o pipeline de reconhecimento devido a provedores de arquivo histórico que paginam milhões de URLs.|Execute `subfinder -d example.corp -s crtsh,chaos -v` e confirme nos logs verbosos que exclusivamente os provedores listados em `-s` foram consultados.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-configuracao-provedores-api-keys-provider-config-yaml, subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao
+
+===NOTE===
+0344|subfinder-resolucao-ativa-eliminacao-wildcards-nw-resolvers-ip|Subfinder: Resolução DNS Ativa (`-nW` / `-active`), Eliminação de Wildcards e Extração de IPs (`-oI`)|Embora seja passivo por padrão, o `subfinder` possui um módulo interno de resolução DNS ativa e eliminação de *wildcards* (`-nW` / `-active`) configurável com listas de resolvedores confiáveis (`-r` / `-rL`) e concorrência (`-t`).|Domínios configurados com registros DNS wildcard (`*.example.corp IN A 198.51.100.10`) fazem com que qualquer subdomínio histórico ou inexistente pareça ativo; o filtro de wildcard descarta respostas sintéticas falsas.|Quando `-nW` (`-active`) é especificado, o `subfinder` resolve cada subdomínio encontrado pelas fontes passivas usando as goroutines configuradas em `-t` contra os servidores DNS de `-rL resolvers.txt`, testa se o domínio pai responde para nomes aleatórios (wildcard DNS) e, se `-oI` (`-ip`) for combinado com `-oJ`, inclui o endereço IP resolvido e a fonte de descoberta.|```bash
+# Filtrar apenas subdomínios atualmente ativos no DNS com IP resolvido e sem falsos positivos de wildcard
+subfinder -d example.corp \
+  -nW -oI -cs -oJ \
+  -r 1.1.1.1,8.8.8.8,9.9.9.9 \
+  -t 30 -o active-subdomains.jsonl
+```|Habilitar `-nW` transforma a execução de puramente passiva em resolução DNS ativa; se o servidor DNS autoritativo do alvo for monitorado, ele verá consultas para os subdomínios enumerados.|Inspecione `jq -c '{host, ip, source}' active-subdomains.jsonl` e confirme que todos os registros emitidos possuem endereço IP válido resolvido.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-filtragem-escopo-match-filter-exclude-ip, httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit
+
+===NOTE===
+0345|subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao|Subfinder: Rate-Limiting Global (`-rl`) e por Provedor (`-rls`), Timeouts e Limite de Leitura (`-rsr`)|O `subfinder` permite impor limites de requisições HTTP por segundo tanto globalmente (`-rl`) quanto individualmente para cada provedor de API (`-rls`), além de limitar o tamanho máximo de corpo lido (`-rsr`) e o tempo total de enumeração (`-max-time`).|Cada API de Threat Intelligence possui cotas de *rate limit* distintas (ex.: Shodan permite taxas diferentes de HackerTarget ou GitHub); o controle por provedor (`-rls`) evita erros `HTTP 429 Too Many Requests` sem desacelerar os demais provedores.|A flag `-rls "hackertarget=5/s,shodan=10/s,github=3/m"` aplica *token buckets* independentes por conector. Complementarmente, `-timeout 30` define o tempo máximo por requisição HTTP, `-max-time 10` encerra a enumeração do domínio após 10 minutos e `-rsr 10485760` limita a leitura de respostas gigantes a 10 MiB para proteger a memória RAM do coletor.|```bash
+# Executar subfinder respeitando cotas específicas de cada API e limite de memória de resposta
+subfinder -dLroot-domains.txt \
+  -rls "shodan=10/s,securitytrails=2/s,github=20/m" \
+  -timeout 20 -max-time 5 \
+  -rsr 10485760 \
+  -oD /var/reports/easm-subdomains/
+```|Deixar `-rsr 0` (ilimitado) ao consultar fontes de arquivo histórico para domínios com milhões de certificados emitidos pode causar picos elevados de alocação de memória no container.|Monitore os logs com `-v` durante a execução e confirme a ausência de respostas `429 Too Many Requests` nos provedores configurados em `-rls`.|subfinder-configuracao-provedores-api-keys-provider-config-yaml, subfinder-selecao-fontes-recursive-all-exclude-sources-max-results, subfinder-encadeamento-pipelines-easm-stdin-stdout-httpx-nuclei
+
+===NOTE===
+0346|subfinder-filtragem-escopo-match-filter-exclude-ip|Subfinder: Controle de Escopo com Match (`-m`), Filter (`-f`) e Exclusão de IPs (`-ei`)|As opções `-m` (`-match`), `-f` (`-filter`) e `-ei` (`-exclude-ip`) do `subfinder` restringem os subdomínios emitidos na saída de acordo com regras de escopo contratual de testes de intrusão ou programas de Bug Bounty.|Evita que subdomínios explicitamente fora de escopo (ex.: `*.prod-pci.example.corp` ou ambientes de parceiros terceirizados) sejam repassados automaticamente para ferramentas ativas de *probing* e *crawling* no restante do pipeline.|As flags `-m` e `-f` aceitam strings separadas por vírgula ou o caminho de um arquivo contendo padrões de subdomínios a incluir ou excluir. Já a flag `-ei` (`-exclude-ip`) remove endereços IP literais que algumas fontes passivas retornam misturados a nomes de domínio.|```bash
+# Incluir apenas subdomínios de homologação/API e excluir escopos proibidos pelo ROE (Rules of Engagement)
+subfinder -d example.corp \
+  -f out-of-scope-hosts.txt \
+  -ei -silent \
+  -o in-scope-subdomains.txt
+```|Aplicar o filtro de escopo apenas no `subfinder` não substitui a configuração de escopo nas ferramentas seguintes (`httpx`, `katana`, `nuclei`), pois redirecionamentos HTTP 302 podem levar o scanner ativo de volta para um host fora de escopo.|Confirme com `grep -Ff out-of-scope-hosts.txt in-scope-subdomains.txt` que nenhum ativo listado no arquivo de exclusão está presente no artefato final.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-encadeamento-pipelines-easm-stdin-stdout-httpx-nuclei, katana-controle-escopo-field-scope-crawl-scope-out-of-scope
+
+===NOTE===
+0347|subfinder-formatos-saida-jsonl-collect-sources-output-dir-audit|Subfinder: Saída Estruturada JSONL (`-oJ`), Atribuição de Fontes (`-cs`) e Diretórios por Domínio (`-oD`)|O `subfinder` exporta resultados estruturados em JSON Lines (`-oJ` / `-json`), enriquecidos opcionalmente com a lista completa de todas as fontes passivas que confirmaram cada subdomínio (`-cs` / `-collect-sources`).|Em programas de gestão contínua de superfície de ataque (EASM), saber se um subdomínio apareceu apenas em um repositório público do GitHub (`source: github`) ou em um certificado TLS recém-emitido (`source: crtsh`) orienta a prioridade da investigação.|Quando `-cs` é usado sem `-oJ`, apenas a primeira fonte que reportou o host é registrada; combinando `-oJ -cs`, cada linha JSON inclui um array de provedores, o domínio raiz (`input`) e o subdomínio (`host`), facilitando a ingestão em bancos PostgreSQL, OpenSearch ou grafos de ativos.|```bash
+# Exportar inventário enriquecido em JSONL com todas as fontes de descoberta por subdomínio
+subfinder -d example.corp -oJ -cs -silent \
+  | jq -c 'select(.sources | index("github"))' > leaked-on-github.jsonl
+```|A flag `-oD <diretório>` só tem efeito quando usada em conjunto com uma lista de domínios de entrada (`-dL domains.txt`), gravando um arquivo individual por domínio raiz dentro do diretório especificado.|Valide o schema de saída executando `head -n 1 leaked-on-github.jsonl | jq -e '.host and .input and .sources'`.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-monitoramento-continuo-diff-novos-subdominios-alertas, httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit
+
+===NOTE===
+0348|subfinder-encadeamento-pipelines-easm-stdin-stdout-httpx-nuclei|Subfinder: Encadeamento Unix (`stdin`/`stdout`) em Pipelines de Reconhecimento com `httpx`, `katana` e `nuclei`|Seguindo a filosofia Unix das ferramentas ProjectDiscovery, o `subfinder` aceita domínios via `stdin` e emite subdomínios limpos via `stdout` (`-silent`), encadeando-se diretamente com `httpx`, `katana` e `nuclei`.|Permite construir pipelines automatizados de descoberta contínua que partem de uma lista de domínios raiz corporativos, descobrem subdomínios passivamente, verificam quais respondem via HTTP/TLS e auditam exposições críticas.|O uso da flag `-silent` (e `-duc` para desativar checagens de atualização em pipelines de CI/CD) garante que apenas FQDNs válidos sejam impressos no `stdout`, evitando que banners ASCII ou logs informativos poluam a entrada da ferramenta seguinte no pipe.|```bash
+# Pipeline EASM completo: enumeração passiva -> probing HTTP/TLS -> detecção de tecnologias
+cat root-domains.txt \
+  | subfinder -silent -duc \
+  | httpx -silent -duc -sc -title -td -json -o live-web-assets.jsonl
+```|Encadear `subfinder | httpx` diretamente em redes corporativas sem antes filtrar ativos fora de escopo (`-f`) enviará sondas HTTP ativas para todos os subdomínios encontrados nas fontes passivas.|Verifique que `live-web-assets.jsonl` contém apenas linhas JSON válidas geradas pelo `httpx` sem mensagens de banner misturadas.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, katana-arquitetura-crawler-padrao-vs-headless-chrome-dast
+
+===NOTE===
+0349|subfinder-uso-como-biblioteca-go-sdk-runner-enumerate|Subfinder: Integração Programática em Go via SDK (`runner.NewRunner` e `EnumerateSingleDomainWithCtx`)|Além da CLI, o `subfinder/v2/pkg/runner` pode ser importado diretamente como biblioteca Go em microserviços internos de segurança para executar enumeração passiva sem invocar processos externos.|Permite embutir descoberta contínua de subdomínios em plataformas internas de inventário de ativos (CMDB/CSPM), controlando timeouts via `context.Context` e processando cada resultado em callbacks de memória (`ResultCallback`).|O desenvolvedor instancia `runner.Options` (definindo `Threads`, `Timeout`, `MaxEnumerationTime` e `ResultCallback`), chama `runner.NewRunner(options)` e invoca `EnumerateSingleDomainWithCtx(ctx, "example.corp", writers)` para receber estruturas `resolve.HostEntry` tipadas em tempo real.|```go
+package main
+
+import (
+	"bytes"
+	"context"
+	"github.com/projectdiscovery/subfinder/v2/pkg/runner"
+)
+
+func main() {
+	opts := &runner.Options{Threads: 10, Timeout: 30, MaxEnumerationTime: 5}
+	r, _ := runner.NewRunner(opts)
+	var out bytes.Buffer
+	_ = r.EnumerateSingleDomainWithCtx(context.Background(), "example.corp", []io.Writer{&out})
+}
+```|Ao executar o SDK do `subfinder` dentro de um serviço Go de longa duração, passe sempre um `context.WithTimeout` para garantir que goroutines de provedores externos lentos sejam canceladas e não vazem recursos.|Compile o serviço com `go build` e execute um teste unitário com `context.WithTimeout`, confirmando o preenchimento do buffer de saída sem *goroutine leaks*.|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao, subfinder-monitoramento-continuo-diff-novos-subdominios-alertas
+
+===NOTE===
+0350|subfinder-monitoramento-continuo-diff-novos-subdominios-alertas|Subfinder: Monitoramento Contínuo de Novos Subdomínios, Detecção de *Shadow IT* e Subdomain Takeover|Executar o `subfinder` periodicamente via CronJob Kubernetes ou GitHub Actions e comparar o estado atual contra o inventário histórico permite alertar o SOC em minutos sempre que um novo subdomínio corporativo é criado ou recebe um certificado TLS.|Novos subdomínios de campanha ou homologação frequentemente entram no ar com configurações padrão inseguras ou apontam via `CNAME` para serviços em nuvem desprovisionados (S3, Azure App Service, GitHub Pages), ficando vulneráveis a *Subdomain Takeover*.|O job executa `subfinder -dL domains.txt -duc -silent`, ordena e deduplica a saída (`sort -u`), compara com a linha de base anterior (`comm -13 baseline.txt current.txt`) e submete apenas o delta de novos hosts para verificação de `CNAME` órfão e inspeção HTTP com `httpx`.|```bash
+# Detectar exclusivamente novos subdomínios surgidos desde a última varredura e sondá-los
+subfinder -dL /etc/easm/domains.txt -duc -silent | sort -u > /tmp/current-subs.txt
+comm -13 /var/lib/easm/baseline-subs.txt /tmp/current-subs.txt > /tmp/new-subs.txt
+
+if [ -s /tmp/new-subs.txt ]; then
+  httpx -l /tmp/new-subs.txt -silent -sc -cname -title -json -o /tmp/new-assets-alert.jsonl
+  cp /tmp/current-subs.txt /var/lib/easm/baseline-subs.txt
+fi
+```|Atualizar o arquivo `baseline-subs.txt` caso a execução do `subfinder` tenha falhado por falta de conectividade de rede fará com que na execução seguinte todos os subdomínios antigos pareçam novos; valide que `current-subs.txt` não está vazio antes de sobrescrever a base.|Simule a adição de um domínio na base e verifique que `/tmp/new-subs.txt` isola apenas a diferença incremental (`comm -13`).|subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas, subfinder-formatos-saida-jsonl-collect-sources-output-dir-audit, httpxpd-probes-rede-ip-cname-asn-cdn-waf-vhost-ports

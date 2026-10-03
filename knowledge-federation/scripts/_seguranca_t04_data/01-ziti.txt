@@ -1,0 +1,128 @@
+ TOPIC: OpenZiti — Malha Zero Trust Programável, Serviços Dark e SDKs Application-Embedded
+SOURCES: https://raw.githubusercontent.com/openziti/ziti/release-next/README.md | https://netfoundry.io/docs/openziti/intro/ | https://github.com/openziti/ziti/blob/release-next/CHANGELOG.md
+
+===NOTE===
+0301|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge|OpenZiti: Arquitetura da Malha Zero Trust com Controller, Fabric Mesh e Edge Components|OpenZiti é uma plataforma open-source de rede Zero Trust (Apache-2.0) composta por Controller central, roteadores em malha inteligente (Fabric Mesh) e clientes de borda via SDKs ou Tunnelers.|Engenharias de segurança substituem VPNs corporativas amplas por segmentação no nível de aplicação onde cada conexão exige autenticação mútua X.509, autorização prévia e criptografia ponta a ponta via `libsodium`.|O **OpenZiti Controller** coordena identidades, PKI, configurações e políticas de acesso, emitindo sessões autorizadas apenas após validar certificados de cliente e postura. Os **OpenZiti Routers** formam uma malha overlay roteada por latência com failover automático, enquanto **Edge Clients** conectam aplicações diretamente via SDK ou sem alterar código via *tunnelers* locais.|```bash
+# Inicializar uma malha OpenZiti local de avaliação e listar os componentes ativos
+ziti edge quickstart \
+  --ctrl-address 127.0.0.1 \
+  --ctrl-port 1280 \
+  --router-address 127.0.0.1 \
+  --router-port 3022
+
+ziti edge list edge-routers
+ziti edge list services
+```|Em implantações de produção, o plano de controle do Controller não deve compartilhar a mesma superfície pública não filtrada dos Edge Routers; separe as interfaces `edge-management` e `edge-client` em listeners distintos.|Execute `ziti edge list edge-routers` e `ziti fabric list links` e confirme que os roteadores estabeleceram links de malha ativos (`Connected`) sob controle do Controller.|ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric, ziti-identities-enrollment-jwt-ott-certificados-x509-mutuos, ziti-politicas-service-policies-edge-router-policies-bind-dial
+
+===NOTE===
+0302|ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric|OpenZiti: Dark Services e Dark Routers sem Portas de Escuta Inbound Expostas|Serviços e roteadores *dark* no OpenZiti operam sem abrir portas TCP/UDP de entrada (*inbound*) na internet ou na rede privada, iniciando apenas conexões de saída (*outbound*) autenticadas contra a malha.|Ao eliminar portas de escuta públicas, atacantes externos não conseguem realizar *port scanning*, explorar vulnerabilidades pré-autenticação em listeners HTTP/SSH ou descobrir a existência do serviço.|O servidor da aplicação (com SDK embutido ou *tunneler* colocalizado) conecta-se proativamente aos *Edge Routers* realizando uma operação de `Bind` autenticada por certificado X.509. Quando um cliente autorizado solicita `Dial` para o serviço lógico, a malha OpenZiti encaminha o fluxo até a conexão *outbound* já estabelecida pelo hospedeiro.|```bash
+# Verificar no host do serviço que não há porta aberta externamente além de loopback
+ss -tulnp | grep 8443
+# LISTEN 0 4096 127.0.0.1:8443 0.0.0.0:* users:(("internal-api",pid=2410,fd=7))
+
+# Verificar terminators registrados no OpenZiti apontando para o serviço dark
+ziti edge list terminators 'service.name="internal-orders-api"'
+```|Pelo menos um conjunto de *Edge Routers* de trânsito precisa ser alcançável tanto pelos clientes quanto pelos *Dark Routers*/serviços privados (geralmente em DMZ ou nuvem com porta 443 *outbound* liberada nos firewalls internos).|Consulte `ziti edge list terminators` e confirme a presença de *terminators* dinâmicos ativos mesmo com regras de firewall bloqueando 100% de conexões de entrada (`INPUT DROP`) no servidor da aplicação.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-sdks-application-embedded-zero-trust-go-c-python-jvm, ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns
+
+===NOTE===
+0303|ziti-identities-enrollment-jwt-ott-certificados-x509-mutuos|OpenZiti: Identidades, Enrollment via One-Time Token (OTT) JWT e mTLS X.509|O processo de *enrollment* no OpenZiti provisiona identidades criptográficas fortes usando tokens JWT de uso único (*One-Time Token* — OTT), PKI corporativa de terceiros (*3rd Party CA*) ou provedores OIDC externos.|Impede o compartilhamento de credenciais estáticas: o JWT de matrícula expira rapidamente e é consumido uma única vez para assinar um CSR gerado localmente cuja chave privada nunca sai do dispositivo.|O administrador cria a identidade (`ziti edge create identity`) com atributos de papel (`-a`), gerando um arquivo `.jwt` temporário. O endpoint executa `ziti-edge-tunnel enroll` (ou o SDK), gera seu par de chaves localmente, submete um CSR ao Controller apresentando o OTT e recebe o certificado X.509 operacional.|```bash
+# Criar identidade de workload com atributos de role e matricular em arquivo JSON
+ziti edge create identity service "payments-worker-01" \
+  -a "payments-hosts,prod-workloads" \
+  -o /tmp/payments-worker-01.jwt
+
+ziti-edge-tunnel enroll \
+  --jwt /tmp/payments-worker-01.jwt \
+  --identity /etc/ziti/identities/payments-worker-01.json
+```|Se um arquivo `.jwt` de matrícula expirar antes do provisionamento da máquina virtual ou pod, a tentativa de enrollment falhará; automatize a emissão *just-in-time* via API REST do Controller ou use auto-enrollment via 3rd Party CA.|Execute `ziti edge list identities 'name="payments-worker-01"'` e valide que o campo `hasApiSession` ou o estado de enrollment passou a concluído e que o arquivo `.jwt` não pode ser reutilizado.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-politicas-service-policies-edge-router-policies-bind-dial, ziti-posture-checks-mfa-os-process-mac-domain-avaliacao-continua
+
+===NOTE===
+0304|ziti-politicas-service-policies-edge-router-policies-bind-dial|OpenZiti: Modelo de Autorização com Service Policies (`Bind`/`Dial`) e Attribute Roles|O modelo de políticas do OpenZiti desacopla quem pode consumir um serviço (`Dial`), quem pode hospedá-lo (`Bind`) e quais roteadores de borda cada identidade ou serviço pode atravessar.|Garante o princípio de privilégio mínimo com escalabilidade operacional: novas identidades e serviços herdam permissões automaticamente através de atributos (`#tag`) em vez de ACLs baseadas em sub-redes IP.|Quatro tipos de políticas governam a malha: `service-policy` (`Dial` ou `Bind`), `edge-router-policy` (quais identidades acessam quais roteadores) e `service-edge-router-policy` (quais roteadores transportam quais serviços). O operador `Semantic` (`AllOf` vs `AnyOf`) controla se a identidade precisa possuir todos os atributos listados ou apenas um.|```bash
+# Autorizar identidades #sre-team a discar (Dial) para serviços #prod-k8s-apis
+ziti edge create service-policy "sre-dial-prod-k8s" Dial \
+  --identity-roles "#sre-team" \
+  --service-roles "#prod-k8s-apis" \
+  --semantic AllOf
+
+# Autorizar os hosts #k8s-control-plane a hospedar (Bind) os serviços #prod-k8s-apis
+ziti edge create service-policy "nodes-bind-prod-k8s" Bind \
+  --identity-roles "#k8s-control-plane" \
+  --service-roles "#prod-k8s-apis"
+```|Criar uma `service-policy` sem configurar `edge-router-policy` e `service-edge-router-policy` correspondentes impede o estabelecimento do circuito porque não haverá roteador em comum autorizado.|Execute `ziti edge policy-advisor services -q` ou `ziti edge policy-advisor identities -q` e confirme que a matriz exibe `OK : Common routers > 0` para os pares `Dial` e `Bind` desejados.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-identities-enrollment-jwt-ott-certificados-x509-mutuos, ziti-posture-checks-mfa-os-process-mac-domain-avaliacao-continua
+
+===NOTE===
+0305|ziti-sdks-application-embedded-zero-trust-go-c-python-jvm|OpenZiti: SDKs Application-Embedded Zero Trust (Go, C, Python, JVM e Node.js)|Os SDKs do OpenZiti permitem embutir a pilha de rede Zero Trust diretamente no código-fonte de clientes e servidores, substituindo sockets TCP dependentes do sistema operacional por conexões virtuais autenticadas sobre a malha.|Elimina completamente a exposição do serviço na pilha de rede local (`localhost` ou LAN): nem mesmo processos maliciosos rodando na mesma máquina virtual conseguem conectar-se ao servidor sem uma identidade OpenZiti válida.|No Go SDK (`github.com/openziti/sdk-golang`), o servidor inicializa um contexto com seu arquivo de identidade JSON e chama `zitiContext.Listen("service-name")` em vez de `net.Listen("tcp", ":8080")`, enquanto o cliente chama `zitiContext.Dial("service-name")`, estabelecendo criptografia ponta a ponta (`libsodium`) diretamente entre os processos.|```go
+package main
+
+import (
+	"net/http"
+	"github.com/openziti/sdk-golang/ziti"
+)
+
+func main() {
+	cfg, _ := ziti.NewConfigFromFile("/etc/ziti/server-identity.json")
+	ctx, _ := ziti.NewContext(cfg)
+	listener, _ := ctx.Listen("internal-vault-service")
+	_ = http.Serve(listener, http.DefaultServeMux)
+}
+```|Aplicações de terceiros de código fechado (como bancos de dados comerciais ou binários legados) não podem ser recompiladas com o SDK; nesses casos, utilize `ziti-edge-tunnel` em modo `host` no mesmo pod ou VM.|Inspecione `lsof -i -P -n -p <PID>` do binário compilado com o SDK OpenZiti e verifique que não há nenhum descritor `TCP LISTEN`, existindo apenas conexões `ESTABLISHED` de saída para os Edge Routers.|ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric, ziti-criptografia-ponta-a-ponta-libsodium-kx-chacha20-poly1305, ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns
+
+===NOTE===
+0306|ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns|OpenZiti: Tunnelers (`ziti-edge-tunnel`) com Interceptação DNS/TPROXY (`intercept.v1`) e Hosting (`host.v1`)|O `ziti-edge-tunnel` (e os Ziti Desktop/Mobile Edge) integra aplicações sem modificação de código à malha OpenZiti usando configurações estruturadas `intercept.v1` (lado cliente) e `host.v1` (lado servidor).|Permite migrar bancos de dados, servidores SSH e APIs legadas para arquitetura *dark* imediatamente, interceptando nomes DNS fictícios ou IPs CGNAT (`100.64.0.0/10`) de forma transparente para o usuário.|O administrador cria um config `intercept.v1` definindo o endereço virtual (ex.: `db.internal.ziti:5432`) e um config `host.v1` apontando para o destino real (`127.0.0.1:5432`) no servidor. O `ziti-edge-tunnel` do cliente registra um resolvedor DNS local para `*.ziti`, intercepta os pacotes via interface `tun`/TPROXY e os encapsula na malha até o `ziti-edge-tunnel` hospedeiro.|```bash
+# Criar configurações intercept.v1 e host.v1 e associá-las a um serviço OpenZiti
+ziti edge create config "pg-intercept-cfg" intercept.v1 \
+  '{"protocols":["tcp"],"addresses":["postgres.corp.ziti"],"portRanges":[{"low":5432,"high":5432}]}'
+
+ziti edge create config "pg-host-cfg" host.v1 \
+  '{"protocol":"tcp","address":"127.0.0.1","port":5432}'
+
+ziti edge create service "corp-postgres" \
+  --configs "pg-intercept-cfg,pg-host-cfg" \
+  --encryption ON
+```|Se o `systemd-resolved` ou gerenciador de DNS corporativo não encaminhar consultas do domínio interceptado para o nameserver local do `ziti-edge-tunnel` (`100.64.0.2`), os clientes falharão com `NXDOMAIN`.|Execute `ziti-edge-tunnel tunnel_status` e teste `dig postgres.corp.ziti` no host cliente, confirmando a resolução para um IP da faixa `100.64.x.x` e conectividade TCP na porta 5432.|ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric, ziti-sdks-application-embedded-zero-trust-go-c-python-jvm, ziti-politicas-service-policies-edge-router-policies-bind-dial
+
+===NOTE===
+0307|ziti-criptografia-ponta-a-ponta-libsodium-kx-chacha20-poly1305|OpenZiti: Criptografia Ponta a Ponta (`libsodium` Curve25519 / ChaCha20-Poly1305) Acima do mTLS|Além do mTLS obrigatório em cada salto entre clientes e *Edge Routers*, o OpenZiti oferece criptografia ponta a ponta (*end-to-end encryption*) nativa baseada em `libsodium` entre a identidade de origem (`Dial`) e a identidade hospedeira (`Bind`).|Mesmo que um *Edge Router* ou *Fabric Router* intermediário em nuvem pública seja comprometido ou inspecionado na memória, o atacante não consegue decifrar nem adulterar o payload da aplicação.|Quando um serviço exige `--encryption ON`, o SDK/tunneler de origem e o SDK/tunneler de destino realizam troca de chaves efêmeras (`crypto_kx` sobre Curve25519) e cifram o fluxo de dados com AEAD (`crypto_secretstream_xchacha20poly1305`) antes de injetá-lo no túnel mTLS da malha.|```bash
+# Auditar todos os serviços OpenZiti para garantir que encryptionRequired está ativado
+ziti edge list services -j \
+  | jq -r '.data[] | select(.encryptionRequired == false) | .name'
+
+# Forçar criptografia ponta a ponta obrigatória em um serviço existente
+ziti edge update service "corp-postgres" --encryption ON
+```|Se um serviço for criado com `--encryption OFF`, o tráfego ainda estará cifrado via mTLS entre os saltos dos roteadores, mas ficará em texto claro na memória transitória dos roteadores da malha.|Execute a consulta JSON `ziti edge list services -j | jq '.data[] | {name, encryptionRequired}'` e confirme que todos os serviços críticos exibem `"encryptionRequired": true`.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-sdks-application-embedded-zero-trust-go-c-python-jvm, ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns
+
+===NOTE===
+0308|ziti-posture-checks-mfa-os-process-mac-domain-avaliacao-continua|OpenZiti: Posture Checks Contínuos (OS, Processos, MAC, Domínio e MFA TOTP)|*Posture Checks* no OpenZiti avaliam continuamente atributos de estado do dispositivo cliente (versão mínima do SO, hash/assinatura de processos EDR em execução, domínio Windows, MAC e MFA TOTP) antes e durante as sessões de rede.|Evita que um endpoint cujo certificado seja válido, mas cujo agente de EDR tenha sido encerrado ou cuja sessão MFA tenha expirado, mantenha conexões abertas com serviços internos sensíveis.|As checagens de postura são criadas no Controller (`ziti edge create posture-check ...`) e vinculadas às `service-policies` via `--posture-check-roles`. O cliente envia telemetria periódica de postura; se uma checagem falhar no meio de uma transferência TCP ativa, o OpenZiti encerra imediatamente os circuitos abertos daquela identidade.|```bash
+# Exigir Linux kernel >= 6.1.0 e MFA TOTP válido com timeout de inatividade de 15 minutos
+ziti edge create posture-check os "linux-min-kernel" \
+  --os "Linux:6.1.0" -a "prod-posture"
+
+ziti edge create posture-check mfa "totp-15m" \
+  --timeout 900 --prompt-on-wake --prompt-on-unlock -a "prod-posture"
+
+ziti edge update service-policy "sre-dial-prod-k8s" \
+  --posture-check-roles "#prod-posture"
+```|Verificações de processos por hash SHA-512 exigem atualização da política sempre que o agente de segurança (ex.: CrowdStrike/Falco) sofrer atualização automática nos endpoints corporativos.|Execute `ziti edge policy-advisor services "corp-postgres" -q` ou inspecione as falhas de postura da identidade na API REST para confirmar que sessões sem MFA ou fora da versão do SO são bloqueadas.|ziti-identities-enrollment-jwt-ott-certificados-x509-mutuos, ziti-politicas-service-policies-edge-router-policies-bind-dial, ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge
+
+===NOTE===
+0309|ziti-smart-routing-fabric-mesh-terminators-load-balancing-ha|OpenZiti: Smart Routing na Fabric Mesh, Terminators, Custos Dinâmicos e Alta Disponibilidade|A malha (*Fabric*) do OpenZiti mede continuamente a latência de cada link entre roteadores e o custo de cada *Terminator*, roteando novos fluxos pelo caminho de menor custo e redirecionando tráfego automaticamente em caso de falha.|Permite balanceamento de carga ativo-ativo ou failover ativo-passivo na camada de rede Zero Trust sem necessidade de balanceadores L4 externos expostos na internet.|Múltiplas instâncias de um serviço registrando `Bind` criam múltiplos *Terminators* para o mesmo serviço lógico, cada um com precedência (`default`, `required`, `failed`) e custo base configurável. O Controller calcula o grafo de menor custo somando a latência de cada link de malha e o custo do *Terminator* de destino.|```bash
+# Inspecionar links da malha com latência medida e listar custos dos terminators
+ziti fabric list links
+ziti fabric list terminators
+
+# Ajustar precedência de um terminator secundário para failover (cost mais alto)
+ziti edge update terminator <terminator-id> \
+  --precedence default \
+  --cost 250
+```|Conexões TCP já estabelecidas que atravessam um roteador intermediário que cai abruptamente precisarão ser reconectadas pelo SDK/tunneler no novo caminho calculado pela malha.|Derrube uma instância hospedeira de um serviço com dois *Terminators* ativos e verifique em `ziti edge list terminators` que o tráfego subsequente é encaminhado integralmente para o *Terminator* sobrevivente.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric, ziti-operacao-kubernetes-helm-ziti-controller-router-zrok-browzer
+
+===NOTE===
+0310|ziti-operacao-kubernetes-helm-ziti-controller-router-zrok-browzer|OpenZiti: Implantação em Kubernetes via Helm, `ziti-host` para ClusterIPs, `zrok` e BrowZer|O ecossistema OpenZiti para Kubernetes inclui charts Helm para Controller, Router e `ziti-edge-tunnel` (modo `ziti-host`), além de extensões especializadas como `zrok` (compartilhamento Zero Trust) e OpenZiti BrowZer (acesso web clientless via WebAssembly).|Permite expor APIs `ClusterIP` e o próprio `kube-apiserver` de clusters Kubernetes privados sem `LoadBalancer` público nem Ingress exposto na internet.|Um pod `ziti-host` rodando dentro do cluster Kubernetes possui uma identidade com permissão `Bind` e encaminha conexões da malha para serviços DNS internos (`*.svc.cluster.local`). Já o **OpenZiti BrowZer** carrega um SDK OpenZiti compilado em WebAssembly diretamente no navegador após login OIDC, permitindo acessar aplicações web *dark* sem instalar agente no desktop.|```bash
+# Instalar o pod ziti-host no cluster Kubernetes privado usando o chart oficial OpenZiti
+helm repo add openziti https://docs.openziti.io/helm-charts/
+helm repo update
+
+helm upgrade --install ziti-host openziti/ziti-host \
+  --namespace ziti-system --create-namespace \
+  --set-file zitiIdentity=/etc/ziti/k8s-cluster-binder.json
+```|Se o pod `ziti-host` tiver acesso irrestrito de saída no cluster, qualquer serviço mapeado erroneamente por um administrador no Controller poderá ser alcançado; restrinja o pod com `NetworkPolicy` de *egress* no Kubernetes.|Verifique `kubectl -n ziti-system logs deploy/ziti-host` e confirme o registro de *terminators* saudáveis para os `ClusterIPs` internos configurados no OpenZiti.|ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge, ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns, ziti-smart-routing-fabric-mesh-terminators-load-balancing-ha

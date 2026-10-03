@@ -1,0 +1,98 @@
+TOPIC: ProjectDiscovery Katana — Web Crawling e Spidering (Standard e Headless Chrome), JS Parsing e Escopo DAST
+SOURCES: https://raw.githubusercontent.com/projectdiscovery/katana/main/README.md | https://docs.projectdiscovery.io/opensource/katana/overview | https://github.com/projectdiscovery/katana/releases
+
+===NOTE===
+0361|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast|Katana: Arquitetura de Web Crawling e Spidering (Modo Standard HTTP vs Modo Headless Chrome `-hl`)|`katana` (ProjectDiscovery, MIT) é um framework de *web crawling* e *spidering* escrito em Go que opera tanto em modo **Standard** (análise rápida de respostas HTTP brutas) quanto em modo **Headless Híbrido** (`-hl` / `-headless`, instrumentando um navegador Chromium real via DevTools Protocol).|Aplicações *Single-Page Application* (SPAs em React, Angular, Vue, Next.js) constroem o DOM e disparam chamadas XHR/Fetch dinamicamente no navegador; crawlers tradicionais sem motor JavaScript veem apenas uma página HTML vazia (`<div id="root"></div>`).|No modo Standard, o `katana` analisa tags HTML (`href`, `src`, `form`, `action`), cabeçalhos e sitemaps com altíssima velocidade e baixo uso de CPU. Quando `-hl` (e `-system-chrome`) é ativado, o `katana` renderiza cada página no Chrome Headless, intercepta chamadas de rede geradas pelo frontend e segue eventos de navegação DOM até a profundidade máxima configurada (`-d`, padrão 3).|```bash
+# Executar crawling híbrido com Headless Chrome até profundidade 3 e limite de 5 minutos
+katana -u https://app.staging.corp \
+  -hl -system-chrome \
+  -d 3 -ct 5m \
+  -silent -o spa-endpoints.txt
+```|Em containers Docker ou Kubernetes sem privilégios de namespace de usuário, o Chrome Headless pode falhar ao iniciar o sandbox interno; utilize `-system-chrome` com perfil dedicado ou `-nos` (`--no-sandbox`) apenas em containers efêmeros estritamente isolados.|Compare o número de rotas descobertas na SPA com e sem `-hl` e confirme a captura das chamadas de API `/api/v1/*` disparadas pelo bundle JavaScript.|katana-analise-javascript-jc-jsluice-known-files-endpoints, katana-controle-escopo-field-scope-crawl-scope-out-of-scope, httpxpd-encadeamento-dast-subfinder-httpx-katana-nuclei
+
+===NOTE===
+0362|katana-analise-javascript-jc-jsluice-known-files-endpoints|Katana: Parsing Estático de Arquivos JavaScript (`-jc` e `-jsl`) e Descoberta de `known-files` (`-kf`)|Mesmo sem abrir um navegador Headless, o `katana` extrai rotas de API, parâmetros ocultos e URLs internas analisando estaticamente bundles JavaScript (`.js`, Webpack chunks, sourcemaps) através das flags `-jc` (`-js-crawl`) e `-jsl` (`-jsluice`), combinadas com `-kf all` (`robots.txt` e `sitemap.xml`).|Bundles JavaScript de frontend frequentemente contêm todas as rotas da API administrativa (`/api/internal/users/export`, mutações GraphQL e flags de feature) mesmo para usuários não autenticados.|A flag `-jc` aplica analisadores léxicos rápidos sobre todos os arquivos `.js` referenciados pela página, enquanto `-jsl` aciona o motor **jsluice** (baseado em árvore sintática tree-sitter para JavaScript) para resolver concatenações de strings, objetos de configuração e URLs parciais com precisão superior. Já `-kf all` (que requer `-d 3` ou maior) processa automaticamente `/robots.txt` e `/sitemap.xml`.|```bash
+# Extrair rotas de bundles JavaScript com jsluice e processar robots.txt/sitemap.xml
+katana -u https://portal.staging.corp \
+  -d 3 -jc -jsl -kf all \
+  -ef woff,woff2,ttf,png,jpg,svg,css \
+  -o js-discovered-routes.txt
+```|A análise AST do `-jsluice` (`-jsl`) consome significativamente mais memória RAM em bundles JavaScript minificados gigantes (>10 MB); combine com `-mrs 4194304` para limitar o tamanho máximo lido por resposta.|Inspecione `js-discovered-routes.txt` e confirme a presença de endpoints REST/GraphQL extraídos de dentro dos arquivos `*.chunk.js`.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-extracao-campos-field-extraction-custom-regex-jsonl, katana-knowledge-base-classificacao-endpoints-segredos-kb
+
+===NOTE===
+0363|katana-controle-escopo-field-scope-crawl-scope-out-of-scope|Katana: Controle Estrito de Escopo (`-fs`, `-cs`, `-cos`, `-do` e `-e`) para Prevenção de Fuga de Crawl|O `katana` previne que o spider siga links para fora do alvo autorizado utilizando escopo por campo DNS (`-fs`), expressões regulares de inclusão (`-cs` / `-crawl-scope`), regex de exclusão (`-cos` / `-crawl-out-scope`), bloqueio de saída (`-do`) e exclusão de hosts/IPs (`-e`).|Sem controle de escopo, um único link para redes sociais, parceiros comerciais ou botões de *"Logout"* (`-cos "logout|signout"`) faz o crawler abandonar a sessão autenticada ou varrer domínios de terceiros não autorizados.|A flag `-fs` (`-field-scope`) aceita `rdn` (padrão: mesmo domínio raiz registrável, ex.: `*.example.corp`), `fqdn` (estritamente o mesmo subdomínio inicial, ex.: apenas `app.example.corp`) ou `dn` (palavra-chave do domínio). Complementarmente, `-cos` recebe regexes de caminhos proibidos (como `/logout`, `/delete`, `/reset`) que jamais devem ser visitados pelo crawler.|```bash
+# Restringir o crawl estritamente ao mesmo FQDN e bloquear rotas de logout ou exclusão
+katana -u https://app.staging.corp/dashboard \
+  -fs fqdn \
+  -cos "logout|signout|account/delete" \
+  -e cdn,private-ips \
+  -d 4 -o scoped-crawl.txt
+```|Usar o padrão `-fs rdn` ao testar um único subdomínio de homologação (`staging.example.corp`) permite que o crawler siga links que apontam para `www.example.corp` (produção); use sempre `-fs fqdn` quando apenas um subdomínio específico estiver autorizado.|Execute `cut -d/ -f3 scoped-crawl.txt | sort -u` e confirme que 100% das URLs visitadas pertencem exclusivamente ao FQDN `app.staging.corp`.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-crawling-autenticado-headers-cookies-chrome-ws-url, subfinder-filtragem-escopo-match-filter-exclude-ip
+
+===NOTE===
+0364|katana-preenchimento-formularios-aff-form-config-estrategias-visita|Katana: Preenchimento Automático de Formulários (`-aff`, `-fc`), Extração (`-fx`) e Estratégias de Visita (`-s`)|O `katana` descobre estados profundos da aplicação extraindo elementos `<form>`, `<input>`, `<textarea>` e `<select>` (`-fx`) e preenchendo formulários automaticamente (`-aff` / `-automatic-form-fill`) com base em regras customizáveis (`-fc` / `form-config.yaml`).|Muitas rotas e fluxos de negócio só são alcançados após submeter formulários de busca, filtros ou cadastros multi-etapa com valores sintaticamente válidos (e-mail, telefone, CEP, datas).|O arquivo `form-config.yaml` mapeia expressões regulares sobre atributos `name`, `id`, `placeholder` ou `type` dos inputs HTML para valores de teste adequados. Além disso, a flag `-s` (`-strategy`) alterna a ordem de travessia do grafo de links entre `depth-first` (padrão, aprofundando um fluxo até `-d`) e `breadth-first` (explorando primeiro todas as páginas de nível 1 antes do nível 2).|```bash
+# Executar crawling breadth-first preenchendo formulários e extraindo metadados de inputs no JSONL
+katana -u https://portal.staging.corp \
+  -s breadth-first -d 3 \
+  -aff -fx \
+  -fc /etc/katana/custom-form-config.yaml \
+  -jsonl -o forms-and-routes.jsonl
+```|Habilitar `-aff` em sessões autenticadas sem bloquear rotas destrutivas via `-cos` pode submeter formulários de alteração de senha, criação massiva de tickets ou exclusão de registros no ambiente.|Inspecione `jq -c 'select(.request.method == "POST")' forms-and-routes.jsonl` para auditar os formulários submetidos e os campos descobertos.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-controle-escopo-field-scope-crawl-scope-out-of-scope, katana-deduplicacao-similaridade-fsu-pcs-simhash-tfidf-bm25
+
+===NOTE===
+0365|katana-deduplicacao-similaridade-fsu-pcs-simhash-tfidf-bm25|Katana: Deduplicação de URLs Paramétricas (`-fsu`, `-iqp`) e Similaridade de Conteúdo (`-pcs` SimHash/TF-IDF/BM25)|Para evitar *spider traps* (calendários infinitos, catálogos com milhares de produtos `/items/1` a `/items/99999` ou paginações redundantes), o `katana` combina filtragem de URLs estruturalmente similares (`-fsu`), descarte de query params repetidos (`-iqp`) e deduplicação por similaridade de conteúdo (`-pcs`).|Sem deduplicação de similaridade, um crawler gasta 99% do seu orçamento de tempo (`-ct`) visitando milhares de páginas de produtos ou artigos que possuem exatamente o mesmo template de código no servidor.|A flag `-fsu` (`-filter-similar`) detecta quando uma posição do caminho de URL recebe mais de `-fst 10` valores distintos (ex.: `/users/101`, `/users/102`...) e passa a tratá-la como parâmetro já coberto. Já `-pcs` (`-page-content-similar`) calcula *fingerprints* do conteúdo HTML via `simhash` (distância de Hamming `-pcsd 3`), `tfidf` ou `bm25` (`-pcst 0.85`), processando apenas `-pcsn 1` página por cluster de similaridade.|```bash
+# Evitar spider traps de catálogo filtrando URLs parametrizadas e páginas com SimHash similar
+katana -u https://ecommerce.staging.corp \
+  -d 4 -iqp \
+  -fsu -fst 5 \
+  -pcs -pcsm simhash -pcsd 3 -pcsn 1 \
+  -mdp 1000 -o deduplicated-routes.txt
+```|Definir `-fst` muito baixo (ex.: `2`) em APIs onde o primeiro segmento de rota define módulos distintos (`/users`, `/orders`, `/billing`) pode fazer o filtro inferir erroneamente que o primeiro segmento é um ID dinâmico.|Compare o tempo de execução e a contagem de linhas geradas com e sem `-fsu -pcs` em um portal com paginação extensa, confirmando a eliminação de rotas `/items/<id>` duplicadas.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-controle-escopo-field-scope-crawl-scope-out-of-scope, katana-rate-limiting-concorrencia-parallelism-delay-timeout-resume
+
+===NOTE===
+0366|katana-extracao-campos-field-extraction-custom-regex-jsonl|Katana: Extração Estruturada de Campos (`-f`, `-sf`, `-em`, `-ef`) e `field-config.yaml` (`-flc`)|O motor de *Field Extraction* do `katana` permite formatar a saída ou filtrar os resultados por componentes específicos da URL (`url`, `path`, `fqdn`, `rdn`, `rurl`, `qurl`, `qpath`, `file`, `ufile`, `key`, `value`, `kv`, `dir`, `udir`) e por campos customizados baseados em regex (`-flc`).|Permite extrair diretamente uma wordlist limpa de nomes de parâmetros (`-f key`), caminhos únicos de diretórios (`-f udir`) ou apenas URLs que possuem parâmetros de query (`-f qurl`) para alimentar fuzzers como `ffuf` ou scanners de injeção.|Além dos campos nativos selecionados com `-f`, o analista pode definir extratores customizados em `~/.config/katana/field-config.yaml` (ou `-flc`) para capturar chaves de API, endereços de e-mail ou cabeçalhos específicos durante o crawl, enquanto `-ef png,jpg,css,ico` exclui extensões estáticas irrelevantes e `-em php,jsp,json` restringe a extensões de interesse.|```bash
+# Extrair apenas URLs que contêm query parameters (qurl) e gerar wordlist de chaves de parâmetros
+katana -u https://app.staging.corp \
+  -d 3 -jc -silent \
+  -f qurl -o urls-with-params.txt
+
+katana -u https://app.staging.corp \
+  -d 3 -jc -silent \
+  -f key | sort -u > custom-param-wordlist.txt
+```|Ao usar `-f key` ou `-f ufile`, linhas vazias são omitidas automaticamente, mas quando combinado com `-jsonl`, todos os campos extraídos permanecem aninhados no objeto JSON de cada requisição.|Verifique `custom-param-wordlist.txt` e confirme que contém apenas identificadores de parâmetros únicos prontos para uso em `ffuf -w custom-param-wordlist.txt:PARAM`.|katana-analise-javascript-jc-jsluice-known-files-endpoints, ffuf-fuzzing-parametros-get-post-json-headers-raw-request, httpxpd-extratores-customizados-er-ep-body-preview-redirect-chain
+
+===NOTE===
+0367|katana-knowledge-base-classificacao-endpoints-segredos-kb|Katana: Knowledge Base (`-kb`), Classificação de Endpoints REST/GraphQL (`-kb-endpoints`) e Detecção de Segredos (`-kb-secrets`)|O módulo *Knowledge Base* do `katana` (`-kb`) utiliza classificadores embarcados e extratores semânticos para categorizar tipos de páginas e formulários, classificar endpoints de API (`-kb-endpoints`: REST, GraphQL, SOAP, XHR) e detectar segredos expostos no código cliente (`-kb-secrets`).|Acelera a triagem de segurança ao separar automaticamente páginas estáticas institucionais de formulários de autenticação, endpoints GraphQL e bundles JavaScript contendo tokens de API vazados.|Quando `-kb -kb-endpoints -kb-secrets` é habilitado com `-jsonl`, cada registro emitido pelo `katana` recebe metadados de classificação indicando a natureza da rota e quaisquer credenciais candidatas encontradas no corpo ou nos scripts da página.|```bash
+# Executar crawl com classificação de endpoints de API e detecção passiva de segredos em JSONL
+katana -u https://app.staging.corp \
+  -d 3 -jc -kb -kb-endpoints -kb-secrets \
+  -jsonl -o kb-classified-crawl.jsonl
+```|A flag experimental `-kb-validate-secrets` envia chamadas de API ativas para os provedores externos a fim de testar se um segredo encontrado é válido; **não** habilite `-kb-validate-secrets` sem autorização explícita no ROE, pois gera tráfego externo usando credenciais de terceiros.|Filtre o arquivo gerado com `jq -c 'select(.knowledge_base != null)' kb-classified-crawl.jsonl` para revisar os endpoints classificados e alertas de segredos.|katana-analise-javascript-jc-jsluice-known-files-endpoints, katana-extracao-campos-field-extraction-custom-regex-jsonl, katana-arquitetura-crawler-padrao-vs-headless-chrome-dast
+
+===NOTE===
+0368|katana-crawling-autenticado-headers-cookies-chrome-ws-url|Katana: Crawling Autenticado com Headers/Cookies (`-H`), Sessão de Navegador (`-cdd`) e Chrome DevTools (`-cwu`)|Para mapear a superfície interna de uma aplicação após o login, o `katana` suporta injeção de cabeçalhos `Authorization`/`Cookie` (`-H`), reutilização de diretório de perfil do Chrome (`-cdd` / `-chrome-data-dir` com `-noi`) ou conexão direta a um navegador já autenticado via WebSocket DevTools (`-cwu` / `-chrome-ws-url`).|Mais de 80% dos endpoints críticos de uma aplicação SaaS ou corporativa ficam atrás da tela de login (SSO/MFA/Passkeys) e retornam `401 Unauthorized` ou `302 Redirect` para crawlers não autenticados.|Em fluxos com MFA ou OAuth2 complexo, o analista abre uma instância do Chrome com `--remote-debugging-port=9222`, realiza o login manualmente uma única vez e passa a URL WebSocket (`ws://127.0.0.1:9222/devtools/browser/...`) para `katana -hl -cwu <ws-url>` combinada com `-cos "logout|signout"` para preservar a sessão ativa durante todo o spidering.|```bash
+# Crawling autenticado via token Bearer e cookie de sessão preservando a sessão contra logout
+katana -u https://api.staging.corp/v1/me \
+  -H "Authorization: Bearer ${STAGING_JWT}" \
+  -H "Cookie: session_id=${STAGING_SESSION}" \
+  -fs fqdn -cos "logout|revoke|signout" \
+  -d 3 -jc -jsonl -o authenticated-crawl.jsonl
+```|Quando usar `-cdd` (diretório de perfil do Chrome) para manter cookies de login no modo Headless, é obrigatório adicionar `-noi` (`-no-incognito`), pois por padrão o modo Headless do `katana` abre abas em modo anônimo que ignoram os cookies persistidos no perfil.|Confirme em `authenticated-crawl.jsonl` que as rotas autenticadas retornam `status_code: 200` em vez de redirecionamentos para `/login`.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-controle-escopo-field-scope-crawl-scope-out-of-scope, katana-rate-limiting-concorrencia-parallelism-delay-timeout-resume
+
+===NOTE===
+0369|katana-rate-limiting-concorrencia-parallelism-delay-timeout-resume|Katana: Controle de Concorrência (`-c`, `-p`), Rate-Limiting (`-rl`, `-rlm`, `-rd`), TLS Impersonation (`-tlsi`) e `-resume`|O `katana` separa a concorrência de URLs por alvo (`-c` / `-concurrency`, padrão 10) do paralelismo de alvos simultâneos (`-p` / `-parallelism`, padrão 10), controlando a cadência com `-rl` (req/s), `-rlm` (req/min), `-rd` (atraso em segundos entre requisições) e retomada de estado via `-resume resume.cfg`.|Impede a sobrecarga de servidores de aplicação durante *crawls* profundos e permite pausar e retomar varreduras longas sem repetir o trabalho já executado.|Quando o processo é interrompido (`SIGINT`), o `katana` salva o estado atual em `resume.cfg`. Adicionalmente, a flag `-tlsi` (`-tls-impersonate`) randomiza a impressão digital TLS `ClientHello` (JA3) para evitar que WAFs bloqueiem o crawler simplesmente por reconhecerem o fingerprint TLS padrão da biblioteca `crypto/tls` do Go.|```bash
+# Executar crawl controlado a 20 req/s com atraso de 1s e armazenamento de respostas brutas
+katana -list staging-apps.txt \
+  -c 5 -p 2 -rl 20 -rd 1 -timeout 15 \
+  -srd /var/lib/dast/katana-responses \
+  -jsonl -o controlled-crawl.jsonl
+```|Definir `-c 20` e `-p 20` simultaneamente sem limitar `-rl` pode disparar centenas de requisições concorrentes caso a lista de entrada possua múltiplos subdomínios apontando para o mesmo cluster de backend.|Interrompa um teste longo e reinicie com `katana -resume resume.cfg`, verificando nos logs a retomada a partir do checkpoint salvo.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-deduplicacao-similaridade-fsu-pcs-simhash-tfidf-bm25, httpxpd-otimizacao-rate-limit-threads-retries-timeout-waf-bypass
+
+===NOTE===
+0370|katana-integracao-pipelines-dast-nuclei-ffuf-zap-proxy|Katana: Integração em Pipelines DAST com Proxy de Auditoria (`-proxy`), `nuclei` e `ffuf`|O `katana` funciona como o motor de descoberta de rotas e parâmetros para scanners de vulnerabilidades e proxies DAST: suas URLs parametrizadas alimentam templates DAST do `nuclei` (`nuclei -dast`) ou o tráfego inteiro do crawl pode ser encaminhado em tempo real por um proxy (`-proxy http://127.0.0.1:8080`) para popular a árvore de sites do OWASP ZAP / Caido.|Scanners DAST frequentemente têm crawlers lentos ou limitados para SPAs modernas; usar o `katana` (com `-hl -jc -aff`) através da flag `-proxy` popula passivamente 100% das rotas e chamadas XHR dentro do motor de análise do ZAP.|Em pipelines totalmente automatizados de CI/CD, o `katana` exporta as rotas descobertas com query parameters (`-f qurl`) ou o log JSONL completo (que preserva método HTTP, cabeçalhos e corpo `POST` dos formulários extraídos) para alimentar diretamente os testes ativos de injeção.|```bash
+# Descobrir rotas com parâmetros via katana e alimentar os templates DAST do nuclei
+katana -u https://app.staging.corp \
+  -hl -system-chrome -jc -aff \
+  -fs fqdn -f qurl -silent \
+  | nuclei -dast -rl 30 -o dast-findings.txt
+```|Ao encaminhar o `katana` por um proxy interceptador (`-proxy`), certifique-se de que o modo de interceptação manual (*breakpoint*) do proxy esteja desligado para não travar todas as goroutines do crawler por *timeout*.|Verifique que o catálogo de rotas no proxy ou a entrada do `nuclei -dast` recebeu os endpoints dinâmicos descobertos pelo `katana`.|katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, katana-extracao-campos-field-extraction-custom-regex-jsonl, httpxpd-encadeamento-dast-subfinder-httpx-katana-nuclei

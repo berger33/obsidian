@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs), DFIR, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs), DFIR, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **300 / 2.000 (15,00%)**
-- Gate automatizado: **300/300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 3)
-- Revisão factual humana: **0/300**
-- Revisão factual por IA: **300/300**
-- Contabilizadas como válidas: **300/300**
-- Revisor das 300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–3 (300 notas, IDs 1–300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **400 / 2.000 (20,00%)**
+- Gate automatizado: **400/400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 4)
+- Revisão factual humana: **0/400**
+- Revisão factual por IA: **400/400**
+- Contabilizadas como válidas: **400/400**
+- Revisor das 400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–4 (400 notas, IDs 1–400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-03.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-03.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-04.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-04.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md)
 
-Existem 300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.700 restantes.
+Existem 400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.600 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -416,6 +416,138 @@ Existem 300 notas materiais listadas abaixo; não há IDs reservados, placeholde
 299. [Velociraptor Orquestração de Ferramentas de Terceiros (`Tools`) e Resposta Ativa (`Windows.Remediation.Quarantine`)](../../domains/software-0009/software/seguranca/velociraptor-orquestracao-ferramentas-externas-thor-hayabusa-cybertriage-quarantine.md)
 300. [Velociraptor Automação SOAR via `gRPC API` (`pyvelociraptor`), `Orgs` Multi-Tenant e Governança `RBAC` / `OIDC`](../../domains/software-0009/software/seguranca/velociraptor-automacao-grpc-api-pyvelociraptor-rbac-orgs-multi-tenant.md)
 
+## Tranche 4 — OpenZiti, Cisco ClamAV, Brakeman, `ffuf`, ProjectDiscovery Subfinder, ProjectDiscovery `httpx`, ProjectDiscovery Katana, OpenSSF GUAC, Sigstore Rekor e Sigstore Fulcio (100 notas; revisão factual por IA registrada)
+
+### OpenZiti (plataforma open-source de rede Zero-Trust, *Dark Services* e *Dark Routers* sem portas inbound expostas, *Controller*, *Fabric Mesh*, *SDKs Application-Embedded* e *Tunnelers* `ziti-edge-tunnel`)
+
+301. [OpenZiti: Arquitetura da Malha Zero Trust com Controller, Fabric Mesh e Edge Components](../../domains/software-0009/software/seguranca/ziti-arquitetura-openziti-malha-zero-trust-controller-fabric-edge.md)
+302. [OpenZiti: Dark Services e Dark Routers sem Portas de Escuta Inbound Expostas](../../domains/software-0009/software/seguranca/ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric.md)
+303. [OpenZiti: Identidades, Enrollment via One-Time Token (OTT) JWT e mTLS X.509](../../domains/software-0009/software/seguranca/ziti-identities-enrollment-jwt-ott-certificados-x509-mutuos.md)
+304. [OpenZiti: Modelo de Autorização com Service Policies (`Bind`/`Dial`) e Attribute Roles](../../domains/software-0009/software/seguranca/ziti-politicas-service-policies-edge-router-policies-bind-dial.md)
+305. [OpenZiti: SDKs Application-Embedded Zero Trust (Go, C, Python, JVM e Node.js)](../../domains/software-0009/software/seguranca/ziti-sdks-application-embedded-zero-trust-go-c-python-jvm.md)
+306. [OpenZiti: Tunnelers (`ziti-edge-tunnel`) com Interceptação DNS/TPROXY (`intercept.v1`) e Hosting (`host.v1`)](../../domains/software-0009/software/seguranca/ziti-tunnelers-ziti-edge-tunnel-intercept-host-tproxy-dns.md)
+307. [OpenZiti: Criptografia Ponta a Ponta (`libsodium` Curve25519 / ChaCha20-Poly1305) Acima do mTLS](../../domains/software-0009/software/seguranca/ziti-criptografia-ponta-a-ponta-libsodium-kx-chacha20-poly1305.md)
+308. [OpenZiti: Posture Checks Contínuos (OS, Processos, MAC, Domínio e MFA TOTP)](../../domains/software-0009/software/seguranca/ziti-posture-checks-mfa-os-process-mac-domain-avaliacao-continua.md)
+309. [OpenZiti: Smart Routing na Fabric Mesh, Terminators, Custos Dinâmicos e Alta Disponibilidade](../../domains/software-0009/software/seguranca/ziti-smart-routing-fabric-mesh-terminators-load-balancing-ha.md)
+310. [OpenZiti: Implantação em Kubernetes via Helm, `ziti-host` para ClusterIPs, `zrok` e BrowZer](../../domains/software-0009/software/seguranca/ziti-operacao-kubernetes-helm-ziti-controller-router-zrok-browzer.md)
+
+### Cisco ClamAV (motor antivírus open-source `libclamav`, daemon multi-thread `clamd`, atualização segura `freshclam`, varredura *On-Access* `clamonacc` via `fanotify`, assinaturas `.hsb`/`.ndb`/`.ldb`/`.cbc` e `clamav-milter`)
+
+311. [ClamAV: Arquitetura do Motor `libclamav`, Daemon `clamd`, `clamscan` e `freshclam`](../../domains/software-0009/software/seguranca/clamav-arquitetura-libclamav-clamd-clamscan-freshclam.md)
+312. [ClamAV: Configuração do `clamd.conf`, Protocolo `INSTREAM` e Limites Anti-Zip-Bomb](../../domains/software-0009/software/seguranca/clamav-daemon-clamd-conf-unix-socket-tcp-instream-limites.md)
+313. [ClamAV: Atualização Segura de Bases (`freshclam`), Arquivos `.cvd`/`.cld` e Mirrors Privados](../../domains/software-0009/software/seguranca/clamav-atualizacao-freshclam-cvd-cld-private-local-mirrors.md)
+314. [ClamAV: Varredura On-Access em Tempo Real (`clamonacc`) via Linux `fanotify`](../../domains/software-0009/software/seguranca/clamav-varredura-tempo-real-clamonacc-fanotify-on-access-linux.md)
+315. [ClamAV: Escrita de Assinaturas Customizadas (`.hdb`, `.hsb`, `.ndb`, `.ldb`, `.yar`) e `sigtool`](../../domains/software-0009/software/seguranca/clamav-assinaturas-customizadas-hdb-ndb-ldb-yara-sigtool.md)
+316. [ClamAV: Assinaturas de Bytecode (`.cbc`), Sandbox Runtime e Depuração com `clambc`](../../domains/software-0009/software/seguranca/clamav-bytecode-signatures-bc-clambc-llvm-runtime-sandbox.md)
+317. [ClamAV: Alertas Heurísticos, Bloqueio de Macros OLE2, Arquivos Criptografados e Prevenção de DLP](../../domains/software-0009/software/seguranca/clamav-heuristicas-dlp-macros-ole2-pdf-encrypted-archives.md)
+318. [ClamAV: Integração em Gateways de E-mail (`clamav-milter`), Servidores ICAP e Eventos S3/API](../../domains/software-0009/software/seguranca/clamav-integracao-pipelines-upload-api-milter-icap-s3.md)
+319. [ClamAV: Monitoramento Operacional com `clamdtop`, Pool de Memória e Dimensionamento em Containers](../../domains/software-0009/software/seguranca/clamav-monitoramento-performance-clamdtop-filas-threads-memoria.md)
+320. [ClamAV: Supressão Auditável de Falsos Positivos (`.ign2` e `.fp`) e Submissão com `clamsubmit`](../../domains/software-0009/software/seguranca/clamav-gerenciamento-falsos-positivos-ign2-fp-clamsubmit.md)
+
+### Brakeman (analisador estático de segurança `SAST` *whole-program* para aplicações Ruby on Rails, níveis de confiança `High`/`Medium`/`Weak`, `CheckSQL`, `CheckCrossSiteScripting`, `CheckMassAssignment`, `config/brakeman.ignore` e SARIF)
+
+321. [Brakeman: Arquitetura de Análise Estática *Whole-Program* para Aplicações Ruby on Rails](../../domains/software-0009/software/seguranca/brakeman-arquitetura-sast-ruby-on-rails-whole-program-ast.md)
+322. [Brakeman: Níveis de Confiança (`High`, `Medium`, `Weak`) e Sensibilidade de Fluxo (`--branch-limit`)](../../domains/software-0009/software/seguranca/brakeman-niveis-confianca-high-medium-weak-fluxo-dados-branching.md)
+323. [Brakeman: Detecção de SQL Injection (`CheckSQL`) em ActiveRecord, Interpolação de Strings e Arel](../../domains/software-0009/software/seguranca/brakeman-prevencao-sql-injection-activerecord-interpolacao-arel.md)
+324. [Brakeman: Detecção de Cross-Site Scripting (`CheckCrossSiteScripting`, `raw`, `html_safe` e `link_to`)](../../domains/software-0009/software/seguranca/brakeman-deteccao-xss-templates-erb-raw-html-safe-link-to.md)
+325. [Brakeman: Detecção de Mass Assignment e Abuso de Strong Parameters (`permit!` e Chaves Sensíveis)](../../domains/software-0009/software/seguranca/brakeman-mass-assignment-strong-parameters-permit-attr-accessible.md)
+326. [Brakeman: Command Injection (`CheckExecute`), SSRF, Path Traversal (`CheckSendFile`) e Dynamic Render](../../domains/software-0009/software/seguranca/brakeman-command-injection-ssrf-open-redirect-dynamic-render.md)
+327. [Brakeman: Desserialização Insegura (`YAML.load`, `Marshal.load`, `CSV`), `eval` e `send` Dinâmico](../../domains/software-0009/software/seguranca/brakeman-desserializacao-insegura-yaml-marshal-oj-eval-send.md)
+328. [Brakeman: Auditoria de CSRF (`protect_from_forgery`), Sessões, Cookies, `force_ssl` e Regex (`\A...\z`)](../../domains/software-0009/software/seguranca/brakeman-csrf-forgery-protection-sessoes-cookies-ssl-headers.md)
+329. [Brakeman: Gestão Auditável de Falsos Positivos com `config/brakeman.ignore` (`-I` e `--show-ignored`)](../../domains/software-0009/software/seguranca/brakeman-gerenciamento-falsos-positivos-brakeman-ignore-interativo.md)
+330. [Brakeman: Configuração Declarativa (`config/brakeman.yml`), Comparação Delta (`--compare`) e SARIF no CI/CD](../../domains/software-0009/software/seguranca/brakeman-integracao-ci-cd-sarif-compare-json-brakeman-yml.md)
+
+### `ffuf` — Fuzz Faster U Fool (web fuzzer de alta performance em Go para descoberta de diretórios, *Virtual Hosts* e parâmetros, *Auto-Calibration* `-ac`/`-ach`, *Matchers* `-mc`/`-ms`/`-mw`/`-ml` e *Filters* `-fc`/`-fs`/`-fw`/`-fl`)
+
+331. [ffuf: Arquitetura de Web Fuzzing Rápido em Go, Keyword `FUZZ` e Descoberta de Conteúdo (`-e` e `-D`)](../../domains/software-0009/software/seguranca/ffuf-arquitetura-web-fuzzer-go-keyword-fuzz-diretorios-arquivos.md)
+332. [ffuf: Precisão com Matchers (`-mc`, `-ms`, `-mw`, `-ml`, `-mr`, `-mt`) e Filters (`-fc`, `-fs`, `-fw`, `-fl`, `-fr`, `-ft`)](../../domains/software-0009/software/seguranca/ffuf-matchers-filters-status-size-words-lines-regex-time.md)
+333. [ffuf: Auto-Calibration (`-ac`, `-acs`, `-acc` e `-ach`) para Eliminação Automática de Falso Positivo](../../domains/software-0009/software/seguranca/ffuf-auto-calibration-ac-acs-acc-ach-eliminacao-soft-404.md)
+334. [ffuf: Descoberta de Virtual Hosts (`Host: FUZZ`) sem Registros DNS Públicos e TLS SNI (`-sni`)](../../domains/software-0009/software/seguranca/ffuf-descoberta-virtual-hosts-vhost-host-header-sni.md)
+335. [ffuf: Fuzzing de Parâmetros GET, Payloads POST JSON, Headers Customizados e Requisições Raw (`-request`)](../../domains/software-0009/software/seguranca/ffuf-fuzzing-parametros-get-post-json-headers-raw-request.md)
+336. [ffuf: Modos Multi-Wordlist (`clusterbomb`, `pitchfork`, `sniper`) e Encoders (`-enc`)](../../domains/software-0009/software/seguranca/ffuf-modos-multi-wordlist-clusterbomb-pitchfork-sniper-encoders.md)
+337. [ffuf: Varredura Recursiva (`-recursion`, `-recursion-depth`, `-recursion-strategy`) e `-maxtime-job`](../../domains/software-0009/software/seguranca/ffuf-recursao-automatica-recursion-depth-strategy-maxtime-job.md)
+338. [ffuf: Controle de Taxa (`-rate`, `-p`, `-t`), Circuit Breakers (`-sf`, `-se`, `-sa`) e Modo Interativo](../../domains/software-0009/software/seguranca/ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo.md)
+339. [ffuf: Geração Dinâmica de Payloads e Fuzzing Mutacional com `--input-cmd`, `--input-num` e `$FFUF_NUM`](../../domains/software-0009/software/seguranca/ffuf-mutadores-externos-input-cmd-radamsa-ffuf-num.md)
+340. [ffuf: Padronização com `ffufrc` (`-config`), Artefatos de Resposta (`-od`), Relatórios (`-of all`) e `-replay-proxy`](../../domains/software-0009/software/seguranca/ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc.md)
+
+### ProjectDiscovery Subfinder (enumeração passiva rápida de subdomínios para `EASM`, configuração de provedores e rotação de chaves em `provider-config.yaml`, resolução ativa e eliminação de *wildcards* `-nW`, rate-limiting `-rls` e SDK Go)
+
+341. [Subfinder: Arquitetura de Enumeração Passiva de Subdomínios e Descoberta de Superfície Externa (EASM)](../../domains/software-0009/software/seguranca/subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas.md)
+342. [Subfinder: Configuração de Chaves de API e Rotação de Credenciais em `provider-config.yaml` (`-pc`)](../../domains/software-0009/software/seguranca/subfinder-configuracao-provedores-api-keys-provider-config-yaml.md)
+343. [Subfinder: Seleção Granular de Fontes (`-s`, `-es`, `-all`, `-recursive`) e Paginação (`-mr`)](../../domains/software-0009/software/seguranca/subfinder-selecao-fontes-recursive-all-exclude-sources-max-results.md)
+344. [Subfinder: Resolução DNS Ativa (`-nW` / `-active`), Eliminação de Wildcards e Extração de IPs (`-oI`)](../../domains/software-0009/software/seguranca/subfinder-resolucao-ativa-eliminacao-wildcards-nw-resolvers-ip.md)
+345. [Subfinder: Rate-Limiting Global (`-rl`) e por Provedor (`-rls`), Timeouts e Limite de Leitura (`-rsr`)](../../domains/software-0009/software/seguranca/subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao.md)
+346. [Subfinder: Controle de Escopo com Match (`-m`), Filter (`-f`) e Exclusão de IPs (`-ei`)](../../domains/software-0009/software/seguranca/subfinder-filtragem-escopo-match-filter-exclude-ip.md)
+347. [Subfinder: Saída Estruturada JSONL (`-oJ`), Atribuição de Fontes (`-cs`) e Diretórios por Domínio (`-oD`)](../../domains/software-0009/software/seguranca/subfinder-formatos-saida-jsonl-collect-sources-output-dir-audit.md)
+348. [Subfinder: Encadeamento Unix (`stdin`/`stdout`) em Pipelines de Reconhecimento com `httpx`, `katana` e `nuclei`](../../domains/software-0009/software/seguranca/subfinder-encadeamento-pipelines-easm-stdin-stdout-httpx-nuclei.md)
+349. [Subfinder: Integração Programática em Go via SDK (`runner.NewRunner` e `EnumerateSingleDomainWithCtx`)](../../domains/software-0009/software/seguranca/subfinder-uso-como-biblioteca-go-sdk-runner-enumerate.md)
+350. [Subfinder: Monitoramento Contínuo de Novos Subdomínios, Detecção de *Shadow IT* e Subdomain Takeover](../../domains/software-0009/software/seguranca/subfinder-monitoramento-continuo-diff-novos-subdominios-alertas.md)
+
+### ProjectDiscovery `httpx` (toolkit multi-propósito de *probing* HTTP sobre `retryablehttp-go`, detecção de tecnologias Wappalyzer `-td`, hashes `mmh3` de favicon e `JARM`, inspeção TLS/CSP, *screenshots* headless `-ss` e filtros DSL)
+
+351. [ProjectDiscovery `httpx`: Arquitetura de Probing HTTP Multi-Propósito com `retryablehttp-go`](../../domains/software-0009/software/seguranca/httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit.md)
+352. [ProjectDiscovery `httpx`: Fingerprinting de Tecnologias (`-td`), Favicon Hash (`-favicon`), Body Hash e JARM (`-jarm`)](../../domains/software-0009/software/seguranca/httpxpd-deteccao-tecnologias-wappalyzer-favicon-hash-jarm-tls.md)
+353. [ProjectDiscovery `httpx`: Probes de Infraestrutura (`-ip`, `-cname`, `-asn`, `-cdn`), Portas (`-p`) e Virtual Hosts (`-vhost`)](../../domains/software-0009/software/seguranca/httpxpd-probes-rede-ip-cname-asn-cdn-waf-vhost-ports.md)
+354. [ProjectDiscovery `httpx`: Inspeção de Certificados TLS (`tls-grab`), Header CSP (`-csp-probe`) e Extração de FQDNs (`-efqdn`)](../../domains/software-0009/software/seguranca/httpxpd-inspecao-certificados-tls-csp-extract-fqdn-san.md)
+355. [ProjectDiscovery `httpx`: Triagem Visual em Escala com Screenshots Headless (`-ss`, `-system-chrome` e `-jsc`)](../../domains/software-0009/software/seguranca/httpxpd-captura-screenshots-headless-chrome-system-chrome-js.md)
+356. [ProjectDiscovery `httpx`: Filtragem Avançada com Matchers (`-mc`, `-ms`, `-mr`, `-mfc`) e Filters (`-fc`, `-fs`, `-fr`, `-fcdn`)](../../domains/software-0009/software/seguranca/httpxpd-matchers-filters-status-length-string-regex-cdn-time.md)
+357. [ProjectDiscovery `httpx`: Extratores Regex (`-er`, `-ep`), Body Preview (`-bp`) e Cadeia de Redirecionamento (`-fr` / `- follow-redirects`)](../../domains/software-0009/software/seguranca/httpxpd-extratores-customizados-er-ep-body-preview-redirect-chain.md)
+358. [ProjectDiscovery `httpx`: Controle de Concorrência (`-t`, `-rl`, `-rlm`), Retries, Timeout e Resiliência a WAF](../../domains/software-0009/software/seguranca/httpxpd-otimizacao-rate-limit-threads-retries-timeout-waf-bypass.md)
+359. [ProjectDiscovery `httpx`: Arquivamento Forense de Respostas (`-srd`, `-irh`, `-irb`) e Relatórios CSV/JSONL](../../domains/software-0009/software/seguranca/httpxpd-armazenamento-respostas-srd-irh-csv-sqlite-dbs.md)
+360. [ProjectDiscovery `httpx`: Papel de Filtro e Enriquecimento Entre `subfinder`, `katana` e `nuclei`](../../domains/software-0009/software/seguranca/httpxpd-encadeamento-dast-subfinder-httpx-katana-nuclei.md)
+
+### ProjectDiscovery Katana (framework de *web crawling* e *spidering* em modo Standard e Headless Chrome `-hl`, parsing de JavaScript `-jc`/`-jsl` com `jsluice`, preenchimento de formulários `-aff`, deduplicação SimHash `-pcs` e controle de escopo)
+
+361. [Katana: Arquitetura de Web Crawling e Spidering (Modo Standard HTTP vs Modo Headless Chrome `-hl`)](../../domains/software-0009/software/seguranca/katana-arquitetura-crawler-padrao-vs-headless-chrome-dast.md)
+362. [Katana: Parsing Estático de Arquivos JavaScript (`-jc` e `-jsl`) e Descoberta de `known-files` (`-kf`)](../../domains/software-0009/software/seguranca/katana-analise-javascript-jc-jsluice-known-files-endpoints.md)
+363. [Katana: Controle Estrito de Escopo (`-fs`, `-cs`, `-cos`, `-do` e `-e`) para Prevenção de Fuga de Crawl](../../domains/software-0009/software/seguranca/katana-controle-escopo-field-scope-crawl-scope-out-of-scope.md)
+364. [Katana: Preenchimento Automático de Formulários (`-aff`, `-fc`), Extração (`-fx`) e Estratégias de Visita (`-s`)](../../domains/software-0009/software/seguranca/katana-preenchimento-formularios-aff-form-config-estrategias-visita.md)
+365. [Katana: Deduplicação de URLs Paramétricas (`-fsu`, `-iqp`) e Similaridade de Conteúdo (`-pcs` SimHash/TF-IDF/BM25)](../../domains/software-0009/software/seguranca/katana-deduplicacao-similaridade-fsu-pcs-simhash-tfidf-bm25.md)
+366. [Katana: Extração Estruturada de Campos (`-f`, `-sf`, `-em`, `-ef`) e `field-config.yaml` (`-flc`)](../../domains/software-0009/software/seguranca/katana-extracao-campos-field-extraction-custom-regex-jsonl.md)
+367. [Katana: Knowledge Base (`-kb`), Classificação de Endpoints REST/GraphQL (`-kb-endpoints`) e Detecção de Segredos (`-kb-secrets`)](../../domains/software-0009/software/seguranca/katana-knowledge-base-classificacao-endpoints-segredos-kb.md)
+368. [Katana: Crawling Autenticado com Headers/Cookies (`-H`), Sessão de Navegador (`-cdd`) e Chrome DevTools (`-cwu`)](../../domains/software-0009/software/seguranca/katana-crawling-autenticado-headers-cookies-chrome-ws-url.md)
+369. [Katana: Controle de Concorrência (`-c`, `-p`), Rate-Limiting (`-rl`, `-rlm`, `-rd`), TLS Impersonation (`-tlsi`) e `-resume`](../../domains/software-0009/software/seguranca/katana-rate-limiting-concorrencia-parallelism-delay-timeout-resume.md)
+370. [Katana: Integração em Pipelines DAST com Proxy de Auditoria (`-proxy`), `nuclei` e `ffuf`](../../domains/software-0009/software/seguranca/katana-integracao-pipelines-dast-nuclei-ffuf-zap-proxy.md)
+
+### OpenSSF GUAC — *Graph for Understanding Artifact Composition* (agregação de `SBOMs` SPDX/CycloneDX, atestações `SLSA`/in-toto `DSSE`, `OSV`, `OpenSSF Scorecard` e `VEX` em grafo de alta fidelidade com API GraphQL e CLI `guacone`)
+
+371. [OpenSSF GUAC: Arquitetura do Grafo de Composição de Artefatos (Collectors, Ingestor, Assembler e GraphQL)](../../domains/software-0009/software/seguranca/guacsec-arquitetura-openssf-supply-chain-graph-sbom-slsa-vex.md)
+372. [OpenSSF GUAC: Ontologia do Grafo — Substantivos (`Package`, `Artifact`, `Source`, `Builder`) e Predicados (`IsDependency`, `HasSLSA`, `CertifyVEX`)](../../domains/software-0009/software/seguranca/guacsec-ontologia-grafo-nouns-package-artifact-source-predicates.md)
+373. [OpenSSF GUAC: Ingestão de Documentos SPDX, CycloneDX, Envelopes DSSE, in-toto ITE-6 e Proveniência SLSA](../../domains/software-0009/software/seguranca/guacsec-ingestao-sboms-spdx-cyclonedx-dsse-intoto-slsa.md)
+374. [OpenSSF GUAC: Enriquecimento Contínuo com Certifiers (`osv`, `deps_dev`, `scorecard` e `clearlydefined`)](../../domains/software-0009/software/seguranca/guacsec-certificadores-automaticos-osv-deps-dev-scorecard-clearlydefined.md)
+375. [OpenSSF GUAC: Rastreamento de Vulnerabilidades Transitivas (`guacone query vuln`) e Filtragem por VEX (`OpenVEX` / `CSAF`)](../../domains/software-0009/software/seguranca/guacsec-consultas-vulnerabilidades-transitivas-guacone-query-vuln-vex.md)
+376. [OpenSSF GUAC: Backends de Persistência (`keyvalue` In-Memory vs `ent` com PostgreSQL)](../../domains/software-0009/software/seguranca/guacsec-backends-armazenamento-keyvalue-ent-postgresql-redis-tikv.md)
+377. [OpenSSF GUAC: Pipeline Assíncrono em Escala com NATS JetStream, `collectsub` e `guacingest`](../../domains/software-0009/software/seguranca/guacsec-arquitetura-eventos-nats-jetstream-collectsub-escala.md)
+378. [OpenSSF GUAC: Governança Proativa da Cadeia de Suprimentos com `CertifyBad`, `CertifyGood` e `PointOfContact`](../../domains/software-0009/software/seguranca/guacsec-governanca-politicas-certifybad-certifygood-pointofcontact.md)
+379. [OpenSSF GUAC: Consultas Customizadas na API GraphQL, REST API e Exploração Visual no GUAC Visualizer](../../domains/software-0009/software/seguranca/guacsec-api-graphql-rest-guac-visualizer-integracao.md)
+380. [OpenSSF GUAC: Integração em Gates de Release CI/CD e Relação com o Ecossistema GUAC / Trustify](../../domains/software-0009/software/seguranca/guacsec-ecossistema-trustify-gateways-admissao-ci-cd.md)
+
+### Sigstore Rekor (*Transparency Log* imutável e *append-only* para metadados assinados da cadeia de suprimentos, árvores de Merkle `Trillian` e `rekor-tiles` / `Trillian-Tessera`, *Pluggable Types* `hashedrekord`/`dsse`/`intoto`, `rekor-cli` e `rekor-monitor`)
+
+381. [Sigstore Rekor: Arquitetura do Transparency Log Imutável de Cadeia de Suprimentos e Árvores de Merkle](../../domains/software-0009/software/seguranca/rekor-arquitetura-sigstore-transparency-log-merkle-tree-trillian.md)
+382. [Sigstore Rekor: Esquemas Pluggable Types (`hashedrekord`, `rekord`, `intoto`, `dsse`, `jar`, `rpm` e `tuf`)](../../domains/software-0009/software/seguranca/rekor-tipos-pluggable-hashedrekord-intoto-dsse-jar-rpm-tuf.md)
+383. [Sigstore Rekor: Operação com `rekor-cli` (`upload`, `get`, `search` e `verify`) por Hash, Chave ou E-mail](../../domains/software-0009/software/seguranca/rekor-operacoes-rekor-cli-upload-get-search-verify.md)
+384. [Sigstore Rekor: Provas Criptográficas de Árvore de Merkle (`Inclusion Proof`, `Consistency Proof`, `STH` e `SET`)](../../domains/software-0009/software/seguranca/rekor-provas-criptograficas-inclusion-proof-consistency-proof-sth.md)
+385. [Sigstore Rekor: Evolução do Rekor v1 (Trillian gRPC + MySQL) para Rekor v2 (`rekor-tiles` e `Trillian-Tessera`)](../../domains/software-0009/software/seguranca/rekor-evolucao-rekor-v2-tile-based-logs-trillian-tessera.md)
+386. [Sigstore Rekor: Auditoria e Monitoramento Contínuo com `rekor-monitor` (Consistência e Identidades OIDC)](../../domains/software-0009/software/seguranca/rekor-monitoramento-continuo-rekor-monitor-checkpoints-identidades.md)
+387. [Sigstore Rekor: Registro de Assinaturas Não-Fulcio (`ssh-keygen -Y sign`, `minisign` e X.509 Tradicional)](../../domains/software-0009/software/seguranca/rekor-integracao-assinatura-ssh-minisign-x509-openpgp.md)
+388. [Sigstore Rekor: API REST v1 (`/api/v1/log`, `/api/v1/log/entries`, `/api/v1/index/retrieve`) e Limites Operacionais](../../domains/software-0009/software/seguranca/rekor-api-rest-openapi-entries-retrieve-index-search.md)
+389. [Sigstore Rekor: Auto-Hospedagem Privada (`rekor-server`), KMS Signing, Limite `--max_request_body_size` e Sharding](../../domains/software-0009/software/seguranca/rekor-auto-hospedagem-privada-trillian-kms-sharding-offline-bundles.md)
+390. [Sigstore Rekor: Formato Sigstore Bundle (`.sigstore.json`) e Verificação 100% Offline de Inclusão e Tempo](../../domains/software-0009/software/seguranca/rekor-sigstore-bundle-verificacao-offline-signed-timestamps.md)
+
+### Sigstore Fulcio (Autoridade Certificadora `CA` gratuita para assinatura de código baseada em identidades `OIDC`, certificados X.509 de curta duração de 10 minutos, extensões `OID 1.3.6.1.4.1.57264.1.*`, *Certificate Transparency Log* `ctfe` e distribuição via `TUF`)
+
+391. [Sigstore Fulcio: Arquitetura da Autoridade Certificadora (CA) para *Keyless Code Signing* Baseada em OIDC](../../domains/software-0009/software/seguranca/fulcio-arquitetura-sigstore-ca-oidc-short-lived-certificates.md)
+392. [Sigstore Fulcio: Modelo de Segurança de Certificados de 10 Minutos — Por Que Não Há CRL/OCSP nem Re-Assinatura](../../domains/software-0009/software/seguranca/fulcio-modelo-seguranca-revogacao-timestamps-rekor-verificacao.md)
+393. [Sigstore Fulcio: Especificação RFC 5280 dos Certificados Root, Intermediate (`pathlen:0`) e Leaf (Subject Vazio e SAN Crítico)](../../domains/software-0009/software/seguranca/fulcio-especificacao-certificados-x509-san-critico-subject-vazio.md)
+394. [Sigstore Fulcio: Árvore de OIDs X.509 (`1.3.6.1.4.1.57264.1.*`) para GitHub Actions, GitLab CI e Buildkite](../../domains/software-0009/software/seguranca/fulcio-extensoes-x509-oids-57264-github-actions-ci-claims.md)
+395. [Sigstore Fulcio: Configuração de Provedores OIDC (`config.json`), Meta-Issuers (EKS/GKE/AKS) e SPIFFE/Workload Identity](../../domains/software-0009/software/seguranca/fulcio-provedores-oidc-meta-issuers-kubernetes-spiffe-ci.md)
+396. [Sigstore Fulcio: Certificate Transparency Log (`ctfe`), Precertificates (`OID 1.3.6.1.4.1.11129.2.4.3`) e SCT (`OID 1.3.6.1.4.1.11129.2.4.2`)](../../domains/software-0009/software/seguranca/fulcio-certificate-transparency-log-ctfe-rfc6962-sct-poison.md)
+397. [Sigstore Fulcio: Fluxo Criptográfico da API v2 (`CreateSigningCertificate`) e Prova de Posse da Chave](../../domains/software-0009/software/seguranca/fulcio-fluxo-protocolo-create-signing-certificate-proof-possession.md)
+398. [Sigstore Fulcio: Raiz de Confiança com The Update Framework (TUF `sigstore/root-signing`) e `trusted_root.json`](../../domains/software-0009/software/seguranca/fulcio-distribuicao-confianca-tuf-root-signing-trustbundle.md)
+399. [Sigstore Fulcio: Implantação Corporativa Privada com `certificate-maker`, Cloud KMS e HSM PKCS#11](../../domains/software-0009/software/seguranca/fulcio-implantacao-privada-certificate-maker-kms-pkcs11-tuf.md)
+400. [Sigstore Fulcio: Integração Ponta a Ponta com `cosign`, `gitsign` e Kubernetes `policy-controller` / Kyverno](../../domains/software-0009/software/seguranca/fulcio-integracao-ecossistema-cosign-gitsign-policy-controller.md)
+
 ## Critérios e próximo passo
 
-As 300 notas 1–300 das tranches 1–3 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 300/2.000 notas válidas, restando 1.700 notas materiais.
+As 400 notas 1–400 das tranches 1–4 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 400/2.000 notas válidas, restando 1.600 notas materiais.
