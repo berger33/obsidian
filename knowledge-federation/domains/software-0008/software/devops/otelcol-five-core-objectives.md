@@ -13,7 +13,7 @@ revisor: ""
 revisao_ia: aprovada
 revisor_ia: "Arena.ai Agent Mode"
 data_revisao_ia: 2026-10-03
-relatorio_revisao_ia: "knowledge-federation/exports/reports/ai-review-software-devops-2000-0002-tranche-25.md"
+relatorio_revisao_ia: "knowledge-federation/exports/reports/ai-review-software-devops-2000-0002-tranche-01.md"
 fontes: ["https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/main/README.md", "https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/main/docs/component-stability.md"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 lote: software-devops-2000-0002

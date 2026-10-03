@@ -126,7 +126,7 @@ revisor: ""
 revisao_ia: aprovada
 revisor_ia: "Arena.ai Agent Mode"
 data_revisao_ia: {DATE}
-relatorio_revisao_ia: "knowledge-federation/exports/reports/ai-review-software-devops-2000-0002-tranche-25.md"
+relatorio_revisao_ia: "knowledge-federation/exports/reports/ai-review-software-devops-2000-0002-tranche-01.md"
 fontes: [{', '.join('"' + source[1] + '"' for source in sources)}]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 lote: software-devops-2000-0002

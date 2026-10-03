@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **100 / 2.000 (5,00%)**
-- Gate automatizado: **100/100 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 1)
-- Revisão factual humana: **0/100**
-- Revisão factual por IA: **100/100**
-- Contabilizadas como válidas: **100/100**
-- Revisor das 100 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (100 notas, IDs 1–100) foi conferida factualmente por IA e aprovada sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **200 / 2.000 (10,00%)**
+- Gate automatizado: **200/200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 2)
+- Revisão factual humana: **0/200**
+- Revisão factual por IA: **200/200**
+- Contabilizadas como válidas: **200/200**
+- Revisor das 200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–2 (200 notas, IDs 1–200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-01.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-01.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-02.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-02.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 100 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1900 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1800 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -150,6 +150,138 @@
 99. [Reutilização remota e segurança da cadeia de suprimentos: `resolution.md` e `trusted-resources.md`](../../domains/software-0008/software/devops/tekton-remote-resolution-and-trusted-resources.md)
 100. [Guia de contribuição, arquitetura interna (`docs/developers/README.md`) e duplo licenciamento CC-BY-4.0 / Apache 2.0](../../domains/software-0008/software/devops/tekton-contributing-development-and-licenses.md)
 
+## Tranche 2 — Crossplane, Velero, Cilium, Linkerd, Harbor, Thanos, Grafana Loki, Fluent Bit, Vector e Skaffold (100 notas; revisão factual por IA registrada)
+
+### Crossplane — framework de control planes cloud-native e composição declarativa de recursos (itens 101–110)
+
+101. [Definição do Crossplane como framework de control planes sem escrever código](../../domains/software-0008/software/devops/crossplane-cloud-native-control-plane-framework.md)
+102. [Arquitetura dual de backend extensível e frontend declarativo configurável](../../domains/software-0008/software/devops/crossplane-extensible-backend-and-declarative-frontend.md)
+103. [Ponto de partida oficial e guia de início com Composition](../../domains/software-0008/software/devops/crossplane-get-started-and-composition-docs.md)
+104. [Tabela de versões mantidas e cronograma de End-of-Life (EOL)](../../domains/software-0008/software/devops/crossplane-maintained-releases-and-eol-schedule.md)
+105. [Fim de suporte da série v1.20 e transição para o Crossplane v2](../../domains/software-0008/software/devops/crossplane-v1-20-eol-and-v2-migration.md)
+106. [Roadmap público, triagem comunitária e natureza estimativa dos milestones](../../domains/software-0008/software/devops/crossplane-public-roadmap-and-triage-process.md)
+107. [Reuniões comunitárias a cada quatro semanas e canais de colaboração](../../domains/software-0008/software/devops/crossplane-community-meetings-and-channels.md)
+108. [Papel consultivo dos Special Interest Groups (SIGs) sem autoridade decisória](../../domains/software-0008/software/devops/crossplane-special-interest-groups-governance.md)
+109. [Frentes técnicas dos 14 SIGs: composição, provedores, Upjet e observabilidade](../../domains/software-0008/software/devops/crossplane-sig-composition-and-provider-ecosystems.md)
+110. [Registro público de adotantes em ADOPTERS.md e conformidade OpenSSF](../../domains/software-0008/software/devops/crossplane-adopters-and-open-governance.md)
+
+### Velero — backup, restauração, migração de clusters Kubernetes e proteção de volumes (itens 111–120)
+
+111. [Visão geral do Velero: backup, restauração, migração e replicação de clusters](../../domains/software-0008/software/devops/velero-backup-restore-and-cluster-migration.md)
+112. [Arquitetura cliente-servidor: controladores em réplica única no cluster e CLI local](../../domains/software-0008/software/devops/velero-server-controllers-and-local-cli.md)
+113. [Movimentação de dados de volumes: file-system backup, data mover CSI e plugins de provedor](../../domains/software-0008/software/devops/velero-file-system-backup-and-csi-data-mover.md)
+114. [Matriz de compatibilidade do Velero 1.14 a 1.18 com versões do Kubernetes](../../domains/software-0008/software/devops/velero-kubernetes-compatibility-matrix.md)
+115. [Garantia de restauração de backups entre versões N-2 menores do Velero](../../domains/software-0008/software/devops/velero-n-minus-2-upgrade-restore-guarantee.md)
+116. [Suporte a ambientes IPv4, IPv6 e dual-stack no Velero](../../domains/software-0008/software/devops/velero-ipv4-ipv6-and-dual-stack-support.md)
+117. [Processo de propostas de design em design/ e histórico em design/Implemented/](../../domains/software-0008/software/devops/velero-design-proposals-and-implemented-archive.md)
+118. [Seletor de versão na documentação e fluxo de troubleshooting do Velero](../../domains/software-0008/software/devops/velero-versioned-docs-and-troubleshooting.md)
+119. [Reuniões quinzenais em dois fusos horários e governança em velero-io/.github](../../domains/software-0008/software/devops/velero-community-meetings-and-governance.md)
+120. [Status na CNCF, séries LF Projects e guia Start contributing](../../domains/software-0008/software/devops/velero-cncf-sandbox-and-contributing-workflow.md)
+
+### Cilium — rede CNI baseada em eBPF, segurança por identidade, service mesh e Hubble (itens 121–130)
+
+121. [Dataplane baseado em eBPF para rede, observabilidade e segurança graduado na CNCF](../../domains/software-0008/software/devops/cilium-ebpf-dataplane-networking-security-observability.md)
+122. [Modos de operação CNI: overlay (VXLAN/Geneve), roteamento nativo e BGP/L2](../../domains/software-0008/software/devops/cilium-cni-overlay-native-routing-and-bgp.md)
+123. [Balanceamento de carga eBPF L4, substituição do kube-proxy, XDP, DSR e Maglev](../../domains/software-0008/software/devops/cilium-ebpf-load-balancing-kube-proxy-replacement.md)
+124. [Cluster Mesh: descoberta global de serviços e identidade unificada entre clusters](../../domains/software-0008/software/devops/cilium-cluster-mesh-multicluster-service-discovery.md)
+125. [Políticas de rede L3–L7 e DNS baseadas em identidade de segurança](../../domains/software-0008/software/devops/cilium-identity-based-l3-l7-and-dns-network-policy.md)
+126. [Service Mesh sem sidecars tradicionais: criptografia IPsec/WireGuard/ztunnel e Gateway API](../../domains/software-0008/software/devops/cilium-service-mesh-encryption-and-gateway-api.md)
+127. [Observabilidade integrada com Hubble, métricas Prometheus e motivos de descarte](../../domains/software-0008/software/devops/cilium-hubble-observability-and-drop-reasons.md)
+128. [Política de manutenção das três últimas versões menores estáveis do Cilium](../../domains/software-0008/software/devops/cilium-stable-releases-and-three-minor-support-policy.md)
+129. [Distribuição de imagens AMD64/AArch64 e SBOM em formato SPDX desde a v1.13.0](../../domains/software-0008/software/devops/cilium-multi-arch-images-and-spdx-sbom.md)
+130. [Licenciamento Apache 2.0 em espaço de usuário e duplo licenciamento GPL-2.0/BSD-2-Clause em BPF](../../domains/software-0008/software/devops/cilium-dual-licensing-userspace-and-bpf-templates.md)
+
+### Linkerd — service mesh ultraleve e security-first para Kubernetes com proxy em Rust (itens 131–140)
+
+131. [Definição do Linkerd como service mesh ultraleve e security-first na CNCF](../../domains/software-0008/software/devops/linkerd-ultralight-security-first-service-mesh.md)
+132. [Organização dos cinco repositórios do Linkerd e divisão entre Rust, Go e React](../../domains/software-0008/software/devops/linkerd-five-repositories-and-rust-go-react-split.md)
+133. [Componentes nucleares do control plane: destination, proxy-injector e identity](../../domains/software-0008/software/devops/linkerd-control-plane-destination-injector-identity.md)
+134. [Extensão viz: metrics-api, tap, tap-injector e dashboard web](../../domains/software-0008/software/devops/linkerd-viz-extension-metrics-tap-and-web.md)
+135. [Extensão multicluster: linkerd-gateway e controlador linkerd-service-mirror](../../domains/software-0008/software/devops/linkerd-multicluster-gateway-and-service-mirror.md)
+136. [Fluxo de instalação em duas etapas (--crds e control plane), linkerd check e linkerd inject](../../domains/software-0008/software/devops/linkerd-install-crds-check-and-inject-workflow.md)
+137. [Habilitação de rastreamento distribuído nos componentes do control plane](../../domains/software-0008/software/devops/linkerd-control-plane-distributed-tracing-flag.md)
+138. [Registro oficial cr.l5d.io/linkerd e fluxo de build local com k3d e buildx](../../domains/software-0008/software/devops/linkerd-container-registry-and-k3d-dev-workflow.md)
+139. [Auditorias periódicas de segurança por terceiros e política em SECURITY.md](../../domains/software-0008/software/devops/linkerd-third-party-security-audits-and-policy.md)
+140. [Reuniões do Steering Committee, listas da CNCF e canais comunitários](../../domains/software-0008/software/devops/linkerd-steering-committee-and-community-channels.md)
+
+### Harbor — registro cloud-native de imagens e Helm charts com assinatura, scan e replicação (itens 141–150)
+
+141. [Definição do Harbor como registro cloud-native que armazena, assina e escaneia artefatos](../../domains/software-0008/software/devops/harbor-trusted-cloud-native-registry-overview.md)
+142. [Controle de acesso baseado em papéis (RBAC) por projeto e autenticação LDAP/AD e OIDC](../../domains/software-0008/software/devops/harbor-rbac-projects-ldap-and-oidc-identity.md)
+143. [Replicação baseada em políticas com filtros, retentativa automática e adaptadores](../../domains/software-0008/software/devops/harbor-policy-based-replication-multi-registry.md)
+144. [Scan regular de vulnerabilidades e políticas para impedir o deploy de imagens vulneráveis](../../domains/software-0008/software/devops/harbor-vulnerability-scanning-and-deployment-policies.md)
+145. [Exclusão de imagens e jobs de garbage collection para liberar manifests e blobs órfãos](../../domains/software-0008/software/devops/harbor-image-deletion-and-garbage-collection.md)
+146. [Portal gráfico, trilha de auditoria de operações e API RESTful com Swagger UI embutido](../../domains/software-0008/software/devops/harbor-portal-auditing-and-restful-swagger-api.md)
+147. [Opções de implantação: Docker Compose, Helm Chart (harbor-helm) e Harbor Operator](../../domains/software-0008/software/devops/harbor-deployment-options-docker-compose-helm-operator.md)
+148. [Verificação criptográfica de instaladores do Harbor com Cosign a partir da v2.15.0](../../domains/software-0008/software/devops/harbor-cosign-release-signature-verification.md)
+149. [Testes de conformidade OCI Distribution e matriz de compatibilidade de adaptadores](../../domains/software-0008/software/devops/harbor-oci-distribution-conformance-and-compatibility.md)
+150. [Visão arquitetural na wiki oficial e reuniões comunitárias quinzenais em dois fusos](../../domains/software-0008/software/devops/harbor-architecture-overview-and-community-calls.md)
+
+### Thanos — métricas Prometheus em alta disponibilidade, visão global de consulta e armazenamento ilimitado (itens 151–160)
+
+151. [Definição do Thanos e os três objetivos centrais sobre o Prometheus 2.0](../../domains/software-0008/software/devops/thanos-ha-prometheus-global-query-unlimited-storage.md)
+152. [Formato de armazenamento do Prometheus 2.0 e Object Storage como única dependência opcional](../../domains/software-0008/software/devops/thanos-prometheus-2-storage-format-and-object-storage.md)
+153. [Visão global de consulta, deduplicação de pares Prometheus HA e federação multi-cluster](../../domains/software-0008/software/devops/thanos-global-query-view-and-ha-deduplication.md)
+154. [Downsampling de dados históricos para aceleração massiva de consultas](../../domains/software-0008/software/devops/thanos-downsampling-historical-data-query-speedup.md)
+155. [API gRPC Store API simples para acesso unificado a dados e provedores customizados](../../domains/software-0008/software/devops/thanos-grpc-store-api-unified-data-access.md)
+156. [Arquiteturas de implantação no Kubernetes: modelo com Sidecar versus modelo com Receive](../../domains/software-0008/software/devops/thanos-sidecar-versus-receive-architectures.md)
+157. [Filosofia UNIX e Go no design do Thanos: um binário com subcomandos coesos](../../domains/software-0008/software/devops/thanos-unix-and-golang-design-philosophy.md)
+158. [Cadência de releases menores a cada seis semanas e imagens em Quay.io e Docker Hub](../../domains/software-0008/software/devops/thanos-release-cadence-six-weeks-and-container-registries.md)
+159. [Documentação de partida: Getting Started, Design, Proposals e Integrations](../../domains/software-0008/software/devops/thanos-design-docs-proposals-and-integrations.md)
+160. [Comunidade no CNCF Slack, lista de adotantes em adopters.yml e MAINTAINERS.md](../../domains/software-0008/software/devops/thanos-community-adopters-and-maintainers-governance.md)
+
+### Grafana Loki — agregação de logs multi-tenant indexada por labels no estilo Prometheus (itens 161–170)
+
+161. [Definição do Loki: agregação de logs inspirada no Prometheus que indexa apenas labels](../../domains/software-0008/software/devops/loki-prometheus-inspired-label-indexed-log-aggregation.md)
+162. [Correlação direta entre métricas e logs usando os mesmos labels do Prometheus e de Pods Kubernetes](../../domains/software-0008/software/devops/loki-shared-prometheus-and-kubernetes-pod-labels.md)
+163. [Pilha de três componentes (Alloy, Loki e Grafana) e transição do Promtail para o Grafana Alloy](../../domains/software-0008/software/devops/loki-three-component-stack-alloy-loki-grafana.md)
+164. [Diferença entre o modelo push do Loki e o pull do Prometheus, em binário único ou microsserviços](../../domains/software-0008/software/devops/loki-push-model-and-single-binary-or-microservices.md)
+165. [Migração do Helm chart do Grafana Loki em março de 2026 para grafana-community/helm-charts](../../domains/software-0008/software/devops/loki-helm-chart-migration-march-2026.md)
+166. [Seções essenciais da documentação: API de ingestão, Labels, Docker Driver Client e Grafana](../../domains/software-0008/software/devops/loki-api-labels-docker-driver-and-grafana-datasource.md)
+167. [Operação e verificação: interface de linha de comando LogCLI e monitoramento com Loki Canary](../../domains/software-0008/software/devops/loki-logcli-and-loki-canary-auditing.md)
+168. [Compilação a partir do código-fonte em Go e execução local sem dependências](../../domains/software-0008/software/devops/loki-building-from-source-and-local-no-dependencies-mode.md)
+169. [Documento original de design do Loki e referências históricas de arquitetura](../../domains/software-0008/software/devops/loki-design-doc-and-architecture-reading.md)
+170. [Canais de suporte da comunidade e separação entre issues do Loki e issues de UI no Grafana](../../domains/software-0008/software/devops/loki-community-support-and-grafana-ui-issue-routing.md)
+
+### Fluent Bit — agente de telemetria leve e de alta performance para logs, métricas e traces (itens 171–180)
+
+171. [Definição do Fluent Bit como agente leve para Logs, Métricas e Traces graduado na CNCF](../../domains/software-0008/software/devops/fluentbit-lightweight-telemetry-agent-logs-metrics-traces.md)
+172. [Suporte multi-plataforma (Linux, Windows, macOS, BSD e sistemas embarcados) e escala de produção](../../domains/software-0008/software/devops/fluentbit-multi-platform-and-embedded-footprint.md)
+173. [Cadência de releases maiores a cada 3–4 meses, série v5.1 e guia MAINTENANCE.md](../../domains/software-0008/software/devops/fluentbit-release-cadence-v5-1-and-maintenance-policy.md)
+174. [Arquitetura modular plugável com mais de 70 plugins de Inputs, Filters e Outputs](../../domains/software-0008/software/devops/fluentbit-pluggable-inputs-filters-outputs-architecture.md)
+175. [Processamento de streams com consultas SQL para análise e transformação em trânsito](../../domains/software-0008/software/devops/fluentbit-sql-stream-processing-analytics.md)
+176. [Rede segura com TLS/SSL, I/O assíncrono e exposição de métricas internas para Prometheus](../../domains/software-0008/software/devops/fluentbit-tls-async-io-and-prometheus-self-monitoring.md)
+177. [Extensibilidade poliglota: plugins em C, filtros em Lua e outputs em Go](../../domains/software-0008/software/devops/fluentbit-extensibility-in-c-lua-and-go.md)
+178. [Requisitos de compilação (CMake, Flex, Bison, YAML e OpenSSL) e quickstart via CLI](../../domains/software-0008/software/devops/fluentbit-cmake-build-requirements-and-cli-quickstart.md)
+179. [Fluxos de CI no GitHub Actions: testes unitários, testes de integração, builds Arm e release](../../domains/software-0008/software/devops/fluentbit-ci-workflows-and-arm-builds.md)
+180. [Guia do desenvolvedor, diretrizes de contribuição e canal #fluent-bit no Slack](../../domains/software-0008/software/devops/fluentbit-developer-guide-and-community-channels.md)
+
+### Vector — pipeline de dados de observabilidade ponta a ponta em Rust para agentes e agregadores (itens 181–190)
+
+181. [Definição do Vector como pipeline de dados de observabilidade ponta a ponta construído em Rust](../../domains/software-0008/software/devops/vector-high-performance-rust-observability-pipeline.md)
+182. [Os três princípios arquiteturais do Vector: Reliable (Rust), End-to-end (Agent/Aggregator) e Unified](../../domains/software-0008/software/devops/vector-three-principles-reliable-end-to-end-unified.md)
+183. [Cinco casos de uso: redução de custos, transição de fornecedores, qualidade e consolidação de agentes](../../domains/software-0008/software/devops/vector-five-use-cases-vendor-transition-and-agent-consolidation.md)
+184. [Escala comprovada na comunidade: mais de 100 mil downloads diários e 500 TB/dia no maior usuário](../../domains/software-0008/software/devops/vector-community-scale-500tb-daily-and-production-users.md)
+185. [Benchmarks de performance no vector-test-harness: TCP, File e HTTP](../../domains/software-0008/software/devops/vector-performance-benchmarks-test-harness.md)
+186. [Testes de corretude: persistência de buffer em disco, rotação de arquivos, truncamento, SIGHUP e JSON](../../domains/software-0008/software/devops/vector-correctness-tests-disk-buffer-logrotate-sighup.md)
+187. [Modelo declarativo do pipeline: coleta em sources, processamento em transforms e entrega em sinks](../../domains/software-0008/software/devops/vector-sources-transforms-sinks-pipeline-model.md)
+188. [Verificação contínua no repositório: Nightly, Integration/E2E Test Suite e Component Features](../../domains/software-0008/software/devops/vector-ci-workflows-nightly-integration-component-features.md)
+189. [Políticas formais do projeto: Releases, Versioning, Security, Privacy e Code of Conduct](../../domains/software-0008/software/devops/vector-policies-releases-versioning-security-privacy.md)
+190. [Posicionamento arquitetural: como combinar ou escolher entre Vector, Fluent Bit e OpenTelemetry Collector](../../domains/software-0008/software/devops/vector-choosing-between-vector-fluentbit-and-otelcol.md)
+
+### Skaffold — desenvolvimento contínuo client-side e blocos de CI/CD para aplicações Kubernetes (itens 191–200)
+
+191. [Definição do Skaffold como ferramenta de linha de comando para desenvolvimento contínuo no Kubernetes](../../domains/software-0008/software/devops/skaffold-continuous-development-kubernetes-cli.md)
+192. [Ciclo otimizado source-to-deploy, tagueamento baseado em políticas e feedback contínuo](../../domains/software-0008/software/devops/skaffold-source-to-deploy-and-policy-image-tagging.md)
+193. [Portabilidade de projeto (`git clone` e `skaffold run`) e perfis sensíveis ao contexto](../../domains/software-0008/software/devops/skaffold-project-portability-and-profiles.md)
+194. [Blocos de construção de CI/CD e geração de manifestos hidratados com skaffold render para GitOps](../../domains/software-0008/software/devops/skaffold-cicd-building-blocks-and-skaffold-render-gitops.md)
+195. [Descoberta com skaffold init, aplicações multi-componente e arquitetura plugável de build/deploy](../../domains/software-0008/software/devops/skaffold-init-multi-component-and-pluggable-tools.md)
+196. [Arquitetura 100% client-side sem componentes instalados nem manutenção no cluster](../../domains/software-0008/software/devops/skaffold-client-side-only-lightweight-architecture.md)
+197. [Integração gerenciada com IDEs via extensões Google Cloud Code para VS Code e JetBrains](../../domains/software-0008/software/devops/skaffold-cloud-code-ide-integrations-vscode-jetbrains.md)
+198. [Maturidade GA pronta para produção e política formal de depreciação](../../domains/software-0008/software/devops/skaffold-production-readiness-and-deprecation-policy.md)
+199. [Catálogo oficial de exemplos no repositório e guia de contribuição](../../domains/software-0008/software/devops/skaffold-examples-catalog-and-contribution-guide.md)
+200. [Processo de divulgação de segurança (SECURITY.md), avisos no GitHub e canais da comunidade](../../domains/software-0008/software/devops/skaffold-security-disclosures-and-community-channels.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 100 notas 1–100 da tranche 1 têm revisão factual por IA registrada no relatório vinculado. O lote continua incompleto: são 100/2.000 notas válidas, restando 1900 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 200 notas 1–200 das tranches 1–2 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 200/2.000 notas válidas, restando 1800 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
