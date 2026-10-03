@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **800 / 2.000 (40,00%)**
-- Gate automatizado: **800/800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 8)
-- Revisão factual humana: **0/800**
-- Revisão factual por IA: **800/800**
-- Contabilizadas como válidas: **800/800**
-- Revisor das 800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–8 (800 notas, IDs 1–800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **900 / 2.000 (45,00%)**
+- Gate automatizado: **900/900 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 9)
+- Revisão factual humana: **0/900**
+- Revisão factual por IA: **900/900**
+- Contabilizadas como válidas: **900/900**
+- Revisor das 900 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–9 (900 notas, IDs 1–900) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-08.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-08.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-09.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-09.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1200 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 900 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1100 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1074,6 +1074,138 @@
 799. [Earthly: paralelismo automático por DAG no BuildKit, mounts de cache (--mount type=cache) e funções reutilizáveis (FUNCTION)](../../domains/software-0008/software/devops/earthly-execucao-paralela-dag-buildkit-cache-camadas.md)
 800. [Earthly: camada agnóstica sobre qualquer CI (GitHub Actions, GitLab CI, CircleCI, Jenkins, Tekton) e modo interativo de debug (-i)](../../domains/software-0008/software/devops/earthly-integracao-qualquer-ci-github-actions-gitlab-jenkins.md)
 
+## Tranche 9 — Talos Linux, K3s, Cluster API (CAPI), kind, Minikube, Cloud Native Buildpacks (pack), ko, Task (Taskfile.yml), Telepresence e MetalBear mirrord (100 notas; revisão factual por IA registrada)
+
+### Talos Linux (sistema operacional Linux imutável, mínimo e gerenciado exclusivamente por API gRPC mTLS para Kubernetes)
+
+801. [Talos Linux: sistema operacional moderno, imutável e gerenciado por API gRPC para Kubernetes](../../domains/software-0008/software/devops/talos-linux-sistema-operacional-imutavel-api-kubernetes.md)
+802. [Talos Linux: reescrita do userspace em Go a partir do PID 1 (machined) sem systemd, GNU utilities ou SSH](../../domains/software-0008/software/devops/talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh.md)
+803. [Talos Linux: layout das 6 partições de disco (EFI, BIOS, BOOT, META, STATE, EPHEMERAL) e 3 camadas de filesystem](../../domains/software-0008/software/devops/talos-particoes-disco-camadas-rootfs-squashfs-overlayfs.md)
+804. [Talos Linux: configuração declarativa unificada da máquina e do Kubernetes em um único manifesto YAML](../../domains/software-0008/software/devops/talos-configuracao-declarativa-yaml-unica-machineconfig.md)
+805. [Talos Linux: endurecimento de segurança por padrão (KSPP, bloqueio de módulos dinâmicos de kernel e PKI mTLS rotativa)](../../domains/software-0008/software/devops/talos-endurecimento-seguranca-kspp-modulos-kernel-mtls.md)
+806. [Talos Linux: atualizações atômicas baseadas em imagem (talosctl upgrade) e reset limpo de nós (talosctl reset)](../../domains/software-0008/software/devops/talos-atualizacoes-atomicas-upgrades-reset-ciclo-vida.md)
+807. [Talos Linux: bootstrap do cluster Kubernetes, gerenciamento nativo do etcd e recuperação de quórum via talosctl](../../domains/software-0008/software/devops/talos-bootstrap-etcd-gerenciamento-control-plane-ha.md)
+808. [Talos Linux: provisionamento de clusters locais (em Docker ou QEMU via talosctl cluster create) e suporte multi-plataforma](../../domains/software-0008/software/devops/talos-ambientes-locais-docker-qemu-bare-metal-cloud.md)
+809. [Talos Linux: diagnóstico e observabilidade sem SSH via talosctl (dashboard, logs, dmesg, pcap e leitura de /proc)](../../domains/software-0008/software/devops/talos-observabilidade-troubleshooting-api-logs-pcap-dashboard.md)
+810. [Talos Linux: identidade de nó na partição STATE, descoberta de cluster e malha criptografada KubeSpan (WireGuard)](../../domains/software-0008/software/devops/talos-descoberta-cluster-kubespan-wireguard-particao-state.md)
+
+### K3s (distribuição Kubernetes leve certificada pela CNCF em binário único para Edge, IoT, ARM e CI)
+
+811. [K3s: distribuição Kubernetes leve e certificada em binário único menor que 100 MB](../../domains/software-0008/software/devops/k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura.md)
+812. [K3s: pilha de tecnologias embutidas (containerd, Flannel, CoreDNS, Traefik, Klipper-lb, Kube-router e utilitários de host)](../../domains/software-0008/software/devops/k3s-componentes-embutidos-containerd-flannel-traefik-klipper.md)
+813. [K3s: shim de datastore Kine (SQLite padrão, PostgreSQL, MySQL/MariaDB) e etcd3 embutido](../../domains/software-0008/software/devops/k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais.md)
+814. [K3s: arquitetura de nós Server e Agent, túnel WebSocket reverso do kubelet e load balancer client-side](../../domains/software-0008/software/devops/k3s-arquitetura-servers-agents-tunel-websocket-loadbalancer.md)
+815. [K3s: proteção de identidade de nós com Secrets node-password.k3s e flag --with-node-id](../../domains/software-0008/software/devops/k3s-seguranca-identidade-nos-node-password-secrets-certificados.md)
+816. [K3s: auto-deploy em tempo real de manifestos em /var/lib/rancher/k3s/server/manifests e Helm-controller (CRD HelmChart)](../../domains/software-0008/software/devops/k3s-auto-deploy-manifestos-helm-controller-crd.md)
+817. [K3s: gerenciamento automatizado e rotação de certificados TLS dos componentes com k3s certificate](../../domains/software-0008/software/devops/k3s-gerenciamento-certificados-tls-rotacao-operacoes.md)
+818. [K3s: configuração declarativa em /etc/rancher/k3s/config.yaml, serviços systemd e scripts de limpeza](../../domains/software-0008/software/devops/k3s-configuracao-config-yaml-systemd-desinstalacao-scripts.md)
+819. [K3s: implantação offline (Air-Gap) com tarball de imagens em /var/lib/rancher/k3s/agent/images e registries.yaml](../../domains/software-0008/software/devops/k3s-instalacao-air-gap-imagens-tarball-registries-privados.md)
+820. [K3s: remoção de drivers in-tree legados, adoção de CSI e CCM out-of-tree e conformidade CNCF](../../domains/software-0008/software/devops/k3s-remocao-in-tree-drivers-suporte-csi-ccm-conformidade.md)
+
+### Cluster API — CAPI (subprojeto Kubernetes SIG Cluster Lifecycle para provisionamento e operação declarativa de clusters)
+
+821. [Kubernetes Cluster API (CAPI): gerenciamento declarativo do ciclo de vida de clusters usando APIs estilo Kubernetes](../../domains/software-0008/software/devops/clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes.md)
+822. [Kubernetes Cluster API: Custom Resources Cluster e Machine e o princípio de imutabilidade de máquinas](../../domains/software-0008/software/devops/clusterapi-recursos-cluster-machine-imutabilidade.md)
+823. [Kubernetes Cluster API: gerenciamento de grupos de nós worker com MachineDeployment, MachineSet e MachinePool](../../domains/software-0008/software/devops/clusterapi-machinedeployment-machineset-machinepool-rollout.md)
+824. [Kubernetes Cluster API: arquitetura extensível de Providers (Infrastructure, Bootstrap e Control Plane)](../../domains/software-0008/software/devops/clusterapi-provedores-infraestrutura-bootstrap-control-plane.md)
+825. [Kubernetes Cluster API: gerenciamento declarativo do Control Plane com KubeadmControlPlane (KCP)](../../domains/software-0008/software/devops/clusterapi-control-plane-kubeadmcontrolplane-etcd-upgrade.md)
+826. [Kubernetes Cluster API: detecção de falhas e auto-remediação de nós com MachineHealthCheck](../../domains/software-0008/software/devops/clusterapi-auto-remediacao-nos-machinehealthcheck.md)
+827. [Kubernetes Cluster API: extensões de atualização In-Place (In-Place Updates a partir do CAPI v1.12) vs substituição imutável](../../domains/software-0008/software/devops/clusterapi-extensoes-atualizacao-in-place-v1-12.md)
+828. [Kubernetes Cluster API: reutilização de topologias e ponto único de controle com ClusterClass](../../domains/software-0008/software/devops/clusterapi-topologia-clusterclass-ponto-unico-controle.md)
+829. [Kubernetes Cluster API: operações de ciclo de vida do Management Cluster com a CLI clusterctl (init, generate, move, upgrade)](../../domains/software-0008/software/devops/clusterapi-cli-clusterctl-init-generate-move-upgrade.md)
+830. [Kubernetes Cluster API: integração com provedores alternativos (Talos, K3s, MicroVMs) e gestão GitOps de frotas](../../domains/software-0008/software/devops/clusterapi-integracao-talos-k3s-microvms-gitops-frota.md)
+
+### kind — Kubernetes IN Docker (clusters Kubernetes locais executando nós em containers Docker/Podman/Nerdctl para desenvolvimento e CI)
+
+831. [kind (Kubernetes IN Docker): execução de clusters Kubernetes locais usando containers como nós](../../domains/software-0008/software/devops/kind-clusters-kubernetes-locais-containers-docker-arquitetura.md)
+832. [kind: gerenciamento de múltiplos clusters (--name), regras de merge do KUBECONFIG e deleção idempotente](../../domains/software-0008/software/devops/kind-gerenciamento-clusters-contextos-kubeconfig-delete.md)
+833. [kind: carregamento direto de imagens locais para dentro do cluster (kind load docker-image e image-archive)](../../domains/software-0008/software/devops/kind-carregamento-imagens-locais-load-docker-image-archive.md)
+834. [kind: configuração declarativa de clusters multi-nós, Control Plane HA e extraPortMappings (kind.x-k8s.io/v1alpha4)](../../domains/software-0008/software/devops/kind-configuracao-multinode-control-plane-ha-port-mappings.md)
+835. [kind: fixação de versões do Kubernetes por digest SHA-256, habilitação de Feature Gates e uso de Proxy](../../domains/software-0008/software/devops/kind-versoes-kubernetes-digests-sha256-feature-gates-proxy.md)
+836. [kind: construção de imagens de nó customizadas (kind build node-image) a partir de source, release, url ou file](../../domains/software-0008/software/devops/kind-construcao-node-image-codigo-fonte-kubernetes-build.md)
+837. [kind: exportação estruturada de logs do cluster e dos nós para diagnóstico em CI (kind export logs)](../../domains/software-0008/software/devops/kind-exportacao-logs-diagnostico-ci-troubleshooting.md)
+838. [kind: instalação via binários de release, go install e compilação reprodutível sem Go pré-instalado (make build com gimme)](../../domains/software-0008/software/devops/kind-instalacao-reprodutivel-make-gimme-go-install-binarios.md)
+839. [kind: customização avançada do cluster com kubeadmConfigPatches, desativação da CNI padrão (kindnet) e redes dual-stack](../../domains/software-0008/software/devops/kind-customizacao-kubeadmconfigpatches-cni-rede-local.md)
+840. [kind: compartilhamento de arquivos e dispositivos do host com os nós (extraMounts) e uso de registries locais](../../domains/software-0008/software/devops/kind-montagem-diretorios-host-extramounts-registries-locais.md)
+
+### Minikube (clusters Kubernetes locais multiplataforma com suporte a múltiplos drivers, addons, service/tunnel e cache de imagens)
+
+841. [Kubernetes minikube: implementação de clusters Kubernetes locais em macOS, Linux e Windows e controles básicos](../../domains/software-0008/software/devops/minikube-clusters-locais-kubernetes-perfis-controles-basicos.md)
+842. [Kubernetes minikube: acesso a serviços locais NodePort (minikube service) e LoadBalancer (minikube tunnel)](../../domains/software-0008/software/devops/minikube-exposicao-servicos-service-nodeport-tunnel-loadbalancer.md)
+843. [Kubernetes minikube: marketplace de Addons, Dashboard integrado, suporte a GPUs NVIDIA/AMD e Filesystem Mounts](../../domains/software-0008/software/devops/minikube-addons-dashboard-gpu-mounts-container-runtimes.md)
+844. [Kubernetes minikube: customização de flags do apiserver/kubelet (--extra-config), GitHub Codespaces e Dev Containers](../../domains/software-0008/software/devops/minikube-customizacao-apiserver-kubelet-codespaces-ci.md)
+845. [Kubernetes minikube: construção e carregamento de imagens locais (minikube image load, image build e docker-env)](../../domains/software-0008/software/devops/minikube-gerenciamento-imagens-image-build-load-docker-env.md)
+846. [Kubernetes minikube: arquitetura de drivers multiplataforma (Docker/Podman containers, VMs KVM2/QEMU/VFKit/Hyper-V e bare-metal)](../../domains/software-0008/software/devops/minikube-drivers-execucao-docker-kvm2-qemu-vfkit-none.md)
+847. [Kubernetes minikube: provisionamento dinâmico de PersistentVolumes, StorageClass standard e snapshots CSI](../../domains/software-0008/software/devops/minikube-persistencia-volumes-storage-provisioner-csi.md)
+848. [Kubernetes minikube: diagnóstico e economia de recursos com minikube logs, ssh, ip, pause e unpause](../../domains/software-0008/software/devops/minikube-diagnostico-logs-ssh-ip-pause-unpause.md)
+849. [Kubernetes minikube: configurações persistentes de perfil (minikube config set, view e unset)](../../domains/software-0008/software/devops/minikube-configuracao-persistente-config-set-view-profiles.md)
+850. [Kubernetes minikube: kubectl embutido na versão exata do cluster (minikube kubectl --) e gerenciamento multi-nós (minikube node)](../../domains/software-0008/software/devops/minikube-kubectl-embutido-node-add-multinode-topologias.md)
+
+### Cloud Native Buildpacks e CLI pack (transformação de código-fonte em imagens OCI sem Dockerfile, Lifecycle e Rebase)
+
+851. [Cloud Native Buildpacks (pack): transformação de código-fonte em imagens OCI sem Dockerfile](../../domains/software-0008/software/devops/buildpacks-cli-pack-build-lifecycle-builders-oci.md)
+852. [Cloud Native Buildpacks: as fases do Lifecycle (analyzer, detector, restorer, extender, builder e exporter)](../../domains/software-0008/software/devops/buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter.md)
+853. [Cloud Native Buildpacks: arquitetura de Builder, Build Image, Run Image, Launch Layers e processo Launcher](../../domains/software-0008/software/devops/buildpacks-conceitos-builder-build-image-run-image-launcher.md)
+854. [Cloud Native Buildpacks: atualização instantânea da imagem base do SO sem recompilar a aplicação (pack rebase)](../../domains/software-0008/software/devops/buildpacks-operacao-rebase-atualizacao-rapida-run-image.md)
+855. [Cloud Native Buildpacks: builds reprodutíveis (SOURCE_DATE_EPOCH / --creation-time) e cache granular de camadas](../../domains/software-0008/software/devops/buildpacks-reprodutibilidade-timestamps-caching-camadas.md)
+856. [Cloud Native Buildpacks: configuração declarativa do build com project.toml, variáveis BP_* e BPE_*](../../domains/software-0008/software/devops/buildpacks-configuracao-project-toml-env-vars-build.md)
+857. [Cloud Native Buildpacks: extensão de imagens de build e run com Image Extensions e a fase extender](../../domains/software-0008/software/devops/buildpacks-image-extensions-extender-dockerfile-dinamico.md)
+858. [Cloud Native Buildpacks: criação e empacotamento de Buildpacks (buildpack.toml, bin/detect, bin/build e pack buildpack package)](../../domains/software-0008/software/devops/buildpacks-autoria-empacotamento-buildpack-toml-pack-package.md)
+859. [Cloud Native Buildpacks: empacotamento de Builders corporativos customizados (builder.toml e pack builder create)](../../domains/software-0008/software/devops/buildpacks-criacao-builders-customizados-builder-toml.md)
+860. [Cloud Native Buildpacks: geração integrada de SBOM, labels OCI (io.buildpacks.*) e transição de Stacks para Target Data](../../domains/software-0008/software/devops/buildpacks-metadados-sbom-labels-oci-deprecacao-stacks.md)
+
+### ko (construtor CNCF rápido e sem daemon Docker de imagens de container OCI para aplicações Go e integração Kubernetes ko://)
+
+861. [ko: construtor rápido de imagens de container para aplicações Go sem necessidade de Docker](../../domains/software-0008/software/devops/ko-construtor-imagens-containers-go-sem-docker.md)
+862. [ko: autenticação transparente em registries (GCR/GAR, ECR, ACR, GHCR e ko login) e variável KO_DOCKER_REPO](../../domains/software-0008/software/devops/ko-autenticacao-registries-ko-docker-repo-ko-login.md)
+863. [ko: integração nativa com manifestos Kubernetes via referências ko://, ko resolve, ko apply e ko delete](../../domains/software-0008/software/devops/ko-integracao-kubernetes-ko-resolve-apply-delete-uri.md)
+864. [ko: builds multiplataforma (--platform=all), geração de SBOM por padrão e reprodutibilidade](../../domains/software-0008/software/devops/ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade.md)
+865. [ko: customização de imagem base (defaultBaseImage), flags de compilação e ldflags com .ko.yaml](../../domains/software-0008/software/devops/ko-configuracao-ko-yaml-imagens-base-flags-ldflags.md)
+866. [ko: publicação direta para o daemon Docker local (ko.local / --local) e clusters kind (kind.local)](../../domains/software-0008/software/devops/ko-desenvolvimento-local-ko-local-kind-local-minikube.md)
+867. [ko: empacotamento de arquivos estáticos sem Dockerfile usando o diretório kodata e KO_DATA_PATH](../../domains/software-0008/software/devops/ko-arquivos-estaticos-kodata-caminho-ko-data-path.md)
+868. [ko: estratégias de nomenclatura de imagens no registry (--base-import-paths, --preserve-import-paths e --bare)](../../domains/software-0008/software/devops/ko-nomenclatura-imagens-base-import-paths-preserve-import-paths.md)
+869. [ko: herança arquitetural do Bazel (rules_docker / rules_k8s) e montagem direta de camadas OCI com go-containerregistry](../../domains/software-0008/software/devops/ko-origens-bazel-rules-docker-arquitetura-camadas-oci.md)
+870. [ko: pipelines leves de CI/CD, integração com Sigstore Cosign e segurança com imagens base Chainguard nonroot](../../domains/software-0008/software/devops/ko-cicd-github-actions-assinatura-cosign-slsa-seguranca.md)
+
+### Task / Taskfile.yml (executor de tarefas e automação de build multiplataforma em Go com sintaxe YAML e shell nativo mvdan/sh)
+
+871. [Task (Taskfile.yml): task runner moderno e multiplataforma escrito em Go como alternativa ao Make](../../domains/software-0008/software/devops/taskfile-task-runner-moderno-go-alternativa-make-yaml.md)
+872. [Task: variáveis dinâmicas (sh:), argumentos CLI, validação de entradas (requires) e mascaramento de segredos](../../domains/software-0008/software/devops/taskfile-variaveis-argumentos-validacao-segredos-mascarados.md)
+873. [Task: dependências concorrentes (deps), chamadas sequenciais (task:), controle de execução única (run: once) e Loops](../../domains/software-0008/software/devops/taskfile-dependencias-paralelas-sequenciais-loops-matrizes.md)
+874. [Task: execução condicional (if e preconditions), prompts de confirmação (prompt) e limpeza garantida (defer)](../../domains/software-0008/software/devops/taskfile-execucao-condicional-preconditions-prompts-defer.md)
+875. [Task: checagem de arquivos atualizados (sources, generates, method: checksum/timestamp) e modo Watch (--watch)](../../domains/software-0008/software/devops/taskfile-builds-incrementais-sources-generates-watch-mode.md)
+876. [Task: modularização em monorepos com includes, namespaces e Remote Taskfiles (HTTP/Git com checksums)](../../domains/software-0008/software/devops/taskfile-composicao-includes-namespaces-remote-taskfiles.md)
+877. [Task: carregamento de arquivos .env (dotenv), filtragem por plataforma (platforms) e modos de saída (output)](../../domains/software-0008/software/devops/taskfile-ambientes-dotenv-plataformas-shells-output.md)
+878. [Task: descoberta automática de arquivos Taskfile, execução a partir de subdiretórios (--dir, --taskfile, --global)](../../domains/software-0008/software/devops/taskfile-execucao-diretorios-subpastas-flags-cli-taskfile.md)
+879. [Task: definição avançada de tarefas (aliases, internal, silent, labels dinâmicas e captura de wildcards *)](../../domains/software-0008/software/devops/taskfile-aliases-wildcard-tasks-internal-silent-desc.md)
+880. [Task: motor de templates Go/slim-sprig embutido (OS, ARCH, joinPath) e instalação em pipelines de CI/CD](../../domains/software-0008/software/devops/taskfile-templating-sprig-funcoes-instalacao-cicd.md)
+
+### Telepresence (desenvolvimento local conectado a clusters Kubernetes remotos via VIF, Traffic Manager, Traffic Agent e 4 modos de anexação)
+
+881. [Telepresence: desenvolvimento local conectado a clusters Kubernetes remotos sem ciclo build/push/deploy](../../domains/software-0008/software/devops/telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura.md)
+882. [Telepresence: os 4 modos de anexação a workloads (replace, intercept, wiretap e ingest)](../../domains/software-0008/software/devops/telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest.md)
+883. [Telepresence: interceptações seletivas por cabeçalho HTTP (--http-header) e caminho (--http-path-*) em clusters compartilhados](../../domains/software-0008/software/devops/telepresence-filtragem-trafego-http-headers-paths-equipes.md)
+884. [Telepresence: escolha entre Traffic Agent como Sidecar injetado (padrão) ou Node-Agent sem reiniciar pods](../../domains/software-0008/software/devops/telepresence-modos-traffic-agent-sidecar-vs-node-agent.md)
+885. [Telepresence: importação de variáveis de ambiente (--env-file) e montagem de volumes remotos (--mount) no processo local](../../domains/software-0008/software/devops/telepresence-ambiente-remoto-variaveis-montagem-volumes-locais.md)
+886. [Telepresence: dispositivo de rede virtual (VIF) no Root-Daemon, resolução DNS do cluster e roteamento direto de IPs](../../domains/software-0008/software/devops/telepresence-rede-virtual-vif-dns-cluster-sem-port-forward.md)
+887. [Telepresence: execução de interceptações em containers Docker locais (--docker-run, --docker-build e telepresence connect --docker)](../../domains/software-0008/software/devops/telepresence-execucao-containers-docker-run-docker-build.md)
+888. [Telepresence: instalação e administração do Traffic Manager no cluster (telepresence helm install/upgrade) e escopo de namespaces](../../domains/software-0008/software/devops/telepresence-gerenciamento-traffic-manager-helm-namespaces-rbac.md)
+889. [Telepresence: depuração não-intrusiva com wiretap (cópia de tráfego) e ingest (apenas variáveis/volumes)](../../domains/software-0008/software/devops/telepresence-modos-nao-intrusivos-wiretap-ingest-producao-staging.md)
+890. [Telepresence: diagnóstico de conectividade (gather-logs, loglevel) e limpeza de agentes e daemons (leave, uninstall, quit)](../../domains/software-0008/software/devops/telepresence-troubleshooting-logs-limpeza-sessoes-quit-uninstall.md)
+
+### MetalBear mirrord (execução de processos locais e agentes de IA no contexto de pods Kubernetes ao vivo via mirrord-layer e mirrord-agent)
+
+891. [MetalBear mirrord: execução de processos locais no contexto de um cluster Kubernetes em tempo real](../../domains/software-0008/software/devops/mirrord-execucao-processos-locais-contexto-cluster-kubernetes.md)
+892. [MetalBear mirrord: arquitetura mirrord-layer e mirrord-agent e gerenciamento de Linux Capabilities](../../domains/software-0008/software/devops/mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities.md)
+893. [MetalBear mirrord: modos de tráfego de entrada (mirror padrão vs steal) e roteamento de saída pelo pod remoto](../../domains/software-0008/software/devops/mirrord-modos-trafego-mirror-vs-steal-filtragem-http.md)
+894. [MetalBear mirrord: interceptação de leituras/escritas de arquivos e variáveis de ambiente sem montar volumes no host](../../domains/software-0008/software/devops/mirrord-interceptacao-sistema-arquivos-variaveis-ambiente-libc.md)
+895. [MetalBear mirrord: integração nativa com debuggers de IDEs (VS Code e IntelliJ) e arquivo .mirrord/mirrord.json](../../domains/software-0008/software/devops/mirrord-extensoes-ide-vscode-intellij-configuracao-json.md)
+896. [MetalBear mirrord: desenvolvimento e verificação end-to-end para agentes de codificação de IA (Claude Code, Cursor, Codex)](../../domains/software-0008/software/devops/mirrord-agentes-ia-claude-code-cursor-codex-testes-cluster.md)
+897. [MetalBear mirrord: mirrord Operator (Teams), uso concorrente, Queue Splitting, DB Branching e Políticas](../../domains/software-0008/software/devops/mirrord-operador-teams-queue-splitting-db-branching-policies.md)
+898. [MetalBear mirrord: execução simultânea de múltiplos microsserviços locais conectados ao cluster com mirrord up](../../domains/software-0008/software/devops/mirrord-multiplas-sessoes-concorrentes-mirrord-up.md)
+899. [MetalBear mirrord: mirrord for CI, Preview Environments, Multi-cluster e operação Air-gapped (Enterprise)](../../domains/software-0008/software/devops/mirrord-enterprise-preview-environments-ci-multicluster-airgap.md)
+900. [MetalBear mirrord: tipos de alvos suportados (--target pod, deployment, statefulset, job, argoproj Rollout) e modo targetless](../../domains/software-0008/software/devops/mirrord-alvos-execucao-targetless-pod-deployment-rollout-job.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 800 notas 1–800 das tranches 1–8 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 800/2.000 notas válidas, restando 1200 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 900 notas 1–900 das tranches 1–9 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 900/2.000 notas válidas, restando 1100 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

@@ -1,0 +1,159 @@
+=== NOTE: 841 | minikube-clusters-locais-kubernetes-perfis-controles-basicos | Kubernetes minikube: implementação de clusters Kubernetes locais em macOS, Linux e Windows e controles básicos ===
+ONE_LINER: O `minikube` (`kubernetes/minikube`, projeto do Kubernetes SIG Cluster Lifecycle) implementa um cluster Kubernetes local no macOS, Linux e Windows com foco em ser a ferramenta mais completa para desenvolvimento local de aplicações Kubernetes.
+IMPORTANCE: Desenvolvedores de aplicações precisam testar seus manifestos Kubernetes localmente usando recursos reais do Kubernetes — como `LoadBalancer`, `NodePort`, `PersistentVolumes`, `Ingress`, `Dashboard` e múltiplos runtimes de container (`containerd`, `CRI-O`, `Docker`) — tanto em VMs quanto em containers. O README oficial e a página `Basic controls` (`minikube.sigs.k8s.io/docs/handbook/controls/`) documentam o ciclo de vida completo do `minikube`.
+HOW_IT_WORKS: Com um único comando **`minikube start`**, o `minikube` detecta e provisiona um ambiente local (container ou máquina virtual via drivers como `docker`, `kvm2`, `qemu`, `hyperkit`, `vfkit`, `hyperv` ou `virtualbox`), instala a versão estável mais recente do Kubernetes (ou a especificada em `--kubernetes-version`) e configura automaticamente o contexto do `kubectl`. O operador pode pausar/parar o cluster com **`minikube stop`**, destruí-lo com **`minikube delete`** (ou remover todos os clusters e perfis locais com **`minikube delete --all`**) e atualizar o cluster existente executando **`minikube start --kubernetes-version=latest`**.
+EXAMPLE:
+```bash
+# Iniciar um cluster minikube local, verificar o status e executar um segundo cluster isolado usando perfil (-p)
+minikube start
+minikube status
+minikube start -p cluster2
+```
+TRADE_OFFS: Conforme observa explicitamente a página oficial `Basic controls` (`minikube.sigs.k8s.io/docs/handbook/controls/`), o recurso de rodar múltiplos clusters locais simultâneos usando perfis (**`minikube start -p cluster2`**) **não funciona** se o `minikube` estiver usando o driver bare-metal (`--driver=none`), pois o driver `none` instala o Kubernetes diretamente no sistema operacional do host sem isolamento de container ou VM.
+VERIFY: Execute `minikube profile list` para listar todos os perfis de clusters locais criados na máquina e seus respectivos drivers, IPs e status.
+LINKS: [[minikube-exposicao-servicos-service-nodeport-tunnel-loadbalancer]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 842 | minikube-exposicao-servicos-service-nodeport-tunnel-loadbalancer | Kubernetes minikube: acesso a serviços locais NodePort (minikube service) e LoadBalancer (minikube tunnel) ===
+ONE_LINER: O `minikube` facilita o acesso da máquina host a aplicações expostas no cluster por meio de dois comandos dedicados: `minikube service <nome>` (para abrir endpoints `NodePort` no navegador/terminal) e `minikube tunnel` (para atribuir IPs roteáveis a serviços `type: LoadBalancer`).
+IMPORTANCE: Em um cluster Kubernetes local (onde o nó roda dentro de uma VM ou de um container Docker isolado da rede de loopback da estação de trabalho, especialmente no macOS e Windows), quando um desenvolvedor cria um Service `type: LoadBalancer`, a coluna `EXTERNAL-IP` fica presa indefinidamente em `<pending>`, e portas `NodePort` não respondem diretamente em `localhost`. O README oficial e o `Basic controls` do `minikube` resolvem ambos os cenários.
+HOW_IT_WORKS: (1) **Acesso `NodePort` (`minikube service`)**: após criar e expor um deployment (`kubectl expose deployment hello-minikube --type=NodePort --port=8080`), executar **`minikube service hello-minikube`** (ou `--url` para apenas imprimir a URL no terminal sem abrir navegador) resolve o IP/porta do nó (e cria um túnel local automático quando necessário em drivers como Docker no macOS/Windows); e (2) **Acesso `LoadBalancer` (`minikube tunnel`)**: roda como um processo em separado criando uma rota de rede na máquina host para o CIDR de serviços do cluster usando o IP do nó como gateway, preenchendo imediatamente o campo `EXTERNAL-IP` de qualquer Service `type: LoadBalancer` com um IP acessível diretamente da estação do desenvolvedor.
+EXAMPLE:
+```bash
+# Fluxo oficial do Basic controls: criar deployment echo-server, expor como NodePort e acessar via minikube service
+kubectl create deployment hello-minikube --image=kicbase/echo-server:1.0
+kubectl expose deployment hello-minikube --type=NodePort --port=8080
+minikube service hello-minikube --url
+```
+TRADE_OFFS: Como o comando `minikube tunnel` precisa configurar interfaces e rotas de rede no sistema operacional hospedeiro (e fazer bind em portas privilegiadas `< 1024` como `80` e `443` em alguns drivers), ele pode solicitar senha administrativa (`sudo`) no terminal e **precisa permanecer em execução** em uma aba de terminal aberta (ou em background) enquanto você estiver acessando os Services `LoadBalancer`.
+VERIFY: Com `minikube tunnel` em execução em outro terminal, crie um Service `type: LoadBalancer` e execute `kubectl get svc` para confirmar que `EXTERNAL-IP` deixou de ser `<pending>` e recebeu um IP ativo.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]] | [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 843 | minikube-addons-dashboard-gpu-mounts-container-runtimes | Kubernetes minikube: marketplace de Addons, Dashboard integrado, suporte a GPUs NVIDIA/AMD e Filesystem Mounts ===
+ONE_LINER: O `minikube` inclui um marketplace embutido de **Addons** (`minikube addons enable <nome>`), comando nativo para abrir o Kubernetes Dashboard (`minikube dashboard`), seleção de container runtime (`--container-runtime`), montagem de diretórios do host (`minikube mount`) e suporte a GPUs NVIDIA e AMD.
+IMPORTANCE: Configurar manualmente Ingress NGINX, Metrics Server, Registry local, Istio, MetalLB ou passthrough de GPU para cargas de Machine Learning em um cluster de desenvolvimento consome horas de trabalho repetitivo. A seção `Features` do README oficial do `minikube` destaca esses recursos voltados à produtividade do desenvolvedor.
+HOW_IT_WORKS: (1) **Dashboard**: executar **`minikube dashboard`** ativa automaticamente o addon do painel oficial do Kubernetes, abre um proxy seguro e lança o Dashboard no navegador (ou imprime o link com `--url`, inclusive dentro de GitHub Codespaces); (2) **Addons**: `minikube addons list` exibe dezenas de extensões mantidas pela comunidade (`ingress`, `metrics-server`, `registry`, `storage-provisioner`, `volumesnapshots`, `nvidia-device-plugin`), ativáveis com `minikube addons enable <addon>`; (3) **Container runtimes**: `minikube start --container-runtime=containerd` (ou `cri-o` / `docker`) escolhe o runtime do cluster; (4) **Filesystem mounts**: `minikube mount /caminho/host:/caminho/vm` monta diretórios locais em tempo real dentro do nó; e (5) **Suporte a GPU**: permite expor GPUs **NVIDIA** e **AMD** para treinar ou servir modelos de IA/ML localmente no Kubernetes.
+EXAMPLE:
+```bash
+# Listar os addons disponíveis, habilitar o metrics-server e o ingress no minikube e obter a URL do dashboard
+minikube addons list
+minikube addons enable metrics-server
+minikube addons enable ingress
+minikube dashboard --url
+```
+TRADE_OFFS: O comando `minikube mount <origem>:<destino>` utiliza um servidor de arquivos 9P em espaço de usuário rodando no processo de linha de comando; se você fechar o terminal onde `minikube mount` está rodando, os pods dentro do cluster perderão imediatamente o acesso aos arquivos montados naquele caminho.
+VERIFY: Após executar `minikube addons enable metrics-server`, aguarde alguns segundos e rode `kubectl top nodes` e `kubectl top pods -A` para confirmar a coleta de métricas de CPU e memória no cluster local.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-exposicao-servicos-service-nodeport-tunnel-loadbalancer]] | [[minikube-customizacao-apiserver-kubelet-codespaces-ci]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 844 | minikube-customizacao-apiserver-kubelet-codespaces-ci | Kubernetes minikube: customização de flags do apiserver/kubelet (--extra-config), GitHub Codespaces e Dev Containers ===
+ONE_LINER: O `minikube` permite customizar opções avançadas de qualquer componente do Kubernetes (`apiserver`, `kubelet`, `scheduler`, `controller-manager`) via `--extra-config` e `--feature-gates`, além de suportar execução direta em GitHub Codespaces, VS Code Dev Containers e ambientes de CI.
+IMPORTANCE: Desenvolvedores que testam políticas de admissão, autenticação OIDC, auditoria da API ou configurações específicas do `kubelet` precisam injetar flags customizadas nos componentes do control plane do Kubernetes sem editar arquivos manualmente dentro do nó; além disso, equipes modernas frequentemente desenvolvem em ambientes em nuvem como GitHub Codespaces. O README oficial do `minikube` destaca ambas as capacidades.
+HOW_IT_WORKS: Na linha de comando do **`minikube start`**, a flag **`--extra-config=<componente>.<chave>=<valor>`** permite modificar os padrões do `kubeadm` para `apiserver`, `controller-manager`, `scheduler` e `kubelet` (por exemplo, `--extra-config=apiserver.enable-admission-plugins=...` ou `--extra-config=kubelet.max-pods=150`), enquanto `--cpus` e `--memory` definem a alocação de recursos do nó e `--nodes` cria clusters multi-nós. Para desenvolvimento em nuvem e CI, o repositório oficial inclui integração pronta para **GitHub Codespaces** (`codespaces.new/kubernetes/minikube?quickstart=1`), **Dev Containers** do VS Code e exemplos de pipelines de CI (`github.com/minikube-ci/examples`).
+EXAMPLE:
+```bash
+# Iniciar um cluster minikube customizando recursos de CPU/RAM e opções do kubelet e apiserver via --extra-config
+minikube start --cpus=4 --memory=4096 \
+  --extra-config=kubelet.max-pods=120 \
+  --extra-config=apiserver.v=4
+```
+TRADE_OFFS: Passar um nome de flag inválido ou um valor sintaticamente incorreto em `--extra-config=apiserver.<flag>=<valor>` fará com que o pod estático do `kube-apiserver` entre em crash loop durante o bootstrap do `kubeadm`, impedindo o `minikube start` de concluir; caso isso ocorra, inspecione os logs com `minikube logs` e recrie ou ajuste a configuração.
+VERIFY: Execute `minikube kubectl -- get nodes` e inspecione os argumentos aplicados ao `kube-apiserver` com `kubectl get pod -n kube-system -l component=kube-apiserver -o yaml`.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]] | [[minikube-gerenciamento-imagens-image-build-load-docker-env]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 845 | minikube-gerenciamento-imagens-image-build-load-docker-env | Kubernetes minikube: construção e carregamento de imagens locais (minikube image load, image build e docker-env) ===
+ONE_LINER: Para usar imagens de container locais sem fazer push para um registry externo, o `minikube` oferece os subcomandos `minikube image load <img:tag>`, `minikube image build -t <img:tag> .` e `eval $(minikube -p minikube docker-env)`.
+IMPORTANCE: Assim como ocorre em outros clusters locais baseados em VM ou container (`kicbase`), o ambiente interno do nó `minikube` possui seu próprio armazenamento de imagens isolado do daemon Docker da máquina host; entender as formas nativas de disponibilizar imagens locais no `minikube` acelera drasticamente o loop de desenvolvimento (`inner loop`).
+HOW_IT_WORKS: O `minikube` disponibiliza três fluxos para trabalhar com imagens locais: (1) **`minikube image load minha-app:v1`**: transfere uma imagem já construída no host para dentro de todos os nós do cluster `minikube` (independentemente de o runtime do cluster ser `docker`, `containerd` ou `cri-o`); (2) **`minikube image build -t minha-app:v1 .`**: constrói o `Dockerfile` diretamente dentro do runtime do nó `minikube`, sem gastar espaço duplicado no host; e (3) **`eval $(minikube -p minikube docker-env)`** (quando o cluster usa o runtime `docker`): aponta o cliente `docker` do terminal atual diretamente para o daemon Docker de dentro do `minikube`, de modo que qualquer `docker build` subsequente já grava a imagem diretamente no cluster.
+EXAMPLE:
+```bash
+# Construir uma imagem diretamente dentro do cluster minikube e listar as imagens presentes no nó
+minikube image build -t meu-servico:v1.0.0 .
+minikube image ls | grep meu-servico
+```
+TRADE_OFFS: Assim como no Kubernetes em geral, ao usar imagens construídas ou carregadas localmente no `minikube`, evite usar a tag `:latest` (ou defina `imagePullPolicy: IfNotPresent` / `Never` no manifesto do Pod), pois a tag `:latest` aciona `imagePullPolicy: Always` por padrão, fazendo o `kubelet` tentar buscar a imagem em um registry remoto na internet.
+VERIFY: Execute `minikube image ls` para confirmar que `docker.io/library/meu-servico:v1.0.0` está registrada no armazenamento interno do nó `minikube`.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[kind-carregamento-imagens-locais-load-docker-image-archive]] | [[buildpacks-cli-pack-build-lifecycle-builders-oci]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 846 | minikube-drivers-execucao-docker-kvm2-qemu-vfkit-none | Kubernetes minikube: arquitetura de drivers multiplataforma (Docker/Podman containers, VMs KVM2/QEMU/VFKit/Hyper-V e bare-metal) ===
+ONE_LINER: O `minikube` suporta três famílias de drivers (`--driver`): baseados em **containers** (`docker`, `podman`), baseados em **máquinas virtuais** (`kvm2`, `qemu`, `vfkit`, `krunkit`, `hyperkit`, `hyperv`, `virtualbox`, `vmware`) e **bare-metal** (`none`).
+IMPORTANCE: Enquanto ferramentas como o `kind` operam exclusivamente com containers como nós, certos cenários de desenvolvimento e testes de infraestrutura (como carregar módulos de kernel específicos no nó, testar armazenamento de bloco real anexado a VMs, passthrough de GPU PCI ou isolamento completo de kernel no Linux/macOS/Windows) exigem rodar o cluster dentro de uma máquina virtual real.
+HOW_IT_WORKS: Quando o usuário executa `minikube start` sem especificar `--driver`, o `minikube` escolhe automaticamente o driver mais rápido e saudável disponível na plataforma (tipicamente o driver **`docker`**, que roda a imagem base `kicbase` — *Kubernetes in Container*). Caso o desenvolvedor necessite de um kernel isolado completo ou emulação de dispositivos de VM, basta passar **`minikube start --driver=kvm2`** (no Linux), **`--driver=qemu`** ou **`--driver=vfkit`** / **`--driver=krunkit`** (no macOS Apple Silicon) ou **`--driver=hyperv`** (no Windows), fazendo o `minikube` baixar a imagem ISO mínima do Minikube e provisionar a máquina virtual.
+EXAMPLE:
+```bash
+# Iniciar um perfil minikube usando explicitamente o driver de container docker vs um perfil em máquina virtual kvm2
+minikube start -p dev-container --driver=docker
+minikube start -p dev-vm --driver=kvm2
+```
+TRADE_OFFS: Os drivers baseados em container (`--driver=docker`) iniciam muito mais rápido e consomem menos memória RAM ociosa na máquina host, mas compartilham o kernel do host Linux (ou da VM do Docker Desktop); já os drivers baseados em máquina virtual (`kvm2`, `qemu`, `vfkit`, `hyperv`) oferecem isolamento completo de kernel e suporte a discos extras (`--extra-disks`), ao custo de boot ligeiramente mais longo e alocação fixa de RAM da VM.
+VERIFY: Execute `minikube status -p <perfil>` e `minikube ip -p <perfil>` para verificar o driver ativo, o estado do host/kubelet/apiserver e o endereço IP atribuído ao nó.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]] | [[minikube-persistencia-volumes-storage-provisioner-csi]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 847 | minikube-persistencia-volumes-storage-provisioner-csi | Kubernetes minikube: provisionamento dinâmico de PersistentVolumes, StorageClass standard e snapshots CSI ===
+ONE_LINER: O `minikube` habilita por padrão o addon `storage-provisioner` e a `StorageClass` padrão `standard` (`k8s.io/minikube-hostpath`), atendendo automaticamente `PersistentVolumeClaims` (`PVCs`) e suportando snapshots de volume via driver CSI hostpath (`csi-hostpath-driver`).
+IMPORTANCE: Aplicações stateful (bancos de dados PostgreSQL, MySQL, Redis, filas Kafka/RabbitMQ e plataformas como Bytebase ou Mimir) declaradas em StatefulSets ou Helm charts criam objetos `PersistentVolumeClaim` (`PVC`); se o cluster local não possuir um provisionador dinâmico de armazenamento ativo por padrão, todos os Pods stateful ficarão travados eternamente em `Pending`. O README oficial do `minikube` destaca o suporte nativo a `Persistent Volumes`.
+HOW_IT_WORKS: Logo na criação do cluster (`minikube start`), os addons **`default-storageclass`** e **`storage-provisioner`** já vêm ativados por padrão. Sempre que um usuário aplica um `PersistentVolumeClaim` sem especificar `storageClassName` (ou especificando `storageClassName: standard`), o provisionador do `minikube` cria automaticamente um `PersistentVolume` apoiado em um diretório persistente dentro do nó (`/tmp/hostpath-provisioner/...`, que sobrevive a `minikube stop` e `minikube start`). Para testar recursos avançados da Container Storage Interface (como `VolumeSnapshot`, clonagem e expansão de volumes CSI), basta habilitar os addons **`volumesnapshots`** e **`csi-hostpath-driver`**.
+EXAMPLE:
+```bash
+# Verificar a StorageClass padrão ativa no minikube e habilitar suporte a CSI Hostpath e VolumeSnapshots
+kubectl get storageclass
+minikube addons enable volumesnapshots
+minikube addons enable csi-hostpath-driver
+```
+TRADE_OFFS: O provisionador padrão `k8s.io/minikube-hostpath` (`StorageClass: standard`) é projetado para clusters de nó único; se você iniciar um cluster `minikube` multi-nós (`minikube start --nodes 3`) e quiser provisionar volumes em múltiplos nós ou usar `VolumeSnapshots`, deve habilitar o addon `csi-hostpath-driver` (ou `storage-provisioner-rancher` / `local-path`) conforme documentado no guia de Persistent Volumes do `minikube`.
+VERIFY: Crie um `PersistentVolumeClaim` simples de `1Gi` no cluster `minikube` e execute `kubectl get pvc,pv` para confirmar que o status muda imediatamente para `Bound`.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]] | [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 848 | minikube-diagnostico-logs-ssh-ip-pause-unpause | Kubernetes minikube: diagnóstico e economia de recursos com minikube logs, ssh, ip, pause e unpause ===
+ONE_LINER: O `minikube` fornece subcomandos operacionais para inspecionar falhas do cluster (`minikube logs`), acessar o nó interativamente (`minikube ssh`), consultar o IP do nó (`minikube ip`) e congelar o control plane sem parar o cluster (`minikube pause` e `minikube unpause`).
+IMPORTANCE: Em laptops de desenvolvimento onde o engenheiro alterna entre codificar localmente, participar de chamadas de vídeo e testar no Kubernetes, manter o control plane do Kubernetes rodando continuamente em background consome CPU e bateria; além disso, quando o `kubelet` ou um addon apresenta erro, é preciso coletar os logs rapidamente.
+HOW_IT_WORKS: (1) **`minikube pause` / `minikube unpause`**: congela (`cgroup freezer`) todos os containers do plano de controle do Kubernetes dentro do nó em menos de 1 segundo, zerando o consumo de CPU do control plane sem destruir os pods e sem exigir o tempo de boot de um `minikube stop` / `start`; (2) **`minikube logs [--file=logs.txt] [--problems]`**: agrega logs do `kubelet`, `apiserver`, runtime de container e addons, onde a flag `--problems` filtra e destaca automaticamente apenas as linhas com erros conhecidos de configuração; e (3) **`minikube ssh`** e **`minikube ip`**: abrem um shell dentro do nó (VM ou container `kicbase`) ou imprimem o endereço IP do nó.
+EXAMPLE:
+```bash
+# Diagnosticar possíveis problemas nos logs do cluster e pausar/retomar o control plane para economizar CPU
+minikube logs --problems
+minikube pause
+minikube unpause
+```
+TRADE_OFFS: Enquanto o cluster estiver em estado pausado (`minikube pause`), o `kube-apiserver` e o `scheduler` estão congelados no nível de cgroups: portanto, comandos `kubectl` darão timeout de conexão até que você execute `minikube unpause` para descongelar imediatamente o control plane.
+VERIFY: Execute `minikube pause`, verifique no `minikube status` que o estado reporta `Paused`, e em seguida execute `minikube unpause` confirmando o retorno instantâneo de `kubectl get nodes`.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-drivers-execucao-docker-kvm2-qemu-vfkit-none]] | [[kind-exportacao-logs-diagnostico-ci-troubleshooting]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 849 | minikube-configuracao-persistente-config-set-view-profiles | Kubernetes minikube: configurações persistentes de perfil (minikube config set, view e unset) ===
+ONE_LINER: O subcomando `minikube config` (`set`, `get`, `view`, `unset`) permite salvar preferências padrão persistentes (como `driver`, `cpus`, `memory`, `container-runtime` e `kubernetes-version`) para que o desenvolvedor não precise repetir flags em todo `minikube start`.
+IMPORTANCE: Se a estação de trabalho do desenvolvedor exige sempre usar `cpus=4`, `memory=8192`, `driver=docker` e `container-runtime=containerd`, esquecer de passar uma dessas flags ao criar um novo cluster ou perfil faz o `minikube` usar os valores mínimos padrão (`2 CPUs` e `~2 GB RAM`), causando pressão de recursos nos pods.
+HOW_IT_WORKS: As configurações salvas com **`minikube config set <propriedade> <valor>`** são persistidas no arquivo de configuração global do usuário (`~/.minikube/config/config.json`). A partir desse momento, qualquer chamada futura a `minikube start` para criar um novo cluster aplicará automaticamente os valores definidos. O usuário pode listar todas as customizações ativas com **`minikube config view`** e remover uma preferência voltando ao padrão de fábrica com **`minikube config unset <propriedade>`**.
+EXAMPLE:
+```bash
+# Definir padrões persistentes de memória, CPUs e container-runtime no minikube e visualizar a configuração salva
+minikube config set memory 6144
+minikube config set cpus 4
+minikube config set container-runtime containerd
+minikube config view
+```
+TRADE_OFFS: Executar `minikube config set memory 6144` altera o valor padrão para novos clusters, mas **não redimensiona a quente** uma máquina virtual ou container de um cluster que já está criado e em execução; para aplicar a nova quantidade de memória/CPU a um cluster existente, é necessário parar e recriar (ou reiniciar conforme o suporte do driver) o perfil correspondente.
+VERIFY: Execute `minikube config view` para confirmar as propriedades gravadas e verifique com `kubectl describe node minikube` a capacidade de CPU e memória alocada após recriar o cluster.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-customizacao-apiserver-kubelet-codespaces-ci]] | [[minikube-drivers-execucao-docker-kvm2-qemu-vfkit-none]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube
+
+=== NOTE: 850 | minikube-kubectl-embutido-node-add-multinode-topologias | Kubernetes minikube: kubectl embutido na versão exata do cluster (minikube kubectl --) e gerenciamento multi-nós (minikube node) ===
+ONE_LINER: O `minikube` inclui um wrapper que baixa e executa automaticamente o binário `kubectl` na versão exata do cluster (`minikube kubectl -- <cmd>`) e permite adicionar, iniciar, parar ou remover nós workers dinamicamente com `minikube node` (`add`, `list`, `stop`, `delete`).
+IMPORTANCE: Quando um desenvolvedor testa múltiplos perfis do `minikube` em versões muito diferentes do Kubernetes (ex.: um cluster legado em `v1.26` e outro em `v1.35`), um único binário `kubectl` instalado globalmente na máquina pode falhar pela regra de version skew; além disso, às vezes é necessário adicionar um segundo nó worker a um cluster `minikube` que já está rodando sem perder os dados atuais.
+HOW_IT_WORKS: (1) **`minikube kubectl -- <argumentos>`**: verifica a versão exata do Kubernetes rodando no perfil ativo do `minikube`, baixa e cacheia em `~/.minikube/cache/linux/.../kubectl` o binário oficial correspondente àquela versão caso ainda não exista e repassa todos os argumentos após `--` (podendo ser associado a um alias `alias kubectl="minikube kubectl --"`); e (2) **`minikube node add`**: adiciona a quente um novo nó worker (ou control-plane com `--control-plane`) a um cluster `minikube` já existente, enquanto `minikube node list` e `minikube node delete <nome>` gerenciam a topologia multi-nós.
+EXAMPLE:
+```bash
+# Adicionar dinamicamente um novo nó worker ao cluster minikube existente e listar os nós usando o kubectl embutido
+minikube node add
+minikube node list
+minikube kubectl -- get nodes -o wide
+```
+TRADE_OFFS: Ao usar `minikube kubectl --`, lembre-se sempre de incluir o separador **`--`** antes das flags do `kubectl` (por exemplo, `minikube kubectl -- get pods -A`), caso contrário a CLI do `minikube` tentará interpretar flags como `-n` ou `-o` como flags do próprio `minikube` em vez de repassá-las ao `kubectl`.
+VERIFY: Execute `minikube node list` e `minikube kubectl -- version` para confirmar que o novo nó foi integrado ao cluster e que a versão do cliente `kubectl` casa exatamente com a versão do servidor.
+LINKS: [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]] | [[minikube-persistencia-volumes-storage-provisioner-csi]] | [[kind-configuracao-multinode-control-plane-ha-port-mappings]]
+SOURCES: https://raw.githubusercontent.com/kubernetes/minikube/master/README.md | https://minikube.sigs.k8s.io/docs/handbook/controls/ | https://github.com/kubernetes/minikube

@@ -1,0 +1,190 @@
+=== NOTE: 821 | clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes | Kubernetes Cluster API (CAPI): gerenciamento declarativo do ciclo de vida de clusters usando APIs estilo Kubernetes ===
+ONE_LINER: O Cluster API (`kubernetes-sigs/cluster-api`, subprojeto do Kubernetes SIG Cluster Lifecycle) fornece APIs declarativas (Custom Resource Definitions) e controladores para automatizar o provisionamento, atualização e operação de múltiplos clusters Kubernetes.
+IMPORTANCE: Provisionar e atualizar dezenas de clusters Kubernetes em diferentes nuvens (AWS, Azure, GCP) e data centers (vSphere, bare-metal) usando scripts imperativos separados para cada ambiente torna a gestão de frotas lenta e inconsistente. Segundo o README oficial e o `The Cluster API Book`, o Cluster API permite que operadores de plataforma definam máquinas virtuais, redes, balanceadores de carga e a configuração do cluster Kubernetes exatamente da mesma maneira declarativa que desenvolvedores usam `Deployments` para gerenciar Pods.
+HOW_IT_WORKS: A arquitetura do Cluster API baseia-se em um **Management Cluster** (um cluster Kubernetes onde rodam os controladores do Cluster API e um ou mais provedores de infraestrutura/bootstrap/control-plane). Dentro do Management Cluster, o operador cria Custom Resources declarativos no grupo de API `cluster.x-k8s.io` (como `Cluster`, `Machine`, `MachineSet`, `MachineDeployment`, `MachinePool`, `KubeadmControlPlane` e `MachineHealthCheck`). Os controladores reconciliam continuamente esses objetos comunicando-se com as APIs da nuvem/hipervisor para criar e manter os **Workload Clusters** (os clusters finais onde rodam as cargas de trabalho dos usuários).
+EXAMPLE:
+```bash
+# Inicializar um Management Cluster do Cluster API usando a CLI oficial clusterctl (ex.: com o provider Docker/CAPD para testes)
+clusterctl init --infrastructure docker
+kubectl get providers -A
+```
+TRADE_OFFS: Como o **Management Cluster** armazena o estado declarativo, os certificados PKI e as credenciais de provedores de todos os Workload Clusters gerenciados, a perda ou comprometimento do Management Cluster afeta a capacidade de escalar, atualizar ou recuperar toda a frota de clusters (embora os Workload Clusters existentes continuem rodando suas aplicações de forma autônoma enquanto o Management Cluster estiver indisponível).
+VERIFY: Em um Management Cluster inicializado com `clusterctl init`, execute `kubectl get crds | grep cluster.x-k8s.io` e `kubectl get pods -n capi-system` para verificar que os controladores centrais estão em execução.
+LINKS: [[clusterapi-recursos-cluster-machine-imutabilidade]] | [[clusterapi-machinedeployment-machineset-machinepool-rollout]] | [[clusterapi-provedores-infraestrutura-bootstrap-control-plane]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 822 | clusterapi-recursos-cluster-machine-imutabilidade | Kubernetes Cluster API: Custom Resources Cluster e Machine e o princípio de imutabilidade de máquinas ===
+ONE_LINER: No Cluster API (`cluster.x-k8s.io/v1beta2`), o recurso `Cluster` representa o cluster de workload inteiro (rede e referências `infrastructureRef` e `controlPlaneRef`), enquanto o recurso `Machine` representa declarativamente o host que executa um `Node` Kubernetes sob o princípio de imutabilidade.
+IMPORTANCE: Em ferramentas tradicionais de gerência de configuração, quando se deseja atualizar a versão do Kubernetes ou do SO de um servidor, scripts tentam mutar a máquina existente; se falharem, o nó vira um "floco de neve" irreproduzível. A página `Concepts` do `Cluster API Book` explica como os recursos `Cluster` e `Machine` separam propriedades portáveis de detalhes específicos de provedor e tratam cada `Machine` como imutável.
+HOW_IT_WORKS: (1) **`Cluster`**: define propriedades comuns como blocos CIDR de pods/services (`spec.clusterNetwork.pods.cidrBlocks`) e delega detalhes específicos da nuvem para os objetos apontados em `spec.infrastructureRef` (ex.: `VSphereCluster`, `AWSCluster`) e `spec.controlPlaneRef` (ex.: `KubeadmControlPlane`); e (2) **`Machine`**: define a especificação declarativa de um servidor individual (como `spec.clusterName`, `spec.version: v1.35.0`, `spec.infrastructureRef` e `spec.bootstrap.configRef`). Quando uma `Machine` é criada, o controlador provisiona um novo host que se registra como `Node` (`status.nodeRef`); quando a `Machine` é deletada, o host subjacente e o `Node` são destruídos. **Sob a perspectiva do Cluster API, todas as `Machines` são imutáveis**: uma vez criadas, nunca são atualizadas in-place por padrão (exceto labels, annotations e status), sendo substituídas por novas máquinas durante upgrades.
+EXAMPLE:
+```yaml
+# Exemplo oficial do Cluster API Book (v1beta2) declarando um objeto Cluster e suas referências
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: my-cluster
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 192.168.0.0/16
+  infrastructureRef:
+    apiGroup: infrastructure.cluster.x-k8s.io
+    kind: VSphereCluster
+    name: my-cluster-infrastructure
+  controlPlaneRef:
+    apiGroup: controlplane.cluster.x-k8s.io
+    kind: KubeadmControlPlane
+    name: my-control-plane
+```
+TRADE_OFFS: Assim como você não deve criar `Pods` avulsos diretamente no Kubernetes em produção (usando `Deployments` em vez disso), a documentação oficial do Cluster API recomenda **não gerenciar objetos `Machine` individuais diretamente**, mas sim utilizar controladores de nível superior como `KubeadmControlPlane`, `MachineDeployment` ou `MachinePool`, que coordenam a substituição gradual das máquinas imutáveis.
+VERIFY: Execute `kubectl get clusters,machines -A` no Management Cluster e verifique na coluna `PROVIDERID` e `PHASE` (`Running`) o vínculo entre cada `Machine` e seu respectivo `Node` no Workload Cluster.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-machinedeployment-machineset-machinepool-rollout]] | [[clusterapi-extensoes-atualizacao-in-place-v1-12]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 823 | clusterapi-machinedeployment-machineset-machinepool-rollout | Kubernetes Cluster API: gerenciamento de grupos de nós worker com MachineDeployment, MachineSet e MachinePool ===
+ONE_LINER: De forma análoga a `Deployment` e `ReplicaSet` para Pods no Kubernetes, no Cluster API o `MachineDeployment` gerencia atualizações declarativas rolando alterações entre dois `MachineSets` (o antigo e o novo), enquanto o `MachinePool` usa recursos nativos de grupo de cada provedor de nuvem.
+IMPORTANCE: Para atualizar 50 nós workers de um cluster Kubernetes da versão `v1.34.0` para `v1.35.0` sem derrubar as aplicações em produção, é preciso criar máquinas novas com a versão `v1.35.0`, aguardar que fiquem `Ready`, drenar (`kubectl drain`) as cargas das máquinas antigas respeitando `PodDisruptionBudgets` e remover as máquinas antigas gradualmente. O `Cluster API Book` documenta como o `MachineDeployment` e o `MachineSet` automatizam exatamente esse rollout.
+HOW_IT_WORKS: (1) **`MachineSet`**: tem como propósito manter um conjunto estável de objetos `Machine` rodando a qualquer momento (equivalente a um `ReplicaSet`); não deve ser manipulado diretamente pelo usuário; (2) **`MachineDeployment`**: fica acima do `MachineSet` (equivalente a um `Deployment`); quando o operador altera o template da máquina no `MachineDeployment` (ex.: altera `spec.template.spec.version` ou referencia um novo `InfrastructureMachineTemplate`), o controlador cria um novo `MachineSet` e transfere a capacidade progressivamente do `MachineSet` antigo para o novo; e (3) **`MachinePool`**: similar ao `MachineDeployment`, mas delega o gerenciamento do grupo de máquinas para abstrações nativas do provedor de infraestrutura (como AWS Auto Scaling Groups, Azure VMSS ou GCP Managed Instance Groups).
+EXAMPLE:
+```bash
+# Escalar declarativamente o número de nós workers de um MachineDeployment e acompanhar o rollout dos MachineSets
+kubectl scale machinedeployment my-cluster-md-0 --replicas=5
+kubectl get machinedeployments,machinesets,machines
+```
+TRADE_OFFS: Como os templates referenciados por um `MachineDeployment` (como `AWSMachineTemplate` ou `VSphereMachineTemplate`) também são tratados como imutáveis para preservar o histórico de rollout entre os dois `MachineSets`, para alterar o tipo de instância (ex.: de `m6i.large` para `m6i.xlarge`) você deve criar um **novo** objeto `*MachineTemplate` com um novo nome e atualizar a referência `infrastructureRef.name` dentro do `MachineDeployment`.
+VERIFY: Inspecione o progresso de uma atualização de versão de nós workers com `kubectl get machinedeployments -o wide` verificando as colunas `REPLICAS`, `AVAILABLE`, `UP-TO-DATE` e `READY`.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-recursos-cluster-machine-imutabilidade]] | [[clusterapi-auto-remediacao-nos-machinehealthcheck]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 824 | clusterapi-provedores-infraestrutura-bootstrap-control-plane | Kubernetes Cluster API: arquitetura extensível de Providers (Infrastructure, Bootstrap e Control Plane) ===
+ONE_LINER: A extensibilidade do Cluster API divide responsabilidades em três tipos de provedores plugáveis: **Infrastructure Provider** (VMs, rede, variantes EC2/EKS), **Bootstrap Provider** (geração de `BootstrapData`/cloud-init e join de nós) e **Control Plane Provider** (self-provisioned, pod-based ou managed).
+IMPORTANCE: Desacoplar "onde a máquina virtual roda" (AWS, Azure, GCP, vSphere, Metal3,MAAS) de "como um servidor vira um nó Kubernetes" (`kubeadm`, Talos, K3s, MicroK8s) permite combinar qualquer infraestrutura com qualquer distribuição Kubernetes sem reescrever a lógica de ciclo de vida. A página `Concepts` do `Cluster API Book` detalha o papel de cada um dos três tipos de provedores.
+HOW_IT_WORKS: (1) **Infrastructure Provider**: provisiona os recursos computacionais e de rede exigidos pelo `Cluster` ou pelas `Machines` (em nuvem como AWS, Azure, Google; ou bare-metal como VMware, MAAS, `metal3.io`). Quando um mesmo provedor oferece mais de uma maneira de obter recursos (como a AWS oferecendo tanto VMs EC2 quanto clusters gerenciados EKS), cada maneira é chamada de **variant**; (2) **Bootstrap Provider**: transforma um servidor em um nó Kubernetes gerando o `BootstrapData` (geralmente `cloud-init`), gerando certificados do cluster (se não especificados), inicializando o control plane e coordenando o join de nós; e (3) **Control Plane Provider**: gerencia o control plane em três abordagens possíveis: **Self-provisioned** (ex.: `KubeadmControlPlane` usando static pods em `Machines`), **Pod-based** (control plane rodando como `Deployment`/`StatefulSet` em um cluster hospedeiro externo) ou **External/Managed** (GKE, AKS, EKS, IKS).
+EXAMPLE:
+```bash
+# Listar todos os providers (Core, Bootstrap, ControlPlane e Infrastructure) instalados no Management Cluster
+kubectl get providers.clusterctl.cluster.x-k8s.io -A
+```
+TRADE_OFFS: Ao utilizar uma variante **External/Managed** de Control Plane (como `AWSManagedControlPlane` para Amazon EKS ou `AzureManagedControlPlane` para AKS), o plano de controle é gerenciado pela nuvem pública (portanto você não gerencia `Machines` individuais de control plane nem o `etcd` diretamente via `KubeadmControlPlane`), gerenciando pelo CAPI a configuração do cluster gerenciado e os `MachinePools` / `MachineDeployments` dos workers.
+VERIFY: Consulte `kubectl get pods -A | grep -E "capi-|cap"` para confirmar que os três controladores (Infrastructure, Bootstrap e Control Plane) mais o Core Provider estão saudáveis no Management Cluster.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-recursos-cluster-machine-imutabilidade]] | [[clusterapi-control-plane-kubeadmcontrolplane-etcd-upgrade]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 825 | clusterapi-control-plane-kubeadmcontrolplane-etcd-upgrade | Kubernetes Cluster API: gerenciamento declarativo do Control Plane com KubeadmControlPlane (KCP) ===
+ONE_LINER: O recurso `KubeadmControlPlane` (`KCP`), fornecido pelo Kubeadm Control Plane Provider embutido no Cluster API, gerencia declarativamente o conjunto de `Machines` que hospedam os nós de control plane e o `etcd` criados com `kubeadm`.
+IMPORTANCE: Atualizar ou escalar nós de control plane é muito mais delicado do que escalar nós workers comuns: adicionar ou remover uma réplica exige atualizar o quórum de membros do banco de dados `etcd`, transferir liderança do `etcd` antes de desligar um nó, rotacionar certificados PKI e atualizar `kube-apiserver`, `kube-controller-manager`, `kube-scheduler` e `CoreDNS` na sequência correta. O `Cluster API Book` destaca o `KubeadmControlPlane` como o controlador que automatiza todo esse processo.
+HOW_IT_WORKS: Quando o operador declara um objeto **`KubeadmControlPlane`** (por exemplo, com `spec.replicas: 3` e `spec.version: v1.35.0`), o controlador KCP: (1) gera ou carrega as autoridades certificadoras (CAs) do cluster como Secrets no Management Cluster; (2) cria a primeira `Machine` de control plane com configuração `InitConfiguration` do `kubeadm` (que sobe os static pods do `kube-apiserver`, `kube-controller-manager`, `kube-scheduler` e `etcd`); (3) aguarda o plano de controle inicializar antes de liberar a criação das demais `Machines` de control plane (`JoinConfiguration`) e dos workers; e (4) durante upgrades de versão ou alterações de template, executa rolling updates seguros um nó de control plane por vez, verificando a saúde do `etcd` a cada passo.
+EXAMPLE:
+```bash
+# Inspecionar o estado do KubeadmControlPlane e das réplicas do plano de controle usando clusterctl describe
+kubectl get kubeadmcontrolplane -A
+clusterctl describe cluster my-cluster
+```
+TRADE_OFFS: Como o `KubeadmControlPlane` gerencia o quórum Raft do `etcd` acoplado às `Machines` de control plane (no modo stacked etcd padrão), o campo `spec.replicas` do `KubeadmControlPlane` deve ser sempre configurado com um **número ímpar** (`1` apenas para desenvolvimento/teste, ou `3` e `5` para produção HA) e as atualizações de versão do Kubernetes (`spec.version`) devem respeitar a política oficial de skew do Kubernetes (subindo uma versão minor por vez, ex.: `1.33` -> `1.34` -> `1.35`).
+VERIFY: Execute `clusterctl describe cluster <nome-do-cluster>` para visualizar a árvore hierárquica do `ControlPlane`, a saúde de cada membro do `etcd` e o status das condições `ControlPlaneInitialized` e `Ready`.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-provedores-infraestrutura-bootstrap-control-plane]] | [[clusterapi-auto-remediacao-nos-machinehealthcheck]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 826 | clusterapi-auto-remediacao-nos-machinehealthcheck | Kubernetes Cluster API: detecção de falhas e auto-remediação de nós com MachineHealthCheck ===
+ONE_LINER: O recurso `MachineHealthCheck` (`MHC`) define as condições sob as quais um `Node` do Workload Cluster deve ser considerado ausente ou não saudável por um período configurável, iniciando automaticamente a remediação pela substituição da `Machine` correspondente.
+IMPORTANCE: Em uma frota com centenas de servidores ou máquinas virtuais, falhas de hardware, travamentos de kernel, discos cheios ou perda permanente de rede acontecem regularmente; sem auto-remediação, operadores precisam ser acordados de madrugada para deletar manualmente a VM quebrada e provisionar uma nova. A seção `MachineHealthCheck` em `cluster-api.sigs.k8s.io/user/concepts.html` documenta esse mecanismo de autocura.
+HOW_IT_WORKS: Um objeto **`MachineHealthCheck`** criado no Management Cluster seleciona um grupo de `Machines` por labels (`spec.selector`) e define uma lista de `unhealthyConditions` (por exemplo, `type: Ready` com `status: Unknown` ou `status: False` por um `timeout: 300s`, além de `nodeStartupTimeout` para máquinas que nunca conseguem se registrar como `Node`). O controlador monitora continuamente os objetos `Node` dentro do Workload Cluster: se um nó permanecer na condição não saudável além do tempo configurado, o `MachineHealthCheck` marca a `Machine` para remediação e a deleta, fazendo com que o controlador pai (`MachineSet` / `KubeadmControlPlane`) crie automaticamente uma nova `Machine` saudável no seu lugar.
+EXAMPLE:
+```yaml
+# Exemplo de MachineHealthCheck remediando nós workers que fiquem NotReady ou Unknown por mais de 5 minutos
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: my-cluster-worker-mhc
+spec:
+  clusterName: my-cluster
+  selector:
+    matchLabels:
+      nodepool: pool-workers
+  unhealthyConditions:
+    - type: Ready
+      status: Unknown
+      timeout: 300s
+    - type: Ready
+      status: "False"
+      timeout: 300s
+```
+TRADE_OFFS: Conforme destaca explicitamente o `Cluster API Book`, o `MachineHealthCheck` só remedia nós de workers se as respectivas `Machines` forem possuídas por um **`MachineSet`** (ou `MachineDeployment` / `KubeadmControlPlane`) — isso garante que o cluster não perca capacidade ao deletar uma `Machine` avulsa que ninguém recriaria; além disso, deve-se configurar `maxUnhealthy` (disjuntor de circuito) para evitar que uma falha global de rede faça o MHC deletar 100% dos nós do cluster de uma só vez.
+VERIFY: Execute `kubectl get machinehealthchecks -A` e verifique as colunas `EXPECTEDMACHINES` e `CURRENTHEALTHY` para confirmar que o MHC está monitorando ativamente o pool de máquinas.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-machinedeployment-machineset-machinepool-rollout]] | [[descheduler-politicas-eviccao-rebalanceamento-pods-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 827 | clusterapi-extensoes-atualizacao-in-place-v1-12 | Kubernetes Cluster API: extensões de atualização In-Place (In-Place Updates a partir do CAPI v1.12) vs substituição imutável ===
+ONE_LINER: A partir do Cluster API v1.12, além do modelo padrão de substituição de máquinas imutáveis (rolling replacement), a arquitetura introduziu pontos de extensão (`update extensions`) que permitem realizar atualizações **in-place** sob circunstâncias bem definidas mantendo a mesma experiência declarativa.
+IMPORTANCE: Embora substituir a máquina virtual inteira a cada mudança seja o padrão ouro para nuvens elásticas, em ambientes de servidores **bare-metal** físicos (onde dar PXE boot e reinstalar um servidor físico leva 20 a 40 minutos) ou quando a mudança é mínima (ou em sistemas operacionais atômicos como Talos/Flatcar), atualizar a máquina existente in-place reduz drasticamente o tempo de rollout e a movimentação de pods. A seção `MachineDeployment` do `Cluster API Book` explica essa evolução introduzida no CAPI v1.12.
+HOW_IT_WORKS: Conforme documenta o `Cluster API Book`, a partir do **Cluster API v1.12**, os usuários podem optar por trocar parte dos benefícios da imutabilidade estrita de `Machine` conectando **pontos de extensão de atualização (Runtime Extensions / In-Place Update extensions)**. Crucialmente, **a experiência do usuário no Cluster API permanece exatamente a mesma** quer as atualizações in-place estejam habilitadas ou não: o operador continua declarando apenas o **estado desejado** no `MachineDeployment` / `KubeadmControlPlane`, e o próprio Cluster API fica responsável por escolher a melhor estratégia (atualizar a máquina existente in-place via extensão quando a mudança for suportada, ou fazer fallback automático para o rollout tradicional de substituição de máquina).
+EXAMPLE:
+```bash
+# Inspecionar runtime extensions registradas no Management Cluster e o status de rollout de MachineDeployments
+kubectl get extensionconfigs.runtime.cluster.x-k8s.io -A
+kubectl describe machinedeployment my-cluster-md-0
+```
+TRADE_OFFS: Habilitar atualizações in-place via extensões requer que o provedor de bootstrap/SO convidado nos nós possua um agente ou mecanismo capaz de aplicar a mudança solicitada na máquina em execução e reportar sucesso ao Management Cluster; caso a extensão de atualização in-place falhe ou atinja timeout em um nó, a máquina deve ser substituída para evitar desvio de configuração.
+VERIFY: Ao alterar a especificação de um `MachineDeployment`, acompanhe `clusterctl describe cluster <nome>` para observar a estratégia de atualização aplicada pelos controladores às `Machines`.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-recursos-cluster-machine-imutabilidade]] | [[clusterapi-machinedeployment-machineset-machinepool-rollout]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 828 | clusterapi-topologia-clusterclass-ponto-unico-controle | Kubernetes Cluster API: reutilização de topologias e ponto único de controle com ClusterClass ===
+ONE_LINER: O recurso `ClusterClass` permite definir um template reutilizável de arquitetura de cluster (control plane, classes de `MachineDeployment`/`MachinePool` e variáveis/patches), transformando o objeto `Cluster` (`spec.topology`) em um ponto único de controle para o cluster inteiro.
+IMPORTANCE: Sem o `ClusterClass`, criar um único Workload Cluster no Cluster API exige instanciar e conectar manualmente 7 a 10 objetos YAML separados (`Cluster`, `AWSCluster`, `KubeadmControlPlane`, `AWSMachineTemplate` do CP, `MachineDeployment`, `AWSMachineTemplate` do worker e `KubeadmConfigTemplate`); multiplicar isso por 50 clusters gera centenas de recursos repetitivos. Conforme destaca o `Cluster API Book`, com `ClusterClass` o objeto `Cluster` torna-se o ponto único de controle.
+HOW_IT_WORKS: A equipe de plataforma define uma vez um objeto **`ClusterClass`** (por exemplo, `ha-eks-standard` ou `vsphere-prod-class`) que amarra os templates de infraestrutura, control plane, workers e variáveis parametrizáveis (como região, tipo de instância, tamanho de disco). A partir daí, para provisionar, escalar ou atualizar qualquer cluster da frota, o usuário cria ou edita **apenas um único objeto `Cluster`** preenchendo o bloco `spec.topology` (`class: vsphere-prod-class`, `version: v1.35.0`, `controlPlane.replicas: 3`, `workers.machineDeployments: ...`). O controlador de topologia do Cluster API gera, atualiza e rotaciona automaticamente todos os templates e objetos subjacentes (`KubeadmControlPlane`, `MachineDeployments` e `*MachineTemplates`).
+EXAMPLE:
+```yaml
+# Exemplo de objeto Cluster usando ClusterClass (spec.topology) como ponto único de controle do cluster inteiro
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: prod-payment-cluster
+spec:
+  topology:
+    class: corporate-ha-class
+    version: v1.35.0
+    controlPlane:
+      replicas: 3
+    workers:
+      machineDeployments:
+        - class: default-worker
+          name: md-general
+          replicas: 6
+```
+TRADE_OFFS: Quando um `Cluster` é gerenciado por uma `ClusterClass` (`spec.topology`), todos os recursos filhos (`KubeadmControlPlane`, `MachineDeployment`, templates) são reconciliados continuamente pelo controlador de topologia; portanto, você **nunca deve editar manualmente** o `KubeadmControlPlane` ou o `MachineDeployment` gerado, fazendo toda alteração de versão ou escala diretamente em `spec.topology` no objeto `Cluster` (ou na `ClusterClass` para propagar a mudança para todos os clusters que a herdam).
+VERIFY: Execute `kubectl get clusterclasses,clusters -A` e `clusterctl describe cluster <nome>` para verificar a reconciliação da topologia a partir da `ClusterClass`.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-recursos-cluster-machine-imutabilidade]] | [[clusterapi-cli-clusterctl-init-generate-move-upgrade]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 829 | clusterapi-cli-clusterctl-init-generate-move-upgrade | Kubernetes Cluster API: operações de ciclo de vida do Management Cluster com a CLI clusterctl (init, generate, move, upgrade) ===
+ONE_LINER: A ferramenta de linha de comando oficial `clusterctl` gerencia o ciclo de vida do próprio Management Cluster e seus provedores (`clusterctl init`, `upgrade`), gera manifestos de Workload Clusters (`generate cluster`), inspeciona árvores de saúde (`describe`) e migra a gestão entre clusters (`move`).
+IMPORTANCE: Um desafio clássico de bootstrapping (o problema do ovo e da galinha) é: *"Se o Cluster API precisa de um Management Cluster Kubernetes para criar clusters Kubernetes, como eu crio o primeiro Management Cluster?"*. A CLI `clusterctl`, documentada no Quick Start do `Cluster API Book`, resolve esse fluxo com o comando `clusterctl move`.
+HOW_IT_WORKS: O fluxo de bootstrapping e operação com **`clusterctl`** compreende: (1) **`clusterctl init --infrastructure <provider>`**: instala os certificados, CRDs e controladores do Cluster API em um cluster Kubernetes existente (que pode ser um cluster temporário local criado com **`kind`** na máquina do administrador); (2) **`clusterctl generate cluster <nome> --kubernetes-version v1.35.0`**: renderiza os manifestos YAML do novo cluster; (3) **`clusterctl get kubeconfig <nome>`**: extrai o `kubeconfig` de administrador do Workload Cluster criado; (4) **`clusterctl move --to-kubeconfig <kubeconfig-destino>`**: transfere de forma atômica todos os CRDs, objetos `Cluster`/`Machine`, Secrets PKI e referências do cluster bootstrap (`kind`) para um Management Cluster definitivo em produção (permitindo destruir o cluster `kind` temporário); e (5) **`clusterctl upgrade plan` / `apply`**: atualiza as versões dos provedores CAPI.
+EXAMPLE:
+```bash
+# Gerar o manifesto de um Workload Cluster, extrair seu kubeconfig e planejar upgrade dos providers CAPI
+clusterctl generate cluster prod-01 --kubernetes-version v1.35.0 --control-plane-machine-count=3 --worker-machine-count=3 > prod-01.yaml
+clusterctl get kubeconfig prod-01 > prod-01.kubeconfig
+clusterctl upgrade plan
+```
+TRADE_OFFS: Antes de executar `clusterctl move --to-kubeconfig <destino>`, o cluster de destino já precisa ter sido inicializado com `clusterctl init` contendo exatamente a mesma combinação (e versões compatíveis) de provedores de Infrastructure, Bootstrap e Control Plane que existem no cluster de origem, e todas as máquinas devem estar em estado estável (sem rollouts em andamento).
+VERIFY: Execute `clusterctl upgrade plan` no Management Cluster para verificar o contrato de API (`v1beta1` / `v1beta2`) e se há novas versões disponíveis para os provedores instalados.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[clusterapi-provedores-infraestrutura-bootstrap-control-plane]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/quick-start.html | https://github.com/kubernetes-sigs/cluster-api
+
+=== NOTE: 830 | clusterapi-integracao-talos-k3s-microvms-gitops-frota | Kubernetes Cluster API: integração com provedores alternativos (Talos, K3s, MicroVMs) e gestão GitOps de frotas ===
+ONE_LINER: Como todos os recursos de um Workload Cluster no Cluster API são objetos Kubernetes declarativos comuns no Management Cluster, frotas inteiras de clusters (usando `kubeadm`, Talos Linux ou K3s sobre nuvem, bare-metal ou microVMs) podem ser gerenciadas via GitOps (Argo CD ou Flux).
+IMPORTANCE: Embora o `kubeadm` seja o provedor de bootstrap e control plane embutido por padrão no Cluster API, muitas organizações desejam provisionar clusters imutáveis com **Talos Linux** (`siderolabs/cluster-api-control-plane-provider-talos`), clusters leves de borda com **K3s** (`k3s-io/cluster-api-k3s`) ou nós ultrarrápidos em microVMs Firecracker (`liquidmetal-dev/cluster-api-provider-microvm`), sincronizando tudo via GitOps. O README oficial do Cluster API referencia o catálogo de provedores (`reference/providers.html`).
+HOW_IT_WORKS: Ao instalar provedores adicionais no Management Cluster (via `clusterctl init --bootstrap talos --control-plane talos --infrastructure ...`), o operador substitui `KubeadmControlPlane` e `KubeadmConfigTemplate` por `TalosControlPlane` e `TalosConfigTemplate` (ou `KThreesControlPlane` para K3s), mantendo exatamente os mesmos recursos `Cluster`, `MachineDeployment` e `MachineHealthCheck` do Cluster API. Como todos esses objetos são manifestos YAML armazenados no Git e reconciliados no Management Cluster pelo **Argo CD** ou **Flux**, criar um novo cluster Kubernetes na empresa ou atualizar a versão de 20 clusters resume-se a abrir e aprovar um Pull Request no repositório Git da plataforma.
+EXAMPLE:
+```bash
+# Inspecionar no Management Cluster o status consolidado de todos os clusters gerenciados via GitOps
+kubectl get clusters,machines,machinedeployments -A -o wide
+```
+TRADE_OFFS: Ao gerenciar objetos do Cluster API com ferramentas GitOps como o **Argo CD**, lembre-se de que controladores do Cluster API (e o Cluster Autoscaler, quando ativo) modificam dinamicamente campos específicos ou anotações nos objetos `MachineDeployment` (como `spec.replicas` quando há auto-scaling) e que templates de infraestrutura são imutáveis; configure `ignoreDifferences` para `spec.replicas` nos `MachineDeployments` com auto-scaling ativo para evitar que o Argo CD desfaça o escalonamento automático.
+VERIFY: Verifique a árvore de recursos de todos os Workload Clusters com `clusterctl describe cluster <nome>` e confirme a sincronização limpa dos manifestos CAPI no painel do controlador GitOps.
+LINKS: [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]] | [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/cluster-api/main/README.md | https://cluster-api.sigs.k8s.io/user/concepts.html | https://github.com/kubernetes-sigs/cluster-api

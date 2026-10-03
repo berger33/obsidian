@@ -1,0 +1,151 @@
+=== NOTE: 881 | telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura | Telepresence: desenvolvimento local conectado a clusters Kubernetes remotos sem ciclo build/push/deploy ===
+ONE_LINER: O Telepresence (`telepresenceio/telepresence`, projeto CNCF sob licença Apache-2.0) conecta a estação de trabalho do desenvolvedor a um cluster Kubernetes remoto, permitindo codificar e depurar um serviço localmente (com IDE, debugger e hot reload) enquanto ele recebe tráfego real, variáveis de ambiente e volumes do cluster.
+IMPORTANCE: Em arquiteturas de microsserviços com dezenas de dependências no Kubernetes, rodar toda a pilha localmente no laptop esgota a memória RAM, enquanto fazer `docker build` -> `docker push` -> `kubectl rollout restart` a cada linha de código editada leva vários minutos por tentativa. Segundo o README oficial e a página `Architecture` (`telepresence.io/docs/concepts/architecture`), o Telepresence elimina o ciclo de container build/push/deploy durante o desenvolvimento.
+HOW_IT_WORKS: Conforme documenta a arquitetura oficial (v2.32+), o Telepresence opera através de quatro componentes principais divididos entre a estação de trabalho e o cluster: (1) **Telepresence CLI**: orquestra os daemons locais e serve como interface de usuário; (2) **Telepresence Daemons na estação (`User-Daemon` e `Root-Daemon`)**: o `Root-Daemon` cria uma interface de rede virtual (`Virtual Network Device` — VIF) na máquina local para rotear DNS e IPs do cluster, enquanto o `User-Daemon` coordena anexações (`replace`, `intercept`, `wiretap`, `ingest`) com o cluster; (3) **Traffic Manager no cluster**: deployment central instalado no cluster (`telepresence helm install`) que faz proxy do tráfego e gerencia agentes; e (4) **Traffic Agent**: sidecar injetado no pod alvo (ou `node-agent` no nó) que redireciona tráfego, variáveis de ambiente e volumes para a estação do desenvolvedor.
+EXAMPLE:
+```bash
+# Instalar o Traffic Manager no cluster Kubernetes, conectar a estação de trabalho e listar os workloads disponíveis
+telepresence helm install
+telepresence connect
+telepresence list
+```
+TRADE_OFFS: Como o `Root-Daemon` do Telepresence cria uma interface de rede virtual (`VIF`) e altera rotas/DNS locais na estação de trabalho para resolver diretamente nomes `*.svc.cluster.local` e IPs de Pods/Services sem `kubectl port-forward`, o processo `Root-Daemon` precisa rodar com privilégios administrativos locais (`sudo`) na máquina do desenvolvedor.
+VERIFY: Após executar `telepresence connect`, rode `telepresence status` para confirmar que tanto o `User Daemon` quanto o `Root Daemon` estão conectados ao `Traffic Manager` e teste um `curl http://meu-servico.meu-namespace.svc.cluster.local` diretamente do terminal local.
+LINKS: [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[telepresence-filtragem-trafego-http-headers-paths-equipes]] | [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 882 | telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest | Telepresence: os 4 modos de anexação a workloads (replace, intercept, wiretap e ingest) ===
+ONE_LINER: O Telepresence oferece quatro modos distintos para conectar seu processo local a um workload no cluster: **replace** (substitui o container remoto), **intercept** (intercepta uma porta de serviço), **wiretap** (recebe uma cópia do tráfego sem interferir) e **ingest** (importa apenas variáveis de ambiente e volumes sem redirecionar tráfego de entrada).
+IMPORTANCE: Nem toda sessão de desenvolvimento tem o mesmo objetivo: às vezes o desenvolvedor quer apenas rodar um consumidor local ou script com as variáveis e segredos do pod sem roubar tráfego HTTP (`ingest`); às vezes quer inspecionar requisições reais de produção sem afetar a resposta dada ao usuário (`wiretap`); e às vezes quer substituir completamente o container remoto pelo seu código local (`replace` ou `intercept`). A seção `Key Features` do README oficial e a arquitetura v2.32 detalham os quatro modos.
+HOW_IT_WORKS: Quando o `User-Daemon` solicita uma anexação ao `Traffic Manager` e ao `Traffic Agent`: (1) **`replace`**: substitui o container de aplicação remoto no pod e roteia todo o tráfego destinado àquele container para a estação de trabalho; (2) **`intercept`**: intercepta tráfego de uma porta de Service específica (todo o tráfego ou apenas requisições filtradas por HTTP header/path) para a porta local do desenvolvedor, mantendo o container remoto ativo para as demais requisições; (3) **`wiretap`**: o `Traffic Agent` envia uma **cópia** espelhada das requisições de entrada para a estação de trabalho enquanto o container no pod continua respondendo normalmente; e (4) **`ingest`**: não altera o tráfego de entrada do pod, apenas disponibiliza as variáveis de ambiente e os volumes montados do container remoto para o processo local.
+EXAMPLE:
+```bash
+# Interceptar o tráfego do deployment checkout-service redirecionando para a porta 8080 da máquina local
+telepresence intercept checkout-service --port 8080:http
+telepresence list
+telepresence leave checkout-service
+```
+TRADE_OFFS: Usar `replace` ou um `intercept` global (sem filtro de cabeçalho HTTP) em um cluster de staging compartilhado por toda a equipe fará com que **todas** as requisições enviadas por outros desenvolvedores ou testes de QA para aquele serviço caiam no seu laptop local (e falhem se o seu debugger estiver pausado em um breakpoint); em clusters compartilhados, prefira `intercept` com filtros HTTP, `wiretap` ou `ingest`.
+VERIFY: Execute `telepresence list` para verificar qual modo (`intercepted`, `replaced`, `wiretapped` ou `ingested`) está ativo em cada deployment do namespace.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-filtragem-trafego-http-headers-paths-equipes]] | [[telepresence-modos-traffic-agent-sidecar-vs-node-agent]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 883 | telepresence-filtragem-trafego-http-headers-paths-equipes | Telepresence: interceptações seletivas por cabeçalho HTTP (--http-header) e caminho (--http-path-*) em clusters compartilhados ===
+ONE_LINER: O recurso de **Traffic Filtering** do Telepresence permite interceptar apenas as requisições que pertencem ao desenvolvedor (selecionadas por cabeçalho HTTP ou caminho de URL), deixando todas as demais requisições fluírem normalmente para o container original no cluster.
+IMPORTANCE: Manter um cluster Kubernetes completo separado na nuvem para cada desenvolvedor da empresa é caro; porém, compartilhar um único cluster de desenvolvimento/staging só funciona se 20 desenvolvedores puderem depurar o mesmo microsserviço simultaneamente sem que um roube as requisições de teste do outro. O README oficial do Telepresence destaca o `Traffic filtering` como peça central para equipes compartilharem um único cluster sem colisões.
+HOW_IT_WORKS: Ao iniciar um `telepresence intercept` passando flags de filtragem HTTP — como **`--http-header x-dev-user=alice`** ou **`--http-path-prefix /api/v2/experimental`** (ou `--http-path-equal` / `--http-path-regex`) — o `Traffic Agent` atua como um proxy inteligente de camada 7 na frente do container do pod: para cada requisição HTTP recebida, ele inspeciona os cabeçalhos e o path; se a requisição contiver `x-dev-user: alice`, o `Traffic Agent` a desvia pelo túnel para a porta local na estação de trabalho da Alice; caso contrário, repassa a requisição imediatamente para o container original rodando dentro do pod no cluster.
+EXAMPLE:
+```bash
+# Interceptar apenas requisições que contenham o cabeçalho HTTP x-dev-session=dev-alice sem afetar outros usuários do cluster
+telepresence intercept orders-api --port 3000:8080 --http-header x-dev-session=dev-alice
+```
+TRADE_OFFS: Para que a filtragem seletiva por cabeçalhos HTTP (`--http-header`) funcione em chamadas em cadeia (onde o frontend chama o `api-gateway`, que por sua vez chama o `orders-api` interceptado lá no fundo do cluster), os serviços intermediários precisam propagar o cabeçalho de contexto (como `baggage` do W3C Trace Context / OpenTelemetry ou cabeçalhos `x-dev-*`) nas chamadas downstream.
+VERIFY: Com o intercept filtrado ativo, envie um `curl` sem o cabeçalho `x-dev-session` (confirmando que o pod do cluster responde) e um segundo `curl -H "x-dev-session: dev-alice"` (confirmando que o processo local na sua IDE recebe a chamada).
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[flagger-estrategias-roteamento-canary-ab-testing-blue-green]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 884 | telepresence-modos-traffic-agent-sidecar-vs-node-agent | Telepresence: escolha entre Traffic Agent como Sidecar injetado (padrão) ou Node-Agent sem reiniciar pods ===
+ONE_LINER: O `Traffic Agent` do Telepresence pode operar de duas maneiras configuráveis no cluster: injetado como um container **sidecar** no pod alvo (o padrão) ou executando como um **node-agent** (um pod hospedado no nó que se anexa aos namespaces do workload sem modificá-lo e sem reiniciar o pod).
+IMPORTANCE: Na abordagem clássica de sidecar, na primeira vez que um desenvolvedor faz `intercept` em um Deployment, o webhook do `Traffic Manager` precisa injetar o container `traffic-agent` no pod template, o que força o Kubernetes a recriar/reiniciar o pod (podendo ser bloqueado por políticas estritas de admissão ou interromper estados em memória). O README oficial e a página `Architecture` (v2.32) destacam o novo modo **node-agent**.
+HOW_IT_WORKS: Conforme documenta a seção `Traffic Agent` em `telepresence.io/docs/concepts/architecture`: (1) **Sidecar (padrão)**: na primeira anexação (`replace`, `ingest`, `intercept` ou `wiretap`), o `Traffic Manager` usa um Mutating Admission Webhook para injetar o container sidecar `traffic-agent` dentro do(s) pod(s) do workload, redirecionando as portas no namespace de rede do pod sem exigir privilégios em nível de nó; e (2) **Node-hosted agent (`node-agent`)**: um administrador do cluster pode configurar o Helm chart do Telepresence para rodar o `traffic-agent` como um pod hospedado no nó (DaemonSet/node-agent) que se anexa diretamente aos namespaces dos pods existentes no nó **sem injetar sidecar, sem alterar a especificação do Deployment e sem reiniciar o pod**.
+EXAMPLE:
+```bash
+# Verificar o status do Traffic Agent nos workloads anexados usando telepresence list ou kubectl describe pod
+telepresence list
+kubectl describe pod -l app=checkout-service | grep -A 5 "traffic-agent"
+```
+TRADE_OFFS: O modo **sidecar** padrão não exige privilégios elevados de host nos nós workers (rodando dentro do próprio contexto de segurança do pod), mas causa o rollout inicial do pod ao injetar o sidecar (que pode ser removido depois com `telepresence uninstall <workload>`); já o modo **node-agent** evita completamente qualquer modificação ou restart nos pods da aplicação, mas exige que o pod do `node-agent` no nó worker tenha permissões privilegiadas no host para entrar nos namespaces de rede dos containers locais.
+VERIFY: Consulte `telepresence list` e `kubectl get pods` durante uma sessão de `intercept` para verificar se o cluster está operando com injeção de sidecar (`2/2 Ready`) ou via `node-agent` (`1/1 Ready`).
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 885 | telepresence-ambiente-remoto-variaveis-montagem-volumes-locais | Telepresence: importação de variáveis de ambiente (--env-file) e montagem de volumes remotos (--mount) no processo local ===
+ONE_LINER: Durante uma anexação (`intercept`, `replace`, `wiretap` ou `ingest`), o Telepresence captura todas as variáveis de ambiente (ConfigMaps e Secrets) e monta os volumes do container remoto (incluindo tokens de ServiceAccount e certificados) para que o processo local se comporte exatamente como dentro do cluster.
+IMPORTANCE: Mesmo que o tráfego de rede chegue ao processo local, a aplicação falhará na partida se não tiver acesso às dezenas de variáveis de ambiente injetadas por `ConfigMap`/`Secret` no Kubernetes ou aos arquivos montados em `/var/run/secrets/kubernetes.io/serviceaccount` e volumes CSI. O README oficial do Telepresence destaca `Remote environment, local process` como funcionalidade essencial.
+HOW_IT_WORKS: Quando o desenvolvedor inicia uma sessão de anexação: (1) **Variáveis de ambiente**: o `Traffic Agent` extrai o ambiente do container remoto; o desenvolvedor pode gravá-lo em um arquivo `.env` local com `--env-file .env.telepresence` (ou `--env-json`) para carregar no debugger do VS Code / GoLand / IntelliJ, ou passar `-- <comando>` na própria linha do `telepresence intercept` para que o Telepresence já injete todas as variáveis diretamente no subprocesso local; e (2) **Volumes remotos (`--mount`)**: o `Traffic Agent` exporta os pontos de montagem de volumes do container remoto (via SFTP/FUSE ou SMB) e o Telepresence os monta em um diretório local (expondo o caminho raiz montado na variável **`$TELEPRESENCE_ROOT`**).
+EXAMPLE:
+```bash
+# Interceptar um serviço exportando as variáveis remotas do pod para um arquivo .env e executando o binário local já com o ambiente injetado
+telepresence intercept payment-worker \
+  --port 8080 \
+  --env-file ./payment-remote.env \
+  -- go run ./cmd/worker
+```
+TRADE_OFFS: Como os sistemas de arquivos do Linux/macOS na máquina do desenvolvedor não permitem que um processo sem root sobrescreva diretórios raiz do sistema como `/var/run/secrets` ou `/etc/config`, os volumes do container são montados sob o diretório prefixado **`$TELEPRESENCE_ROOT`** (por exemplo, `$TELEPRESENCE_ROOT/var/run/secrets/...`), a menos que se utilize execução em container Docker local (`--docker-run`) onde os volumes são montados nos caminhos absolutos exatos.
+VERIFY: Dentro de um processo iniciado pelo `telepresence intercept ... -- env`, verifique que as variáveis vindas dos ConfigMaps e Secrets do pod remoto e a variável `TELEPRESENCE_ROOT` estão presentes.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[telepresence-execucao-containers-docker-run-docker-build]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 886 | telepresence-rede-virtual-vif-dns-cluster-sem-port-forward | Telepresence: dispositivo de rede virtual (VIF) no Root-Daemon, resolução DNS do cluster e roteamento direto de IPs ===
+ONE_LINER: Ao executar `telepresence connect`, o `Root-Daemon` configura uma Virtual Network Interface (`VIF` / dispositivo `tun`) na estação de trabalho que roteia os CIDRs de Services e Pods do Kubernetes e resolve nomes DNS internos do cluster sem necessidade de `kubectl port-forward`.
+IMPORTANCE: Usar `kubectl port-forward` para acessar 5 microsserviços e 2 bancos de dados diferentes no cluster exige abrir 7 terminais paralelos mapeando portas arbitrárias (`localhost:15432`, `localhost:18081`), quebrando a descoberta de serviços por DNS (`postgres.db.svc.cluster.local:5432`) e os certificados TLS que validam o hostname real do Service. O README oficial (`Cluster access`) e a página `Architecture` explicam como a VIF resolve isso.
+HOW_IT_WORKS: Quando `telepresence connect` é executado, o `User-Daemon` conecta-se ao `Traffic Manager` no cluster para descobrir as sub-redes (CIDRs) de `Services` e `Pods` e o servidor DNS interno (`CoreDNS`). Em seguida, o **`Root-Daemon`** cria uma interface de rede virtual (**`VIF`**) no sistema operacional da estação de trabalho, adiciona rotas de tabela de rede direcionando os CIDRs do cluster para a VIF e integra um resolvedor DNS local. Assim, qualquer aplicação na estação de trabalho (navegador, `curl`, `psql`, cliente gRPC ou código na IDE) pode conectar-se diretamente a `http://orders.prod.svc.cluster.local` (ou apenas `http://orders` se conectado com `--namespace prod`) nas portas originais.
+EXAMPLE:
+```bash
+# Conectar ao cluster fixando o namespace padrão de resolução DNS e verificar as sub-redes roteadas pela VIF
+telepresence connect --namespace staging
+telepresence status
+```
+TRADE_OFFS: Se a sub-rede CIDR de Pods ou Services do cluster Kubernetes remoto (por exemplo, `10.0.0.0/8` ou `172.16.0.0/12`) colidir com a faixa de IPs da rede Wi-Fi local ou da VPN corporativa da estação de trabalho do desenvolvedor, rotear o CIDR inteiro pela VIF pode causar conflito de rotas; nesses casos, o Telepresence permite configurar `alsoProxy` / `neverProxy` no Helm chart do `Traffic Manager` ou usar `telepresence connect --docker` para isolar a rede virtual dentro de um container Docker local.
+VERIFY: Execute `telepresence status` e confirme na seção `Root Daemon` as faixas de sub-redes (`Subnets`) mapeadas na interface virtual e o funcionamento de `nslookup kubernetes.default.svc.cluster.local`.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-execucao-containers-docker-run-docker-build]] | [[minikube-exposicao-servicos-service-nodeport-tunnel-loadbalancer]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 887 | telepresence-execucao-containers-docker-run-docker-build | Telepresence: execução de interceptações em containers Docker locais (--docker-run, --docker-build e telepresence connect --docker) ===
+ONE_LINER: O Telepresence permite executar o processo local dentro de um container Docker (`--docker-run`, `--docker-build`) conectado à rede do cluster (`telepresence connect --docker`), montando volumes remotos em seus caminhos absolutos exatos (`/var/run/secrets/...`) e dispensando privilégios `sudo` no host.
+IMPORTANCE: Em máquinas onde o desenvolvedor não possui permissão de administrador (`sudo`) para criar interfaces `tun` (`VIF`) no sistema operacional hospedeiro, ou quando a aplicação exige bibliotecas específicas do Linux e caminhos absolutos hardcoded (como `/etc/certs/tls.crt` que não podem ser montados na raiz do macOS/Windows), rodar o processo interceptado em um container Docker local resolve ambas as limitações.
+HOW_IT_WORKS: Quando o usuário inicia a conexão com **`telepresence connect --docker`** (ou usa `--docker-run` diretamente no `intercept`), o Telepresence inicia o daemon de rede dentro de um container Docker local na estação de trabalho em vez de modificar a tabela de rotas e o DNS do sistema operacional hospedeiro. Ao executar **`telepresence intercept meu-app --port 8080 --docker-run -- minha-imagem:dev`** (ou `--docker-build ./caminho-do-contexto`), o Telepresence inicia o container da aplicação compartilhando o namespace de rede do container daemon do Telepresence, injeta todas as variáveis de ambiente do pod remoto e monta os volumes remotos exatamente nos mesmos caminhos absolutos do pod Kubernetes.
+EXAMPLE:
+```bash
+# Interceptar um workload rodando o código local dentro de um container Docker sem alterar o DNS/rotas do host
+telepresence intercept billing-api --port 8080:8080 --docker-run -- billing-api:local-dev
+```
+TRADE_OFFS: Ao usar `telepresence connect --docker`, apenas processos que rodam dentro de containers conectados àquela rede Docker do Telepresence enxergam o DNS e os IPs internos do cluster Kubernetes; aplicações rodando diretamente no host fora do Docker (como o navegador web ou um cliente GUI) não terão rota direta para `*.svc.cluster.local` a menos que você use o `telepresence connect` padrão no host.
+VERIFY: Execute `docker ps` durante uma sessão com `--docker-run` para verificar o container local em execução conectado à rede do Telepresence e valide o acesso aos caminhos absolutos de volumes montados.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-ambiente-remoto-variaveis-montagem-volumes-locais]] | [[telepresence-rede-virtual-vif-dns-cluster-sem-port-forward]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 888 | telepresence-gerenciamento-traffic-manager-helm-namespaces-rbac | Telepresence: instalação e administração do Traffic Manager no cluster (telepresence helm install/upgrade) e escopo de namespaces ===
+ONE_LINER: O **Traffic Manager** é instalado no cluster pelo administrador via Helm chart oficial ou pelo comando embutido `telepresence helm install` (`upgrade` / `uninstall`), permitindo restringir quais namespaces são gerenciados e configurar permissões RBAC para os desenvolvedores.
+IMPORTANCE: Em clusters corporativos multi-equipe, administradores de plataforma precisam controlar a versão do `Traffic Manager` via GitOps/Helm, limitar a atuação do Telepresence apenas aos namespaces de desenvolvimento autorizados e garantir que os desenvolvedores não precisem de permissões `cluster-admin` para realizar `connect` e `intercept`. A página `Architecture` (`telepresence.io/docs/concepts/architecture`) detalha o papel administrativo do `Traffic Manager`.
+HOW_IT_WORKS: Conforme documentado oficialmente, o `Traffic Manager` (instalado por padrão no namespace `ambassador`) pode ser implantado de duas formas equivalentes: (1) usando o Helm chart embutido diretamente no binário cliente via **`telepresence helm install`** (aceitando customizações com `--set` ou `-f values.yaml`, atualizado com `telepresence helm upgrade` e removido com `telepresence helm uninstall`); ou (2) usando o CLI do `helm` diretamente a partir do Artifact Hub (`telepresence-oss`). Uma vez que o administrador instalou o `Traffic Manager`, os desenvolvedores comuns precisam apenas de permissões RBAC em nível de namespace (`port-forward`/acesso ao serviço do `traffic-manager` e permissão nos seus próprios Deployments) para usar `telepresence connect` e `telepresence intercept`.
+EXAMPLE:
+```bash
+# Instalar ou atualizar o Traffic Manager no cluster passando valores customizados de Helm e encerrar a sessão local
+telepresence helm upgrade --namespace ambassador
+telepresence quit -s
+```
+TRADE_OFFS: Para evitar incompatibilidades de protocolo gRPC entre as estações de trabalho dos desenvolvedores e o cluster, mantenha a versão do binário cliente `telepresence` nas máquinas dos engenheiros alinhada à versão do `Traffic Manager` instalado no cluster (verificável com `telepresence version`, que exibe tanto a versão do `Client` quanto a do `Traffic Manager` conectado).
+VERIFY: Execute `telepresence version` enquanto conectado ao cluster para confirmar a compatibilidade de versões entre `Client`, `Root Daemon`, `User Daemon` e `Traffic Manager`.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-modos-traffic-agent-sidecar-vs-node-agent]] | [[helm-arquitetura-charts-releases-repositorios-sdk]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 889 | telepresence-modos-nao-intrusivos-wiretap-ingest-producao-staging | Telepresence: depuração não-intrusiva com wiretap (cópia de tráfego) e ingest (apenas variáveis/volumes) ===
+ONE_LINER: Os modos **`wiretap`** e **`ingest`** do Telepresence permitem depurar aplicações conectadas a um cluster sem nunca desviar ou interromper as respostas enviadas pelo pod remoto aos clientes reais do cluster.
+IMPORTANCE: Em um ambiente de homologação integrada (onde testes automatizados de ponta a ponta estão rodando continuamente) ou ao investigar um bug difícil de reproduzir que só acontece com cargas reais de tráfego, usar `replace` ou `intercept` altera o caminho crítico da requisição — se o processo local do desenvolvedor estiver lento ou travar no debugger, o chamador receberá erro HTTP 500/timeout. Os modos `wiretap` e `ingest` documentados no README e na arquitetura v2.32 eliminam esse impacto.
+HOW_IT_WORKS: (1) **`telepresence wiretap <workload> --port <local>:<remota>`**: instrui o `Traffic Agent` a duplicar os pacotes/requisições de entrada que chegam ao serviço; o container original dentro do pod continua processando a requisição e devolvendo a resposta oficial ao cliente no cluster, enquanto uma **cópia idêntica** da requisição é enviada para a estação de trabalho do desenvolvedor (cujo retorno local é descartado pelo agente), permitindo colocar breakpoints no debugger local sem causar timeout no cluster; e (2) **`telepresence ingest <workload>`**: anexa-se ao container remoto exclusivamente para extrair suas variáveis de ambiente e montar seus volumes localmente, mantendo 100% do tráfego de entrada no pod remoto enquanto o processo local faz chamadas de saída pela VIF.
+EXAMPLE:
+```bash
+# Receber uma cópia espelhada do tráfego em tempo real (wiretap) ou importar apenas ambiente e volumes (ingest)
+telepresence wiretap catalog-service --port 8080:http
+telepresence ingest catalog-service --env-file ./catalog.env
+```
+TRADE_OFFS: Mesmo quando você usa `wiretap` (que descarta a resposta HTTP gerada pelo seu processo local) ou `ingest`, lembre-se de que **as chamadas de saída** feitas pelo seu processo local (como `INSERT`/`UPDATE` no banco de dados PostgreSQL do cluster ou publicação de mensagens em uma fila Kafka) são reais e chegarão aos serviços do cluster; portanto, tome cuidado com efeitos colaterais de escrita no banco ao processar requisições espelhadas por `wiretap`.
+VERIFY: Inicie um `telepresence wiretap`, pause o seu processo local em um breakpoint na IDE, faça uma requisição `curl` para o Service no cluster e confirme que o `curl` recebe resposta `200 OK` imediata do pod remoto enquanto sua IDE captura a requisição no breakpoint.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[mirrord-modos-trafego-mirror-vs-steal-filtragem-http]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence
+
+=== NOTE: 890 | telepresence-troubleshooting-logs-limpeza-sessoes-quit-uninstall | Telepresence: diagnóstico de conectividade (gather-logs, loglevel) e limpeza de agentes e daemons (leave, uninstall, quit) ===
+ONE_LINER: O Telepresence disponibiliza comandos estruturados para encerrar anexações (`telepresence leave`), remover sidecars injetados (`telepresence uninstall`), desconectar e parar daemons locais (`telepresence quit -s`) e coletar pacotes de diagnóstico (`telepresence gather-logs`).
+IMPORTANCE: Se um desenvolvedor fechar o laptop abruptamente ou tiver problemas de firewall/VPN bloqueando o túnel para o `Traffic Manager`, saber como limpar o estado dos daemons locais (`User-Daemon` e `Root-Daemon`), reverter o pod remoto ao estado original e exportar os logs unificados dos daemons e agentes resolve rapidamente problemas operacionais.
+HOW_IT_WORKS: O ciclo de limpeza e diagnóstico possui níveis graduais: (1) **`telepresence leave <workload>`**: encerra uma interceptação/wiretap/replace/ingest ativa, fazendo o `Traffic Agent` voltar a repassar 100% do tráfego para o container original no pod; (2) **`telepresence uninstall <workload>`** (ou `--all-agents`): remove a anotação/sidecar `traffic-agent` do Deployment para que o pod volte a rodar sem o container sidecar; (3) **`telepresence disconnect`** vs **`telepresence quit -s`**: `disconnect` encerra a sessão com o cluster atual, enquanto `quit -s` encerra completamente os processos `User-Daemon` e `Root-Daemon` na estação de trabalho e remove a interface `VIF`; e (4) **`telepresence gather-logs`**: coleta em um único arquivo `.zip` os logs do `User-Daemon`, do `Root-Daemon`, do `Traffic Manager` e de todos os `Traffic Agents` no cluster.
+EXAMPLE:
+```bash
+# Coletar todos os logs locais e do cluster em um arquivo zip para diagnóstico e encerrar os daemons locais
+telepresence gather-logs --output-file /tmp/tp-diagnostico.zip
+telepresence quit -s
+```
+TRADE_OFFS: Caso a estação de trabalho do desenvolvedor perca completamente a conexão de internet ou entre em suspensão profunda no meio de um `telepresence intercept` sem ter conseguido enviar o comando `telepresence leave`, o `Traffic Manager` no cluster detecta a perda de heartbeat da sessão após o timeout configurado e desativa automaticamente o intercept órfão para restaurar o tráfego do serviço no cluster.
+VERIFY: Após executar `telepresence quit -s`, rode `telepresence status` para confirmar que tanto o `User Daemon` quanto o `Root Daemon` reportam `Not running` e que as rotas virtuais da VIF foram removidas do host.
+LINKS: [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]] | [[telepresence-quatro-modos-anexacao-replace-intercept-wiretap-ingest]] | [[telepresence-gerenciamento-traffic-manager-helm-namespaces-rbac]]
+SOURCES: https://raw.githubusercontent.com/telepresenceio/telepresence/release/v2/README.md | https://telepresence.io/docs/concepts/architecture | https://github.com/telepresenceio/telepresence

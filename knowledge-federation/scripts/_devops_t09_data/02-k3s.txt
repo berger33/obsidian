@@ -1,0 +1,159 @@
+=== NOTE: 811 | k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura | K3s: distribuição Kubernetes leve e certificada em binário único menor que 100 MB ===
+ONE_LINER: O K3s (`k3s-io/k3s`, projeto CNCF) é uma distribuição Kubernetes pronta para produção e 100% conformante (`CNCF certified conformant`) empacotada em um único binário menor que 100 MB com metade do consumo de memória do Kubernetes tradicional.
+IMPORTANCE: Instalar e operar um cluster Kubernetes upstream tradicional em ambientes de borda (`Edge`), dispositivos IoT, pipelines de CI, estações de desenvolvimento ou processadores ARM com poucos gigabytes de RAM é inviável quando cada componente de controle roda em processos pesados separados e exige um cluster `etcd` dedicado. Segundo o README oficial do K3s, o nome `K3s` (5 letras, metade das 10 letras de `Kubernetes` / `k8s`) reflete a meta de consumir metade da memória mantendo conformidade total.
+HOW_IT_WORKS: Conforme explica o README oficial (`What is this?` e `How is this lightweight?`), o K3s não é um fork divergente, mas uma **distribuição** que mantém menos de 1.000 linhas de patches sobre o Kubernetes upstream e reduz drasticamente o footprint de duas maneiras principais: (1) **Memória menor**: executa vários componentes do control plane e do nó dentro de um único processo combinados por um launcher simples, eliminando a duplicação de memória por processo; e (2) **Binário menor (< 100 MB)**: remove do código do Kubernetes apenas os antigos *in-tree storage drivers* e *in-tree cloud providers* (substituídos pelos padrões modernos out-of-tree CSI e CCM), enquanto embute todas as ferramentas necessárias para um cluster funcional.
+EXAMPLE:
+```bash
+# Instalar e iniciar um nó K3s server e verificar o status do cluster usando o kubectl embutido no binário único
+curl -sfL https://get.k3s.io | sh -
+sudo k3s kubectl get nodes -o wide
+```
+TRADE_OFFS: Como o K3s já vem com escolhas opinativas pré-integradas para funcionar imediatamente após a instalação (Flannel como CNI, Traefik como Ingress controller, Klipper-lb como Service LoadBalancer e Local-path-provisioner para armazenamento), se a sua arquitetura exigir Cilium como CNI ou NGINX/Envoy Gateway como Ingress, você deve desabilitar os componentes embutidos correspondentes na inicialização (`--flannel-backend=none --disable=traefik --disable=servicelb`) para evitar conflitos de portas e regras de rede.
+VERIFY: Execute `k3s --version` e `sudo k3s check-config` no host Linux para validar que o kernel e as montagens de cgroups atendem aos pré-requisitos do K3s.
+LINKS: [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]] | [[k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais]] | [[k3s-arquitetura-servers-agents-tunel-websocket-loadbalancer]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 812 | k3s-componentes-embutidos-containerd-flannel-traefik-klipper | K3s: pilha de tecnologias embutidas (containerd, Flannel, CoreDNS, Traefik, Klipper-lb, Kube-router e utilitários de host) ===
+ONE_LINER: O binário único do K3s empacota de forma coesa `containerd` e `runc`, `Flannel` (CNI), `CoreDNS`, `Metrics Server`, `Traefik` (Ingress), `Klipper-lb` (ServiceLB), `Kube-router` (NetworkPolicy), `Helm-controller`, `Kine`, `Local-path-provisioner` e utilitários de host (`k3s-root`).
+IMPORTANCE: No Kubernetes vanilla (`kubeadm`), após inicializar o control plane o cluster ainda não tem rede de pods (CNI), não tem Ingress controller, não tem provisionador dinâmico de `PersistentVolumeClaim`, não atende serviços `type: LoadBalancer` e depende de pacotes `iptables`/`socat` pré-instalados no sistema operacional hospedeiro. O README oficial do K3s lista as 11 tecnologias integradas que entregam tudo isso pronto de fábrica.
+HOW_IT_WORKS: Ao iniciar o processo `k3s server`, a distribuição disponibiliza automaticamente: (1) **Runtime**: `containerd` e `runc`; (2) **Rede e Segurança**: `Flannel` para CNI, `CoreDNS` para DNS interno, `Kube-router` (netpol controller) para aplicar objetos `NetworkPolicy` e `Klipper-lb` como provedor embutido de balanceador de carga para Services `LoadBalancer`; (3) **Ingress e Observabilidade**: `Traefik` para roteamento HTTP/HTTPS e `Metrics Server` para `kubectl top` e HPA; (4) **Persistência e Automação**: `Kine` (shim de datastore), `Local-path-provisioner` (StorageClass `local-path`) e `Helm-controller` (implantação declarativa de charts via CRD `HelmChart`); e (5) **Host utilities (`k3s-io/k3s-root`)**: binários embutidos no espaço de usuário como `iptables`/`nftables`, `ebtables`, `ethtool` e `socat`, eliminando dependências do SO host.
+EXAMPLE:
+```bash
+# Inspecionar os pods de sistema implantados automaticamente pelo K3s no namespace kube-system
+sudo k3s kubectl get pods -n kube-system
+```
+TRADE_OFFS: O provedor `Klipper-lb` (ServiceLB embutido) funciona agendando pods DaemonSet que fazem bind nas portas solicitadas pelo Service `LoadBalancer` diretamente no IP dos nós usando `hostPort`; por isso, em um único nó K3s, dois Services `LoadBalancer` diferentes não podem solicitar a mesma porta externa (ex.: porta `80` e `443` já usadas pelo `Traefik`) a menos que haja múltiplos nós ou que o `Klipper-lb` seja substituído pelo MetalLB/ Cilium LB IPAM.
+VERIFY: Execute `sudo k3s kubectl get storageclass,ingressclass -A` para confirmar que a StorageClass `local-path` (padrão) e a IngressClass `traefik` estão ativas no cluster.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-auto-deploy-manifestos-helm-controller-crd]] | [[k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 813 | k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais | K3s: shim de datastore Kine (SQLite padrão, PostgreSQL, MySQL/MariaDB) e etcd3 embutido ===
+ONE_LINER: O K3s inclui o projeto **Kine** (`k3s-io/kine`) como um shim de datastore que traduz a API gRPC do `etcd` para bancos de dados relacionais, permitindo usar **SQLite3** como backend padrão de nó único ou PostgreSQL, MySQL e MariaDB em alta disponibilidade, além de suportar `etcd3` embutido ou externo.
+IMPORTANCE: O `kube-apiserver` do Kubernetes upstream só sabe falar com a API do `etcd`, mas rodar um daemon `etcd` em um dispositivo de borda (como um Raspberry Pi ou gateway industrial com cartão SD/eMMC lento e 1 GB de RAM) consome muita memória e sofre com latência de fsync. Segundo o README e a página `Architecture` do K3s, o Kine viabiliza tanto clusters de nó único ultra-leves em SQLite quanto clusters HA apoiados em bancos relacionais gerenciados (RDS/CloudSQL).
+HOW_IT_WORKS: O **Kine** (`Kine is not etcd`) expõe um subconjunto da API gRPC `etcdv3` para o `kube-apiserver` e traduz operações de watch, list, create, update e compactação para tabelas SQL append-only: (1) **Single-server Setup**: usa por padrão um banco **SQLite3** embutido (`/var/lib/rancher/k3s/server/db/state.db`), zero configuração extra; (2) **High-Availability com Embedded DB (`--cluster-init`)**: usa um cluster **`etcd3` embutido** gerenciado pelo próprio K3s em **3 ou mais** nós `k3s server` (número ímpar para quórum Raft); e (3) **High-Availability com External DB (`--datastore-endpoint`)**: usa **2 ou mais** nós `k3s server` stateless apontando via Kine para um banco externo MySQL, MariaDB, PostgreSQL ou cluster `etcd` externo.
+EXAMPLE:
+```bash
+# Iniciar o primeiro nó de um cluster K3s em Alta Disponibilidade (HA) com etcd3 embutido (--cluster-init)
+curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+sudo k3s etcd-snapshot ls
+```
+TRADE_OFFS: Na topologia HA com **etcd embutido** (`--cluster-init`), são necessários no mínimo **3 nós server** (e sempre um número ímpar: 3, 5) para manter o quórum Raft se um nó cair (com apenas 2 nós de etcd, a perda de 1 nó derruba o quórum do cluster inteiro); já na topologia HA com **banco externo** via Kine (PostgreSQL/MySQL), como o estado vive fora dos nós K3s, apenas **2 nós server** já bastam para alta disponibilidade do control plane.
+VERIFY: Verifique em `/var/lib/rancher/k3s/server/db/` se o nó está operando com `state.db` (SQLite via Kine) ou com o diretório `etcd/` (etcd3 embutido).
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-arquitetura-servers-agents-tunel-websocket-loadbalancer]] | [[talos-bootstrap-etcd-gerenciamento-control-plane-ha]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 814 | k3s-arquitetura-servers-agents-tunel-websocket-loadbalancer | K3s: arquitetura de nós Server e Agent, túnel WebSocket reverso do kubelet e load balancer client-side ===
+ONE_LINER: O K3s divide os nós entre `k3s server` (control plane + datastore) e `k3s agent` (workers), eliminando a necessidade de expor portas de entrada nos workers para a API do `kubelet` ao estabelecer um túnel WebSocket iniciado pelo agente com balanceamento de carga client-side na porta `6443`.
+IMPORTANCE: No Kubernetes tradicional, o `kube-apiserver` precisa iniciar conexões TCP diretas para a porta `10250` do `kubelet` de cada nó worker (para `kubectl logs`, `kubectl exec` e `port-forward`), o que falha quando workers de borda estão atrás de NAT/firewalls que bloqueiam conexões de entrada. Conforme documentado no README e em `docs.k3s.io/architecture`, o túnel WebSocket e o load balancer local do agente resolvem tanto a travessia de firewall quanto a alta disponibilidade.
+HOW_IT_WORKS: Quando um nó worker executa **`k3s agent --server https://<ip-ou-lb>:6443 --token <token>`**, o processo do agente inicia uma conexão **WebSocket** de saída para o servidor, permitindo que o control plane acesse a API do `kubelet` através desse túnel bidirecional sem abrir portas de entrada no worker. Além disso, o `k3s agent` executa internamente um **load balancer client-side** local na porta `6443`: inicialmente ele se conecta ao endereço passado em `--server`; assim que entra no cluster, o agente busca a lista dinâmica de todos os endereços de `kube-apiserver` nos endpoints do Service `kubernetes` (namespace `default`) e mantém conexões estáveis com todos os servers do cluster, tolerando a queda do servidor inicial sem perder comunicação.
+EXAMPLE:
+```bash
+# Juntar um nó worker (k3s agent) ao cluster apontando para o endereço de registro e token do servidor
+K3S_TOKEN=$(sudo cat /var/lib/rancher/k3s/server/node-token)
+curl -sfL https://get.k3s.io | K3S_URL=https://10.0.0.10:6443 K3S_TOKEN="${K3S_TOKEN}" sh -
+```
+TRADE_OFFS: Embora o load balancer client-side embutido em cada `k3s agent` descubra e distribua automaticamente o tráfego entre todos os nós `k3s server` depois que o agente já se registrou, para o momento do registro inicial (ou para clientes `kubectl` externos acessando o cluster) em produção HA ainda é recomendado usar um endereço de registro fixo (`Fixed Registration Address`, como um VIP kube-vip, DNS round-robin ou balanceador TCP externo) para não depender de um único IP estático no `--server`.
+VERIFY: Em um nó worker (`k3s agent`), verifique o status do serviço `systemctl status k3s-agent` e confirme que comandos `kubectl logs` e `kubectl exec` a partir do servidor funcionam mesmo com o firewall de entrada do worker bloqueado.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-seguranca-identidade-nos-node-password-secrets-certificados]] | [[k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 815 | k3s-seguranca-identidade-nos-node-password-secrets-certificados | K3s: proteção de identidade de nós com Secrets node-password.k3s e flag --with-node-id ===
+ONE_LINER: O K3s protege a integridade da identidade de cada nó exigindo, além do token de join do cluster, uma senha aleatória gerada pelo agente em `/etc/rancher/node/password` e validada contra o hash armazenado no Secret `<node-name>.node-password.k3s` no namespace `kube-system`.
+IMPORTANCE: Em clusters onde um mesmo token de join (`node-token`) é usado para provisionar dezenas de nós workers, se qualquer máquina pudesse simplesmente se registrar assumindo o hostname de um nó existente sem verificação adicional, um nó malicioso ou mal configurado poderia sequestrar a identidade e os certificados daquele nó. A seção `Node-password secrets` em `docs.k3s.io/architecture` explica como o K3s previne esse conflito e como lidar com recriação de máquinas.
+HOW_IT_WORKS: Na primeira vez que um nó se registra no cluster K3s, ele apresenta o join token e uma senha aleatória gerada localmente e salva em **`/etc/rancher/node/password`**. O servidor K3s grava um hash dessa senha em um Secret Kubernetes chamado **`<node-name>.node-password.k3s`** dentro do namespace `kube-system`. Qualquer tentativa futura de re-registrar ou renovar certificados usando aquele mesmo `<node-name>` deve apresentar a mesma senha. Quando um recurso `Node` é deletado do cluster (`kubectl delete node <nome>`), o K3s apaga automaticamente o Secret `<node-name>.node-password.k3s` correspondente.
+EXAMPLE:
+```bash
+# Listar os Secrets de identidade de senha de nós (node-password.k3s) gerenciados pelo K3s no kube-system
+sudo k3s kubectl get secrets -n kube-system | grep "\.node-password\.k3s"
+```
+TRADE_OFFS: Conforme alerta a documentação oficial de arquitetura do K3s, se um nó worker for formatado/recriado do zero mantendo o mesmo hostname (perdendo o arquivo `/etc/rancher/node/password` antigo) sem antes ter sido removido do cluster, o novo nó será rejeitado com erro de senha inválida ao tentar entrar; para resolver isso, deve-se deletar o nó antigo (`kubectl delete node <nome>`) antes de reingressar, ou iniciar o K3s com a flag **`--with-node-id`** (que anexa automaticamente um ID único ao hostname do nó).
+VERIFY: Verifique a existência do arquivo `/etc/rancher/node/password` no host do nó K3s e confirme a correspondência com o Secret `<node-name>.node-password.k3s` em `kube-system`.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-arquitetura-servers-agents-tunel-websocket-loadbalancer]] | [[k3s-gerenciamento-certificados-tls-rotacao-operacoes]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 816 | k3s-auto-deploy-manifestos-helm-controller-crd | K3s: auto-deploy em tempo real de manifestos em /var/lib/rancher/k3s/server/manifests e Helm-controller (CRD HelmChart) ===
+ONE_LINER: O K3s monitora continuamente o diretório local `/var/lib/rancher/k3s/server/manifests`, aplicando automaticamente em tempo real qualquer manifesto Kubernetes (`.yaml`) colocado ali e processando charts Helm de forma declarativa através do **Helm-controller** embutido (`CRD HelmChart`).
+IMPORTANCE: Em dispositivos de borda (Edge/IoT), appliances desconectados ou provisionamento automatizado de imagens de sistema operacional, o operador muitas vezes precisa que o cluster já suba no primeiro boot com aplicações, operadores e charts Helm instalados automaticamente sem exigir um servidor externo rodando `kubectl apply` ou `helm install`. O README oficial do K3s destaca o auto-deploy de manifestos locais e o `Helm-controller`.
+HOW_IT_WORKS: Qualquer arquivo `.yaml`, `.yml` ou `.json` presente em **`/var/lib/rancher/k3s/server/manifests`** em um nó `k3s server` é vigiado pelo controlador do K3s e aplicado automaticamente ao cluster (de maneira análoga a um `kubectl apply`), sendo reaplicado em tempo real sempre que o arquivo em disco muda. Combinado ao **`k3s-io/helm-controller`** embutido no K3s, o operador pode colocar nesse diretório um manifesto declarativo do Custom Resource **`HelmChart`** (ou `HelmChartConfig` para customizar componentes nativos como o Traefik): o `helm-controller` detecta o CRD e lança um Job `helm-install-<nome>` no cluster para instalar ou atualizar o chart Helm especificado.
+EXAMPLE:
+```yaml
+# Exemplo de CRD HelmChart salvo em /var/lib/rancher/k3s/server/manifests/ para customizar ou instalar um chart automaticamente
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        exposedPort: 80
+```
+TRADE_OFFS: Jamais edite manualmente via `kubectl edit` recursos que foram criados a partir de arquivos em `/var/lib/rancher/k3s/server/manifests` (nem delete diretamente os manifestos dos addons embutidos como `traefik.yaml` desse diretório, pois o K3s os recria no próximo boot/upgrade); para alterar um addon embutido sem desabilitá-lo, use um arquivo `HelmChartConfig` separado, e para desabilitá-lo use `--disable=<addon>` na configuração do servidor.
+VERIFY: Execute `sudo k3s kubectl get helmcharts,helmchartconfigs -A` para inspecionar os charts gerenciados pelo `helm-controller` embutido do K3s.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]] | [[helm-arquitetura-charts-releases-repositorios-sdk]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 817 | k3s-gerenciamento-certificados-tls-rotacao-operacoes | K3s: gerenciamento automatizado e rotação de certificados TLS dos componentes com k3s certificate ===
+ONE_LINER: O K3s automatiza a geração, renovação e rotação dos certificados TLS de todos os componentes internos do Kubernetes (`/var/lib/rancher/k3s/server/tls`) e fornece o subcomando `k3s certificate` (`check` e `rotate`) para inspeção e rotação sob demanda.
+IMPORTANCE: Em clusters Kubernetes de longa duração (especialmente em lojas físicas, fábricas ou ambientes de borda que operam por anos), a expiração silenciosa dos certificados TLS internos do `kube-apiserver`, `etcd` ou `kubelet` derruba toda a comunicação do cluster se não houver renovação automática e ferramentas simples de auditoria. O README oficial do K3s cita o gerenciamento de certificados TLS como uma das principais simplificações operacionais da distribuição.
+HOW_IT_WORKS: Na inicialização do `k3s server`, o K3s gera automaticamente a hierarquia de autoridades certificadoras (CAs de cliente, servidor, request-header e etcd) e os certificados de folha em `/var/lib/rancher/k3s/server/tls` com validade padrão de 1 ano (e CAs de 10 anos). Sempre que um certificado está a menos de 120 dias (ou 90 dias, conforme a versão) de expirar, o K3s o renova automaticamente ao reiniciar o serviço ou em ciclo contínuo. Além disso, o administrador pode auditar a validade exata de cada certificado com **`sudo k3s certificate check`** e forçar a rotação manual imediata de todos os certificados de serviço com **`sudo k3s certificate rotate`** seguido do restart do serviço `k3s`.
+EXAMPLE:
+```bash
+# Verificar a data de expiração e o status de todos os certificados TLS gerenciados pelo K3s no nó server
+sudo k3s certificate check --output table
+```
+TRADE_OFFS: Quando `sudo k3s certificate rotate` é executado para rotacionar os certificados dos componentes do servidor (ou `rotate-ca` para trocar as autoridades certificadoras), é obrigatório reiniciar o serviço `systemctl restart k3s` (e `k3s-agent` nos workers caso as CAs tenham mudado) para que os processos em memória carreguem os novos certificados do disco.
+VERIFY: Execute `sudo k3s certificate check` e confirme que todos os certificados em `/var/lib/rancher/k3s/server/tls/` apresentam status válido e janela de expiração saudável.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-seguranca-identidade-nos-node-password-secrets-certificados]] | [[k3s-configuracao-config-yaml-systemd-desinstalacao-scripts]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
+
+=== NOTE: 818 | k3s-configuracao-config-yaml-systemd-desinstalacao-scripts | K3s: configuração declarativa em /etc/rancher/k3s/config.yaml, serviços systemd e scripts de limpeza ===
+ONE_LINER: O K3s permite declarar todas as flags de linha de comando do servidor ou agente no arquivo `/etc/rancher/k3s/config.yaml` (e diretório `config.yaml.d/`) e cria automaticamente os serviços `systemd`/`openrc` e os scripts de remoção completa (`k3s-uninstall.sh` e `k3s-killall.sh`).
+IMPORTANCE: Passar dezenas de argumentos longos diretamente no comando `curl -sfL https://get.k3s.io | sh -s - ...` ou editar manualmente arquivos `.service` do `systemd` dificulta a manutenção e a leitura da configuração do nó por ferramentas de IaC (Ansible, Salt, cloud-init). A documentação oficial do K3s padroniza a configuração via `/etc/rancher/k3s/config.yaml`.
+HOW_IT_WORKS: Qualquer flag suportada pelo `k3s server` ou `k3s agent` (por exemplo, `--write-kubeconfig-mode 0644`, `--disable traefik`, `--tls-san k8s.exemplo.com`, `--node-label`) pode ser escrita como chave YAML sem os traços iniciais dentro de **`/etc/rancher/k3s/config.yaml`** antes mesmo de rodar o instalador `https://get.k3s.io`. Durante a instalação, o script configura o serviço `k3s.service` (ou `k3s-agent.service`) e instala em `/usr/local/bin/` três utilitários de ciclo de vida: (1) `k3s` (com links simbólicos para `kubectl`, `crictl` e `ctr`); (2) **`k3s-killall.sh`** (que para todos os containers K3s e desmonta volumes/redes sem desinstalar o K3s); e (3) **`k3s-uninstall.sh`** (ou `k3s-agent-uninstall.sh`, que remove completamente o K3s e seus dados do host).
+EXAMPLE:
+```yaml
+# Exemplo de /etc/rancher/k3s/config.yaml substituindo flags complexas de linha de comando
+write-kubeconfig-mode: "0640"
+tls-san:
+  - "k8s-api.interno.empresa.com"
+disable:
+  - traefik
+node-label:
+  - "topology.kubernetes.io/zone=edge-sp-01"
+```
+TRADE_OFFS: O script `k3s-uninstall.sh` remove o serviço systemd, limpa as regras de iptables/CNI e **apaga permanentemente** o diretório `/var/lib/rancher/k3s` (incluindo o banco de dados SQLite ou `etcd` embutido e os volumes do `local-path-provisioner` armazenados ali); em ambientes de produção, faça sempre um snapshot do datastore antes de qualquer operação destrutiva no nó.
+VERIFY: Após editar `/etc/rancher/k3s/config.yaml` e executar `sudo systemctl restart k3s`, verifique com `sudo systemctl status k3s` e `sudo k3s kubectl get nodes --show-labels` que as configurações foram aplicadas.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]] | [[k3s-instalacao-air-gap-imagens-tarball-registries-privados]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/quick-start | https://github.com/k3s-io/k3s
+
+=== NOTE: 819 | k3s-instalacao-air-gap-imagens-tarball-registries-privados | K3s: implantação offline (Air-Gap) com tarball de imagens em /var/lib/rancher/k3s/agent/images e registries.yaml ===
+ONE_LINER: Para ambientes desconectados da internet (Air-Gap), o K3s disponibiliza a cada release arquivos `k3s-airgap-images-<arch>.tar.zst` importados automaticamente de `/var/lib/rancher/k3s/agent/images/` pelo `containerd` embutido, além de espelhamento de registries via `/etc/rancher/k3s/registries.yaml`.
+IMPORTANCE: Em fábricas, navios, subestações de energia, hospitais e data centers financeiros isolados da internet (casos de uso centrais de Edge e IoT destacados no README do K3s), os nós não conseguem acessar o Docker Hub nem `get.k3s.io` para baixar imagens do CoreDNS, Flannel, Metrics Server ou Pause container. O modelo Air-Gap nativo do K3s resolve isso sem exigir infraestrutura externa complexa.
+HOW_IT_WORKS: Cada release oficial no GitHub (`github.com/k3s-io/k3s/releases`) publica, ao lado do binário `k3s` (`amd64`, `arm64`, `armhf`), um arquivo comprimido **`k3s-airgap-images-<arch>.tar.zst`** (ou `.tar.gz`/`.tar`) contendo todas as imagens de container necessárias para inicializar o cluster. Quando o operador coloca qualquer tarball de imagens OCI dentro do diretório **`/var/lib/rancher/k3s/agent/images/`**, o `k3s` importa automaticamente todas as imagens do arquivo para o `containerd` local na partida do serviço. Adicionalmente, o arquivo **`/etc/rancher/k3s/registries.yaml`** permite configurar mirrors privados (`mirrors`), endpoints HTTP/HTTPS, autenticação e certificados CA customizados para o `containerd` embutido sem nunca editar manualmente o `config.toml` do containerd.
+EXAMPLE:
+```bash
+# Preparar imagens air-gap do K3s no diretório vigiado pelo containerd embutido antes de iniciar o serviço
+sudo mkdir -p /var/lib/rancher/k3s/agent/images/
+sudo cp ./k3s-airgap-images-amd64.tar.zst /var/lib/rancher/k3s/agent/images/
+INSTALL_K3S_SKIP_DOWNLOAD=true ./install.sh
+```
+TRADE_OFFS: Ao usar o script `install.sh` em uma máquina sem internet, é obrigatório passar a variável **`INSTALL_K3S_SKIP_DOWNLOAD=true`** (tendo copiado previamente o binário `k3s` para `/usr/local/bin/k3s` com `chmod +x`), caso contrário o script tentará conectar ao GitHub para baixar o binário e falhará por falta de rede.
+VERIFY: Execute `sudo k3s crictl images` no nó air-gap após iniciar o serviço para confirmar que todas as imagens de sistema do K3s (`rancher/mirrored-pause`, `rancher/mirrored-coredns-coredns`, etc.) foram pré-carregadas a partir do tarball local.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]] | [[k3s-configuracao-config-yaml-systemd-desinstalacao-scripts]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/quick-start | https://github.com/k3s-io/k3s
+
+=== NOTE: 820 | k3s-remocao-in-tree-drivers-suporte-csi-ccm-conformidade | K3s: remoção de drivers in-tree legados, adoção de CSI e CCM out-of-tree e conformidade CNCF ===
+ONE_LINER: Para reduzir o tamanho do binário mantendo 100% de conformidade CNCF, as versões atuais do K3s removem do Kubernetes upstream apenas duas categorias de código legado: os **in-tree storage drivers** e os **in-tree cloud providers**, substituídos por **CSI** e **CCM** out-of-tree.
+IMPORTANCE: Conforme esclarece a seção `What have you removed from upstream Kubernetes?` do README oficial do K3s, este é um ponto comum de confusão: versões muito antigas do K3s removiam mais recursos, levando alguns engenheiros a achar equivocadamente que o K3s atual não possui todas as APIs do Kubernetes padrão. Na realidade, o K3s atual remove apenas o que o próprio Kubernetes upstream já descontinuou em favor de interfaces plugáveis.
+HOW_IT_WORKS: O binário do K3s exclui em tempo de compilação: (1) **In-tree storage drivers** (antigos plugins de volume compilados dentro do binário do kubelet/controller-manager para SANs e nuvens específicas); e (2) **In-tree cloud providers** (código específico de provedores de nuvem legado acoplado ao core). Ambas as funcionalidades possuem equivalentes modernos **out-of-tree** totalmente suportados no K3s e adotados pelo próprio Kubernetes upstream: a **Container Storage Interface (CSI)** para volumes (como Longhorn, Ceph CSI, AWS EBS CSI) e o **Cloud Controller Manager (CCM)** para integração com provedores de nuvem (enquanto o K3s fornece seu próprio CCM embutido para nós locais, substituível via `--disable-cloud-controller`).
+EXAMPLE:
+```bash
+# Iniciar o K3s desabilitando o cloud controller embutido (--disable-cloud-controller) para instalar um CCM externo (ex.: AWS/Hetzner/OpenStack)
+curl -sfL https://get.k3s.io | sh -s - server --disable-cloud-controller --kubelet-arg="cloud-provider=external"
+```
+TRADE_OFFS: Ao implantar um Cloud Controller Manager (CCM) externo de um provedor de nuvem (como AWS, GCP, Azure ou Hetzner Cloud) em um cluster K3s, você **deve** passar `--disable-cloud-controller` e `--kubelet-arg="cloud-provider=external"`, caso contrário o cloud controller embutido do K3s entrará em conflito com o CCM externo na inicialização dos endereços e taints `node.cloudprovider.kubernetes.io/uninitialized` dos nós.
+VERIFY: Execute `sudo k3s kubectl api-resources` e `sudo k3s kubectl get csidrivers` para verificar a conformidade completa das APIs do Kubernetes e o suporte a drivers CSI no cluster K3s.
+LINKS: [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]] | [[k3s-componentes-embutidos-containerd-flannel-traefik-klipper]] | [[clusterapi-provedores-infraestrutura-bootstrap-control-plane]]
+SOURCES: https://raw.githubusercontent.com/k3s-io/k3s/main/README.md | https://docs.k3s.io/architecture | https://github.com/k3s-io/k3s
