@@ -1,0 +1,91 @@
+1371|melange-arquitetura-construtor-pacotes-apk-declarativo-pipelines|melange: Construtor Declarativo de Pacotes APK Baseado em Pipelines para Imagens de Container|O **melange** (`chainguard-dev/melange`) é o compilador declarativo de pacotes **APK** criado pela Chainguard para construir artefatos de software auditáveis (para os ecossistemas **Wolfi** e **Alpine Linux**) que alimentam diretamente o construtor de imagens OCI **apko**.|Gerenciadores de pacotes tradicionais (`APKBUILD`, `RPM spec` ou `debian/rules`) utilizam scripts rígidos divididos em fases fixas e difíceis de compor ou auditar em fábricas de software modernas.|No `melange`, todo o processo de compilação é declarado em um arquivo YAML (`melange.yaml`) estruturado em três seções obrigatórias: **`package`** (metadados, versão, época, licenças e dependências de runtime), **`environment`** (configuração estilo `apko` do ambiente de build efêmero) e **`pipeline`** (lista ordenada e componível de passos de compilação).|```bash
+melange version
+melange keygen
+melange build examples/gnu-hello.yaml --arch $(uname -m) --signing-key melange.rsa
+```|Executar `melange build` dentro de um container Docker sem a flag `--privileged` (ou sem suporte a bubblewrap/namespaces de isolamento requerido pelo runner do melange) falha ao montar o ambiente isolado de compilação.|Ao rodar o container oficial `cgr.dev/chainguard/melange`, passe `--privileged` e monte o diretório de trabalho com `-v "$PWD":/work`.|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1372|melange-package-metadata-version-epoch-copyright-spdx|melange: Metadados de Pacote (name, version, epoch) e Atestação de Licenças SPDX (copyright)|A seção `package` do arquivo de build do `melange` define a identidade do artefato (`<name>-<version>-r<epoch>.apk`), as arquiteturas alvo (`target-architecture`) e a seção obrigatória `copyright` (com `license` SPDX, `paths`, `attestation` e `license-path`) que é embutida no SBOM do pacote.|Se um pacote é recompilado com um patch de segurança para a mesma versão upstream (`3.10.12`) sem incrementar o campo `epoch`, o gerenciador `apk` não reconhece o novo pacote como uma atualização superior à versão já instalada.|O campo `epoch` (iniciado em `0` e incrementado monotonicamente a cada alteração do pacote na mesma versão upstream) compõe a versão completa `${{package.full-version}}` (`<version>-r<epoch>`), enquanto `copyright` valida licenças aprovadas pela OSI e permite associar licenças distintas por glob em `paths` (por exemplo, `vendor/foo/**`).|```yaml
+package:
+  name: hello
+  version: 2.12
+  epoch: 0
+  description: "the GNU hello world program"
+  copyright:
+    - license: GPL-3.0-or-later
+      paths:
+        - "*"
+```|Alterar qualquer passo de build, flag de compilação ou patch de CVE no YAML do `melange` mantendo a mesma `version` sem incrementar o `epoch` gera colisão de versão no índice `APKINDEX`.|Incremente `epoch` em `+1` sempre que modificar o build de uma mesma `version` e zere `epoch: 0` quando atualizar `version` para um novo lançamento upstream.|https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://github.com/chainguard-dev/melange
+1373|melange-environment-sandbox-hermetico-apko-build-deps|melange: Ambiente de Build Hermético Declarativo (environment.contents)|A seção `environment` do `melange` utiliza exatamente o mesmo schema declarativo do **apko** (`contents.repositories`, `contents.packages`, `environment`, `accounts`) para instanciar uma raiz de sistema de arquivos limpa e hermética onde os passos do `pipeline` serão executados.|Compilar pacotes diretamente no sistema operacional do runner de CI vaza bibliotecas instaladas globalmente no host para dentro do binário resultante, quebrando a reprodutibilidade.|Antes de iniciar o `pipeline`, o `melange` monta o ambiente efêmero contendo exclusivamente os pacotes de compilação listados em `environment.contents.packages` (como `build-base`, `go`, `rust`, `cmake`, `ca-certificates-bundle` e `busybox`), separando estritamente dependências de tempo de compilação das dependências de tempo de execução (`package.dependencies.runtime`).|```yaml
+environment:
+  contents:
+    repositories:
+      - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    packages:
+      - alpine-baselayout-data
+      - busybox
+      - build-base
+      - scanelf
+      - ca-certificates-bundle
+```|Colocar compiladores pesados (`build-base`, `gcc`, `cmake`) dentro de `package.dependencies.runtime` em vez de `environment.contents.packages` faz com que o compilador inteiro seja puxado para dentro da imagem final de produção no `apko`.|Mantenha ferramentas de build apenas em `environment.contents.packages` e declare em `package.dependencies.runtime` somente o que o binário precisa para rodar.|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1374|melange-pipelines-reutilizaveis-uses-fetch-autoconf-go-strip|melange: Pipelines Reutilizáveis (uses: fetch, autoconf, cmake, go/build e strip) e Substituições|A seção `pipeline` do `melange` combina pipelines embutidos reutilizáveis (`uses:` com parâmetros `with:`) e blocos de shell customizados (`runs:`), interpolando variáveis nativas como `${{package.name}}`, `${{package.version}}`, `${{targets.destdir}}`, `${{targets.subpkgdir}}`, `${{build.arch}}` e `${{build.goarch}}`.|Repetir manualmente comandos `curl`, verificação de SHA-256, `./configure --prefix=/usr`, `make -j$(nproc)` e `strip` em centenas de pacotes introduz inconsistências e erros de segurança.|Por exemplo, o pipeline `uses: fetch` baixa o código-fonte e valida obrigatoriamente o hash criptográfico `expected-sha256` (ou `expected-sha512`), seguido por `uses: autoconf/configure`, `uses: autoconf/make`, `uses: autoconf/make-install` e `uses: strip` para remover símbolos desnecessários e gravar o resultado em `${{targets.destdir}}`.|```yaml
+pipeline:
+  - uses: fetch
+    with:
+      uri: https://ftp.gnu.org/gnu/hello/hello-${{package.version}}.tar.gz
+      expected-sha256: cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab
+  - uses: autoconf/configure
+  - uses: autoconf/make
+  - uses: autoconf/make-install
+  - uses: strip
+```|Instalar os binários compilados no diretório `/usr/bin` da raiz do ambiente de build em vez de instalar dentro de `${{targets.destdir}}/usr/bin` gera um pacote `.apk` completamente vazio.|Gravar sempre todos os arquivos finais do pacote principal sob o prefixo `${{targets.destdir}}` (ou `${{targets.contextdir}}`).|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1375|melange-subpackages-split-manpages-dev-headers-runtime-minimo|melange: Divisão de Artefatos em Subpacotes (subpackages e split/*) para Imagens Enxutas|A seção `subpackages` do `melange` permite que uma única compilação produza múltiplos pacotes `.apk` derivados — separando, por exemplo, a biblioteca compartilhada de runtime, os headers C (`-dev`), as páginas de manual (`-doc` via `uses: split/manpages`) e binários auxiliares.|Se a documentação, páginas `man`, arquivos estáticos `.a` e headers `.h` ficarem dentro do pacote principal, todas as imagens de container de produção ficarão maiores sem necessidade.|Cada entrada em `subpackages` possui seu próprio `name`, `description`, `dependencies.runtime` e `pipeline` (que move arquivos de `${{targets.destdir}}` para `${{targets.subpkgdir}}` usando pipelines como `split/manpages` ou `split/dev`), permitindo que o `apko` instale na imagem final apenas o pacote principal.|```yaml
+subpackages:
+  - name: "hello-doc"
+    description: "Documentation for hello"
+    pipeline:
+      - uses: split/manpages
+    test:
+      pipeline:
+        - uses: test/docs
+```|Escrever um comando customizado em um `subpackage` que copia (`cp`) arquivos de `${{targets.destdir}}` para `${{targets.subpkgdir}}` em vez de movê-los (`mv`) duplica os arquivos tanto no pacote principal quanto no subpacote.|Mova (`mv`) os arquivos (ou use os helpers `split/*` nativos) ao extrair subpacotes para que o pacote principal permaneça enxuto.|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1376|melange-dependencies-runtime-provides-version-streams-sca|melange: Resolução Automática de Dependências (SCA), provides para Version Streams e options|O `melange` inclui um analisador embutido de composição de software (**SCA**) que inspeciona binários ELF (`so:` para bibliotecas compartilhadas e `cmd:` para executáveis) para gerar dependências e provedores automaticamente, além de suportar `dependencies.provides` para fluxos paralelos de versões (como `php-8.1` e `php-8.2` provendo `php=${{package.full-version}}`) e controles em `options` (`no-provides`, `no-depends`, `no-commands`).|Em distribuições como Wolfi, manter múltiplas versões principais de linguagens (`python-3.11`, `python-3.12` ou `php-8.1`, `php-8.2`) no mesmo repositório exige que pacotes dependentes possam solicitar tanto uma linha específica quanto o alias genérico.|Configurando `provides: [php=${{package.full-version}}]` em `php-8.1.yaml` e `php-8.2.yaml`, `apk add php-8.1` instala a série 8.1, enquanto `apk add php` resolve automaticamente para a versão mais recente; já `options.no-commands: true` evita que pacotes secundários registrem provedores de comandos conflitantes.|```yaml
+package:
+  name: php-8.2
+  version: 8.2.10
+  epoch: 1
+  dependencies:
+    provides:
+      - php=${{package.full-version}}
+```|Fixar uma versão literal estática em `provides` (como `php=8.2.10` em vez de `php=${{package.full-version}}`) faz com que futuras atualizações do pacote esquecem de atualizar o valor do `provides`.|Use sempre a variável `${{package.full-version}}` nas declarações de `dependencies.provides`.|https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://github.com/chainguard-dev/melange
+1377|melange-test-pipelines-verificacao-funcional-pacotes-subpackages|melange: Testes Automatizados de Pacotes e Subpacotes (test.pipeline e melange test)|O `melange` suporta blocos declarativos `test:` tanto no nível raiz do pacote quanto dentro de cada item de `subpackages`, executados com o comando `melange test` em um ambiente limpo que instala apenas o pacote recém-construído e suas dependências de runtime.|Um pacote `.apk` pode compilar com código de saída `0`, mas falhar em tempo de execução no container final porque faltou declarar uma dependência de runtime não-ELF (como um script Python, certificado CA ou arquivo de dados).|Durante `melange test`, o `melange` cria um container isolado contendo apenas o pacote alvo, suas dependências `runtime` declaradas e os pacotes extras listados em `test.environment.contents.packages`, executando os comandos de validação em `test.pipeline` (como `hello --version` ou `uses: test/docs`).|```yaml
+test:
+  environment:
+    contents:
+      packages:
+        - busybox
+  pipeline:
+    - runs: |
+        hello
+        hello --version
+```|Incluir todos os pacotes de compilação em `test.environment.contents.packages` mascara dependências de runtime ausentes que só falharão quando o pacote for instalado sozinho pelo `apko`.|Mantenha `test.environment.contents.packages` mínimo para que `melange test` valide fielmente se `package.dependencies.runtime` está completo.|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1378|melange-assinatura-rsa-keygen-apkindex-repositorio-local|melange: Assinatura Criptográfica de Pacotes APK (melange keygen, sign-index e --signing-key)|Para garantir a autenticidade da cadeia de suprimentos entre o compilador de pacotes e o construtor de imagens, o `melange` gera pares de chaves RSA de 4096 bits (`melange keygen`) e assina tanto cada arquivo `.apk` quanto o índice `APKINDEX.tar.gz` no diretório `packages/<arch>/`.|Se o diretório local de pacotes gerados no CI não for assinado criptograficamente, o `apko` rejeitará os pacotes por falta de assinatura confiável no keyring.|Ao executar `melange keygen`, são gerados `melange.rsa` (chave privada) e `melange.rsa.pub` (chave pública); passando `--signing-key melange.rsa` no `melange build`, o pacote e o índice são assinados automaticamente, e `melange.rsa.pub` é informada em `contents.keyring` do `apko.yaml`.|```bash
+melange keygen
+melange build melange.yaml --arch x86_64 --signing-key melange.rsa
+ls -la packages/x86_64/
+```|Commitar a chave privada `melange.rsa` no repositório Git permite que qualquer pessoa forje pacotes `.apk` assinados como se fossem do pipeline oficial.|Mantenha a chave privada de assinatura de produção protegida no cofre do CI/CD (ou gere chaves efêmeras por execução quando o build do `melange` e do `apko` ocorrerem no mesmo job isolado).|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange
+1379|melange-multi-arch-qemu-binfmt-vars-var-transforms|melange: Compilação Multi-Arquitetura com QEMU e Transformação de Variáveis (vars e var-transforms)|O `melange` compila pacotes para múltiplas arquiteturas (`x86_64`, `aarch64`, `armv7`, `ppc64le`, `s390x`) por padrão usando emulação **QEMU (`binfmt_misc`)** transparente e oferece as seções `vars` e `var-transforms` para transformar strings de versão upstream em formatos exigidos pelos URLs de download.|Muitos projetos upstream usam tags Git ou nomes de diretórios com underscores (`2_12_0`) ou apenas major.minor (`v2.12`) que diferem da string `package.version: 2.12.0`.|Com `var-transforms`, aplica-se uma expressão regular (`match` e `replace`) sobre `${{package.version}}` criando uma nova variável `${{vars.mangled-version}}` utilizável no `fetch` e no `copyright`, enquanto o runner QEMU executa o mesmo pipeline para cada arquitetura alvo.|```yaml
+vars:
+  major-minor: "2.12"
+var-transforms:
+  - from: ${{package.version}}
+    match: ^(\d+\.\d+)\.\d+$
+    replace: $1
+    to: short-version
+```|Esquecer de registrar os manipuladores `binfmt_misc` (`tonistiigi/binfmt`) no runner Linux `x86_64` antes de rodar `melange build --arch aarch64` causa erro `exec format error` ao iniciar binários ARM64 no ambiente de build.|Configure `binfmt` no host de CI para compilações emuladas ou utilize runners nativos `x86_64` e `aarch64` passando `--arch $(uname -m)`.|https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://github.com/chainguard-dev/melange
+1380|melange-update-automacao-bump-versoes-debugging-set-x|melange: Atualização Automatizada de Pacotes (update / melange bump) e Depuração de Pipelines (set -x)|A seção opcional `update` no arquivo do `melange` (combinada com `melange bump`) automatiza o monitoramento de novos lançamentos upstream (via GitHub Releases ou Release Monitoring) e a atualização de `version`, `epoch` e `expected-sha256`, enquanto `set -x` dentro de blocos `runs:` facilita a depuração detalhada de falhas de build.|Manter centenas de pacotes livres de CVEs exige detectar novas versões upstream no mesmo dia em que são lançadas e atualizar o hash SHA-256 do tarball sem intervenção manual.|Com a seção `update` declarada no YAML, ferramentas de automação atualizam a versão e recalculam o digest da fonte; caso um passo de compilação falhe, adicionar `set -x` no início do bloco `runs:` imprime cada comando expandido e as variáveis `${{targets.destdir}}` nos logs.|```yaml
+pipeline:
+  - name: Build application with debug trace
+    runs: |
+      set -x
+      mkdir -p "${{targets.destdir}}/usr/bin"
+      cp ./bin/app "${{targets.destdir}}/usr/bin/app"
+```|Deixar o hash `expected-sha256` antigo ao atualizar manualmente `package.version` no YAML faz o passo `uses: fetch` abortar imediatamente por divergência de checksum.|Use `melange bump` para atualizar simultaneamente a versão e o hash `expected-sha256` do tarball upstream.|https://raw.githubusercontent.com/chainguard-dev/melange/main/README.md;https://raw.githubusercontent.com/chainguard-dev/melange/main/docs/BUILD-FILE.md;https://github.com/chainguard-dev/melange

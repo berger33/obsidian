@@ -1,0 +1,84 @@
+1361|apko-arquitetura-construtor-imagens-oci-apk-reprodutivel|apko: Construtor Declarativo de Imagens OCI Baseadas em APK Totalmente Reprodutíveis|O **apko** (`chainguard-dev/apko`, criado pela Chainguard e inspirado pelos projetos `ko` e `distroless`) é uma ferramenta declarativa que constrói e publica imagens de container **OCI** diretamente a partir de pacotes **APK** (Wolfi ou Alpine Linux) em milissegundos, sem usar `Dockerfile` nem instruções `RUN`.|Em um `Dockerfile` tradicional, cada execução de `RUN apk update && apk add ...` grava timestamps variáveis, caches e metadados não-determinísticos nas camadas, produzindo um digest SHA-256 diferente a cada build mesmo quando os pacotes não mudaram.|Por design, o `apko` não suporta execução de comandos arbitrários durante o build: ele resolve o grafo de pacotes APK declarados em um arquivo YAML (`apko.yaml`), monta o sistema de arquivos de forma determinística (**bitwise reproducible** — rodar duas vezes gera exatamente o mesmo binário/digest) e emite automaticamente o SBOM completo da imagem.|```bash
+apko version
+apko build examples/alpine-base.yaml apko-alpine:test apko-alpine.tar
+docker load < apko-alpine.tar
+```|Tentar colocar comandos de compilação ou scripts de instalação (`curl | sh`) dentro do `apko.yaml` não é suportado porque o `apko` é estritamente um montador declarativo de pacotes APK.|Empacote previamente aplicações próprias como pacotes `.apk` usando o **melange** e utilize o **apko** para compor a imagem OCI final.|https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://github.com/chainguard-dev/apko
+1362|apko-contents-repositories-packages-keyring-local-repos|apko: Configuração de contents (repositories, packages, keyring e Repositórios @local)|A seção de topo `contents` no arquivo YAML do `apko` define integralmente os arquivos que existirão na imagem por meio das chaves `repositories`, `packages`, `keyring`, `runtime_repositories` e `runtime_keyring`.|Combinar pacotes oficiais de uma distribuição (como Wolfi ou Alpine) com pacotes `.apk` recém-construídos localmente no mesmo pipeline de CI requer referenciar diretórios locais verificados por assinatura.|Em `contents.repositories`, podem ser listadas URLs HTTPS ou caminhos locais precedidos por uma tag de alias como `@local /github/workspace/packages`; em seguida, referencia-se o pacote correspondente em `contents.packages` com `meu-pacote@local` e incluem-se as chaves públicas de verificação em `contents.keyring`.|```yaml
+contents:
+  repositories:
+    - https://packages.wolfi.dev/os
+    - "@local /work/packages"
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    - /work/melange.rsa.pub
+  packages:
+    - wolfi-baselayout
+    - custom-app@local
+```|Declarar um repositório local com o prefixo `@local /caminho` em `repositories` mas esquecer de adicionar o sufixo `@local` ao nome do pacote em `packages` faz o `apko` procurar o pacote apenas nos repositórios remotos padrão.|Use sempre o sufixo `@local` no nome do pacote quando o repositório local for declarado com tag `@local`.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1363|apko-runtime-repositories-runtime-keyring-espelhos-internos|apko: Separação entre Repositórios de Build e Runtime (runtime_repositories e runtime_keyring)|O `apko` distingue entre os repositórios usados no momento do build (`contents.repositories` e `contents.keyring`) e os repositórios/chaves que devem ficar gravados dentro da imagem final para uso futuro (`contents.runtime_repositories` e `contents.runtime_keyring`).|Quando uma imagem base de desenvolvimento é construída no CI usando um cache local temporário, mas no container em execução o usuário precisa rodar `apk add` apontando para um mirror interno corporativo que re-assina o `APKINDEX`, as configurações de build e runtime são diferentes.|A lista `runtime_repositories` é escrita em `/etc/apk/repositories` na imagem gerada sem ser consultada durante o build, enquanto `runtime_keyring` instala chaves públicas RSA PEM (`{name, content}`) em `/etc/apk/keys` após a resolução dos pacotes, servindo exclusivamente como âncora de confiança em runtime.|```yaml
+contents:
+  repositories:
+    - https://dl-cdn.alpinelinux.org/alpine/v3.22/main
+  runtime_repositories:
+    - https://apk-mirror.internal.corp/alpine/v3.22/main
+  runtime_keyring:
+    - name: corp-mirror.rsa.pub
+      content: |
+        -----BEGIN PUBLIC KEY-----
+        ...
+        -----END PUBLIC KEY-----
+  packages:
+    - alpine-base
+```|Definir um `name` em `runtime_keyring` que não coincide exatamente com o nome referenciado pela assinatura `.SIGN.RSA256.<name>` do `APKINDEX` do mirror faz o `apk add` falhar com erro de chave não confiável em runtime.|Garanta que o campo `name` em `runtime_keyring` seja idêntico ao sufixo do arquivo `.SIGN.RSA256.<name>` gerado pelo repositório mirror.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1364|apko-accounts-users-groups-run-as-nonroot-hardening|apko: Configuração Declarativa de Contas Não-Privilegiadas (accounts, users, groups e run-as)|A seção `accounts` do `apko.yaml` cria usuários (`users`), grupos (`groups`) e define o usuário padrão de execução do container (`run-as`) de forma puramente declarativa, sem precisar executar `adduser` ou `useradd` em um shell.|Em imagens mínimas distroless onde não há `/bin/sh` nem utilitários shadow instalados na imagem final, não é possível rodar um comando `RUN useradd` dentro do container para criar o usuário não-root.|O `apko` manipula diretamente os arquivos `/etc/passwd` e `/etc/group` da imagem durante a montagem da camada, registrando os `uid` e `gid` determinísticos (como `uid: 10000` ou `65532`) e gravando `run-as` na configuração da imagem OCI.|```yaml
+accounts:
+  groups:
+    - groupname: appgroup
+      gid: 10000
+  users:
+    - username: appuser
+      uid: 10000
+      gid: 10000
+      shell: /sbin/nologin
+  run-as: appuser
+```|Omitir a seção `accounts` e `run-as` faz com que o processo principal da imagem OCI seja configurado para rodar como `root` (`UID 0`), violando políticas Kubernetes Pod Security Standards (`restricted`).|Defina sempre um usuário não-root explícito em `accounts.users` e configure `accounts.run-as` em todas as imagens de produção construídas com `apko`.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1365|apko-entrypoint-cmd-service-bundle-s6-supervision|apko: Configuração de Entrypoint, Cmd, Stop-Signal e Supervisão Multi-Processo com s6 (service-bundle)|A seção `entrypoint` do `apko` suporta tanto a definição direta do comando principal (`entrypoint.command`, `cmd` e `stop-signal`) quanto o modo `type: service-bundle`, que utiliza a suíte de supervisão **s6** para gerenciar múltiplos processos dentro do mesmo container sem problemas de processos zumbis (reaping) ou propagação de sinais.|Quando um container precisa rodar dois processos acoplados e o processo PID 1 não trata sinais UNIX nem recolhe processos filhos órfãos, o desligamento do Pod fica preso até o `terminationGracePeriodSeconds` expirar.|Definindo `entrypoint.type: service-bundle` e mapeando os comandos em `entrypoint.services`, o `apko` configura o supervisor **s6** como PID 1 para iniciar e monitorar os serviços declarados.|```yaml
+entrypoint:
+  type: service-bundle
+  services:
+    nginx: /usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;"
+
+stop-signal: SIGQUIT
+work-dir: /usr/share/nginx
+```|Configurar um `stop-signal` customizado (como `SIGQUIT`) junto com `entrypoint.type: service-bundle` exige atenção, pois o supervisor `s6` intercepta e pode reinterpretar o sinal de desligamento enviado pelo runtime.|Para containers de processo único (padrão recomendado em Kubernetes), use `entrypoint.command` direto; reserve `type: service-bundle` apenas quando a supervisão `s6` for estritamente necessária.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1366|apko-paths-permissoes-diretorios-symlinks-hardlinks|apko: Mutação Declarativa de Caminhos, Diretórios, Links e Permissões (paths)|Como o `apko` não possui instruções `RUN mkdir`, `RUN chmod` ou `RUN ln -s`, ele disponibiliza a seção declarativa `paths` para criar diretórios vazios (`directory`), arquivos vazios (`empty-file`), links físicos (`hardlink`), links simbólicos (`symlink`) e ajustar permissões/propriedade (`permissions`, `uid`, `gid`).|Um processo rodando como usuário não-root (`uid: 10000`) falha ao iniciar se precisar gravar arquivos temporários ou sockets PID em `/run/nginx` ou `/var/cache/app` e o diretório não existir ou pertencer ao `root`.|Cada item na lista `paths` declara o `path`, o `type` (`directory`, `empty-file`, `hardlink`, `symlink` ou `permissions`), o `uid`/`gid` e as permissões em octal (`0o755`, `0o644`), aplicando as mutações deterministicamente na imagem.|```yaml
+paths:
+  - path: /run/nginx
+    type: directory
+    uid: 10000
+    gid: 10000
+    permissions: 0o755
+  - path: /etc/nginx/http.d/default.conf
+    type: hardlink
+    source: /usr/share/nginx/http-default_server.conf
+    uid: 10000
+    gid: 10000
+    permissions: 0o644
+```|Definir apenas `uid: 10000` e omitir `gid` em um item de `paths` faz com que o `gid` assuma `0` (`root`) por padrão, conforme documentado na especificação do arquivo `apko`.|Especifique sempre ambos `uid` e `gid` explicitamente em cada entrada de `paths` que requer propriedade de usuário não-root.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1367|apko-multi-arch-archs-publish-oci-image-index-sbom|apko: Construção e Publicação Multi-Arquitetura (archs e apko publish) com Geração Automática de SBOM|A chave `archs` no `apko.yaml` (`386`, `amd64`, `arm64`, `arm/v6`, `arm/v7`, `ppc64le`, `riscv64`, `s390x`) combinada com o comando `apko publish` constrói e publica imagens multi-arquitetura e seus respectivos **SBOMs (Software Bill of Materials)** diretamente no registro OCI sem precisar de emulação QEMU.|Construir uma imagem `arm64` em um runner `amd64` usando `docker buildx` com QEMU precisa emular instruções de CPU durante o `RUN`, tornando o build lento.|Como o `apko` apenas baixa os pacotes `.apk` já compilados para cada arquitetura e monta os tarballs das camadas e o `OCI Image Index`, ele constrói imagens para 4 ou 6 arquiteturas em poucos segundos em qualquer máquina e gera um SBOM detalhando exatamente todos os pacotes instalados.|```bash
+apko publish examples/alpine-base.yaml ghcr.io/org/alpine-apko:v1.0.0 \
+  --arch amd64,arm64
+```|Listar uma arquitetura em `archs` (como `riscv64` ou `s390x`) para a qual um dos pacotes customizados em `contents.packages` ainda não foi compilado faz a resolução de pacotes daquela arquitetura falhar.|Garanta que todos os repositórios declarados em `contents.repositories` possuam os pacotes construídos para todas as arquiteturas listadas em `archs`.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1368|apko-layering-strategy-origin-budget-otimizacao-cache-camadas|apko: Estratégia de Divisão em Camadas (layering.strategy e budget) para Eficiência de Pull|Por padrão, o `apko` pode empacotar todo o sistema de arquivos em uma única camada OCI enxuta ou dividir os pacotes inteligentemente em múltiplas camadas usando a seção `layering` (`strategy: origin` e `budget: <N>`).|Se uma imagem contém `glibc`, `openssl`, `python3` e um pequeno pacote da aplicação em uma única camada monolítica, atualizar apenas o pacote da aplicação obriga os nós Kubernetes a baixarem novamente toda a camada com Python e bibliotecas base.|Configurando `layering.strategy: origin` com um orçamento máximo de camadas (`budget: 10`), o `apko` agrupa pacotes relacionados em camadas separadas deterministicamente sem ultrapassar o limite definido por `budget`, maximizando o reuso de cache de blobs no `containerd`.|```yaml
+layering:
+  strategy: origin
+  budget: 10
+```|Definir um `budget` de camadas muito alto (dezenas de camadas minúsculas) aumenta a sobrecarga de metadados de manifesto e de montagem de diretórios no snapshotter `overlayfs`.|Utilize um `budget` moderado (entre `4` e `10` camadas) com `strategy: origin` para equilibrar reuso de cache e simplicidade de manifesto.|https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://github.com/chainguard-dev/apko
+1369|apko-lockfile-apko-lock-json-pinning-exato-versoes-digests|apko: Pinagem Determinística de Pacotes e Digests com apko lock (apko.lock.json)|O comando `apko lock <config.yaml>` resolve todas as versões transitivas de pacotes APK e seus digests criptográficos no momento da execução e grava um arquivo de trava (`apko.lock.json`), garantindo que builds futuros usem exatamente os mesmos binários.|Mesmo que o `apko` seja bitwise reproducible para o mesmo conjunto de pacotes de entrada, os repositórios Alpine ou Wolfi publicam novas versões de pacotes continuamente; sem um lockfile, rodar `apko build` na semana seguinte puxará versões mais novas dos pacotes.|Com o arquivo `.lock.json` versionado no Git, o pipeline de CI executa `apko build --lockfile apko.lock.json`, reproduzindo exatamente o mesmo digest de imagem OCI em qualquer lugar ou época, enquanto um job automatizado roda `apko lock` para propor atualizações via Pull Request.|```bash
+apko lock apko.yaml
+apko build --lockfile apko.lock.json apko.yaml my-app:v1.0.0 my-app.tar
+```|Atualizar a lista `contents.packages` no `apko.yaml` e rodar `apko build --lockfile apko.lock.json` sem regerar o lockfile com `apko lock` falha porque o lockfile não contém a resolução do novo pacote.|Sempre que adicionar ou remover pacotes em `apko.yaml`, execute `apko lock apko.yaml` e inclua o `apko.lock.json` atualizado no mesmo commit.|https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://github.com/chainguard-dev/apko
+1370|apko-integracao-melange-wolfi-distroless-ciclo-vida-imagens|apko: Arquitetura Combinada melange + apko para Imagens Distroless Zero-CVE com Wolfi|A combinação do **melange** (que compila código-fonte em pacotes `.apk` assinados) com o **apko** (que monta pacotes `.apk` em imagens OCI distroless com SBOM) forma a base da fábrica de software segura usada no ecossistema **Wolfi** e Chainguard Images.|Imagens baseadas em distribuições completas carregam gerenciadores de pacotes, shells e dezenas de binários não utilizados que acumulam CVEs e ampliam a superfície de ataque pós-exploração.|No pipeline unificado, o `melange` compila a aplicação e gera os subpacotes (separando binário de runtime, headers `-dev` e documentação `-doc`), e o `apko` instala na imagem de produção apenas o pacote de runtime e suas bibliotecas compartilhadas estritas (`glibc`/`libstdc++`), resultando em uma imagem mínima, sem shell e com SBOM completo.|```bash
+docker run --rm -v "$PWD":/work cgr.dev/chainguard/apko build \
+  /work/apko.yaml app-distroless:v1 /work/app-distroless.tar
+```|Tentar usar o `apko` sozinho quando o projeto ainda exige executar scripts complexos de instalação não empacotados em `.apk` gera bloqueio; nesses casos, a própria documentação recomenda gerar a imagem base segura com `apko` e usar um `Dockerfile` mínimo apenas para o passo final.|Priorize empacotar a aplicação com `melange` para obter imagens 100% declarativas no `apko`, ou use a imagem gerada pelo `apko` como estágio `FROM` final.|https://raw.githubusercontent.com/chainguard-dev/apko/main/README.md;https://raw.githubusercontent.com/chainguard-dev/apko/main/docs/apko_file.md;https://github.com/chainguard-dev/apko

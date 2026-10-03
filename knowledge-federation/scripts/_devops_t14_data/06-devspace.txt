@@ -1,0 +1,88 @@
+1351|devspace-arquitetura-client-only-devspace-yaml-kubernetes-cncf|DevSpace: Arquitetura Client-Only para Desenvolvimento Kubernetes (devspace.yaml) na CNCF|O **DevSpace** (`devspace-sh/devspace`, criado pela Loft Labs e projeto **CNCF Sandbox**) é uma ferramenta client-only escrita em Go que padroniza o build de imagens, o deploy e o desenvolvimento interativo com **hot reloading** diretamente dentro de qualquer cluster Kubernetes a partir de um único arquivo declarativo `devspace.yaml`.|Exigir que cada desenvolvedor de aplicação instale operadores complexos no cluster ou execute manualmente dezenas de comandos `docker build`, `docker push`, `helm upgrade`, `kubectl get pod` e `kubectl port-forward` reduz drasticamente a produtividade.|Como um único binário CLI local sem necessidade de servidor ou operador pré-instalado no cluster, o DevSpace comunica-se diretamente com o Kubernetes usando o `kube-context` atual (idêntico ao `kubectl` e `helm`), funcionando em clusters locais (`minikube`, `kind`, `k3s`, `MicroK8s`) e remotos (`EKS`, `GKE`, `AKS`, `DOKS`, `Rancher`).|```bash
+devspace init
+devspace use namespace app-dev
+devspace deploy
+```|Executar `devspace dev` ou `devspace deploy` sem verificar previamente o contexto e o namespace ativos no `kubeconfig` pode sobrescrever recursos em um namespace compartilhado de homologação.|Use sempre `devspace use context` e `devspace use namespace` antes de iniciar sessões de desenvolvimento ou deploy.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace
+1352|devspace-dev-hot-reloading-file-sync-bidirecional-containers|DevSpace: Desenvolvimento com Hot Reloading e Sincronização Bidirecional de Arquivos (devspace dev)|O comando `devspace dev` substitui o ciclo lento de reconstruir imagens Docker e recriar Pods a cada alteração de código por **sincronização bidirecional de arquivos em tempo real** (`sync`) combinada com **hot reloading** dentro do container em execução no Kubernetes.|Esperar de 3 a 8 minutos para compilar uma imagem, enviá-la ao registry e aguardar o rollout do Pod para testar a mudança de uma única linha de código inviabiliza o desenvolvimento cloud-native.|Durante `devspace dev`, o DevSpace injeta um helper leve no container de desenvolvimento, monitora alterações de arquivos na IDE local e sincroniza imediatamente os deltas com o sistema de arquivos do container no cluster, além de iniciar automaticamente port-forwarding, streaming de logs ou um terminal interativo.|```yaml
+version: v2beta1
+dev:
+  api:
+    imageSelector: ghcr.io/org/api
+    sync:
+      - path: ./src:/app/src
+        excludePaths:
+          - node_modules/
+          - .git/
+    ports:
+      - port: "8080:8080"
+```|Não incluir pastas volumosas de dependências locais (como `node_modules/`, `.git/` ou `target/`) em `excludePaths` na configuração de `sync` transfere milhares de arquivos pequenos pela rede ao iniciar a sessão.|Exclua sempre diretórios de dependências e artefatos de build em `excludePaths` para manter a sincronização instantânea.|https://www.devspace.sh/docs/getting-started/introduction;https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://github.com/devspace-sh/devspace
+1353|devspace-images-build-paralelo-kaniko-buildkit-docker-tags|DevSpace: Build Paralelo de Imagens, Tagging Automático e Suporte a Docker, BuildKit e Kaniko|A seção `images` do `devspace.yaml` automatiza a construção paralela e o tagging automático (por hash de conteúdo/contexto ou timestamp) de múltiplas imagens de container, suportando o daemon Docker local, BuildKit ou **builds in-cluster com Kaniko** quando não há Docker instalado na máquina.|Construir 5 imagens de microsserviços sequencialmente e lembrar de atualizar a tag de cada imagem nos valores do Helm chart ou nos manifestos Kubernetes manualmente gera erros de implantação com imagens antigas em cache.|O DevSpace calcula se o contexto de arquivos da imagem mudou (pulando builds desnecessários), constrói as imagens modificadas em paralelo e substitui automaticamente a referência da imagem com a nova tag gerada em todos os manifestos `deployments` ou Helm charts antes de aplicá-los.|```yaml
+version: v2beta1
+images:
+  backend:
+    image: ghcr.io/org/backend
+    dockerfile: ./Dockerfile
+    rebuildStrategy: ignoreContextChanges
+  worker:
+    image: ghcr.io/org/worker
+    dockerfile: ./cmd/worker/Dockerfile
+```|Usar tags fixas como `:latest` fora do controle do DevSpace com `imagePullPolicy: IfNotPresent` faz o Kubernetes reutilizar a imagem antiga em cache no nó mesmo após um novo build.|Deixe o DevSpace gerenciar o tagging automático das entradas declaradas em `images:` para garantir que o Kubernetes puxe exatamente a versão recém-construída.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace
+1354|devspace-deployments-helm-kubectl-kustomize-unificacao|DevSpace: Unificação de Deployments com Helm Charts, Manifestos Kubectl e Kustomize|Na seção `deployments` do `devspace.yaml`, uma aplicação pode combinar múltiplos métodos de implantação na mesma execução — como **Helm charts** (locais ou remotos, inclusive usando o chart genérico `component-chart`), manifestos brutos via **`kubectl`** e overlays **Kustomize**.|Um projeto real frequentemente precisa subir um banco Redis via Helm chart oficial da Bitnami, aplicar CRDs brutas via `kubectl` e implantar o serviço principal via Kustomize.|O DevSpace executa os deployments na ordem configurada (ou concorrentemente), injeta as tags das imagens recém-construídas nos campos correspondentes de cada chart/manifesto e permite remover todos os recursos implantados com um único comando `devspace purge`.|```yaml
+version: v2beta1
+deployments:
+  redis:
+    helm:
+      chart:
+        name: redis
+        repo: https://charts.bitnami.com/bitnami
+  app:
+    kubectl:
+      manifests:
+        - k8s/deployment.yaml
+        - k8s/service.yaml
+```|Encerrar o trabalho em um namespace temporário sem rodar `devspace purge` (ou deletar o namespace) mantém os Deployments e PVCs consumindo CPU e memória no cluster compartilhado.|Execute `devspace purge` ao concluir os testes para limpar todas as releases Helm e manifestos aplicados pelo `devspace.yaml`.|https://www.devspace.sh/docs/getting-started/introduction;https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://github.com/devspace-sh/devspace
+1355|devspace-variaveis-configuracao-profiles-dev-staging-prod|DevSpace: Variáveis Dinâmicas de Configuração (vars) e Perfis de Ambiente (profiles)|O DevSpace torna o `devspace.yaml` altamente reutilizável entre desenvolvedores e ambientes (dev, staging e produção) por meio de **variáveis de configuração (`vars`)** e **perfis (`profiles`)** que aplicam patches ou substituem configurações em tempo de execução via flag `-p / --profile`.|Manter arquivos de pipeline completamente duplicados para desenvolvimento local, ambiente de preview por PR e deploy de produção faz com que ajustes na topologia da aplicação fiquem dessincronizados.|Com `vars`, cada desenvolvedor pode ter um subdomínio ou sufixo próprio (`${DEVSPACE_USERNAME}`), enquanto `profiles` (ativados com `devspace deploy -p production`) substituem o `Dockerfile` de desenvolvimento por uma imagem otimizada de produção e ajustam réplicas e limites de recursos.|```bash
+devspace print -p production
+devspace deploy -p production --var REPLICAS=3
+```|Aplicar um perfil (`-p`) complexo sem inspecionar o YAML final renderizado pode ocultar substituições indesejadas de variáveis ou patches.|Use sempre `devspace print -p <perfil>` para visualizar e validar o `devspace.yaml` final resolvido antes de executar `devspace deploy -p <perfil>`.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace
+1356|devspace-replace-pods-container-desenvolvimento-debug-remoto|DevSpace: Substituição Temporária de Containers em Execução (replacePods) para Debug Remoto|No modo `devspace dev`, a configuração de desenvolvimento (`dev`) permite substituir temporariamente a imagem de produção de um Pod no cluster por uma imagem de desenvolvimento contendo compiladores, `dlv` (Delve para Go), `debugpy` ou `node --inspect`, sem alterar os manifestos originais versionados no Git.|Imagens de produção seguras (distroless ou construídas com `apko`) não possuem shell (`/bin/sh`), gerenciador de pacotes nem ferramentas de debug, impossibilitando compilar ou anexar um debugger diretamente na imagem de produção.|Ao iniciar `devspace dev`, o DevSpace intercepta o Deployment/Pod selecionado por `imageSelector` ou `labelSelector`, substitui a imagem pelo `devImage`, sobrescreve o `command` para aguardar conexões de debug ou rodar um watcher de hot-reload e reverte o Pod para a imagem original ao encerrar a sessão.|```yaml
+version: v2beta1
+dev:
+  backend:
+    imageSelector: ghcr.io/org/backend
+    devImage: golang:1.23-bookworm
+    command: ["dlv", "debug", "./cmd/api", "--headless", "--listen=:2345", "--api-version=2"]
+    ports:
+      - port: "2345:2345"
+```|Deixar um Pod substituído por `devImage` rodando indefinidamente em um ambiente de staging após desconectar a máquina local deixa o serviço executando em modo debug.|Encerre a sessão `devspace dev` limpa ou execute `devspace reset pods` para restaurar os Pods ao estado original de produção.|https://www.devspace.sh/docs/getting-started/introduction;https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://github.com/devspace-sh/devspace
+1357|devspace-dependencies-monorepos-multi-repositorio-microsservicos|DevSpace: Orquestração de Dependências Multi-Repositório e Monorepos (dependencies)|A seção `dependencies` do `devspace.yaml` permite referenciar outros projetos que também possuem um `devspace.yaml` (em outras pastas de um monorepo ou em repositórios Git externos fixados por branch/tag), construindo e implantando toda a árvore de microsserviços dependentes com um único comando.|Quando um desenvolvedor do serviço de `checkout` precisa que os serviços de `auth` e `catalog` estejam rodando no seu namespace pessoal de desenvolvimento, clonar e implantar manualmente cada repositório dependente demora horas.|O DevSpace resolve o grafo de `dependencies` recursivamente, constrói as imagens necessárias e executa os pipelines das dependências antes de subir o serviço principal.|```yaml
+version: v2beta1
+dependencies:
+  auth-service:
+    source:
+      git: https://github.com/org/auth-service.git
+      branch: main
+  shared-db:
+    source:
+      path: ../shared-db
+```|Criar dependências circulares entre dois arquivos `devspace.yaml` ou apontar para branches instáveis sem fixar tag/revision pode quebrar o bootstrap do ambiente.|Mantenha o grafo de `dependencies` acíclico e fixe tags ou commits estáveis para dependências de repositórios Git externos.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace
+1358|devspace-port-forwarding-reverse-port-forwarding-logs-terminal|DevSpace: Automação de Port-Forwarding, Reverse Port-Forwarding, Logs e Terminal Interativo|Durante o fluxo de trabalho diário, o DevSpace automatiza o **port-forwarding** (`localhost -> Pod`), o **reverse port-forwarding** (`Pod -> localhost`), o streaming agregado de logs de múltiplos containers e a abertura direta de terminal (`devspace enter`).|Quando um container dentro do cluster precisa chamar um webhook ou serviço que está rodando localmente apenas na IDE do desenvolvedor na porta `3000`, o `kubectl port-forward` comum (que só encaminha no sentido máquina local -> Pod) não resolve.|Configurando `ports` na seção `dev` do `devspace.yaml`, `port: "8080:8080"` encaminha a porta local para o Pod, enquanto `remotePort` em modo reverso expõe um serviço local da estação de trabalho para dentro do container no Kubernetes, com reconexão automática se a conexão cair.|```bash
+devspace enter
+devspace logs -f
+```|Mapear a mesma porta local (como `8080:8080`) para dois serviços diferentes dentro do mesmo `devspace.yaml` causa erro de porta já em uso (`bind: address already in use`) na máquina local.|Atribua portas locais distintas para cada microsserviço no `devspace.yaml` (por exemplo, `8080:80`, `8081:80`).|https://www.devspace.sh/docs/getting-started/introduction;https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://github.com/devspace-sh/devspace
+1359|devspace-pipelines-customizados-commands-hooks-ci-cd|DevSpace: Pipelines Declarativos Customizados (pipelines), Hooks e Comandos de Equipe (commands)|O `devspace.yaml` na versão `v2beta1` utiliza um motor de **pipelines** em shell POSIX integrado (`pipelines:` e `commands:`), permitindo customizar completamente o comportamento de `devspace dev`, `devspace deploy`, `devspace build` e criar novos comandos de projeto (`devspace run <comando>`).|Scripts de preparação de banco de dados (migrations), geração de código gRPC/Protobuf e testes de integração costumam ficar soltos fora do fluxo de deploy do Kubernetes.|Dentro de `pipelines:`, o engenheiro orquestra funções nativas do motor DevSpace (`build_images --all`, `create_deployments --all`, `start_dev --all`, `run_dependencies --all`) combinadas com lógica condicional bash, e expõe atalhos padronizados para toda a equipe em `commands:`.|```yaml
+version: v2beta1
+pipelines:
+  deploy:
+    run: |
+      run_dependencies --all
+      build_images --all
+      create_deployments --all
+commands:
+  migrate:
+    command: kubectl exec deploy/backend -- ./app migrate up
+```|Sobrescrever o pipeline `dev` ou `deploy` esquecendo de chamar `build_images` ou `create_deployments` faz com que o comando rode sem atualizar os containers no cluster.|Inspecione os pipelines disponíveis com `devspace list commands` e mantenha os passos essenciais (`build_images`, `create_deployments`) explícitos nos pipelines customizados.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace
+1360|devspace-paridade-local-kind-minikube-vs-clusters-remotos-ci|DevSpace: Paridade de Workflow entre Clusters Locais (kind/minikube), Dev Clusters Remotos e CI/CD|Como o DevSpace depende exclusivamente da API padrão do Kubernetes via `kubeconfig`, o mesmo arquivo `devspace.yaml` funciona sem modificações para desenvolver localmente no `kind`/`minikube`/`k3s`, compartilhar clusters remotos multi-tenant (com namespaces virtuais ou isolados) e executar o deploy no pipeline de CI/CD.|Usar `docker-compose.yaml` localmente e Helm/Kubernetes apenas na CI faz com que problemas de `SecurityContext`, `NetworkPolicy`, `ConfigMaps` e probes de prontidão só sejam descobertos tarde demais no pipeline.|No laptop, o desenvolvedor roda `devspace dev`; no pipeline de Pull Request (GitHub Actions / GitLab CI), o runner executa `devspace deploy -p ci --kube-context ...`, garantindo que o ambiente de teste use exatamente a mesma definição declarativa.|```bash
+devspace deploy -p ci --namespace "pr-${PR_NUMBER}" --timeout 300
+devspace purge --namespace "pr-${PR_NUMBER}"
+```|Esquecer de passar `--timeout` ou executar comandos interativos em ambientes de CI sem TTY pode travar o runner caso um Pod entre em `ImagePullBackOff` ou `CrashLoopBackOff`.|Em pipelines de CI/CD, utilize sempre flags não-interativas e defina limites claros de tempo de espera para o rollout dos deployments.|https://raw.githubusercontent.com/devspace-sh/devspace/main/README.md;https://www.devspace.sh/docs/getting-started/introduction;https://github.com/devspace-sh/devspace

@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1300 / 2.000 (65,00%)**
-- Gate automatizado: **1300/1300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 13)
-- Revisão factual humana: **0/1300**
-- Revisão factual por IA: **1300/1300**
-- Contabilizadas como válidas: **1300/1300**
-- Revisor das 1300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–13 (1300 notas, IDs 1–1300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1400 / 2.000 (70,00%)**
+- Gate automatizado: **1400/1400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 14)
+- Revisão factual humana: **0/1400**
+- Revisão factual por IA: **1400/1400**
+- Contabilizadas como válidas: **1400/1400**
+- Revisor das 1400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–14 (1400 notas, IDs 1–1400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-13.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-13.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-14.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-14.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 700 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 600 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1734,6 +1734,138 @@
 1299. [Notary Project Notation: Assinatura de SBOMs e Artefatos Anexados via ORAS no Grafo OCI](../../domains/software-0008/software/devops/notation-assinatura-sbom-artefatos-oras-grafo-supply-chain.md)
 1300. [Notary Project Notation: Adoção Gradual com Níveis de Verificação (strict, permissive, audit e skip)](../../domains/software-0008/software/devops/notation-niveis-verificacao-strict-permissive-audit-skip-migracao.md)
 
+## Tranche 14 — Pixie, Submariner, Headlamp, PipeCD, Porter, DevSpace, apko, melange, nerdctl e crictl (100 notas; revisão factual por IA registrada)
+
+### Pixie (plataforma de observabilidade CNCF Sandbox para Kubernetes baseada em eBPF, computação na borda com PEM/Vizier e linguagem Pythonica PxL)
+
+1301. [Pixie: Arquitetura de Observabilidade eBPF (PEM, Vizier e Pixie Cloud) na CNCF](../../domains/software-0008/software/devops/pixie-arquitetura-ebpf-pem-vizier-pixie-cloud-cncf.md)
+1302. [Pixie: Auto-Telemetria eBPF de Requisições Full-Body (HTTP, gRPC e DNS) sem Sidecars](../../domains/software-0008/software/devops/pixie-auto-telemetria-full-body-requests-http-grpc-dns.md)
+1303. [Pixie: Linguagem de Consulta PxL (Pixie Language) Baseada em DataFrames Pythonicos](../../domains/software-0008/software/devops/pixie-pxl-query-language-pythonic-dataframes-scripts.md)
+1304. [Pixie: Monitoramento de Rede, Fluxos DNS, TCP Drops e Retransmits no Cluster](../../domains/software-0008/software/devops/pixie-monitoramento-rede-dns-tcp-drops-retransmits-service-map.md)
+1305. [Pixie: Profiling de Consultas de Banco de Dados (SQL, PostgreSQL, MySQL, Redis) e Métricas LET](../../domains/software-0008/software/devops/pixie-database-query-profiling-sql-postgres-mysql-redis-let.md)
+1306. [Pixie: Continuous Application Profiling e Flame Graphs de CPU por Pod e Nó](../../domains/software-0008/software/devops/pixie-continuous-profiling-flamegraphs-cpu-pod-node.md)
+1307. [Pixie: Implantação Distribuída de Programas bpftrace no Cluster com Tabelas PxL](../../domains/software-0008/software/devops/pixie-distributed-bpftrace-deployment-tabelas-customizadas.md)
+1308. [Pixie: Dynamic Go Logging em Produção sem Recompilação ou Redeploy de Binários](../../domains/software-0008/software/devops/pixie-dynamic-go-logging-uprobes-debug-producao-sem-redeploy.md)
+1309. [Pixie: Monitoramento de Performance de Serviços (Service Maps, Latência por Endpoint e Slowest Requests)](../../domains/software-0008/software/devops/pixie-service-performance-mapas-latencia-slowest-requests.md)
+1310. [Pixie: Automação com Pixie CLI (px), Client API e Exportação para OpenTelemetry](../../domains/software-0008/software/devops/pixie-cli-px-api-client-plugins-opentelemetry-export.md)
+
+### Submariner (rede multi-cluster CNI-agnóstica da CNCF com Gateway Engine IPsec/WireGuard, Route Agent, Broker, Lighthouse DNS e Globalnet)
+
+1311. [Submariner: Arquitetura de Rede Multi-Cluster CNI-Agnostic na CNCF](../../domains/software-0008/software/devops/submariner-arquitetura-rede-multicluster-cni-agnostic-cncf.md)
+1312. [Submariner: Gateway Engine, Eleição de Líder e Cable Drivers (Libreswan IPsec, WireGuard e VXLAN)](../../domains/software-0008/software/devops/submariner-gateway-engine-leader-election-cable-drivers-ipsec-wireguard.md)
+1313. [Submariner: Route Agent, Túnel Interno vx-submariner e Caminho de Rede entre Worker Nodes e Gateways](../../domains/software-0008/software/devops/submariner-route-agent-vx-submariner-fluxo-pacotes-pod-service.md)
+1314. [Submariner: O Papel do Broker na Troca de Metadados (Endpoints e ServiceImports) entre Clusters](../../domains/software-0008/software/devops/submariner-broker-sincronizacao-crds-endpoint-clusterset.md)
+1315. [Submariner: Descoberta de Serviços Multi-Cluster (Lighthouse, ServiceExport, ServiceImport e clusterset.local)](../../domains/software-0008/software/devops/submariner-lighthouse-service-discovery-serviceexport-clusterset-local.md)
+1316. [Submariner: Resolução DNS de Headless Services por Pod e cluster-id no ClusterSet](../../domains/software-0008/software/devops/submariner-headless-services-statefulsets-dns-pod-clusterid.md)
+1317. [Submariner: Interconexão de Clusters com CIDRs Sobrepostos usando Globalnet Controller](../../domains/software-0008/software/devops/submariner-globalnet-controller-overlapping-cidrs-nat.md)
+1318. [Submariner: Arquitetura Baseada em Operator e Implantação via subctl vs Helm Charts](../../domains/software-0008/software/devops/submariner-operator-implantacao-subctl-vs-helm-charts.md)
+1319. [Submariner: Diagnóstico Automatizado, Testes E2E e Coleta de Logs (subctl diagnose, verify e gather)](../../domains/software-0008/software/devops/submariner-diagnostico-automatizado-subctl-diagnose-verify-gather.md)
+1320. [Submariner: NAT Traversal (NAT-T), Descoberta de IP Público e Portas de Firewall em Nuvem Híbrida](../../domains/software-0008/software/devops/submariner-nat-traversal-natt-discovery-firewalls-nuvem-hibrida.md)
+
+### Headlamp (interface web e desktop Kubernetes extensível do Kubernetes SIG UI / CNCF com controles orientados por RBAC, OIDC, multi-cluster e plugins)
+
+1321. [Headlamp: Arquitetura da Interface Web Kubernetes Extensível (SIG UI) In-Cluster e Desktop](../../domains/software-0008/software/devops/headlamp-arquitetura-web-ui-kubernetes-sig-ui-incluster-desktop.md)
+1322. [Headlamp: Controles de UI Orientados por RBAC e Acesso via ServiceAccount Tokens](../../domains/software-0008/software/devops/headlamp-rbac-ui-dinamica-serviceaccount-tokens-permissoes.md)
+1323. [Headlamp: Operação Multi-Cluster com Múltiplos Arquivos Kubeconfig](../../domains/software-0008/software/devops/headlamp-multi-cluster-kubeconfig-separador-cluster-chooser.md)
+1324. [Headlamp: Descoberta Dinâmica de Clusters via Cluster Inventory API (ClusterProfile e secretreader)](../../domains/software-0008/software/devops/headlamp-cluster-inventory-api-clusterprofile-secretreader.md)
+1325. [Headlamp: Gerenciamento de Plugins de UI In-Cluster via Sidecar (pluginsManager e Artifact Hub)](../../domains/software-0008/software/devops/headlamp-plugins-manager-sidecar-artifacthub-extensoes.md)
+1326. [Headlamp: Autenticação OIDC Corporativa, Ingress e Terminação TLS no Backend](../../domains/software-0008/software/devops/headlamp-autenticacao-oidc-ingress-tls-passthrough-backend.md)
+1327. [Headlamp: Operações Interativas de Logs, Terminal Exec, Editor com Documentação e Ações Canceláveis](../../domains/software-0008/software/devops/headlamp-operacoes-interativas-logs-exec-editor-cancelavel.md)
+1328. [Headlamp: Desenvolvimento de Plugins Customizados para Plataformas Internas (IDPs)](../../domains/software-0008/software/devops/headlamp-desenvolvimento-plugins-frontend-sdk-typescript-react.md)
+1329. [Headlamp: Implantação Vanilla (kubernetes-headlamp.yaml) vs Alta Disponibilidade via Helm Chart](../../domains/software-0008/software/devops/headlamp-implantacao-simples-manifesto-vanilla-vs-helm-ha.md)
+1330. [Headlamp: Operação Segura como Aplicativo Desktop Local (Linux, macOS e Windows)](../../domains/software-0008/software/devops/headlamp-desktop-app-linux-macos-windows-kubeconfig-local.md)
+
+### PipeCD (plataforma CNCF Sandbox de entrega contínua GitOps unificada para Kubernetes, Terraform, Cloud Run, Lambda e ECS com análise automatizada ADA)
+
+1331. [PipeCD: Arquitetura GitOps Unificada com Control Plane Central e Agentes Piped Stateless](../../domains/software-0008/software/devops/pipecd-arquitetura-control-plane-piped-stateless-gitops.md)
+1332. [PipeCD: Contrato Declarativo app.pipecd.yaml sem Alteração de Manifestos ou CRDs no Cluster](../../domains/software-0008/software/devops/pipecd-application-configuration-app-pipecd-yaml-sem-crds.md)
+1333. [PipeCD: Estratégias de Sincronização (Quick Sync, Pipeline Sync e Auto Sync)](../../domains/software-0008/software/devops/pipecd-sync-strategies-quick-sync-pipeline-sync-auto.md)
+1334. [PipeCD: Platform Providers Multi-Cloud (Kubernetes, Terraform, AWS ECS, GCP Cloud Run e Lambda)](../../domains/software-0008/software/devops/pipecd-platform-providers-kubernetes-terraform-ecs-cloudrun-lambda.md)
+1335. [PipeCD: Análise Automatizada de Deploy (ADA) com Analysis Providers e Auto-Rollback](../../domains/software-0008/software/devops/pipecd-automated-deployment-analysis-ada-prometheus-datadog-rollback.md)
+1336. [PipeCD: Governança Multi-Tenant com Projects e Papéis RBAC (Viewer, Editor e Admin)](../../domains/software-0008/software/devops/pipecd-projects-rbac-roles-viewer-editor-admin-multitenancy.md)
+1337. [PipeCD: Entrega Progressiva (Canary e Blue/Green) em Kubernetes, Cloud Run e Lambda](../../domains/software-0008/software/devops/pipecd-entrega-progressiva-canary-bluegreen-traffic-routing.md)
+1338. [PipeCD: Detecção Contínua de Configuration Drift e Visibilidade da Árvore de Recursos em Tempo Real](../../domains/software-0008/software/devops/pipecd-drift-detection-reconciliacao-estado-git-vs-cluster.md)
+1339. [PipeCD: Integração entre Pipelines de CI e PipeCD via pipectl e Event Watcher](../../domains/software-0008/software/devops/pipecd-integracao-ci-pipectl-event-watcher-image-update.md)
+1340. [PipeCD: Delivery Insights e Medição Nativa de Métricas DORA (Deployment Frequency, Lead Time, MTTR e CFR)](../../domains/software-0008/software/devops/pipecd-delivery-insights-metricas-dora-lead-time-mttr-cfr.md)
+
+### Porter (instalador e construtor declarativo CNCF Sandbox de pacotes CNAB — Cloud Native Application Bundles — com Mixins, Plugins e Thick Bundles air-gapped)
+
+1341. [Porter: Arquitetura de Empacotamento CNAB (Cloud Native Application Bundle) na CNCF](../../domains/software-0008/software/devops/porter-arquitetura-cnab-cloud-native-application-bundle-cncf.md)
+1342. [Porter: Ciclo de Vida de Instalações de Bundles (install, upgrade, uninstall, list e show)](../../domains/software-0008/software/devops/porter-ciclo-vida-bundle-install-upgrade-uninstall-show-list.md)
+1343. [Porter: Ecossistema de Mixins (Helm, Terraform, Kubernetes, Docker, AWS, Azure, GCloud e exec)](../../domains/software-0008/software/devops/porter-mixins-helm-terraform-kubernetes-exec-cloud-clis.md)
+1344. [Porter: Declaração de Parameters, Credentials e Outputs no porter.yaml](../../domains/software-0008/software/devops/porter-yaml-parameters-credentials-outputs-wiring-entre-steps.md)
+1345. [Porter: Plugins de Armazenamento e Segredos (HashiCorp Vault, Azure Key Vault e Kubernetes)](../../domains/software-0008/software/devops/porter-plugins-secrets-storage-hashicorp-vault-azure-kubernetes.md)
+1346. [Porter: Construção, Publicação OCI e Auto-Documentação de Bundles (build, publish e explain)](../../domains/software-0008/software/devops/porter-build-publish-explain-inspecao-contrato-bundle.md)
+1347. [Porter: Ações Customizadas de Dia 2 (porter invoke --action) para Diagnóstico, Backup e Dry-Run](../../domains/software-0008/software/devops/porter-custom-actions-status-dry-run-operacoes-dia-2.md)
+1348. [Porter: Exportação e Relocação de Thick Bundles para Ambientes Air-Gapped (porter archive)](../../domains/software-0008/software/devops/porter-archive-air-gapped-thick-bundles-relocacao-imagens.md)
+1349. [Porter: Customização da Imagem de Invocação com Dockerfile Template e Execução Non-Root](../../domains/software-0008/software/devops/porter-custom-dockerfile-template-hardening-nonroot.md)
+1350. [Porter: Execução In-Cluster e Automação CI/CD de Bundles com o Plugin Kubernetes](../../domains/software-0008/software/devops/porter-operator-kubernetes-execucao-bundles-in-cluster-gitops.md)
+
+### DevSpace (ferramenta CNCF Sandbox client-only para desenvolvimento Kubernetes com devspace.yaml, hot reloading, sync bidirecional e pipelines declarativos)
+
+1351. [DevSpace: Arquitetura Client-Only para Desenvolvimento Kubernetes (devspace.yaml) na CNCF](../../domains/software-0008/software/devops/devspace-arquitetura-client-only-devspace-yaml-kubernetes-cncf.md)
+1352. [DevSpace: Desenvolvimento com Hot Reloading e Sincronização Bidirecional de Arquivos (devspace dev)](../../domains/software-0008/software/devops/devspace-dev-hot-reloading-file-sync-bidirecional-containers.md)
+1353. [DevSpace: Build Paralelo de Imagens, Tagging Automático e Suporte a Docker, BuildKit e Kaniko](../../domains/software-0008/software/devops/devspace-images-build-paralelo-kaniko-buildkit-docker-tags.md)
+1354. [DevSpace: Unificação de Deployments com Helm Charts, Manifestos Kubectl e Kustomize](../../domains/software-0008/software/devops/devspace-deployments-helm-kubectl-kustomize-unificacao.md)
+1355. [DevSpace: Variáveis Dinâmicas de Configuração (vars) e Perfis de Ambiente (profiles)](../../domains/software-0008/software/devops/devspace-variaveis-configuracao-profiles-dev-staging-prod.md)
+1356. [DevSpace: Substituição Temporária de Containers em Execução (replacePods) para Debug Remoto](../../domains/software-0008/software/devops/devspace-replace-pods-container-desenvolvimento-debug-remoto.md)
+1357. [DevSpace: Orquestração de Dependências Multi-Repositório e Monorepos (dependencies)](../../domains/software-0008/software/devops/devspace-dependencies-monorepos-multi-repositorio-microsservicos.md)
+1358. [DevSpace: Automação de Port-Forwarding, Reverse Port-Forwarding, Logs e Terminal Interativo](../../domains/software-0008/software/devops/devspace-port-forwarding-reverse-port-forwarding-logs-terminal.md)
+1359. [DevSpace: Pipelines Declarativos Customizados (pipelines), Hooks e Comandos de Equipe (commands)](../../domains/software-0008/software/devops/devspace-pipelines-customizados-commands-hooks-ci-cd.md)
+1360. [DevSpace: Paridade de Workflow entre Clusters Locais (kind/minikube), Dev Clusters Remotos e CI/CD](../../domains/software-0008/software/devops/devspace-paridade-local-kind-minikube-vs-clusters-remotos-ci.md)
+
+### apko (construtor declarativo da Chainguard para imagens de container OCI reprodutíveis bit-a-bit e distroless baseadas em pacotes APK com SBOM automático)
+
+1361. [apko: Construtor Declarativo de Imagens OCI Baseadas em APK Totalmente Reprodutíveis](../../domains/software-0008/software/devops/apko-arquitetura-construtor-imagens-oci-apk-reprodutivel.md)
+1362. [apko: Configuração de contents (repositories, packages, keyring e Repositórios @local)](../../domains/software-0008/software/devops/apko-contents-repositories-packages-keyring-local-repos.md)
+1363. [apko: Separação entre Repositórios de Build e Runtime (runtime_repositories e runtime_keyring)](../../domains/software-0008/software/devops/apko-runtime-repositories-runtime-keyring-espelhos-internos.md)
+1364. [apko: Configuração Declarativa de Contas Não-Privilegiadas (accounts, users, groups e run-as)](../../domains/software-0008/software/devops/apko-accounts-users-groups-run-as-nonroot-hardening.md)
+1365. [apko: Configuração de Entrypoint, Cmd, Stop-Signal e Supervisão Multi-Processo com s6 (service-bundle)](../../domains/software-0008/software/devops/apko-entrypoint-cmd-service-bundle-s6-supervision.md)
+1366. [apko: Mutação Declarativa de Caminhos, Diretórios, Links e Permissões (paths)](../../domains/software-0008/software/devops/apko-paths-permissoes-diretorios-symlinks-hardlinks.md)
+1367. [apko: Construção e Publicação Multi-Arquitetura (archs e apko publish) com Geração Automática de SBOM](../../domains/software-0008/software/devops/apko-multi-arch-archs-publish-oci-image-index-sbom.md)
+1368. [apko: Estratégia de Divisão em Camadas (layering.strategy e budget) para Eficiência de Pull](../../domains/software-0008/software/devops/apko-layering-strategy-origin-budget-otimizacao-cache-camadas.md)
+1369. [apko: Pinagem Determinística de Pacotes e Digests com apko lock (apko.lock.json)](../../domains/software-0008/software/devops/apko-lockfile-apko-lock-json-pinning-exato-versoes-digests.md)
+1370. [apko: Arquitetura Combinada melange + apko para Imagens Distroless Zero-CVE com Wolfi](../../domains/software-0008/software/devops/apko-integracao-melange-wolfi-distroless-ciclo-vida-imagens.md)
+
+### melange (compilador declarativo de pacotes APK baseado em pipelines para os ecossistemas Wolfi e Alpine Linux com assinatura RSA, subpackages e testes)
+
+1371. [melange: Construtor Declarativo de Pacotes APK Baseado em Pipelines para Imagens de Container](../../domains/software-0008/software/devops/melange-arquitetura-construtor-pacotes-apk-declarativo-pipelines.md)
+1372. [melange: Metadados de Pacote (name, version, epoch) e Atestação de Licenças SPDX (copyright)](../../domains/software-0008/software/devops/melange-package-metadata-version-epoch-copyright-spdx.md)
+1373. [melange: Ambiente de Build Hermético Declarativo (environment.contents)](../../domains/software-0008/software/devops/melange-environment-sandbox-hermetico-apko-build-deps.md)
+1374. [melange: Pipelines Reutilizáveis (uses: fetch, autoconf, cmake, go/build e strip) e Substituições](../../domains/software-0008/software/devops/melange-pipelines-reutilizaveis-uses-fetch-autoconf-go-strip.md)
+1375. [melange: Divisão de Artefatos em Subpacotes (subpackages e split/*) para Imagens Enxutas](../../domains/software-0008/software/devops/melange-subpackages-split-manpages-dev-headers-runtime-minimo.md)
+1376. [melange: Resolução Automática de Dependências (SCA), provides para Version Streams e options](../../domains/software-0008/software/devops/melange-dependencies-runtime-provides-version-streams-sca.md)
+1377. [melange: Testes Automatizados de Pacotes e Subpacotes (test.pipeline e melange test)](../../domains/software-0008/software/devops/melange-test-pipelines-verificacao-funcional-pacotes-subpackages.md)
+1378. [melange: Assinatura Criptográfica de Pacotes APK (melange keygen, sign-index e --signing-key)](../../domains/software-0008/software/devops/melange-assinatura-rsa-keygen-apkindex-repositorio-local.md)
+1379. [melange: Compilação Multi-Arquitetura com QEMU e Transformação de Variáveis (vars e var-transforms)](../../domains/software-0008/software/devops/melange-multi-arch-qemu-binfmt-vars-var-transforms.md)
+1380. [melange: Atualização Automatizada de Pacotes (update / melange bump) e Depuração de Pipelines (set -x)](../../domains/software-0008/software/devops/melange-update-automacao-bump-versoes-debugging-set-x.md)
+
+### nerdctl (CLI compatível com Docker para containerd com suporte nativo a Docker Compose, namespace k8s.io, modo Rootless bypass4netns, Lazy-Pulling e Cosign/ocicrypt)
+
+1381. [nerdctl: CLI Compatível com Docker para containerd, BuildKit e CNI Plugins](../../domains/software-0008/software/devops/nerdctl-arquitetura-cli-docker-compatible-containerd-buildkit.md)
+1382. [nerdctl: Gerenciamento de Namespaces do containerd (--namespace k8s.io) e Builds Locais para Kubernetes](../../domains/software-0008/software/devops/nerdctl-namespaces-k8s-io-depuracao-builds-kubernetes-local.md)
+1383. [nerdctl: Modo Rootless com containerd-rootless-setuptool.sh e Aceleração bypass4netns](../../domains/software-0008/software/devops/nerdctl-rootless-mode-bypass4netns-aceleracao-rede-apparmor.md)
+1384. [nerdctl: Inicialização Instantânea (Lazy-Pulling) com Snapshotters Stargz, Nydus, OverlayBD e SOCI](../../domains/software-0008/software/devops/nerdctl-lazy-pulling-snapshotters-stargz-nydus-overlaybd-soci.md)
+1385. [nerdctl: Orquestração Multi-Container Compatível com Compose Spec (nerdctl compose)](../../domains/software-0008/software/devops/nerdctl-compose-up-down-execucao-docker-compose-containerd.md)
+1386. [nerdctl: Assinatura e Verificação Cosign (--sign/--verify) e Criptografia de Camadas (ocicrypt)](../../domains/software-0008/software/devops/nerdctl-cosign-assinatura-verificacao-ocicrypt-imagens-criptografadas.md)
+1387. [nerdctl: Distribuição P2P Opcional de Imagens OCI sobre IPFS (ipfs://CID e nerdctl ipfs)](../../domains/software-0008/software/devops/nerdctl-ipfs-p2p-image-distribution-offline-optional.md)
+1388. [nerdctl: Operações Multi-Plataforma (--all-platforms), Arquivos Híbridos OCI/Docker e Inspeção Nativa](../../domains/software-0008/software/devops/nerdctl-multi-platform-pull-save-load-oci-archives-inspect-native.md)
+1389. [nerdctl: Conexão Multi-Rede (--net), Execução Direta de Rootfs (--rootfs), Systemd e Bind-Mounts RRO](../../domains/software-0008/software/devops/nerdctl-redes-multiplas-cni-rootfs-systemd-rro-bind-mounts.md)
+1390. [nerdctl: Integração Nativa com Lima (macOS), Rancher Desktop e WSL2](../../domains/software-0008/software/devops/nerdctl-integracao-lima-macos-wsl2-rancher-desktop.md)
+
+### crictl & cri-tools (CLI e suíte de validação oficial do Kubernetes SIG Node para inspeção, depuração e benchmark da Kubelet Container Runtime Interface — CRI)
+
+1391. [crictl: Arquitetura da CLI Oficial para a Kubelet Container Runtime Interface (CRI)](../../domains/software-0008/software/devops/crictl-arquitetura-cli-kubelet-cri-container-runtime-interface.md)
+1392. [crictl: Configuração de Endpoints (/etc/crictl.yaml, runtime-endpoint e image-endpoint)](../../domains/software-0008/software/devops/crictl-configuracao-etc-crictl-yaml-runtime-endpoint-image-endpoint.md)
+1393. [crictl: Inspeção de Pod Sandboxes e Containers nos Nós (pods, ps, inspectp e inspect)](../../domains/software-0008/software/devops/crictl-pods-ps-inspectp-inspect-depuracao-sandboxes-containers.md)
+1394. [crictl: Coleta de Logs, Execução de Comandos e Port-Forward Direto no Nó (logs, exec e port-forward)](../../domains/software-0008/software/devops/crictl-logs-exec-attach-port-forward-troubleshooting-local.md)
+1395. [crictl: Gestão de Imagens e Diagnóstico de Disco no Nó (images, inspecti, imagefsinfo, pull e rmi)](../../domains/software-0008/software/devops/crictl-images-pull-rmi-inspecti-imagefsinfo-gestao-disco.md)
+1396. [crictl: Métricas e Estatísticas de Recursos CRI (stats, statsp, metricsp e metricdescs)](../../domains/software-0008/software/devops/crictl-stats-statsp-metricsp-metricdescs-substituicao-cadvisor.md)
+1397. [crictl: Checkpoint de Containers (checkpoint), Stream de Eventos (events) e Runtime Config](../../domains/software-0008/software/devops/crictl-checkpoint-events-runtime-config-live-updates.md)
+1398. [crictl: Atualização Dinâmica de Limites de Cgroup (crictl update) e Tracing OpenTelemetry](../../domains/software-0008/software/devops/crictl-update-limites-cgroup-cpu-memory-containers-vivos.md)
+1399. [crictl: Teste Isolado de Runtimes CRI sem Kubelet usando Arquivos JSON/YAML (runp, create, start e run)](../../domains/software-0008/software/devops/crictl-execucao-sandboxes-containers-json-yaml-runp-create-start.md)
+1400. [crictl & critest: Suíte Oficial de Conformidade e Benchmark de Performance para Runtimes CRI](../../domains/software-0008/software/devops/crictl-critest-validacao-conformidade-benchmark-cri-tools.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1300 notas 1–1300 das tranches 1–13 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1300/2.000 notas válidas, restando 700 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1400 notas 1–1400 das tranches 1–14 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1400/2.000 notas válidas, restando 600 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

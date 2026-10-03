@@ -14,11 +14,11 @@ Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint histórico cont�
 - [[MOC-Operacao-e-Seguranca-Kubernetes]] — 8 notas sobre operação e segurança de workloads Kubernetes, aprovadas em revisão factual humana.
 - [[MOC-Cache-HTTP]] — 8 notas sobre semântica e operação de cache HTTP, aprovadas em revisão factual humana.
 - [[MOC-Testes-Software-0007]] — 2000 notas do primeiro lote de escala (meta de 2.000 concluída); nove têm aprovação humana histórica e 1991 revisões factuais por IA.
-- [[MOC-DevOps-Software-0008]] — 1300 notas do segundo lote de escala `software-devops-2000-0002` (meta: 2.000); 1300 revisões factuais por IA.
-- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 3291 aprovações por IA, identificadas separadamente.
+- [[MOC-DevOps-Software-0008]] — 1400 notas do segundo lote de escala `software-devops-2000-0002` (meta: 2.000); 1400 revisões factuais por IA.
+- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 3391 aprovações por IA, identificadas separadamente.
 - [[legacy-remediation-queue|Fila de remediação legada]] — inventário dos problemas nas 100 notas antigas.
 - [[PLANO-CONTINUO-1M|Plano contínuo para a meta de 1 milhão]] — execução, estados e bloqueios.
-- [[note-quality-audit|Auditoria de qualidade]] — 3340 notas válidas pelo protocolo atual (49 humanas + 3291 IA) e 100 notas legadas com falhas.
+- [[note-quality-audit|Auditoria de qualidade]] — 3440 notas válidas pelo protocolo atual (49 humanas + 3391 IA) e 100 notas legadas com falhas.
 
 ## Mapas Globais
 
