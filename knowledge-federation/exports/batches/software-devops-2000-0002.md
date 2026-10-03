@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **300 / 2.000 (15,00%)**
-- Gate automatizado: **300/300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 3)
-- Revisão factual humana: **0/300**
-- Revisão factual por IA: **300/300**
-- Contabilizadas como válidas: **300/300**
-- Revisor das 300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–3 (300 notas, IDs 1–300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **400 / 2.000 (20,00%)**
+- Gate automatizado: **400/400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 4)
+- Revisão factual humana: **0/400**
+- Revisão factual por IA: **400/400**
+- Contabilizadas como válidas: **400/400**
+- Revisor das 400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–4 (400 notas, IDs 1–400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-03.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-03.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-04.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-04.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1700 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1600 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -414,6 +414,138 @@
 299. [Reuniões semanais às quintas-feiras (11:00 AM PT) alternando comunidade e triagem de issues](../../domains/software-0008/software/devops/etcd-weekly-thursday-meetings-and-issue-triage.md)
 300. [Verificação contínua no repositório: workflows de testes, Codecov, CodeQL e OpenSSF Scorecard](../../domains/software-0008/software/devops/etcd-ci-verification-codeql-coverage-and-scorecard.md)
 
+## Tranche 4 — Rook, Longhorn, Cosign, Syft, Grype, BuildKit, Podman, CRI-O, Packer e Terragrunt (100 notas; revisão factual por IA registrada)
+
+### Rook (orquestrador cloud-native de armazenamento Ceph para Kubernetes)
+
+301. [Rook como orquestrador cloud-native de armazenamento Ceph no Kubernetes](../../domains/software-0008/software/devops/rook-orchestrator-for-ceph-on-kubernetes.md)
+302. [Versões do Kubernetes v1.31 a v1.37 e arquiteturas amd64 e arm64 suportadas pelo Rook](../../domains/software-0008/software/devops/rook-kubernetes-versions-and-cpu-architectures.md)
+303. [Pré-requisitos de dispositivos brutos, partições, LVM e PVs em modo block para OSDs no Rook](../../domains/software-0008/software/devops/rook-raw-devices-lvm-and-block-pvc-prerequisites.md)
+304. [Implantação do Rook Operator com crds.yaml, common.yaml, csi-operator.yaml e operator.yaml](../../domains/software-0008/software/devops/rook-operator-deployment-crds-common-and-csi-operator.md)
+305. [Manifestos de cluster Rook para bare-metal (cluster.yaml), nuvem dinâmica (cluster-on-pvc.yaml) e teste (cluster-test.yaml)](../../domains/software-0008/software/devops/rook-cluster-manifests-bare-metal-on-pvc-and-test.md)
+306. [Arquitetura de pods mon, mgr, osd e plugins CSI no namespace rook-ceph](../../domains/software-0008/software/devops/rook-mon-mgr-osd-and-csi-pods-architecture.md)
+307. [Verificação de saúde HEALTH_OK com Rook Toolbox e plugin kubectl rook-ceph](../../domains/software-0008/software/devops/rook-ceph-toolbox-and-kubectl-plugin-verification.md)
+308. [Consumo de armazenamento Block (RBD RWO), Shared Filesystem (CephFS RWX) e Object (RGW S3) no Rook](../../domains/software-0008/software/devops/rook-block-rbd-shared-filesystem-cephfs-and-object-rgw.md)
+309. [Ceph Dashboard, coletores Prometheus nativos e telemetria anônima no Rook](../../domains/software-0008/software/devops/rook-dashboard-prometheus-monitoring-and-telemetry.md)
+310. [Desmontagem limpa (teardown) de clusters Rook e limpeza de metadados nos discos dos hosts](../../domains/software-0008/software/devops/rook-cluster-teardown-and-disk-cleanup-safety.md)
+
+### Longhorn (sistema de armazenamento de bloco distribuído cloud-native para Kubernetes)
+
+311. [Longhorn e arquitetura de controlador dedicado por volume com replicação síncrona](../../domains/software-0008/software/devops/longhorn-distributed-block-storage-microservice-controller.md)
+312. [Snapshots incrementais e backups para NFSv4 ou S3 com detecção eficiente de blocos alterados](../../domains/software-0008/software/devops/longhorn-incremental-snapshots-and-change-block-backups.md)
+313. [Upgrade automatizado e não disruptivo da pilha de software do Longhorn](../../domains/software-0008/software/devops/longhorn-automated-non-disruptive-software-upgrades.md)
+314. [Componentes Longhorn Manager, Instance Manager, Share Manager e Backing Image Manager](../../domains/software-0008/software/devops/longhorn-manager-instance-manager-and-share-manager-components.md)
+315. [Motores de dados Longhorn Engine V1 (iSCSI) e Longhorn SPDK Engine V2 (SPDK)](../../domains/software-0008/software/devops/longhorn-v1-engine-iscsi-and-v2-spdk-data-engines.md)
+316. [Ciclo de suporte de releases ativas (1.11, 1.12, 1.13) e política de EOL de um ano no Longhorn](../../domains/software-0008/software/devops/longhorn-release-support-window-and-eol-policy.md)
+317. [Gerenciamento de imagens base com Longhorn Backing Image Manager](../../domains/software-0008/software/devops/longhorn-backing-image-manager-disk-synchronization.md)
+318. [Instalação do Longhorn via kubectl apply, Helm Chart e Rancher App Marketplace](../../domains/software-0008/software/devops/longhorn-installation-methods-kubectl-helm-and-rancher.md)
+319. [Operação visual e por linha de comando com Longhorn UI e Longhorn CLI](../../domains/software-0008/software/devops/longhorn-ui-dashboard-and-cli-operations.md)
+320. [Coleta de Support Bundle para diagnóstico de bugs e reporte de vulnerabilidades no Longhorn](../../domains/software-0008/software/devops/longhorn-support-bundle-diagnostics-and-security-reporting.md)
+
+### Sigstore Cosign (assinatura e verificação de contêineres OCI, blobs e atestações)
+
+321. [Assinatura keyless de contêineres OCI no Cosign com OIDC, Fulcio e Rekor](../../domains/software-0008/software/devops/cosign-keyless-signing-fulcio-oidc-and-rekor.md)
+322. [Obrigatoriedade de assinar imagens pelo digest SHA-256 em vez de tags mutáveis no Cosign](../../domains/software-0008/software/devops/cosign-always-sign-by-digest-not-mutable-tag.md)
+323. [Verificação keyless com --certificate-identity e --certificate-oidc-issuer no Cosign](../../domains/software-0008/software/devops/cosign-verify-certificate-identity-and-oidc-issuer.md)
+324. [Assinatura e verificação com par de chaves cosign.key/cosign.pub, KMS, hardware tokens e PKI própria](../../domains/software-0008/software/devops/cosign-keypair-kms-and-byo-pki-signing-modes.md)
+325. [Verificação offline e air-gapped no Cosign com cosign initialize, cosign save e trusted_root.json](../../domains/software-0008/software/devops/cosign-air-gapped-offline-verification-and-tuf-trusted-root.md)
+326. [Assinatura e verificação keyless de arquivos arbitrários com cosign sign-blob, verify-blob e bundles](../../domains/software-0008/software/devops/cosign-sign-blob-and-verify-blob-bundles.md)
+327. [Publicação e assinatura de Blobs, Tekton Bundles, módulos WASM e programas eBPF em registros OCI](../../domains/software-0008/software/devops/cosign-oci-registry-artifacts-blobs-tekton-wasm-ebpf.md)
+328. [Suporte a atestações in-toto e uso da imagem oficial ghcr.io/sigstore/cosign/cosign](../../domains/software-0008/software/devops/cosign-in-toto-attestations-and-chainguard-container-image.md)
+329. [Diagnóstico de falhas de verificação no Cosign: RFC3161 timestamps, Rekor v2 e resiliência de serviços](../../domains/software-0008/software/devops/cosign-troubleshooting-rfc3161-timestamps-and-rekor-v2.md)
+330. [Estabilidade da série Cosign 2.x e evolução arquitetural sobre sigstore-go](../../domains/software-0008/software/devops/cosign-sigstore-go-architecture-and-v2-stability-roadmap.md)
+
+### Anchore Syft (geração de Software Bill of Materials SBOM para contêineres e sistemas de arquivos)
+
+331. [Syft como CLI e biblioteca Go para geração de SBOM de contêineres, diretórios e arquivos](../../domains/software-0008/software/devops/syft-sbom-generation-cli-and-go-library.md)
+332. [Catalogação multi-ecossistema de pacotes de SO e linguagens de programação no Syft](../../domains/software-0008/software/devops/syft-os-and-language-packaging-ecosystems.md)
+333. [Emissão simultânea de múltiplos formatos de SBOM: SPDX, CycloneDX, Syft JSON e tabela](../../domains/software-0008/software/devops/syft-spdx-cyclonedx-and-syft-json-multi-output.md)
+334. [Inspeção de pacotes em SPDX e CycloneDX com jq e formatação SYFT_FORMAT_PRETTY=true](../../domains/software-0008/software/devops/syft-jq-inspection-and-pretty-printing-sboms.md)
+335. [Escopo padrão squashed versus análise de todas as camadas com --scope all-layers no Syft](../../domains/software-0008/software/devops/syft-squashed-default-versus-all-layers-scope.md)
+336. [Criação de atestações de SBOM assinadas segundo a especificação in-toto com Syft](../../domains/software-0008/software/devops/syft-in-toto-signed-sbom-attestations.md)
+337. [Execução 100% local sem telemetria externa e enriquecimento opcional com --enrich no Syft](../../domains/software-0008/software/devops/syft-offline-execution-privacy-and-enrich-flag.md)
+338. [Autenticação em registros privados e variedade de alvos de scan suportados pelo Syft](../../domains/software-0008/software/devops/syft-private-registry-authentication-and-scan-targets.md)
+339. [Integração direta entre Syft e Grype para desacoplar geração de SBOM e scan de vulnerabilidades](../../domains/software-0008/software/devops/syft-seamless-pipeline-integration-with-grype.md)
+340. [Verificação de licenças de dependências e conversão entre formatos de SBOM no Syft](../../domains/software-0008/software/devops/syft-license-scanning-and-format-conversion-workflows.md)
+
+### Anchore Grype (scanner de vulnerabilidades para imagens de contêiner, filesystems e SBOMs)
+
+341. [Grype como scanner de vulnerabilidades para imagens de contêiner, diretórios e SBOMs](../../domains/software-0008/software/devops/grype-vulnerability-scanner-for-containers-filesystems-and-sboms.md)
+342. [Suporte do Grype a pacotes de sistemas operacionais e dependências de linguagens](../../domains/software-0008/software/devops/grype-os-and-language-specific-package-scanning.md)
+343. [Priorização de ameaças e risco no Grype com EPSS, KEV e pontuação de risco (risk scoring)](../../domains/software-0008/software/devops/grype-epss-kev-and-risk-scoring-prioritization.md)
+344. [Filtragem e enriquecimento de resultados de scan com suporte a OpenVEX no Grype](../../domains/software-0008/software/devops/grype-openvex-filtering-and-result-augmentation.md)
+345. [Varredura ultrarrápida de SBOMs existentes via grype sbom:arquivo ou pipe Unix](../../domains/software-0008/software/devops/grype-fast-sbom-scanning-and-unix-piping.md)
+346. [Geração de relatórios de vulnerabilidade em JSON (--output json) com progresso separado em stderr](../../domains/software-0008/software/devops/grype-json-vulnerability-reports-and-stderr-progress.md)
+347. [Gerenciamento do banco de dados de vulnerabilidades e operação offline no Grype](../../domains/software-0008/software/devops/grype-vulnerability-database-management-and-offline-scanning.md)
+348. [Privacidade estrita no Grype: execução 100% local sem envio de dados externos](../../domains/software-0008/software/devops/grype-strict-local-privacy-zero-external-telemetry.md)
+349. [Gates de severidade em pipelines CI/CD e distinção entre vulnerabilidades fixed e not-fixed no Grype](../../domains/software-0008/software/devops/grype-ci-cd-severity-gates-and-fixed-status-filtering.md)
+350. [Suporte a registros privados e formatos de imagem Docker, OCI e Singularity no Grype](../../domains/software-0008/software/devops/grype-private-registries-and-singularity-oci-formats.md)
+
+### Moby BuildKit (toolkit concorrente e baseado em LLB para construção de artefatos e imagens OCI)
+
+351. [Representação intermediária binária LLB e resolução concorrente de dependências no BuildKit](../../domains/software-0008/software/devops/buildkit-llb-intermediate-format-and-concurrent-solver.md)
+352. [Arquitetura buildkitd e buildctl com workers OCI (runc/crun) e containerd](../../domains/software-0008/software/devops/buildkit-buildkitd-daemon-buildctl-client-and-worker-backends.md)
+353. [Frontends extensíveis no BuildKit: dockerfile.v0, gateway.v0 e linguagens alternativas para LLB](../../domains/software-0008/software/devops/buildkit-dockerfile-v0-and-gateway-v0-extensible-frontends.md)
+354. [Montagens avançadas RUN --mount=type=(bind, cache, tmpfs, secret, ssh) no BuildKit](../../domains/software-0008/software/devops/buildkit-dockerfile-run-mounts-bind-cache-tmpfs-secret-ssh.md)
+355. [Exportação de imagens no BuildKit: compressão gzip/estargz/zstd, oci-mediatypes e SOURCE_DATE_EPOCH](../../domains/software-0008/software/devops/buildkit-image-output-compression-estargz-zstd-and-reproducibility.md)
+356. [Exportação de artefatos para diretório local (type=local) e tarballs OCI ou Docker no BuildKit](../../domains/software-0008/software/devops/buildkit-local-directory-and-tarball-outputs.md)
+357. [Exportação e importação de cache de build (inline, registry, local, GitHub Actions, S3 e Azure Blob)](../../domains/software-0008/software/devops/buildkit-cache-import-export-inline-registry-local-and-cloud.md)
+358. [Coleta de lixo automática (automatic garbage collection) do cache interno no BuildKit](../../domains/software-0008/software/devops/buildkit-automatic-garbage-collection-and-storage-management.md)
+359. [Execução rootless do BuildKit sem privilégios de root e implantação em Kubernetes](../../domains/software-0008/software/devops/buildkit-rootless-execution-and-containerized-kubernetes-deployments.md)
+360. [Construção de imagens multi-plataforma e rastreamento distribuído com OpenTelemetry no BuildKit](../../domains/software-0008/software/devops/buildkit-multi-platform-builds-and-opentelemetry-tracing.md)
+
+### Podman (gerenciador daemonless e rootless de contêineres OCI, imagens, volumes e pods)
+
+361. [Arquitetura daemonless do Podman baseada na biblioteca libpod e compatibilidade com Docker CLI](../../domains/software-0008/software/devops/podman-daemonless-architecture-and-libpod-lifecycle.md)
+362. [Contêineres e pods rootless no Podman com user namespaces e isolamento de privilégios](../../domains/software-0008/software/devops/podman-rootless-containers-and-user-namespaces-security.md)
+363. [Gerenciamento nativo de Pods no Podman e integração com manifestos YAML do Kubernetes](../../domains/software-0008/software/devops/podman-pods-shared-resources-and-kubernetes-yaml.md)
+364. [Pilha de rede do Podman: Netavark, servidor DNS Aardvark e rede rootless com pasta](../../domains/software-0008/software/devops/podman-netavark-aardvark-dns-and-pasta-networking.md)
+365. [Ecossistema de bibliotecas OCI do Podman: crun, runc, conmon, containers/image e containers/storage](../../domains/software-0008/software/devops/podman-oci-runtime-crun-runc-conmon-and-shared-libraries.md)
+366. [Relação complementar e diferenças de conceito de contêiner entre Podman e Buildah](../../domains/software-0008/software/devops/podman-buildah-and-podman-specialization-and-storage.md)
+367. [Checkpoint e restauração de contêineres em execução no Podman via CRIU](../../domains/software-0008/software/devops/podman-criu-container-checkpoint-and-restore.md)
+368. [Execução multiplataforma no Windows e macOS com podman machine e Podman Desktop](../../domains/software-0008/software/devops/podman-podman-machine-and-podman-desktop-multi-os.md)
+369. [Cadência trimestral de releases, versões LTS e assinatura PGP no Podman](../../domains/software-0008/software/devops/podman-release-cadence-lts-and-pgp-signed-releases.md)
+370. [API REST compatível com Docker e gerenciamento remoto com cliente Podman](../../domains/software-0008/software/devops/podman-rest-api-and-remote-client-management.md)
+
+### CRI-O (implementação leve baseada em OCI da Container Runtime Interface do Kubernetes)
+
+371. [CRI-O como implementação OCI dedicada da Container Runtime Interface (CRI) do Kubernetes](../../domains/software-0008/software/devops/crio-kubernetes-cri-implementation-and-scope.md)
+372. [Matriz de compatibilidade CRI-O 1.x.y com o Kubernetes e política de version skew n-2](../../domains/software-0008/software/devops/crio-kubernetes-version-matching-and-n-minus-2-skew-policy.md)
+373. [Arquitetura interna do CRI-O: runc, container-libs/image, container-libs/storage e CNI](../../domains/software-0008/software/devops/crio-oci-components-runc-container-libs-and-cni.md)
+374. [Arquivos de configuração do CRI-O: crio.conf, policy.json, registries.conf e storage.conf](../../domains/software-0008/software/devops/crio-configuration-files-crio-conf-policy-registries-and-storage.md)
+375. [Inspeção de runtime com crio status e API HTTP sobre socket Unix /var/run/crio/crio.sock](../../domains/software-0008/software/devops/crio-http-status-api-and-crio-status-cli.md)
+376. [Verificação nativa de assinaturas de imagem no nó Kubernetes com policy.json no CRI-O](../../domains/software-0008/software/devops/crio-signature-verification-policy-json-enforcement.md)
+377. [Suporte a OCI Hooks e guia de migração de anotações no CRI-O](../../domains/software-0008/software/devops/crio-oci-hooks-injection-and-annotations-migration.md)
+378. [Configuração do Kubelet com CRI-O via endpoint unix:///var/run/crio/crio.sock e systemd cgroup](../../domains/software-0008/software/devops/crio-running-kubernetes-with-crio-socket-and-systemd.md)
+379. [Observabilidade do CRI-O com métricas Prometheus, tracing distribuído e Evented PLEG](../../domains/software-0008/software/devops/crio-metrics-tracing-and-evented-pleg-observability.md)
+380. [Validação contínua em GitHub Actions e OpenShift Prow e pacotes DEB/RPM do CRI-O](../../domains/software-0008/software/devops/crio-ci-prow-validation-and-packaging-ecosystem.md)
+
+### HashiCorp Packer (construção automatizada e paralela de imagens de máquina idênticas a partir de fonte única)
+
+381. [Packer para construção paralela de imagens de máquina idênticas a partir de configuração única](../../domains/software-0008/software/devops/packer-multi-platform-parallel-machine-image-builder.md)
+382. [Arquitetura de integrações via plugins externos no Packer (developer.hashicorp.com/packer/integrations)](../../domains/software-0008/software/devops/packer-external-plugin-integrations-architecture.md)
+383. [Rastreamento de ciclo de vida de imagens com HCP Packer Registry e integração com Terraform](../../domains/software-0008/software/devops/packer-hcp-packer-image-metadata-registry-and-terraform.md)
+384. [Desenvolvimento e teste local de templates Packer com imagens Docker e Vagrant boxes](../../domains/software-0008/software/devops/packer-local-docker-and-vagrant-box-workflows.md)
+385. [Depuração detalhada com PACKER_LOG=1 packer build template.pkr.hcl e revisão de chaves sensíveis](../../domains/software-0008/software/devops/packer-packer-log-debugging-and-secret-sanitization.md)
+386. [Política oficial do Packer para plugins comunitários não mantidos e arquivados](../../domains/software-0008/software/devops/packer-unmaintained-and-archived-plugins-policy.md)
+387. [Templates HCL2 (template.pkr.hcl) e criação de casos de teste mínimos reproduzíveis no Packer](../../domains/software-0008/software/devops/packer-hcl2-templates-and-reproducible-test-cases.md)
+388. [Compilação do Packer a partir do código-fonte com Go >= v1.20 e verificação de binários de PR](../../domains/software-0008/software/devops/packer-building-packer-from-source-and-go-requirements.md)
+389. [Repositório unificado de documentação (hashicorp/web-unified-docs) e licença BUSL-1.1 no Packer](../../domains/software-0008/software/devops/packer-unified-documentation-and-license-governance.md)
+390. [Fluxo de infraestrutura imutável combinando Golden Images do Packer com provisionamento IaC](../../domains/software-0008/software/devops/packer-immutable-infrastructure-pipeline-with-packer-and-iac.md)
+
+### Terragrunt (orquestrador flexível para escalar código de infraestrutura em OpenTofu e Terraform)
+
+391. [Terragrunt como orquestrador flexível para escalar projetos em OpenTofu e Terraform](../../domains/software-0008/software/devops/terragrunt-orchestration-for-opentofu-and-terraform-at-scale.md)
+392. [Configuração terragrunt.hcl, recurso Auto-init e controle de saída com --log-format bare](../../domains/software-0008/software/devops/terragrunt-terragrunt-hcl-auto-init-and-bare-log-format.md)
+393. [Unidades (units), módulos compartilhados e eliminação de main.tf redundantes com blocos terraform e inputs](../../domains/software-0008/software/devops/terragrunt-units-shared-modules-and-inputs-blocks.md)
+394. [Funcionamento do diretório .terragrunt-cache e uso da função built-in get_terragrunt_dir()](../../domains/software-0008/software/devops/terragrunt-terragrunt-cache-scratch-directory-and-get-terragrunt-dir.md)
+395. [Gerenciamento de Stacks e execução concorrente com terragrunt run --all e --non-interactive](../../domains/software-0008/software/devops/terragrunt-stacks-and-concurrent-run-all-execution.md)
+396. [Grafo Acíclico Direcionado (DAG) no Terragrunt para ordenação automática de runs na stack](../../domains/software-0008/software/devops/terragrunt-directed-acyclic-graph-dag-and-execution-order.md)
+397. [Passagem dinâmica de outputs entre unidades com o bloco dependency no Terragrunt](../../domains/software-0008/software/devops/terragrunt-dependency-blocks-and-dynamic-cross-unit-inputs.md)
+398. [Tratamento de dependências ainda não aplicadas durante o plan com mock_outputs e mock_outputs_allowed_terraform_commands](../../domains/software-0008/software/devops/terragrunt-unapplied-dependencies-and-mock-outputs-in-plan.md)
+399. [Automação GitOps em CI/CD (plan no PR e apply no merge) e Terragrunt Scale](../../domains/software-0008/software/devops/terragrunt-ci-cd-gitops-workflows-and-terragrunt-scale.md)
+400. [Adoção incremental do Terragrunt e uso das fixtures oficiais test/fixtures/docs/01-quick-start](../../domains/software-0008/software/devops/terragrunt-documentation-fixtures-and-incremental-adoption.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 300 notas 1–300 das tranches 1–3 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 300/2.000 notas válidas, restando 1700 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 400 notas 1–400 das tranches 1–4 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 400/2.000 notas válidas, restando 1600 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
