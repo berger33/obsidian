@@ -1,0 +1,127 @@
+TOPIC: Checkmarx KICS (Keeping Infrastructure as Code Secure) — IaC SAST Multi-Plataforma, Consultas Rego (OPA), BoM, Auto-Remediation e Gates CI/CD
+SOURCES: https://raw.githubusercontent.com/Checkmarx/kics/master/README.md | https://raw.githubusercontent.com/Checkmarx/kics/master/docs/commands.md | https://docs.kics.io/latest/queries/all-queries/
+
+===NOTE===
+0801|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast|**Checkmarx KICS (*Keeping Infrastructure as Code Secure*)**: Arquitetura de SAST para **Infraestrutura como Código (IaC)** Baseada em **Open Policy Agent (Rego)**|**KICS** (`Checkmarx/kics`, licença Apache-2.0, escrito em Go) é um motor open-source de análise estática de segurança (**IaC SAST**) que detecta vulnerabilidades de segurança, falhas de conformidade e configurações inseguras em mais de **20 plataformas de Infraestrutura como Código** antes que qualquer recurso seja provisionado na nuvem.|Diferente de scanners acoplados a uma única linguagem de template, a arquitetura do KICS funciona em duas fases desacopladas: **(1) Parsers de Plataforma** convertem arquivos heterogêneos (**Terraform HCL**, **Kubernetes YAML**, **Helm Charts**, **Dockerfile**, **Docker Compose**, **AWS CloudFormation/SAM/CDK**, **Ansible**, **Azure Resource Manager/Bicep**, **OpenAPI 3.0**, **gRPC Protobuf** e **GitHub Actions**) em uma representação intermediária JSON unificada; e **(2) Motor Open Policy Agent (OPA)** avalia mais de **2.000 consultas declarativas escritas em `Rego` (`CxPolicy`)** sobre esse documento normalizado!|Isso permite auditar um repositório *monorepo* inteiro contendo Terraform, manifestos Kubernetes, Dockerfiles e especificações OpenAPI em uma única execução (`kics scan -p .`).|```bash
+# Verificar a versao do KICS, listar todas as plataformas de IaC suportadas e executar um scan em um repositorio local
+kics version
+kics list-platforms
+kics scan -p /cases/iac/repo -o /cases/iac/reports
+```|Para evitar que o KICS tente adivinhar parsers de plataformas que você não usa no projeto (economizando memória e tempo de CPU no CI/CD), especifique explicitamente as plataformas desejadas com **`-t` / `--type`** (ex.: **`kics scan -p . -t Terraform,Kubernetes,Dockerfile`**)!|Verifique no resumo final da execução a contagem de arquivos analisados (`Files scanned`) e as descobertas agrupadas por severidade (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).|kics-desenvolvimento-queries-customizadas-rego-cxpolicy-metadata, kics-governanca-severidade-fail-on-ignore-on-exit-sarif-cicd, prowler-arquitetura-auditoria-multicloud-aws-azure-gcp-kubernetes
+
+===NOTE===
+0802|kics-desenvolvimento-queries-customizadas-rego-cxpolicy-metadata|KICS: Criação de **Consultas Customizadas em `Rego` (`CxPolicy [ result ]`)**, Metadados `metadata.json` e `kics generate-id`|Toda regra de segurança do KICS consiste em uma pasta contendo dois arquivos: **`metadata.json`** (que define o UUID único gerado por **`kics generate-id`**, `queryName`, `severity`, `category`, `descriptionText`, `platform` e `cwe`) e **`query.rego`** (no pacote `package Cx`, que define a regra **`CxPolicy[result]`**).|Quando a condição de falha de segurança é satisfeita no documento JSON normalizado (`input.document[i]`), a regra `CxPolicy[result]` retorna um objeto estruturado contendo **`documentId`**, **`resourceType`**, **`resourceName`**, **`searchKey`** (o caminho exato no arquivo IaC para o KICS apontar o número da linha!), **`issueType`** (`"MissingAttribute"`, `"IncorrectValue"` ou `"RedundantAttribute"`), **`keyExpectedValue`** e **`keyActualValue`**!|Com a flag **`-q` / `--queries-path`**, sua equipe pode carregar um diretório de políticas corporativas internas (ex.: exigir tags obrigatórias `CostCenter`/`DataClassification` ou proibir regiões fora de `sa-east-1`) junto com as queries oficiais.|```rego
+package Cx
+
+# Query KICS Rego customizada: exigir tag 'DataClassification' em todos os buckets AWS S3 no Terraform
+CxPolicy[result] {
+    resource := input.document[i].resource.aws_s3_bucket[name]
+    not resource.tags.DataClassification
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_s3_bucket",
+        "resourceName": name,
+        "searchKey": sprintf("aws_s3_bucket[%s].tags", [name]),
+        "issueType": "MissingAttribute",
+        "keyExpectedValue": sprintf("aws_s3_bucket[%s].tags.DataClassification deve estar definido", [name]),
+        "keyActualValue": sprintf("aws_s3_bucket[%s].tags.DataClassification esta ausente", [name]),
+    }
+}
+```|Use sempre **`kics generate-id`** ao criar uma nova query customizada para garantir um UUID v4 válido no `metadata.json` sem colisão com as queries oficiais do KICS.|Execute `kics scan -p ./terraform -q ./custom_queries --include-queries <UUID>` para testar isoladamente sua nova regra Rego.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-auto-remediacao-kics-remediate-correcao-automatica-iac, kics-supressao-granular-comentarios-kics-scan-ignore-similarity-id
+
+===NOTE===
+0803|kics-auto-remediacao-kics-remediate-correcao-automatica-iac|KICS **`remediate`**: Auto-Remediação Determinística de Misconfigurations em Infraestrutura como Código (`remediation` + `remediationType`)|Além de apontar a linha exata de uma falha de segurança, muitas consultas do KICS incluem nos seus resultados os campos **`remediation`** e **`remediationType`** (`addition`, `replacement` ou `removal`), permitindo que o subcomando **`kics remediate`** aplique a correção diretamente no código-fonte de IaC!|O fluxo de auto-remediação opera em dois passos: **(1)** executar **`kics scan -p ./infra -o ./out --report-formats json`** para gerar o relatório `results.json` contendo as instruções de remediação; e **(2)** executar **`kics remediate --results ./out/results.json`** (podendo filtrar quais correções aplicar com **`--include-ids <similarity_id>`**)!|Isso permite que um bot de Pull Request no GitHub/GitLab gere sugestões automáticas de código (*Suggested Changes*) para adicionar `encrypted = true` em volumes EBS ou `runAsNonRoot: true` em Deployments Kubernetes.|```bash
+# Executar o scan do KICS gerando results.json e aplicar auto-remediacao verificando o diff no Git
+kics scan -p /cases/iac/terraform -t Terraform --report-formats json -o /cases/iac/out --output-name scan_res
+kics remediate --results /cases/iac/out/scan_res.json -v
+git -C /cases/iac/terraform diff
+```|Nunca aplique `kics remediate` diretamente na branch `main` sem revisão humana ou sem rodar **`terraform plan` / `kubectl diff`**, pois adicionar um atributo de criptografia em um recurso de banco de dados ou disco que já existe em produção pode forçar o Terraform a destruir e recriar (`forces replacement`) o recurso!|Verifique no `results.json` quais achados possuem o campo `"remediation"` preenchido antes de invocar `kics remediate`.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-desenvolvimento-queries-customizadas-rego-cxpolicy-metadata, kics-governanca-severidade-fail-on-ignore-on-exit-sarif-cicd
+
+===NOTE===
+0804|kics-supressao-granular-comentarios-kics-scan-ignore-similarity-id|KICS: Governança de Exceções — Comentários Inline (**`# kics-scan ignore`**) e Exclusão por **`similarityID` (`-x` / `--exclude-results`)**|Em projetos reais de infraestrutura, existem recursos que precisam de exceções legítimas e documentadas (por exemplo, o bucket S3 do site estático institucional que realmente precisa ser público na CDN, ou um DaemonSet de monitoramento eBPF que precisa de `CAP_BPF` no Kubernetes).|O KICS oferece dois mecanismos auditáveis de supressão sem precisar desligar a regra inteira para o resto do repositório: **(1) Comentários Inline no código** e **(2) Exclusão por `--exclude-results <similarityID>`**!|Nos comentários inline, você pode usar **`# kics-scan ignore`** no topo do arquivo (para ignorar o arquivo inteiro), **`# kics-scan ignore-block`** imediatamente antes de um recurso/bloco (para ignorar apenas aquele recurso!), ou **`# kics-scan ignore-line`** exatamente acima da linha específica!|```hcl
+# Exemplo de supressao cirurgica por bloco (# kics-scan ignore-block) e por linha (# kics-scan ignore-line) no Terraform
+# kics-scan ignore-block
+resource "aws_s3_bucket" "public_marketing_assets" {
+  bucket = "corp-public-marketing-assets-2026"
+}
+
+resource "aws_security_group_rule" "bastion_ssh" {
+  type        = "ingress"
+  from_port   = 22
+  to_port     = 22
+  protocol    = "tcp"
+  # kics-scan ignore-line
+  cidr_blocks = ["203.0.113.10/32"]
+}
+```|Já nas pipelines de CI/CD, cada achado no JSON do KICS possui um hash determinístico de 64 caracteres chamado **`similarityID`** (que permanece estável mesmo se outras linhas do arquivo forem editadas): passar **`-x <similarityID>`** (ou listá-lo no `kics.config`) suprime exclusivamente aquela instância específica!|Audite periodicamente todos os `# kics-scan ignore` no repositório com `git grep "kics-scan"` durante revisões de arquitetura.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-governanca-severidade-fail-on-ignore-on-exit-sarif-cicd, bandit-supressao-auditavel-nosec-baseline-b-triage-divida-tecnica
+
+===NOTE===
+0805|kics-inventario-recursos-iac-bill-of-materials-bom-m|KICS: Geração de **Inventário de Recursos de Nuvem Pré-Deploy (*IaC Bill of Materials — BoM*, `-m` / `--bom`)**|Muitas vezes, a equipe de Cloud Security sabe o que já está rodando na conta AWS/GCP via Prowler, mas não tem um inventário estruturado de **quais recursos de infraestrutura um Pull Request de Terraform/CloudFormation/Helm está prestes a criar** antes do `apply`.|Conforme documentado em `docs/commands.md`, passar a flag **`-m` / `--bom`** ao comando `kics scan` instrui o KICS a incluir na saída (`results.json`) uma seção completa de **Bill of Materials (`bom`)** de todos os recursos de infraestrutura declarados no código!|Cada item do BoM do KICS detalha o tipo do recurso (`aws_db_instance`, `aws_s3_bucket`, `kubernetes_deployment`), a plataforma, o provedor de nuvem, o arquivo/linha de origem, se possui criptografia configurada e quais políticas de acesso se aplicam a ele.|```bash
+# Executar o KICS habilitando a geracao do Bill of Materials (-m / --bom) para inventariar todos os recursos IaC declarados
+kics scan -p /cases/iac/terraform \
+  --bom \
+  --report-formats json \
+  -o /cases/iac/out --output-name iac_with_bom
+jq '.bom' /cases/iac/out/iac_with_bom.json
+```|Atenção a um requisito de privacidade documentado pelo KICS: para que um recurso apareça no relatório `--bom`, ele deve seguir boas práticas de isolamento (por exemplo, buckets ou recursos explicitamente marcados como públicos sem restrição são sinalizados nas vulnerabilidades e tratados de forma distinta do BoM privado).|Integre a saída `.bom` do KICS ao catálogo de ativos da empresa para rastrear desde o Git quais repositórios são donos de quais recursos de nuvem.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-analise-terraform-variaveis-tfvars-modulos-plan-json, dependency-track-ingestao-continua-cicd-bom-put-post-auto-create
+
+===NOTE===
+0806|kics-analise-terraform-variaveis-tfvars-modulos-plan-json|KICS para **Terraform e OpenTofu**: Resolução de Variáveis (`--terraform-vars-path`), Módulos e Auditoria de `terraform show -json`|Um desafio clássico da análise estática de Terraform/OpenTofu é o uso intensivo de **variáveis (`var.encryption_enabled`)** cujos valores reais estão definidos em arquivos `.tfvars` separados por ambiente (`prod.tfvars`, `dev.tfvars`): se o scanner analisar apenas o `.tf` sem ler o `prod.tfvars`, ele não saberá qual valor `var.encryption_enabled` assumirá em produção!|O KICS resolve isso através da flag **`--terraform-vars-path <caminho/prod.tfvars>`**, que interpola os valores reais das variáveis durante a construção da árvore sintática do HCL antes de rodar as queries Rego!|E para cenários complexos com loops `for_each`, `dynamic` blocks e módulos remotos aninhados, você também pode gerar o plano resolvido do Terraform (`terraform plan -out=tf.plan && terraform show -json tf.plan > plan.json`) e auditar o plano consolidado.|```bash
+# Auditar codigo Terraform injetando os valores reais de producao via --terraform-vars-path
+kics scan -p /cases/iac/terraform \
+  -t Terraform \
+  --terraform-vars-path /cases/iac/terraform/envs/prod.tfvars \
+  --fail-on high,critical \
+  -o /cases/iac/out
+```|Quando o seu projeto Terraform referencia submódulos ou especifica provedores específicos (`aws`, `gcp`, `azure`), use **`--cloud-provider aws`** para restringir o carregamento de queries apenas ao provedor de nuvem utilizado, acelerando o scan.|Compare o resultado do `kics scan` usando `dev.tfvars` vs `prod.tfvars` para garantir que configurações permissivas de desenvolvimento não vazem para o arquivo de produção.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-inventario-recursos-iac-bill-of-materials-bom-m, kics-governanca-severidade-fail-on-ignore-on-exit-sarif-cicd
+
+===NOTE===
+0807|kics-auditoria-kubernetes-helm-dockerfile-pod-security-containers|KICS para **Kubernetes, Helm Charts e Dockerfiles**: Auditoria Integrada da Imagem (`Dockerfile`) até o Manifesto do Pod (`Deployment`)|Em ambientes Cloud-Native, uma falha de segurança de container frequentemente nasce da combinação entre o **`Dockerfile`** (ex.: imagem sem `USER` não-root, pacotes instalados sem pinning, segredos em `ENV`/`ARG` ou `ADD` de URL remota) e o **manifesto Kubernetes / Helm Chart** (ex.: ausência de `securityContext.runAsNonRoot`, `allowPrivilegeEscalation: true`, falta de limites de CPU/memória ou montagem de `hostPath` / `docker.sock`).|O KICS analisa nativamente tanto **Dockerfiles / Docker Compose** quanto **manifestos Kubernetes, Kustomize e Helm Charts** (renderizando templates Helm diretamente sem precisar de um cluster Kubernetes ativo!) na mesma execução.|Isso permite validar a conformidade com os padrões **Kubernetes Pod Security Standards (Baseline / Restricted)** e **CIS Docker / Kubernetes Benchmark** antes mesmo do build da imagem OCI.|```bash
+# Auditar simultaneamente Dockerfiles, manifestos Kubernetes e Helm Charts em um repositorio de microsservico
+kics scan -p /cases/iac/k8s-microservice \
+  -t Dockerfile,Kubernetes,Helm \
+  --exclude-severities info,trace \
+  --report-formats sarif,json \
+  -o /cases/iac/out
+```|Ao auditar **Helm Charts**, aponte `-p` para o diretório raiz do Chart (onde está o `Chart.yaml` e `values.yaml`): o parser de Helm embutido no KICS renderiza os templates Go (`templates/*.yaml`) com os valores do `values.yaml` e mapeia qualquer vulnerabilidade encontrada de volta para a linha exata do template original!|Verifique no relatório gerado se algum container roda como `root` (`Container Running As Root`) ou sem `readOnlyRootFilesystem: true`.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kubearmor-arquitetura-lsm-ebpf-enforcement-inline-containers-nodes, clair-arquitetura-analise-estatica-containers-claircore-indexer-matcher-notifier
+
+===NOTE===
+0808|kics-auditoria-especificacoes-openapi-swagger-grpc-protobuf-apis|KICS para **OpenAPI (v2/v3) e gRPC (`.proto`)**: *Shift-Left API Security* desde o Contrato da API (`--enable-openapi-refs`)|A maioria das equipes só testa a segurança de uma API REST ou gRPC depois que o código já foi escrito e implantado em homologação; porém, falhas graves de design de API — como endpoints sem esquema `security` global/por operação, transporte `http://` não cifrado, parâmetros numéricos/strings sem limites (`maxLength`, `maximum`, `pattern` contra DoS/Injeção) ou códigos de resposta mal especificados — já estão visíveis no contrato **OpenAPI (`openapi.yaml` / `swagger.json`)** e **gRPC (`service.proto`)**!|O KICS inclui plataformas dedicadas **`OpenAPI`** e **`GRPC`** com dezenas de queries baseadas no **OWASP API Security Top 10** que auditam os arquivos de especificação da API durante o design!|Quando a especificação OpenAPI utiliza referências externas (`$ref: "./schemas/user.yaml"`), passe a flag **`--enable-openapi-refs`** para que o KICS resolva e inspecione todos os esquemas referenciados.|```bash
+# Auditar contratos OpenAPI 3.0 (resolvendo $ref externos) e arquivos gRPC Protobuf contra falhas do OWASP API Top 10
+kics scan -p /cases/iac/api-contracts \
+  -t OpenAPI,GRPC \
+  --enable-openapi-refs \
+  --fail-on high,critical \
+  -o /cases/iac/out
+```|Adicione um step `kics scan -t OpenAPI --enable-openapi-refs` em todo repositório que contém contratos Swagger/OpenAPI: isso impede que um desenvolvedor publique uma nova rota REST esquecendo de declarar a exigência de autenticação `BearerAuth`/`OAuth2` ou limites de tamanho de array (`maxItems`).|Confira no relatório do KICS os achados da categoria `Access Control` e `Input Validation` sobre os seus arquivos `openapi.yaml`.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, zap-varredura-apis-openapi-graphql-soap-autenticacao-jwt, wapiti-varredura-apis-rest-openapi-swagger-json-payloads
+
+===NOTE===
+0809|kics-deteccao-segredos-embutidos-passwords-keys-regex-rules|KICS: Detecção Integrada de **Segredos e Credenciais Hardcoded** em IaC (`passwords_and_secrets`, `--secrets-regexes-path` e `--disable-secrets`)|Arquivos de Infraestrutura como Código (`terraform.tfvars`, `docker-compose.yml`, playbooks Ansible, `values.yaml` do Helm e workflows de CI/CD) são um dos locais onde desenvolvedores mais esquecem senhas de banco de dados, tokens de API e chaves privadas SSH/TLS em texto claro.|Além das mais de 2.000 queries Rego de configuração, o KICS traz integrado um **Scanner de Segredos e Senhas** que combina regras de entropia e expressões regulares (`assets/queries/common/passwords_and_secrets`) para detectar chaves AWS, GCP, Azure, GitHub, Slack, Stripe, JWTs e chaves privadas PEM dentro de qualquer arquivo IaC.|Você pode fornecer um arquivo customizado de regras de segredos da sua empresa com **`--secrets-regexes-path`** ou, caso seu pipeline já execute o **Gitleaks / TruffleHog** em uma etapa dedicada e você queira evitar duplicidade, desativar a varredura de segredos do KICS com **`--disable-secrets`**.|```bash
+# Executar o KICS focando em segredos e credenciais hardcoded ou desativando segredos quando ja coberto pelo Gitleaks
+kics scan -p /cases/iac/ansible-playbooks \
+  -t Ansible \
+  -o /cases/iac/out
+```|Mesmo que você utilize o KICS no CI/CD sobre a árvore de arquivos atual (`HEAD`), lembre-se de que o KICS inspeciona o snapshot atual dos arquivos, e **não** o histórico de commits antigos do Git (`git log`); por isso, mantenha sempre o **Gitleaks** ou **TruffleHog** para varrer o histórico completo de commits.|Se um segredo de teste legítimo (ex.: chave dummy em arquivo de fixture) for reportado, suprima a linha com `# kics-scan ignore-line` ou mova para uma variável de ambiente.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, gitleaks-arquitetura-motor-regex-toml-entropia-git-log, trufflehog-arquitetura-detectors-verificacao-ativa-api-entropia
+
+===NOTE===
+0810|kics-governanca-severidade-fail-on-ignore-on-exit-sarif-cicd|KICS em Pipelines CI/CD: Configuração Declarativa (`kics.config`), Códigos de Saída (**`--fail-on`**, **`--ignore-on-exit`**) e Relatórios **SARIF / SonarQube / GitLab**|Para transformar o KICS em um *Quality Gate* determinístico no GitHub Actions, GitLab CI ou Jenkins sem precisar manter linhas de comando gigantescas, o KICS suporta um arquivo de configuração centralizado (**`--config kics.config`** em formato JSON, YAML ou TOML).|O controle de falha do pipeline é governado por duas flags cruciais documentadas em `docs/commands.md`: **(1) `--fail-on <severidades>`** (padrão `critical,high,medium,low,info`; em pipelines de produção configure **`--fail-on critical,high`** para que achados `low`/`info` não bloqueiem o deploy!) e **(2) `--ignore-on-exit <all|results|errors|none>`** (que define se o KICS deve retornar exit code `0` mesmo quando encontra vulnerabilidades, útil quando o step seguinte faz upload do relatório **SARIF**!).|Com **`--report-formats sarif,json,html,glsast,sonarqube,cyclonedx`**, o KICS exporta nativamente para a aba *GitHub Security Code Scanning* (`sarif`), *GitLab SAST* (`glsast`) e *SonarQube*!|```yaml
+# /cases/iac/kics.yaml — Arquivo de configuracao declarativo do KICS para Quality Gate em CI/CD
+path: "."
+type:
+  - Terraform
+  - Kubernetes
+  - Dockerfile
+  - OpenAPI
+exclude-paths:
+  - "./tests/*"
+  - "./.terraform/*"
+fail-on:
+  - critical
+  - high
+report-formats:
+  - sarif
+  - json
+output-path: "./kics-reports"
+output-name: "kics-result"
+ci: true
+```|Conhecer os códigos de saída numéricos do KICS facilita o diagnóstico em scripts de CI: **`0`** = zero vulnerabilidades nas severidades de `--fail-on`; **`50`** = encontrou vulnerabilidades `CRITICAL`; **`40`** = `HIGH`; **`30`** = `MEDIUM`; **`20`** = `LOW`; **`126`** = erro interno de motor!|Execute `kics scan --config /cases/iac/kics.yaml` e verifique a geração do arquivo `kics-result.sarif`.|kics-arquitetura-iac-sast-multi-plataforma-opa-rego-ast, kics-supressao-granular-comentarios-kics-scan-ignore-similarity-id, defectdojo-importacao-reimportacao-sarif-deduplicacao-automatica
