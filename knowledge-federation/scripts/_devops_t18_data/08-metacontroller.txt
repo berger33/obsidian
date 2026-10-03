@@ -1,0 +1,135 @@
+1771|metacontroller-arquitetura-lambda-controllers-webhooks-json|Metacontroller: arquitetura de *Controller-Controller* para escrever operadores Kubernetes como Lambda Hooks JSON|O **Metacontroller** (iniciado originalmente no Google Cloud Platform / GKE e mantido pela comunidade sob Apache 2.0) é um add-on leve para Kubernetes que permite escrever e implantar controladores customizados na forma de simples scripts/webhooks HTTP que recebem o estado atual em JSON e devolvem o estado desejado em JSON.|Construir e manter um controlador completo em Go com `client-go`, Informers, caches em memória, filas de trabalho (`workqueues`) e lógica de concorrência otimista para cada pequena abstração interna de plataforma multiplica o custo de manutenção.|Assim como o `kube-controller-manager` hospeda vários controladores nativos, o Metacontroller é um servidor "controlador de controladores" (*controller-controller*) que observa objetos de sua própria API (`CompositeController` e `DecoratorController`) e executa todos os loops de reconciliação, watches, caches, adoção/orfanato e Garbage Collection em nome do usuário, invocando apenas a função de negócio (*Lambda Hook*) via HTTP/JSON.|```bash
+kubectl apply -k https://github.com/metacontroller/metacontroller/manifests/production
+kubectl get pods -n metacontroller
+```|Como o contrato entre o Metacontroller e o seu hook é puramente HTTP + JSON, você pode escrever controladores Kubernetes em **Python**, **JavaScript/Node.js**, **Jsonnet**, **Go**, **Ruby** ou **Rust** sem importar nenhuma biblioteca cliente do Kubernetes.|Instale o Metacontroller e verifique com `kubectl get crds | grep metacontroller.k8s.io` o registro de `compositecontrollers` e `decoratorcontrollers`.|https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://metacontroller.github.io/metacontroller/concepts.html;https://github.com/metacontroller/metacontroller
+1772|metacontroller-compositecontroller-parent-child-sync-hook-crd|Metacontroller `CompositeController`: gerenciamento de recursos filhos (`childResources`) a partir de um `parentResource`|O CRD **`CompositeController`** (`metacontroller.k8s.io/v1alpha1`) modela o padrão onde um objeto pai (tipicamente um Custom Resource, como um `BlueGreenDeployment` ou `IndexedJob`) é composto e gerencia o ciclo de vida de vários objetos filhos (`Deployments`, `Services`, `Pods`, `ConfigMaps`).|Esse é o mesmo padrão arquitetural usado pelos controladores nativos do Kubernetes (como um `Deployment` que gerencia `ReplicaSets` ou um `StatefulSet` que gerencia `Pods` e `PVCs`), mas sem exigir programação de API do Kubernetes.|No manifesto do `CompositeController`, o engenheiro declara `spec.parentResource` (usando sempre o nome canônico plural em minúsculas do recurso, ex.: `indexedjobs`), a lista `spec.childResources` e o endpoint `spec.hooks.sync.webhook.url`. A cada mudança no pai ou nos filhos, o Metacontroller envia `{parent, children}` em JSON para o webhook e aplica o `{status, children}` retornado.|```yaml
+apiVersion: metacontroller.k8s.io/v1alpha1
+kind: CompositeController
+metadata:
+  name: webapp-composite-controller
+spec:
+  generateSelector: true
+  parentResource:
+    apiVersion: ctl.corp.io/v1
+    resource: webapps
+  childResources:
+    - apiVersion: apps/v1
+      resource: deployments
+      updateStrategy:
+        method: InPlace
+    - apiVersion: v1
+      resource: services
+      updateStrategy:
+        method: InPlace
+  hooks:
+    sync:
+      webhook:
+        url: http://webapp-hook.metacontroller/sync
+```|Quando o Metacontroller pede o nome de um recurso (`resource`) no spec do controlador, utilize sempre a forma canônica **plural e em minúsculas** (ex.: `replicasets`, `deployments`, `services`), enquanto dentro dos manifestos JSON retornados pelo hook usa-se o `kind` em `UpperCamelCase` (`ReplicaSet`, `Deployment`).|Aplique um `CompositeController` e verifique nos logs do Pod `metacontroller-0` o início automático dos watches para o recurso pai e para os recursos filhos.|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1773|metacontroller-decoratorcontroller-attachments-labels-annotations|Metacontroller `DecoratorController`: anexação de comportamentos e recursos secundários a objetos existentes|O CRD **`DecoratorController`** (`metacontroller.k8s.io/v1alpha1`) permite anexar novos objetos filhos (*attachments*), labels, anotações ou status a recursos Kubernetes existentes (nativos ou CRDs) selecionados por `labelSelector` ou `annotationSelector`, sem que o recurso principal precise ser dono exclusivo de todos os objetos do tipo.|No `CompositeController`, cada tipo de recurso pai é dono de sua própria árvore; porém, muitas vezes queremos "decorar" qualquer `StatefulSet` ou `Pod` que receba a anotação `service-per-pod: "true"` criando um `Service` dedicado para ele, sem substituir o controlador nativo do `StatefulSet`.|No `DecoratorController`, `spec.resources` define quais objetos observar (com filtros opcionais de `annotationSelector` / `labelSelector`) e `spec.attachments` define quais tipos de recursos anexos o hook `sync` pode criar e gerenciar. Quando o objeto principal ou a anotação é removida, o Metacontroller limpa automaticamente os attachments via Garbage Collection.|```yaml
+apiVersion: metacontroller.k8s.io/v1alpha1
+kind: DecoratorController
+metadata:
+  name: service-per-pod-decorator
+spec:
+  resources:
+    - apiVersion: apps/v1
+      resource: statefulsets
+      annotationSelector:
+        matchExpressions:
+          - {key: service-per-pod-label, operator: Exists}
+  attachments:
+    - apiVersion: v1
+      resource: services
+      updateStrategy:
+        method: InPlace
+  hooks:
+    sync:
+      webhook:
+        url: http://service-per-pod.metacontroller/sync
+```|O `DecoratorController` pode observar múltiplos tipos de recursos simultaneamente (por exemplo, tanto `Deployments` quanto `StatefulSets` que possuam uma determinada anotação de observabilidade ou backup).|Adicione a anotação monitorada em um `StatefulSet` de teste e confirme que o `DecoratorController` cria imediatamente os `Services` anexos retornados pelo webhook.|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1774|metacontroller-contrato-sync-webhook-request-response-json|Metacontroller: contrato JSON de entrada e saída do webhook `sync` para reconciliação declarativa|O hook `sync` do Metacontroller opera como uma função pura de estado: ele recebe uma requisição HTTP `POST` contendo o estado observado (`parent` / `object` e `children` / `attachments` indexados por GVK e nome) e retorna uma resposta JSON declarando o `status` calculado e a lista completa de filhos desejados.|Em controladores imperativos, o desenvolvedor precisa escrever chamadas separadas de `CREATE` se o filho não existir, `PATCH` se já existir e `DELETE` para os filhos que sobraram; no Metacontroller, basta retornar a lista de filhos desejados naquele instante.|Ao receber a resposta `{ "status": {...}, "children": [...] }` do webhook, o próprio Metacontroller compara os objetos retornados com o cache local: cria os filhos que ainda não existem (injetando `ownerReferences` automaticamente), atualiza os filhos que mudaram (segundo a `updateStrategy` configurada) e deleta os filhos antigos que deixaram de figurar na lista retornada.|```python
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+
+class SyncHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        observed = json.loads(self.rfile.read(int(self.headers.get('content-length'))))
+        parent = observed['parent']
+        desired_svc = {
+            'apiVersion': 'v1',
+            'kind': 'Service',
+            'metadata': {'name': parent['metadata']['name']},
+            'spec': {'ports': [{'port': 80}], 'selector': {'app': parent['metadata']['name']}},
+        }
+        body = json.dumps({'status': {'ready': True}, 'children': [desired_svc]}).encode()
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(body)
+```|Cuidado: se o seu webhook `sync` retornar `"children": []` (lista vazia) por engano, o Metacontroller interpretará que você deseja zero recursos filhos e deletará todos os filhos existentes daquele pai.|Teste o endpoint Python do seu webhook localmente enviando um payload JSON de exemplo com `curl -X POST -d @sample-request.json` antes de conectá-lo ao Metacontroller.|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1775|metacontroller-finalize-hook-limpeza-ordenada-finalizers|Metacontroller `finalize` hook: gerenciamento declarativo de Finalizers e limpeza antes da exclusão|Tanto o `CompositeController` quanto o `DecoratorController` suportam o hook **`finalize`** (`spec.hooks.finalize`), que adiciona automaticamente um `finalizer` do Metacontroller nos objetos gerenciados e chama o seu webhook durante o processo de exclusão até que o hook retorne `"finalized": true`.|Às vezes, apagar os recursos filhos via Garbage Collection padrão do Kubernetes não basta: é preciso desregistrar o nó de um balanceador externo, esvaziar um bucket ou deletar os filhos em uma ordem estrita (primeiro os `Pods`, e só quando não restar nenhum Pod deletar o `ConfigMap`).|Quando um objeto pai possui `hooks.finalize` configurado e recebe `kubectl delete` (ganhando `metadata.deletionTimestamp`), o Metacontroller passa a invocar o webhook `finalize` (ou o próprio `sync` com `"finalizing": true`). O webhook pode retornar estados intermediários de `children` para desligar recursos em etapas e, quando a limpeza terminar, retorna `{"finalized": true}`, momento em que o Metacontroller remove o finalizer.|```yaml
+  hooks:
+    sync:
+      webhook:
+        url: http://my-controller.metacontroller/sync
+    finalize:
+      webhook:
+        url: http://my-controller.metacontroller/finalize
+```|Enquanto o webhook `finalize` retornar `"finalized": false` (ou falhar com erro HTTP), o objeto permanecerá em estado `Terminating` protegido contra remoção do `etcd`.|Delete um recurso gerenciado por um controlador com hook `finalize` e confirme nos logs que o finalizer só é removido após o retorno de `"finalized": true`.|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1776|metacontroller-customize-hook-related-resources-contexto-adicional|Metacontroller `customize` hook: busca declarativa de `relatedResources` para enriquecer o contexto do `sync`|O hook **`customize`** (`spec.hooks.customize`) permite que o controlador informe dinamicamente ao Metacontroller quais recursos adicionais do cluster (*related resources* que não são nem o pai nem os filhos criados) devem ser buscados no cache e incluídos sob a chave `related` na chamada do webhook `sync`.|Imagine que um `CompositeController` para um `WebApp` precise ler um `ConfigMap` global ou um `Secret` referenciado pelo nome em `spec.secretName` do `WebApp`: como o `Secret` não é filho do `WebApp`, ele não viria no dicionário `children`.|Com o hook `customize`, o Metacontroller primeiro envia o objeto `parent` para o endpoint `/customize`; o hook retorna uma lista de regras `relatedResources` (especificando `apiVersion`, `resource`, `namespace` e `names` ou `labelSelector`). O Metacontroller busca esses objetos no seu cache de Informers (sem bater no `kube-apiserver`) e os entrega na chave `related` da requisição `/sync`.|```json
+{
+  "relatedResources": [
+    {
+      "apiVersion": "v1",
+      "resource": "secrets",
+      "namespace": "default",
+      "names": ["app-tls-secret"]
+    }
+  ]
+}
+```|Qualquer alteração em um objeto listado em `relatedResources` re-enfileira automaticamente a reconciliação `sync` do objeto pai dependente, mantendo reatividade total sem código de watch manual.|Configure um hook `customize` retornando um `ConfigMap` relacionado, edite o `ConfigMap` com `kubectl edit` e verifique que o hook `sync` do pai é disparado imediatamente.|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1777|metacontroller-estrategias-atualizacao-filhos-ondelete-recreate-inplace-rolling|Metacontroller: estratégias de atualização de recursos filhos (`OnDelete`, `Recreate`, `InPlace`, `RollingRecreate`, `RollingInPlace`)|Para cada tipo de recurso filho (`childResources` ou `attachments`), o Metacontroller exige declarar uma `updateStrategy.method` explícita (`OnDelete`, `Recreate`, `InPlace`, `RollingRecreate` ou `RollingInPlace`) que define como alterações retornadas pelo webhook serão aplicadas.|Certos objetos Kubernetes permitem atualização in-place via merge patch (`Deployment`, `Service`), enquanto outros possuem campos imutáveis que exigem deletar e recriar o objeto (`Job`, `Pod`) ou precisam de atualização gradual respeitando verificações de saúde (`statusChecks`).|Por padrão, se nenhuma estratégia for informada, o Metacontroller usa `OnDelete` (não modifica filhos existentes até serem deletados). Ao configurar `method: InPlace`, o Metacontroller aplica um patch direto no objeto existente; ao configurar `method: Recreate`, ele deleta e recria o filho quando o template desejado difere do estado atual.|```yaml
+  childResources:
+    - apiVersion: batch/v1
+      resource: jobs
+      updateStrategy:
+        method: Recreate
+    - apiVersion: v1
+      resource: configmaps
+      updateStrategy:
+        method: InPlace
+```|Esquecer de definir `updateStrategy: {method: InPlace}` em um recurso filho como `Deployment` ou `ConfigMap` é a armadilha mais comum ao iniciar com Metacontroller, pois no padrão `OnDelete` mudanças no pai não atualizarão o filho existente.|Verifique a seção `childResources` do seu `CompositeController` e confirme que todos os recursos mutáveis possuem `method: InPlace` (ou `Recreate` para Jobs/Pods).|https://metacontroller.github.io/metacontroller/concepts.html;https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://github.com/metacontroller/metacontroller
+1778|metacontroller-generateselector-labelselector-adopt-orphan-semantics|Metacontroller: seleção de filhos com `generateSelector: true` vs `labelSelector` customizado e semântica de adoção|No `CompositeController`, o campo `spec.generateSelector` controla se o Metacontroller deve gerenciar automaticamente um seletor de labels único por objeto pai (`controller-uid`) ou usar o `spec.selector` declarado pelo próprio usuário no objeto pai (como fazem `Deployment` e `StatefulSet`).|Se você estiver criando um CRD de alto nível onde o usuário final não quer se preocupar em inventar `matchLabels` exclusivos para cada instância, forçar o usuário a escrever `spec.selector` adiciona ruído desnecessário ao manifesto.|Quando `spec.generateSelector: true` é definido no `CompositeController`, o Metacontroller injeta e filtra automaticamente os recursos filhos pelo UID do objeto pai, eliminando a necessidade de `spec.selector` no Custom Resource. Já quando `generateSelector: false` (padrão), o Metacontroller usa `spec.selector` do pai e suporta semântica completa de *adopt/orphan* (adotando órfãos que batam com os labels ou liberando filhos cujos labels deixem de bater).|```yaml
+apiVersion: metacontroller.k8s.io/v1alpha1
+kind: CompositeController
+metadata:
+  name: simple-app-controller
+spec:
+  generateSelector: true
+  parentResource:
+    apiVersion: apps.corp.io/v1
+    resource: simpleapps
+```|Para a maioria dos novos Custom Resources de plataforma, habilitar `generateSelector: true` é a escolha mais segura porque impede colisões acidentais de labels entre duas instâncias criadas no mesmo namespace.|Inspecione os labels injetados automaticamente nos recursos filhos criados por um `CompositeController` com `generateSelector: true`.|https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://metacontroller.github.io/metacontroller/concepts.html;https://github.com/metacontroller/metacontroller
+1779|metacontroller-jsonnet-python-javascript-hooks-configmap-sidecar|Metacontroller: escrita de hooks declarativos enxutos em Jsonnet, Python ou Node.js montados via ConfigMap|Como os hooks do Metacontroller são simples servidores HTTP stateless que transformam JSON em JSON, é prática comum empacotar o código do controlador em um `ConfigMap` e executá-lo em um Deployment leve de **Jsonnet**, **Python** ou **Node.js** no próprio namespace do Metacontroller.|Em linguagens de templating de dados como **Jsonnet**, transformar o objeto JSON `{parent, children}` na estrutura JSON `{status, children}` exige apenas uma expressão funcional de 20 linhas sem precisar manter imagens de container compiladas customizadas.|O administrador cria um `ConfigMap` com o script (`sync.py` ou `sync.jsonnet`), monta-o em um Pod com um servidor HTTP mínimo e aponta `webhook.url` para o `Service` local (`http://my-hook.metacontroller/sync`), configurando opcionalmente `webhook.timeout` e `resyncPeriodSeconds` no controlador.|```yaml
+apiVersion: metacontroller.k8s.io/v1alpha1
+kind: CompositeController
+metadata:
+  name: cron-sync-controller
+spec:
+  resyncPeriodSeconds: 300
+  parentResource:
+    apiVersion: ops.corp.io/v1
+    resource: envsyncs
+  hooks:
+    sync:
+      webhook:
+        url: http://envsync-hook.metacontroller:8080/sync
+        timeout: 10s
+```|O parâmetro `resyncPeriodSeconds` força o Metacontroller a invocar o webhook `sync` periodicamente mesmo que nenhum objeto Kubernetes tenha mudado, sendo útil para controladores que sincronizam estado com sistemas externos.|Configure `resyncPeriodSeconds` e `timeout` no seu controlador e monitore a latência das chamadas de webhook através das métricas Prometheus expostas pelo Metacontroller.|https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://metacontroller.github.io/metacontroller/concepts.html;https://github.com/metacontroller/metacontroller
+1780|metacontroller-observabilidade-metricas-logging-migracao-gke-helm|Metacontroller: instalação via Kustomize/Helm, métricas de reconciliação e migração a partir do projeto GKE original|O projeto comunitário `metacontroller/metacontroller` oferece instalação oficial via **Kustomize** (`manifests/production`) e **Helm**, exportando métricas Prometheus detalhadas da fila de trabalho e das chamadas de webhook HTTP.|Clusters que ainda rodam a versão legada `GoogleCloudPlatform/metacontroller` (arquivada) não recebem suporte às versões recentes da API do Kubernetes nem melhorias de performance e observabilidade da versão comunitária v4+.|O Metacontroller comunitário roda como um `StatefulSet` (`metacontroller-0` no namespace `metacontroller`), requerendo permissões RBAC para observar os recursos gerenciados e gerenciar seus filhos. A migração a partir da versão legada do GKE consiste em atualizar os CRDs de `metacontroller.k8s.io/v1alpha1` e substituir o workload pelo manifesto de produção atual.|```bash
+helm install metacontroller oci://ghcr.io/metacontroller/metacontroller-helm \
+  --version v4.11.20 \
+  --namespace metacontroller --create-namespace
+kubectl logs -n metacontroller sts/metacontroller --tail=30
+```|Certifique-se de que a `ServiceAccount` associada ao `StatefulSet` do Metacontroller possua permissões RBAC (`get`, `list`, `watch`, `create`, `update`, `patch`, `delete`) para todos os tipos de `parentResource`, `childResources` e `attachments` que você registrar.|Verifique o estado do `sts/metacontroller` e consulte os logs estruturados do controlador para auditar o registro dinâmico dos seus controladores.|https://raw.githubusercontent.com/metacontroller/metacontroller/master/README.md;https://metacontroller.github.io/metacontroller/concepts.html;https://github.com/metacontroller/metacontroller

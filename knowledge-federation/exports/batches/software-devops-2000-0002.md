@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1700 / 2.000 (85,00%)**
-- Gate automatizado: **1700/1700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
-- Revisão factual humana: **0/1700**
-- Revisão factual por IA: **1700/1700**
-- Contabilizadas como válidas: **1700/1700**
-- Revisor das 1700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–17 (1700 notas, IDs 1–1700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1800 / 2.000 (90,00%)**
+- Gate automatizado: **1800/1800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
+- Revisão factual humana: **0/1800**
+- Revisão factual por IA: **1800/1800**
+- Contabilizadas como válidas: **1800/1800**
+- Revisor das 1800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–18 (1800 notas, IDs 1–1800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-17.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-17.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md), [`tranche 17`](../reports/ai-review-software-devops-2000-0002-tranche-17.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-18.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-18.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md), [`tranche 17`](../reports/ai-review-software-devops-2000-0002-tranche-17.md), [`tranche 18`](../reports/ai-review-software-devops-2000-0002-tranche-18.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 300 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 200 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -2262,6 +2262,138 @@
 1699. [Canonical MicroK8s: diagnóstico automatizado de saúde e coleta de pacote de suporte com `microk8s inspect`](../../domains/software-0008/software/devops/microk8s-inspect-diagnostico-troubleshooting-pacote-logs.md)
 1700. [Canonical MicroK8s: execução multiplataforma (macOS/Windows via Multipass) e laboratórios HA em containers LXD/Incus](../../domains/software-0008/software/devops/microk8s-execucao-multiplataforma-multipass-lxd-incus-ci.md)
 
+## Tranche 18 — OpenEBS, JuiceFS, SeaweedFS, Piraeus Datastore / LINSTOR, Kubebuilder, Operator SDK, Kopf, Metacontroller, Spin / SpinKube e wasmCloud (100 notas; revisão factual por IA registrada)
+
+### OpenEBS (armazenamento CNCF Container Native Storage com `Mayastor` NVMe-oF replicado, `Local PV Hostpath`, `Local PV LVM`, `Local PV ZFS` e `Local PV Rawfile`)
+
+1701. [OpenEBS: arquitetura Container Native Storage (CNS) com Data Engines e Control Plane no Kubernetes](../../domains/software-0008/software/devops/openebs-arquitetura-container-native-storage-data-engines-control-plane.md)
+1702. [OpenEBS: modelo de um controlador (`Target`/`Nexus`) por volume para redução do raio de explosão (*Blast Radius*)](../../domains/software-0008/software/devops/openebs-volume-services-layer-target-nexus-por-volume-blast-radius.md)
+1703. [OpenEBS `Mayastor`: motor de armazenamento replicado corporativo baseado em NVMe-oF e SPDK](../../domains/software-0008/software/devops/openebs-mayastor-replicated-storage-nvme-of-spdk-alta-performance.md)
+1704. [OpenEBS `Local PV Hostpath`: substituto dinâmico zero-configuração para volumes `hostPath` nativos](../../domains/software-0008/software/devops/openebs-localpv-hostpath-provisionamento-dinamico-zero-config.md)
+1705. [OpenEBS `Local PV LVM`: provisionamento CSI de volumes lógicos LVM2 com snapshots, clones e expansão online](../../domains/software-0008/software/devops/openebs-localpv-lvm-csi-snapshots-thin-provisioning-resize.md)
+1706. [OpenEBS `Local PV ZFS`: provisionamento CSI de datasets e ZVOLs sobre pools ZFS com compressão e RAID-Z](../../domains/software-0008/software/devops/openebs-localpv-zfs-datasets-zvols-compressao-raidz-snapshots.md)
+1707. [OpenEBS `Local PV Rawfile`: armazenamento em bloco e arquivo baseado em sparse files locais](../../domains/software-0008/software/devops/openebs-localpv-rawfile-loopback-extent-files-desenvolvimento.md)
+1708. [OpenEBS: matriz de decisão arquitetural entre Local Storage (`LocalPV`) e Replicated Storage (`Mayastor`)](../../domains/software-0008/software/devops/openebs-criterios-escolha-local-storage-vs-replicated-storage.md)
+1709. [OpenEBS: snapshots e clones instantâneos via CSI `VolumeSnapshot` em LVM, ZFS e Mayastor](../../domains/software-0008/software/devops/openebs-snapshots-clones-csi-volumesnapshot-copy-on-write.md)
+1710. [OpenEBS: backup externo e recuperação de desastres de volumes locais e replicados com Velero](../../domains/software-0008/software/devops/openebs-backup-restore-velero-restic-kopia-protecao-desastres.md)
+
+### JuiceFS (sistema de arquivos distribuído POSIX cloud-native sobre Object Storage e Metadata Engine com `Chunks`/`Slices`/`Blocks`, cache NVMe e Kubernetes CSI Driver)
+
+1711. [JuiceFS: arquitetura de sistema de arquivos distribuído POSIX desacoplando Object Storage e Metadata Engine](../../domains/software-0008/software/devops/juicefs-arquitetura-posix-cloud-native-object-storage-metadata-engine.md)
+1712. [JuiceFS: anatomia de armazenamento de arquivos em `Chunks` (64 MiB), `Slices` e `Blocks` (4 MiB)](../../domains/software-0008/software/devops/juicefs-modelo-dados-chunks-64mb-slices-blocks-4mb-object-storage.md)
+1713. [JuiceFS: sobreposição de `Slices`, leitura top-down e compactação em background contra fragmentação](../../domains/software-0008/software/devops/juicefs-fragmentacao-slices-sobrepostos-compactacao-garbage-collection.md)
+1714. [JuiceFS: seleção de Metadata Engine (`Redis`, `TiKV`, `PostgreSQL`, `MySQL`, `SQLite`) por escala e durabilidade](../../domains/software-0008/software/devops/juicefs-escolha-metadata-engine-redis-tikv-postgresql-mysql-sqlite.md)
+1715. [JuiceFS Kubernetes CSI Driver: volumes `ReadWriteMany` compartilhados via Mount Pods ou modo Sidecar](../../domains/software-0008/software/devops/juicefs-kubernetes-csi-driver-readwritemany-mount-pod-sidecar.md)
+1716. [JuiceFS: aceleração de leitura com cache local de metadados e blocos em SSD/NVMe e `juicefs warmup`](../../domains/software-0008/software/devops/juicefs-cache-multinivel-memoria-disco-ssd-warmup-ai-training.md)
+1717. [JuiceFS: criptografia ponta a ponta em repouso (AES-GCM-256 + RSA/ECDSA) e compressão (`LZ4` / `Zstandard`)](../../domains/software-0008/software/devops/juicefs-criptografia-em-repouso-aes-gcm-rsa-compressao-lz4-zstd.md)
+1718. [JuiceFS: acesso unificado via S3 Gateway, WebDAV, Python SDK (`fsspec`) e Hadoop Java SDK](../../domains/software-0008/software/devops/juicefs-acesso-multiprotocolo-s3-gateway-webdav-python-fsspec-hadoop.md)
+1719. [JuiceFS: locks distribuídos de arquivos (`flock` BSD e `fcntl` POSIX) e semântica de consistência](../../domains/software-0008/software/devops/juicefs-locks-globais-posix-fcntl-flock-consistencia-multi-cliente.md)
+1720. [JuiceFS: proteção contra exclusão acidental com Lixeira (`--trash-days`) e clonagem instantânea de metadados](../../domains/software-0008/software/devops/juicefs-lixeira-trash-snapshots-clone-fast-copy-recuperacao.md)
+
+### SeaweedFS (sistema de armazenamento distribuído inspirado no Facebook Haystack com leitura $O(1)$, `Master`/`Volume`/`Filer`, S3 Gateway, S3 Tables Iceberg/Lance, Erasure Coding e CSI Driver)
+
+1721. [SeaweedFS: arquitetura inspirada no Facebook Haystack com leitura de disco $O(1)$ (`Master`, `Volume Server` e `Filer`)](../../domains/software-0008/software/devops/seaweedfs-arquitetura-haystack-o1-disk-read-master-volume-filer.md)
+1722. [SeaweedFS: política de replicação ciente de topologia (`ReplicaPlacement` de 3 dígitos XYZ por Data Center, Rack e Nó)](../../domains/software-0008/software/devops/seaweedfs-replicacao-rack-datacenter-aware-placement-001-011-100.md)
+1723. [SeaweedFS: Erasure Coding em segundo plano para dados mornos, Cloud Tiering e Volume Server em Rust](../../domains/software-0008/software/devops/seaweedfs-erasure-coding-volumes-mornos-cloud-tiering-rust-volume.md)
+1724. [SeaweedFS `Filer`: camada stateless de diretórios e suporte a mais de 15 bancos de metadados plugáveis](../../domains/software-0008/software/devops/seaweedfs-filer-stateless-metadata-stores-leveldb-postgres-tikv-redis.md)
+1725. [SeaweedFS S3 Gateway: API S3 completa (73 operações de objeto/bucket, 39 IAM, 5 STS), Object Lock e SSE-KMS](../../domains/software-0008/software/devops/seaweedfs-s3-gateway-iam-sts-oidc-object-lock-sse-kms.md)
+1726. [SeaweedFS Lakehouse: S3 Table Buckets com catálogo REST Apache Iceberg e tabelas vetoriais Lance integrados](../../domains/software-0008/software/devops/seaweedfs-lakehouse-s3-tables-apache-iceberg-rest-catalog-lance.md)
+1727. [SeaweedFS `Cloud Drive` e Replicação Ativo-Ativo: cache local acelerado de buckets de nuvem e sincronização multi-cluster](../../domains/software-0008/software/devops/seaweedfs-cloud-drive-cache-remoto-writeback-replicacao-ativo-ativo.md)
+1728. [SeaweedFS CSI Driver: provisionamento dinâmico e estático de volumes `ReadWriteMany` no Kubernetes](../../domains/software-0008/software/devops/seaweedfs-csi-driver-kubernetes-provisionamento-dinamico-estatico-rwx.md)
+1729. [SeaweedFS CSI Driver: aplicação de cotas de capacidade (`ENOSPC`) por `collection` e procedimento de *Safe Rollout*](../../domains/software-0008/software/devops/seaweedfs-csi-driver-cotas-capacidade-collection-enospc-safe-rollout.md)
+1730. [SeaweedFS: segurança em repouso e trânsito com criptografia AES-256-GCM no Filer, mTLS, JWT Volume Access e builds FIPS](../../domains/software-0008/software/devops/seaweedfs-seguranca-aes256-gcm-jwt-volume-access-tls-fips.md)
+
+### Piraeus Datastore e LINSTOR (armazenamento em bloco replicado CNCF Sandbox no Kubernetes sobre DRBD9, `Piraeus Operator v2`, `LinstorCluster`, `LinstorSatellite` e `ha-controller`)
+
+1731. [Piraeus Datastore: armazenamento em bloco replicado cloud-native no Kubernetes com LINSTOR e DRBD](../../domains/software-0008/software/devops/piraeus-datastore-arquitetura-linstor-drbd-kubernetes-cncf-sandbox.md)
+1732. [Piraeus Operator e `piraeus-operator-gencert`: reconciliação do `LinstorCluster` e rotação autônoma de certificados TLS](../../domains/software-0008/software/devops/piraeus-operator-linstorcluster-gencert-tls-sem-cert-manager.md)
+1733. [Piraeus `linstor-controller`: gerenciamento central de posicionamento de volumes persistido em objetos Kubernetes](../../domains/software-0008/software/devops/piraeus-linstor-controller-estado-crds-kubernetes-orquestracao.md)
+1734. [Piraeus `linstor-satellite`: arquitetura de um DaemonSet por nó e isolamento de namespaces Linux (`UTS` e `Network`)](../../domains/software-0008/software/devops/piraeus-linstor-satellite-daemonset-por-no-uts-network-namespaces.md)
+1735. [Piraeus `linstor-csi-controller` e `linstor-csi-node`: tradução de `StorageClass`, `PVC` e `VolumeSnapshot` para LINSTOR](../../domains/software-0008/software/devops/piraeus-linstor-csi-controller-node-provisionamento-volumes-snapshots.md)
+1736. [Piraeus `linstor-csi-nfs-server` e `DRBD Reactor`: suporte a volumes `ReadWriteMany` (`RWX`) altamente disponíveis](../../domains/software-0008/software/devops/piraeus-linstor-csi-nfs-server-drbd-reactor-readwritemany-rwx.md)
+1737. [Piraeus `linstor-affinity-controller`: sincronização dinâmica de `nodeAffinity` de `PersistentVolumes` imutáveis](../../domains/software-0008/software/devops/piraeus-linstor-affinity-controller-sincronizacao-nodeaffinity-pv.md)
+1738. [Piraeus `ha-controller`: aceleração de failover de Pods Stateful monitorando eventos de quórum DRBD](../../domains/software-0008/software/devops/piraeus-ha-controller-failover-rapido-workloads-stateful-drbd-events.md)
+1739. [Piraeus `LinstorSatelliteConfiguration`: provisionamento declarativo de Storage Pools (`LVM`, `LVMThin`, `ZFS`) nos nós](../../domains/software-0008/software/devops/piraeus-linstorsatelliteconfiguration-storage-pools-lvm-thin-zfs.md)
+1740. [Piraeus: gerenciamento do módulo de kernel DRBD9 e configuração de rede dedicada de replicação](../../domains/software-0008/software/devops/piraeus-carregamento-modulo-kernel-drbd-module-loader-host-networking.md)
+
+### Kubebuilder (framework oficial Kubernetes SIG-API-Machinery em Go sobre `controller-runtime` e `controller-tools` para construção de CRDs, Reconcilers, Webhooks e testes `envtest`)
+
+1741. [Kubebuilder: arquitetura do framework oficial SIG-API-Machinery para criação de APIs e Operators Kubernetes em Go](../../domains/software-0008/software/devops/kubebuilder-arquitetura-sdk-go-controller-runtime-controller-tools.md)
+1742. [Kubebuilder: modelagem de `Groups`, `Versions`, `Kinds`, `Resources` (`GVK`/`GVR`) e registro no `runtime.Scheme`](../../domains/software-0008/software/devops/kubebuilder-groups-versions-kinds-resources-gvk-gvr-scheme.md)
+1743. [Kubebuilder: geração declarativa de CRDs OpenAPI v3, `DeepCopy` e RBAC via marcadores `// +kubebuilder:` e `controller-gen`](../../domains/software-0008/software/devops/kubebuilder-markers-controller-gen-validacao-openapi-crd-rbac.md)
+1744. [Kubebuilder: implementação do loop `Reconcile`, `Manager`, cache de leitura e watches (`For`, `Owns`, `Watches`)](../../domains/software-0008/software/devops/kubebuilder-reconcile-loop-manager-client-cache-watches-owns.md)
+1745. [Kubebuilder: criação de Admission Webhooks (`Defaulter`, `Validator`) e Webhooks de Conversão Multi-Versão (`Hub`/`Spoke`)](../../domains/software-0008/software/devops/kubebuilder-admission-webhooks-defaulter-validator-conversion.md)
+1746. [Kubebuilder: testes de integração rápidos com `envtest` (`setup-envtest`) usando `kube-apiserver` e `etcd` reais](../../domains/software-0008/software/devops/kubebuilder-testes-integracao-envtest-setup-envtest-ginkgo.md)
+1747. [Kubebuilder: plugin `deploy-image/v1-alpha` para geração automática de APIs e Controllers que gerenciam um Operand](../../domains/software-0008/software/devops/kubebuilder-deploy-image-plugin-v1-alpha-scaffolding-operand.md)
+1748. [Kubebuilder: arquitetura de Plugins (`go/v4`, `kustomize/v2`, `grafana/v1-alpha`) e uso do Kubebuilder como biblioteca Go](../../domains/software-0008/software/devops/kubebuilder-arquitetura-plugins-extensibilidade-biblioteca-go.md)
+1749. [Kubebuilder: proteção do endpoint `/metrics` com `WithAuthenticationAndAuthorization` em substituição ao `kube-rbac-proxy`](../../domains/software-0008/software/devops/kubebuilder-protecao-metricas-withauthenticationandauthorization-sem-kube-rbac-proxy.md)
+1750. [Kubebuilder: organização de manifestos em `config/` via Kustomize e geração de `dist/install.yaml`](../../domains/software-0008/software/devops/kubebuilder-empacotamento-kustomize-config-dist-install-yaml-dockerfile.md)
+
+### Operator SDK e OLM (toolkit CNCF Incubating do Operator Framework para desenvolvimento de Operators em Go, Ansible e Helm, empacotamento de Bundles CSV e validação `scorecard`)
+
+1751. [Operator SDK: arquitetura do kit CNCF Incubating para criação de Operators em Go, Ansible e Helm](../../domains/software-0008/software/devops/operator-sdk-arquitetura-operator-framework-go-ansible-helm.md)
+1752. [Operator SDK: modelo de maturidade de 5 níveis (*Operator Capability Levels*) e comparação entre Go, Ansible e Helm](../../domains/software-0008/software/devops/operator-sdk-modelo-maturidade-5-capability-levels-go-ansible-helm.md)
+1753. [Operator SDK `ansible-operator`: reconciliação de Custom Resources via `watches.yaml`, Roles e Playbooks Ansible](../../domains/software-0008/software/devops/operator-sdk-ansible-operator-watches-yaml-roles-playbooks.md)
+1754. [Operator SDK `helm-operator`: conversão de Helm Charts existentes em Operators Kubernetes declarativos](../../domains/software-0008/software/devops/operator-sdk-helm-operator-charts-watches-reconciliacao-nativa.md)
+1755. [Operator SDK e OLM (*Operator Lifecycle Manager*): instalação, verificação de status e matriz de compatibilidade](../../domains/software-0008/software/devops/operator-sdk-olm-integration-operator-sdk-olm-install-status.md)
+1756. [Operator SDK Bundles: geração de `ClusterServiceVersion` (CSV) e empacotamento OCI de Bundles para o OLM](../../domains/software-0008/software/devops/operator-sdk-generate-bundle-clusterserviceversion-csv-metadata.md)
+1757. [Operator SDK `run bundle` e `run bundle-upgrade`: validação ponta a ponta de instalação e upgrade no OLM](../../domains/software-0008/software/devops/operator-sdk-run-bundle-run-bundle-upgrade-testes-ciclo-vida-olm.md)
+1758. [Operator SDK `scorecard`: validação automatizada de bundles com suítes básicas, OLM e testes declarativos KUTTL](../../domains/software-0008/software/devops/operator-sdk-scorecard-test-kuttl-validacao-boas-praticas-bundles.md)
+1759. [Operator SDK: auditoria de compatibilidade de versões com Kubernetes e `client-go` por tipo de projeto](../../domains/software-0008/software/devops/operator-sdk-matriz-compatibilidade-kubernetes-client-go-lookup.md)
+1760. [Operator SDK: marcadores de `specDescriptors` e `statusDescriptors` (`+operator-sdk:csv:customresourcedefinitions`)](../../domains/software-0008/software/devops/operator-sdk-spec-status-descriptors-crds-annotations-olm-ui.md)
+
+### Kopf (*Kubernetes Operator Pythonic Framework* para desenvolvimento de operadores em Python com `@kopf.on.create/update/delete/field`, `@kopf.daemon`, `@kopf.timer`, `@kopf.index` e Peering)
+
+1761. [Kopf (*Kubernetes Operator Pythonic Framework*): arquitetura de operadores Kubernetes em Python com decoradores declarativos](../../domains/software-0008/software/devops/kopf-arquitetura-kubernetes-operator-pythonic-framework-ddd.md)
+1762. [Kopf: handlers de causa de mudança (`@kopf.on.create`, `update`, `delete`, `resume`, `field`) e inspeção de `diff`](../../domains/software-0008/software/devops/kopf-handlers-ciclo-vida-create-update-delete-resume-field-diffs.md)
+1763. [Kopf `@kopf.daemon` e `@kopf.timer`: execução de tarefas contínuas e periódicas vinculadas ao tempo de vida do recurso](../../domains/software-0008/software/devops/kopf-daemons-timers-tarefas-background-continuas-stopped-flag.md)
+1764. [Kopf: consistência eventual, retentativas com `TemporaryError` vs `PermanentError` e persistência de progresso](../../domains/software-0008/software/devops/kopf-tratamento-erros-retries-temporaryerror-permanenterror-persistencia.md)
+1765. [Kopf: hierarquia de objetos filhos, propagação de labels e Garbage Collection com `kopf.adopt`](../../domains/software-0008/software/devops/kopf-hierarquia-objetos-adopt-label-owner-references-garbage-collection.md)
+1766. [Kopf: filtragem declarativa de recursos por `labels`, `annotations`, `field` e predicados `when` em modo *stealth*](../../domains/software-0008/software/devops/kopf-filtragem-eventos-labels-annotations-when-callbacks-stealth.md)
+1767. [Kopf: implementação de Validating e Mutating Admission Webhooks com `@kopf.on.validate` e `@kopf.on.mutate`](../../domains/software-0008/software/devops/kopf-admission-webhooks-validating-mutating-dev-tunneling.md)
+1768. [Kopf `@kopf.index`: indexação em memória em tempo real para consultas cruzadas entre recursos sem chamadas de API](../../domains/software-0008/software/devops/kopf-indexacao-em-memoria-kopf-index-queries-cross-resource.md)
+1769. [Kopf Peering: coordenação multi-réplica (`KopfPeering`) e pausa automática do operador de cluster durante desenvolvimento local](../../domains/software-0008/software/devops/kopf-peering-alta-disponibilidade-pausa-dev-mode-priority.md)
+1770. [Kopf: sub-handlers dinâmicos (`kopf.subhandler`), memória por recurso (`memo`), probe `--liveness` e `KopfRunner`](../../domains/software-0008/software/devops/kopf-subhandlers-dinamicos-memo-containers-liveness-testing-runner.md)
+
+### Metacontroller (add-on *Controller-Controller* para Kubernetes que executa controladores customizados via Lambda Hooks JSON usando `CompositeController` e `DecoratorController`)
+
+1771. [Metacontroller: arquitetura de *Controller-Controller* para escrever operadores Kubernetes como Lambda Hooks JSON](../../domains/software-0008/software/devops/metacontroller-arquitetura-lambda-controllers-webhooks-json.md)
+1772. [Metacontroller `CompositeController`: gerenciamento de recursos filhos (`childResources`) a partir de um `parentResource`](../../domains/software-0008/software/devops/metacontroller-compositecontroller-parent-child-sync-hook-crd.md)
+1773. [Metacontroller `DecoratorController`: anexação de comportamentos e recursos secundários a objetos existentes](../../domains/software-0008/software/devops/metacontroller-decoratorcontroller-attachments-labels-annotations.md)
+1774. [Metacontroller: contrato JSON de entrada e saída do webhook `sync` para reconciliação declarativa](../../domains/software-0008/software/devops/metacontroller-contrato-sync-webhook-request-response-json.md)
+1775. [Metacontroller `finalize` hook: gerenciamento declarativo de Finalizers e limpeza antes da exclusão](../../domains/software-0008/software/devops/metacontroller-finalize-hook-limpeza-ordenada-finalizers.md)
+1776. [Metacontroller `customize` hook: busca declarativa de `relatedResources` para enriquecer o contexto do `sync`](../../domains/software-0008/software/devops/metacontroller-customize-hook-related-resources-contexto-adicional.md)
+1777. [Metacontroller: estratégias de atualização de recursos filhos (`OnDelete`, `Recreate`, `InPlace`, `RollingRecreate`, `RollingInPlace`)](../../domains/software-0008/software/devops/metacontroller-estrategias-atualizacao-filhos-ondelete-recreate-inplace-rolling.md)
+1778. [Metacontroller: seleção de filhos com `generateSelector: true` vs `labelSelector` customizado e semântica de adoção](../../domains/software-0008/software/devops/metacontroller-generateselector-labelselector-adopt-orphan-semantics.md)
+1779. [Metacontroller: escrita de hooks declarativos enxutos em Jsonnet, Python ou Node.js montados via ConfigMap](../../domains/software-0008/software/devops/metacontroller-jsonnet-python-javascript-hooks-configmap-sidecar.md)
+1780. [Metacontroller: instalação via Kustomize/Helm, métricas de reconciliação e migração a partir do projeto GKE original](../../domains/software-0008/software/devops/metacontroller-observabilidade-metricas-logging-migracao-gke-helm.md)
+
+### Spin e SpinKube (framework CNCF Sandbox para microsserviços serverless em WebAssembly com `spin.toml`, WASI Component Model e operador Kubernetes `SpinApp`/`SpinAppExecutor`/`containerd-shim-spin`)
+
+1781. [Spin: arquitetura do framework CNCF para microsserviços serverless em WebAssembly com Component Model e Wasmtime](../../domains/software-0008/software/devops/spin-arquitetura-webassembly-microservices-wasi-component-model-wasmtime.md)
+1782. [Spin `spin.toml`: configuração declarativa de triggers (`http`, `redis`), rotas, variáveis e permissões de rede](../../domains/software-0008/software/devops/spin-manifesto-spin-toml-triggers-http-redis-componentes-variaveis.md)
+1783. [Spin SDKs Poliglotas e APIs de Plataforma: suporte a Rust, TypeScript/JS, Python e TinyGo com KV, SQLite, SQL e Serverless AI](../../domains/software-0008/software/devops/spin-sdks-poliglotas-rust-typescript-python-tinygo-apis-embutidas.md)
+1784. [SpinKube: arquitetura CNCF Sandbox para operar aplicações WebAssembly no Kubernetes (`Spin Operator`, `runwasi` e `RuntimeClass`)](../../domains/software-0008/software/devops/spinkube-arquitetura-wasm-kubernetes-spin-operator-runwasi-shim.md)
+1785. [SpinKube CRD `SpinApp`: implantação declarativa de artefatos OCI WebAssembly com réplicas, variáveis e recursos no Kubernetes](../../domains/software-0008/software/devops/spinkube-crd-spinapp-deploy-oci-replicas-variables-secrets.md)
+1786. [SpinKube CRD `SpinAppExecutor`: configuração do modelo de execução (`containerd-shim-spin`) e `RuntimeClass`](../../domains/software-0008/software/devops/spinkube-crd-spinappexecutor-containerd-shim-spin-deployment-model.md)
+1787. [SpinKube Runtime Class Manager (`Shim` CRD): instalação declarativa de shims Wasm (`containerd-shim-spin`) nos worker nodes](../../domains/software-0008/software/devops/spinkube-runtime-class-manager-kwasm-instalacao-shims-nos-kubernetes.md)
+1788. [Spin OCI Distribution: empacotamento e distribuição de aplicações Wasm em Registries OCI (`spin registry push` / `pull`)](../../domains/software-0008/software/devops/spin-registry-push-pull-distribuicao-artefatos-oci-wasm.md)
+1789. [SpinKube: auto-escalonamento horizontal (HPA) e *scale-to-zero* orientado a eventos com KEDA para `SpinApp`](../../domains/software-0008/software/devops/spinkube-autoscaling-hpa-keda-scale-to-zero-workloads-wasm.md)
+1790. [Spin: sistema de Plugins (`spin plugins`), Templates (`spin templates`) e criação de Custom Triggers](../../domains/software-0008/software/devops/spin-plugins-templates-extensibilidade-custom-triggers-wasi.md)
+
+### wasmCloud (plataforma CNCF Incubating para execução distribuída de componentes WebAssembly `wasi 0.2` *deny-by-default* com `wash` CLI, `wash-runtime`, `runtime-operator` e NATS)
+
+1791. [wasmCloud: arquitetura CNCF Incubating de execução distribuída de componentes WebAssembly *deny-by-default*](../../domains/software-0008/software/devops/wasmcloud-arquitetura-cncf-incubating-deny-by-default-components.md)
+1792. [wasmCloud Components: programação reativa sobre WASI Preview 2 (`wasm32-wasip2`), interfaces WIT e linkagem dinâmica](../../domains/software-0008/software/devops/wasmcloud-component-model-wasi-p2-wit-interfaces-composicao-dinamica.md)
+1793. [wasmCloud Wasm Shell (`wash`): ciclo de desenvolvimento com `wash new`, `wash build` e loop hot-reload `wash dev`](../../domains/software-0008/software/devops/wasmcloud-wash-cli-scaffolding-build-hot-reload-wash-dev.md)
+1794. [wasmCloud `wash-runtime`: arquitetura dos 3 mecanismos de capacidades (`wasmtime-wasi`, `Ingress` e `Host Plugins`)](../../domains/software-0008/software/devops/wasmcloud-wash-runtime-mecanismos-capacidades-builtin-ingress-plugins.md)
+1795. [wasmCloud Kubernetes `runtime-operator`: reconciliação dos CRDs `Host`, `Workload`, `WorkloadDeployment`, `WorkloadReplicaSet` e `Artifact`](../../domains/software-0008/software/devops/wasmcloud-kubernetes-runtime-operator-crds-host-workload-deployment.md)
+1796. [wasmCloud no Kubernetes: roteamento HTTP nativo via `EndpointSlices` em Services padrão e depreciação do `runtime-gateway`](../../domains/software-0008/software/devops/wasmcloud-roteamento-http-endpointslices-kubernetes-services-deprecacao-gateway.md)
+1797. [wasmCloud e NATS: barramento de controle Protobuf e backend para `wasi:keyvalue`, `wasi:blobstore` e `wasmcloud:messaging`](../../domains/software-0008/software/devops/wasmcloud-nats-control-plane-messaging-kv-blobstore-plugins.md)
+1798. [wasmCloud Poliglota: compilação e interoperabilidade de componentes em Rust, Go, TypeScript e Python](../../domains/software-0008/software/devops/wasmcloud-desenvolvimento-poliglota-rust-tinygo-typescript-python-wasi.md)
+1799. [wasmCloud: arquiteturas de referência (`blobby`, `grpc-hello-world`, `otel-config`, `qrcode`) e observabilidade OpenTelemetry](../../domains/software-0008/software/devops/wasmcloud-exemplos-referencia-blobby-grpc-otel-persistent-storage.md)
+1800. [wasmCloud na Borda e Hosts Customizados: execução de alta densidade fora de containers com `wash-runtime`](../../domains/software-0008/software/devops/wasmcloud-execucao-hibrida-edge-custom-hosts-densidade-seguranca.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1700 notas 1–1700 das tranches 1–17 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1700/2.000 notas válidas, restando 300 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1800 notas 1–1800 das tranches 1–18 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1800/2.000 notas válidas, restando 200 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

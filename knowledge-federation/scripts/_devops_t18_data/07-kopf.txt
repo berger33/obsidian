@@ -1,0 +1,110 @@
+1761|kopf-arquitetura-kubernetes-operator-pythonic-framework-ddd|Kopf (*Kubernetes Operator Pythonic Framework*): arquitetura de operadores Kubernetes em Python com decoradores declarativos|O **Kopf** (*Kubernetes Operator Pythonic Framework*, originalmente iniciado em `zalando-incubator/kopf` e mantido em `nolar/kopf`, estável em SemVer v1 para Python 3.10+) é um framework e biblioteca que permite escrever operadores Kubernetes completos em poucas linhas de Python puro usando decoradores declarativos.|Para equipes cujo ecossistema principal é Python (IA/ML, ciência de dados, automação de rede e plataformas internas), manter um operador em Go apenas para orquestrar `PersistentVolumeClaims`, `Jobs` de treinamento ou recursos customizados introduz atrito cognitivo e duplica bibliotecas de domínio.|O Kopf traz o *Domain-Driven Design (DDD)* para o nível de infraestrutura: o Kubernetes atua como o banco de dados de objetos de domínio (Custom Resources ou recursos nativos como `Pod`/`Namespace`), enquanto o operador Python contém apenas a lógica de domínio em funções decoradas (`@kopf.on.create`, `@kopf.on.update`, `@kopf.on.delete`, `@kopf.daemon`, `@kopf.timer`), executável com `kopf run handlers.py`.|```python
+import kopf
+
+@kopf.on.create('kopfexamples')
+def create_fn(spec, name, meta, status, **kwargs):
+    print(f"Created {name} with spec: {spec}")
+    return {'message': f'Processed {name}'}
+```|Qualquer dicionário retornado por um handler do Kopf é automaticamente serializado e gravado dentro do sub-recurso `status` do objeto Kubernetes correspondente sob a chave com o nome da função handler.|Execute `kopf run handlers.py --verbose` localmente (ou via imagem `ghcr.io/nolar/kopf`) e aplique um recurso de teste para observar o disparo do handler e a atualização de `status`.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1762|kopf-handlers-ciclo-vida-create-update-delete-resume-field-diffs|Kopf: handlers de causa de mudança (`@kopf.on.create`, `update`, `delete`, `resume`, `field`) e inspeção de `diff`|O Kopf oferece decoradores de alto nível para as causas reais de mudança no ciclo de vida de um recurso (`@kopf.on.create`, `@kopf.on.update`, `@kopf.on.delete`, `@kopf.on.resume`) e permite filtrar mudanças em um único campo específico (`@kopf.on.field('...', field='spec.size')`) entregando a lista exata de diferenças (`diff`, `old`, `new`) nos argumentos `kwargs`.|Em um watcher bruto da API do Kubernetes, uma atualização de `status` ou de uma `annotation` interna dispara o mesmo evento `MODIFIED` que uma alteração real em `spec`; o Kopf calcula o diff contra a última configuração processada e invoca `@kopf.on.update` apenas quando há mudança efetiva nos campos relevantes.|Nos handlers de atualização, o argumento `diff` recebe uma tupla de operações `(op, field_path, old_val, new_val)` (como `('change', ('spec', 'size'), '1G', '5G')`). Além disso, `@kopf.on.delete` gerencia automaticamente a adição e remoção de `finalizers` no objeto Kubernetes para garantir que o handler de limpeza rode antes que o objeto suma do `etcd`.|```python
+import kopf
+
+@kopf.on.field('ephemeralvolumeclaims', field='spec.size')
+def resize_pvc(old, new, name, namespace, logger, **kwargs):
+    logger.info(f"Redimensionando PVC {namespace}/{name} de {old} para {new}")
+```|Se você precisar que a exclusão de um objeto nunca seja bloqueada por finalizer mesmo que o operador esteja desligado, passe `optional=True` em `@kopf.on.delete(..., optional=True)`.|Altere um campo do `spec` de um recurso existente com `kubectl patch` e verifique nos logs do Kopf os valores exatos de `old`, `new` e `diff` recebidos pelo handler.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1763|kopf-daemons-timers-tarefas-background-continuas-stopped-flag|Kopf `@kopf.daemon` e `@kopf.timer`: execução de tarefas contínuas e periódicas vinculadas ao tempo de vida do recurso|Além de handlers orientados a eventos pontuais, o Kopf fornece os decoradores **`@kopf.daemon`** (que inicia uma thread ou task `asyncio` contínua para cada recurso existente enquanto ele existir) e **`@kopf.timer`** (que dispara uma função periodicamente a cada `interval` segundos para cada recurso).|Monitorar uma fila externa, manter um túnel aberto ou verificar a saúde de um banco de dados provisionado a cada 30 segundos enquanto um Custom Resource existir exigiria gerenciar pools de threads e cancelamentos manuais se o framework só suportasse callbacks de criação/atualização.|No `@kopf.daemon`, o Kopf injeta o argumento `stopped` (`kopf.DaemonStopped`): o loop `while not stopped:` roda em background (em asyncio nativo se a função for `async def` ou em thread se for `def`) e é sinalizado automaticamente para encerrar assim que o recurso Kubernetes é deletado. Já `@kopf.timer(..., interval=60.0, idle=10.0)` executa a função em intervalos regulares sem precisar manter um loop manual.|```python
+import time
+import kopf
+
+@kopf.daemon('kopfexamples', cancellation_timeout=10.0)
+def monitor_resource(spec, name, stopped, logger, **kwargs):
+    while not stopped:
+        logger.info(f"Monitorando {name}: {spec.get('endpoint')}")
+        stopped.wait(15.0)
+
+@kopf.timer('kopfexamples', interval=60.0)
+def periodic_sync(spec, name, **kwargs):
+    print(f"Tick periódico de 60s para {name}")
+```|Dentro de um `@kopf.daemon` síncrono, prefira usar `stopped.wait(segundos)` em vez de `time.sleep(segundos)` para que o daemon acorde e encerre instantaneamente quando o recurso for deletado no Kubernetes.|Crie um recurso no cluster, observe os ticks do `@kopf.timer` e do `@kopf.daemon`, delete o recurso e confirme o encerramento imediato da task.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1764|kopf-tratamento-erros-retries-temporaryerror-permanenterror-persistencia|Kopf: consistência eventual, retentativas com `TemporaryError` vs `PermanentError` e persistência de progresso|O Kopf implementa consistência eventual automática: qualquer exceção arbitrária lançada dentro de um handler faz o framework agendar uma nova tentativa (*retry*), enquanto as exceções especiais **`kopf.TemporaryError`** (retentar após `delay`) e **`kopf.PermanentError`** (abortar imediatamente sem retentar) dão controle fino sobre falhas.|Se uma API externa estiver temporariamente indisponível, o handler deve retentar daqui a 30 segundos; porém, se o usuário informou um valor inválido em `spec.size` que jamais funcionará sem edição humana, ficar retentando em loop infinito apenas polui os logs e sobrecarrega o cluster.|Nos decoradores de handler, parâmetros como `backoff=30`, `retries=10` e `timeout=3600` limitam o número de tentativas ou o tempo total. O Kopf persiste implicitamente o progresso de cada handler nas anotações/status do recurso para que, mesmo que o Pod do operador reinicie no meio de uma sequência de sub-handlers, os passos já concluídos com sucesso não sejam reexecutados.|```python
+import kopf
+
+@kopf.on.create('ephemeralvolumeclaims', retries=5, backoff=15.0)
+def create_pvc(spec, **kwargs):
+    size = spec.get('size')
+    if not size:
+        raise kopf.PermanentError("O campo spec.size é obrigatório.")
+    if not storage_backend_ready():
+        raise kopf.TemporaryError("Backend ocupado; tentando novamente em 15s.", delay=15)
+```|Para registrar eventos nativos do Kubernetes (`kubectl describe <recurso>`) associados ao objeto reconciliado, basta usar o objeto `logger` injetado nos `kwargs` (`logger.info(...)`, `logger.warning(...)`, `logger.error(...)`) ou `kopf.info(body, reason=..., message=...)`.|Aplique um CR sem o campo obrigatório para acionar `kopf.PermanentError` e verifique em `kubectl describe` o evento de erro definitivo e a ausência de novas tentativas.|https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://github.com/nolar/kopf
+1765|kopf-hierarquia-objetos-adopt-label-owner-references-garbage-collection|Kopf: hierarquia de objetos filhos, propagação de labels e Garbage Collection com `kopf.adopt`|Para vincular recursos filhos (como `Pods`, `Services` ou `PersistentVolumeClaims` criados via cliente `kubernetes` ou `pykube-ng`) ao Custom Resource pai, o Kopf oferece as funções auxiliares **`kopf.adopt(data)`**, `kopf.label(data)` e `kopf.harmonize_naming(data)`.|Se o handler Python criar um `PersistentVolumeClaim` ou `Deployment` filho sem preencher `metadata.ownerReferences` apontando para o UID do Custom Resource pai, deletar o CR pai deixará os PVCs e Deployments filhos órfãos consumindo recursos eternamente no cluster.|Antes de enviar o dicionário/manifesto YAML do objeto filho para a API do Kubernetes (`CoreV1Api().create_namespaced_persistent_volume_claim`), chamar `kopf.adopt(data)` dentro de um handler injeta automaticamente no objeto filho o `namespace` do pai, a entrada `ownerReferences` completa (habilitando o Garbage Collector em cascata do Kubernetes) e propaga os labels de identificação.|```python
+import kopf
+import kubernetes
+import yaml
+
+@kopf.on.create('ephemeralvolumeclaims')
+def create_fn(spec, name, namespace, logger, **kwargs):
+    data = yaml.safe_load(f"""
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: {spec['size']}
+    """)
+    kopf.adopt(data)
+    api = kubernetes.client.CoreV1Api()
+    obj = api.create_namespaced_persistent_volume_claim(namespace=namespace, body=data)
+    logger.info(f"PVC filho criado e adotado: {obj.metadata.name}")
+```|O Kopf é deliberadamente agnóstico à biblioteca cliente HTTP do Kubernetes: você pode usar `kubernetes` oficial, `pykube-ng`, `kr8s`, `lightkube` ou `aiohttp` dentro dos handlers junto com `kopf.adopt(data)`.|Crie o CR pai, verifique com `kubectl get pvc <nome> -o yaml` a presença de `metadata.ownerReferences`, delete o CR pai e confirme a remoção automática do PVC filho.|https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://github.com/nolar/kopf
+1766|kopf-filtragem-eventos-labels-annotations-when-callbacks-stealth|Kopf: filtragem declarativa de recursos por `labels`, `annotations`, `field` e predicados `when` em modo *stealth*|Todos os decoradores de recursos do Kopf suportam filtros declarativos por `labels={...}`, `annotations={...}`, valores especiais `kopf.PRESENT` / `kopf.ABSENT`, filtros de `field=` e funções de predicado `when=callable` (incluindo operação silenciosa sem geração de logs de eventos).|Em clusters compartilhados ou com milhares de `Pods` e `ConfigMaps`, um operador que observa recursos nativos não deve processar todos os Pods do cluster, mas apenas aqueles marcados com uma anotação ou label específico (ex.: `auto-backup: "enabled"`).|Quando os filtros são declarados no decorador (`@kopf.on.create('pods', annotations={'backup.corp.io/enabled': 'true'}, when=lambda spec, **_: ...)`), o Kopf avalia as condições antes mesmo de iniciar o ciclo de persistência de estado ou emitir logs, ignorando completamente em modo *stealth* os objetos que não atendem aos critérios.|```python
+import kopf
+
+@kopf.on.create(
+    'pods',
+    labels={'tier': 'backend', 'managed-by': kopf.PRESENT},
+    annotations={'legacy-skip': kopf.ABSENT},
+)
+def handle_backend_pod(name, namespace, **kwargs):
+    print(f"Pod gerenciado detectado: {namespace}/{name}")
+```|Ao observar recursos nativos do Kubernetes (como `pods`, `services` ou `secrets`), combine sempre filtros de `labels`/`annotations` com `kopf.PRESENT` para evitar que o Kopf grave anotações de rastreamento em objetos do sistema aos quais o operador não pertence.|Aplique dois Pods (um com o label `tier=backend,managed-by=kopf` e outro sem) e confirme que apenas o primeiro aciona o handler.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1767|kopf-admission-webhooks-validating-mutating-dev-tunneling|Kopf: implementação de Validating e Mutating Admission Webhooks com `@kopf.on.validate` e `@kopf.on.mutate`|O Kopf permite implementar **Validating Admission Webhooks** (`@kopf.on.validate`) e **Mutating Admission Webhooks** (`@kopf.on.mutate`) no mesmo script Python dos handlers de reconciliação, incluindo suporte a tunelamento automático para desenvolvimento fora do cluster.|Sem um Admission Webhook síncrono, um erro de configuração em um Custom Resource só é descoberto segundos depois nos logs assíncronos do controlador, em vez de rejeitar o comando `kubectl apply` imediatamente no terminal do usuário.|Em `@kopf.on.validate`, levantar `kopf.AdmissionError("mensagem")` rejeita a requisição na API do Kubernetes com o motivo informado; em `@kopf.on.mutate`, modificar o dicionário `patch` recebido nos `kwargs` aplica um JSONPatch mutante no objeto antes de ser salvo no `etcd`.|```python
+import kopf
+
+@kopf.on.validate('ephemeralvolumeclaims')
+def validate_size(spec, warnings, **kwargs):
+    size = spec.get('size', '')
+    if not size.endswith(('M', 'G', 'Gi', 'Mi')):
+        raise kopf.AdmissionError("spec.size deve terminar com M, Mi, G ou Gi.")
+    if size.endswith('T'):
+        warnings.append("Volumes em Terabytes exigem aprovação de cota.")
+```|A lista mutável `warnings` injetada nos `kwargs` dos admission handlers permite devolver avisos (`Warning:`) diretamente na saída do `kubectl apply` do usuário mesmo quando a requisição é aprovada.|Teste o envio de um manifesto inválido para um webhook `@kopf.on.validate` e confirme que o `kubectl apply` falha sincronamente exibindo a mensagem do `AdmissionError`.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1768|kopf-indexacao-em-memoria-kopf-index-queries-cross-resource|Kopf `@kopf.index`: indexação em memória em tempo real para consultas cruzadas entre recursos sem chamadas de API|O decorador **`@kopf.index`** do Kopf constrói e mantém atualizado em tempo real um índice em memória (`kopf.Index`) de qualquer recurso do cluster, injetando esse índice diretamente como um argumento `kwargs` em todos os outros handlers, timers e webhooks.|Se o handler de reconciliação de um `Pod` precisar consultar informações de todas as `NetworkPolicies` ou `Tenants` do cluster fazendo uma chamada HTTP `LIST` ao `kube-apiserver` a cada evento, o operador sofrerá *client-side throttling* rapidamente.|Uma função decorada com `@kopf.index('tenants')` retorna o valor (ou chave-valor) que deve ser indexado para cada `Tenant`. O Kopf atualiza automaticamente o dicionário em memória quando qualquer `Tenant` é criado, modificado ou deletado, e qualquer outro handler recebe o índice pronto apenas declarando o nome da função de índice na sua assinatura.|```python
+import kopf
+
+@kopf.index('ephemeralvolumeclaims')
+def evcs_by_ns(namespace, name, spec, **kwargs):
+    return {(namespace, name): spec.get('size')}
+
+@kopf.on.create('pods')
+def check_pod_volumes(namespace, evcs_by_ns: kopf.Index, **kwargs):
+    known = list(evcs_by_ns.get((namespace, 'my-claim'), []))
+    print(f"Tamanhos conhecidos em memória: {known}")
+```|Os índices `@kopf.index` são populados integralmente na inicialização do operador antes que os handlers de eventos e timers comecem a processar objetos, garantindo consistência desde o primeiro evento.|Declare um `@kopf.index` em seu operador e inspecione o objeto `kopf.Index` injetado em um `@kopf.on.create` sem realizar chamadas extras ao `kubernetes.client`.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1769|kopf-peering-alta-disponibilidade-pausa-dev-mode-priority|Kopf Peering: coordenação multi-réplica (`KopfPeering`) e pausa automática do operador de cluster durante desenvolvimento local|O mecanismo de **Peering** do Kopf coordena múltiplas instâncias do mesmo operador usando objetos `ClusterKopfPeering` ou `KopfPeering` (`kopf.dev/v1`), evitando processamento duplicado e permitindo que um operador rodando na máquina do desenvolvedor (`--priority`) pause temporariamente o operador implantado no cluster.|Quando um desenvolvedor conecta seu laptop a um cluster de staging para depurar um novo handler com `kopf run --dev`, o Deployment do operador que já está rodando dentro do cluster competiria pelos mesmos eventos e sobrescreveria o teste local.|Com o recurso de peering ativo (`kopf run --peering=my-operator`), as instâncias trocam heartbeats e respeitam a maior prioridade (`--priority=666` ou `--dev`). Enquanto a instância de maior prioridade do desenvolvedor estiver ativa, os Pods de menor prioridade (`priority=0`) no cluster entram automaticamente em pausa silenciosa, retomando o trabalho assim que o desenvolvedor encerra o processo local.|```bash
+# No cluster (prioridade padrão 0):
+kopf run handlers.py --peering=my-operator-peering --priority=0
+
+# Na máquina de desenvolvimento (prioridade superior via --dev):
+kopf run handlers.py --peering=my-operator-peering --dev
+```|Quando há dois operadores Kopf completamente diferentes que observam o mesmo `Kind` no mesmo cluster, atribua identidades de armazenamento distintas em `settings.persistence.progress_storage` para que suas anotações de estado não colidam.|Verifique o objeto `kubectl get kopfpeerings` (ou `clusterkopfpeerings`) enquanto roda uma instância com `--dev` e confirme a transição de liderança.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
+1770|kopf-subhandlers-dinamicos-memo-containers-liveness-testing-runner|Kopf: sub-handlers dinâmicos (`kopf.subhandler`), memória por recurso (`memo`), probe `--liveness` e `KopfRunner`|Para fluxos avançados de produção, o Kopf oferece **sub-handlers dinâmicos** (`kopf.execute` / `@kopf.subhandler`), contêineres de memória por recurso (`memo`), endpoint HTTP de liveness probe (`--liveness`) e o gerenciador de contexto de testes **`KopfRunner`** (`kopf.testing`).|Quando a criação de um recurso envolve criar dinamicamente $N$ shards (onde cada shard deve ter seu próprio rastreamento individual de retentativa e sucesso) ou guardar um objeto Python não serializável (como um pool de conexões ou `asyncio.Lock`) associado àquele recurso em memória, handlers planos não bastam.|Dentro de um handler principal, `kopf.subhandler` permite registrar passos filhos dinamicamente; o objeto `memo` injetado nos `kwargs` guarda atributos arbitrários em memória durante toda a vida daquele recurso no processo; `--liveness=http://0.0.0.0:8080/healthz` expõe saúde para o `kubelet`; e `with KopfRunner(['run', '-A', 'handlers.py']):` permite testar o operador em suítes `pytest`.|```python
+from kopf.testing import KopfRunner
+
+def test_operator_lifecycle():
+    with KopfRunner(['run', '-A', '--standalone', 'handlers.py']) as runner:
+        # Execute comandos kubectl ou chamadas client aqui
+        assert runner.exit_code is None
+```|Ao empacotar o operador em produção para Kubernetes, use `--standalone` se houver apenas 1 réplica (sem CRD `KopfPeering`) e configure `livenessProbe` HTTP apontando para a porta definida em `--liveness`.|Execute `kopf run handlers.py --standalone --liveness=http://0.0.0.0:8080/healthz` e valide o retorno JSON de `curl http://localhost:8080/healthz`.|https://raw.githubusercontent.com/nolar/kopf/main/README.md;https://kopf.readthedocs.io/en/stable/walkthrough/creation/;https://github.com/nolar/kopf
