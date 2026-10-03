@@ -1,0 +1,107 @@
+0071|spicedb-arquitetura-authzed-google-zanzibar-permissions-database|SpiceDB: arquitetura do banco de dados de permissões distribuído inspirado no Google Zanzibar (`spicedb` e CLI `zed`)|O **SpiceDB** (`authzed/spicedb`, licenciado sob Apache 2.0) é um banco de dados de permissões distribuído e open-source inspirado no sistema **Google Zanzibar**, projetado para responder com latência na casa de ~5 ms (P95) e consistência configurável por requisição à pergunta central: **"o sujeito X pode executar a ação Y no recurso Z?"**.|Conforme cita o README oficial do SpiceDB, *Broken Access Control* tornou-se a ameaça número 1 no OWASP Top 10; espalhar lógica de autorização em queries `JOIN` ad-hoc dentro de dezenas de microsserviços em linguagens diferentes torna impossível auditar e escalar permissões.|De forma análoga a um banco de dados relacional: 1) os desenvolvedores definem um **Schema (`.zed`)** tipado; 2) as aplicações gravam dados na forma de **Relationships (tuplas)**; e 3) os serviços emitem consultas gRPC/HTTP (`CheckPermission`, `LookupResources`, `LookupSubjects`) através dos clientes oficiais ou da CLI **`zed`**.|```bash
+# Iniciando o SpiceDB em modo de desenvolvimento local (serve-testing) ou com chave pré-compartilhada:
+spicedb serve --grpc-preshared-key "dev-secret-key" --datastore-engine memory
+
+# Configurando o contexto da CLI zed e verificando a versão:
+zed context set local localhost:50051 "dev-secret-key" --insecure
+zed version
+```|O subcomando `spicedb serve-testing` sobe um servidor SpiceDB efêmero em memória onde cada chave pré-compartilhada diferente passada pelo cliente cria um banco isolado instantâneo — perfeito para rodar centenas de testes de integração em paralelo no CI!|Execute `spicedb version` e `zed version` para validar a instalação do servidor e da CLI.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0072|spicedb-schema-language-zed-definitions-relations-permissions|SpiceDB Schema Language (`.zed`): separação estrita entre `definition`, `relation` (substantivos) e `permission` (verbos computados)|Na linguagem de schema do SpiceDB (arquivos **`.zed`**), há uma distinção fundamental e estrita entre **`relation`** (que define como dois objetos/sujeitos podem se relacionar e onde os dados são efetivamente gravados, nomeada como **substantivo**: `reader`, `writer`, `member`) e **`permission`** (que define um conjunto **computado** de sujeitos que podem realizar uma ação, nomeada como **verbo**: `view`, `edit`, `delete`).|Conforme documentado na referência oficial do Schema do SpiceDB, **você nunca pode gravar um relacionamento referenciando uma `permission`** — você só grava relacionamentos referenciando uma `relation`. Isso permite alterar a regra de cálculo de uma `permission` a qualquer momento sem precisar migrar milhões de linhas no banco de dados!|Além disso, as `definitions` suportam prefixos de namespace (ex.: `definition docs/document {}`, `definition iam/user {}`) e relações para conjuntos de sujeitos (*Subject Relations*, ex.: `relation owner: user | group#member`).|```zed
+definition iam/user {}
+
+definition iam/group {
+  relation member: iam/user
+}
+
+definition docs/document {
+  relation writer: iam/user | iam/group#member
+  relation reader: iam/user | iam/group#member
+
+  permission edit = writer
+  permission view = reader + writer
+}
+```|Ao usar **Wildcards** (`relation viewer: user | user:*`) para conceder acesso público (`document:public#viewer@user:*`), siga o alerta oficial da documentação: **nunca** conceda suporte a wildcard em relações associadas a permissões de escrita!|Aplique e valide o schema com `zed schema write schema.zed` e `zed schema read`.|https://authzed.com/docs/spicedb/concepts/schema;https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://github.com/authzed/spicedb
+0073|spicedb-operadores-permissao-union-intersection-exclusion-arrows-precedencia|SpiceDB Operações de Permissão (`+`, `&`, `-` e `->`): travessia de hierarquias com Arrows e a armadilha de precedência do `+`|As expressões de `permission` no SpiceDB suportam quatro operadores fundamentais: **união (`+`)**, **interseção (`&`)**, **exclusão (`-`)** e **seta / arrow (`->`, ex.: `parent->view`)** — com uma regra crítica documentada na referência oficial: por razões históricas, **a união (`+`) tem precedência maior que a interseção (`&`) e a exclusão (`-`)**!|Em quase todas as linguagens de programação e na álgebra booleana, o `AND` (`&`) tem precedência sobre o `OR` (`+`); porém no SpiceDB, a expressão `a + b & c` é avaliada da esquerda para a direita como **`(a + b) & c`**, e **não** como `a + (b & c)`!|Por isso, sempre que combinar `+` com `&` ou `-` na mesma expressão de `permission`, utilize **parênteses explícitos** (ex.: `permission view = (reader + parent->view) - banned_user`) para tornar a intenção inequívoca e segura.|```zed
+definition folder {
+  relation reader: user
+  permission view = reader
+}
+
+definition document {
+  relation parent: folder
+  relation reader: user
+  relation banned: user
+
+  // Uso explícito de parênteses + seta (->) para herdar view da pasta pai exceto banidos:
+  permission view = (reader + parent->view) - banned
+}
+```|O operador **arrow (`parent->view`)** percorre todos os objetos ligados pela relação à esquerda (`parent`) e avalia a permissão/relação à direita (`view`) nesses objetos, permitindo herança hierárquica sem duplicar tuplas.|Use `zed validate` com asserções para confirmar que expressões combinando `+`, `&` e `-` comportam-se exatamente como esperado.|https://authzed.com/docs/spicedb/concepts/schema;https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://github.com/authzed/spicedb
+0074|spicedb-caveats-abac-relacoes-condicionais-cel-contexto|SpiceDB `Caveats`: combinando ReBAC e ABAC com relacionamentos condicionais avaliados em tempo de execução|Conforme documentado na referência oficial do Schema, **Caveats** são expressões tipadas (baseadas em Google CEL) declaradas no topo do schema `.zed` e anexadas a relações (`relation reader: user with ip_allowlist`), permitindo que um relacionamento só seja considerado válido no momento do `CheckPermission` se a expressão retornar `true`.|Em cenários multi-paradigma (ReBAC + ABAC), você quer que um relacionamento no grafo exista apenas sob condições dinâmicas de atributos (ex.: o usuário está na faixa CIDR corporativa, o horário está dentro do turno de plantão ou o atributo `region` do usuário coincide com o recurso).|No schema `.zed`, você declara `caveat ip_allowlist(user_ip ipaddress, cidr string) { user_ip.in_cidr(cidr) }`. Ao gravar a relação, você pode pré-vincular parte do contexto (como o `cidr` permitido da empresa) e, no momento do `CheckPermission`, a aplicação fornece o `user_ip` atual da requisição HTTP.|```zed
+caveat ip_allowlist(user_ip ipaddress, cidr string) {
+  user_ip.in_cidr(cidr)
+}
+
+definition user {}
+
+definition document {
+  relation reader: user | user with ip_allowlist
+  permission view = reader
+}
+```|Se os parâmetros exigidos por uma `caveat` não forem fornecidos no contexto da chamada `CheckPermission`, o SpiceDB retorna um resultado parcial indicando quais parâmetros de contexto faltam para concluir a decisão.|Teste um relacionamento com caveat via CLI passando `--caveat-context`: `zed permission check document:sec view user:alice --caveat-context '{"user_ip": "10.0.1.5"}'`.|https://authzed.com/docs/spicedb/concepts/schema;https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://github.com/authzed/spicedb
+0075|spicedb-consistencia-zedtoken-zookies-at-least-as-fresh-new-enemy|SpiceDB Consistência Global e `ZedToken`: prevenção do *New Enemy Problem* com `at_least_as_fresh`, `minimize_latency` e `fully_consistent`|Fiel ao artigo do Google Zanzibar, o SpiceDB retorna um token opaco de marca d'água temporal chamado **`ZedToken`** (equivalente ao *Zookie* do Zanzibar) em toda operação de escrita (`WriteRelationships`) e leitura, permitindo que o cliente escolha entre 4 modos de consistência por requisição: **`minimize_latency`**, **`at_least_as_fresh`**, **`at_exact_snapshot`** e **`fully_consistent`**.|Se você usar sempre cache cego sem controle de versão, sofre o *New Enemy Problem* (acesso revogado continua funcionando durante a janela de cache); se desativar todo o cache (`fully_consistent` em 100% das chamadas), perde a performance e escalabilidade de cache distribuído.|Ao armazenar o `ZedToken` retornado quando um recurso ou permissão foi modificado e passá-lo em **`at_least_as_fresh`** nas leituras daquele recurso, o SpiceDB usa seu cache em memória de ~5ms sempre que o cache for mais novo ou igual ao `ZedToken`, e só vai ao banco se o cache estiver atrasado em relação àquela mutação!|```bash
+# Gravando um relacionamento via zed (que retorna um ZedToken) e checando com consistência total:
+zed relationship create document:roadmap reader user:anne
+zed permission check document:roadmap view user:anne --consistency-full
+```|Para a maioria das aplicações, o padrão ideal é usar `at_least_as_fresh` (quando a entidade possui um `ZedToken` salvo junto ao registro no banco da aplicação) ou `minimize_latency` para leituras gerais, reservando `fully_consistent` para operações críticas de segurança.|Use `--explain` no `zed permission check` para visualizar o caminho exato de resolução no grafo e o `ZedToken` avaliado.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0076|spicedb-reverse-indexes-lookupresources-lookupsubjects-paginacao|SpiceDB Índices Reversos (`LookupResources` e `LookupSubjects`): listagem eficiente de recursos acessíveis e auditoria de sujeitos|Além de `CheckPermission`, a API do SpiceDB fornece duas consultas de índice reverso em streaming: **`LookupResources`** ("quais recursos do tipo `document` o sujeito `user:anne` tem permissão `view`?") e **`LookupSubjects`** ("quais sujeitos do tipo `user` possuem a permissão `edit` no recurso `document:roadmap`?").|Para listar os documentos de um usuário ou auditar todos os usuários com acesso administrativo a um projeto, varrer todos os registros do banco da aplicação um por um chamando `CheckPermission` não escala.|O SpiceDB caminha o grafo de relacionamentos de forma reversa e paralela (distribuída entre os nós do cluster via *dispatching* consistente por hash), emitindo os IDs dos recursos ou sujeitos autorizados via stream gRPC com suporte a cursores de paginação.|```bash
+# Listando todos os documentos que user:anne pode visualizar (LookupResources):
+zed permission lookup-resources document view user:anne
+
+# Listando todos os usuários que podem editar o document:roadmap (LookupSubjects):
+zed permission lookup-subjects document:roadmap edit user
+```|Quando um `LookupSubjects` ou `LookupResources` atravessa um relacionamento condicional (`caveat`) cujo contexto não foi resolvido, o item retornado inclui o status condicional (`PERMISSIONSHEP_CONDITIONAL`) indicando a caveat pendente.|Teste ambas as consultas reversas na CLI com `zed permission lookup-resources` e `zed permission lookup-subjects`.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0077|spicedb-validacao-testes-schema-zed-validate-assertions-ci|SpiceDB Validação e Testes em CI/CD (`zed validate`): arquivos YAML de schema, relacionamentos de teste, `assertions` e `expected_relations`|O comando **`zed validate`** permite validar estaticamente o schema `.zed` e executar uma suíte completa de testes unitários de autorização declarados em um arquivo YAML de validação (contendo `schema`, `relationships`, `assertions` de `assertTrue`/`assertFalse` e `validation` exaustiva de sujeitos esperados) sem precisar de servidor externo.|Refatorar um schema `.zed` grande sem testes automatizados de `assertTrue` **e** `assertFalse` pode abrir brechas silenciosas onde um papel de leitor passa a herdar permissão de exclusão.|No arquivo YAML passado para `zed validate`, a seção `assertions` verifica que permissões positivas (`assertTrue`) e negativas (`assertFalse`) sejam respeitadas, enquanto a seção `validation` garante a lista exata e completa de todos os sujeitos que possuem determinada permissão e como chegaram até ela.|```yaml
+schema: |
+  definition user {}
+  definition document {
+    relation writer: user
+    relation reader: user
+    permission edit = writer
+    permission view = reader + writer
+  }
+relationships: |
+  document:doc1#writer@user:alice
+  document:doc1#reader@user:bob
+assertions:
+  assertTrue:
+    - "document:doc1#edit@user:alice"
+    - "document:doc1#view@user:alice"
+    - "document:doc1#view@user:bob"
+  assertFalse:
+    - "document:doc1#edit@user:bob"
+```|Inclua sempre casos explícitos em **`assertFalse`** nos seus arquivos de validação para testar limites de isolamento multi-tenant e usuários banidos.|Execute `zed validate ./authz-tests.yaml` na sua pipeline de CI/CD a cada commit.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0078|spicedb-datastores-postgres-cockroachdb-spanner-mysql-migrate|SpiceDB Datastores de Produção e `spicedb migrate`: escolha entre `postgres`, `cockroachdb`, `spanner` e `mysql`|O SpiceDB desacopla o motor de avaliação de grafo da camada de persistência, suportando quatro *datastore engines* de produção além do modo `memory`: **`postgres`** (PostgreSQL), **`cockroachdb`** (CockroachDB multi-região), **`spanner`** (Google Cloud Spanner) e **`mysql`** (MySQL), gerenciados pelo comando **`spicedb migrate`** e pelo **SpiceDB Operator** no Kubernetes.|A escolha do datastore define a topologia geográfica e as garantias de janela de quantização do `ZedToken`: para implantações em uma única região, o **PostgreSQL** entrega excelente custo-benefício e baixa latência; para implantações ativas-ativas distribuídas globalmente em múltiplas regiões, **CockroachDB** ou **Cloud Spanner** fornecem transações distribuídas nativas.|Antes de iniciar o `spicedb serve` contra um banco persistente, execute `spicedb migrate head --datastore-engine postgres --datastore-conn-uri ...` para criar/atualizar as tabelas de tuplas e transações.|```bash
+# Executando migrações até a versão head no PostgreSQL e iniciando o servidor SpiceDB:
+spicedb migrate head \
+  --datastore-engine postgres \
+  --datastore-conn-uri "postgres://spicedb:secret@pg.internal:5432/spicedb?sslmode=require"
+
+spicedb serve \
+  --grpc-preshared-key "${SPICEDB_PRESHARED_KEY}" \
+  --datastore-engine postgres \
+  --datastore-conn-uri "postgres://spicedb:secret@pg.internal:5432/spicedb?sslmode=require"
+```|No PostgreSQL, o SpiceDB também suporta roteamento para réplicas somente-leitura para escalar horizontalmente a vazão de consultas.|Verifique a revisão atual de migração do datastore com `spicedb datastore repair` / logs de inicialização do `spicedb serve`.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0079|spicedb-dispatch-cluster-consistent-hashing-kubernetes-caching|SpiceDB Dispatching Distribuído em Cluster Kubernetes: roteamento por *Consistent Hashing* entre réplicas para maximizar Cache Hit|Quando múltiplas réplicas do SpiceDB rodam em um cluster Kubernetes com o **Dispatch Server** interno habilitado (`--dispatch-cluster-enabled=true` e `--dispatch-upstream-addr=kubernetes:///spicedb.authz.svc.cluster.local:50053`), os nós usam **Consistent Hashing** para encaminhar subproblemas de avaliação do grafo sempre para a mesma réplica que já possui aquele subgrafo em cache de memória!|Se um cluster de 10 Pods do SpiceDB mantivesse caches locais independentes sem *consistent hashing dispatch*, cada Pod teria apenas 10% de taxa de acerto de cache e 90% das subconsultas precisariam bater no banco de dados.|Com o dispatch de cluster ativado na porta `50053`, se o Pod A recebe um `CheckPermission` sobre `document:1 -> folder:2 -> org:3`, ele despacha a subconsulta de `org:3` para o Pod responsável por aquele hash no anel, alcançando taxas de cache hit próximas de 100% e latências P95 de poucos milissegundos.|```bash
+# Iniciando o SpiceDB em cluster Kubernetes com dispatch entre pares habilitado:
+spicedb serve \
+  --grpc-preshared-key "${SPICEDB_PRESHARED_KEY}" \
+  --dispatch-cluster-enabled=true \
+  --dispatch-upstream-addr="kubernetes:///spicedb.authz.svc.cluster.local:50053" \
+  --datastore-engine=postgres \
+  --datastore-conn-uri="${POSTGRES_URI}"
+```|Para que a resolução `kubernetes:///` funcione, configure um Service *headless* (`clusterIP: None`) expondo a porta `50053` dos Pods do SpiceDB.|Monitore as métricas Prometheus do SpiceDB na porta `9090` (`/metrics`) verificando `spicedb_dispatch_...` e a taxa de acerto do cache de dispatch.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
+0080|spicedb-watch-api-bulk-import-export-backup-auditoria-eventos|SpiceDB `Watch` API e Operações em Massa (`zed backup` / `zed restore` / `zed import`): streaming de mudanças e migração de dados|O SpiceDB expõe a API gRPC **`Watch`** (que emite em tempo real um stream contínuo de todas as mutações de relacionamentos e alterações de schema à medida que ocorrem no datastore) e comandos de linha de comando na ferramenta `zed` para **backup, restore e importação em lote (`zed backup`, `zed restore`, `zed import`)**.|Sistemas externos de busca (como Elasticsearch/OpenSearch), caches de borda ou trilhas de auditoria de segurança frequentemente precisam reagir em tempo real sempre que uma permissão é concedida ou revogada no SpiceDB.|Consumindo o stream da `Watch` API a partir de um `ZedToken` de checkpoint, um worker assíncrono recebe cada tupla adicionada ou removida em ordem transacional. Já `zed backup` e `zed restore` permitem copiar um banco inteiro de produção para um ambiente de staging ou teste local em segundos.|```bash
+# Realizando backup completo do schema e relacionamentos para um arquivo local e restaurando:
+zed backup prod-permissions.backup
+zed restore prod-permissions.backup
+```|Ao importar milhões de relacionamentos iniciais durante uma migração para o SpiceDB, utilize a API `BulkImportRelationships` (via `zed restore` / `zed import`) em vez de chamar `WriteRelationships` tupla por tupla.|Inspecione o arquivo de backup ou valide a contagem de relacionamentos restaurados com `zed relationship read`.|https://raw.githubusercontent.com/authzed/spicedb/main/README.md;https://authzed.com/docs/spicedb/concepts/schema;https://github.com/authzed/spicedb
