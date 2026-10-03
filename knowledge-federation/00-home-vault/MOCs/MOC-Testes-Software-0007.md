@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 1055 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1055 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1046 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1156 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1156 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1147 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1332,6 +1332,139 @@
 1054. [[hurl-ci-integration]] — O código de saída e os relatórios permitem integrar a verificação de contrato a um pipeline, com recapitulação legível e resultado consumível por máquina.
 1055. [[hurl-contract-verification-limits]] — Os arquivos verificam forma e valores das respostas que o serviço realmente devolve, sem validar a especificação nem substituir testes de comportamento.
 
+## Tranche 17 — automação de navegador e dispositivos, simulação HTTP e contratos
+
+### Gatling — simulações, injeção de carga, checagens e asserções
+
+1056. [[gatling-simulation-structure]] — A simulação é uma classe executável que reúne o protocolo, os cenários e o perfil de injeção, permitindo versionar o teste de carga junto do serviço.
+1057. [[gatling-scenario-flow]] — O cenário encadeia requisições, pausas e extrações de valores, representando o comportamento de um usuário virtual ao longo de uma sessão.
+1058. [[gatling-injection-profiles]] — Os perfis definem como usuários virtuais entram ao longo do tempo, seja em modelo aberto pela taxa de chegada, seja em modelo fechado por usuários simultâneos.
+1059. [[gatling-checks]] — As checagens avaliam cada resposta, como o código de status ou um campo do corpo, e registram falhas contabilizadas no relatório.
+1060. [[gatling-session-and-extraction]] — Valores extraídos das respostas ficam guardados na sessão do usuário virtual e podem alimentar requisições posteriores do mesmo cenário.
+1061. [[gatling-feeders]] — Os alimentadores fornecem valores a cada iteração, a partir de arquivos, bancos ou código, com estratégias de distribuição entre usuários virtuais.
+1062. [[gatling-pauses-and-pacing]] — As pausas inserem intervalos entre ações, e a função de ritmo ajusta a espera para manter uma frequência estável de transações por usuário.
+1063. [[gatling-assertions]] — As asserções comparam estatísticas globais ou por requisição com limites declarados e fazem a execução terminar com erro quando o critério não é atendido.
+1064. [[gatling-http-protocol]] — O construtor de protocolo reúne endereço base, cabeçalhos, versão do protocolo e política de conexões aplicados a todos os cenários da simulação.
+1065. [[gatling-reports-and-ci]] — Ao final da execução a ferramenta publica relatório navegável com séries temporais, distribuição de latências e contagem de falhas por requisição.
+
+### Locust — usuários, tarefas, tempos de espera e formas de carga
+
+1066. [[locust-locustfile-structure]] — O arquivo descreve classes de usuário com tarefas anotadas, e a ferramenta gera a carga executando essas tarefas em processos distribuídos.
+1067. [[locust-tasks-and-weights]] — Cada tarefa recebe um peso que determina sua frequência relativa, permitindo representar a mistura de comportamentos observada no uso.
+1068. [[locust-wait-time]] — O tempo de espera pode ser sorteado em uma faixa, constante ou calculado para manter um ritmo fixo de tarefas por usuário.
+1069. [[locust-custom-load-shape]] — Uma classe de forma de carga decide, a cada intervalo, quantos usuários manter e a que velocidade criá-los, permitindo sequências de patamares.
+1070. [[locust-user-lifecycle]] — Ganchos de início e término permitem autenticar o usuário virtual antes das tarefas e liberar recursos quando ele deixa a execução.
+1071. [[locust-response-validation]] — O cliente permite capturar a resposta e declarar sucesso ou falha, cobrindo casos em que o código de status não expressa o resultado da operação.
+1072. [[locust-tags-and-selection]] — Tarefas podem receber etiquetas e a execução pode incluir ou excluir etiquetas específicas, permitindo reaproveitar o mesmo arquivo em cenários diferentes.
+1073. [[locust-distributed-execution]] — A execução pode dividir usuários entre vários processos trabalhadores coordenados por um processo principal, ampliando a capacidade de gerar carga.
+1074. [[locust-headless-and-ci]] — A execução sem interface aceita número de usuários, velocidade de criação e tempo, grava resumos em arquivos e permite integrar a carga ao pipeline.
+1075. [[locust-limits-and-interpretation]] — O resumo apresenta latências por percentil, taxa de requisições e falhas, mas descreve apenas o ponto de vista do cliente simulado.
+
+### Robot Framework — palavras-chave, dados de teste, etiquetas e execução
+
+1076. [[robot-test-case-syntax]] — Os testes são escritos em tabelas de seções, com o nome do caso seguido de chamadas de palavra-chave e seus argumentos.
+1077. [[robot-keywords-and-arguments]] — Palavras-chave definidas pelo time agrupam passos repetidos, aceitam argumentos com valores padrão e podem devolver valores para o caso que as chama.
+1078. [[robot-templates-data-driven]] — A configuração de modelo faz o caso executar a mesma palavra-chave para cada linha de dados, transformando a tabela em conjunto de cenários.
+1079. [[robot-setup-teardown]] — Configurações e limpezas podem ser declaradas para a suíte, cada caso ou cada palavra-chave, com ordem de execução definida entre os níveis.
+1080. [[robot-tags-and-selection]] — Etiquetas classificam casos e suítes e podem ser usadas na linha de comando para incluir, excluir ou exigir combinações.
+1081. [[robot-teardown-and-continuation]] — Palavras-chave de verificação e o comportamento de continuidade permitem executar todas as verificações de um caso mesmo quando uma delas falha.
+1082. [[robot-variables-and-scopes]] — Variáveis podem ser locais ao caso, comuns à suíte, globais à execução ou passadas por linha de comando, com precedência definida entre elas.
+1083. [[robot-timeouts-and-stability]] — É possível declarar tempo limite por caso ou por suíte e usar palavras-chave de espera que aguardam condições observáveis em vez de pausas fixas.
+1084. [[robot-libraries-and-extensions]] — O framework traz bibliotecas padrão e aceita bibliotecas próprias ou de terceiros, cujas palavras-chave passam a integrar o vocabulário dos testes.
+1085. [[robot-reports-and-ci]] — Cada execução gera arquivos de registro e relatório, e a ferramenta de reprocessamento permite combinar resultados parciais e mudar o formato da saída.
+
+### Cucumber — Gherkin, definições de passo, ganchos e execução paralela
+
+1086. [[cucumber-gherkin-structure]] — O arquivo de funcionalidade descreve cenários com passos iniciados por palavras reservadas e um contexto curto no topo da funcionalidade.
+1087. [[cucumber-step-definitions]] — Cada passo do cenário corresponde a uma definição de passo que reconhece o texto, extrai parâmetros e executa a ação sobre o sistema.
+1088. [[cucumber-scenario-outline-examples]] — O esquema de cenário usa marcadores no texto e uma tabela de exemplos, gerando uma execução por linha e um relatório por combinação.
+1089. [[cucumber-hooks-lifecycle]] — Ganchos executados antes e depois de cenários, passos ou da execução permitem preparar estado e liberar recursos em pontos controlados.
+1090. [[cucumber-tags-and-expressions]] — Etiquetas aplicadas a funcionalidades, cenários e exemplos podem ser combinadas em expressões lógicas para selecionar o que será executado.
+1091. [[cucumber-background-and-data-tables]] — O antecedente repete um contexto no início de cada cenário da funcionalidade, e tabelas nos passos organizam dados estruturados de forma legível.
+1092. [[cucumber-parallel-execution]] — A execução pode distribuir cenários entre processos, respeitando limites de paralelismo e mantendo relatórios individuais por processo.
+1093. [[cucumber-reports]] — A execução pode gerar relatórios legíveis, arquivos estruturados e saídas consumíveis por servidores de integração, a partir do mesmo resultado.
+1094. [[cucumber-living-documentation]] — Como os cenários são executáveis, eles permanecem verdadeiros enquanto a suíte passa, servindo de documentação do comportamento acordado.
+1095. [[cucumber-limits-and-maintenance]] — A camada de cenários precisa de manutenção, com passos reutilizáveis, dados controlados e decisão explícita sobre o que pertence a ela.
+
+### Selenium WebDriver — localizadores, esperas, objetos de página e grade
+
+1096. [[selenium-locator-strategy]] — Os localizadores identificam elementos por identificador, seletor de estilo, texto visível ou caminho estrutural, com estabilidade decrescente nessa ordem em geral.
+1097. [[selenium-explicit-waits]] — A espera explícita repete uma condição até que ela seja satisfeita ou o tempo limite se esgote, aceitando exceções ignoradas durante a verificação.
+1098. [[selenium-page-objects]] — Um objeto de página expõe serviços da tela por métodos, escondendo localizadores e devolvendo outros objetos de página ou valores de negócio.
+1099. [[selenium-actions-api]] — A interface de ações permite encadear movimento do ponteiro, cliques, arrasto, digitação e combinações de teclas, liberando o conjunto de uma vez.
+1100. [[selenium-frames-windows-alerts]] — O driver permite entrar em quadros, mudar de janela e tratar caixas de diálogo, sempre com troca explícita de contexto antes de interagir.
+1101. [[selenium-grid-distributed]] — A grade recebe sessões, escolhe um nó compatível com as capacidades pedidas e devolve o endereço da sessão para o cliente.
+1102. [[selenium-browser-options]] — Cada navegador aceita opções de inicialização, como modo sem interface, argumentos de segurança, tamanho de janela e preferências de download.
+1103. [[selenium-screenshot-and-evidence]] — O driver permite capturar imagens da tela, e a captura costuma ser associada a ganchos que gravam artefato apenas quando o teste falha.
+1104. [[selenium-flakiness-diagnosis]] — Falhas intermitentes costumam vir de esperas mal colocadas, dados compartilhados, animações ou dependências externas lentas, e não do driver.
+1105. [[selenium-limits-and-practices]] — O driver automatiza o navegador, mas não valida conteúdo, desempenho nem acessibilidade, e a suíte precisa ser combinada com outras verificações.
+
+### Appium — capacidades, drivers, seletores e sessões móveis paralelas
+
+1106. [[appium-capabilities]] — As capacidades descrevem plataforma, automação, dispositivo e aplicativo, definindo o que a sessão vai controlar antes de qualquer comando.
+1107. [[appium-drivers-architecture]] — O servidor é extensível, e cada plataforma é suportada por um driver instalado separadamente, com a automação escolhida por capacidade.
+1108. [[appium-locator-strategies]] — Os seletores variam por plataforma, incluindo identificador de acessibilidade, atributos nativos e estratégias específicas de cada automação.
+1109. [[appium-mobile-gestures]] — A sessão expõe comandos para deslizar, tocar em coordenadas, pressionar por tempo e executar ações encadeadas com o ponteiro.
+1110. [[appium-hybrid-context]] — Aplicativos híbridos expõem contextos distintos, e a sessão precisa mudar para o contexto web antes de usar seletores de página.
+1111. [[appium-session-reset]] — Opções de sessão definem se o aplicativo é reinstalado, se os dados são apagados e se o estado é preservado entre execuções.
+1112. [[appium-parallel-sessions]] — O servidor pode manter várias sessões simultâneas, e cada uma precisa de porta de sistema e identificador de dispositivo próprios para não colidir.
+1113. [[appium-inspector]] — A ferramenta de inspeção mostra a árvore de elementos de uma sessão ativa, permitindo descobrir identificadores e validar seletores antes de escrever o teste.
+1114. [[appium-device-farm]] — A mesma sessão pode apontar para dispositivos físicos locais ou serviços de nuvem que expõem endereços compatíveis com o protocolo.
+1115. [[appium-limits-and-practices]] — A automação móvel depende de sistema operacional, fabricante e permissões, e a suíte precisa ser pequena, estável e focada em fluxos críticos.
+
+### WireMock — stubs, correspondência de requisições, cenários e verificação
+
+1116. [[wiremock-stub-mapping]] — Um stub associa critérios de correspondência da requisição a uma resposta predefinida, em arquivo, código ou documento estruturado.
+1117. [[wiremock-request-matching]] — Os critérios podem exigir caminho exato ou por padrão, método, cabeçalhos e condições sobre o corpo em formatos estruturados.
+1118. [[wiremock-response-templating]] — A resposta pode usar modelos que leem valores da requisição, geram identificadores e formatam datas no momento da chamada.
+1119. [[wiremock-stateful-scenarios]] — Um cenário é uma máquina de estados que começa em um estado inicial e muda conforme as chamadas, permitindo representar sequências.
+1120. [[wiremock-priorities]] — Quando mais de um stub corresponde à mesma requisição, a prioridade decide qual deles responde, com padrão definido para os casos não declarados.
+1121. [[wiremock-fault-simulation]] — O servidor pode responder com atraso fixo ou variável, encerrar conexões e devolver respostas malformadas para testar o tratamento de falhas do cliente.
+1122. [[wiremock-verification]] — O servidor registra as requisições e permite verificar ocorrências por critérios, contando chamadas a uma rota específica.
+1123. [[wiremock-record-playback]] — O servidor pode atuar como intermediário, capturar respostas de um serviço real e gerar stubs automaticamente a partir do tráfego observado.
+1124. [[wiremock-standalone-and-ci]] — O servidor pode rodar como processo independente ou contêiner, aceitando diretório de stubs e porta por argumento de linha de comando.
+1125. [[wiremock-limits-and-practices]] — O simulador reproduz respostas definidas, sem lógica de negócio, persistência real nem garantia de que o serviço verdadeiro se comporta assim.
+
+### Pact — contratos entre consumidor e provedor, correspondência e broker
+
+1126. [[pact-consumer-driven]] — O consumidor escreve expectativas sobre as requisições que faz e as respostas que espera, e esse registro vira um artefato verificável pelo provedor.
+1127. [[pact-consumer-test-dsl]] — A interface de teste descreve o estado inicial, a requisição esperada e a resposta simulada, e executa o código do consumidor contra esse dublê.
+1128. [[pact-matching-rules]] — As regras de correspondência verificam forma e tipo em vez de valores exatos, aceitando identificadores variáveis, listas de tamanho mínimo e padrões textuais.
+1129. [[pact-provider-states]] — Cada interação pode declarar o estado em que o provedor deve estar, e o lado do provedor implementa a preparação correspondente àquele estado.
+1130. [[pact-provider-verification]] — A ferramenta de verificação lê os contratos publicados, executa cada interação contra o serviço real e reporta o resultado por contrato.
+1131. [[pact-publish-and-broker]] — Os arquivos de contrato gerados pelos testes do consumidor são publicados em um serviço central com versão e identificação do aplicativo.
+1132. [[pact-can-i-deploy]] — A consulta de autorização verifica se a versão prestes a ser implantada tem todos os contratos e verificações compatíveis com o ambiente de destino.
+1133. [[pact-versioning-and-selectors]] — Os seletores definem quais contratos o provedor verifica, combinando ramos, etiquetas, ambiente ou contratos em andamento.
+1134. [[pact-webhooks-and-pending]] — Avisos automáticos podem disparar verificações quando um contrato muda, e contratos em andamento permitem que o provedor os teste sem bloquear o pipeline.
+1135. [[pact-limits-and-practices]] — O contrato cobre a forma da interação acordada, mas não verifica regras de negócio, desempenho nem o comportamento completo do provedor.
+
+### Testify — asserções, suítes, dublês e testes HTTP em Go
+
+1136. [[testify-assert-vs-require]] — O pacote de asserção registra a falha e continua a execução, enquanto o pacote equivalente interrompe o teste no primeiro erro.
+1137. [[testify-equality-assertions]] — As funções de comparação distinguem igualdade profunda, identidade de objeto e comparação de conteúdo, exibindo diferenças legíveis no relatório.
+1138. [[testify-error-assertions]] — Há funções específicas para confirmar que uma chamada devolve erro, que o erro é de determinado tipo ou que corresponde a um erro conhecido.
+1139. [[testify-suite-lifecycle]] — O pacote de suíte agrupa métodos de teste em uma estrutura, com preparação e limpeza por caso ou por conjunto, executadas na ordem definida.
+1140. [[testify-mock-expectations]] — O pacote de dublês permite registrar chamadas esperadas com argumentos e valores de retorno e verificar, ao final, se todas ocorreram.
+1141. [[testify-mock-argument-matchers]] — Os dublês aceitam funções de correspondência nos argumentos, permitindo casar por tipo ou por parte do valor em vez de exigir igualdade exata.
+1142. [[testify-mock-generation]] — A geração automática produz implementações de dublê a partir das interfaces do projeto, mantendo o código de apoio sincronizado com as assinaturas.
+1143. [[testify-http-testing]] — O suporte a HTTP auxilia a montar requisições e verificar respostas, embora os utilitários de servidor de teste da biblioteca padrão sejam hoje a recomendação.
+1144. [[testifylint-and-consistency]] — Ferramentas de análise específicas apontam usos incorretos das asserções, como ordem trocada de esperado e obtido ou comparações que deveriam ser fatais.
+1145. [[testify-limits-and-practices]] — A biblioteca melhora a legibilidade das asserções, mas não substitui o executor padrão nem decide quais comportamentos merecem verificação.
+
+### RSpec — exemplos, expectativas, dublês, ganchos e exemplos compartilhados
+
+1146. [[rspec-describe-and-context]] — Um grupo de exemplos descreve o comportamento de uma classe ou método, e contextos internos separam situações diferentes desse mesmo comportamento.
+1147. [[rspec-expectations-matchers]] — As expectativas combinam um valor observado com um matcher, cobrindo igualdade, correspondência de padrão, mudança de estado e exceções.
+1148. [[rspec-let-and-subject]] — Os auxiliares de definição criam valores avaliados no primeiro uso e memorizados por exemplo, e o sujeito nomeado descreve o objeto principal.
+1149. [[rspec-hooks]] — Ganchos de antes, depois e ao redor envolvem os exemplos, com escopo por exemplo, por grupo ou na suíte, respeitando a ordem dos grupos.
+1150. [[rspec-doubles-and-stubs]] — Dublês verificados imitam a interface real, e permissões de recebimento configuram respostas sem exigir que a chamada aconteça.
+1151. [[rspec-message-expectations]] — Uma expectativa de mensagem configura o recebimento e falha o exemplo se a chamada não ocorrer, distinguindo-se da permissão simples.
+1152. [[rspec-argument-matchers]] — Nas expectativas e permissões é possível casar argumentos por expressão, inclusão parcial e padrão, em vez de exigir igualdade exata.
+1153. [[rspec-shared-examples]] — Blocos de exemplos compartilhados descrevem comportamento comum e são incluídos em grupos diferentes, com parâmetros e contexto próprio.
+1154. [[rspec-metadata-and-filtering]] — Os grupos e exemplos aceitam metadados, e a configuração pode aplicar ganchos ou filtros conforme esses metadados.
+1155. [[rspec-configuration-and-profiling]] — O arquivo de configuração define filtros, formato de saída, perfil de execução e ordem dos exemplos, e a execução pode apontar os exemplos mais lentos.
+1156. [[rspec-limits-and-practices]] — A suíte verifica comportamento e colaboração, mas depende de disciplina para manter exemplos independentes e mensagens de falha úteis.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 1055/1055 notas e as 1055 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1046 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1055 notas substantivas; 945 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-16.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md) e [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1156/1156 notas e as 1156 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1147 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1156 notas substantivas; 844 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-17.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md) e [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
