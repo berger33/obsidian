@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1759 / 2.000 (87,95%)**
-- Gate automatizado: **1759/1759 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 23)
+- Notas efetivamente redigidas até agora: **1859 / 2.000 (92,95%)**
+- Gate automatizado: **1859/1859 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 24)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1759**
-- Revisão factual por IA: **1750/1759**
-- Contabilizadas como válidas: **1759/1759**
+- Revisão factual humana: **9/1859**
+- Revisão factual por IA: **1850/1859**
+- Contabilizadas como válidas: **1859/1859**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1750 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–23 (1750 notas, IDs 10–1759) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1850 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–24 (1850 notas, IDs 10–1859) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-22.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-22.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-24.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-24.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md), [`tranche 23`](../reports/ai-review-software-testes-2000-0001-tranche-23.md) e [`tranche 24`](../reports/ai-review-software-testes-2000-0001-tranche-24.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1759 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 241 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1859 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 141 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -2255,6 +2255,138 @@
 1758. [Mutators custom: ensinar a gramática sem ensinar gramática](../../domains/software-0007/software/testes/atheris-custom-mutator.md)
 1759. [Integração com OSS-Fuzz e o caso dos módulos nativos](../../domains/software-0007/software/testes/atheris-ossfuzz-native.md)
 
+## Tranche 24 — Robot Framework, Pynguin, Kani, Honggfuzz, LibAFL, syzkaller, Behat, Cucumber-JVM, FuzzBench e httpmock (100 notas; revisão factual por IA registrada)
+
+### Robot Framework — automação genérica em texto puro para aceitação e RPA
+
+1760. [Robot Framework: automação genérica com sintaxe de texto puro](../../domains/software-0007/software/testes/robotframework-what-it-is.md)
+1761. [Instalação por pip e a escada de versões do Python](../../domains/software-0007/software/testes/robotframework-install-python-versions.md)
+1762. [A anatomia de uma suíte: tabelas Settings e Test Cases](../../domains/software-0007/software/testes/robotframework-suite-syntax.md)
+1763. [Execução pela linha de comando: robot, variáveis e outputdir](../../domains/software-0007/software/testes/robotframework-robot-cli.md)
+1764. [rebot: pós-processamento e junção de resultados](../../domains/software-0007/software/testes/robotframework-rebot.md)
+1765. [Fundação, marca e o duplo licenciamento do projeto](../../domains/software-0007/software/testes/robotframework-foundation-license.md)
+1766. [O ecossistema como parte do produto](../../domains/software-0007/software/testes/robotframework-ecosystem.md)
+1767. [Onde a documentação oficial mora](../../domains/software-0007/software/testes/robotframework-doc-channels.md)
+1768. [Contribuir: do CONTRIBUTING.rst aos rótulos de issue](../../domains/software-0007/software/testes/robotframework-contributing.md)
+1769. [Fatos de versão e estabilidade do projeto](../../domains/software-0007/software/testes/robotframework-versioning-facts.md)
+
+### Pynguin — geração automática de testes unitários para Python
+
+1770. [Pynguin: gerador de testes unitários para linguagem dinâmica](../../domains/software-0007/software/testes/pynguin-what-it-is.md)
+1771. [O gerador executa o código sob teste — sem rede de segurança](../../domains/software-0007/software/testes/pynguin-executes-code-danger.md)
+1772. [PYNGUIN_DANGER_AWARE: o CLI que se recusa a rodar](../../domains/software-0007/software/testes/pynguin-danger-aware-gate.md)
+1773. [Instalação por pip e a janela curta de versões do Python](../../domains/software-0007/software/testes/pynguin-install-python-prereqs.md)
+1774. [A linha de comando mínima: três flags](../../domains/software-0007/software/testes/pynguin-cli-minimal.md)
+1775. [O log de geração: DYNAMOSA, seed e timeout de 600s](../../domains/software-0007/software/testes/pynguin-generation-internals.md)
+1776. [Anotações PEP 484 como matéria-prima do gerador](../../domains/software-0007/software/testes/pynguin-type-hints.md)
+1777. [Isolamento de primeira classe: o wrapper pynguin-docker.sh](../../domains/software-0007/software/testes/pynguin-docker-workflow.md)
+1778. [Protótipo de pesquisa com governança universitária](../../domains/software-0007/software/testes/pynguin-research-prototype.md)
+1779. [Hackeando o gerador: poetry, make check](../../domains/software-0007/software/testes/pynguin-for-developers.md)
+
+### Kani — model checker bit-preciso para Rust
+
+1780. [Kani: model checker bit-preciso para o Rust](../../domains/software-0007/software/testes/kani-what-it-is.md)
+1781. [Onde o compilador não olha: os blocos unsafe](../../domains/software-0007/software/testes/kani-unsafe-superpowers.md)
+1782. [O que a ferramenta checa mesmo sem você pedir](../../domains/software-0007/software/testes/kani-automatic-checks.md)
+1783. [Instalação: cargo install mais o setup explícito](../../domains/software-0007/software/testes/kani-install.md)
+1784. [O harness de prova: kani::any e assert](../../domains/software-0007/software/testes/kani-proof-harness.md)
+1785. [Verificação com cara de teste, garantia de outra ordem](../../domains/software-0007/software/testes/kani-vs-testing.md)
+1786. [CI nativo: o action model-checking/kani-github-action](../../domains/software-0007/software/testes/kani-github-action.md)
+1787. [Base acadêmica rastreável: o paper ASE 2026](../../domains/software-0007/software/testes/kani-citation.md)
+1788. [Licenciamento espelhado no do próprio Rust](../../domains/software-0007/software/testes/kani-license.md)
+1789. [Por dentro: developer docs e política de segurança](../../domains/software-0007/software/testes/kani-developer-docs.md)
+
+### Honggfuzz — fuzzer orientado a segurança com cobertura de hardware
+
+1790. [Honggfuzz: fuzzer evolutivo orientado a feedback](../../domains/software-0007/software/testes/honggfuzz-what-it-is.md)
+1791. [Cobertura de hardware: Intel BTS/PT como motor de feedback](../../domains/software-0007/software/testes/honggfuzz-hardware-coverage.md)
+1792. [Persistent fuzzing com 1M de iterações por segundo](../../domains/software-0007/software/testes/honggfuzz-persistent-mode.md)
+1793. [Começar do zero: corpus vazio que se auto-constrói](../../domains/software-0007/software/testes/honggfuzz-empty-corpus.md)
+1794. [ptrace: detectar sinais sequestrados e crashes escondidos](../../domains/software-0007/software/testes/honggfuzz-ptrace-monitoring.md)
+1795. [Seis famílias de SO: do Linux ao Windows via Cygwin](../../domains/software-0007/software/testes/honggfuzz-platform-support.md)
+1796. [O build: make, hfuzz_cc e os wrappers de compilação](../../domains/software-0007/software/testes/honggfuzz-build-wrappers.md)
+1797. [___FILE___: o contrato do input por arquivo](../../domains/software-0007/software/testes/honggfuzz-input-placeholder.md)
+1798. [Trophies: a lista de CVEs como currículo](../../domains/software-0007/software/testes/honggfuzz-trophies.md)
+1799. [Quem adota — e o disclaimer de que não é produto Google](../../domains/software-0007/software/testes/honggfuzz-adopters-not-google.md)
+
+### LibAFL — a biblioteca Rust para montar o próprio fuzzador
+
+1800. [LibAFL: encaixe o seu fuzzador em Rust](../../domains/software-0007/software/testes/libafl-what-it-is.md)
+1801. [LLMP: escala quase linear por núcleo e TCP entre máquinas](../../domains/software-0007/software/testes/libafl-llmp-scaling.md)
+1802. [Overhead mínimo por decisão de compilação](../../domains/software-0007/software/testes/libafl-compile-time-speed.md)
+1803. [BytesInput é opcional: o formato de input é seu](../../domains/software-0007/software/testes/libafl-custom-inputs.md)
+1804. [no_std: fuzzador dentro de firmware e hypervisor](../../domains/software-0007/software/testes/libafl-no-std-embedded.md)
+1805. [Quatro backends de instrumentação declarados](../../domains/software-0007/software/testes/libafl-instrumentation-backends.md)
+1806. [Dependências declaradas: LLVM 15–18, just e o toolchain certo](../../domains/software-0007/software/testes/libafl-build-deps.md)
+1807. [O caminho de partida: ler os exemplos, just run](../../domains/software-0007/software/testes/libafl-examples-first.md)
+1808. [O artigo científico: fuzzer modular e reutilizável](../../domains/software-0007/software/testes/libafl-paper-ccs.md)
+1809. [Comunidade, depuração e a dupla licença MIT/Apache](../../domains/software-0007/software/testes/libafl-community-license.md)
+
+### syzkaller — fuzzer não supervisionado de kernels
+
+1810. [syzkaller: fuzzing de kernel não supervisionado e guiado por cobertura](../../domains/software-0007/software/testes/syzkaller-what-it-is.md)
+1811. [O syz-manager: um binário, um arquivo .cfg](../../domains/software-0007/software/testes/syzkaller-manager-config.md)
+1812. [HTTP de serviço: crashes e estatísticas expostos](../../domains/software-0007/software/testes/syzkaller-http-dashboard.md)
+1813. [Reprodução automática: 4 VMs e minimização](../../domains/software-0007/software/testes/syzkaller-auto-repro.md)
+1814. [Dois formulários de reproduzor: programa syzkaller ou C](../../domains/software-0007/software/testes/syzkaller-repro-forms.md)
+1815. [Quanto custa reproduzir: de minutos a uma hora](../../domains/software-0007/software/testes/syzkaller-repro-timing.md)
+1816. [Hub: vários syz-managers trocando achados](../../domains/software-0007/software/testes/syzkaller-hub.md)
+1817. [O mapa da documentação por sistema operacional](../../domains/software-0007/software/testes/syzkaller-docs-map.md)
+1818. [Onde reportar: found_bugs por SO e o guia Linux](../../domains/software-0007/software/testes/syzkaller-bug-reporting.md)
+1819. [Badges públicos e o disclaimer de que não é produto Google](../../domains/software-0007/software/testes/syzkaller-disclaimer-status.md)
+
+### Behat — BDD em Gherkin para PHP
+
+1820. [Behat: BDD em linguagem natural para PHP](../../domains/software-0007/software/testes/behat-what-it-is.md)
+1821. [Instalação oficial: um require de dev](../../domains/software-0007/software/testes/behat-install-composer.md)
+1822. [Rodando a versão de desenvolvimento](../../domains/software-0007/software/testes/behat-development-version.md)
+1823. [Promessa de compatibilidade: interfaces e service constants](../../domains/software-0007/software/testes/behat-semver-bc.md)
+1824. [O formato: Feature, Background e Scenario em inglês estruturado](../../domains/software-0007/software/testes/behat-gherkin-features.md)
+1825. [Cobrindo a aplicação inteira, não camadas](../../domains/software-0007/software/testes/behat-full-application-scope.md)
+1826. [Misture tecnologias: navegador, HTTP, shell, banco e PHP direto](../../domains/software-0007/software/testes/behat-mix-approaches.md)
+1827. [Profiles, tags e suites: o mesmo feature, jeitos diferentes](../../domains/software-0007/software/testes/behat-profiles-tags-suites.md)
+1828. [Por dentro: componentes Symfony, qualquer framework](../../domains/software-0007/software/testes/behat-under-the-hood-symfony.md)
+1829. [Extensões por todo lado — e o modelo de sustento voluntário](../../domains/software-0007/software/testes/behat-extensions-and-support.md)
+
+### Cucumber-JVM — Cucumber em linguagem natural para a JVM
+
+1830. [Cucumber JVM: testes automatizados em linguagem natural na JVM](../../domains/software-0007/software/testes/cucumber-jvm-what-it-is.md)
+1831. [Execução plugável: com suas ferramentas e contêineres DI](../../domains/software-0007/software/testes/cucumber-jvm-run-with-your-tools.md)
+1832. [Aprendizado oficial: dois starters e um repositório de exemplos](../../domains/software-0007/software/testes/cucumber-jvm-hello-world-starters.md)
+1833. [Artefatos versionados no Maven Central](../../domains/software-0007/software/testes/cucumber-jvm-artifacts.md)
+1834. [Upgrade sem susto: release-notes archive + CHANGELOG do major](../../domains/software-0007/software/testes/cucumber-jvm-upgrading.md)
+1835. [Onde pedir ajuda: Discussions, Discord e Stack Overflow](../../domains/software-0007/software/testes/cucumber-jvm-support-channels.md)
+1836. [A frase mais importante para quem vai abrir uma issue](../../domains/software-0007/software/testes/cucumber-jvm-volunteer-reality.md)
+1837. [Contribuir tem duas portas: docs.cucumber.io e CONTRIBUTING.md](../../domains/software-0007/software/testes/cucumber-jvm-contributing-docs-code.md)
+1838. [CI de teste e de release, com scorecard público](../../domains/software-0007/software/testes/cucumber-jvm-ci-quality.md)
+1839. [Financiamento por OpenCollective](../../domains/software-0007/software/testes/cucumber-jvm-funding.md)
+
+### FuzzBench — benchmarking de fuzzers como serviço
+
+1840. [FuzzBench: avaliação de fuzzers como serviço gratuito](../../domains/software-0007/software/testes/fuzzbench-what-it-is.md)
+1841. [Os três componentes oferecidos](../../domains/software-0007/software/testes/fuzzbench-three-pieces.md)
+1842. [Integração e aceite: do guia ao experimento](../../domains/software-0007/software/testes/fuzzbench-integration-flow.md)
+1843. [A escala de referência do sample report](../../domains/software-0007/software/testes/fuzzbench-sample-scale.md)
+1844. [Benchmarks herdados do OSS-Fuzz](../../domains/software-0007/software/testes/fuzzbench-oss-fuzz-benchmarks.md)
+1845. [A biblioteca de reporting com estatística embutida](../../domains/software-0007/software/testes/fuzzbench-reporting-library.md)
+1846. [Como ler um relatório de fuzzers, segundo o próprio serviço](../../domains/software-0007/software/testes/fuzzbench-reading-advice.md)
+1847. [Relatórios públicos e recorrentes](../../domains/software-0007/software/testes/fuzzbench-periodic-reports.md)
+1848. [Documentação e canais do projeto](../../domains/software-0007/software/testes/fuzzbench-docs-contacts.md)
+1849. [O convite de feedback e o escopo de melhoria contínua](../../domains/software-0007/software/testes/fuzzbench-feedback-loop.md)
+
+### httpmock — servidor HTTP de mentira com API fluent para testes em Rust
+
+1850. [httpmock: simular serviços HTTP para testar clientes em Rust](../../domains/software-0007/software/testes/httpmock-what-it-is.md)
+1851. [Getting Started: dev-dependency e o exemplo canônico](../../domains/software-0007/software/testes/httpmock-getting-started.md)
+1852. [When: as condições que o request tem que satisfazer](../../domains/software-0007/software/testes/httpmock-when-when.md)
+1853. [Then: a resposta predeterminada](../../domains/software-0007/software/testes/httpmock-then-and-response.md)
+1854. [O assert que vira laudo: diff do request mais parecido](../../domains/software-0007/software/testes/httpmock-assert-diagnostics.md)
+1855. [O handle Mock: observar contagens e remover mocks](../../domains/software-0007/software/testes/httpmock-mock-lifecycle.md)
+1856. [Record and Playback: gravar o backend real para replay](../../domains/software-0007/software/testes/httpmock-record-playback.md)
+1857. [Forward e Proxy mode: o mock que sabe encaminhar](../../domains/software-0007/software/testes/httpmock-forward-proxy.md)
+1858. [Standalone mode com Docker e mocks em YAML](../../domains/software-0007/software/testes/httpmock-standalone-yaml.md)
+1859. [Núcleo assíncrono, APIs sync e async — e a letra miúda](../../domains/software-0007/software/testes/httpmock-async-license-meta.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1750 notas 10–1759 das tranches 2–23 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1759/2.000 notas válidas, restando 241 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1850 notas 10–1859 das tranches 2–24 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1859/2.000 notas válidas, restando 141 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
