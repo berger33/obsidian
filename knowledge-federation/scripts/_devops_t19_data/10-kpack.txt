@@ -1,0 +1,145 @@
+1891|kpack-arquitetura-kubernetes-native-container-build-cloud-native-buildpacks|kpack: arquitetura do serviço Kubernetes-native de build e rebase contínuo de imagens OCI com Cloud Native Buildpacks|O **kpack** (`kpack.io/v1alpha2`, mantido pela comunidade Cloud Native Buildpacks sob licença Apache 2.0) estende o Kubernetes utilizando primitivas **não privilegiadas** para construir e manter imagens de container OCI automaticamente a partir de código-fonte, implementando a especificação **Cloud Native Buildpacks (CNB)** como plataforma declarativa.|Construir imagens com Dockerfiles manuais espalhados por centenas de repositórios obriga cada equipe de produto a abrir Pull Requests e reexecutar pipelines de CI inteiros sempre que sai uma correção de CVE na imagem base do SO (Ubuntu/Debian) ou no runtime do Java/Node.js.|No kpack, você declara recursos **`ClusterStack`**, **`ClusterStore`**, **`Builder`/`ClusterBuilder`** e **`Image`**. O controlador do kpack monitora continuamente três entradas — 1) commits no repositório Git/Blob/Registry de código-fonte, 2) novas versões de Buildpacks no Store e 3) atualizações de segurança na Stack do SO — agendando novos objetos **`Build`** ou executando **Rebase** rápido de camadas OCI sem recompilar a aplicação.|```bash
+# Listando os recursos declarativos do kpack no cluster com kubectl ou kp CLI:
+kubectl get clusterstacks,clusterstores,clusterbuilders,images,builds -A
+```|Como os Pods de `Build` gerados pelo kpack executam o *CNB Lifecycle* (`detect`, `analyze`, `restore`, `build`, `export` ou `rebase`) em containers sem privilégios de root/Docker daemon, eles operam com segurança em clusters multi-tenant.|Verifique o controlador e o webhook do kpack em execução com `kubectl get pods -n kpack`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/builders.md
+1892|kpack-crd-image-spec-tag-additionaltags-cache-history-limits|kpack `Image` CRD: configuração declarativa de `tag`, `additionalTags`, `cache` (Volume vs Registry) e limites de histórico|O Custom Resource **`Image`** (`kpack.io/v1alpha2`) define como o kpack deve construir e manter uma imagem OCI ao longo do tempo, especificando o destino no registry (`tag` e `additionalTags`), o `builder`, a fonte de código (`source`), a estratégia de `cache` e os limites de retenção (`successBuildHistoryLimit` e `failedBuildHistoryLimit`).|Recompilar todas as dependências Maven, Gradle, npm ou Cargo do zero a cada commit demoraria vários minutos; por isso, o kpack preserva as camadas de cache do Cloud Native Buildpacks entre builds consecutivos.|O campo `spec.tag` é imutável e define o repositório principal da imagem construída, enquanto `spec.additionalTags` é mutável (desde que no mesmo registry). Para o `spec.cache`, o kpack oferece duas variantes: 1) **`cache.volume.size`** (cria um `PersistentVolumeClaim` no cluster para guardar o cache em disco); ou 2) **`cache.registry.tag`** (armazena o cache como uma imagem OCI no registry, ideal para clusters sem ReadWriteMany ou com nós efêmeros).|```yaml
+apiVersion: kpack.io/v1alpha2
+kind: Image
+metadata:
+  name: payment-service-img
+  namespace: builds
+spec:
+  tag: ghcr.io/org/payment-service
+  additionalTags:
+    - ghcr.io/org/payment-service:latest
+  serviceAccountName: kpack-registry-sa
+  builder:
+    name: default-cluster-builder
+    kind: ClusterBuilder
+  cache:
+    volume:
+      size: 2Gi
+  failedBuildHistoryLimit: 5
+  successBuildHistoryLimit: 5
+  imageTaggingStrategy: BuildNumber
+  source:
+    git:
+      url: https://github.com/org/payment-service.git
+      revision: main
+```|Conforme documentado em `docs/image.md`, todas as entradas de `additionalTags` devem residir no **mesmo** registry que o `tag` principal (exportação cruzada entre registries distintos não é suportada).|Aplique o recurso `Image` e verifique seu status e a última imagem gerada (`LATESTIMAGE`) com `kubectl get images -n builds`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1893|kpack-source-configuration-git-blob-registry-subpath-monorepo|kpack Fontes de Código (`spec.source`): monitoramento de repositórios `git`, arquivos `blob` e imagens `registry` com `subPath`|No recurso `Image` do kpack, o bloco **`spec.source`** (reconciliado internamente por um `SourceResolver`) suporta três origens mutuamente exclusivas de código-fonte: **`git`** (repositório Git via HTTPS ou SSH com `revision` e `initializeSubmodules`), **`blob`** (arquivo `.zip`/`.tar.gz`/`.jar` em URL ou bucket com `stripComponents` e `auth`) e **`registry`** (imagem OCI contendo código-fonte), todas compatíveis com **`subPath`**.|Em arquiteturas de monorepo onde dez microsserviços residem em pastas diferentes (`services/auth`, `services/billing`) do mesmo repositório Git, um commit em `services/auth` não deveria disparar rebuilds desnecessários em `services/billing`.|Ao configurar `source.git.url`, `source.git.revision: main` e `source.subPath: services/billing` (com a feature flag `GIT_RESOLVER_USE_SHALLOW_CLONE` habilitada), quando `git.revision` é uma branch, o kpack agenda novos builds **somente** se os novos commits modificarem arquivos dentro de `subPath`.|```yaml
+spec:
+  source:
+    git:
+      url: git@github.com:org/platform-monorepo.git
+      revision: main
+      initializeSubmodules: true
+    subPath: services/billing
+```|Para fontes do tipo `blob` em nuvem privada, o campo `auth` suporta `""` (público), `"secret"` (credenciais via Secret do kpack) ou `"helper"` (Workload Identity da ServiceAccount em Azure AKS e Google GKE).|Inspecione o objeto `SourceResolver` criado automaticamente para a sua `Image` com `kubectl get sourceresolvers -n builds`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1894|kpack-builder-vs-clusterbuilder-order-detection-resolution|kpack `Builder` e `ClusterBuilder`: definição da ordem de detecção (`spec.order`) e resolução de IDs de Buildpacks|Os recursos **`Builder`** (escopo de namespace) e **`ClusterBuilder`** (escopo de cluster) combinam uma **`ClusterStack`**, uma **`ClusterStore`** opcional e uma lista ordenada de grupos de detecção (**`spec.order`**) para construir e publicar no registry uma imagem de *CNB Builder* pronta para uso pelas `Images`.|Permitir que cada desenvolvedor escolha versões arbitrárias ou não homologadas de compiladores perde a governança; com um `ClusterBuilder`, a equipe de plataforma define centralmente quais buildpacks (ex.: Paketo Java, Node.js, Go, Python) e versões são testados na fase de `detection`.|Durante o build de uma aplicação, o CNB Lifecycle testa os grupos de `spec.order` sequencialmente, um grupo por vez: o **primeiro grupo** cujos buildpacks não-opcionais (`optional: false`) passarem todos na detecção é selecionado para compilar a aplicação. Enquanto o `Builder` usa `spec.serviceAccountName` do próprio namespace, o `ClusterBuilder` usa `spec.serviceAccountRef` (`name` e `namespace`).|```yaml
+apiVersion: kpack.io/v1alpha2
+kind: ClusterBuilder
+metadata:
+  name: default-cluster-builder
+spec:
+  tag: ghcr.io/org/kpack-cluster-builder:latest
+  serviceAccountRef:
+    name: kpack-registry-sa
+    namespace: kpack
+  stack:
+    name: noble-base-stack
+    kind: ClusterStack
+  store:
+    name: paketo-cluster-store
+    kind: ClusterStore
+  order:
+    - group:
+        - id: paketo-buildpacks/java
+    - group:
+        - id: paketo-buildpacks/nodejs
+    - group:
+        - id: paketo-buildpacks/go
+```|Um `ClusterBuilder` expõe duas condições de status importantes: **`Ready`** (indicando se pode ser usado em Builds) e **`UpToDate`** (indicando se a reconciliação mais recente com a Stack e Buildpacks mais novos teve sucesso).|Execute `kubectl get clusterbuilders` e `kubectl describe clusterbuilder default-cluster-builder` para verificar as condições `Ready` e `UpToDate` e a lista de buildpacks resolvidos.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/builders.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1895|kpack-clusterstack-build-image-run-image-rebase-automatico-cve|kpack `ClusterStack` e Operação de `Rebase`: atualização instantânea da camada de SO (`runImage`) sem recompilar o código|O recurso **`ClusterStack`** (`kpack.io/v1alpha2`) define o par de imagens base do sistema operacional exigido pelos Cloud Native Buildpacks: a **`buildImage`** (ambiente onde o build executa) e a **`runImage`** (imagem base final sobre a qual as camadas compiladas da aplicação rodam em produção).|Quando sai um patch de segurança crítico para `openssl` ou `libc` na imagem base do Ubuntu, reconstruir do zero 300 microsserviços Java e Node.js levaria horas de CPU no cluster.|Graças à separação estrutural de camadas do formato OCI/CNB, quando você atualiza a `runImage` no `ClusterStack` (por exemplo para um novo digest do `paketobuildpacks/run-noble-base`), o kpack detecta que apenas a base de execução mudou e executa uma operação de **Rebase**: ele apenas troca os ponteiros de manifesto das camadas da `runImage` no registry em poucos segundos, sem clonar o Git nem recompilar uma única linha de código!|```yaml
+apiVersion: kpack.io/v1alpha2
+kind: ClusterStack
+metadata:
+  name: noble-base-stack
+spec:
+  id: "io.buildpacks.stacks.noble"
+  buildImage:
+    image: "paketobuildpacks/build-noble-base:latest"
+  runImage:
+    image: "paketobuildpacks/run-noble-base:latest"
+```|O kpack resolve as tags de `buildImage` e `runImage` para seus digests SHA-256 imutáveis no `status` do `ClusterStack`, garantindo reprodutibilidade exata em cada build e rebase.|Execute `kubectl get clusterstacks -o wide` para inspecionar o `ID` da stack e os digests resolvidos de `buildImage` e `runImage`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/builders.md;https://github.com/buildpacks-community/kpack
+1896|kpack-clusterstore-buildpack-clusterbuildpack-empacotamento-cnb|kpack `ClusterStore`, `Buildpack` e `ClusterBuildpack`: catálogo e resolução de versões de Cloud Native Buildpacks|Para alimentar `Builders` e `ClusterBuilders`, o kpack oferece três recursos que referenciam pacotes de buildpacks distribuídos como imagens OCI (*buildpackages*): **`ClusterStore`**, **`Buildpack`** (namespaced) e **`ClusterBuildpack`** (cluster-scoped).|Entender a ordem exata em que o kpack resolve um `id` de buildpack (e sua `version`) declarado em `spec.order` evita surpresas quando múltiplas versões do mesmo buildpack coexistem no cluster.|Conforme documentado em `docs/builders.md`, quando um `Builder` referencia apenas `{ id: "paketo-buildpacks/gradle" }` (sem `version` explícita, escolhendo a maior versão SemVer), o kpack procura o buildpack nesta ordem: 1º como sub-buildpack de qualquer `Buildpack` no mesmo namespace do Builder; 2º como sub-buildpack de qualquer `ClusterBuildpack`; e 3º dentro do `ClusterStore` especificado em `spec.store`.|```yaml
+apiVersion: kpack.io/v1alpha2
+kind: ClusterStore
+metadata:
+  name: paketo-cluster-store
+spec:
+  sources:
+    - image: paketobuildpacks/java:latest
+    - image: paketobuildpacks/nodejs:latest
+    - image: paketobuildpacks/go:latest
+```|Um mesmo ID de buildpack pode aparecer em múltiplos grupos (`group`) diferentes de `spec.order`, mas nunca duas vezes dentro do mesmo `group`.|Inspecione todos os buildpacks e sub-buildpacks indexados pelo store com `kubectl describe clusterstore paketo-cluster-store`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/builders.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1897|kpack-build-configuration-env-resources-project-toml-cosign|kpack Configuração Avançada de Build (`spec.build` e `spec.cosign`): variáveis `BP_*`, limites de CPU/RAM, `project.toml` e assinatura Cosign|Na especificação do recurso `Image` (`docs/image.md`), o bloco **`spec.build`** controla as variáveis de ambiente passadas aos buildpacks (como `BP_JVM_VERSION`), os `resources` (`requests`/`limits` de CPU e memória do Pod de build), `tolerations`, `nodeSelector`, `affinity`, `buildTimeout` e `creationTime`, enquanto **`spec.cosign`** e **`spec.projectDescriptorPath`** configuram assinatura criptográfica e o arquivo `project.toml`.|Diferentes linguagens exigem quantidades muito distintas de memória durante a compilação (um build GraalVM Native Image exige 6–8 GiB de RAM, enquanto um build Go precisa de 512 MiB), e cadeias de suprimentos seguras exigem assinar a imagem OCI gerada com **Cosign**.|Além das variáveis declaradas em `spec.build.env`, o kpack procura automaticamente por um arquivo **`project.toml`** na raiz do código-fonte (ou em `subPath`, customizável via `projectDescriptorPath`). Definindo `creationTime: "now"`, a imagem gerada recebe o timestamp Unix atual em vez do timestamp fixo zero padrão dos buildpacks.|```yaml
+spec:
+  projectDescriptorPath: project.toml
+  defaultProcess: web
+  build:
+    buildTimeout: 1800
+    creationTime: "now"
+    env:
+      - name: BP_JVM_VERSION
+        value: "21"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+```|Se um build pesado falhar com código de saída `137` (`OOMKilled`), aumente `spec.build.resources.limits.memory` no recurso `Image` para que os containers do Pod de `Build` recebam mais memória.|Verifique os recursos e variáveis injetados no último Pod de build executando `kubectl get builds -n builds` e `kubectl describe pod <build-pod> -n builds`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1898|kpack-secrets-serviceaccount-git-ssh-docker-registry-cosign|kpack Gerenciamento de Credenciais: vinculação de `Secrets` (Registry, Git SSH/Basic Auth e Cosign) à `ServiceAccount`|O kpack gerencia todas as credenciais de acesso a registries de container privados, repositórios Git privados (SSH ou Basic Auth) e chaves de assinatura Cosign vinculando **`Secrets`** do Kubernetes anotados ao recurso **`ServiceAccount`** referenciado em `spec.serviceAccountName` da `Image` ou `Builder`.|Se qualquer usuário do namespace pudesse ler credenciais globais do controlador, uma `Image` maliciosa poderia sobrescrever tags de outras equipes no registry corporativo.|No modelo do kpack: 1) credenciais de container registry (`kubernetes.io/dockerconfigjson`) são listadas em **`imagePullSecrets`** (e `secrets`) da `ServiceAccount`; 2) credenciais Git (`kubernetes.io/ssh-auth` ou `kubernetes.io/basic-auth`) recebem a anotação **`kpack.io/git: https://github.com`** (ou `git@github.com`) e são listadas em **`secrets`** da `ServiceAccount`; e 3) chaves Cosign (`cosign.key` / `cosign.password`) também são associadas à `ServiceAccount` para assinar automaticamente cada imagem exportada.|```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-ssh-creds
+  namespace: builds
+  annotations:
+    kpack.io/git: git@github.com
+type: kubernetes.io/ssh-auth
+stringData:
+  ssh-privatekey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kpack-registry-sa
+  namespace: builds
+secrets:
+  - name: github-ssh-creds
+imagePullSecrets:
+  - name: ghcr-push-secret
+```|Lembre-se da distinção no `ServiceAccount`: segredos de registry devem constar em `imagePullSecrets` (ou `secrets`), enquanto segredos de Git e Cosign devem constar na lista `secrets` da `ServiceAccount`.|Verifique os segredos vinculados à ServiceAccount de build com `kubectl describe sa kpack-registry-sa -n builds`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://github.com/buildpacks-community/kpack
+1899|kpack-crd-build-fases-cnb-lifecycle-pods-init-containers|kpack `Build` CRD e Execução em Pod: fases do CNB Lifecycle (`prepare`, `detect`, `analyze`, `restore`, `build`, `export`, `completion`)|Cada vez que uma `Image` precisa ser construída ou atualizada, o controlador cria um objeto imutável **`Build`** (`<image-name>-build-<number>`) que agenda um Pod Kubernetes onde cada fase do **Cloud Native Buildpacks Lifecycle** executa sequencialmente através de **Init Containers** compartilhando volumes em comum.|Entender a sequência de *Init Containers* de um Pod de `Build` do kpack permite identificar rapidamente em qual etapa um build falhou (se foi no clone Git em `prepare`, na detecção de linguagem em `detect`, na compilação em `build` ou no push para o registry em `export`).|Um Pod de `Build` padrão executa a cadeia de containers: 1) **`prepare`** (clona o código-fonte Git/Blob/Registry e prepara credenciais); 2) **`detect`** (testa os grupos de buildpacks de `spec.order`); 3) **`analyze`** (verifica metadados da imagem anterior no registry); 4) **`restore`** (restaura camadas do cache); 5) **`build`** (executa os buildpacks selecionados para compilar a app); 6) **`export`** (monta e faz push das camadas OCI e do cache); e 7) **`completion`** (opcionalmente assina com Cosign e reporta o digest final no `status.latestImage`).|```bash
+# Listando os builds de uma Image e inspecionando os initContainers do Pod correspondente:
+kubectl get builds -n builds -l image.kpack.io/image=payment-service-img
+kubectl get pod payment-service-img-build-1-build-pod -n builds \
+  -o jsonpath='{.spec.initContainers[*].name}'
+```|Quando a razão do build é apenas `STACK` (atualização compatível da `runImage` na `ClusterStack`), o kpack cria um Pod de `Build` enxuto que executa apenas a operação rápida de **`rebase`**, pulando `detect`, `restore` e `build`.|Verifique a coluna `REASON` (`CONFIG`, `COMMIT`, `BUILDPACK`, `STACK`) na saída de `kubectl get builds -n builds`.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://github.com/buildpacks-community/kpack
+1900|kpack-cli-kp-utilitario-logs-operacao-comparacao-pack|kpack CLI (`kp`) e Utilitário `logs`: operação de `Images`/`Builders`, streaming de logs de build e comparação `kpack` vs `pack`|Para interagir de forma ergonômica com os Custom Resources do kpack no dia a dia e em pipelines de CI/CD, o ecossistema fornece a **CLI oficial `kp`** (`kpack-cli`) e o utilitário **`logs`**, além de documentar quando usar **`kpack`** (in-cluster contínuo) versus **`pack`** (CLI local de desenvolvedor).|Acompanhar os logs sequenciais de 6 *Init Containers* em um Pod de build usando `kubectl logs -c <init-container>` manualmente um por um é trabalhoso; a CLI `kp build logs` (ou o binário `logs`) encadeia todos os containers automaticamente em tempo real.|Enquanto a CLI **`pack`** (`pack build`) foi projetada para a máquina local do desenvolvedor (usando um daemon Docker local para construir uma imagem pontual), o **`kpack`** roda dentro do cluster Kubernetes sem Docker daemon e reconstrói/faz rebase automaticamente de toda a frota de imagens ao longo do tempo.|```bash
+# Criando uma Image e acompanhando os logs de todas as fases do build em tempo real com kp:
+kp image create payment-service-img \
+  --tag ghcr.io/org/payment-service \
+  --git https://github.com/org/payment-service.git \
+  --git-revision main \
+  --cluster-builder default-cluster-builder \
+  --namespace builds
+
+kp build list payment-service-img -n builds
+kp build logs payment-service-img -n builds
+```|O comando `kp image status <name> -n <namespace>` resume o estado atual da imagem, o digest completo da última imagem construída, a razão do último build e a referência do Builder utilizado.|Execute `kp build status payment-service-img -b 1 -n builds` para auditar os buildpacks exatos que participaram do build #1.|https://raw.githubusercontent.com/buildpacks-community/kpack/main/README.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/image.md;https://raw.githubusercontent.com/buildpacks-community/kpack/main/docs/builders.md

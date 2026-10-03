@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1800 / 2.000 (90,00%)**
-- Gate automatizado: **1800/1800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
-- Revisão factual humana: **0/1800**
-- Revisão factual por IA: **1800/1800**
-- Contabilizadas como válidas: **1800/1800**
-- Revisor das 1800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–18 (1800 notas, IDs 1–1800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1900 / 2.000 (95,00%)**
+- Gate automatizado: **1900/1900 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 19)
+- Revisão factual humana: **0/1900**
+- Revisão factual por IA: **1900/1900**
+- Contabilizadas como válidas: **1900/1900**
+- Revisor das 1900 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–19 (1900 notas, IDs 1–1900) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-18.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-18.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md), [`tranche 17`](../reports/ai-review-software-devops-2000-0002-tranche-17.md), [`tranche 18`](../reports/ai-review-software-devops-2000-0002-tranche-18.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-19.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-19.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md), [`tranche 17`](../reports/ai-review-software-devops-2000-0002-tranche-17.md), [`tranche 18`](../reports/ai-review-software-devops-2000-0002-tranche-18.md), [`tranche 19`](../reports/ai-review-software-devops-2000-0002-tranche-19.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 200 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1900 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 100 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -2394,6 +2394,138 @@
 1799. [wasmCloud: arquiteturas de referência (`blobby`, `grpc-hello-world`, `otel-config`, `qrcode`) e observabilidade OpenTelemetry](../../domains/software-0008/software/devops/wasmcloud-exemplos-referencia-blobby-grpc-otel-persistent-storage.md)
 1800. [wasmCloud na Borda e Hosts Customizados: execução de alta densidade fora de containers com `wash-runtime`](../../domains/software-0008/software/devops/wasmcloud-execucao-hibrida-edge-custom-hosts-densidade-seguranca.md)
 
+## Tranche 19 — OpenFaaS, Fission, Nuclio, Temporal, HashiCorp Boundary, Tailscale, Headscale, NetBird, Nebula e kpack (100 notas; revisão factual por IA registrada)
+
+### OpenFaaS (*Functions as a Service* serverless para Kubernetes com `faas-netes`, `faas-cli`, `of-watchdog`, fila assíncrona NATS e auto-scaling Prometheus)
+
+1801. [OpenFaaS: arquitetura serverless para Kubernetes com Gateway, `faas-netes`, `of-watchdog` e NATS](../../domains/software-0008/software/devops/openfaas-arquitetura-serverless-kubernetes-gateway-faas-netes-watchdog.md)
+1802. [OpenFaaS `faas-cli` e `stack.yaml`: ciclo de vida de funções (`new`, `build`, `push`, `deploy`, `up`) e Template Store](../../domains/software-0008/software/devops/openfaas-faas-cli-stack-yaml-template-store-build-push-deploy.md)
+1803. [OpenFaaS `faas-netes`: comparação entre o modo Controller e o modo Operator com o CRD `Function` (`openfaas.com/v1`)](../../domains/software-0008/software/devops/openfaas-faas-netes-modos-operacao-controller-vs-operator-function-crd.md)
+1804. [OpenFaaS `of-watchdog` e Probes de Saúde: gerenciamento do arquivo `.lock` de readiness e timeouts de leitura/escrita](../../domains/software-0008/software/devops/openfaas-watchdog-http-mode-readiness-lock-file-timeouts.md)
+1805. [OpenFaaS Invocação Assíncrona: processamento em background via `/async-function/<name>`, NATS e `X-Callback-Url`](../../domains/software-0008/software/devops/openfaas-invocacao-assincrona-function-routes-nats-queue-worker-callback.md)
+1806. [OpenFaaS Auto-Scaling: escalonamento horizontal por RPS/capacidade (`com.openfaas.scale.min`/`max`) e *scale-to-zero*](../../domains/software-0008/software/devops/openfaas-autoscaling-prometheus-alertmanager-scale-min-max-zero.md)
+1807. [OpenFaaS Secrets: gerenciamento declarativo de segredos montados como arquivos em `/var/openfaas/secrets/`](../../domains/software-0008/software/devops/openfaas-gerenciamento-secrets-kubernetes-mounted-var-openfaas-secrets.md)
+1808. [OpenFaaS `Profile` CRD: aplicação reutilizável de `affinity`, `tolerations`, `runtimeClassName` e `podSecurityContext`](../../domains/software-0008/software/devops/openfaas-profiles-crd-afinidadade-tolerations-pod-security-context.md)
+1809. [OpenFaaS Event Connectors e Cron: disparo de funções por tópicos (`topic` annotation) e agendamentos `cron-connector`](../../domains/software-0008/software/devops/openfaas-event-connectors-cron-connector-kafka-sqs-annotations.md)
+1810. [OpenFaaS no Kubernetes: dimensionamento de requests/limits dos componentes core no Helm chart e boas práticas de produção](../../domains/software-0008/software/devops/openfaas-dimensionamento-recursos-helm-chart-gateway-faasnetes-prometheus.md)
+
+### Fission (framework serverless Kubernetes-native com *cold start* de ~100 ms, CRDs `Function`/`Environment`/`Package`/`Trigger` e executores `poolmgr`/`newdeploy`/`container`)
+
+1811. [Fission: arquitetura serverless Kubernetes-native com *cold start* de ~100 ms e 4 CRDs fundamentais](../../domains/software-0008/software/devops/fission-arquitetura-serverless-kubernetes-100ms-cold-start-crds.md)
+1812. [Fission Executors: escolha entre `poolmgr` (pools aquecidos ~100 ms), `newdeploy` (HPA e alta carga) e `container`](../../domains/software-0008/software/devops/fission-executors-poolmgr-vs-newdeploy-vs-container-comparacao.md)
+1813. [Fission `Environment`: configuração de imagens de Runtime, imagens de Builder e `poolsize`](../../domains/software-0008/software/devops/fission-environments-runtime-image-builder-image-poolsize.md)
+1814. [Fission `Package` e Build Pipeline: gerenciamento de `source` archives, `deployment` archives e `buildermgr`](../../domains/software-0008/software/devops/fission-packages-source-archive-deployment-archive-buildermgr.md)
+1815. [Fission `Triggers`: vinculação de eventos HTTP, Cron (`TimeTrigger`), Filas (`MessageQueueTrigger`/KEDA) e Kubernetes Watch](../../domains/software-0008/software/devops/fission-triggers-httptrigger-timetrigger-mqtrigger-kubewatch.md)
+1816. [Fission Declarative Specs (`fission spec`): gerenciamento GitOps idempotente de funções e arquivos em `specs/`](../../domains/software-0008/software/devops/fission-specs-declarativos-fission-spec-init-apply-gitops.md)
+1817. [Fission Arquitetura Interna: interação entre `Router`, `Executor`, sidecar `Fetcher` e `StorageSvc`](../../domains/software-0008/software/devops/fission-arquitetura-interna-router-executor-fetcher-storagesvc.md)
+1818. [Fission: injeção de `ConfigMaps` e `Secrets` do Kubernetes em funções (`--configmap` e `--secret`)](../../domains/software-0008/software/devops/fission-injecao-configmaps-secrets-funcoes-acesso-filesystem.md)
+1819. [Fission `container` Executor: execução de imagens OCI arbitrárias com scale-to-zero no Fission](../../domains/software-0008/software/devops/fission-container-executor-execucao-imagens-oci-customizadas-scale-zero.md)
+1820. [Fission vs Knative e OpenFaaS: critérios arquiteturais de *cold start*, peso operacional e experiência de código](../../domains/software-0008/software/devops/fission-comparacao-arquitetural-knative-openfaas-quando-escolher.md)
+
+### Nuclio (framework serverless de tempo real de alta performance para eventos, dados e GPUs com `Function Processor`, runtimes `Native`/`SHMEM`/`Shell` e `nuctl`)
+
+1821. [Nuclio: arquitetura serverless de tempo real de alta performance para eventos, dados e GPUs no Kubernetes](../../domains/software-0008/software/devops/nuclio-arquitetura-serverless-real-time-data-gpu-processor.md)
+1822. [Nuclio Function Processor: arquitetura interna de Event Listeners e motores de Runtime (`Native`, `SHMEM` e `Shell`)](../../domains/software-0008/software/devops/nuclio-function-processor-event-listeners-runtimes-native-shmem-shell.md)
+1823. [Nuclio: alocação de EventProcessors em dois níveis (`Blocking Allocator` vs `Non-blocking Allocator`) para modos Sync e Async](../../domains/software-0008/software/devops/nuclio-blocking-vs-non-blocking-allocator-workers-sync-async.md)
+1824. [Nuclio no Kubernetes: autenticação de funções com `auth-proxy` sidecar (`reverse-proxy` vs `auth-only` no DLX)](../../domains/software-0008/software/devops/nuclio-auth-proxy-sidecar-reverse-proxy-auth-only-dlx-scale-zero.md)
+1825. [Nuclio `nuctl` CLI e Builder Kaniko: construção segura de imagens de função in-cluster e deploy declarativo](../../domains/software-0008/software/devops/nuclio-nuctl-cli-build-deploy-invoke-function-yaml-kaniko.md)
+1826. [Nuclio Triggers de Tempo Real: ingestão paralela de streams (`Kafka`, `Kinesis`, `RabbitMQ`, `MQTT`, `NATS`, `Cron` e `HTTP`)](../../domains/software-0008/software/devops/nuclio-triggers-streaming-kafka-kinesis-rabbit-mqtt-cron-http.md)
+1827. [Nuclio Data Bindings: conexões persistentes pré-inicializadas em `context.data_binding` com prefetching e caching](../../domains/software-0008/software/devops/nuclio-data-bindings-conexoes-persistentes-context-zero-copy.md)
+1828. [Nuclio para IA/ML e GPUs: alocação de GPUs NVIDIA (`nvidia.com/gpu`), integração com Jupyter (`nuclio-jupyter`) e MLRun](../../domains/software-0008/software/devops/nuclio-aceleracao-gpu-nvidia-inferencia-ml-jupyter-kubeflow.md)
+1829. [Nuclio Auto-Scaling e DLX (*Dead Letter / Scale-to-Zero*): escalonamento dinâmico de `0` a `N` réplicas](../../domains/software-0008/software/devops/nuclio-dlx-auto-scaling-scale-to-zero-min-max-replicas.md)
+1830. [Nuclio `NuclioAPIGateway` e `NuclioProject`: roteamento canário com divisão percentual de tráfego e governança multi-projeto](../../domains/software-0008/software/devops/nuclio-api-gateways-canary-deployments-projects-k8s-crds.md)
+
+### Temporal (plataforma de *Durable Execution* baseada em Event Sourcing com `Frontend`/`History`/`Matching`/`Worker` Services, `Workflows` determinísticos e `Activities` idempotentes)
+
+1831. [Temporal: arquitetura de *Durable Execution* baseada em Event Sourcing separando Temporal Cluster e User Workers](../../domains/software-0008/software/devops/temporal-arquitetura-durable-execution-event-sourcing-cluster-workers.md)
+1832. [Temporal Server Internals: papel dos 4 serviços (`Frontend`, `History`, `Matching` e `Worker`)](../../domains/software-0008/software/devops/temporal-quatro-servicos-internos-frontend-history-matching-worker.md)
+1833. [Temporal: segregação entre `Workflows` determinísticos (Replay de Histórico) e `Activities` idempotentes](../../domains/software-0008/software/devops/temporal-workflows-determinismo-replay-history-vs-activities-idempotentes.md)
+1834. [Temporal `Task Queues` e Tipos de Tarefas: ciclo de polling de `Workflow Tasks`, `Activity Tasks` e `Query Tasks`](../../domains/software-0008/software/devops/temporal-task-queues-workflow-tasks-activity-tasks-query-tasks.md)
+1835. [Temporal Persistence e Visibility: bancos de dados suportados (`PostgreSQL`, `MySQL`, `Cassandra`) e Advanced Visibility (`Elasticsearch` / SQL)](../../domains/software-0008/software/devops/temporal-persistencia-datastore-postgresql-mysql-cassandra-visibility.md)
+1836. [Temporal `Signals`, `Queries` e `Updates`: interação assíncrona e síncrona com Workflows em execução](../../domains/software-0008/software/devops/temporal-signals-queries-updates-interacao-workflows-em-execucao.md)
+1837. [Temporal `Continue-As-New`: prevenção de explosão de histórico em Workflows de longa duração ou loops contínuos](../../domains/software-0008/software/devops/temporal-continue-as-new-limites-event-history-workflows-longos.md)
+1838. [Temporal `Namespaces`: isolamento multi-tenant, período de retenção de histórico e `Archival` para S3/GCS](../../domains/software-0008/software/devops/temporal-namespaces-retencao-archival-s3-gcs-isolamento-multi-tenant.md)
+1839. [Temporal Activity Timeouts e Heartbeats: configuração de `StartToCloseTimeout`, `ScheduleToCloseTimeout`, `HeartbeatTimeout` e `RetryPolicy`](../../domains/software-0008/software/devops/temporal-timeouts-activities-retry-policy-heartbeat-long-running.md)
+1840. [Temporal CLI em Produção: operações de `workflow reset`, `cancel`, `terminate`, `batch` e `schedule`](../../domains/software-0008/software/devops/temporal-cli-operacoes-reset-terminate-cancel-batch-schedules.md)
+
+### HashiCorp Boundary (gerenciamento de acesso privilegiado *Zero-Trust* baseado em identidade com `Controller`, `Worker` multi-hop, KMS, `Host Catalogs` e brokering de credenciais Vault)
+
+1841. [HashiCorp Boundary: arquitetura de acesso privilegiado baseado em identidade com `Controller`, `Worker`, PostgreSQL e KMS](../../domains/software-0008/software/devops/boundary-arquitetura-identity-based-access-controller-worker-postgresql-kms.md)
+1842. [HashiCorp Boundary: modelagem hierárquica de `Scopes` (`global`, `org`, `project`), `Roles` e `Grants`](../../domains/software-0008/software/devops/boundary-hierarquia-scopes-global-org-project-iam-roles-grants.md)
+1843. [HashiCorp Boundary KMS: arquitetura de chaves (`root`, `worker-auth`, `recovery`, `config`) com Cloud KMS ou Vault Transit](../../domains/software-0008/software/devops/boundary-kms-key-hierarchy-root-worker-auth-recovery-vault-transit.md)
+1844. [HashiCorp Boundary: descoberta automatizada de endpoints com `Host Catalogs` dinâmicos, `Host Sets` e `Targets`](../../domains/software-0008/software/devops/boundary-host-catalogs-static-dynamic-aws-azure-host-sets-targets.md)
+1845. [HashiCorp Boundary e HashiCorp Vault: *Credential Brokering* e injeção de credenciais efêmeras por sessão](../../domains/software-0008/software/devops/boundary-vault-credential-store-brokering-injecao-credenciais-efemeras.md)
+1846. [HashiCorp Boundary `boundary connect`: helpers nativos de CLI (`ssh`, `postgres`, `kube`, `http`, `rdp`) e sessões transparentes](../../domains/software-0008/software/devops/boundary-connect-helpers-ssh-postgres-kube-rdp-transparent-sessions.md)
+1847. [HashiCorp Boundary Workers e Multi-Hop Sessions: encadeamento de Ingress e Egress Workers para redes privadas sem rota de entrada](../../domains/software-0008/software/devops/boundary-workers-ingress-egress-multi-hop-redes-isoladas-enclaves.md)
+1848. [HashiCorp Boundary Session Controls: limites de conexões por sessão, `session_max_seconds` e revogação em tempo real](../../domains/software-0008/software/devops/boundary-session-controls-max-connections-timeout-cancelamento-auditoria.md)
+1849. [HashiCorp Boundary Session Recording (BSR): gravação e reprodução criptografada de sessões SSH para conformidade](../../domains/software-0008/software/devops/boundary-session-recording-bsr-storage-buckets-auditoria-ssh.md)
+1850. [HashiCorp Boundary como Código: provisionamento declarativo de Scopes, OIDC, Managed Groups e Targets via Terraform Provider](../../domains/software-0008/software/devops/boundary-automacao-terraform-provider-oidc-managed-groups-gitops.md)
+
+### Tailscale e Tailscale Kubernetes Operator (rede mesh sobre WireGuard com `tailscaled`, relays `DERP`, MagicDNS, ACLs/Grants e operador Kubernetes para Ingress, Egress, `Connector` e API Server Proxy)
+
+1851. [Tailscale: arquitetura de rede mesh sobre WireGuard com daemon `tailscaled`, NAT Traversal e relays `DERP`](../../domains/software-0008/software/devops/tailscale-arquitetura-mesh-vpn-wireguard-tailscaled-derp-nat-traversal.md)
+1852. [Tailscale Kubernetes Operator: conectividade nativa de Ingress, Egress, `Connector` e Proxy do Kubernetes API Server](../../domains/software-0008/software/devops/tailscale-kubernetes-operator-arquitetura-ingress-egress-api-server-proxy.md)
+1853. [Tailscale Kubernetes Ingress: exposição de `Services` e `Ingress` internos para a *tailnet* com certificados HTTPS automáticos](../../domains/software-0008/software/devops/tailscale-kubernetes-ingress-exposicao-servicos-tailnet-tls-automatico.md)
+1854. [Tailscale Kubernetes Egress: conectando Pods do cluster a bancos de dados e servidores privados na *tailnet*](../../domains/software-0008/software/devops/tailscale-kubernetes-egress-acesso-pods-servicos-externos-tailnet.md)
+1855. [Tailscale `Connector` CRD: implantação declarativa de Subnet Routers e Exit Nodes em alta disponibilidade no Kubernetes](../../domains/software-0008/software/devops/tailscale-connector-crd-subnet-router-exit-node-kubernetes.md)
+1856. [Tailscale Políticas Zero-Trust (ACLs e `Grants`): controle de acesso baseado em identidade, `tagOwners` e `autoApprovers`](../../domains/software-0008/software/devops/tailscale-acls-grants-tags-autoapprovers-politica-zero-trust.md)
+1857. [Tailscale SSH e `Recorder` (`tsrecorder`): autenticação SSH sem chaves pela *tailnet* e gravação de sessões no Kubernetes](../../domains/software-0008/software/devops/tailscale-ssh-session-recording-tsrecorder-kubernetes-auditoria.md)
+1858. [Tailscale MagicDNS e Split DNS: resolução automática de nomes `.ts.net` e encaminhamento seletivo por domínio](../../domains/software-0008/software/devops/tailscale-magicdns-split-dns-search-domains-resolucao-nomes.md)
+1859. [Tailscale em Containers: diferença entre modo Kernel `TUN` (`/dev/net/tun`) e `Userspace Networking` (`--tun=userspace-networking`)](../../domains/software-0008/software/devops/tailscale-userspace-networking-container-sidecar-tun-device.md)
+1860. [Tailscale `serve` e `funnel`: exposição rápida de portas locais via HTTPS na *tailnet* (`serve`) ou na internet pública (`funnel`)](../../domains/software-0008/software/devops/tailscale-serve-funnel-compartilhamento-local-https-webhooks.md)
+
+### Headscale (servidor de controle open-source e *self-hosted* para Tailscale com `Users`, `PreAuthKeys`, MagicDNS, `extra_records`, servidor `DERP` embutido, OIDC e políticas ACL/Grants)
+
+1861. [Headscale: arquitetura do servidor de controle open-source e *self-hosted* compatível com clientes oficiais Tailscale](../../domains/software-0008/software/devops/headscale-arquitetura-control-server-open-source-self-hosted-tailscale.md)
+1862. [Headscale: gerenciamento de `Users` e registro de `Nodes` via Web Auth, `PreAuthKeys` e nós efêmeros](../../domains/software-0008/software/devops/headscale-users-nodes-registration-web-auth-preauthkeys-ephemeral.md)
+1863. [Headscale DNS: configuração de `MagicDNS`, `Split DNS` (nameservers restritos) e `extra_records` exclusivos do Headscale](../../domains/software-0008/software/devops/headscale-dns-magicdns-split-dns-extra-records-config-yaml.md)
+1864. [Headscale Routes: aprovação manual e automática (`autoApprovers`) de Subnet Routers, Exit Nodes e filtragem com `via`](../../domains/software-0008/software/devops/headscale-rotas-subnet-routers-exit-nodes-auto-approvers-via.md)
+1865. [Headscale Policy Engine: gerenciamento de ACLs, `Grants`, `Tags`, `Tailscale SSH` e modo `file` vs `database`](../../domains/software-0008/software/devops/headscale-politicas-acls-grants-tags-ssh-database-vs-file.md)
+1866. [Headscale Embedded DERP Server: operação 100% *air-gapped* com servidor relay DERP e STUN embutido](../../domains/software-0008/software/devops/headscale-embedded-derp-server-stun-custom-derpmap-airgapped.md)
+1867. [Headscale com OpenID Connect (OIDC): registro de nós via Single Sign-On com Keycloak, Dex, Authelia ou Okta](../../domains/software-0008/software/devops/headscale-autenticacao-oidc-single-sign-on-keycloak-dex-authelia.md)
+1868. [Headscale API (gRPC/REST) e `apikeys`: administração remota segura e integração com automação externa](../../domains/software-0008/software/devops/headscale-api-grpc-rest-apikeys-automacao-remota-cli.md)
+1869. [Headscale Persistência e Operação: banco de dados SQLite (WAL) vs PostgreSQL e recomendações de deploy](../../domains/software-0008/software/devops/headscale-armazenamento-sqlite-wal-postgresql-requisitos-producao.md)
+1870. [Headscale File Sharing e Tags: uso de `Taildrop`, `Taildrive` e gerenciamento de `tags` em máquinas de infraestrutura](../../domains/software-0008/software/devops/headscale-compartilhamento-arquivos-taildrop-taildrive-tags-acls.md)
+
+### NetBird (plataforma Zero-Trust P2P sobre Kernel WireGuard com `Client`, `Management`, `Signal`, `Relay`/Coturn, Pion ICE, firewall `nftables`, DNS privado e criptografia pós-quântica Rosenpass)
+
+1871. [NetBird: arquitetura Zero-Trust P2P sobre Kernel WireGuard com `Client`, `Management`, `Signal` e `Relay` (Coturn)](../../domains/software-0008/software/devops/netbird-arquitetura-zero-trust-mesh-wireguard-management-signal-relay.md)
+1872. [NetBird Negociação P2P: descoberta de candidatos via Pion ICE (STUN) e sinalização criptografada fim-a-fim no Signal](../../domains/software-0008/software/devops/netbird-protocolo-negociacao-p2p-pion-ice-signal-nacl-box-encryption.md)
+1873. [NetBird `Setup Keys`: registro automatizado de servidores, containers e nós efêmeros em massa](../../domains/software-0008/software/devops/netbird-setup-keys-provisionamento-automatizado-servidores-containers-ephemeral.md)
+1874. [NetBird Access Control e Posture Checks: políticas baseadas em grupos aplicadas via `nftables` e verificação de postura](../../domains/software-0008/software/devops/netbird-controle-acesso-groups-policies-nftables-posture-checks.md)
+1875. [NetBird Network Routes e Exit Nodes: roteamento para sub-redes privadas (CIDR), rotas por domínio DNS e grupos de alta disponibilidade](../../domains/software-0008/software/devops/netbird-network-routes-domain-routes-exit-nodes-ha-routing-peers.md)
+1876. [NetBird Private DNS: resolução de FQDNs de peers, `Custom DNS Zones` e compartilhamento de porta DNS com XDP/eBPF](../../domains/software-0008/software/devops/netbird-private-dns-custom-zones-ebpf-xdp-port-sharing.md)
+1877. [NetBird com Rosenpass (`--enable-rosenpass`): resistência pós-quântica (PQC) para túneis WireGuard](../../domains/software-0008/software/devops/netbird-rosenpass-post-quantum-cryptography-wireguard-preshared-keys.md)
+1878. [NetBird Self-Hosted: arquitetura de implantação própria com Management, Dashboard, Signal, Relay/Coturn e IdP OIDC](../../domains/software-0008/software/devops/netbird-self-hosted-deployment-docker-compose-idp-oidc-coturn.md)
+1879. [NetBird SSH e Browser Client: acesso SSH governado por políticas centrais e terminal SSH/RDP no navegador](../../domains/software-0008/software/devops/netbird-ssh-server-central-access-policies-browser-ssh-rdp.md)
+1880. [NetBird Automação e Perfis: Terraform Provider (`netbirdio/netbird`), Ansible Collection e `netbird profile` multi-conta](../../domains/software-0008/software/devops/netbird-automacao-terraform-provider-ansible-multi-account-profiles.md)
+
+### Nebula (rede overlay escalável baseada no Noise Protocol Framework, certificados PKI `nebula-cert` com grupos de segurança, nós de descoberta `Lighthouses` e firewall stateful embutido)
+
+1881. [Nebula: arquitetura de rede overlay escalável baseada no Noise Protocol Framework, certificados PKI e `Lighthouses`](../../domains/software-0008/software/devops/nebula-arquitetura-overlay-network-noise-protocol-pki-lighthouses.md)
+1882. [Nebula PKI (`nebula-cert`): emissão de certificados com grupos de segurança, restrições de sub-rede e modo `P256` / FIPS 140-3](../../domains/software-0008/software/devops/nebula-cert-ca-sign-groups-subnets-curve-p256-fips.md)
+1883. [Nebula Rotação de CA e Revogação: recarga de certificados sem downtime via `SIGHUP` e `pki.blocklist`](../../domains/software-0008/software/devops/nebula-rotacao-ca-zero-downtime-sighup-blocklist-certificados.md)
+1884. [Nebula `Lighthouses` e `static_host_map`: arquitetura de descoberta de pares de baixíssimo custo e DNS opcional](../../domains/software-0008/software/devops/nebula-lighthouses-static-host-map-descoberta-peers-dns.md)
+1885. [Nebula Stateful Firewall: filtragem de tráfego `inbound`/`outbound` baseada em `group`/`groups`, `proto`, `port` e `cidr`](../../domains/software-0008/software/devops/nebula-firewall-stateful-inbound-outbound-groups-cidr-ca-sha.md)
+1886. [Nebula NAT Traversal e `Relay`: configuração de `punchy` (UDP hole punching) e nós de `relay` para NATs simétricos](../../domains/software-0008/software/devops/nebula-nat-traversal-punchy-relay-am-relay-use-relays.md)
+1887. [Nebula `unsafe_routes`: roteamento de tráfego para sub-redes externas que não executam o agente Nebula](../../domains/software-0008/software/devops/nebula-unsafe-routes-roteamento-sub-redes-externas-subnet-routing.md)
+1888. [Nebula `local_allow_list` e `remote_allow_list`: filtragem de interfaces virtuais (`docker.*`, `cni.*`) anunciadas ao Lighthouse](../../domains/software-0008/software/devops/nebula-local-remote-allow-list-filtragem-interfaces-docker-cni.md)
+1889. [Nebula Tuning de Alta Performance: ajuste de `routines`, `listen.batch`, buffers de socket (`read_buffer`/`write_buffer`) e MTU](../../domains/software-0008/software/devops/nebula-tuning-performance-listen-batch-routines-buffers-mtu.md)
+1890. [Nebula Observabilidade e Diagnóstico: exportação de métricas `stats` (Prometheus/Graphite) e servidor `sshd` interno de inspeção](../../domains/software-0008/software/devops/nebula-observabilidade-prometheus-stats-sshd-interno-diagnostico.md)
+
+### kpack (serviço Kubernetes-native de build e rebase contínuo de imagens OCI não privilegiado com Cloud Native Buildpacks, `Image`, `Builder`, `ClusterBuilder`, `ClusterStore` e `ClusterStack`)
+
+1891. [kpack: arquitetura do serviço Kubernetes-native de build e rebase contínuo de imagens OCI com Cloud Native Buildpacks](../../domains/software-0008/software/devops/kpack-arquitetura-kubernetes-native-container-build-cloud-native-buildpacks.md)
+1892. [kpack `Image` CRD: configuração declarativa de `tag`, `additionalTags`, `cache` (Volume vs Registry) e limites de histórico](../../domains/software-0008/software/devops/kpack-crd-image-spec-tag-additionaltags-cache-history-limits.md)
+1893. [kpack Fontes de Código (`spec.source`): monitoramento de repositórios `git`, arquivos `blob` e imagens `registry` com `subPath`](../../domains/software-0008/software/devops/kpack-source-configuration-git-blob-registry-subpath-monorepo.md)
+1894. [kpack `Builder` e `ClusterBuilder`: definição da ordem de detecção (`spec.order`) e resolução de IDs de Buildpacks](../../domains/software-0008/software/devops/kpack-builder-vs-clusterbuilder-order-detection-resolution.md)
+1895. [kpack `ClusterStack` e Operação de `Rebase`: atualização instantânea da camada de SO (`runImage`) sem recompilar o código](../../domains/software-0008/software/devops/kpack-clusterstack-build-image-run-image-rebase-automatico-cve.md)
+1896. [kpack `ClusterStore`, `Buildpack` e `ClusterBuildpack`: catálogo e resolução de versões de Cloud Native Buildpacks](../../domains/software-0008/software/devops/kpack-clusterstore-buildpack-clusterbuildpack-empacotamento-cnb.md)
+1897. [kpack Configuração Avançada de Build (`spec.build` e `spec.cosign`): variáveis `BP_*`, limites de CPU/RAM, `project.toml` e assinatura Cosign](../../domains/software-0008/software/devops/kpack-build-configuration-env-resources-project-toml-cosign.md)
+1898. [kpack Gerenciamento de Credenciais: vinculação de `Secrets` (Registry, Git SSH/Basic Auth e Cosign) à `ServiceAccount`](../../domains/software-0008/software/devops/kpack-secrets-serviceaccount-git-ssh-docker-registry-cosign.md)
+1899. [kpack `Build` CRD e Execução em Pod: fases do CNB Lifecycle (`prepare`, `detect`, `analyze`, `restore`, `build`, `export`, `completion`)](../../domains/software-0008/software/devops/kpack-crd-build-fases-cnb-lifecycle-pods-init-containers.md)
+1900. [kpack CLI (`kp`) e Utilitário `logs`: operação de `Images`/`Builders`, streaming de logs de build e comparação `kpack` vs `pack`](../../domains/software-0008/software/devops/kpack-cli-kp-utilitario-logs-operacao-comparacao-pack.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1800 notas 1–1800 das tranches 1–18 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1800/2.000 notas válidas, restando 200 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1900 notas 1–1900 das tranches 1–19 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1900/2.000 notas válidas, restando 100 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

@@ -1,0 +1,113 @@
+1881|nebula-arquitetura-overlay-network-noise-protocol-pki-lighthouses|Nebula: arquitetura de rede overlay escalável baseada no Noise Protocol Framework, certificados PKI e `Lighthouses`|O **Nebula** (criado originalmente no Slack e mantido com a Defined Networking sob licença MIT) é uma ferramenta de rede overlay peer-to-peer mutuamente autenticada capaz de conectar desde poucas máquinas até dezenas de milhares de hosts em qualquer nuvem ou data center, baseando-se no **Noise Protocol Framework** (`ECDH` Curve25519/P256 e `AES-256-GCM`), certificados X.509 próprios (`nebula-cert`) e nós de descoberta chamados **Lighthouses**.|Diferentemente de redes que dependem de um servidor de coordenação centralizado que mantém conexões ativas com todos os nós para distribuir listas de ACLs, o Nebula embute o endereço IP, a sub-rede e os **grupos de segurança (*groups*)** do host diretamente dentro do certificado assinado pela Autoridade Certificadora offline (`ca.key`).|Quando dois nós Nebula iniciam um handshake Noise entre si, cada lado valida criptograficamente o certificado do outro contra o arquivo `ca.crt` local e descobre instantaneamente quais `groups` o par possui — aplicando o firewall do Nebula sem precisar consultar nenhum servidor central de políticas.|```bash
+nebula-cert ca -name "Acme Infrastructure CA"
+nebula-cert sign -name "lighthouse1" -ip "192.168.100.1/24"
+nebula-cert sign -name "app-server-1" -ip "192.168.100.10/24" -groups "servers,prod-web"
+```|O arquivo **`ca.key`** gerado por `nebula-cert ca` é o segredo mais crítico de toda a rede Nebula: ele **nunca** deve ser copiado para os nós nem para os Lighthouses; mantenha-o offline em cofre seguro e distribua apenas o certificado público `ca.crt`.|Inspecione os metadados, grupos, sub-rede e validade de um certificado emitido executando `nebula-cert print -path app-server-1.crt`.|https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://github.com/slackhq/nebula
+1882|nebula-cert-ca-sign-groups-subnets-curve-p256-fips|Nebula PKI (`nebula-cert`): emissão de certificados com grupos de segurança, restrições de sub-rede e modo `P256` / FIPS 140-3|O binário **`nebula-cert`** gerencia toda a Autoridade Certificadora (CA) e os certificados de hosts do Nebula, permitindo assinar nos próprios certificados o nome do nó (`-name`), o IP e máscara da rede overlay (`-ip`), a lista de grupos de segurança (`-groups`), sub-redes roteáveis (`-subnets`) e a curva criptográfica (`Curve25519` padrão ou NIST **`P256`** para conformidade **FIPS 140-3**).|Se uma CA intermediária de uma equipe de desenvolvimento pudesse assinar certificados para qualquer IP da rede de produção ou adicionar o grupo `prod-dba`, ela comprometeria o isolamento da malha.|O `nebula-cert ca` aceita as flags `-groups`, `-ips` e `-subnets` na própria criação da CA para restringir criptograficamente quais grupos e faixas de IP aquela CA tem permissão para assinar nos certificados filhos. Além disso, `nebula-cert ca -curve P256` combinado com binários compilados com `GOFIPS140=v1.0.0` habilita handshakes ECDH/ECDSA P256 e `AES-256-GCM` compatíveis com FIPS 140-3.|```bash
+# Criando uma CA restrita a assinar apenas IPs na faixa 10.42.0.0/16 e grupos específicos:
+nebula-cert ca -name "Prod CA" \
+  -ips "10.42.0.0/16" \
+  -groups "prod-web,prod-db,prod-k8s" \
+  -duration 8760h
+nebula-cert print -path ca.crt -json
+```|Por padrão, uma CA criada com `nebula-cert ca` tem validade de **1 ano** e os certificados de host expiram 1 segundo antes da CA; planeje a rotação da CA com antecedência.|Execute `nebula-cert verify -ca ca.crt -crt host.crt` para validar criptograficamente se um certificado de host é válido perante o bundle de CAs.|https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://github.com/slackhq/nebula
+1883|nebula-rotacao-ca-zero-downtime-sighup-blocklist-certificados|Nebula Rotação de CA e Revogação: recarga de certificados sem downtime via `SIGHUP` e `pki.blocklist`|A seção **`pki:`** do `config.yml` do Nebula suporta recarga a quente via sinal **`SIGHUP`** (recarregando `ca.crt`, `host.crt` e `host.key` do disco sem derrubar túneis existentes), múltiplos certificados CA concatenados em `ca.crt` para rotação de CA sem downtime, **`blocklist`** de fingerprints SHA-256 e **`disconnect_invalid: true`**.|Como os certificados Nebula têm validade finita (1 ano por padrão) e não consultam um servidor OCSP central a cada pacote, operadores precisam saber como rotacionar a CA sem interromper milhares de conexões e como revogar imediatamente um laptop roubado.|Para **rotacionar a CA**, você gera a nova CA (`ca-new.crt`), concatena o conteúdo de `ca-old.crt` e `ca-new.crt` no arquivo `ca.crt` de todos os nós, emite novos certificados de host assinados pela nova CA e envia `kill -HUP $(pidof nebula)`. Para **revogar** um certificado comprometido antes de expirar, basta obter seu `fingerprint` com `nebula-cert print` e adicioná-lo à lista `pki.blocklist` no `config.yml`.|```yaml
+pki:
+  ca: /etc/nebula/ca.crt
+  cert: /etc/nebula/host.crt
+  key: /etc/nebula/host.key
+  disconnect_invalid: true
+  blocklist:
+    - c99d4e650533b92061b09918e838a5a0a6aaee21eed1d12fd937682865936c72
+```|Habilite sempre `disconnect_invalid: true` na seção `pki:` para garantir que clientes cujos certificados expiraram após o túnel já estar aberto sejam desconectados imediatamente.|Obtenha o fingerprint de um certificado com `nebula-cert print -path host.crt` e valide a configuração com `nebula -test -config /etc/nebula/config.yml`.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1884|nebula-lighthouses-static-host-map-descoberta-peers-dns|Nebula `Lighthouses` e `static_host_map`: arquitetura de descoberta de pares de baixíssimo custo e DNS opcional|No Nebula, um **Lighthouse** (`lighthouse.am_lighthouse: true`) é um nó de descoberta leve com endereço IP ou DNS público fixo (normalmente na porta UDP `4242`) que mantém em memória os endereços IP reais reportados pelos demais nós da malha para que eles possam se encontrar e abrir túneis diretos.|Como o Lighthouse não roteia o tráfego de dados dos demais nós nem armazena estado em banco de dados, ele consome pouquíssima CPU e memória (uma VM básica de $6/mês atende milhares de nós).|Na configuração dos nós comuns (`am_lighthouse: false`), a seção **`static_host_map`** mapeia o IP Nebula de cada Lighthouse (ex.: `"192.168.100.1"`) para a lista de seus endereços reais na internet (`["203.0.113.10:4242"]`), e a seção `lighthouse.hosts` lista os IPs Nebula dos Lighthouses (`["192.168.100.1"]`). Nos próprios nós Lighthouse, `am_lighthouse: true` deve estar ativo e `lighthouse.hosts` **deve ficar vazio (`[]`)**.|```yaml
+static_host_map:
+  "192.168.100.1": ["203.0.113.10:4242"]
+  "192.168.100.2": ["198.51.100.20:4242"]
+
+lighthouse:
+  am_lighthouse: false
+  interval: 60
+  hosts:
+    - "192.168.100.1"
+    - "192.168.100.2"
+```|Atenção às duas regras de ouro documentadas no `config.yml` oficial: 1) em um nó Lighthouse (`am_lighthouse: true`), a lista `lighthouse.hosts` deve ser vazia; e 2) nos demais nós, `lighthouse.hosts` deve conter os **IPs Nebula** dos Lighthouses, e nunca seus IPs públicos reais.|Valide o `config.yml` de um Lighthouse e de um nó cliente executando `nebula -test -config config.yml`.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1885|nebula-firewall-stateful-inbound-outbound-groups-cidr-ca-sha|Nebula Stateful Firewall: filtragem de tráfego `inbound`/`outbound` baseada em `group`/`groups`, `proto`, `port` e `cidr`|Todo nó Nebula possui um **firewall stateful de pacotes embutido** configurado na seção `firewall:` do `config.yml`, que avalia cada pacote nos sentidos `outbound` e `inbound` com base nas propriedades criptograficamente autenticadas no certificado do par remoto (`group`, `groups`, `host`, `cidr`, `ca_name`, `ca_sha`).|Em firewalls tradicionais baseados apenas em IP (`iptables`), se um endereço IP muda ou é realocado, a regra quebra ou libera acesso indevido; no firewall do Nebula, uma regra `groups: ["prod-k8s-worker", "sre"]` verifica se o certificado apresentado no handshake Noise contém ambos os grupos assinados pela CA.|Por padrão, o firewall do Nebula nega todo tráfego que não corresponda explicitamente a uma regra (`default deny`), e o rastreamento de estado (`conntrack`) garante que pacotes de resposta a conexões permitidas fluam automaticamente. Usar `group: sre` exige pertencer a um único grupo (OR quando múltiplos itens), enquanto `groups: ["sre", "prod"]` exige que o certificado remoto possua **todos** os grupos listados (AND lógico).|```yaml
+firewall:
+  outbound:
+    - port: any
+      proto: any
+      host: any
+  inbound:
+    - port: any
+      proto: icmp
+      host: any
+    - port: 22
+      proto: tcp
+      groups:
+        - sre
+        - ssh-bastion
+    - port: 5432
+      proto: tcp
+      group: app-backend
+```|A seção `firewall:` suporta recarga a quente via `SIGHUP`, permitindo atualizar regras de firewall em produção sem reiniciar a interface `nebula1` nem interromper conexões permitidas.|Edite uma regra em `firewall.inbound`, teste a sintaxe com `nebula -test -config config.yml` e aplique a mudança a quente com `kill -HUP <pid>`.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1886|nebula-nat-traversal-punchy-relay-am-relay-use-relays|Nebula NAT Traversal e `Relay`: configuração de `punchy` (UDP hole punching) e nós de `relay` para NATs simétricos|Para atravessar firewalls e roteadores NAT domésticos ou corporativos, o Nebula utiliza a seção **`punchy:`** (que mantém o *UDP hole punching* ativo) combinada com a seção **`relay:`** (`am_relay: true` / `use_relays: true`), que encaminha pacotes criptografados através de um nó intermediário caso a conexão UDP direta falhe.|Quando dois nós estão atrás de NATs simétricos estritos ou firewalls corporativos que bloqueiam UDP arbitrário entre pares, o *UDP hole punching* sozinho não consegue abrir o caminho direto.|Habilitar `punchy.punch: true` e `punchy.respond: true` instrui os nós a enviarem pacotes de perfuração NAT coordenados pelo Lighthouse. Se ainda assim o caminho direto falhar, nós configurados com `relay.am_relay: true` (frequentemente os próprios Lighthouses quando o tráfego de fallback é moderado) encaminham os pacotes cifrados ponta-a-ponto para os nós que listam seus IPs Nebula em `relay.relays`.|```yaml
+punchy:
+  punch: true
+  respond: true
+  delay: 1s
+
+relay:
+  am_relay: false
+  use_relays: true
+  relays:
+    - 192.168.100.1
+```|Mesmo quando uma conexão transita por um nó `relay`, o handshake Noise e a criptografia `AES-256-GCM` permanecem estritamente ponta-a-ponto entre o nó de origem e o nó de destino; o nó relay não consegue descriptografar o tráfego.|Valide a configuração das seções `punchy` e `relay` com `nebula -test -config config.yml`.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1887|nebula-unsafe-routes-roteamento-sub-redes-externas-subnet-routing|Nebula `unsafe_routes`: roteamento de tráfego para sub-redes externas que não executam o agente Nebula|O recurso **`tun.unsafe_routes`** do Nebula (junto à flag `-subnets` na assinatura do certificado via `nebula-cert sign`) permite que um nó Nebula atue como gateway para uma sub-rede externa (como uma CIDR de VPC, impressoras, equipamentos de rede ou serviços gerenciados) onde o binário Nebula não está instalado.|O recurso chama-se `unsafe_routes` porque, ao sair do nó gateway Nebula em direção à sub-rede física final, o tráfego deixa de estar encapsulado pelo túnel Noise e pelas garantias de identidade de certificado do Nebula.|Para configurar o roteamento com segurança: 1) assine o certificado do nó gateway incluindo `-subnets "10.50.0.0/24"` no `nebula-cert sign` (sem isso os demais nós recusarão enviar tráfego dessa sub-rede para ele); 2) habilite IP forwarding no kernel do gateway (`net.ipv4.ip_forward=1`); e 3) adicione a entrada `unsafe_routes` no `config.yml` dos nós clientes apontando `route: 10.50.0.0/24` para `via: 192.168.100.10`.|```yaml
+tun:
+  disabled: false
+  dev: nebula1
+  mtu: 1300
+  unsafe_routes:
+    - route: 10.50.0.0/24
+      via: 192.168.100.10
+      mtu: 1300
+      metric: 100
+```|Se o certificado do nó `via` (`192.168.100.10`) não tiver a sub-rede `10.50.0.0/24` explicitamente autorizada em seu campo `subnets` assinado pela CA, o handshake rejeitará o roteamento.|Verifique com `nebula-cert print -path gateway.crt` se a sub-rede consta na lista `Subnets` do certificado do gateway.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1888|nebula-local-remote-allow-list-filtragem-interfaces-docker-cni|Nebula `local_allow_list` e `remote_allow_list`: filtragem de interfaces virtuais (`docker.*`, `cni.*`) anunciadas ao Lighthouse|Em servidores que executam Docker ou Kubernetes, as opções **`lighthouse.local_allow_list`** e **`lighthouse.remote_allow_list`** evitam que o nó Nebula anuncie ao Lighthouse endereços IP internos irrelevantes de bridges de containers (`docker0`, `br-*`, `cni0`, `flannel.1`, `cali*`) ou tente fazer handshake para faixas privadas colidentes.|Se dois servidores em data centers distintos tiverem ambos uma bridge `docker0` com o IP `172.17.0.1` e anunciarem esse IP ao Lighthouse, quando tentarem se conectar o Nebula poderá enviar pacotes UDP para a própria bridge `172.17.0.1` local em vez do IP roteável real.|Em `lighthouse.local_allow_list.interfaces`, é possível passar expressões regulares de nomes de interface com `false` (ex.: `'docker.*': false`, `'br-.*': false`, `'veth.*': false`) e restringir quais CIDRs locais são reportados ao Lighthouse.|```yaml
+lighthouse:
+  am_lighthouse: false
+  hosts:
+    - "192.168.100.1"
+  local_allow_list:
+    interfaces:
+      tun0: false
+      'docker.*': false
+      'br-.*': false
+      'veth.*': false
+```|Conforme documentado no `config.yml`, se você combinar regras `true` (allow) e `false` (deny) de CIDRs IPv4 em `remote_allow_list`, você **deve** definir explicitamente uma regra padrão para `"0.0.0.0/0"` (e `"::/0"` para IPv6).|Teste as regras de `local_allow_list` com `nebula -test -config config.yml` antes de reiniciar o serviço.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1889|nebula-tuning-performance-listen-batch-routines-buffers-mtu|Nebula Tuning de Alta Performance: ajuste de `routines`, `listen.batch`, buffers de socket (`read_buffer`/`write_buffer`) e MTU|Para workloads de alto throughput (10 Gbps+) em servidores multi-core, o `config.yml` do Nebula expõe controles de baixo nível: **`routines`** (múltiplas threads/filas TUN e sockets UDP), **`listen.batch`** (número de pacotes lidos por syscall `recvmmsg`), **`read_buffer`/`write_buffer`** e **`tun.mtu`**.|Por padrão, processar toda a criptografia `AES-256-GCM` e leituras da interface TUN em uma única goroutine limita o throughput máximo ao clock de um único núcleo de CPU.|Em kernels Linux modernos com suporte a multi-queue TUN e `SO_REUSEPORT`, aumentar `routines` (ex.: `4` ou `8`) distribui o processamento criptográfico e de pacotes entre múltiplos núcleos, enquanto `listen.batch: 64` e buffers de 10 MB (`10485760`) reduzem drasticamente o overhead de chamadas de sistema sob tráfego intenso.|```yaml
+listen:
+  host: "::"
+  port: 4242
+  batch: 64
+  read_buffer: 10485760
+  write_buffer: 10485760
+
+routines: 4
+
+tun:
+  dev: nebula1
+  mtu: 1300
+```|Note o aviso da documentação oficial: em Linux 5.10+ com UDP GRO, cada slot de recepção aloca 64 KiB, portanto `batch: 64` consome ~4 MiB de buffer por `routine`; em dispositivos embarcados com pouca memória, reduza `batch` e mantenha `routines: 1`.|Valide a configuração de tuning com `nebula -test -config config.yml` e meça o ganho de throughput entre dois hosts com `iperf3`.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula
+1890|nebula-observabilidade-prometheus-stats-sshd-interno-diagnostico|Nebula Observabilidade e Diagnóstico: exportação de métricas `stats` (Prometheus/Graphite) e servidor `sshd` interno de inspeção|O Nebula possui duas ferramentas nativas de observabilidade e troubleshooting em produção: a seção **`stats:`** (que exporta métricas detalhadas de handshakes, pacotes descartados pelo firewall, latência e bytes por túnel para **Prometheus** ou **Graphite**) e a seção **`sshd:`** (um servidor SSH administrativo embutido no processo Nebula para inspecionar o hostmap e túneis em memória).|Quando dois nós não conseguem fechar túnel ou pacotes são descartados silenciosamente, reiniciar o daemon em modo debug corta as conexões ativas; já conectar no `sshd` administrativo interno permite rodar comandos como `list-hostmap`, `print-cert` e `query-lighthouse` em tempo real.|Na seção `stats:`, basta configurar `type: prometheus`, `listen: 127.0.0.1:8080` e `path: /metrics` (com `message_metrics: true` e `lighthouse_metrics: true` opcionais) para coletar métricas de saúde da malha pelo Prometheus.|```yaml
+stats:
+  type: prometheus
+  listen: 127.0.0.1:8080
+  path: /metrics
+  namespace: nebula
+  subsystem: overlay
+  interval: 10s
+  message_metrics: true
+  lighthouse_metrics: true
+```|Se habilitar o servidor `sshd:` administrativo de diagnóstico em `config.yml`, faça bind estritamente em `127.0.0.1` (ou no IP Nebula do próprio nó) e restrinja `authorized_users` com chaves públicas SSH dedicadas.|Consulte `curl -s http://127.0.0.1:8080/metrics | grep nebula_` para inspecionar os contadores de pacotes, handshakes e estado dos túneis.|https://raw.githubusercontent.com/slackhq/nebula/master/examples/config.yml;https://raw.githubusercontent.com/slackhq/nebula/master/README.md;https://github.com/slackhq/nebula

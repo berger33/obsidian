@@ -1,0 +1,101 @@
+1821|nuclio-arquitetura-serverless-real-time-data-gpu-processor|Nuclio: arquitetura serverless de tempo real de alta performance para eventos, dados e GPUs no Kubernetes|O **Nuclio** (iniciado em 2017 e amplamente integrado a Jupyter, Kubeflow Pipelines e MLRun, licenciado sob Apache 2.0) é um framework serverless de altíssimo desempenho focado em cargas intensivas de dados, I/O e computação (CPUs e GPUs), onde uma única instância de função pode processar centenas de milhares de requisições HTTP ou registros de streaming por segundo.|Frameworks serverless tradicionais criam um novo processo por evento ou serializam dados por múltiplas camadas de proxy HTTP, tornando inviável processar streams Kafka/Kinesis em tempo real ou inferências de modelos de IA em GPU com baixa latência.|No Nuclio, cada função é compilada ou empacotada (usando **Kaniko** ou Docker de forma segura) junto ao **Function Processor** do Nuclio, que alimenta um pool paralelo de *workers* em memória, gerencia conexões persistentes (*Data Bindings*), expõe métricas e suporta dezenas de fontes de eventos com overhead mínimo.|```bash
+# Executando o dashboard do Nuclio rapidamente via Docker para exploração:
+docker run -d -p 8070:8070 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name nuclio-dashboard \
+  quay.io/nuclio/dashboard:stable-amd64
+```|Em clusters Kubernetes, o Nuclio opera por meio de Custom Resource Definitions (`NuclioFunction`, `NuclioProject`, `NuclioFunctionEvent`, `NuclioAPIGateway`), convertendo configurações de réplicas, auto-scaling e GPUs em `Deployments`, `Services`, `HPA` e `Ingress` nativos.|Execute `kubectl get nucliofunctions -A` (ou acesse o dashboard na porta `8070`) para inspecionar as funções implantadas.|https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://github.com/nuclio/nuclio
+1822|nuclio-function-processor-event-listeners-runtimes-native-shmem-shell|Nuclio Function Processor: arquitetura interna de Event Listeners e motores de Runtime (`Native`, `SHMEM` e `Shell`)|O **Function Processor** é o coração de cada Pod de função no Nuclio: ele desacopla a lógica da função das fontes de eventos e executa o handler do usuário por meio de três implementações de motor de runtime: **Native** (Go/C inline), **SHMEM** (memória compartilhada zero-copy para Python, Java, Node.js, .NET) e **Shell** (executáveis CLI).|Comunicar o processo supervisor em Go com um worker Python ou Java usando chamadas HTTP/REST locais introduz cópias de memória e serialização JSON caras; já usar canais de memória compartilhada (*SHMEM*) entrega velocidade próxima ao código nativo.|O Function Processor é composto por quatro blocos: 1) **Event-source listeners** (ouvindo sockets/filas com garantia *at-least-once* ou *exactly-once* e checkpoints de stream); 2) **Runtime engine** (`Native`, `SHMEM` ou `Shell` com múltiplos workers paralelos); 3) **Data bindings** (conexões persistentes pré-inicializadas no objeto `context`); e 4) **Control framework** (coleta de logs estruturados, estatísticas e health checks em `/__internal/health`).|```python
+def handler(context, event):
+    context.logger.info_with("Evento recebido", body_len=len(event.body))
+    return context.Response(
+        body="Processado pelo runtime SHMEM Python",
+        headers={},
+        content_type="text/plain",
+        status_code=200,
+    )
+```|Conforme documentado na arquitetura do Nuclio, o runtime **Shell** (que executa binários via linha de comando mapeando `stdout`/`stderr`) suporta apenas *data bindings* baseados em arquivos.|Verifique o endpoint de saúde interno de um Function Processor consultando `/__internal/health` no Pod da função.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1823|nuclio-blocking-vs-non-blocking-allocator-workers-sync-async|Nuclio: alocação de EventProcessors em dois níveis (`Blocking Allocator` vs `Non-blocking Allocator`) para modos Sync e Async|No pipeline interno do Function Processor do Nuclio, cada evento atravessa dois níveis de abstração `EventProcessor` (primeiro no nível do **Trigger** e depois no nível do **Runtime**), gerenciados por um **Blocking Allocator** (para processamento síncrono FIFO) ou por um **Non-blocking Allocator** (para processamento assíncrono concorrente).|Enquanto handlers síncronos tradicionais processam 1 evento por vez por worker (bloqueando o worker até o retorno), handlers assíncronos modernos (como `async def` em `asyncio` do Python) permitem que um único worker processe dezenas de eventos concorrentemente enquanto aguarda I/O externo.|No modo **Synchronous** (padrão), o Nuclio usa um *Blocking Pool Allocator* no nível do trigger que garante que cada worker processe apenas 1 evento por vez em ordem FIFO. Já no modo **Asynchronous**, o nível do trigger usa um *Singleton Non-blocking Allocator* (permitindo alocar múltiplos eventos simultaneamente ao mesmo worker), enquanto o nível de conexão/runtime garante o isolamento de cada chamada.|```yaml
+# Trecho de function.yaml configurando múltiplos workers no trigger HTTP:
+spec:
+  runtime: python:3.11
+  handler: main:handler
+  triggers:
+    myHttpTrigger:
+      kind: http
+      numWorkers: 8
+```|Mesmo no fluxo assíncrono (*async processing flow*), o Nuclio utiliza *Blocking Allocator* para a alocação de conexões individuais no nível de runtime a fim de preservar a integridade de protocolo.|Ajuste `numWorkers` no trigger da função e monitore a utilização de workers pelas métricas Prometheus expostas pelo processor.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1824|nuclio-auth-proxy-sidecar-reverse-proxy-auth-only-dlx-scale-zero|Nuclio no Kubernetes: autenticação de funções com `auth-proxy` sidecar (`reverse-proxy` vs `auth-only` no DLX)|Em implantações Kubernetes onde `authentication.functionAuthenticationEnabled` está habilitado na configuração da plataforma, cada Pod de função Nuclio executa dois containers: o **processor** (escutando apenas em loopback `127.0.0.1`) e o sidecar **`auth-proxy`** (ponto de entrada voltado ao cluster).|Se o container processor ficasse exposto diretamente na rede do cluster sem camada de autenticação padronizada — ou se qualquer requisição não autenticada pudesse acordar funções em *scale-to-zero* (DLX) gastando GPUs — o cluster ficaria vulnerável a abuso.|O `auth-proxy` opera em dois modos complementares: 1) **`reverse-proxy`** (roda como sidecar dentro de cada Pod de função, autenticando toda requisição HTTP antes de repassá-la ao processor em loopback); e 2) **`auth-only`** (roda junto ao Pod **DLX** de scale-to-zero, expondo um endpoint `/auth` que o DLX consulta para autenticar a chamada **antes** de escalar a função de 0 para 1 réplica).|```bash
+# O caminho /__internal/health é sempre liberado sem autenticação para probes do kubelet:
+kubectl exec <nuclio-fn-pod> -c nuclio -- wget -qO- http://127.0.0.1:8080/__internal/health
+```|O caminho `/__internal/health` é sempre permitido sem autenticação pelo `auth-proxy` para que as `livenessProbe` e `readinessProbe` do `kubelet` continuem verificando o processor.|Ative `functionAuthenticationEnabled` em um ambiente de teste e inspecione os 2 containers do Pod da função com `kubectl describe pod`.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1825|nuclio-nuctl-cli-build-deploy-invoke-function-yaml-kaniko|Nuclio `nuctl` CLI e Builder Kaniko: construção segura de imagens de função in-cluster e deploy declarativo|A CLI **`nuctl`** (`nuctl build`, `nuctl deploy`, `nuctl invoke`, `nuctl get`) permite empacotar código-fonte e configurações (`function.yaml`) em imagens de container OCI e implantá-las no Kubernetes, integrando-se nativamente ao **Kaniko** para construir imagens dentro do cluster sem exigir daemon Docker privilegiado.|Montar `/var/run/docker.sock` dentro de Pods de plataforma em um cluster Kubernetes de produção viola políticas de segurança e não funciona em nós baseados puramente em `containerd`.|Quando o desenvolvedor executa `nuctl deploy` (ou cria uma `NuclioFunction` pela UI/API), o componente builder do Nuclio gera a imagem contendo o handler do usuário e o binário `processor` utilizando Kaniko, envia a imagem para o container registry configurado e o deployer reconcilia o `Deployment`, `Service`, `HPA` e `Ingress` no Kubernetes.|```bash
+nuctl deploy FraudDetector \
+  --namespace nuclio \
+  --path ./fraud_detector.py \
+  --runtime python:3.11 \
+  --handler fraud_detector:handler \
+  --registry ghcr.io/org
+nuctl invoke FraudDetector --namespace nuclio -m POST -b '{"tx_id": 42}'
+```|É possível separar a etapa de construção (`nuctl build`) da etapa de implantação (`nuctl deploy --run-image ...`) para construir a imagem uma única vez no pipeline de CI e promovê-la entre homologação e produção.|Execute `nuctl get function --namespace nuclio` para verificar o estado `ready` e a porta HTTP atribuída à função.|https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://github.com/nuclio/nuclio
+1826|nuclio-triggers-streaming-kafka-kinesis-rabbit-mqtt-cron-http|Nuclio Triggers de Tempo Real: ingestão paralela de streams (`Kafka`, `Kinesis`, `RabbitMQ`, `MQTT`, `NATS`, `Cron` e `HTTP`)|Diferentemente de plataformas que convertem cada mensagem de fila em uma requisição HTTP externa, os **Event-source listeners** do Nuclio conectam-se nativamente por dentro do próprio Function Processor a **Apache Kafka**, **AWS Kinesis**, **RabbitMQ**, **MQTT**, **NATS**, **V3IO**, **Cron** e **HTTP**.|Manter conexões TCP nativas com partições de um consumer group Kafka diretamente nos workers do Function Processor elimina saltos de rede intermediários, preserva ordenação por partição e gerencia commits de offsets/checkpoints com baixa latência.|Na seção `spec.triggers` do `function.yaml`, basta declarar o tipo de trigger (ex.: `kind: kafka-cluster`), a lista de `brokers`, os `topics` e o `consumerGroup`. O Nuclio distribui automaticamente as partições entre as réplicas dos Pods da função e os workers internos de cada processor.|```yaml
+spec:
+  runtime: golang
+  handler: main:HandleEvent
+  triggers:
+    kafkaStream:
+      kind: kafka-cluster
+      numWorkers: 4
+      attributes:
+        brokers:
+          - kafka-0.kafka.svc.cluster.local:9092
+        topics:
+          - telemetry-events
+        consumerGroup: nuclio-telemetry-cg
+```|Em triggers de stream como Kafka, se o handler retornar erro (ou ocorrer falha antes da confirmação), o listener aplica as políticas de retentativa/backoff configuradas antes de avançar o checkpoint da partição.|Aplique uma função com trigger `kafka-cluster` (ou `cron`) e monitore nos logs estruturados do processor o balanceamento de partições e o processamento dos eventos.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1827|nuclio-data-bindings-conexoes-persistentes-context-zero-copy|Nuclio Data Bindings: conexões persistentes pré-inicializadas em `context.data_binding` com prefetching e caching|Os **Data Bindings** do Nuclio inicializam conexões persistentes com bancos de dados, sistemas de arquivos ou serviços de armazenamento na subida do Function Processor e as entregam prontas para uso dentro do objeto **`context`** passado ao handler.|Abrir e fechar uma nova conexão TCP/TLS com um banco de dados ou storage a cada invocação de função destrói o throughput e esgota as portas efêmeras e o pool de conexões do banco em poucos segundos.|Declarado em `spec.dataBindings` na configuração da função (com `class`, `url` e credenciais), o runtime inicializa o cliente uma única vez por worker e gerencia *prefetching*, *caching* e *micro-batching* com operação *zero-copy* e *zero-serialization* sempre que suportado.|```python
+def init_context(context):
+    # Opcionalmente inicialize modelos pesados ou recursos compartilhados uma única vez por worker:
+    setattr(context.user_data, "model_loaded", True)
+
+def handler(context, event):
+    if getattr(context.user_data, "model_loaded", False):
+        return "Inferência pronta em memória!"
+```|Além dos `dataBindings` declarativos, a função callback especial **`init_context(context)`** no Nuclio é executada uma única vez na inicialização de cada worker, sendo o local ideal para carregar pesos de modelos de Machine Learning na GPU/RAM ou inicializar clientes.|Defina `init_context(context)` em sua função Python, faça deploy e confirme nos logs que a inicialização ocorre apenas 1 vez por worker na partida do Pod.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1828|nuclio-aceleracao-gpu-nvidia-inferencia-ml-jupyter-kubeflow|Nuclio para IA/ML e GPUs: alocação de GPUs NVIDIA (`nvidia.com/gpu`), integração com Jupyter (`nuclio-jupyter`) e MLRun|O Nuclio oferece suporte nativo a execução sobre **GPUs** (`resources.limits."nvidia.com/gpu"`) e integra-se diretamente com **Jupyter Notebooks** (`nuclio-jupyter`), **Kubeflow Pipelines** e **MLRun** para converter células de notebook de cientistas de dados em microsserviços de inferência em tempo real.|Um cientista de dados treina um modelo PyTorch/ONNX em um Jupyter Notebook, mas colocá-lo em produção com auto-scaling, batching de inferência em GPU e consumo de fila Kafka geralmente exige semanas de reescrita pela engenharia de software.|Com a biblioteca `nuclio-jupyter`, o cientista adiciona comentários mágicos (`# nuclio: start-code`, `# nuclio: end-code`) no próprio notebook e exporta/implanta a função diretamente no cluster Kubernetes com suporte a GPUs, variáveis de ambiente e montagem de volumes de modelos.|```yaml
+spec:
+  runtime: python:3.11
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+      memory: 8Gi
+    requests:
+      nvidia.com/gpu: 1
+      memory: 4Gi
+```|Quando uma função solicita recursos `nvidia.com/gpu`, configure o número de workers por Pod e o modo de alocação cuidadosamente para não estourar a memória VRAM da GPU com múltiplos processos concorrentes carregando o mesmo modelo.|Implante uma função solicitando recursos e verifique no `Deployment` gerado pelo operador do Nuclio a propagação exata de `resources.limits` e `requests`.|https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://github.com/nuclio/nuclio
+1829|nuclio-dlx-auto-scaling-scale-to-zero-min-max-replicas|Nuclio Auto-Scaling e DLX (*Dead Letter / Scale-to-Zero*): escalonamento dinâmico de `0` a `N` réplicas|No Kubernetes, o Nuclio gerencia o escalonamento horizontal automático de cada função entre `minReplicas` e `maxReplicas` (incluindo **`minReplicas: 0`**), utilizando o componente **DLX** para interceptar chamadas destinadas a funções adormecidas, acordar o Deployment e encaminhar a requisição.|Funções de inferência em GPU ou pipelines de processamento batch esporádicos têm custo elevado se mantiverem `minReplicas: 1` durante madrugadas e fins de semana sem tráfego.|Quando uma função com `minReplicas: 0` fica ociosa pelo período configurado de janela de inatividade, o controlador do Nuclio reduz o `Deployment` para `0` réplicas e aponta a rota para o serviço **DLX**. Na chegada de uma nova requisição HTTP, o DLX (opcionalmente validando com o `auth-proxy` em modo `auth-only`) aciona o scale-up da função, aguarda a probe `/__internal/health` ficar pronta e entrega a chamada.|```yaml
+spec:
+  minReplicas: 0
+  maxReplicas: 5
+  targetCPU: 75
+```|Para funções que exigem latência de cauda sub-milissegundo constante sem tolerar a subida inicial do Pod a partir do DLX, configure `minReplicas: 1` (ou maior).|Configure `minReplicas: 0` em uma função de teste, aguarde o scale-to-zero (`kubectl get pods -n nuclio`) e faça uma chamada HTTP para observar o DLX acordando o Pod automaticamente.|https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://github.com/nuclio/nuclio
+1830|nuclio-api-gateways-canary-deployments-projects-k8s-crds|Nuclio `NuclioAPIGateway` e `NuclioProject`: roteamento canário com divisão percentual de tráfego e governança multi-projeto|Os Custom Resources **`NuclioProject`** e **`NuclioAPIGateway`** (`nuclio.io/v1beta1`) organizam funções por domínio de equipe e permitem expor endpoints HTTP externos com autenticação e **canary deployments** (dividindo o tráfego percentual entre uma função primária `upstreams[0]` e uma função canário `upstreams[1]`).|Atualizar um modelo de detecção de fraude em produção de uma só vez é arriscado; o engenheiro de ML precisa enviar primeiro 10% do tráfego em tempo real para a versão `v2` da função e manter 90% na versão `v1` comparando métricas.|No recurso `NuclioAPIGateway`, o operador declara o `host`, `path`, modo de autenticação (`none`, `basicAuth`, `accessKey`, `oauth2`) e até dois `upstreams` com `percentage` para rollout canário gerenciado pelo Ingress do cluster.|```yaml
+apiVersion: nuclio.io/v1beta1
+kind: NuclioAPIGateway
+metadata:
+  name: fraud-api-gw
+  namespace: nuclio
+spec:
+  host: fraud.corp.internal
+  path: /predict
+  authenticationMode: basicAuth
+  upstreams:
+    - kind: nucliofunction
+      nucliofunction:
+        name: fraud-detector-v1
+      percentage: 90
+    - kind: nucliofunction
+      nucliofunction:
+        name: fraud-detector-v2
+      percentage: 10
+```|Toda função Nuclio pertence a um `NuclioProject` (padrão `default`), permitindo listar, filtrar e aplicar políticas de governança por projeto.|Execute `kubectl get nuclioapigateways,nuclioprojects -n nuclio` para auditar os gateways e projetos ativos no cluster.|https://raw.githubusercontent.com/nuclio/nuclio/development/README.md;https://raw.githubusercontent.com/nuclio/nuclio/development/docs/concepts/architecture.md;https://github.com/nuclio/nuclio

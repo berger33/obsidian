@@ -1,0 +1,104 @@
+1851|tailscale-arquitetura-mesh-vpn-wireguard-tailscaled-derp-nat-traversal|Tailscale: arquitetura de rede mesh sobre WireGuard com daemon `tailscaled`, NAT Traversal e relays `DERP`|O **Tailscale** é uma rede privada virtual (*mesh VPN*) construída sobre o protocolo criptográfico **WireGuard**, onde o daemon open-source **`tailscaled`** e a CLI **`tailscale`** criam túneis ponto-a-ponto diretos entre dispositivos (*tailnet*) sem necessidade de concentradores VPN ou abertura manual de portas de firewall.|Em VPNs corporativas hub-and-spoke tradicionais, todo o tráfego passa por um gateway central (aumentando a latência e criando um ponto único de falha), e configurar chaves públicas WireGuard manualmente em `N` máquinas exige atualizar `N*(N-1)` pares.|No Tailscale, o plano de controle atua exclusivamente como ponto de troca de chaves públicas WireGuard, atribuição de IPs CGNAT (`100.64.0.0/10`) e distribuição de políticas ACL/Grants, sem nunca ver o tráfego de dados nem as chaves privadas (que jamais saem de cada nó). O plano de dados estabelece conexões UDP diretas usando **NAT Traversal** (STUN/ICE) ou recorre a servidores relay **DERP** (*Designated Encrypted Relay for Packets*, sobre HTTPS porta 443) mantendo criptografia fim-a-fim.|```bash
+tailscale up
+tailscale status
+tailscale ping <peer-hostname>
+```|Ao executar `tailscale ping <peer>`, você observa as primeiras respostas viajando via relay `DERP(...)` em poucos milissegundos e, logo em seguida, o upgrade transparente para conexão direta UDP ponto-a-ponto (`via <ip:port>`).|Execute `tailscale netcheck` e `tailscale status` para inspecionar a conectividade UDP/IPv4/IPv6 e a latência até cada região DERP.|https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://tailscale.com/docs/kubernetes-operator;https://github.com/tailscale/tailscale
+1852|tailscale-kubernetes-operator-arquitetura-ingress-egress-api-server-proxy|Tailscale Kubernetes Operator: conectividade nativa de Ingress, Egress, `Connector` e Proxy do Kubernetes API Server|O **Tailscale Kubernetes Operator** fornece uma maneira nativa do Kubernetes para conectar dispositivos da *tailnet* a workloads do cluster (**Ingress**), conectar Pods do cluster a serviços externos na *tailnet* (**Egress**), expor o **Kubernetes API Server** de forma privada e hospedar `Connectors` e gravadores de sessão.|Expor o endpoint do `kube-apiserver` ou serviços internos de administração para a internet pública exige manter load balancers caros, regras de allowlist de IP quebradiças e certificados TLS complexos.|Instalado via Helm no namespace `tailscale`, o operador gerencia automaticamente Pods de proxy stateful (`StatefulSets`) para cada `Service`/`Ingress` anotado ou `Connector` CRD criado, autenticando cada proxy como um nó dedicado com identidade e tags próprias na *tailnet*.|```bash
+helm upgrade --install tailscale-operator tailscale/tailscale-operator \
+  --namespace=tailscale \
+  --create-namespace \
+  --set-string oauth.clientId="<OAUTH_CLIENT_ID>" \
+  --set-string oauth.clientSecret="<OAUTH_CLIENT_SECRET>"
+```|Com o proxy do Kubernetes API Server habilitado no operador (`apiServerProxyConfig.mode: "true"`), engenheiros e runners de CI executam `kubectl` de qualquer lugar na *tailnet* autenticados por sua identidade Tailscale (*impersonation*) sem abrir o endpoint público do cluster.|Execute `kubectl get pods -n tailscale` após instalar o operador para verificar o Pod do `operator` em execução.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1853|tailscale-kubernetes-ingress-exposicao-servicos-tailnet-tls-automatico|Tailscale Kubernetes Ingress: exposição de `Services` e `Ingress` internos para a *tailnet* com certificados HTTPS automáticos|Com o Tailscale Kubernetes Operator, expor uma aplicação interna do cluster (como Grafana, Argo CD ou Prometheus) exclusivamente para dispositivos autorizados da *tailnet* basta definir `ingressClassName: tailscale` em um recurso **`Ingress`** (ou adicionar a anotação `tailscale.com/expose: "true"` em um `Service`).|Configurar VPNs site-to-site ou proxies OAuth externos para cada painel interno do Kubernetes consome tempo de engenharia de plataforma.|Ao detectar um `Ingress` com `spec.ingressClassName: tailscale` e `spec.tls.hosts: ["grafana-prod"]`, o operador cria um Pod de proxy Tailscale que registra o nó `grafana-prod.<tailnet-name>.ts.net` na *tailnet*, provisiona automaticamente um certificado TLS válido via Let's Encrypt e faz proxy reverso para o Service backend.|```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-internal
+  namespace: monitoring
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: grafana
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - grafana-prod
+```|Para expor um serviço TCP bruto (como PostgreSQL ou Redis) em vez de HTTP/HTTPS, utilize um `Service` do tipo `LoadBalancer` com `spec.loadBalancerClass: tailscale` ou a anotação `tailscale.com/expose: "true"`.|Aplique o `Ingress` com `ingressClassName: tailscale` e verifique com `kubectl get ingress -n monitoring` o FQDN `.ts.net` atribuído na coluna `ADDRESS`.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1854|tailscale-kubernetes-egress-acesso-pods-servicos-externos-tailnet|Tailscale Kubernetes Egress: conectando Pods do cluster a bancos de dados e servidores privados na *tailnet*|O recurso de **Egress** do Tailscale Kubernetes Operator permite que aplicações rodando dentro do Kubernetes se comuniquem de forma transparente com máquinas externas, bancos de dados on-premises ou serviços de outros clusters presentes na *tailnet*, por meio de um `Service` anotado com **`tailscale.com/tailnet-fqdn`** ou **`tailscale.com/tailnet-ip`**.|Quando um Pod no Kubernetes na nuvem precisa consultar um banco de dados legado on-premises, instalar o cliente VPN como sidecar em cada Pod de aplicação exige privilégios `NET_ADMIN` ou polui os manifestos das equipes de produto.|Com o Tailscale Operator, o engenheiro cria um `Service` Kubernetes comum (`type: ExternalName` com a anotação `tailscale.com/tailnet-fqdn: "legacy-db.tailnet-xyz.ts.net"`). O operador provisiona um proxy de egresso no namespace `tailscale` e reescreve o Service para que qualquer Pod do cluster acesse `http://legacy-db-svc.default.svc.cluster.local` usando DNS padrão do Kubernetes.|```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: onprem-postgres
+  namespace: default
+  annotations:
+    tailscale.com/tailnet-fqdn: "pg-onprem.tail-example.ts.net"
+spec:
+  externalName: placeholder
+  type: ExternalName
+  ports:
+    - port: 5432
+      protocol: TCP
+```|Combinar Ingress em um cluster `A` com Egress em um cluster `B` permite rotear tráfego **multi-cluster** entre regiões e provedores de nuvem distintos mantendo políticas de segurança baseadas em identidade (tags ACL) do Tailscale.|Crie um Service de Egress anotado com `tailscale.com/tailnet-fqdn` e verifique com `kubectl describe svc onprem-postgres` que o operador provisionou o proxy e atualizou o alvo.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1855|tailscale-connector-crd-subnet-router-exit-node-kubernetes|Tailscale `Connector` CRD: implantação declarativa de Subnet Routers e Exit Nodes em alta disponibilidade no Kubernetes|O Custom Resource **`Connector`** (`tailscale.com/v1alpha1`) do Tailscale Kubernetes Operator permite implantar **Subnet Routers** (expondo CIDRs inteiros de Pods/Services ou VPC para a *tailnet*) e **Exit Nodes** rodando como Pods gerenciados dentro do cluster Kubernetes.|Se você possui centenas de serviços ou endpoints RDS em uma VPC privada sem poder instalar o agente Tailscale em cada um, um *Subnet Router* anuncia os prefixos CIDR (`10.244.0.0/16`, `10.100.0.0/16`) para a *tailnet* com failover automático.|Ao aplicar um recurso `Connector` especificando `spec.subnetRouter.advertiseRoutes` e `spec.replicas: 2`, o operador implanta múltiplas réplicas para alta disponibilidade (*High Availability Subnet Router*) e aplica as tags ACL configuradas em `spec.tags`.|```yaml
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: vpc-subnet-router
+spec:
+  replicas: 2
+  tags:
+    - tag:k8s-subnet-router
+  subnetRouter:
+    advertiseRoutes:
+      - 10.96.0.0/12
+      - 10.244.0.0/16
+```|Para que as rotas anunciadas por um `Connector` entrem em vigor imediatamente sem aprovação manual no painel, adicione uma regra `autoApprovers` para a tag `tag:k8s-subnet-router` no arquivo de política (ACL/Grants) da *tailnet*.|Execute `kubectl get connectors` para verificar a prontidão das réplicas e as rotas anunciadas pelo `Connector`.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1856|tailscale-acls-grants-tags-autoapprovers-politica-zero-trust|Tailscale Políticas Zero-Trust (ACLs e `Grants`): controle de acesso baseado em identidade, `tagOwners` e `autoApprovers`|No Tailscale, o controle de acesso da rede (*Zero-Trust Network Access*) é definido declarativamente em um arquivo HuJSON (JSON com comentários) contendo **`grants`** (ou `acls`), **`tagOwners`**, **`autoApprovers`**, **`ssh`** e **`tests`**, compilado pelo plano de controle em filtros de pacotes aplicados diretamente na interface de cada nó.|Uma rede mesh onde qualquer laptop conectado pode acessar todas as portas de todos os servidores de produção permitiria movimentação lateral imediata caso uma estação fosse comprometida.|Atribuir uma **Tag** (ex.: `tag:prod-db`) a um servidor remove a identidade pessoal do humano que o registrou e passa a tratá-lo como uma identidade de máquina governada por `tagOwners`. Com `grants`, é possível restringir não apenas IP e porta, mas também permissões de aplicação (como acesso ao proxy do Kubernetes API Server).|```json
+{
+  "tagOwners": {
+    "tag:k8s-operator": ["autogroup:admin"],
+    "tag:prod-app": ["tag:k8s-operator"]
+  },
+  "grants": [
+    {
+      "src": ["group:sre"],
+      "dst": ["tag:prod-app"],
+      "ip": ["tcp:443", "tcp:8080"]
+    }
+  ]
+}
+```|Inclua sempre blocos `"tests"` e `"sshTests"` no próprio arquivo de política HuJSON: o plano de controle executa os testes automaticamente a cada alteração e rejeita salvar a política se algum teste de permissão/negação falhar.|Valide suas regras declarando asserções `accept` e `deny` na seção `"tests"` da política da *tailnet*.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1857|tailscale-ssh-session-recording-tsrecorder-kubernetes-auditoria|Tailscale SSH e `Recorder` (`tsrecorder`): autenticação SSH sem chaves pela *tailnet* e gravação de sessões no Kubernetes|O **Tailscale SSH** permite autenticar conexões SSH entre nós da *tailnet* usando a própria identidade criptográfica do WireGuard/Tailscale (sem distribuir chaves `~/.ssh/authorized_keys` e com opção de *check mode* que exige reautenticação MFA/SSO no navegador), enquanto o componente **`tsrecorder`** grava sessões SSH e `kubectl exec` para auditoria.|Gerenciar chaves públicas SSH estáticas de ex-funcionários em centenas de VMs e auditar sessões interativas de terminal em clusters Kubernetes exige infraestrutura pesada se feito com ferramentas legadas.|No Tailscale Kubernetes Operator, o Custom Resource **`Recorder`** implanta instâncias do `tsrecorder` no cluster (enviando gravações no formato asciicast para um bucket S3 ou volume persistente) para capturar tanto sessões **Tailscale SSH** quanto sessões **`kubectl exec` / `attach`** que passam pelo API Server Proxy.|```yaml
+apiVersion: tailscale.com/v1alpha1
+kind: Recorder
+metadata:
+  name: prod-session-recorder
+spec:
+  replicas: 1
+  enableUI: true
+  storage:
+    s3:
+      endpoint: s3.amazonaws.com
+      bucket: corp-tailscale-audit-logs
+```|Se a regra de política SSH definir `"recorder": ["tag:session-recorder"]` com `enforceRecorder: true` (padrão de falha fechada), caso nenhum nó `tsrecorder` esteja acessível no momento da conexão, a sessão será bloqueada por segurança.|Implante um `Recorder` via operador (`kubectl get recorders`) e teste uma sessão auditada verificando a geração do log no storage configurado.|https://tailscale.com/docs/kubernetes-operator;https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://github.com/tailscale/tailscale
+1858|tailscale-magicdns-split-dns-search-domains-resolucao-nomes|Tailscale MagicDNS e Split DNS: resolução automática de nomes `.ts.net` e encaminhamento seletivo por domínio|O **MagicDNS** registra automaticamente um nome DNS único (`<hostname>.<tailnet-name>.ts.net`) para cada dispositivo e proxy Kubernetes na *tailnet* através de um resolvedor DNS local embutido no `tailscaled` (`100.100.100.100`), suportando também **Split DNS** (nameservers restritos a domínios internos específicos como `.corp.internal`).|Memorizar endereços IP `100.x.y.z` ou manter arquivos `/etc/hosts` sincronizados entre laptops e servidores não escala quando serviços mudam ou são recriados pelo operador Kubernetes.|O resolvedor local em `100.100.100.100` intercepta consultas para a zona da *tailnet* (respondendo instantaneamente com os IPs IPv4 `100.x.y.z` e IPv6 `fd7a:115c:a1e0::/48` do nó) e encaminha consultas de zonas corporativas configuradas em *Split DNS* para os servidores DNS privados alcançáveis via *Subnet Router*.|```bash
+tailscale dns status
+dig @100.100.100.100 grafana-prod
+```|O subcomando `tailscale dns status` exibe toda a configuração de DNS ativa no host local, incluindo os servidores upstream por domínio (Split DNS), domínios de busca e estado do sistema operacional (`/etc/resolv.conf` ou `systemd-resolved`).|Execute `tailscale dns status` e `tailscale ip -4 <hostname>` para testar a resolução MagicDNS de um par da rede.|https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://tailscale.com/docs/kubernetes-operator;https://github.com/tailscale/tailscale
+1859|tailscale-userspace-networking-container-sidecar-tun-device|Tailscale em Containers: diferença entre modo Kernel `TUN` (`/dev/net/tun`) e `Userspace Networking` (`--tun=userspace-networking`)|Ao executar o `tailscaled` dentro de containers Docker, Pods Kubernetes sem privilégio ou ambientes serverless (Cloud Run, AWS App Runner, Fly.io), o Tailscale pode operar em dois modos de rede: **Kernel TUN** (usando `/dev/net/tun` e `CAP_NET_ADMIN`) ou **Userspace Networking** (`--tun=userspace-networking`, que inclui pilha TCP/IP netstack em espaço de usuário e proxies SOCKS5/HTTP).|Em plataformas de container restritas ou FaaS onde o container não tem permissão para criar interfaces de rede virtuais `/dev/net/tun` nem modificar tabelas de roteamento do kernel, uma VPN tradicional simplesmente não inicia.|Com `--tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055`, o `tailscaled` roda 100% sem privilégios de rede do kernel: conexões de entrada da *tailnet* são encaminhadas para `localhost` no container, e conexões de saída da aplicação podem usar `ALL_PROXY=socks5://localhost:1055`.|```bash
+tailscaled --tun=userspace-networking \
+  --socks5-server=localhost:1055 \
+  --outbound-http-proxy-listen=localhost:1055 &
+tailscale up --auth-key="${TS_AUTHKEY}"
+```|Sempre que o ambiente permitir conceder `CAP_NET_ADMIN` e acesso a `/dev/net/tun` (como nos proxies gerenciados pelo Tailscale Kubernetes Operator em modo padrão), prefira o modo TUN por oferecer maior throughput e transparência para conexões de saída sem exigir proxy SOCKS5.|Verifique nos logs de inicialização do `tailscaled` se ele abriu o dispositivo TUN do sistema ou iniciou o `userspace-networking` netstack.|https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://tailscale.com/docs/kubernetes-operator;https://github.com/tailscale/tailscale
+1860|tailscale-serve-funnel-compartilhamento-local-https-webhooks|Tailscale `serve` e `funnel`: exposição rápida de portas locais via HTTPS na *tailnet* (`serve`) ou na internet pública (`funnel`)|Os subcomandos **`tailscale serve`** e **`tailscale funnel`** transformam o próprio cliente `tailscaled` em um proxy reverso HTTP/HTTPS/TCP com certificado TLS automático: o `serve` expõe um serviço local (`localhost:3000`) apenas para membros da sua *tailnet*, enquanto o `funnel` abre o tráfego da internet pública para o seu nó através dos servidores de ingress da Tailscale.|Quando um desenvolvedor precisa receber um webhook real do GitHub ou Stripe em seu servidor local na porta `8080` ou compartilhar um preview com um colega da equipe, configurar túneis de terceiros inseguros ou subir ambientes completos de cloud atrasa o ciclo de feedback.|Com `tailscale serve --bg 8080`, qualquer dispositivo autorizado na *tailnet* acessa `https://<node>.<tailnet>.ts.net` com TLS válido. Com `tailscale funnel --bg 8080` (desde que o atributo de nó `funnel` seja permitido na política ACL), os servidores públicos da Tailscale terminam o TCP na borda e repassam o fluxo TLS criptografado (SNI passthrough) até o `tailscaled` local, que detém a chave privada do certificado.|```bash
+# Expondo a porta local 8080 via HTTPS apenas para a tailnet:
+tailscale serve --bg 8080
+tailscale serve status
+
+# Desativando a exposição:
+tailscale serve reset
+```|Como no `tailscale funnel` o certificado TLS é gerado localmente no seu dispositivo e os servidores de borda da Tailscale fazem apenas *TLS passthrough* baseado em SNI, os servidores de relay nunca têm acesso à chave privada TLS nem ao conteúdo HTTP descriptografado.|Execute `tailscale serve status` para auditar se há alguma porta local exposta via `serve` ou `funnel` na máquina.|https://raw.githubusercontent.com/tailscale/tailscale/main/README.md;https://headscale.net/stable/about/features/;https://github.com/tailscale/tailscale

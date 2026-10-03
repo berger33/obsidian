@@ -1,0 +1,93 @@
+1801|openfaas-arquitetura-serverless-kubernetes-gateway-faas-netes-watchdog|OpenFaaS: arquitetura serverless para Kubernetes com Gateway, `faas-netes`, `of-watchdog` e NATS|O **OpenFaaS** (*Functions as a Service*) simplifica o empacotamento e a implantação de funções orientadas a eventos e microsserviços em imagens OCI sobre Kubernetes (por meio do provedor `faas-netes`) ou em hosts leves (`faasd`), fornecendo auto-scaling, métricas Prometheus e fila assíncrona integrada.|Transformar um script Python, handler Node.js ou binário legado em um serviço HTTP escalável no Kubernetes normalmente exigiria escrever servidor web, Dockerfile, Deployment, Service, HPA e exporter de métricas manualmente.|Na pilha do OpenFaaS sobre Kubernetes, os recursos de infraestrutura residem no namespace `openfaas` (**API Gateway**, **faas-netes** controller/operator, **queue-worker** com **NATS** e **Prometheus**), enquanto as funções implantadas rodam isoladas no namespace `openfaas-fn`. Cada container de função inclui o binário leve **`of-watchdog`** como PID 1, que atua como proxy reverso HTTP, expõe métricas e gerencia o arquivo `.lock` de readiness probe.|```bash
+faas-cli new --lang python3-http hello-openfaas
+faas-cli up -f hello-openfaas.yml
+```|A edição comunitária (*OpenFaaS CE*) possui restrições de licença (uso pessoal/exploratório ou PoC comercial limitada a 60 dias), enquanto ambientes comerciais de produção utilizam *OpenFaaS Standard* ou *OpenFaaS for Enterprises*.|Execute `kubectl get pods -n openfaas` e `kubectl get pods -n openfaas-fn` para verificar o plano de controle e os Pods de funções.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas-netes
+1802|openfaas-faas-cli-stack-yaml-template-store-build-push-deploy|OpenFaaS `faas-cli` e `stack.yaml`: ciclo de vida de funções (`new`, `build`, `push`, `deploy`, `up`) e Template Store|A ferramenta de linha de comando **`faas-cli`** gerencia todo o ciclo de desenvolvimento de funções OpenFaaS a partir de um arquivo declarativo YAML (`stack.yaml`), baixando templates de linguagens da **Template Store** oficial (`faas-cli template store pull`) e executando `build`, `push` e `deploy` (ou o atalho unificado `faas-cli up`).|Padronizar a estrutura de dezenas de funções em Node.js (`node20`), Python (`python3-http`), Go (`golang-middleware`) ou C# sem espalhar Dockerfiles divergentes entre repositórios requer um sistema central de templates.|No arquivo `stack.yaml`, o desenvolvedor declara o endereço do `gateway`, o mapa `functions` (especificando `lang`, pasta `handler`, `image`, `environment`, `labels`, `annotations`, `secrets` e `limits`/`requests`). O comando `faas-cli build` combina a pasta `handler/` com o template selecionado em `./build/` e gera a imagem OCI.|```yaml
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  stripe-webhooks:
+    lang: node20
+    handler: ./stripe-webhooks
+    image: ghcr.io/org/stripe-webhooks:0.1.0
+    environment:
+      write_debug: true
+```|Ao desenvolver localmente com Minikube ou k3d compartilhando o daemon Docker, configurar `image_pull_policy: IfNotPresent` permite usar `faas-cli build` + `faas-cli deploy` sem precisar de `faas-cli push` para um registry remoto.|Execute `faas-cli template store list` para inspecionar os templates oficiais disponíveis e `faas-cli build -f stack.yaml` para validar o empacotamento.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas
+1803|openfaas-faas-netes-modos-operacao-controller-vs-operator-function-crd|OpenFaaS `faas-netes`: comparação entre o modo Controller e o modo Operator com o CRD `Function` (`openfaas.com/v1`)|O provedor Kubernetes `faas-netes` possui dois modos arquiteturais de operação: o modo **Controller** (usado no OpenFaaS CE) e o modo **Operator** (suportado para produção no OpenFaaS Standard/Enterprise), que reconcilia o Custom Resource **`Function`** (`openfaas.com/v1`).|Gerenciar funções exclusivamente pela API REST do Gateway sem um Custom Resource nativo impede que ferramentas GitOps (como Argo CD e Flux) e `kubectl get functions` gerenciem as funções declarativamente como recursos de primeira classe do Kubernetes.|Com o modo Operator habilitado no Helm chart do OpenFaaS, cada função é representada por um objeto `Function` no namespace `openfaas-fn`, podendo ser gerada com `faas-cli generate --yaml stack.yaml` e aplicada diretamente via `kubectl apply -f` ou sincronizada pelo Argo CD.|```yaml
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: nodeinfo
+  namespace: openfaas-fn
+spec:
+  name: nodeinfo
+  image: ghcr.io/openfaas/nodeinfo:latest
+  labels:
+    com.openfaas.scale.min: "1"
+    com.openfaas.scale.max: "10"
+```|Conforme documentado no repositório `faas-netes`, o modo controller legado permanece disponível para a edição CE, enquanto o modo operator com CRD `Function` é o caminho suportado para cargas de produção.|Execute `faas-cli generate -f stack.yaml` para converter um manifesto do `faas-cli` em um Custom Resource `Function` do Kubernetes.|https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://github.com/openfaas/faas-netes
+1804|openfaas-watchdog-http-mode-readiness-lock-file-timeouts|OpenFaaS `of-watchdog` e Probes de Saúde: gerenciamento do arquivo `.lock` de readiness e timeouts de leitura/escrita|No OpenFaaS, a verificação de prontidão (*readiness*) e vivacidade (*liveness*) dos Pods de função no Kubernetes baseia-se no binário `of-watchdog`, que cria um arquivo `.lock` no diretório temporário padrão (`/tmp/.lock`) e expõe o endpoint `/_/health` (quando `httpProbe: true`).|Se o `kubelet` enviasse tráfego para um Pod de função antes do runtime inicializar ou continuasse roteando requisições para uma função que entrou em deadlock, chamadas HTTP síncronas e eventos de fila falhariam.|O `faas-netes` configura por padrão `httpProbe: true`, `read_timeout: 60s` e `write_timeout: 60s`. Enquanto o arquivo `/tmp/.lock` existir dentro do container da função, a probe de readiness tem sucesso; se a função ou o operador remover `/tmp/.lock`, o Pod sai imediatamente dos `Endpoints` do Service e é reagendado.|```bash
+# Testando o mecanismo de readiness lock file em um Pod de função em execução:
+kubectl get pods -n openfaas-fn
+kubectl exec -n openfaas-fn deploy/nodeinfo -- ls -la /tmp/.lock
+```|Funções que processam payloads grandes ou inferências demoradas acima de 60 segundos devem ajustar `read_timeout`, `write_timeout` e `exec_timeout` tanto nas variáveis de ambiente da função quanto na configuração do `gateway` e do `faas-netes`/`queue-worker`.|Verifique as probes configuradas no Deployment da função com `kubectl describe deploy <func-name> -n openfaas-fn`.|https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://github.com/openfaas/faas-netes
+1805|openfaas-invocacao-assincrona-function-routes-nats-queue-worker-callback|OpenFaaS Invocação Assíncrona: processamento em background via `/async-function/<name>`, NATS e `X-Callback-Url`|Toda função implantada no OpenFaaS ganha automaticamente dois endpoints no Gateway: `/function/<nome>` (para execução síncrona imediata) e **`/async-function/<nome>`** (para enfileiramento assíncrono em background processado pelo `queue-worker` sobre NATS).|Quando um webhook externo (como GitHub, Stripe ou Slack) exige resposta HTTP `202 Accepted` em menos de 3 segundos, mas o processamento real leva 45 segundos, executar de forma síncrona causaria timeout no emissor.|Ao enviar um `POST` para `/async-function/<nome>` (opcionalmente passando o cabeçalho HTTP `X-Callback-Url: https://meu-receptor/webhook`), o Gateway grava o payload na fila NATS, retorna `202 Accepted` imediatamente com `X-Call-Id` e o `queue-worker` consome a mensagem, invoca a função e posta o resultado final na `X-Callback-Url`.|```bash
+curl -i -X POST http://127.0.0.1:8080/async-function/nodeinfo \
+  -H "X-Callback-Url: http://webhook-receiver.default.svc.cluster.local:8080/done" \
+  -d "processar em background"
+```|No dimensionamento de recursos do chart `openfaas`, ajuste `queueWorker.resources` e o limite de concorrência (`max_inflight`) do `queue-worker` para controlar a pressão exercida sobre os Pods das funções.|Invoque `/async-function/<nome>` com `curl -i`, confirme o código HTTP `202 Accepted` e acompanhe `kubectl logs -n openfaas deploy/queue-worker`.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas-netes
+1806|openfaas-autoscaling-prometheus-alertmanager-scale-min-max-zero|OpenFaaS Auto-Scaling: escalonamento horizontal por RPS/capacidade (`com.openfaas.scale.min`/`max`) e *scale-to-zero*|O OpenFaaS inclui auto-scaling nativo guiado pelas métricas HTTP coletadas pelo **Prometheus** embutido no namespace `openfaas`, escalando o número de réplicas de cada função entre `com.openfaas.scale.min` e `com.openfaas.scale.max` (incluindo *scale-to-zero*).|Manter dezenas de funções raramente chamadas rodando com réplicas ociosas 24x7 desperdiça memória do cluster; por outro lado, funções críticas em horário de pico precisam escalar rapidamente por taxa de requisições por segundo (RPS) ou conexões inflight.|O desenvolvedor aplica labels na função (em `stack.yaml` ou no CRD `Function`): `com.openfaas.scale.min: "2"`, `com.openfaas.scale.max: "15"`, `com.openfaas.scale.factor: "20"` e `com.openfaas.scale.zero: "true"`. Quando uma função escalada para `0` réplicas recebe uma chamada no Gateway, o Gateway retém a conexão brevemente enquanto instrui o `faas-netes` a subir `1` réplica e entrega a requisição sem erro.|```yaml
+functions:
+  image-resizer:
+    lang: python3-http
+    handler: ./image-resizer
+    image: ghcr.io/org/image-resizer:1.0.0
+    labels:
+      com.openfaas.scale.min: "1"
+      com.openfaas.scale.max: "10"
+      com.openfaas.scale.factor: "25"
+      com.openfaas.scale.zero: "true"
+```|Para desabilitar completamente o auto-scaling em uma função específica que deve permanecer com número fixo de réplicas, defina `com.openfaas.scale.min` e `com.openfaas.scale.max` com exatamente o mesmo valor ou `com.openfaas.scale.factor: "0"`.|Verifique os labels aplicados no Deployment da função em `openfaas-fn` e monitore as métricas `gateway_function_invocation_total` no Prometheus do OpenFaaS.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas-netes
+1807|openfaas-gerenciamento-secrets-kubernetes-mounted-var-openfaas-secrets|OpenFaaS Secrets: gerenciamento declarativo de segredos montados como arquivos em `/var/openfaas/secrets/`|Em vez de expor chaves de API, senhas de banco de dados ou tokens de webhook em variáveis de ambiente em texto claro (`environment:`), o OpenFaaS monta `Secrets` do Kubernetes (no namespace `openfaas-fn`) como arquivos somente leitura dentro de **`/var/openfaas/secrets/<secret-name>`** no container da função.|Variáveis de ambiente vazam facilmente em dumps de processo, relatórios de crash ou inspeções `kubectl describe pod`; arquivos montados via tmpfs em `/var/openfaas/secrets/` são isolados e restritos às funções que os declaram explicitamente.|O operador cria o segredo com `faas-cli secret create api-token --from-file=token.txt` (ou `kubectl create secret generic -n openfaas-fn`) e referencia o nome na lista `secrets:` da função em `stack.yaml`. O código da função apenas lê `/var/openfaas/secrets/api-token` da memória na inicialização.|```bash
+faas-cli secret create stripe-signing-key --from-literal="whsec_example123"
+faas-cli secret list
+```|Um `Secret` referenciado por uma função precisa existir obrigatoriamente no namespace das funções (`openfaas-fn` por padrão), e não no namespace de infraestrutura `openfaas`.|Crie um segredo com `faas-cli secret create`, referencie-o na seção `secrets:` da função e verifique a montagem em `/var/openfaas/secrets/` dentro do Pod.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas-netes
+1808|openfaas-profiles-crd-afinidadade-tolerations-pod-security-context|OpenFaaS `Profile` CRD: aplicação reutilizável de `affinity`, `tolerations`, `runtimeClassName` e `podSecurityContext`|No `faas-netes`, o Custom Resource **`Profile`** (`openfaas.com/v1`, criado no namespace `openfaas`) permite definir políticas avançadas de agendamento e segurança do Kubernetes (`tolerations`, `affinity`, `podSecurityContext`, `runtimeClassName`, `dnsPolicy`) que podem ser aplicadas a qualquer função por meio da anotação `com.openfaas.profile`.|Expor toda a especificação bruta de um Pod Kubernetes dentro do `stack.yaml` do desenvolvedor quebraria a simplicidade da abstração serverless; com `Profiles`, a equipe de plataforma define perfis nomeados (ex.: `gpu-nodes`, `arm64-spot`, `restricted-pss`) e o desenvolvedor apenas referencia o nome do perfil.|Quando uma função possui a anotação `com.openfaas.profile: gpu-nodes,restricted-pss`, o `faas-netes` busca os objetos `Profile` correspondentes e injeta as regras de afinidade, tolerations e contextos de segurança no `Deployment` gerado em `openfaas-fn`.|```yaml
+apiVersion: openfaas.com/v1
+kind: Profile
+metadata:
+  name: spot-workers
+  namespace: openfaas
+spec:
+  tolerations:
+    - key: "spot-instance"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+```|Os objetos `Profile` devem ser criados no namespace do controlador (`openfaas`), mesmo que as funções que os consomem rodem no namespace `openfaas-fn`.|Aplique um `Profile` em `openfaas`, adicione a anotação `com.openfaas.profile` em uma função e confirme em `kubectl get deploy -n openfaas-fn -o yaml` que a `toleration` foi injetada.|https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://github.com/openfaas/faas-netes
+1809|openfaas-event-connectors-cron-connector-kafka-sqs-annotations|OpenFaaS Event Connectors e Cron: disparo de funções por tópicos (`topic` annotation) e agendamentos `cron-connector`|O OpenFaaS desacopla as fontes de eventos das funções por meio do padrão **connector-sdk**: conectores dedicados (`cron-connector`, `kafka-connector`, `sqs-connector`, `nats-connector`, `postgres-connector`) observam as anotações `topic` e `schedule` nas funções implantadas e encaminham eventos automaticamente.|Em vez de embutir consumidores Kafka ou agendadores cron dentro do código de cada função, basta anotar a função existente para que ela responda tanto a chamadas HTTP quanto a mensagens de fila ou horários programados.|Para agendar uma função periodicamente com o `cron-connector`, basta adicionar as anotações `topic: cron-function` e `schedule: "*/5 * * * *"` na definição da função. Para consumir tópicos Kafka ou filas SQS, basta anotar `topic: "orders.created,payments.processed"`.|```yaml
+functions:
+  nightly-cleanup:
+    lang: golang-middleware
+    handler: ./nightly-cleanup
+    image: ghcr.io/org/nightly-cleanup:0.1.0
+    annotations:
+      topic: cron-function
+      schedule: "0 2 * * *"
+```|Os conectores de eventos consultam periodicamente a API do Gateway para descobrir quais funções assinaram cada `topic`, não exigindo reiniciar o conector quando novas funções são implantadas.|Implante o `cron-connector`, anote uma função com `topic: cron-function` e `schedule: "*/1 * * * *"` e confirme nas métricas do Gateway que a função é invocada a cada minuto.|https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://github.com/openfaas/faas-netes
+1810|openfaas-dimensionamento-recursos-helm-chart-gateway-faasnetes-prometheus|OpenFaaS no Kubernetes: dimensionamento de requests/limits dos componentes core no Helm chart e boas práticas de produção|A documentação operacional do `faas-netes` especifica os valores de referência de `requests` e `limits` de CPU e memória para cada componente da pilha (`gateway`, `faasnetes`/`operator`, `queueWorker`, `prometheus`, `alertmanager`, `nats` e `basicAuthPlugin`) além de boas práticas de isolamento.|Subdimensionar a memória do `prometheus` embutido (padrão `512Mi`) ou não definir `requests`/`limits` nas próprias funções em `openfaas-fn` pode causar `OOMKilled` no controlador de auto-scaling ou contenção de CPU nos worker nodes.|Na tabela oficial do `faas-netes`, os componentes leves de controle (`gateway`, `faasnetes`, `operator`, `queueWorker`, `nats`) iniciam com requests enxutos (`memory: 120Mi`, `cpu: 50m`), o `prometheus` com `512Mi`, o `alertmanager` com `25Mi` e o `basicAuthPlugin` com `50Mi`/`20m`. Em produção, configure também TLS no Gateway/Ingress e defina `limits`/`requests` explícitos para cada função no `stack.yaml`.|```yaml
+# Definindo requests e limits explícitos para uma função no stack.yaml:
+functions:
+  pdf-generator:
+    lang: python3-http
+    handler: ./pdf-generator
+    image: ghcr.io/org/pdf-generator:1.2.0
+    limits:
+      memory: 256Mi
+      cpu: 500m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+```|Por padrão, o `faas-netes` aplica `imagePullPolicy: Always` nas funções implantadas para garantir que tags atualizadas sejam recarregadas; em produção, prefira tags SemVer imutáveis em cada release.|Execute `kubectl top pods -n openfaas` e `kubectl top pods -n openfaas-fn` para auditar o consumo real frente aos limites configurados.|https://raw.githubusercontent.com/openfaas/faas-netes/master/README.md;https://raw.githubusercontent.com/openfaas/faas/master/README.md;https://github.com/openfaas/faas-netes
