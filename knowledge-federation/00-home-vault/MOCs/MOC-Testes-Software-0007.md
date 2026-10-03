@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 1459 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1459 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1450 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1559 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1559 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1550 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1864,6 +1864,138 @@
 1458. [[nb-ci-integration]] — A ferramenta integra-se a executores de teste conhecidos, permitindo que a carga faça parte do trabalho automatizado.
 1459. [[nb-limits-and-practices]] — A ferramenta mede carga gerada em código e produz métricas confiáveis, mas não identifica a causa raiz nem substitui a análise de desempenho do sistema.
 
+## Tranche 21 — executores de navegador e de unidade, asserções, dublês, cassetes HTTP, mutação e fuzzing
+
+### Nightwatch — framework integrado de testes de navegador com WebDriver
+
+1460. [[nightwatch-integrated-framework]] — O Nightwatch é um framework completo, escrito em Node.js, para testes de ponta a ponta de sites em vários navegadores, usando a API W3C WebDriver.
+1461. [[nightwatch-browser-drivers]] — O controle dos navegadores acontece por serviços que implementam o protocolo WebDriver: GeckoDriver, ChromeDriver, Microsoft Edge Driver e SafariDriver.
+1462. [[nightwatch-settings-basics]] — A configuração central do Nightwatch define src_folders para localizar os testes, test_settings para declarar ambientes e os objetos webdriver ou selenium para o transporte.
+1463. [[nightwatch-environments-baseurl]] — A propriedade baseUrl (também grafada base_url, launch_url ou launchUrl) fica disponível na API do teste e assume o valor do ambiente selecionado na execução.
+1464. [[nightwatch-capabilities-desired]] — O objeto desiredCapabilities (ou capabilities) define as capacidades da sessão WebDriver, como o nome do navegador e opções de toleração de certificados.
+1465. [[nightwatch-page-objects-path]] — A chave page_objects_path aponta as pastas de onde os objetos de página são carregados e ficam disponíveis pelo namespace page da API do teste.
+1466. [[nightwatch-custom-commands-assertions]] — As chaves custom_commands_path e custom_assertions_path registram pastas de comandos e asserções definidos pelo projeto, anexados à API do teste.
+1467. [[nightwatch-parallel-test-workers]] — A chave test_workers aceita verdadeiro ou um objeto com enabled e workers, rodando cada suíte em um processo próprio com número de trabalhadores fixo ou automático.
+1468. [[nightwatch-runner-mocha-unit]] — O campo test_runner seleciona o runner interno (default) ou o mocha, com opções aninhadas como ui; unit_tests_mode desliga a criação automática da sessão de navegador.
+1469. [[nightwatch-screenshots-failures]] — O objeto screenshots controla a geração de imagens quando um comando erra ou um teste falha, com chaves enabled, on_failure, on_error e path.
+
+### AVA — executor de testes de Node.js com concorrência e isolamento por arquivo
+
+1470. [[ava-concurrency-model]] — No AVA, os testes de um arquivo são definidos para rodar concorrentemente, e o executor só espera um teste terminar quando ele retorna uma promessa ou um observável.
+1471. [[ava-worker-isolation]] — Cada arquivo de teste roda em uma thread de worker nova, com opção de voltar a processos separados pela configuração workerThreads, e o NODE_ENV do teste é definido automaticamente.
+1472. [[ava-setup-npm-init]] — O comando npm init ava instala o AVA como dependência de desenvolvimento e grava o script test apontando para o binário, já marcando o pacote como módulo ES.
+1473. [[ava-declaring-tests]] — Um teste é declarado chamando a função test importada do AVA com um título e a implementação, e o título deve ser único dentro de cada arquivo.
+1474. [[ava-async-support]] — O AVA aguarda promessas retornadas pelo teste e falha o caso se a promessa rejeitar, com suporte nativo a funções async e consumo automático de observáveis até o fim.
+1475. [[ava-serial-modifier]] — O modificador .serial força testes que não podem dividir o processo a rodarem em sequência, sempre antes dos testes concorrentes do mesmo arquivo.
+1476. [[ava-only-skip-todo-failing]] — O modificador .only recorta os casos do arquivo, .skip pula mantendo o caso visível, .todo reserva um placeholder só com título e .failing documenta um defeito esperado sem quebrar a esteira.
+1477. [[ava-hooks-lifecycle]] — O AVA registra test.before, test.after, test.beforeEach, test.afterEach e as variantes .always, que executam preparação e limpeza em torno dos testes do arquivo.
+1478. [[ava-magic-assert-diffs]] — O AVA amplia as falhas de asserção com trechos de código e diffs limpos entre real e esperado, destacando apenas a diferença em objetos e arrays.
+1479. [[ava-parallel-ci-watch]] — O AVA detecta ambientes de CI com builds paralelas (via ci-parallel-vars) e executa em cada build um subconjunto diferente dos arquivos, cobrindo o total somado; o flag --watch reexecuta ao salvar.
+
+### Chai — asserções encadeáveis em linguagem BDD para JavaScript
+
+1480. [[chai-three-styles]] — O Chai oferece expect e should, que compartilham a mesma linguagem encadeável, mais o estilo assert clássico com argumentos posicionais.
+1481. [[chai-language-chains]] — Os getters to, be, been, is, that, which, and, has, have, with, at, of, same, but, does, still e also existem para melhorar a legibilidade e não alteram o resultado.
+1482. [[chai-not-assert-positive]] — O elo .not nega toda asserção seguinte na cadeia, mas a documentação recomenda afirmar a saída esperada em vez de negar uma entre muitas inesperadas.
+1483. [[chai-deep-vs-strict]] — Adicionar .deep à cadeia faz as asserções equal, include, members, keys e property compararem por igualdade profunda em vez da estrita do operador de três sinais de igual.
+1484. [[chai-nested-property-paths]] — Com .nested antes de property ou include, o Chai entende notação de ponto e colchetes no nome da chave, como 'a.b[1]', e permite escapar ponto e colchete literais com barras invertidas duplas.
+1485. [[chai-own-versus-inherited]] — O elo .own restringe property e include às propriedades próprias do objeto, ignorando o que veio do protótipo.
+1486. [[chai-ordered-members]] — O elo .ordered faz asserções members exigirem a mesma sequência dos elementos, e combinado com include a verificação começa alinhada ao início dos dois arrays.
+1487. [[chai-any-all-keys]] — Para asserções keys, .any exige ao menos uma das chaves listadas e .all exige todas; o comportamento padrão é .all quando a cadeia não escolhe.
+1488. [[chai-type-a-an]] — A asserção .a (ou .an) compara o tipo detectado com a string informada, é insensível a maiúsculas e respeita o Symbol.toStringTag de objetos customizados.
+1489. [[chai-include-polymorphism]] — Em string, .include verifica substring; em array, membro presente; em objeto, subconjunto de propriedades; em Set ou WeakSet, membro por SameValueZero; em Map, um dos valores.
+
+### Sinon.JS — espiões, stubs, mocks e relógio falso para testes em JavaScript
+
+1490. [[sinon-purpose-scope]] — O Sinon é uma biblioteca de stubbing, spying e mocking para testes em JavaScript que funciona com qualquer framework de teste unitário.
+1491. [[sinon-spy-observation]] — sinon.spy(objeto, "metodo") envolve o método mantendo o comportamento original e registra tudo o que aconteceu com ele durante o teste.
+1492. [[sinon-stub-replace-behavior]] — Um stub troca o comportamento de uma função por um resultado escolhido: valores fixos, exceções lançadas ou callbacks disparados sob demanda.
+1493. [[sinon-stub-on-existing-method]] — O Sinon permite stubar um método específico de um objeto existente, mantendo os demais métodos da instância funcionando como sempre.
+1494. [[sinon-withargs-per-call]] — Com .withArgs, um mesmo stub responde diferente conforme os argumentos recebidos, e variantes como .onCall variam a resposta por ordem de chamada.
+1495. [[sinon-mock-expectations]] — O mock do Sinon declara expectativas de chamada sobre o objeto e cobra o cumprimento no fim do teste, em vez de só observar passivamente.
+1496. [[sinon-clock-fake-timers]] — sinon.useFakeTimers congela o relógio do ambiente de teste e avança no ritmo escolhido, disparando timeouts e intervalos sob comando.
+1497. [[sinon-fake-server-xhr]] — O fake server do Sinon intercepta requisições XMLHttp no navegador de teste, respondendo a roteamentos definidos pelo próprio teste.
+1498. [[sinon-sandbox-restore]] — O sandbox agrupa espiões, stubs e relógios criados a partir dele e devolve todos os objetos ao estado original num único restore.
+1499. [[sinon-assert-framework-agnostic]] — Além das propriedades booleanas dos dublês, o Sinon expõe um conjunto sinon.assert com falhas descritivas que funcionam com qualquer executor.
+
+### VCR.py — gravação e repetição de interações HTTP em testes Python
+
+1500. [[vcrpy-record-replay-contract]] — O VCR.py grava as interações HTTP reais em um arquivo de cassetete na primeira execução e reproduz as respostas gravadas nas execuções seguintes.
+1501. [[vcrpy-context-decorator]] — O cassette pode envolver o código com vcr.use_cassette('caminho.yaml') como gerenciador de contexto ou como decorator sobre a função de teste.
+1502. [[vcrpy-record-modes]] — Os modos de gravação controlam quando o VCR fala com a rede: once grava sem cassette e erro com novo pedido, new_episodes estende sempre, none proíbe rede, all regrava tudo.
+1503. [[vcrpy-vcrtestcase]] — Herdar de vcr.unittest.VCRTestCase liga a gravação e a reprodução automaticamente a cada teste, com o cassette acessível em self.cassette e caminho padrão cassettes/Classe.metodo.yaml.
+1504. [[vcrpy-vcrmixin]] — Quando a classe de teste já herda de outra base de testes, o VCRMixin entra como mixin na frente do TestCase para obter a mesma gravação automática.
+1505. [[vcrpy-vcr-config-object]] — Instanciar vcr.VCR com serializer, cassette_library_dir, record_mode e match_on cria uma configuração reutilizável, e cada use_cassette aceita overrides que vencem o global.
+1506. [[vcrpy-request-matching]] — Por padrão o VCR considera idênticos os pedidos com mesmo método, esquema, host, porta, caminho e query, e a lista match_on aceita também uri, body, raw_body, headers e um alias url.
+1507. [[vcrpy-pytest-plugins]] — Para o pytest existem duas integrações mantidas fora do núcleo: o plugin pytest-vcr e o pytest-recording, que também bloqueia o acesso à rede.
+1508. [[vcrpy-override-hooks]] — A VCRTestCase expõe _get_vcr_kwargs, _get_cassette_library_dir e _get_cassette_name para reescrever configuração, pasta e nome, e _get_vcr permite registrar matchers antes do uso.
+1509. [[vcrpy-when-cassettes-fit]] — O VCR.py cobre a camada HTTP do teste de integração; ele não valida contratos de esquema nem executa o serviço real, e serve como substituto de ambiente, não de suíte.
+
+### freezegun — congelamento e viagem do relógio em testes Python
+
+1510. [[freezegun-what-it-mocks]] — O freezegun congela o tempo dos testes simulando o módulo datetime: now, utcnow, today, time.time, localtime, gmtime e strftime devolvem o instante escolhido.
+1511. [[freezegun-decorator-basics]] — freeze_time aceita uma string de data e funciona como decorator simples sobre a função de teste, valendo por toda a duração do caso.
+1512. [[freezegun-class-decorator]] — Aplicado à classe, o decorator congela o tempo em cada callable testável, servindo tanto a TestCase do unittest quanto a classes comuns de teste.
+1513. [[freezegun-context-manager]] — O uso com with freeze_time("2012-01-14"): circunscreve o congelamento ao bloco, e fora dele o relógio volta ao normal.
+1514. [[freezegun-raw-start-stop]] — O objeto cru devolvido por freeze_time aceita start() e stop() manuais, a peça que permite ligar o congelamento em fixtures e setups compartilhados.
+1515. [[freezegun-as-kwarg]] — O parâmetro as_kwarg injeta o objeto do congelador no teste por nome, dando acesso ao time_to_freeze e aos controles de avanço dentro do corpo.
+1516. [[freezegun-tz-offset]] — O argumento tz_offset desloca o tempo congelado, aceitando horas inteiras ou um timedelta com minutos fracionários, e separa o que é utcnow do que é now local.
+1517. [[freezegun-nice-inputs]] — O parser usa dateutil por baixo, aceitando textos como "Jan 14th, 2012", e freeze_time recebe ainda uma função ou um gerador como fonte de datas.
+1518. [[freezegun-tick-modes]] — tick=True mantém o relógio andando a partir do instante congelado, e auto_tick_seconds avança o tempo uma quantidade fixa a cada chamada de now, sobrepondo-se ao tick.
+1519. [[freezegun-manual-ticks]] — Usando o contexto como gerenciador, o objeto frozen_datetime permite tick() de um segundo e tick(delta=...) com o salto desejado, e chamá-lo devolve o instante atual congelado.
+
+### mutmut — testes de mutação para Python com resultados acionáveis
+
+1520. [[mutmut-what-mutation-tests]] — A mutação altera sistematicamente o código-fonte e verifica se a suíte falha; um mutante que sobrevive indica comportamento não realmente testado.
+1521. [[mutmut-install-first-run]] — pip install mutmut e um mutmut run na raiz do projeto bastam: o mutmut roda o pytest sobre a pasta tests ou test e tenta descobrir sozinho onde fica o código a mutar.
+1522. [[mutmut-resume-and-retest]] — O mutmut lembra do trabalho já feito, permitindo parar a corrida a qualquer momento e continuar de onde parou, e o browse retesta mutantes depois de você mexer nos testes.
+1523. [[mutmut-browse-tui]] — O mutmut browse abre uma interface de terminal com os mutantes encontrados, onde é possível inspecionar cada um e retestar funções ou módulos inteiros pelas teclas f e m.
+1524. [[mutmut-apply-mutant]] — Um mutante pode ser gravado no arquivo-fonte via browse ou pelo comando mutmut apply <mutante>, materializando a mudança exatamente como a corrida a viu.
+1525. [[mutmut-fork-requirement]] — O mutmut exige suporte a fork no sistema operacional, o que na prática significa rodar no Windows dentro do WSL.
+1526. [[mutmut-config-paths]] — Quando o layout foge do óbvio, a seção [mutmut] do setup.cfg (ou tool.mutmut no pyproject.toml) define source_paths e pytest_add_cli_args_test_selection; no TOML os caminhos viram lista.
+1527. [[mutmut-copy-stack-depth]] — Arquivos extras de suporte entram na corrida pela chave also_copy, e max_stack_depth limita a contagem de relevância de um teste à profundidade de pilha dentro do código-fonte.
+1528. [[mutmut-mutate-selection]] — Os padrões only_mutate e do_not_mutate filtram arquivos por glob estilo Unix, e mutate_only_covered_lines troca o critério de funções chamadas por linhas cobertas pelo coverage.py.
+1529. [[mutmut-typecheck-debug]] — O parâmetro type_check_command permite usar mypy ou pyrefly em JSON para descartar mutantes que nem sequer tipam, e debug=true despeja todo o detalhe que a interface limpa engole.
+
+### cargo-mutants — testes de mutação para Rust sem setup de projeto
+
+1530. [[cargo-mutants-what-it-finds]] — A ferramenta substitui a implementação de funções candidatas por algo trivial e roda os testes: se tudo continua passando, a função não tem teste real.
+1531. [[cargo-mutants-install-run]] — cargo install cargo-mutants publica o subcomando, e o trabalho começa com um simples cargo mutants na raiz do crate, sem tocar no código.
+1532. [[cargo-mutants-side-effects]] — A documentação adverte que a ferramenta compila e executa código com modificações geradas por máquina: se a suíte escreve ou apaga arquivos, a corrida pode causar estrago real.
+1533. [[cargo-mutants-baseline-first]] — Antes de qualquer mutante, a ferramenta roda os testes sem modificação; falhas ali abortam a análise e produzem código de saída quatro dedicado.
+1534. [[cargo-mutants-result-vocabulary]] — Cada mutante recebe um de quatro destinos: pego por teste, não pego, verificação de tipos que falhou ou compilação quebrada, cada qual com seu significado de cobertura.
+1535. [[cargo-mutants-list-diff-json]] — As opções --list, --diff e --json mostram os mutantes gerados sem executar nada: a primeira a enumeração, a segunda a substituição em diff e a terceira a forma legível por máquina.
+1536. [[cargo-mutants-skip-annotation]] — Com a dependência do micro-crate mutants no Cargo.toml, o atributo #[mutants::skip] numa função a remove da lista de mutantes.
+1537. [[cargo-mutants-output-directory]] — A corrida cria o diretório mutants.out na raiz, com um arquivo de log por mutante e pelo baseline, contendo o diff aplicado e a saída do cargo, além de mutants.json descrevendo tudo.
+1538. [[cargo-mutants-speed-advice]] — Todo ganho de velocidade de cargo build e cargo test se multiplica na corrida, e o README cita o linker Mold no Linux por causa das ligações incrementais intensas.
+1539. [[cargo-mutants-hard-to-test]] — Funções que gerenciam caches ou efeitos de performance podem sobreviver à mutação sem poderem ser simplesmente removidas; o README orienta torná-las observáveis ou pular com aviso.
+
+### Toxiproxy — simulação de condições de rede para testes de resiliência
+
+1540. [[toxiproxy-purpose-positioning]] — O Toxiproxy é uma estrutura para simular condições de rede em testes, desenvolvimento e CI, com adulteração determinística das conexões e espaço para caos aleatório.
+1541. [[toxiproxy-install-server]] — O servidor é distribuído como binário e pacote (Linux via releases, macOS por Homebrew ou MacPorts, Windows via executável) e roda também como contêiner ghcr.io/shopify/toxiproxy; do fonte é make build.
+1542. [[toxiproxy-populate-proxies]] — O mapeamento de endpoints — nome, listen e upstream — é registrado cedo no boot via populate, arquivo config/toxiproxy.json lido com -config ou comandos do toxiproxy-cli create.
+1543. [[toxiproxy-latency-bandwidth]] — O toxic latency adiciona atraso igual a latency com variação jitter em milissegundos, e bandwidth limita a conexão a um máximo de KB por segundo.
+1544. [[toxiproxy-timeout-reset-peer]] — O toxic timeout bloqueia todo o tráfego e fecha a conexão após timeout milissegundos, ou mantém a queda indefinida com zero; o reset_peer simula TCP RESET imediato ou após o prazo dado.
+1545. [[toxiproxy-slicer-limit-data]] — O slicer fatia os dados TCP em pedaços pequenos com delay médio em microssegundos entre fatias, enquanto limit_data fecha a conexão quando o volume transmitido passa do limite em bytes.
+1546. [[toxiproxy-packet-loss]] — O toxic packet_loss descarta chunks aleatoriamente com probabilidade loss_rate entre zero e um, e correlation eleva a chance de descarte logo após um descarte anterior, modelando perda em rajada.
+1547. [[toxiproxy-toxic-fields-direction]] — Toxicos têm nome padrão tipo_corrente, stream obrigatório upstream (cliente para servidor) ou downstream (servidor para cliente), toxicidade de probabilidade com default um, e atributos próprios; derrubar o serviço é outro gesto, com enabled falso no proxy.
+1548. [[toxiproxy-http-api-endpoints]] — Toda manipulação passa pela interface JSON na porta 8474: listar e criar proxies, popular lotes, ler e atualizar proxies e toxics por rota própria, além da listagem de endpoints no README.
+1549. [[toxiproxy-clients-ecosystem]] — O projeto mantém cliente Go no repositório e a comunidade atende Ruby, Python, .NET, PHP, Node, Java, Haskell, Rust e Elixir, todos falando com o mesmo daemon.
+
+### Jazzer — fuzzing dirigido por cobertura e em processo para a JVM
+
+1550. [[jazzer-coverage-guided-jvm]] — O Jazzer faz fuzzing dirigido por cobertura, no próprio processo da JVM, gerando e mutando entradas de um método de teste para maximizar o alcance de código e encontrar falhas.
+1551. [[jazzer-standalone-binary]] — Os arquivos de release trazem um binário jazzer que sobe a própria JVM já configurada para fuzzing; basta apontar o classpath e a classe do fuzz test.
+1552. [[jazzer-main-class-invocation]] — Também é possível invocar com o seu próprio java o classpath do projeto mais jazzer.jar e jazzer-junit.jar e a classe com.code_intelligence.jazzer.Jazzer, passando --target_class com a classe do fuzz test.
+1553. [[jazzer-fuzzertestoneinput]] — No modo sem JUnit, o fuzz test é uma classe pública com um método estático fuzzerTestOneInput que declara os parâmetros que o fuzzer vai gerar e variar.
+1554. [[jazzer-junit-fuzzing-mode]] — Sob JUnit com @FuzzTest, habilita-se o modo de fuzzing com a variável JAZZER_FUZZ=1 antes de rodar os testes, fazendo o Jazzer executar um fuzz test por vez e gerar entradas livremente.
+1555. [[jazzer-generated-corpus]] — Entradas que abrem nova cobertura vão para o diretório gerado em .cifuzz-corpus/<pacote>.<ClasseTeste>/<metodo>, formando o ponto de partida das próximas corridas.
+1556. [[jazzer-crash-inputs-directory]] — Toda entrada que provoca falha é salva no diretório de inputs do teste, derivado do pacote e da classe — src/test/resources/<pacote>/<Classe>Inputs/<metodo> — ou no diretório atual quando a pasta não existe.
+1557. [[jazzer-gitattributes-binary]] — Para versionar os diretórios de entradas, o README manda marcá-los como binários no .gitattributes, com src/test/resources/** e .cifuzz-corpus/** no exemplo.
+1558. [[jazzer-seeding-junit]] — Um @FuzzTest aceita sementes iniciais pelos parameter sources padrão do JUnit — @MethodSource, @CsvSource, @ValueSource ou ArgumentsSource próprios — que rodam como casos na regressão e como base de mutação no fuzzing.
+1559. [[jazzer-sanitizers-hooks]] — Os sanitizers (bug detectors) monitoram a execução contra padrões de risco como SSRF, path traversal e injeção de comando, devolvendo feedback que orienta a geração de entradas.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 1459/1459 notas e as 1459 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1450 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1459 notas substantivas; 541 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-20.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md), [19](../../exports/reports/ai-review-software-testes-2000-0001-tranche-19.md) e [20](../../exports/reports/ai-review-software-testes-2000-0001-tranche-20.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1559/1559 notas e as 1559 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1550 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1559 notas substantivas; 441 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-21.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md), [19](../../exports/reports/ai-review-software-testes-2000-0001-tranche-19.md), [20](../../exports/reports/ai-review-software-testes-2000-0001-tranche-20.md) e [21](../../exports/reports/ai-review-software-testes-2000-0001-tranche-21.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

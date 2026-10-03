@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1459 / 2.000 (72,95%)**
-- Gate automatizado: **1459/1459 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 20)
+- Notas efetivamente redigidas até agora: **1559 / 2.000 (77,95%)**
+- Gate automatizado: **1559/1559 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 21)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1459**
-- Revisão factual por IA: **1450/1459**
-- Contabilizadas como válidas: **1459/1459**
+- Revisão factual humana: **9/1559**
+- Revisão factual por IA: **1550/1559**
+- Contabilizadas como válidas: **1559/1559**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1450 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–20 (1450 notas, IDs 10–1459) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1550 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–21 (1550 notas, IDs 10–1559) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-20.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-20.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-21.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-21.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1459 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 541 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1559 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 441 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1859,6 +1859,138 @@
 1458. [NBomber: usar na esteira contínua](../../domains/software-0007/software/testes/nb-ci-integration.md)
 1459. [NBomber: interpretar resultados e reconhecer limites](../../domains/software-0007/software/testes/nb-limits-and-practices.md)
 
+## Tranche 21 — executores de navegador e de unidade, asserções, dublês, cassetes HTTP, mutação e fuzzing (100 notas; revisão factual por IA registrada)
+
+### Nightwatch — framework integrado de testes de navegador com WebDriver
+
+1460. [Nightwatch: um framework integrado de testes](../../domains/software-0007/software/testes/nightwatch-integrated-framework.md)
+1461. [Nightwatch: drivers por navegador](../../domains/software-0007/software/testes/nightwatch-browser-drivers.md)
+1462. [Nightwatch: organização da configuração](../../domains/software-0007/software/testes/nightwatch-settings-basics.md)
+1463. [Nightwatch: baseUrl por ambiente](../../domains/software-0007/software/testes/nightwatch-environments-baseurl.md)
+1464. [Nightwatch: desiredCapabilities e sessões](../../domains/software-0007/software/testes/nightwatch-capabilities-desired.md)
+1465. [Nightwatch: página de objetos pelo caminho](../../domains/software-0007/software/testes/nightwatch-page-objects-path.md)
+1466. [Nightwatch: estender com comandos e asserções próprios](../../domains/software-0007/software/testes/nightwatch-custom-commands-assertions.md)
+1467. [Nightwatch: executar suítes em paralelo](../../domains/software-0007/software/testes/nightwatch-parallel-test-workers.md)
+1468. [Nightwatch: escolher runner e modo de unidade](../../domains/software-0007/software/testes/nightwatch-runner-mocha-unit.md)
+1469. [Nightwatch: capturas de tela em falha](../../domains/software-0007/software/testes/nightwatch-screenshots-failures.md)
+
+### AVA — executor de testes de Node.js com concorrência e isolamento por arquivo
+
+1470. [AVA: testes concorrentes por padrão](../../domains/software-0007/software/testes/ava-concurrency-model.md)
+1471. [AVA: isolamento em worker threads](../../domains/software-0007/software/testes/ava-worker-isolation.md)
+1472. [AVA: inicializar o projeto com npm init ava](../../domains/software-0007/software/testes/ava-setup-npm-init.md)
+1473. [AVA: declarar testes com título único](../../domains/software-0007/software/testes/ava-declaring-tests.md)
+1474. [AVA: promessas, async e observáveis](../../domains/software-0007/software/testes/ava-async-support.md)
+1475. [AVA: casos .serial antes dos concorrentes](../../domains/software-0007/software/testes/ava-serial-modifier.md)
+1476. [AVA: only, skip, todo e failing](../../domains/software-0007/software/testes/ava-only-skip-todo-failing.md)
+1477. [AVA: ganchos before, after e always](../../domains/software-0007/software/testes/ava-hooks-lifecycle.md)
+1478. [AVA: diagnóstico de falha com magic assert](../../domains/software-0007/software/testes/ava-magic-assert-diffs.md)
+1479. [AVA: distribuição na CI e modo watch](../../domains/software-0007/software/testes/ava-parallel-ci-watch.md)
+
+### Chai — asserções encadeáveis em linguagem BDD para JavaScript
+
+1480. [Chai: três estilos, um núcleo](../../domains/software-0007/software/testes/chai-three-styles.md)
+1481. [Chai: correntes de linguagem de leitura](../../domains/software-0007/software/testes/chai-language-chains.md)
+1482. [Chai: negar com .not é poder, não dever](../../domains/software-0007/software/testes/chai-not-assert-positive.md)
+1483. [Chai: igualdade profunda com .deep](../../domains/software-0007/software/testes/chai-deep-vs-strict.md)
+1484. [Chai: caminhos aninhados com .nested](../../domains/software-0007/software/testes/chai-nested-property-paths.md)
+1485. [Chai: .own ignora propriedades herdadas](../../domains/software-0007/software/testes/chai-own-versus-inherited.md)
+1486. [Chai: ordem exigida com .ordered](../../domains/software-0007/software/testes/chai-ordered-members.md)
+1487. [Chai: .any e .all em chaves](../../domains/software-0007/software/testes/chai-any-all-keys.md)
+1488. [Chai: verificar tipo antes do resto com .a](../../domains/software-0007/software/testes/chai-type-a-an.md)
+1489. [Chai: .include muda conforme o alvo](../../domains/software-0007/software/testes/chai-include-polymorphism.md)
+
+### Sinon.JS — espiões, stubs, mocks e relógio falso para testes em JavaScript
+
+1490. [Sinon: dublês para qualquer framework](../../domains/software-0007/software/testes/sinon-purpose-scope.md)
+1491. [Sinon: observar chamadas com spies](../../domains/software-0007/software/testes/sinon-spy-observation.md)
+1492. [Sinon: stubs substituem o resultado](../../domains/software-0007/software/testes/sinon-stub-replace-behavior.md)
+1493. [Sinon: aplicar stub a um método real](../../domains/software-0007/software/testes/sinon-stub-on-existing-method.md)
+1494. [Sinon: um stub, vários comportamentos](../../domains/software-0007/software/testes/sinon-withargs-per-call.md)
+1495. [Sinon: mocks com expectativas verificadas](../../domains/software-0007/software/testes/sinon-mock-expectations.md)
+1496. [Sinon: relógio falso para aguardar sem espera](../../domains/software-0007/software/testes/sinon-clock-fake-timers.md)
+1497. [Sinon: servidor falso para requisições XHR](../../domains/software-0007/software/testes/sinon-fake-server-xhr.md)
+1498. [Sinon: sandbox para devolver os originais](../../domains/software-0007/software/testes/sinon-sandbox-restore.md)
+1499. [Sinon: asserções próprias, sem refém do framework](../../domains/software-0007/software/testes/sinon-assert-framework-agnostic.md)
+
+### VCR.py — gravação e repetição de interações HTTP em testes Python
+
+1500. [VCR.py: gravar uma vez, repetir sempre](../../domains/software-0007/software/testes/vcrpy-record-replay-contract.md)
+1501. [VCR.py: gerenciar contexto ou decorar a função](../../domains/software-0007/software/testes/vcrpy-context-decorator.md)
+1502. [VCR.py: escolher entre once, new_episodes, none e all](../../domains/software-0007/software/testes/vcrpy-record-modes.md)
+1503. [VCR.py: integração com unittest via VCRTestCase](../../domains/software-0007/software/testes/vcrpy-vcrtestcase.md)
+1504. [VCR.py: VCRMixin quando a hierarquia já tem base](../../domains/software-0007/software/testes/vcrpy-vcrmixin.md)
+1505. [VCR.py: configurar um objeto VCR próprio](../../domains/software-0007/software/testes/vcrpy-vcr-config-object.md)
+1506. [VCR.py: o que torna dois pedidos iguais](../../domains/software-0007/software/testes/vcrpy-request-matching.md)
+1507. [VCR.py: pytest-vcr e pytest-recording](../../domains/software-0007/software/testes/vcrpy-pytest-plugins.md)
+1508. [VCR.py: ganchos de personalização da classe-base](../../domains/software-0007/software/testes/vcrpy-override-hooks.md)
+1509. [VCR.py: o que o cassette não substitui](../../domains/software-0007/software/testes/vcrpy-when-cassettes-fit.md)
+
+### freezegun — congelamento e viagem do relógio em testes Python
+
+1510. [freezegun: o que a biblioteca congela](../../domains/software-0007/software/testes/freezegun-what-it-mocks.md)
+1511. [freezegun: decorar o teste com o instante](../../domains/software-0007/software/testes/freezegun-decorator-basics.md)
+1512. [freezegun: congelar uma classe de testes inteira](../../domains/software-0007/software/testes/freezegun-class-decorator.md)
+1513. [freezegun: contexto para controlar a fronteira](../../domains/software-0007/software/testes/freezegun-context-manager.md)
+1514. [freezegun: start e stop para fixtures](../../domains/software-0007/software/testes/freezegun-raw-start-stop.md)
+1515. [freezegun: receber o congelador como argumento](../../domains/software-0007/software/testes/freezegun-as-kwarg.md)
+1516. [freezegun: congelar com deslocamento de fuso](../../domains/software-0007/software/testes/freezegun-tz-offset.md)
+1517. [freezegun: datas legíveis e funções geradoras](../../domains/software-0007/software/testes/freezegun-nice-inputs.md)
+1518. [freezegun: tempo correndo com tick e auto_tick](../../domains/software-0007/software/testes/freezegun-tick-modes.md)
+1519. [freezegun: avanço manual com o congelador vivo](../../domains/software-0007/software/testes/freezegun-manual-ticks.md)
+
+### mutmut — testes de mutação para Python com resultados acionáveis
+
+1520. [mutmut: medir testes por defeitos injetados](../../domains/software-0007/software/testes/mutmut-what-mutation-tests.md)
+1521. [mutmut: instalar e rodar sem setup](../../domains/software-0007/software/testes/mutmut-install-first-run.md)
+1522. [mutmut: interromper, retomar e retestar](../../domains/software-0007/software/testes/mutmut-resume-and-retest.md)
+1523. [mutmut: explorar mutantes no browse](../../domains/software-0007/software/testes/mutmut-browse-tui.md)
+1524. [mutmut: aplicar o mutante no disco](../../domains/software-0007/software/testes/mutmut-apply-mutant.md)
+1525. [mutmut: requisito de fork e plataformas](../../domains/software-0007/software/testes/mutmut-fork-requirement.md)
+1526. [mutmut: configuração em setup.cfg ou pyproject](../../domains/software-0007/software/testes/mutmut-config-paths.md)
+1527. [mutmut: also_copy e profundidade máxima de pilha](../../domains/software-0007/software/testes/mutmut-copy-stack-depth.md)
+1528. [mutmut: escolher linhas com cobertura ou glob](../../domains/software-0007/software/testes/mutmut-mutate-selection.md)
+1529. [mutmut: filtrar mutantes por tipos e ativar verbosidade](../../domains/software-0007/software/testes/mutmut-typecheck-debug.md)
+
+### cargo-mutants — testes de mutação para Rust sem setup de projeto
+
+1530. [cargo-mutants: funções que ninguém testa de verdade](../../domains/software-0007/software/testes/cargo-mutants-what-it-finds.md)
+1531. [cargo-mutants: instalar e disparar](../../domains/software-0007/software/testes/cargo-mutants-install-run.md)
+1532. [cargo-mutants: perigo de efeitos colaterais](../../domains/software-0007/software/testes/cargo-mutants-side-effects.md)
+1533. [cargo-mutants: baseline verde antes de mutar](../../domains/software-0007/software/testes/cargo-mutants-baseline-first.md)
+1534. [cargo-mutants: caught, not caught, check e build failed](../../domains/software-0007/software/testes/cargo-mutants-result-vocabulary.md)
+1535. [cargo-mutants: ver mutantes sem rodá-los](../../domains/software-0007/software/testes/cargo-mutants-list-diff-json.md)
+1536. [cargo-mutants: marcar funções para pular](../../domains/software-0007/software/testes/cargo-mutants-skip-annotation.md)
+1537. [cargo-mutants: o que há em mutants.out](../../domains/software-0007/software/testes/cargo-mutants-output-directory.md)
+1538. [cargo-mutants: acelerar builds para acelerar mutantes](../../domains/software-0007/software/testes/cargo-mutants-speed-advice.md)
+1539. [cargo-mutants: funções de efeito difícil de testar](../../domains/software-0007/software/testes/cargo-mutants-hard-to-test.md)
+
+### Toxiproxy — simulação de condições de rede para testes de resiliência
+
+1540. [Toxiproxy: provar a resiliência em teste](../../domains/software-0007/software/testes/toxiproxy-purpose-positioning.md)
+1541. [Toxiproxy: obter e subir o servidor](../../domains/software-0007/software/testes/toxiproxy-install-server.md)
+1542. [Toxiproxy: popular os proxies no boot](../../domains/software-0007/software/testes/toxiproxy-populate-proxies.md)
+1543. [Toxiproxy: latência e banda pelos toxic latency e bandwidth](../../domains/software-0007/software/testes/toxiproxy-latency-bandwidth.md)
+1544. [Toxiproxy: conexões que apodrecem com timeout e reset_peer](../../domains/software-0007/software/testes/toxiproxy-timeout-reset-peer.md)
+1545. [Toxiproxy: pacotes miúdos e conexões cortadas por tamanho](../../domains/software-0007/software/testes/toxiproxy-slicer-limit-data.md)
+1546. [Toxiproxy: queda de pacotes com rajadas por packet_loss](../../domains/software-0007/software/testes/toxiproxy-packet-loss.md)
+1547. [Toxiproxy: stream, toxicidade e o down que não é toxic](../../domains/software-0007/software/testes/toxiproxy-toxic-fields-direction.md)
+1548. [Toxiproxy: a API HTTP de controle](../../domains/software-0007/software/testes/toxiproxy-http-api-endpoints.md)
+1549. [Toxiproxy: clientes por linguagem e CLI](../../domains/software-0007/software/testes/toxiproxy-clients-ecosystem.md)
+
+### Jazzer — fuzzing dirigido por cobertura e em processo para a JVM
+
+1550. [Jazzer: fuzzing em processo para a JVM](../../domains/software-0007/software/testes/jazzer-coverage-guided-jvm.md)
+1551. [Jazzer: binário standalone da página de releases](../../domains/software-0007/software/testes/jazzer-standalone-binary.md)
+1552. [Jazzer: chamar a classe main diretamente](../../domains/software-0007/software/testes/jazzer-main-class-invocation.md)
+1553. [Jazzer: o método fuzzerTestOneInput](../../domains/software-0007/software/testes/jazzer-fuzzertestoneinput.md)
+1554. [Jazzer: fuzzing a partir de testes normais](../../domains/software-0007/software/testes/jazzer-junit-fuzzing-mode.md)
+1555. [Jazzer: o corpus gerado pelo fuzzer](../../domains/software-0007/software/testes/jazzer-generated-corpus.md)
+1556. [Jazzer: inputs que quebram viram arquivo no repositório](../../domains/software-0007/software/testes/jazzer-crash-inputs-directory.md)
+1557. [Jazzer: marcar corpus e inputs como binários no git](../../domains/software-0007/software/testes/jazzer-gitattributes-binary.md)
+1558. [Jazzer: sementes vindas de parâmetros do JUnit](../../domains/software-0007/software/testes/jazzer-seeding-junit.md)
+1559. [Jazzer: sanitizers que denunciam a vulnerabilidade](../../domains/software-0007/software/testes/jazzer-sanitizers-hooks.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1450 notas 10–1459 das tranches 2–20 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1459/2.000 notas válidas, restando 541 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1550 notas 10–1559 das tranches 2–21 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1559/2.000 notas válidas, restando 441 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
