@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **400 / 2.000 (20,00%)**
-- Gate automatizado: **400/400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 4)
-- Revisão factual humana: **0/400**
-- Revisão factual por IA: **400/400**
-- Contabilizadas como válidas: **400/400**
-- Revisor das 400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–4 (400 notas, IDs 1–400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **500 / 2.000 (25,00%)**
+- Gate automatizado: **500/500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 5)
+- Revisão factual humana: **0/500**
+- Revisão factual por IA: **500/500**
+- Contabilizadas como válidas: **500/500**
+- Revisor das 500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–5 (500 notas, IDs 1–500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-04.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-04.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-05.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-05.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1600 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1500 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -546,6 +546,138 @@
 399. [Automação GitOps em CI/CD (plan no PR e apply no merge) e Terragrunt Scale](../../domains/software-0008/software/devops/terragrunt-ci-cd-gitops-workflows-and-terragrunt-scale.md)
 400. [Adoção incremental do Terragrunt e uso das fixtures oficiais test/fixtures/docs/01-quick-start](../../domains/software-0008/software/devops/terragrunt-documentation-fixtures-and-incremental-adoption.md)
 
+## Tranche 5 — Grafana Tempo, VictoriaMetrics, Backstage, KubeVirt, MetalLB, Strimzi, Knative Serving, SPIFFE/SPIRE, Dapr e OpenFeature (100 notas; revisão factual por IA registrada)
+
+### Grafana Tempo (backend de rastreamento distribuído em alta escala sobre object storage)
+
+401. [Grafana Tempo como backend de tracing distribuído de alta escala baseado apenas em object storage](../../domains/software-0008/software/devops/tempo-object-storage-distributed-tracing-backend.md)
+402. [Exploração sem queries e métricas RED com o aplicativo Grafana Traces Drilldown](../../domains/software-0008/software/devops/tempo-traces-drilldown-ui-and-red-metrics.md)
+403. [Linguagem de consulta TraceQL inspirada em LogQL e PromQL no Grafana Tempo](../../domains/software-0008/software/devops/tempo-traceql-query-language-for-spans-and-traces.md)
+404. [Geração ad-hoc de métricas a partir de traces com TraceQL metrics no Tempo](../../domains/software-0008/software/devops/tempo-traceql-metrics-ad-hoc-aggregation.md)
+405. [Apache Parquet como formato colunar padrão de armazenamento a partir do Grafana Tempo 2.0](../../domains/software-0008/software/devops/tempo-apache-parquet-default-storage-format.md)
+406. [Arquitetura nativa em OpenTelemetry e ingestão multi-protocolo (OTLP, Jaeger, Zipkin e Kafka)](../../domains/software-0008/software/devops/tempo-opentelemetry-native-receiver-wire-and-storage-format.md)
+407. [Exemplos e modelos de implantação do Tempo com Docker Compose, Helm e Jsonnet (Tanka)](../../domains/software-0008/software/devops/tempo-deployment-topologies-compose-helm-and-jsonnet.md)
+408. [Monitoramento contínuo de consistência de ponta a ponta com tempo-vulture](../../domains/software-0008/software/devops/tempo-tempo-vulture-consistency-checking-tool.md)
+409. [Operações administrativas e inspeção de blocos de armazenamento com tempo-cli](../../domains/software-0008/software/devops/tempo-tempo-cli-operations-and-block-inspection.md)
+410. [Licenciamento AGPL-3.0-only, exceções em LICENSING.md e roteamento de issues de UI para o Grafana](../../domains/software-0008/software/devops/tempo-agplv3-licensing-and-grafana-ui-issue-routing.md)
+
+### VictoriaMetrics (banco de dados de séries temporais e solução de monitoramento rápida e econômica)
+
+411. [VictoriaMetrics nas versões Single-node e Cluster sob licença Apache-2.0](../../domains/software-0008/software/devops/victoria-single-node-and-cluster-tsdb-apache2.md)
+412. [Armazenamento de longo prazo para Prometheus e visão global de consulta no VictoriaMetrics](../../domains/software-0008/software/devops/victoria-prometheus-long-term-storage-and-global-query-view.md)
+413. [Compatibilidade com PromQL e extensões de performance e usabilidade do MetricsQL](../../domains/software-0008/software/devops/victoria-promql-and-metricsql-query-languages.md)
+414. [Ingestão multi-protocolo: Prometheus, InfluxDB, Graphite, OpenTSDB, DataDog, NewRelic e OpenTelemetry](../../domains/software-0008/software/devops/victoria-multi-protocol-ingestion-prometheus-influx-graphite-otel.md)
+415. [Backups com snapshots instantâneos (hard links) e suporte a armazenamento NFS (EFS e Filestore)](../../domains/software-0008/software/devops/victoria-instant-snapshots-and-nfs-storage-support.md)
+416. [Eficiência de memória RAM, compressão de dados (7x a 70x) e controle de alta cardinalidade](../../domains/software-0008/software/devops/victoria-ram-footprint-and-compression-benchmarks.md)
+417. [Agregação de stream em tempo real (alternativa ao StatsD) e relabeling de métricas no VictoriaMetrics](../../domains/software-0008/software/devops/victoria-stream-aggregation-and-relabeling-capabilities.md)
+418. [Lançamentos LTS (Long-Term Support), changelog rápido e procedimento seguro de upgrade](../../domains/software-0008/software/devops/victoria-lts-releases-and-upgrade-procedures.md)
+419. [Recursos Enterprise do VictoriaMetrics: detecção de anomalias, múltiplas retenções e downsampling](../../domains/software-0008/software/devops/victoria-enterprise-features-downsampling-and-multi-retention.md)
+420. [Aplicação do VictoriaMetrics em cargas de Big Data, Kubernetes, IoT, carros conectados e telemetria industrial](../../domains/software-0008/software/devops/victoria-big-data-iot-and-industrial-telemetry-workloads.md)
+
+### Backstage (framework CNCF Incubating para construção de portais internos de desenvolvedores)
+
+421. [Backstage como framework open-source para construção de Internal Developer Portals (IDP)](../../domains/software-0008/software/devops/backstage-internal-developer-portal-framework-overview.md)
+422. [Gerenciamento de microsserviços, bibliotecas, pipelines e modelos de ML no Backstage Software Catalog](../../domains/software-0008/software/devops/backstage-software-catalog-metadata-and-ownership.md)
+423. [Criação padronizada de novos projetos e Golden Paths com Backstage Software Templates](../../domains/software-0008/software/devops/backstage-software-templates-golden-paths-scaffolding.md)
+424. [Documentação técnica "docs like code" integrada ao catálogo com Backstage TechDocs](../../domains/software-0008/software/devops/backstage-techdocs-docs-like-code-architecture.md)
+425. [Arquitetura extensível de plugins open-source e internos no Backstage](../../domains/software-0008/software/devops/backstage-open-source-plugin-ecosystem-and-extensibility.md)
+426. [Arquitetura do Backstage (Frontend, Backend, Proxy e Banco de Dados) e Architecture Decision Records (ADRs)](../../domains/software-0008/software/devops/backstage-architecture-overview-and-adr-decisions.md)
+427. [Padronização visual de plugins com Backstage Design System e Storybook](../../domains/software-0008/software/devops/backstage-design-system-and-storybook-ui-components.md)
+428. [Modelagem de APIs (OpenAPI, AsyncAPI, gRPC, GraphQL), Sistemas e Domínios no Backstage](../../domains/software-0008/software/devops/backstage-api-entities-and-system-domain-modeling.md)
+429. [Processo de RFCs, governança CNCF em backstage/community e encontros mensais](../../domains/software-0008/software/devops/backstage-rfc-process-and-cncf-community-governance.md)
+430. [Processo de releases de segurança (SECURITY.md) e reporte privado de vulnerabilidades no Backstage](../../domains/software-0008/software/devops/backstage-security-release-process-and-hackerone-reporting.md)
+
+### KubeVirt (add-on de gerenciamento de máquinas virtuais sobre Kubernetes)
+
+431. [KubeVirt como add-on de gerenciamento declarativo de máquinas virtuais no Kubernetes](../../domains/software-0008/software/devops/kubevirt-virtual-machine-management-addon-for-kubernetes.md)
+432. [Hierarquia de Custom Resources no KubeVirt: VMI (efêmero), VM (stateful) e VMIRS (escala horizontal)](../../domains/software-0008/software/devops/kubevirt-vmi-vm-and-vmirs-custom-resources-hierarchy.md)
+433. [Arquitetura orientada a serviços e coreografia entre virt-controller, virt-handler e libvirtd](../../domains/software-0008/software/devops/kubevirt-virt-controller-virt-handler-and-libvirtd-choreography.md)
+434. [Delegação de agendamento, rede e armazenamento ao Kubernetes na pilha do KubeVirt](../../domains/software-0008/software/devops/kubevirt-delegating-scheduling-networking-and-storage-to-kubernetes.md)
+435. [O princípio de design The KubeVirt Razor e a integração de rede com Multus e CNI](../../domains/software-0008/software/devops/kubevirt-the-kubevirt-razor-design-principle-and-multus-cni.md)
+436. [Modelo de segurança do KubeVirt: coexistência com cargas nativas sem elevação de privilégios](../../domains/software-0008/software/devops/kubevirt-security-model-no-privilege-escalation-for-operators.md)
+437. [Matriz de compatibilidade KubeVirt vs Kubernetes e governança do repositório kubevirt/sig-release](../../domains/software-0008/software/devops/kubevirt-kubernetes-version-support-matrix-and-sig-release.md)
+438. [Integrações do ecossistema KubeVirt: Libvirt, Cockpit e coleção Ansible kubevirt.core](../../domains/software-0008/software/devops/kubevirt-ecosystem-integrations-libvirt-cockpit-and-ansible.md)
+439. [Desenvolvimento, testes contínuos no Prow CI e documentação de componentes do KubeVirt](../../domains/software-0008/software/devops/kubevirt-prow-ci-coveralls-and-developer-getting-started.md)
+440. [Exigência de Developer Certificate of Origin (Signed-off-by: git commit -s) e canais da comunidade KubeVirt](../../domains/software-0008/software/devops/kubevirt-dco-signed-off-by-and-community-governance.md)
+
+### MetalLB (implementação de balanceador de carga de rede para clusters Kubernetes bare-metal)
+
+441. [MetalLB como implementação de Services do tipo LoadBalancer para Kubernetes bare-metal](../../domains/software-0008/software/devops/metallb-bare-metal-loadbalancer-service-implementation.md)
+442. [Alocação de endereços IP e gerenciamento de recursos IPAddressPool no MetalLB](../../domains/software-0008/software/devops/metallb-address-allocation-and-ipaddresspool-management.md)
+443. [Configuração de múltiplos pools de IP no MetalLB: sub-redes públicas em colocation e faixas privadas RFC1918](../../domains/software-0008/software/devops/metallb-public-colocation-subnet-versus-private-rfc1918-pools.md)
+444. [Modo Layer 2 do MetalLB: anúncio externo via ARP (IPv4) e NDP (IPv6) na rede local](../../domains/software-0008/software/devops/metallb-layer-2-mode-arp-ipv4-and-ndp-ipv6-announcement.md)
+445. [Modo BGP do MetalLB: sessões de peering com roteadores e balanceamento de carga real entre múltiplos nós](../../domains/software-0008/software/devops/metallb-bgp-mode-peering-and-true-multi-node-load-balancing.md)
+446. [Arquitetura de componentes do MetalLB: Deployment controller (alocação) e DaemonSet speaker (anúncio)](../../domains/software-0008/software/devops/metallb-controller-and-speaker-pods-architecture.md)
+447. [Comportamento de externalTrafficPolicy: Cluster vs Local em serviços gerenciados pelo MetalLB](../../domains/software-0008/software/devops/metallb-externaltrafficpolicy-local-versus-cluster-with-metallb.md)
+448. [Persistência de IPs atribuídos a Services e reatribuição automática após edição de IPAddressPool](../../domains/software-0008/software/devops/metallb-ip-pool-reassignment-and-service-ip-persistence.md)
+449. [Governança de implantação do MetalLB: uso obrigatório de releases estáveis em vez da branch main](../../domains/software-0008/software/devops/metallb-stable-release-branches-versus-main-branch-deployments.md)
+450. [Reporte de vulnerabilidades de segurança e meta de resposta inicial em 48 horas no MetalLB](../../domains/software-0008/software/devops/metallb-security-disclosure-and-48h-response-target.md)
+
+### Strimzi (operador cloud-native para executar clusters Apache Kafka no Kubernetes e OpenShift)
+
+451. [Strimzi como operador declarativo de Apache Kafka no Kubernetes e OpenShift](../../domains/software-0008/software/devops/strimzi-apache-kafka-operator-for-kubernetes-and-openshift.md)
+452. [Alinhamento obrigatório de namespace em ClusterRoles e ClusterRoleBindings na instalação do Strimzi](../../domains/software-0008/software/devops/strimzi-namespace-binding-in-install-manifests-and-rbac.md)
+453. [Provisionamento do recurso Kafka, condição Ready e conexão via serviço my-cluster-kafka-bootstrap:9092](../../domains/software-0008/software/devops/strimzi-kafka-custom-resource-and-bootstrap-service.md)
+454. [Exclusão explícita de PersistentVolumeClaims (PVCs) ao remover e recriar clusters Kafka no Strimzi](../../domains/software-0008/software/devops/strimzi-pvc-cleanup-requirement-on-cluster-deletion.md)
+455. [Verificação de assinaturas de imagens do Strimzi com Cosign (keyless desde a versão 0.49.0)](../../domains/software-0008/software/devops/strimzi-cosign-keyless-container-signature-verification.md)
+456. [Publicação e verificação de SBOMs assinados do Strimzi nos formatos SPDX-JSON e Syft-Table](../../domains/software-0008/software/devops/strimzi-spdx-json-and-syft-table-signed-sboms.md)
+457. [Diferenças operacionais entre Minikube e Kubernetes Kind para clusters locais do Strimzi](../../domains/software-0008/software/devops/strimzi-minikube-versus-kubernetes-kind-local-tradeoffs.md)
+458. [Gerenciamento declarativo de tópicos e usuários com CRDs KafkaTopic e KafkaUser no Strimzi](../../domains/software-0008/software/devops/strimzi-kafka-topics-and-users-declarative-management.md)
+459. [Fluxo de build, guia de testes (TESTING.md) e checklist de release no repositório do Strimzi](../../domains/software-0008/software/devops/strimzi-development-testing-and-release-guides-workflow.md)
+460. [Conformidade DCO (git commit -s / git commit --amend -s) e reuniões comunitárias do Strimzi](../../domains/software-0008/software/devops/strimzi-dco-sign-off-and-cncf-community-meetings.md)
+
+### Knative Serving (plataforma serverless baseada em Kubernetes para deploy, roteamento e scale-to-zero)
+
+461. [Knative Serving e as quatro primitivas para contêineres serverless no Kubernetes](../../domains/software-0008/software/devops/knative-serverless-containers-and-middleware-primitives.md)
+462. [Snapshots imutáveis (Revisions) e divisão percentual de tráfego no Knative Serving](../../domains/software-0008/software/devops/knative-point-in-time-revisions-and-traffic-splitting.md)
+463. [Arquitetura de escalonamento até zero (scale-to-zero) com os pods activator, autoscaler e autoscaler-hpa](../../domains/software-0008/software/devops/knative-scale-to-zero-activator-and-autoscaler-architecture.md)
+464. [Manifestos oficiais de instalação do Knative Serving: serving-crds, serving-core, serving-hpa e serving-nscert](../../domains/software-0008/software/devops/knative-release-manifests-crds-core-hpa-and-nscert.md)
+465. [Dimensionamento de CPU/memória do cluster e pré-requisitos de cluster-admin para o Knative Serving](../../domains/software-0008/software/devops/knative-cluster-resource-allocation-and-admin-prerequisites.md)
+466. [Desenvolvimento e deploy de imagens Go no Knative com a ferramenta ko (ko.local, kind.local e --platform)](../../domains/software-0008/software/devops/knative-ko-build-tool-and-local-registries-ko-local-kind-local.md)
+467. [Integração do Knative Serving com cert-manager para provisionamento automático de certificados TLS](../../domains/software-0008/software/devops/knative-cert-manager-integration-and-tls-encryption.md)
+468. [Papel do pod webhook na validação, atribuição de defaults e conversão de recursos no Knative Serving](../../domains/software-0008/software/devops/knative-webhook-validation-and-defaulting-in-knative.md)
+469. [Diagnóstico de reconciliação de Services, Routes e Revisions através dos logs do Knative controller](../../domains/software-0008/software/devops/knative-controller-logs-and-reconciliation-debugging.md)
+470. [Requisitos de compilação do Knative Serving: Go, Bash v4+, protoc e protoc-gen-gogofaster](../../domains/software-0008/software/devops/knative-protobuf-code-generation-and-bash-v4-build-requirements.md)
+
+### SPIFFE e SPIRE (identidade criptográfica de workloads e autenticação zero-trust graduadas na CNCF)
+
+471. [SPIRE como ambiente de execução SPIFFE graduado na CNCF e exposição da SPIFFE Workload API](../../domains/software-0008/software/devops/spiffe-spire-runtime-environment-and-workload-api.md)
+472. [Documentos de identidade verificáveis SVIDs (X.509 e JWT) para mTLS e autenticação entre serviços](../../domains/software-0008/software/devops/spiffe-x509-svid-mtls-and-jwt-svid-authentication.md)
+473. [Componentes e imagens oficiais do SPIRE: spire-server, spire-agent e oidc-discovery-provider](../../domains/software-0008/software/devops/spiffe-spire-server-spire-agent-and-oidc-discovery-provider-images.md)
+474. [Rotação transparente de certificados TLS e trust bundles no Envoy Proxy via SPIRE SDS](../../domains/software-0008/software/devops/spiffe-envoy-secret-discovery-service-sds-integration.md)
+475. [Bibliotecas clientes oficiais go-spiffe e java-spiffe para consumo direto da SPIFFE Workload API](../../domains/software-0008/software/devops/spiffe-go-spiffe-and-java-spiffe-client-libraries.md)
+476. [Framework extensível de plugins do SPIRE para atestação de nós, workloads e autoridades certificadoras](../../domains/software-0008/software/devops/spiffe-extensible-plugin-framework-node-and-workload-attestation.md)
+477. [Escalabilidade e modelos de implantação do SPIRE (doc/scaling_spire.md) e federação de Trust Domains](../../domains/software-0008/software/devops/spiffe-scaling-spire-and-federation-deployment-models.md)
+478. [Auditorias independentes de segurança do SPIFFE e SPIRE (Cure53 e CNCF TAG-Security) e reporte privado](../../domains/software-0008/software/devops/spiffe-cure53-and-cncf-tag-security-audits.md)
+479. [Posição arquitetural do SPIRE frente a cofres de segredos, provedores de identidade, motores de política e service meshes](../../domains/software-0008/software/devops/spiffe-comparing-spire-to-secret-stores-iam-and-service-meshes.md)
+480. [Validação prática com spire-examples, spire-tutorials e Quickstart para Kubernetes, Linux e macOS](../../domains/software-0008/software/devops/spiffe-quickstart-guides-and-spire-tutorials-verification.md)
+
+### Dapr (Distributed Application Runtime graduado na CNCF para aplicações distribuídas, workflows duráveis e agentes de IA)
+
+481. [Arquitetura sidecar leve do Dapr (~58MB binário, ~4MB RAM) e as 12 APIs de blocos de construção](../../domains/software-0008/software/devops/dapr-sidecar-runtime-and-twelve-building-block-apis.md)
+482. [Execução durável e retomada automática de etapas com Dapr Workflows](../../domains/software-0008/software/devops/dapr-durable-execution-with-dapr-workflows.md)
+483. [Operação confiável de agentes de IA, orquestração multi-agentes e Conversation API para LLMs no Dapr](../../domains/software-0008/software/devops/dapr-reliable-ai-agents-and-conversation-api-llm.md)
+484. [Segurança por padrão no Dapr: identidade criptográfica, mTLS automático e políticas de accessControl](../../domains/software-0008/software/devops/dapr-secure-by-default-mtls-and-accesscontrol-configuration.md)
+485. [Execução verificável (Verifiable Execution) para auditoria de linhagem e integridade no Dapr](../../domains/software-0008/software/devops/dapr-verifiable-execution-provenance-and-auditability.md)
+486. [Portabilidade de infraestrutura com State Management, Pub/Sub e repositório dapr/components-contrib](../../domains/software-0008/software/devops/dapr-state-management-pubsub-and-pluggable-components-contrib.md)
+487. [APIs avançadas de coordenação e segurança no Dapr: Actors, Distributed Lock, Cryptography e Jobs](../../domains/software-0008/software/devops/dapr-actors-distributed-lock-cryptography-and-jobs-apis.md)
+488. [SDKs nativos em 8 linguagens (.NET, Java, Python, Go, JS/TS, Rust, C++ e PHP) sobre HTTP e gRPC](../../domains/software-0008/software/devops/dapr-multi-language-sdks-http-grpc-and-zero-lock-in.md)
+489. [Gerenciamento de desenvolvimento local e clusters Kubernetes com Dapr CLI (dapr/cli)](../../domains/software-0008/software/devops/dapr-dapr-cli-local-and-kubernetes-lifecycle-management.md)
+490. [Observabilidade integrada no Dapr: métricas, rastreamento distribuído automático e diagnósticos](../../domains/software-0008/software/devops/dapr-built-in-observability-traces-metrics-and-health.md)
+
+### OpenFeature (especificação aberta e agnóstica de fornecedor na CNCF para gerenciamento de feature flags)
+
+491. [OpenFeature como especificação aberta e agnóstica de fornecedor para feature flags na CNCF](../../domains/software-0008/software/devops/openfeature-vendor-agnostic-feature-flag-specification.md)
+492. [Casos de uso de feature flags dinâmicas e sensíveis ao contexto em tempo de execução](../../domains/software-0008/software/devops/openfeature-dynamic-context-aware-runtime-feature-flags.md)
+493. [A abstração Evaluation API do OpenFeature para autores de aplicação](../../domains/software-0008/software/devops/openfeature-evaluation-api-for-application-authors.md)
+494. [Gerenciamento de dados estáticos e dinâmicos com Evaluation Context no OpenFeature](../../domains/software-0008/software/devops/openfeature-evaluation-context-static-and-dynamic-merging.md)
+495. [Arquitetura de Providers como camada de tradução no OpenFeature](../../domains/software-0008/software/devops/openfeature-providers-translation-layer-architecture.md)
+496. [Extensão do ciclo de vida de avaliação de flags com Hooks no OpenFeature](../../domains/software-0008/software/devops/openfeature-hooks-lifecycle-extensibility-and-telemetry.md)
+497. [Reação a mudanças de estado do Provider e alterações de configuração com Events no OpenFeature](../../domains/software-0008/software/devops/openfeature-events-provider-state-and-configuration-changes.md)
+498. [Conformidade da especificação OpenFeature com RFC 2119, W3C QA Guidelines e parser automatizado via make](../../domains/software-0008/software/devops/openfeature-rfc2119-and-w3c-qa-framework-specification-tooling.md)
+499. [Matriz de compatibilidade de SDKs e distinção entre paradigmas Server-side e Client-side no OpenFeature](../../domains/software-0008/software/devops/openfeature-sdk-compatibility-matrix-server-and-client-paradigms.md)
+500. [Entrega progressiva (Progressive Delivery), kill switches e governança de feature flags em DevOps](../../domains/software-0008/software/devops/openfeature-progressive-delivery-and-safe-degradation-in-devops.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 400 notas 1–400 das tranches 1–4 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 400/2.000 notas válidas, restando 1600 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 500 notas 1–500 das tranches 1–5 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 500/2.000 notas válidas, restando 1500 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
