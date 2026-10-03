@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1959 / 2.000 (97,95%)**
-- Gate automatizado: **1959/1959 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 25)
+- Notas efetivamente redigidas até agora: **2000 / 2.000 (100%)**
+- Gate automatizado: **2000/2000 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 26)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1959**
-- Revisão factual por IA: **1950/1959**
-- Contabilizadas como válidas: **1959/1959**
+- Revisão factual humana: **9/2000**
+- Revisão factual por IA: **1991/2000**
+- Contabilizadas como válidas: **2000/2000**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1950 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–25 (1950 notas, IDs 10–1959) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1991 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `complete`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–26 (1991 notas, IDs 10–2000) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-25.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-25.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md), [`tranche 23`](../reports/ai-review-software-testes-2000-0001-tranche-23.md), [`tranche 24`](../reports/ai-review-software-testes-2000-0001-tranche-24.md) e [`tranche 25`](../reports/ai-review-software-testes-2000-0001-tranche-25.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-26.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-26.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 20`](../reports/ai-review-software-testes-2000-0001-tranche-20.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md), [`tranche 23`](../reports/ai-review-software-testes-2000-0001-tranche-23.md), [`tranche 24`](../reports/ai-review-software-testes-2000-0001-tranche-24.md), [`tranche 25`](../reports/ai-review-software-testes-2000-0001-tranche-25.md) e [`tranche 26`](../reports/ai-review-software-testes-2000-0001-tranche-26.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1959 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 41 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote e todas as 2000 notas materiais já estão criadas e listadas abaixo; não há IDs reservados, placeholders ou registros virtuais. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -2519,6 +2519,61 @@
 1958. [Execução com `codecept run` e relatório passo a passo em inglês com `--steps`](../../domains/software-0007/software/testes/codeception-run-and-steps-flag.md)
 1959. [Suporte nativo a BDD/Gherkin e o mapa dos 17 capítulos da documentação oficial](../../domains/software-0007/software/testes/codeception-bdd-gherkin-and-guides-map.md)
 
+## Tranche 26 — ESBMC, SymbiYosys, gocheck e Psalm (41 notas finais; revisão factual por IA registrada)
+
+### ESBMC — model checker limitado por contexto baseado em SMT para múltiplas linguagens
+
+1960. [ESBMC: model checker limitado por contexto baseado em SMT para oito famílias de linguagens](../../domains/software-0007/software/testes/esbmc-what-it-is.md)
+1961. [Os cinco frontends especializados: Clang, Soot/Jimple, CPython 3.10, Solidity e ESBMC-PLC](../../domains/software-0007/software/testes/esbmc-five-language-frontends.md)
+1962. [Classes de erros sequenciais detectados automaticamente pelo ESBMC](../../domains/software-0007/software/testes/esbmc-sequential-safety-properties.md)
+1963. [Verificação de software concorrente (pthread): interleavings, deadlock, data races e atomicidade](../../domains/software-0007/software/testes/esbmc-concurrent-pthread-verification.md)
+1964. [Sete solvers SMT suportados nativamente e comunicação via pipe SMT-LIB](../../domains/software-0007/software/testes/esbmc-smt-solvers-and-smtlib-pipe.md)
+1965. [Backends one-shot externos sobre arquivos SMT-LIB2: --bitwuzllob (Mallob) e --neurosym](../../domains/software-0007/software/testes/esbmc-oneshot-backends-bitwuzllob-neurosym.md)
+1966. [Instalação oficial: PPA para Ubuntu 22.04/24.04, Homebrew com Z3/Bitwuzla e binários de release](../../domains/software-0007/software/testes/esbmc-installation-ppa-homebrew-releases.md)
+1967. [As três integrações oficiais fora do terminal: VS Code, ESBMC-Web e plugin Claude Code (mais GitHub Action)](../../domains/software-0007/software/testes/esbmc-editor-web-and-claude-code-integrations.md)
+1968. [Uso prático com --incremental-bmc e leitura do trace de contraexemplo por estados](../../domains/software-0007/software/testes/esbmc-incremental-bmc-counterexample-trace.md)
+1969. [Documentação de arquitetura, publicações científicas da SSVLab e comunidade no Zulip](../../domains/software-0007/software/testes/esbmc-architecture-publications-and-community.md)
+
+### SymbiYosys — verificação formal de hardware em Verilog e SystemVerilog sobre o Yosys
+
+1970. [SymbiYosys (sby): driver de linha de comando para verificação formal de hardware sobre o Yosys](../../domains/software-0007/software/testes/symbiyosys-what-it-is.md)
+1971. [Licenciamento ISC e distribuição via OSS CAD Suite (gratuito) e Tabby CAD Suite](../../domains/software-0007/software/testes/symbiyosys-isc-license-and-suites.md)
+1972. [O exemplo canônico em fifo.sv: ponteiros circulares addr_gen e banco de registradores](../../domains/software-0007/software/testes/symbiyosys-fifo-rtl-example-structure.md)
+1973. [Escrevendo propriedades temporais básicas em RTL: assert imediato e operador $past](../../domains/software-0007/software/testes/symbiyosys-sva-assert-and-past-operator.md)
+1974. [Verificação de invariante estrutural: consistência entre contador auxiliar e diferença de ponteiros](../../domains/software-0007/software/testes/symbiyosys-invariant-checking-circular-pointers.md)
+1975. [O arquivo .sby, suas tarefas de verificação e a tag :default](../../domains/software-0007/software/testes/symbiyosys-sby-file-tasks-and-default-tag.md)
+1976. [Reexecução iterativa com a flag -f e seleção de tarefa na linha de comando](../../domains/software-0007/software/testes/symbiyosys-overwrite-flag-f-and-task-selection.md)
+1977. [Verificação não limitada (unbounded): processos paralelos basecase e induction](../../domains/software-0007/software/testes/symbiyosys-unbounded-basecase-and-induction.md)
+1978. [Os três artefatos gerados em uma falha: trace.vcd, trace_tb.v e trace.smtc](../../domains/software-0007/software/testes/symbiyosys-three-counterexample-artifacts.md)
+1979. [Depuração visual do contraexemplo com GTKWave e arquivos de configuração .gtkw](../../domains/software-0007/software/testes/symbiyosys-gtkwave-waveform-debugging.md)
+
+### gocheck — extensão de suítes, checkers e fixtures para o pacote testing do Go
+
+1980. [gocheck (gopkg.in/check.v1): extensão rica sobre o pacote testing padrão do Go](../../domains/software-0007/software/testes/gocheck-what-it-is-and-import.md)
+1981. [Registro de suítes com Suite(suite) e integração ao go test via TestingT(testingT)](../../domains/software-0007/software/testes/gocheck-suite-and-testingt-bridge.md)
+1982. [A diferença crucial em *check.C: Assert interrompe o teste, Check continua a execução](../../domains/software-0007/software/testes/gocheck-assert-vs-check-methods.md)
+1983. [A abstração Checker, o combinador lógico Not(checker) e CheckerInfo](../../domains/software-0007/software/testes/gocheck-checker-not-and-checkerinfo.md)
+1984. [Contexto rico em falhas de asserção com CommentInterface e Commentf](../../domains/software-0007/software/testes/gocheck-commentinterface-and-commentf.md)
+1985. [Controle de fluxo e falhas conhecidas em *check.C: ExpectFailure, Skip, FailNow e SucceedNow](../../domains/software-0007/software/testes/gocheck-expectfailure-and-skip-control.md)
+1986. [Diretórios temporários isolados com c.MkDir() e inspeção de log com c.GetTestLog() e c.TestName()](../../domains/software-0007/software/testes/gocheck-mkdir-and-gettestlog-helpers.md)
+1987. [Suporte a benchmarks na mesma estrutura *check.C: ResetTimer, StartTimer, StopTimer e SetBytes](../../domains/software-0007/software/testes/gocheck-benchmark-timer-methods-on-c.md)
+1988. [Execução e listagem programática de suítes: Run, RunAll, List, ListAll, RunConf e Result](../../domains/software-0007/software/testes/gocheck-programmatic-runner-run-list-result.md)
+1989. [Estrutura enxuta do repositório go-check/check e URLs canônicas do projeto](../../domains/software-0007/software/testes/gocheck-source-files-and-canonical-urls.md)
+
+### Psalm — análise estática de tipos, execução incremental e revisão interativa para PHP
+
+1990. [Psalm: ferramenta de análise estática para encontrar erros em aplicações PHP](../../domains/software-0007/software/testes/psalm-what-it-is.md)
+1991. [Instalação com PHP >= 8.2 e Composer: `--init` para nível de erro e `--no-cache`](../../domains/software-0007/software/testes/psalm-composer-install-init-and-nocache.md)
+1992. [A imagem Docker oficial `ghcr.io/danog/psalm`: PHP customizado +30% a +50% mais rápido](../../domains/software-0007/software/testes/psalm-official-docker-image-performance.md)
+1993. [Ecossistema de plugins no Packagist e ativação com `vendor/bin/psalm-plugin enable`](../../domains/software-0007/software/testes/psalm-plugins-and-psalm-plugin-cli.md)
+1994. [Uso via Phar autocontido (`psalm.phar` ou `psalm/phar`) para evitar conflito de dependências](../../domains/software-0007/software/testes/psalm-phar-distribution-conflict-free.md)
+1995. [Escopo de execução na linha de comando: projeto inteiro `<projectFiles>` vs. arquivos específicos](../../domains/software-0007/software/testes/psalm-cli-scope-project-vs-specific-files.md)
+1996. [Semântica dos códigos de saída do processo: 0 (limpo), 1 (erro de execução) e 2 (issues encontrados)](../../domains/software-0007/software/testes/psalm-exit-status-codes-0-1-2.md)
+1997. [Aceleração máxima da análise: `--threads=[n]`, `--diff` (ativo por padrão) e diretório de cache no CI](../../domains/software-0007/software/testes/psalm-fast-execution-threads-and-diff-cache.md)
+1998. [Rastreamento de cobertura de tipos com `--shepherd` e os badges `shepherd.dev`](../../domains/software-0007/software/testes/psalm-shepherd-type-coverage-tracking.md)
+1999. [Triagem interativa de issues na IDE com `psalm-review` (ou `psalm.phar --review`) e `report.json`](../../domains/software-0007/software/testes/psalm-review-interactive-ide-tool.md)
+2000. [Origem no Vimeo, mantenedor ativo, canais no Telegram e contratos de suporte](../../domains/software-0007/software/testes/psalm-governance-history-and-support-contracts.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1950 notas 10–1959 das tranches 2–25 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1959/2.000 notas válidas, restando 41 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1991 notas 10–2000 das tranches 2–26 têm revisão factual por IA registrada nos relatórios vinculados. O lote está concluído (`complete`): são 2000/2.000 notas válidas, restando 0 notas materiais neste lote. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
