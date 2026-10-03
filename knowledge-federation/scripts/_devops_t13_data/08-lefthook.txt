@@ -1,0 +1,83 @@
+1271|lefthook-gerenciador-git-hooks-poliglota-go-lefthook-yml|Lefthook: Gerenciador Poliglota e Paralelo de Git Hooks em Go (lefthook.yml)|O **Lefthook** (`evilmartians/lefthook`, criado pela Evil Martians) é um gerenciador rápido de Git hooks escrito em Go, distribuído como um único binário sem dependências de runtime, que orquestra verificações de `pre-commit`, `pre-push` e `commit-msg` em paralelo para projetos de qualquer linguagem.|Ferramentas de Git hooks acopladas a um único ecossistema (como Husky em Node.js, Overcommit em Ruby ou ambientes Python pesados) obrigam equipes de plataforma/infraestrutura (que usam Go, Rust, Terraform e YAML) a instalar runtimes desnecessários apenas para rodar linters antes do commit.|O Lefthook lê a configuração do projeto (`lefthook.yml`, `lefthook.toml` ou `lefthook.json`), instala os hooks nativos em `.git/hooks/` com `lefthook install` e permite validar e inspecionar a configuração consolidada com `lefthook validate` e `lefthook dump`.|```bash
+lefthook install
+lefthook validate
+lefthook dump
+lefthook run pre-commit
+```|Manter múltiplos arquivos de configuração (por exemplo, `lefthook.yml` e `lefthook.toml`) no mesmo repositório causa comportamento não-determinístico, pois a documentação oficial alerta que apenas um arquivo será lido sem ordem garantida.|Padronize um único formato de arquivo (preferencialmente `lefthook.yml` na raiz do repositório) e valide-o no CI com `lefthook validate`.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/;https://lefthook.dev/usage/
+1272|lefthook-execucao-paralela-jobs-staged-files-push-files|Lefthook: Execução Paralela (parallel: true) e Placeholders de Arquivos ({staged_files}, {push_files}, {all_files})|O Lefthook acelera os hooks do Git executando múltiplos `jobs` concorrentemente quando `parallel: true` está habilitado e injetando automaticamente apenas os arquivos relevantes no comando por meio de templates como `{staged_files}`, `{push_files}`, `{all_files}` e `{files}`.|Executar `golangci-lint`, `shellcheck`, `kubeconform` e `tflint` sequencialmente sobre todos os milhares de arquivos de um repositório a cada `git commit` demora dezenas de segundos e leva desenvolvedores a desativarem os hooks.|Definindo `parallel: true` em `pre-commit` ou `pre-push`, o Lefthook dispara todos os jobs em goroutines paralelas e substitui `{staged_files}` apenas pelos arquivos preparados no índice do Git (filtrados por `glob` e `exclude`), pulando automaticamente qualquer job cuja lista de arquivos filtrados seja vazia.|```yaml
+pre-commit:
+  parallel: true
+  jobs:
+    - name: shellcheck-scripts
+      glob: "*.sh"
+      run: shellcheck {staged_files}
+    - name: kubeconform-manifests
+      glob: "k8s/**/*.yaml"
+      run: kubeconform -strict {staged_files}
+```|Usar `{all_files}` em vez de `{staged_files}` em hooks `pre-commit` para linters lentos faz com que cada pequeno commit reescaneie todo o repositório desnecessariamente.|Utilize `{staged_files}` em `pre-commit` para feedback sub-segundo e reserve varreduras mais amplas (`{push_files}` ou `{all_files}`) para o hook `pre-push` e para o pipeline de CI.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/;https://lefthook.dev/usage/
+1273|lefthook-filtros-glob-exclude-root-monorepos|Lefthook: Filtros de Arquivos (glob, exclude, files) e Escopo de Subdiretório (root) em Monorepos|Cada job no `lefthook.yml` pode restringir seu escopo usando padrões `glob`, listas de exclusão `exclude`, comando customizado de descoberta `files` (como `git diff --name-only HEAD @{push}`) e o diretório de trabalho relativo `root` (essencial para monorepos).|Em um monorepo que contém um serviço Go em `services/api/`, um frontend React em `web/` e módulos Terraform em `infra/`, cada ferramenta exige ser executada dentro de sua respectiva subpasta (onde residem o `go.mod` ou `package.json`).|Ao configurar `root: "services/api/"` (com barra final conforme recomendado pela documentação), o Lefthook muda o diretório de trabalho para `services/api/` antes de executar o comando `run` e ajusta automaticamente os caminhos em `{staged_files}` para serem relativos àquela subpasta.|```yaml
+pre-commit:
+  parallel: true
+  jobs:
+    - name: go-vet-api
+      root: "services/api/"
+      glob: "*.go"
+      exclude:
+        - "*_mock.go"
+      run: go vet {staged_files}
+```|Omitir a barra final em `root: "api/"` ou passar caminhos que duplicam o prefixo do subdiretório no padrão `glob` faz com que o filtro não encontre nenhum arquivo e pule o job silenciosamente.|Use sempre a barra final em `root: "subpasta/"` e teste quais arquivos estão sendo selecionados com `lefthook run pre-commit -v`.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/;https://lefthook.dev/usage/
+1274|lefthook-local-yml-overrides-pessoais-skip-tags-docker|Lefthook: Customização Pessoal sem Poluir o Git com lefthook-local.yml, tags e exclude_tags|O Lefthook mescla automaticamente um arquivo complementar chamado `lefthook-local.yml` (ou `.lefthook-local.yml`, seguindo o mesmo prefixo/formato do arquivo principal) sobre a configuração principal, permitindo que cada desenvolvedor pule tags específicas (`exclude_tags`), altere o `runner` para Docker ou adicione hooks próprios sem alterar o `lefthook.yml` versionado.|Em equipes multidisciplinares, um engenheiro de infraestrutura que nunca edita o frontend ou que roda todas as ferramentas dentro de containers Docker precisa ajustar a execução local sem quebrar o `lefthook.yml` compartilhado pelo restante do time.|No `lefthook.yml` principal, os jobs recebem `tags: [frontend, linters]` ou `[backend, security]`. Na máquina local, o desenvolvedor cria um `lefthook-local.yml` (ignorado no `.gitignore`) com `exclude_tags: [frontend]` ou `skip: true` em jobs específicos, e verifica o resultado mesclado com `lefthook dump`.|```yaml
+# lefthook-local.yml (ignorado no Git):
+pre-push:
+  exclude_tags:
+    - frontend
+  jobs:
+    - name: audit-gems
+      skip: true
+```|Esquecer de adicionar `lefthook-local.yml` (e `.lefthook-local.*`) ao `.gitignore` do repositório faz com que overrides pessoais de um desenvolvedor sejam commitados acidentalmente e desativem verificações para toda a equipe.|Inclua `*lefthook-local*` no `.gitignore` do projeto e use `lefthook dump` para inspecionar como o arquivo local foi mesclado à configuração base.|https://lefthook.dev/configuration/;https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/usage/
+1275|lefthook-scripts-commit-msg-runners-docker-containerizados|Lefthook: Execução de Scripts Dedicados (script e runner) e Hooks em Ambientes Docker|Além de comandos inline (`run`), o Lefthook permite executar scripts armazenados em `.lefthook/<hook-name>/` usando a chave `script` combinada com um `runner` customizado (como `bash`, `python3` ou `docker run -it --rm <container> {cmd}`).|Regras complexas de validação de mensagens de commit (`commit-msg` para Conventional Commits ou vínculo obrigatório de ticket Jira) ou verificações que rodam dentro de containers de desenvolvimento ficam ilegíveis se escritas em uma única linha de shell no YAML.|Colocando o arquivo executável ou script em `.lefthook/commit-msg/template_checker` e declarando `script: "template_checker"` com `runner: bash` (ou um `runner` Docker que substitui `{cmd}`), o Lefthook repassa os argumentos nativos do Git (como `$1` apontando para `.git/COMMIT_EDITMSG`) ao script.|```yaml
+commit-msg:
+  jobs:
+    - script: "check_conventional_commit.sh"
+      runner: bash
+```|Usar `docker run -it` (com flag `-t` de TTY obrigatório) em um `runner` do Lefthook quando o commit é feito por uma interface gráfica de IDE ou em CI sem terminal interativo falha com erro `the input device is not a TTY`.|Remova a flag `-t` (use `docker run --rm -i`) nos runners Docker do `lefthook.yml` para garantir compatibilidade tanto no terminal quanto em IDEs (VS Code, JetBrains) e pipelines de CI.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/;https://lefthook.dev/usage/
+1276|lefthook-custom-tasks-fixer-stage-fixed-autofix|Lefthook: Grupos de Tarefas Customizadas (lefthook run <grupo>) e Auto-Correção com stage_fixed|O Lefthook permite definir grupos de tarefas arbitrários no `lefthook.yml` (além dos nomes de hooks padrão do Git, como um grupo `fixer:` ou `security-audit:`) invocáveis sob demanda via `lefthook run <grupo>`, e suporta `stage_fixed: true` em hooks `pre-commit` para readicionar automaticamente ao `git stage` arquivos formatados por auto-fixers.|Quando um formatador como `gofmt -w`, `prettier --write` ou `terraform fmt` corrige um arquivo durante o `pre-commit`, sem `stage_fixed: true` a correção fica apenas na working tree e o commit prossegue com o código antigo não formatado.|Ao configurar `stage_fixed: true` em um job de `pre-commit` que modifica `{staged_files}`, o Lefthook executa o formatador e roda `git add` automaticamente sobre os mesmos `{staged_files}` antes de concluir o hook.|```yaml
+pre-commit:
+  jobs:
+    - name: terraform-fmt
+      glob: "*.tf"
+      run: terraform fmt {staged_files}
+      stage_fixed: true
+
+fixer:
+  jobs:
+    - run: golangci-lint run --fix ./...
+```|Habilitar `stage_fixed: true` em um comando que formata todos os arquivos do diretório (`terraform fmt .`) em vez de apenas `{staged_files}` pode incluir no commit alterações em arquivos que não estavam no stage.|Combine sempre `stage_fixed: true` com comandos que operam estritamente sobre `{staged_files}`.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/usage/;https://lefthook.dev/configuration/
+1277|lefthook-bypass-emergencia-lefthook-0-output-control|Lefthook: Controle de Verbose (output) e Bypass Consciente em Emergências (LEFTHOOK=0)|O Lefthook permite enxugar o ruído visual no terminal configurando a lista `output` no `lefthook.yml` e pode ser desativado pontualmente em um comando Git específico definindo a variável de ambiente `LEFTHOOK=0` (por exemplo, `LEFTHOOK=0 git commit`).|Durante commits intermediários de trabalho em progresso (`WIP`) em uma branch pessoal ou durante um hotfix crítico onde um linter externo está indisponível, o engenheiro precisa saber como pular a execução local conscientemente sem desinstalar os hooks.|Definindo `output: [failure, summary]` no `lefthook.yml`, o Lefthook oculta logs extensos de ferramentas que passaram com sucesso e imprime detalhes apenas quando um job falha. Para pular o Lefthook em uma operação específica, precede-se o comando Git com `LEFTHOOK=0`.|```bash
+# Pular a execucao do Lefthook em um commit pontual:
+LEFTHOOK=0 git commit -m "wip: checkpoint antes de rebase"
+
+# Executar manualmente todos os hooks pre-push antes de abrir PR:
+lefthook run pre-push
+```|Exportar `export LEFTHOOK=0` permanentemente no `~/.bashrc` ou `~/.zshrc` desativa silenciosamente todas as proteções locais de `pre-commit` e `pre-push` em todos os repositórios da máquina.|Use `LEFTHOOK=0` apenas inline para um único comando emergencial e execute `lefthook run pre-commit` no pipeline de CI para garantir que commits feitos com `LEFTHOOK=0` ainda sejam validados no Pull Request.|https://lefthook.dev/usage/;https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/
+1278|lefthook-extends-remotes-compartilhamento-politicas-organizacao|Lefthook: Compartilhamento de Políticas entre Repositórios com extends e remotes|Por meio das diretivas `extends` e `remotes` no `lefthook.yml`, uma equipe de plataforma ou segurança pode manter um repositório central de hooks corporativos (como varredura de segredos `gitleaks`/`trufflehog`, lint de commits e verificação de licenças) e herdá-lo automaticamente em dezenas de repositórios de microsserviços.|Copiar e atualizar manualmente a mesma configuração de scanner de segredos em 150 repositórios Git faz com que novas regras de segurança demorem meses para chegar a todos os projetos.|Com `remotes` apontando para o `git_url` do repositório de políticas da organização (fixado por `ref` de tag ou branch) e o caminho do `configs`, o Lefthook baixa e mescla as regras remotas com o `lefthook.yml` local. O comando `lefthook dump` exibe exatamente a configuração final resultante da fusão de `remotes`, `extends` e `lefthook-local.yml`.|```yaml
+remotes:
+  - git_url: https://github.com/org/platform-git-hooks
+    ref: v1.2.0
+    configs:
+      - security-pre-commit.yml
+```|Apontar `remotes.git_url` para a branch `main` sem fixar uma tag `ref` auditada permite que uma alteração incorreta no repositório central quebre o `git commit` de todos os desenvolvedores da empresa simultaneamente.|Fixe sempre `ref` em uma tag semântica revisada (`v1.2.0`) na seção `remotes` e valide a configuração resultante com `lefthook dump` e `lefthook validate`.|https://lefthook.dev/usage/;https://lefthook.dev/configuration/;https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md
+1279|lefthook-seguranca-shift-left-gitleaks-trivy-kubeconform-tflint|Lefthook: Prevenção Shift-Left de Vazamento de Segredos e Erros IaC no pre-commit DevOps|Em repositórios de infraestrutura como código (Terraform, Kubernetes, Helm, Ansible), configurar o Lefthook para executar scanners rápidos sobre `{staged_files}` no `pre-commit` bloqueia o vazamento de credenciais (AWS keys, tokens GitHub, chaves privadas PEM) antes mesmo que elas entrem no histórico local do Git.|Uma vez que um segredo é commitado e enviado por `git push` para o repositório remoto, mesmo que seja revertido no commit seguinte, a credencial já foi exposta aos logs de auditoria e requer revogação e rotação imediatas.|Combinando `parallel: true` no `pre-commit`, o Lefthook executa simultaneamente `gitleaks protect --staged --redact`, `terraform fmt -check`, `tflint` e `kubeconform` apenas nas pastas e extensões modificadas, concluindo a verificação em menos de um segundo.|```yaml
+pre-commit:
+  parallel: true
+  jobs:
+    - name: gitleaks-staged
+      run: gitleaks protect --staged --no-banner --redact
+    - name: helm-lint
+      glob: "charts/**"
+      run: helm lint charts/*
+```|Rodar `gitleaks detect` sobre todo o histórico de commits do repositório dentro do hook `pre-commit` (em vez de `gitleaks protect --staged`) torna cada commit lento à medida que o histórico Git cresce.|No hook `pre-commit`, escaneie apenas o índice atual (`--staged` ou `{staged_files}`), deixando varreduras de histórico completo para o CI.|https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/;https://lefthook.dev/usage/
+1280|lefthook-integracao-ci-cd-paridade-local-github-actions|Lefthook: Execução de lefthook run no Pipeline de CI/CD para Paridade Total com Hooks Locais|Como o comando `lefthook run <hook-name>` pode ser invocado diretamente sem depender de um evento interativo do Git, o mesmo arquivo `lefthook.yml` usado nos laptops dos desenvolvedores pode ser executado dentro do pipeline de CI/CD (`lefthook run pre-commit --all-files`).|Como hooks locais do Git residem na máquina do cliente e podem ser pulados com `--no-verify` ou `LEFTHOOK=0`, o pipeline de CI precisa validar exatamente as mesmas regras sem duplicar a lista de comandos e filtros `glob` no YAML do GitHub Actions.|No job de CI, instala-se o binário `lefthook` (ou via `mise`/`devbox`) e executa-se `lefthook validate` seguido de `lefthook run pre-push` ou `lefthook run pre-commit --all-files`, garantindo uma única fonte da verdade para os linters do repositório.|```bash
+lefthook validate
+lefthook run pre-commit --all-files --no-tty
+```|Executar `lefthook run pre-commit` simples (sem `--all-files` ou `--files-from-command`) em um runner de CI onde o índice de staging do Git está vazio (`{staged_files}` vazio) faz o Lefthook pular todos os jobs que dependem de `{staged_files}`.|Em pipelines de CI, passe `--all-files` (ou configure um job/hook dedicado como `pre-push` que compara o diff do Pull Request) para que todos os arquivos relevantes sejam verificados.|https://lefthook.dev/usage/;https://raw.githubusercontent.com/evilmartians/lefthook/master/README.md;https://lefthook.dev/configuration/

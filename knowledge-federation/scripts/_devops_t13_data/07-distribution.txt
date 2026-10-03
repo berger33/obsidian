@@ -1,0 +1,111 @@
+1261|distribution-arquitetura-oci-registry-v2-core-library-cncf|CNCF Distribution: Arquitetura da Implementação de Referência OCI Registry e Biblioteca Core|O projeto **Distribution** (`distribution/distribution`, anteriormente conhecido como Docker Registry v2, licença Apache-2.0 na CNCF) é a implementação open-source base da **OCI Distribution Specification** que serve como motor central para registros como Docker Hub, GitHub Container Registry, GitLab Container Registry, DigitalOcean Container Registry e CNCF Harbor.|Compreender a arquitetura e o modelo de configuração do Distribution é fundamental tanto para operar registros privados enxutos (`registry:3`) quanto para administrar plataformas corporativas como o Harbor e o GitLab Registry que o embutem sob o capô.|O repositório fornece o binário servidor `registry` (configurado via `/etc/distribution/config.yml`) e um conjunto de bibliotecas Go para manipulação de manifestos, blobs, drivers de armazenamento e middlewares de autenticação e CDN.|```bash
+docker run -d -p 5000:5000 --restart=always --name registry \
+  -v "$(pwd)/config.yml:/etc/distribution/config.yml:ro" \
+  registry:3
+curl -i http://127.0.0.1:5000/v2/
+```|Importar diretamente pacotes internos da biblioteca Go do `distribution/distribution` sem fixar versões exatas no `go.mod` pode quebrar compilação em atualizações, pois a documentação oficial alerta que as interfaces dessas bibliotecas são instáveis.|Fixe versões exatas e imutáveis tanto da imagem `registry:3` quanto dos módulos Go e valide o endpoint `/v2/` após subir o container.|https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://distribution.github.io/distribution/about/configuration/;https://github.com/distribution/distribution
+1262|distribution-configuracao-yaml-overrides-variaveis-ambiente-otel|CNCF Distribution: Configuração YAML (/etc/distribution/config.yml), Overrides por Variáveis REGISTRY_* e OpenTelemetry|O servidor Distribution é configurado por um arquivo YAML (`version: 0.1` em `/etc/distribution/config.yml`) onde qualquer opção individual pode ser sobrescrita por variáveis de ambiente seguindo a convenção `REGISTRY_<CAMINHO_EM_MAIUSCULAS>` (com `_` representando níveis de indentação e índices numéricos `_0` para listas), além de controlar exportação de traces via `OTEL_TRACES_EXPORTER`.|Ao implantar o registry em Kubernetes ou Docker, injetar segredos (como chaves S3, senhas de Redis ou `http.secret`) ou ajustar um diretório sem reconstruir a imagem exige usar variáveis de ambiente previsíveis.|Por exemplo, `storage.filesystem.rootdirectory` torna-se `REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/somewhere`, e o primeiro item da lista `http.tls.letsencrypt.hosts` torna-se `REGISTRY_HTTP_TLS_LETSENCRYPT_HOSTS_0=registry.example.com`. Como o exportador de traces padrão aponta para `https://localhost:4318/v1/traces`, define-se `OTEL_TRACES_EXPORTER=none` quando não há coletor OpenTelemetry local.|```bash
+docker run -d -p 5000:5000 --name registry \
+  -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+  -e REGISTRY_STORAGE_DELETE_ENABLED=true \
+  -e OTEL_TRACES_EXPORTER=none \
+  registry:3
+```|Esquecer de definir `OTEL_TRACES_EXPORTER=none` em ambientes onde não existe um coletor OpenTelemetry escutando em `localhost:4318` polui os logs do container com erros periódicos de falha de conexão de exportação de traces.|Defina `OTEL_TRACES_EXPORTER=none` (ou aponte para o endpoint OTLP real do cluster) e mantenha um `config.yml` base claro, usando variáveis `REGISTRY_*` apenas para segredos e ajustes pontuais.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1263|distribution-storage-drivers-filesystem-s3-gcs-azure-inmemory|CNCF Distribution: Drivers de Armazenamento (filesystem, s3, gcs, azure e inmemory) e Parâmetros de Performance|A seção `storage` do Distribution abstrai o backend físico de blobs e manifestos por meio de drivers mutuamente exclusivos: `filesystem` (disco local/NFS com `maxthreads`), `s3` (Amazon S3 e compatíveis como MinIO/Ceph com `forcepathstyle`, `chunksize`, `multipartcopy*`), `gcs` (Google Cloud Storage), `azure` (Azure Blob Storage) e `inmemory`.|Usar o driver `filesystem` em múltiplas réplicas sem armazenamento compartilhado faz com que uma camada enviada para a réplica A retorne `404 Blob Unknown` quando o cliente tenta baixar da réplica B.|Para produção em nuvem ou on-premises escalável, configura-se um driver de armazenamento de objetos (`s3`, `gcs` ou `azure`) com criptografia (`encrypt: true`), ajuste de `chunksize` (padrão `5242880` / 5 MB) e controle de concorrência de tags (`tag.concurrencylimit: 8`).|```yaml
+version: 0.1
+storage:
+  s3:
+    region: sa-east-1
+    bucket: prod-oci-registry-blobs
+    encrypt: true
+    secure: true
+    v4auth: true
+    chunksize: 10485760
+    rootdirectory: /registry
+  tag:
+    concurrencylimit: 8
+```|Conectar o driver `s3` a um armazenamento compatível com S3 on-premises (como MinIO ou Ceph RGW) sem definir `forcepathstyle: true` e `regionendpoint` causa falha de resolução DNS no formato virtual-hosted-style.|Em storages compatíveis com S3 fora da AWS, habilite `forcepathstyle: true` e configure `regionendpoint` apontando para a URL HTTPS do storage.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1264|distribution-delete-enabled-maintenance-uploadpurging-readonly-gc|CNCF Distribution: Deleção de Manifestos (delete.enabled), Limpeza de Uploads (uploadpurging) e Modo Readonly para GC|No CNCF Distribution, a exclusão de tags e manifestos via API HTTP (`DELETE /v2/<name>/manifests/<reference>`) vem desabilitada por padrão (`storage.delete.enabled: false`), e a manutenção do armazenamento combina expurgo automático de uploads incompletos (`maintenance.uploadpurging`) com o modo `maintenance.readonly` para execução segura de Garbage Collection.|Quando um `docker push` é interrompido por queda de rede no meio do envio de uma camada grande, arquivos temporários ficam acumulados na pasta `_uploads` se o `uploadpurging` não estiver ativo.|Habilitando `storage.delete.enabled: true`, clientes autorizados podem remover referências de manifestos; `maintenance.uploadpurging` (`enabled: true`, `age: 168h`, `interval: 24h`) limpa automaticamente uploads abandonados há mais de 7 dias; e `maintenance.readonly.enabled: true` bloqueia escritas temporariamente para que o comando `registry garbage-collect /etc/distribution/config.yml` remova blobs não referenciados sem condição de corrida.|```yaml
+storage:
+  delete:
+    enabled: true
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+    readonly:
+      enabled: false
+```|Executar `registry garbage-collect` enquanto o registro está aceitando `docker push` concorrentes (`readonly.enabled: false`) pode apagar o blob de uma camada que acabou de ser enviada mas cujo manifesto ainda não foi finalizado, corrompendo a imagem.|Ative `readonly.enabled: true` (ou execute em janela sem pushes) antes de rodar `registry garbage-collect` e use `--dry-run` para revisar o plano de limpeza.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1265|distribution-autenticacao-htpasswd-token-jwt-jwks-mtls|CNCF Distribution: Autenticação com htpasswd, Token Server Externo (JWT/JWKS) e mTLS|A seção `auth` do Distribution suporta três modos de autenticação (`htpasswd` para autenticação básica com senhas bcrypt, `token` para delegação OAuth2/JWT a um servidor de autorização externo com validação via `rootcertbundle` ou `jwks` e algoritmos como `EdDSA`/`HS256`, e `silly` apenas para desenvolvimento), além de mTLS em `http.tls.clientcas`.|Usar o modo `auth.silly` (que aceita qualquer requisição que simplesmente envie um cabeçalho `Authorization` não-vazio) fora de testes locais deixa o registro completamente aberto.|Em implantações standalone enxutas, utiliza-se `auth.htpasswd` (`realm: basic-realm`, `path: /etc/distribution/htpasswd`) obrigatoriamente sobre HTTPS (`http.tls`); em plataformas corporativas (como Harbor ou Portus), utiliza-se `auth.token` apontando `realm`, `service`, `issuer` e `jwks` para que o registry valide tokens JWT assinados com permissões granulares de pull/push por repositório.|```yaml
+auth:
+  token:
+    autoredirect: true
+    realm: https://auth.example.com/token
+    service: registry.example.com
+    issuer: registry-token-issuer
+    jwks: /etc/distribution/auth-jwks.json
+    signingalgorithms:
+      - EdDSA
+      - RS256
+```|Utilizar `auth.htpasswd` com entradas geradas sem algoritmo bcrypt (como MD5 ou SHA1 do Apache antigo) faz a autenticação falhar no Distribution, que aceita apenas hashes bcrypt no arquivo htpasswd.|Gere senhas do `htpasswd` exclusivamente com a flag `-B` (`htpasswd -Bc htpasswd usuario`) e exija TLS em `http.tls`.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1266|distribution-alta-disponibilidade-http-secret-redis-blobdescriptor-cache|CNCF Distribution: Alta Disponibilidade com http.secret Compartilhado e Cache de Blob Descriptors no Redis|Para executar múltiplas réplicas do CNCF Distribution atrás de um balanceador de carga, é obrigatório compartilhar exatamente o mesmo valor de `http.secret` entre todas as instâncias e recomendável configurar `storage.cache.blobdescriptor: redis` para reduzir chamadas lentas de metadados ao S3/GCS.|Se cada Pod do `registry` não definir `http.secret` (gerando uma chave aleatória diferente em memória ao iniciar), um upload de camada iniciado no Pod 1 falhará com erro de validação de estado HMAC quando o próximo chunk cair no Pod 2.|No `config.yml`, define-se `http.secret` (via variável `REGISTRY_HTTP_SECRET`) com o mesmo segredo criptográfico em todas as réplicas e configura-se a seção `redis` junto com `storage.cache.blobdescriptor: redis` (`blobdescriptorsize: 10000`) para manter em memória os descritores de camadas consultados a cada `HEAD /v2/<repo>/blobs/<digest>`.|```yaml
+storage:
+  cache:
+    blobdescriptor: redis
+    blobdescriptorsize: 10000
+http:
+  addr: 0.0.0.0:5000
+  secret: "${REGISTRY_HTTP_SECRET}"
+  draintimeout: 60s
+```|Deixar o valor de exemplo `http.secret: asecretforlocaldevelopment` em produção permite que clientes forjem estados de upload assinados no servidor.|Gere um valor aleatório forte de 32+ bytes para `REGISTRY_HTTP_SECRET` armazenado em um `Secret` Kubernetes compartilhado por todas as réplicas do Deployment.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1267|distribution-storage-redirect-middlewares-cloudfront-cdn-offload|CNCF Distribution: Redirecionamento de Blobs (storage.redirect) e Middlewares de CDN (CloudFront)|Por padrão (`storage.redirect.disable: false`), quando o Distribution usa um backend de objetos como S3 ou GCS, requisições de download de camadas (`GET /v2/<name>/blobs/<digest>`) retornam um redirecionamento HTTP `307 Temporary Redirect` com uma URL pré-assinada do bucket ou CDN (via middleware `cloudfront` ou `redirect`), descarregando a banda pesada dos Pods do registry.|Se o binário do registry tiver que fazer proxy em memória de cada gigabyte de blob baixado por centenas de nós Kubernetes, a rede e a CPU dos Pods do registry tornam-se o gargalo principal.|Mantendo `storage.redirect.disable: false` (ou configurando `middleware.storage` com `name: cloudfront`, `baseurl`, `privatekey`, `keypairid` e filtro de IP por região AWS `ipfilteredby: awsregion`), a autenticação do manifesto ocorre no registry, mas o download pesado dos blobs vai direto do cliente (`containerd`) para o S3 ou CloudFront.|```yaml
+storage:
+  redirect:
+    disable: false
+middleware:
+  storage:
+    - name: cloudfront
+      options:
+        baseurl: https://d111111abcdef8.cloudfront.net/
+        privatekey: /etc/distribution/cf-pk.pem
+        keypairid: K2JCJMDEHXQW5F
+        duration: 3000s
+```|Deixar `storage.redirect.disable: false` em clusters privados cujos worker nodes têm acesso ao serviço interno do registry mas **não** têm rota de rede ou regra de firewall liberada para o endpoint do S3/MinIO faz o `docker pull` falhar ao seguir o redirecionamento `307`.|Se os clientes não puderem acessar o endpoint do Object Storage diretamente, defina `storage.redirect.disable: true` para que o registry faça o proxy dos blobs.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1268|distribution-pull-through-cache-proxy-remoteurl-docker-hub|CNCF Distribution: Configuração de Pull-Through Cache (proxy.remoteurl) para Espelhamento de Registries|O CNCF Distribution pode operar como um cache pull-through transparente configurando a seção `proxy` (`remoteurl`, `username`, `password`, `ttl`) no `/etc/distribution/config.yml`, armazenando localmente imagens buscadas de um registro upstream como o Docker Hub.|Clusters de CI/CD que criam ambientes efêmeros constantemente sofrem falhas de build por rate limit de pulls anônimos no Docker Hub (`toomanyrequests`) se não utilizarem um proxy cache autenticado.|Quando `proxy.remoteurl: https://registry-1.docker.io` está configurado, o Distribution intercepta requisições de `pull`, verifica se o manifesto atualizado e os blobs já estão no storage local, busca na origem apenas o que falta e remove artefatos expirados conforme o `ttl`.|```yaml
+proxy:
+  remoteurl: https://registry-1.docker.io
+  username: "${DOCKERHUB_USER}"
+  password: "${DOCKERHUB_TOKEN}"
+  ttl: 168h
+```|Tentar fazer `docker push` de imagens próprias para uma instância do Distribution configurada com `proxy.remoteurl` falha porque instâncias em modo proxy cache operam exclusivamente como espelhos somente leitura da origem configurada.|Mantenha instâncias separadas do Distribution: uma dedicada a `proxy.remoteurl` (pull-through cache) e outra sem `proxy` para hospedar imagens internas publicadas pelos pipelines.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1269|distribution-notifications-webhooks-eventos-push-pull-delete|CNCF Distribution: Sistema de Notificações por Webhook (notifications.endpoints) e Filas de Eventos|A seção `notifications` do Distribution emite eventos estruturados via HTTP Webhook sempre que manifestos ou blobs sofrem push, pull ou delete, permitindo acionar scanners de vulnerabilidades, conversores Nydus, pré-aquecimento Dragonfly ou auditoria de supply chain.|Fazer polling contínuo na API `/v2/_catalog` e nas listas de tags para descobrir se uma nova imagem foi publicada é lento e ineficiente em registros grandes.|Cada endpoint em `notifications.endpoints` define `name`, `url`, `headers` de autorização, `timeout`, `threshold`, `backoff` e filtros `ignore` (por `mediaTypes` ou `actions`, permitindo ignorar eventos `pull` de alto volume e notificar apenas `push` e `delete` de manifestos).|```yaml
+notifications:
+  events:
+    includereferences: true
+  endpoints:
+    - name: security-scanner-webhook
+      url: https://scanner.internal.corp/api/v1/registry-events
+      timeout: 500ms
+      threshold: 5
+      backoff: 1s
+      ignore:
+        actions:
+          - pull
+```|Não incluir `"pull"` em `ignore.actions` de um webhook síncrono em um cluster movimentado gera milhares de chamadas HTTP por minuto para o receptor de eventos a cada camada baixada pelos nós.|Ignore a ação `pull` (`ignore.actions: [pull]`) nos webhooks que precisam reagir apenas à publicação (`push`) ou remoção (`delete`) de imagens.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution
+1270|distribution-http-debug-prometheus-healthchecks-draintimeout|CNCF Distribution: Servidor de Debug, Métricas Prometheus, Health Checks e Graceful Shutdown (draintimeout)|Na seção `http.debug` e `health` do `config.yml`, o Distribution expõe um listener administrativo separado com métricas Prometheus (`http.debug.prometheus.enabled: true`), profiling pprof e verificações ativas de saúde de disco, HTTP e TCP que colocam o servidor em `503 Service Unavailable` caso o backend degrade.|Se o sistema de arquivos ou o mount NFS onde o registry grava blobs ficar inacessível mas o processo HTTP principal continuar respondendo `200 OK` no load balancer, todos os pushes e pulls falharão silenciosamente.|Configurando `http.draintimeout: 60s` (para aguardar o término de uploads em andamento antes de desligar o Pod no Kubernetes), `http.debug.addr: 0.0.0.0:5001` com `prometheus.enabled: true` (`path: /metrics`) e sondas em `health.storagedriver`, o Kubernetes monitora a saúde real do storage e coleta telemetria completa.|```yaml
+http:
+  addr: 0.0.0.0:5000
+  draintimeout: 60s
+  debug:
+    addr: 0.0.0.0:5001
+    prometheus:
+      enabled: true
+      path: /metrics
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+```|Expor a porta de `http.debug` (`5001`) no Ingress público junto com a porta `5000` vaza métricas internas e perfis de memória Go (`/debug/pprof`) sem autenticação.|Mantenha a porta `5001` (`http.debug`) restrita exclusivamente à rede interna do cluster para coleta pelo Prometheus e sondas `livenessProbe`/`readinessProbe` do kubelet.|https://distribution.github.io/distribution/about/configuration/;https://raw.githubusercontent.com/distribution/distribution/main/README.md;https://github.com/distribution/distribution

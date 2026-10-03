@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1200 / 2.000 (60,00%)**
-- Gate automatizado: **1200/1200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 12)
-- Revisão factual humana: **0/1200**
-- Revisão factual por IA: **1200/1200**
-- Contabilizadas como válidas: **1200/1200**
-- Revisor das 1200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–12 (1200 notas, IDs 1–1200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1300 / 2.000 (65,00%)**
+- Gate automatizado: **1300/1300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 13)
+- Revisão factual humana: **0/1300**
+- Revisão factual por IA: **1300/1300**
+- Contabilizadas como válidas: **1300/1300**
+- Revisor das 1300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–13 (1300 notas, IDs 1–1300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-12.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-12.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-13.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-13.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 800 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 700 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1602,6 +1602,138 @@
 1199. [just: Descoberta Interativa de Tarefas (--list, --summary, --choose com fzf e Shell Completions)](../../domains/software-0008/software/devops/just-descoberta-interativa-choose-list-summary-completions.md)
 1200. [just: Padronização de Workflows entre Laptop e CI Combinando just com mise, Devbox e direnv](../../domains/software-0008/software/devops/just-integracao-mise-devbox-direnv-padronizacao-local-ci.md)
 
+## Tranche 13 — Node Problem Detector, Aqua kube-bench, Project Zot, Dragonfly, Nydus, ORAS, CNCF Distribution, Lefthook, kube-vip e Notary Project Notation (100 notas; revisão factual por IA registrada)
+
+### Node Problem Detector — NPD (daemon Kubernetes para detecção de anomalias de kernel, hardware e runtime em NodeConditions e Events)
+
+1201. [Node Problem Detector: Arquitetura DaemonSet e Problem API (NodeCondition vs Event)](../../domains/software-0008/software/devops/npd-arquitetura-daemonset-problem-api-nodecondition-event.md)
+1202. [Node Problem Detector: SystemLogMonitor para kmsg, filelog, abrt e systemd](../../domains/software-0008/software/devops/npd-system-log-monitor-kmsg-filelog-journald-regras-regex.md)
+1203. [Node Problem Detector: Regras do kernel-monitor.json (KernelDeadlock, XfsShutdown, CperHardwareError e OOMKilling)](../../domains/software-0008/software/devops/npd-kernel-monitor-deadlock-xfsshutdown-cper-hardware-oomkilling.md)
+1204. [Node Problem Detector: HealthChecker para Saúde do Kubelet e Container Runtime (containerd e Docker)](../../domains/software-0008/software/devops/npd-healthchecker-kubelet-containerd-docker-unhealthy.md)
+1205. [Node Problem Detector: CustomPluginMonitor para Scripts Customizados (NTP, Rede, Disco e GPUs)](../../domains/software-0008/software/devops/npd-custom-plugin-monitor-scripts-ntp-hardware-gpu-checks.md)
+1206. [Node Problem Detector: SystemStatsMonitor para Coleta de Estatísticas de Saúde do Host como Métricas](../../domains/software-0008/software/devops/npd-system-stats-monitor-metricas-disco-cpu-memoria-host.md)
+1207. [Node Problem Detector: Exporters (Kubernetes Exporter, Prometheus Exporter e Stackdriver)](../../domains/software-0008/software/devops/npd-exporters-kubernetes-prometheus-stackdriver-configuracao.md)
+1208. [Node Problem Detector: Detecção de Reinícios Frequentes (FrequentKubeletRestart e FrequentContainerdRestart)](../../domains/software-0008/software/devops/npd-systemd-monitor-frequent-restarts-kubelet-containerd-docker.md)
+1209. [Node Problem Detector: Identificação de Nó (--hostname-override e NODE_NAME) e RBAC de Mínimo Privilégio](../../domains/software-0008/software/devops/npd-hostname-override-node-name-downward-api-rbac.md)
+1210. [Node Problem Detector: Integração com Sistemas de Auto-Remediação (Draino, Kured e Cluster API Node HealthCheck)](../../domains/software-0008/software/devops/npd-integracao-remedy-systems-draino-kured-cluster-api-autohealing.md)
+
+### Aqua Security kube-bench (auditoria automatizada de conformidade CIS Kubernetes Benchmark para planos de controle, worker nodes e clusters gerenciados)
+
+1211. [Aqua kube-bench: Auditoria de Segurança com CIS Kubernetes Benchmark Baseada em YAML](../../domains/software-0008/software/devops/kubebench-auditoria-cis-kubernetes-benchmark-arquitetura-yaml.md)
+1212. [Aqua kube-bench: Autodetecção de Versão do Kubernetes e Mapeamento para Releases do CIS Benchmark](../../domains/software-0008/software/devops/kubebench-autodetect-versao-kubernetes-mapeamento-cis-benchmark.md)
+1213. [Aqua kube-bench: Execução de Controles de Control Plane (Master, API Server, etcd, Scheduler) com Tolerations](../../domains/software-0008/software/devops/kubebench-control-plane-master-nodes-nodeselector-tolerations.md)
+1214. [Aqua kube-bench: Auditoria de Worker Nodes em Clusters Gerenciados (EKS, GKE, AKS e ACK) e Limites de Escopo](../../domains/software-0008/software/devops/kubebench-clusters-gerenciados-eks-gke-aks-limites-worker-nodes.md)
+1215. [Aqua kube-bench: Varredura de Conformidade DISA STIG em Clusters Kubernetes e EKS (job-eks-stig.yaml)](../../domains/software-0008/software/devops/kubebench-disa-stig-eks-conformidade-governamental.md)
+1216. [Aqua kube-bench: Seleção de Alvos (--targets), Filtros de Controles (--check, --skip) e Customização de /opt/kube-bench/cfg](../../domains/software-0008/software/devops/kubebench-customizacao-cfg-targets-check-skip-filtros.md)
+1217. [Aqua kube-bench: Exportação de Relatórios em JSON e JUnit (--json, --junit) e Uso em CronJobs de Auditoria](../../domains/software-0008/software/devops/kubebench-saida-json-junit-exit-code-automacao-ci-cronjob.md)
+1218. [Aqua kube-bench: Auditoria e Endurecimento do Kubelet (Seção 4: anonymous-auth, authorization-mode e read-only-port)](../../domains/software-0008/software/devops/kubebench-controles-kubelet-anonymous-auth-webhook-read-only-port.md)
+1219. [Aqua kube-bench: Auditoria do API Server e etcd (Criptografia de Secrets, Audit Logs, TLS e Permissões PKI)](../../domains/software-0008/software/devops/kubebench-controles-apiserver-etcd-encryption-audit-log-rbac.md)
+1220. [Aqua kube-bench: Execução Contínua do CIS Benchmark via Trivy e Trivy Operator no Cluster](../../domains/software-0008/software/devops/kubebench-integracao-trivy-operator-compliance-reports-continuo.md)
+
+### Project Zot (registro de containers e artefatos OCI-nativo da CNCF em binário único com extensões embutidas de busca, Trivy, Cosign/Notation e sync)
+
+1221. [Project Zot: Arquitetura de Registry OCI-Nativo, Validação de Config (zot verify) e JSON Schema (zot schema)](../../domains/software-0008/software/devops/zot-arquitetura-registro-oci-nativo-serve-verify-schema.md)
+1222. [Project Zot: Armazenamento com Deduplicação Inline (dedupe), hydrateBlobOnRead, subPaths e maxRepos](../../domains/software-0008/software/devops/zot-storage-dedupe-hydrate-blob-on-read-subpaths-maxrepos.md)
+1223. [Project Zot: Coleta de Lixo em Background (gc, gcDelay e gcTimeWindow em UTC) e Políticas de Retenção](../../domains/software-0008/software/devops/zot-garbage-collection-gc-gcdelay-gctimewindow-retencao.md)
+1224. [Project Zot: Autenticação (mTLS, htpasswd, LDAP, Bearer/OIDC e API Keys) e Controle de Acesso](../../domains/software-0008/software/devops/zot-autenticacao-mtls-htpasswd-ldap-oidc-api-keys.md)
+1225. [Project Zot: Extensão sync para Espelhamento Periódico e Pull-Through Cache Sob Demanda](../../domains/software-0008/software/devops/zot-extensao-sync-espelhamento-on-demand-periodico-assinaturas.md)
+1226. [Project Zot: Extensão search com Scanner de Vulnerabilidades CVE (Trivy) e Consultas GraphQL](../../domains/software-0008/software/devops/zot-extensao-search-trivy-cve-scanning-graphql.md)
+1227. [Project Zot: Extensão trust para Armazenamento e Verificação de Assinaturas Cosign e Notation](../../domains/software-0008/software/devops/zot-extensao-trust-verificacao-assinaturas-cosign-notation.md)
+1228. [Project Zot: Backend S3, Cache Driver, fastRestart e Escalonamento Horizontal em Cluster](../../domains/software-0008/software/devops/zot-storage-driver-s3-dynamodb-cache-fastrestart-cluster.md)
+1229. [Project Zot: Verificação de Integridade de Blobs (scrub), Linting de Imagens (lint) e Métricas Prometheus](../../domains/software-0008/software/devops/zot-extensoes-scrub-lint-metrics-eventos-observabilidade.md)
+1230. [Project Zot: Implantação no Kubernetes como Mirror OCI Local para containerd](../../domains/software-0008/software/devops/zot-implantacao-kubernetes-mirror-containerd-pull-through.md)
+
+### Dragonfly (sistema CNCF Incubating de distribuição P2P de imagens OCI, arquivos e modelos de IA/ML em larga escala com Manager, Scheduler e Dfdaemon)
+
+1231. [Dragonfly: Arquitetura P2P CNCF Graduated (Manager, Scheduler, Seed Peer e Peer)](../../domains/software-0008/software/devops/dragonfly-arquitetura-p2p-manager-scheduler-seed-peer-cncf.md)
+1232. [Dragonfly: Fluxo de Download P2P em Peças (First-Time Download via Seed Peer vs. Subsequent Downloads)](../../domains/software-0008/software/devops/dragonfly-fluxo-download-first-time-subsequent-pieces-streaming.md)
+1233. [Dragonfly: Algoritmo de Agendamento em Dois Estágios Sensível à Carga (Load-Aware Scheduling)](../../domains/software-0008/software/devops/dragonfly-load-aware-scheduling-two-stage-parent-selection.md)
+1234. [Dragonfly: Integração Não-Intrusiva com containerd, CRI-O e Docker para Pull de Imagens OCI](../../domains/software-0008/software/devops/dragonfly-integracao-containerd-cri-o-docker-mirror-proxy.md)
+1235. [Dragonfly: Aceleração P2P de Pesos de Modelos de IA/ML, Objetos S3/OSS e Datasets em Clusters GPU](../../domains/software-0008/software/devops/dragonfly-distribuicao-modelos-ia-ml-huggingface-s3-lfs.md)
+1236. [Dragonfly: Componente Manager para Governança Multi-Cluster P2P e Configuração Dinâmica](../../domains/software-0008/software/devops/dragonfly-manager-console-multi-cluster-configuracao-dinamica.md)
+1237. [Dragonfly: Verificação de Consistência de Dados, Isolamento de Exceções e Segurança (Trail of Bits Audit)](../../domains/software-0008/software/devops/dragonfly-consistencia-dados-isolamento-excecoes-seguranca.md)
+1238. [Dragonfly: Pré-Aquecimento (Preheat) de Imagens e Modelos nos Seed Peers Antes de Rollouts Massivos](../../domains/software-0008/software/devops/dragonfly-preheat-pre-aquecimento-imagens-modelos-seed-peers.md)
+1239. [Dragonfly: Combinação de Distribuição P2P Dragonfly com Lazy Pulling em Chunks do Nydus](../../domains/software-0008/software/devops/dragonfly-combinado-nydus-rafs-lazy-pulling-p2p-chunks.md)
+1240. [Dragonfly: Observabilidade da Malha P2P com Métricas Prometheus e Tracing Distribuído](../../domains/software-0008/software/devops/dragonfly-observabilidade-metricas-prometheus-tracing-opentelemetry.md)
+
+### Nydus Image Service (serviço de imagens OCI de carregamento sob demanda com formato RAFS v6, nydusify, nydusd FUSE/EROFS e deduplicação em chunks)
+
+1241. [Nydus: Arquitetura RAFS (Bootstrap de Metadados e Blobfile em Chunks de 1 MB) para Lazy Pulling](../../domains/software-0008/software/devops/nydus-arquitetura-rafs-bootstrap-blobfile-lazy-pulling.md)
+1242. [Nydus: Evolução do Formato RAFS v5 (FUSE/virtiofs) para RAFS v6 (EROFS In-Kernel)](../../domains/software-0008/software/devops/nydus-rafs-v5-fuse-vs-rafs-v6-erofs-in-kernel-performance.md)
+1243. [Nydus: Deduplicação em Nível de Chunk (Cross-Layer e Cross-Image) e Algoritmos de Compressão (LZ4, Zstd, GZip)](../../domains/software-0008/software/devops/nydus-deduplicacao-chunks-cross-layer-cross-image-compressao.md)
+1244. [Nydus: Ferramentas do Ecossistema (nydusd, nydus-image, nydusify e nydusctl)](../../domains/software-0008/software/devops/nydus-ecossistema-ferramentas-nydusd-nydusify-nydus-image-nydusctl.md)
+1245. [Nydus: Verificação de Integridade Fim-a-Fim em Tempo de Execução (Árvore de Merkle com SHA-256 e BLAKE3)](../../domains/software-0008/software/devops/nydus-integridade-fim-a-fim-merkle-tree-sha256-blake3.md)
+1246. [Nydus: Tabela de Prefetch (PrefetchTable), Amplificação de I/O e Otimização de Leituras no Boot](../../domains/software-0008/software/devops/nydus-prefetch-otimizacao-layout-io-amplification-cold-start.md)
+1247. [Nydus: Compatibilidade com Imagens OCI Nativas (OCI zran), eStargz e Conversão Automática no Harbor](../../domains/software-0008/software/devops/nydus-compatibilidade-oci-zran-estargz-conversao-harbor.md)
+1248. [Nydus: Implantação no Kubernetes e containerd com nydus-snapshotter e nerdctl](../../domains/software-0008/software/devops/nydus-snapshotter-containerd-kubernetes-nerdctl-implantacao.md)
+1249. [Nydus: Aceleração de Kata Containers (virtiofs) e Confidential Containers com Nydus](../../domains/software-0008/software/devops/nydus-kata-containers-virtiofs-confidential-containers-isolamento.md)
+1250. [Nydus: Backends de Armazenamento (Registry, S3/OSS, NAS, Localfs) e Gestão do BlobCache](../../domains/software-0008/software/devops/nydus-storage-backends-registry-oss-s3-nas-blobcache-gestao.md)
+
+### ORAS — OCI Registry As Storage (ferramenta CNCF Sandbox para push, pull, attach, discover, cópia e backup de artefatos OCI, SBOMs e grafos de referrers)
+
+1251. [ORAS: Arquitetura OCI Registry As Storage e Distribuição de Artefatos Genéricos](../../domains/software-0008/software/devops/oras-arquitetura-oci-registry-as-storage-artefatos-genericos.md)
+1252. [ORAS: Operações de Push e Pull de Arquivos, Media Types, Anotações e OCI Image Layout Local](../../domains/software-0008/software/devops/oras-push-pull-media-types-annotations-oci-image-layout.md)
+1253. [ORAS: Vinculação e Descoberta de Artefatos na Árvore de Referrers (oras attach e oras discover)](../../domains/software-0008/software/devops/oras-attach-discover-grafo-referrers-sbom-assinaturas-oci11.md)
+1254. [ORAS: Cópia de Imagens, Índices Multi-Arch e Grafos de Referrers entre Registries (oras cp)](../../domains/software-0008/software/devops/oras-cp-copia-artefatos-grafos-referrers-entre-registries.md)
+1255. [ORAS: Backup e Restauração de Artefatos e Grafos OCI para Ambientes Air-Gapped (oras backup e oras restore)](../../domains/software-0008/software/devops/oras-backup-restore-arquivamento-portavel-air-gapped.md)
+1256. [ORAS: Manipulação Direta de Manifestos e Índices OCI (oras manifest fetch, push, index create e update)](../../domains/software-0008/software/devops/oras-manifest-fetch-push-delete-index-multi-arch.md)
+1257. [ORAS: Operações Diretas em Blobs Endereçáveis por Conteúdo (oras blob push, fetch e delete)](../../domains/software-0008/software/devops/oras-blob-fetch-push-delete-operacoes-camada-digest.md)
+1258. [ORAS: Descoberta de Repositórios, Tags e Resolução de Digests (oras repo ls, oras repo tags, oras resolve e oras tag)](../../domains/software-0008/software/devops/oras-repo-ls-tags-resolve-tag-descoberta-inventario.md)
+1259. [ORAS: Governança de Tags de Release (:vX.Y.Z, :vX.Y, :vX e :latest) e Segurança de Supply Chain](../../domains/software-0008/software/devops/oras-politica-tags-releases-imutaveis-rolling-tags-supply-chain.md)
+1260. [ORAS: Gerenciamento de Credenciais e Autenticação em Registros OCI (oras login, oras logout e Credential Helpers)](../../domains/software-0008/software/devops/oras-autenticacao-credenciais-docker-config-login-logout.md)
+
+### CNCF Distribution — registry:3 (implementação open-source de referência da OCI Distribution Specification para armazenamento, cache e distribuição de imagens)
+
+1261. [CNCF Distribution: Arquitetura da Implementação de Referência OCI Registry e Biblioteca Core](../../domains/software-0008/software/devops/distribution-arquitetura-oci-registry-v2-core-library-cncf.md)
+1262. [CNCF Distribution: Configuração YAML (/etc/distribution/config.yml), Overrides por Variáveis REGISTRY_* e OpenTelemetry](../../domains/software-0008/software/devops/distribution-configuracao-yaml-overrides-variaveis-ambiente-otel.md)
+1263. [CNCF Distribution: Drivers de Armazenamento (filesystem, s3, gcs, azure e inmemory) e Parâmetros de Performance](../../domains/software-0008/software/devops/distribution-storage-drivers-filesystem-s3-gcs-azure-inmemory.md)
+1264. [CNCF Distribution: Deleção de Manifestos (delete.enabled), Limpeza de Uploads (uploadpurging) e Modo Readonly para GC](../../domains/software-0008/software/devops/distribution-delete-enabled-maintenance-uploadpurging-readonly-gc.md)
+1265. [CNCF Distribution: Autenticação com htpasswd, Token Server Externo (JWT/JWKS) e mTLS](../../domains/software-0008/software/devops/distribution-autenticacao-htpasswd-token-jwt-jwks-mtls.md)
+1266. [CNCF Distribution: Alta Disponibilidade com http.secret Compartilhado e Cache de Blob Descriptors no Redis](../../domains/software-0008/software/devops/distribution-alta-disponibilidade-http-secret-redis-blobdescriptor-cache.md)
+1267. [CNCF Distribution: Redirecionamento de Blobs (storage.redirect) e Middlewares de CDN (CloudFront)](../../domains/software-0008/software/devops/distribution-storage-redirect-middlewares-cloudfront-cdn-offload.md)
+1268. [CNCF Distribution: Configuração de Pull-Through Cache (proxy.remoteurl) para Espelhamento de Registries](../../domains/software-0008/software/devops/distribution-pull-through-cache-proxy-remoteurl-docker-hub.md)
+1269. [CNCF Distribution: Sistema de Notificações por Webhook (notifications.endpoints) e Filas de Eventos](../../domains/software-0008/software/devops/distribution-notifications-webhooks-eventos-push-pull-delete.md)
+1270. [CNCF Distribution: Servidor de Debug, Métricas Prometheus, Health Checks e Graceful Shutdown (draintimeout)](../../domains/software-0008/software/devops/distribution-http-debug-prometheus-healthchecks-draintimeout.md)
+
+### Lefthook (gerenciador poliglota e rápido de Git hooks em Go com execução paralela, filtros glob/root para monorepos, lefthook-local.yml e remotes)
+
+1271. [Lefthook: Gerenciador Poliglota e Paralelo de Git Hooks em Go (lefthook.yml)](../../domains/software-0008/software/devops/lefthook-gerenciador-git-hooks-poliglota-go-lefthook-yml.md)
+1272. [Lefthook: Execução Paralela (parallel: true) e Placeholders de Arquivos ({staged_files}, {push_files}, {all_files})](../../domains/software-0008/software/devops/lefthook-execucao-paralela-jobs-staged-files-push-files.md)
+1273. [Lefthook: Filtros de Arquivos (glob, exclude, files) e Escopo de Subdiretório (root) em Monorepos](../../domains/software-0008/software/devops/lefthook-filtros-glob-exclude-root-monorepos.md)
+1274. [Lefthook: Customização Pessoal sem Poluir o Git com lefthook-local.yml, tags e exclude_tags](../../domains/software-0008/software/devops/lefthook-local-yml-overrides-pessoais-skip-tags-docker.md)
+1275. [Lefthook: Execução de Scripts Dedicados (script e runner) e Hooks em Ambientes Docker](../../domains/software-0008/software/devops/lefthook-scripts-commit-msg-runners-docker-containerizados.md)
+1276. [Lefthook: Grupos de Tarefas Customizadas (lefthook run <grupo>) e Auto-Correção com stage_fixed](../../domains/software-0008/software/devops/lefthook-custom-tasks-fixer-stage-fixed-autofix.md)
+1277. [Lefthook: Controle de Verbose (output) e Bypass Consciente em Emergências (LEFTHOOK=0)](../../domains/software-0008/software/devops/lefthook-bypass-emergencia-lefthook-0-output-control.md)
+1278. [Lefthook: Compartilhamento de Políticas entre Repositórios com extends e remotes](../../domains/software-0008/software/devops/lefthook-extends-remotes-compartilhamento-politicas-organizacao.md)
+1279. [Lefthook: Prevenção Shift-Left de Vazamento de Segredos e Erros IaC no pre-commit DevOps](../../domains/software-0008/software/devops/lefthook-seguranca-shift-left-gitleaks-trivy-kubeconform-tflint.md)
+1280. [Lefthook: Execução de lefthook run no Pipeline de CI/CD para Paridade Total com Hooks Locais](../../domains/software-0008/software/devops/lefthook-integracao-ci-cd-paridade-local-github-actions.md)
+
+### kube-vip (Virtual IP e Load Balancer em Go para alta disponibilidade do Control Plane e Services LoadBalancer em Kubernetes via ARP Layer 2, BGP Layer 3 e IPVS)
+
+1281. [kube-vip: Arquitetura de Virtual IP (VIP) e Load Balancer para Control Plane e Services Kubernetes](../../domains/software-0008/software/devops/kubevip-arquitetura-vip-load-balancer-control-plane-services.md)
+1282. [kube-vip: Modo ARP (Layer 2), Eleição de Líder e Failover Rápido com Gratuitous ARP](../../domains/software-0008/software/devops/kubevip-arp-layer2-leader-election-gratuitous-arp-failover.md)
+1283. [kube-vip: Modo BGP (Layer 3) para Anúncio Multi-Nó de VIPs e Balanceamento ECMP](../../domains/software-0008/software/devops/kubevip-bgp-layer3-ecmp-rotas-peers-multinodo.md)
+1284. [kube-vip: Balanceamento do Control Plane com IPVS (lb_enable) e Pré-Carregamento de Módulos com SELinux](../../domains/software-0008/software/devops/kubevip-control-plane-ipvs-load-balancing-selinux-modprobe.md)
+1285. [kube-vip: Balanceamento de Kubernetes Services (svc_enable) e Integração com kube-vip-cloud-provider](../../domains/software-0008/software/devops/kubevip-service-loadbalancer-cloud-provider-ipam-annotations.md)
+1286. [kube-vip: Arquivo de Configuração de Runtime (--config-file), Ordem de Precedência e Validação Estrita](../../domains/software-0008/software/devops/kubevip-runtime-config-file-precedencia-validacao-estrita.md)
+1287. [kube-vip: Suporte a Services LoadBalancer de Gateway API sem Endpoints (allow-reconcile-without-endpoints)](../../domains/software-0008/software/devops/kubevip-gateway-api-loadbalancer-sem-endpoints-annotation.md)
+1288. [kube-vip: Egress com IP de Origem Fixo por Pod, Alocação via DHCP e Exposição UPnP](../../domains/software-0008/software/devops/kubevip-egress-source-ip-fixo-dhcp-upnp-redes-locais.md)
+1289. [kube-vip: Eleição de Líder por Service (svc_election) para Distribuir VIPs ARP entre Worker Nodes](../../domains/software-0008/software/devops/kubevip-eleicao-lider-por-service-arp-distribuicao-carga.md)
+1290. [kube-vip: Geração de Manifestos (kube-vip manifest pod / daemonset), RBAC e Upgrade In-Place](../../domains/software-0008/software/devops/kubevip-geracao-manifestos-static-pod-daemonset-rbac-upgrade.md)
+
+### Notary Project Notation (CLI e biblioteca CNCF Incubating para assinatura e verificação criptográfica de imagens e artefatos OCI com X.509 PKI, JWS/COSE e Trust Policy)
+
+1291. [Notary Project Notation: Arquitetura CNCF Incubating para Assinatura e Verificação de Artefatos OCI](../../domains/software-0008/software/devops/notation-arquitetura-notary-project-assinatura-artefatos-oci.md)
+1292. [Notary Project Notation: Envelopes de Assinatura JWS (JSON Web Signature) e COSE (RFC 8152)](../../domains/software-0008/software/devops/notation-formatos-assinatura-jws-vs-cose-rfc8152.md)
+1293. [Notary Project Notation: Gerenciamento de Trust Store (ca, signingAuthority e tsa) e Certificados X.509](../../domains/software-0008/software/devops/notation-trust-store-ca-signingauthority-tsa-x509-pki.md)
+1294. [Notary Project Notation: Configuração de Trust Policy (trustpolicy.json), Escopos e Níveis de Verificação](../../domains/software-0008/software/devops/notation-trust-policy-json-registryscopes-trustedidentities-levels.md)
+1295. [Notary Project Notation: Arquitetura de Plugins KMS (AWS Signer, Azure Key Vault e HashiCorp Vault)](../../domains/software-0008/software/devops/notation-plugins-kms-aws-signer-azure-key-vault-vault.md)
+1296. [Notary Project Notation: Instalação Verificada por Checksum, Estrutura NOTATION_CONFIG e Estabilidade de Versões](../../domains/software-0008/software/devops/notation-instalacao-verificacao-shasum-notation-config-dir.md)
+1297. [Notary Project Notation: Inspeção Detalhada de Assinaturas e Cadeias X.509 com notation inspect](../../domains/software-0008/software/devops/notation-inspect-assinaturas-cadeia-certificados-timestamps.md)
+1298. [Notary Project Notation: Verificação de Assinaturas na Admissão do Kubernetes com Kyverno e Ratify](../../domains/software-0008/software/devops/notation-verificacao-admissao-kubernetes-kyverno-ratify-gatekeeper.md)
+1299. [Notary Project Notation: Assinatura de SBOMs e Artefatos Anexados via ORAS no Grafo OCI](../../domains/software-0008/software/devops/notation-assinatura-sbom-artefatos-oras-grafo-supply-chain.md)
+1300. [Notary Project Notation: Adoção Gradual com Níveis de Verificação (strict, permissive, audit e skip)](../../domains/software-0008/software/devops/notation-niveis-verificacao-strict-permissive-audit-skip-migracao.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1200 notas 1–1200 das tranches 1–12 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1200/2.000 notas válidas, restando 800 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1300 notas 1–1300 das tranches 1–13 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1300/2.000 notas válidas, restando 700 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

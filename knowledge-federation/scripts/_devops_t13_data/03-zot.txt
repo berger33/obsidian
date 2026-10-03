@@ -1,0 +1,131 @@
+1221|zot-arquitetura-registro-oci-nativo-serve-verify-schema|Project Zot: Arquitetura de Registry OCI-Nativo, Validação de Config (zot verify) e JSON Schema (zot schema)|O **zot** (`project-zot/zot`, projeto CNCF Sandbox) é um registro de imagens e artefatos pronto para produção e neutro de fornecedor que armazena imagens exclusivamente no formato **OCI Image Specification** em disco/S3 e fala **OCI Distribution Specification** na rede, sem camadas legadas específicas do Docker.|Registros tradicionais carregam dívida técnica de formatos de manifesto antigos e exigem múltiplos componentes externos acoplados, enquanto o `zot` empacota armazenamento OCI puro, deduplicação, coleta de lixo e extensões opcionais em um único binário Go.|O comportamento do servidor é controlado por um arquivo JSON ou YAML iniciado com `zot serve <config-file>`. Antes de subir ou recarregar o serviço em produção, o mesmo binário permite exportar a referência completa em JSON Schema draft 7 (`zot schema > zot-config-schema.json`) e validar estaticamente qualquer arquivo candidato com `zot verify <config-file>`.|```bash
+zot schema > zot-config-schema.json
+zot verify /etc/zot/config.json
+zot serve /etc/zot/config.json
+```|Tentar fazer push de manifestos legados Docker v2 Schema 1 (depreciados) para o `zot` falha porque o `zot` exige conformidade estrita com as especificações OCI Image e OCI Distribution.|Adicione `zot verify config.json` ao pipeline de CI da infraestrutura do registry e verifique a conformidade do endpoint HTTP em `/v2/`.|https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://github.com/project-zot/zot
+1222|zot-storage-dedupe-hydrate-blob-on-read-subpaths-maxrepos|Project Zot: Armazenamento com Deduplicação Inline (dedupe), hydrateBlobOnRead, subPaths e maxRepos|Na seção `storage` do `zot`, é possível habilitar deduplicação inline de camadas compartilhadas (`"dedupe": true`), controlar a hidratação de blobs em leituras (`"hydrateBlobOnRead"`), limitar o número máximo de repositórios (`"maxRepos"`) e particionar múltiplos sistemas de arquivos ou buckets por prefixo (`"subPaths"`).|Imagens de containers frequentemente compartilham camadas base idênticas entre dezenas de repositórios; sem deduplicação por hard links/cache de blobs e sem cota de criação de novos repositórios, o armazenamento se esgota rapidamente.|Com `"dedupe": true`, o `zot` evita duplicar blobs idênticos no mesmo store. Por padrão (`"hydrateBlobOnRead": false`), leituras `HEAD` e `GET` verificam apenas o caminho local do repositório para preservar a semântica `AtomicDelete` da OCI Distribution Spec (um blob deletado de um repositório continua ausente nele mesmo que exista no cache de outro repositório). Já `"maxRepos": 100` rejeita pushes que criariam novos repositórios acima do limite com `HTTP 429`, permitindo pushes em repositórios já existentes.|```json
+{
+  "distSpecVersion": "1.1.0",
+  "storage": {
+    "rootDirectory": "/var/lib/zot",
+    "dedupe": true,
+    "hydrateBlobOnRead": false,
+    "maxRepos": 500
+  },
+  "http": {
+    "address": "0.0.0.0",
+    "port": "5000"
+  }
+}
+```|Habilitar `"hydrateBlobOnRead": true` sem configurar `"accessControl"` adequado pode fazer com que uma requisição `HEAD`/`GET` rematerialize no repositório de destino um blob que havia sido deletado localmente mas ainda constava no cache compartilhado.|Mantenha `"hydrateBlobOnRead": false` (o padrão oficial) para garantir o comportamento `AtomicDelete` da especificação OCI e valide o arquivo com `zot verify`.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1223|zot-garbage-collection-gc-gcdelay-gctimewindow-retencao|Project Zot: Coleta de Lixo em Background (gc, gcDelay e gcTimeWindow em UTC) e Políticas de Retenção|O `zot` realiza coleta de lixo (Garbage Collection) nativa em background quando `"gc": true` está definido em `storage`, removendo blobs órfãos e manifestos não referenciados mais antigos que `"gcDelay"` (por exemplo, `"2h"`) e permitindo restringir o início das varreduras periódicas a uma janela diária em UTC com `"gcTimeWindow"`.|Em registros que exigem colocar o servidor inteiro em modo somente leitura (`readonly`) para rodar garbage collection offline, a limpeza periódica interrompe pipelines de CI/CD; por outro lado, rodar GC pesado no horário de pico adiciona contenção de locks no armazenamento.|Configurando `"gc": true`, `"gcDelay": "2h"` e `"gcTimeWindow": "01:00-08:00"` (sempre interpretado em UTC, suportando janelas que cruzam a meia-noite como `"22:00-06:00"`), o `zot` inicia as varreduras globais apenas fora do horário de pico e permite que uma varredura iniciada dentro da janela termine sem travar no meio.|```json
+{
+  "storage": {
+    "rootDirectory": "/var/lib/zot",
+    "dedupe": true,
+    "gc": true,
+    "gcDelay": "2h",
+    "gcTimeWindow": "01:00-06:00"
+  }
+}
+```|Alterar `"gcTimeWindow"` no arquivo de configuração e fazer apenas reload em quente sem reiniciar o processo `zot` atualiza o valor em memória, mas não reprograma as tarefas periódicas de GC que já foram agendadas na inicialização do servidor.|Reinicie o serviço `zot` sempre que alterar `"gcTimeWindow"` e lembre-se de converter o horário desejado para UTC.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1224|zot-autenticacao-mtls-htpasswd-ldap-oidc-api-keys|Project Zot: Autenticação (mTLS, htpasswd, LDAP, Bearer/OIDC e API Keys) e Controle de Acesso|A seção `http.auth` e `http.accessControl` do `zot` suporta autenticação mútua TLS (mTLS), arquivo `htpasswd` com passphrases bcrypt, integração LDAP, tokens Bearer/OpenID Connect e geração de API Keys, combinados com autorização baseada em identidade por repositório.|Expor um registro OCI interno sem autenticação e sem separar permissões de leitura (`read`) das permissões de escrita (`create`, `update`, `delete`) permite que qualquer workload sobrescreva imagens de produção ou delete tags críticas.|No bloco `http`, configura-se `tls` (`cert`, `key`, `cacert`), os provedores em `auth` (incluindo `failDelay` para mitigar força bruta) e as políticas granulares em `accessControl`, onde padrões de caminhos de repositórios mapeiam grupos ou usuários para listas de ações permitidas (`read`, `create`, `update`, `delete`, `detectManifestCollision`).|```json
+{
+  "http": {
+    "address": "0.0.0.0",
+    "port": "5000",
+    "tls": {
+      "cert": "/etc/zot/certs/server.cert",
+      "key": "/etc/zot/certs/server.key"
+    },
+    "auth": {
+      "htpasswd": {
+        "path": "/etc/zot/htpasswd"
+      },
+      "failDelay": 5
+    }
+  }
+}
+```|Omitir `"failDelay"` em registros expostos a redes amplas com autenticação baseada em senha (`htpasswd` ou LDAP) facilita ataques automatizados de adivinhação de credenciais sem penalidade de latência.|Defina `"failDelay"` (por exemplo, `5` segundos), force TLS em `http.tls` e restrinja escrita em repositórios de produção exclusivamente às identidades de CI.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1225|zot-extensao-sync-espelhamento-on-demand-periodico-assinaturas|Project Zot: Extensão sync para Espelhamento Periódico e Pull-Through Cache Sob Demanda|A extensão `extensions.sync` do `zot` permite sincronizar imagens e artefatos OCI de registros remotos (Docker Hub, GHCR, ECR, Harbor ou outra instância `zot`) tanto por agendamento periódico (`pollInterval`) quanto sob demanda (`onDemand: true`) no instante em que um nó Kubernetes solicita o pull.|Quando centenas de nós Kubernetes puxam imagens diretamente de registros públicos na internet, falhas externas ou limites de taxa (`429 Too Many Requests` do Docker Hub) interrompem o escalonamento de Pods no cluster.|Na configuração de `extensions.sync`, define-se uma lista de `registries` com `urls`, `onDemand`, `pollInterval`, `tlsVerify` e regras de `content` (filtrando por prefixo de repositório e regex de tags ou SemVer). O `zot` copia não apenas as camadas da imagem OCI, mas também artefatos referenciados associados, como assinaturas Cosign e Notation e SBOMs.|```json
+{
+  "extensions": {
+    "sync": {
+      "enable": true,
+      "registries": [
+        {
+          "urls": ["https://ghcr.io"],
+          "onDemand": true,
+          "tlsVerify": true,
+          "content": [
+            {
+              "prefix": " score-spec/*"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```|Habilitar espelhamento de repositórios remotos amplos sem filtrar tags por regex ou SemVer no bloco `content` pode fazer o sync periódico baixar milhares de tags históricas e esgotar o disco.|Use `onDemand: true` para caches de borda ou restrinja o bloco `content` com filtros de tags SemVer quando usar `pollInterval`.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1226|zot-extensao-search-trivy-cve-scanning-graphql|Project Zot: Extensão search com Scanner de Vulnerabilidades CVE (Trivy) e Consultas GraphQL|A extensão `extensions.search` do `zot` habilita uma API GraphQL avançada de busca e descoberta de imagens, além de integrar nativamente o scanner **Trivy** (`cve`) para identificar vulnerabilidades CVE nas imagens armazenadas no registro.|Em um registro OCI básico que implementa apenas a API `/v2/_catalog`, não é possível consultar quais imagens contêm uma CVE crítica específica, quais camadas são compartilhadas ou quais artefatos possuem assinatura válida.|Com `extensions.search.enable: true` e o sub-bloco `cve` configurado (`updateInterval` para atualização da base de vulnerabilidades do Trivy), o `zot` indexa os metadados dos manifestos no `metaDB` e permite consultar via GraphQL ou pela interface web (`ui`) a lista de CVEs por imagem, tag ou digest, além de buscar imagens que dependem de determinada camada base.|```json
+{
+  "extensions": {
+    "search": {
+      "enable": true,
+      "cve": {
+        "updateInterval": "4h"
+      }
+    }
+  }
+}
+```|Construir ou implantar a variante binária mínima do `zot` (`zot-minimal`, compilada sem extensões) e tentar habilitar `extensions.search` ou `extensions.sync` no arquivo de configuração faz o `zot verify` rejeitar ou ignorar as extensões ausentes.|Utilize a imagem completa do `zot` quando precisar de `search`/Trivy, `sync` e `ui`, reservando a imagem `minimal` para ambientes edge restritos que precisam apenas da spec OCI Distribution pura.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1227|zot-extensao-trust-verificacao-assinaturas-cosign-notation|Project Zot: Extensão trust para Armazenamento e Verificação de Assinaturas Cosign e Notation|Por meio da extensão `extensions.trust` e do suporte nativo à API OCI Referrers (` OCI 1.1`), o `zot` armazena, vincula e verifica assinaturas criptográficas geradas tanto pelo **Sigstore Cosign** quanto pelo **Notary Project Notation**.|Armazenar assinaturas de imagem sem validar se elas correspondem a chaves públicas ou certificados X.509 confiáveis da organização permite que artefatos assinados por chaves desconhecidas passem despercebidos na interface e nas buscas do registro.|Habilitando `extensions.trust` (`enable: true`, `cosign: true`, `notation: true`), os administradores podem fazer upload de chaves públicas do Cosign e certificados de confiança do Notation para o `zot`, que passa a avaliar e expor nas consultas da API `search` e na UI se cada imagem possui assinatura confiável e dentro da validade.|```json
+{
+  "extensions": {
+    "search": { "enable": true },
+    "trust": {
+      "enable": true,
+      "cosign": true,
+      "notation": true
+    }
+  }
+}
+```|Habilitar `extensions.trust` sem habilitar `extensions.search` impede a utilização dos endpoints de verificação e consulta de estado de confiança das assinaturas.|Ative sempre `extensions.search` junto com `extensions.trust` e valide a configuração com `zot verify config.json`.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1228|zot-storage-driver-s3-dynamodb-cache-fastrestart-cluster|Project Zot: Backend S3, Cache Driver, fastRestart e Escalonamento Horizontal em Cluster|Para implantações de grande escala, o `zot` suporta armazenamento de objetos compatível com **Amazon S3** (`storageDriver` com `name: "s3"`), driver de cache para deduplicação, inicialização rápida (`fastRestart`) e agrupamento stateless em múltiplos nós (`cluster`).|Em registros com mais de 1 TB e milhares de repositórios no S3, percorrer todos os objetos do bucket durante a inicialização para reconciliar o `metaDB` pode levar vários minutos se `fastRestart` não estiver configurado.|No bloco `storage`, configura-se o `storageDriver` S3 (lendo credenciais de variáveis de ambiente, perfil IAM ou arquivo) e a opção `fastRestart` para acelerar o boot; no bloco de nível superior `cluster`, listam-se os membros de scale-out, a chave de hash (`hashKey`) e o TLS intra-cluster para distribuir requisições de forma consistente.|```json
+{
+  "storage": {
+    "rootDirectory": "/var/lib/zot",
+    "dedupe": true,
+    "storageDriver": {
+      "name": "s3",
+      "region": "sa-east-1",
+      "bucket": "corp-zot-registry",
+      "secure": true
+    }
+  }
+}
+```|Executar múltiplas réplicas do `zot` apontando para o mesmo bucket S3 sem configurar o bloco `cluster` e o banco de metadados/cache compartilhado gera inconsistências de estado de índice e colisão de tarefas de GC.|Ao escalar o `zot` para múltiplas réplicas sobre S3, configure explicitamente a seção `cluster` e valide o schema com `zot schema` e `zot verify`.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1229|zot-extensoes-scrub-lint-metrics-eventos-observabilidade|Project Zot: Verificação de Integridade de Blobs (scrub), Linting de Imagens (lint) e Métricas Prometheus|O bloco `extensions` do `zot` inclui verificação periódica de integridade física de blobs em disco (`scrub`), validação de políticas de metadados de imagem no push (`lint`), exportação de métricas Prometheus (`metrics`) e gravação de eventos (`events`).|Corrupção silenciosa de blocos em discos locais (bit rot) só é descoberta quando um nó tenta baixar uma camada antiga durante uma emergência e falha na verificação do digest SHA-256.|A extensão `scrub` recalcula periodicamente em background os digests SHA-256 dos blobs armazenados e registra qualquer corrupção nos logs; a extensão `lint` permite exigir anotações OCI obrigatórias (como `org.opencontainers.image.licenses` ou autor) ao receber novos manifestos; e `metrics` expõe indicadores de latência HTTP, armazenamento e downloads no endpoint `/metrics`.|```json
+{
+  "extensions": {
+    "metrics": {
+      "enable": true,
+      "prometheus": {
+        "path": "/metrics"
+      }
+    },
+    "scrub": {
+      "enable": true,
+      "interval": "24h"
+    }
+  }
+}
+```|Definir um `interval` muito curto na extensão `scrub` (como `15m`) em um registry de vários terabytes gera leitura contínua de disco e IOPS elevados no backend de armazenamento.|Configure `scrub.interval` para ciclos diários ou semanais (`"24h"` ou `"168h"`) e monitore as métricas do `/metrics` no Prometheus.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
+1230|zot-implantacao-kubernetes-mirror-containerd-pull-through|Project Zot: Implantação no Kubernetes como Mirror OCI Local para containerd|Implantado no Kubernetes via Helm chart (`project-zot/helm-charts`), o `zot` com `extensions.sync` (`onDemand: true`) funciona como um registry mirror local de baixa latência para os nós `containerd` do cluster.|Quando um Deployment de 200 réplicas escala ou um novo nó entra no cluster, buscar as mesmas imagens repetidamente através de links WAN ou NAT Gateways encarece o tráfego de rede e atrasa o startup dos Pods.|Configurando `hosts.toml` no `containerd` dos nós para apontar os registros upstream (como `docker.io`, `ghcr.io`, `quay.io`) para o endpoint interno do `zot` com `onDemand: true`, a primeira requisição busca e armazena a imagem no `zot` local, e todas as requisições subsequentes dos demais nós são servidas diretamente dentro da rede local do cluster.|```toml
+# /etc/containerd/certs.d/ghcr.io/hosts.toml nos nos do cluster:
+server = "https://ghcr.io"
+
+[host."https://zot.registry-system.svc.cluster.local:5000"]
+  capabilities = ["pull", "resolve"]
+```|Configurar o `zot` como mirror no `containerd` usando um `PersistentVolume` pequeno sem habilitar `"gc": true` e política de retenção faz o disco do mirror encher e interromper novos cacheamentos.|Habilite sempre `"gc": true`, `"dedupe": true` e políticas de retenção por último pull no `zot` quando operá-lo como cache mirror de cluster.|https://raw.githubusercontent.com/project-zot/zot/main/examples/README.md;https://raw.githubusercontent.com/project-zot/zot/main/README.md;https://github.com/project-zot/zot
