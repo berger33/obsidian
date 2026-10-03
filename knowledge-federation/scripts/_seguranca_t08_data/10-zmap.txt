@@ -1,0 +1,115 @@
+TOPIC: ZMap & ZGrab 2.0 (zmap/zmap, zmap/zgrab2) — Varredura Stateless em Escala de Internet via Grupos Cíclicos Multiplicativos, Probe/Output Modules e Handshakes L7
+SOURCES: https://raw.githubusercontent.com/zmap/zmap/main/README.md | https://raw.githubusercontent.com/zmap/zgrab2/master/README.md | https://github.com/zmap/zmap/wiki
+
+===NOTE===
+0791|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless|**ZMap (`zmap/zmap`)**: Arquitetura de Varredura *Stateless* de Pacote Único via Permutação em **Grupos Cíclicos Multiplicativos ($\mathbb{Z}_p^*$)**|Desenvolvido por pesquisadores da Universidade de Michigan (Zakir Durumeric, J. Alex Halderman et al., licença Apache-2.0), o **ZMap** (`zmap/zmap`) é um scanner de rede modular de pacote único projetado para realizar **pesquisas e auditorias em escala de internet inteira (ou grandes redes corporativas)** a taxas de **1,4 milhão de pacotes/s em 1 Gbps** (varrendo todo o espaço IPv4 em ~45 minutos) até **14,88 milhões de pacotes/s em 10 Gbps** (em < 5 minutos via `PF_RING` ZC / Netmap)!|Como o ZMap visita cada um dos $2^{32}$ endereços IPv4 em ordem 100% pseudo-aleatória **sem guardar uma lista de 4 bilhões de IPs na memória RAM e sem repetir nenhum IP**? A resposta matemática elegante do artigo original do ZMap (USENIX Security 2013) é a iteração sobre um **Grupo Cíclico Multiplicativo $(\mathbb{Z}_p^*, \times)$** onde $p = 2^{32} + 15$ é um número primo e $g$ é uma raiz primitiva módulo $p$: a recorrência $x_{n+1} = (x_n \cdot g) \pmod p$ percorre todos os inteiros de $1$ a $2^{32}$ exatamente uma vez usando apenas alguns bytes de estado na CPU!|Ao mesmo tempo, o receptor do ZMap valida os pacotes de resposta sem manter tabela de conexões codificando um MAC/checksum dos metadados nos campos cabeçalho IP/TCP do pacote de sondagem.|```bash
+# Verificar a versao do ZMap, listar os modulos de sondagem (-M) disponiveis e realizar um dry-run (-d) sem transmitir na rede
+zmap --version
+zmap --list-probe-modules
+zmap -p 443 -n 5 --dryrun
+```|Observe a flag **`--dryrun` (`-d`)**: antes de executar qualquer varredura real com o ZMap, rodar com `--dryrun -n 5` imprime na tela a representação exata dos quadros Ethernet/IP/TCP que seriam enviados pela placa de rede, permitindo validar IPs de origem, MAC do gateway e portas com zero risco!|Inspecione a lista de módulos de saída disponíveis executando `zmap --list-output-modules`.|zmap-modulos-sondagem-probe-modules-tcp-synscan-icmp-udp-dns, zmap-listas-bloqueio-blocklist-allowlist-conformidade-rfc, masscan-arquitetura-assincrona-pilha-tcp-ip-userspace-blackrock-syn-cookies
+
+===NOTE===
+0792|zmap-modulos-sondagem-probe-modules-tcp-synscan-icmp-udp-dns|ZMap **Probe Modules (`-M`)**: Sondagem `tcp_synscan` (padrão), `icmp_echoscan`, `udp`, `dns` e `upnp` com **`--probe-args`**|A arquitetura do ZMap separa completamente o motor de permutação de endereços e transmissão Ethernet dos **Módulos de Sondagem (*Probe Modules*, selecionados com `-M` / `--probe-module`)**, que definem como construir o pacote de saída e como validar se um pacote recebido é uma resposta legítima.|O módulo padrão é o **`-M tcp_synscan`** (que exige `-p <porta_destino>` e classifica respostas `SYN-ACK` como `success=1` e `RST` como `success=0`); para descoberta de hosts ativos via ICMP Ping em larga escala, usa-se **`-M icmp_echoscan`**; e para protocolos UDP, usa-se **`-M udp`**, **`-M dns`** ou **`-M upnp`**!|No módulo **`-M udp`**, a flag **`--probe-args`** permite passar payloads estáticos em texto/hex (`text:...` ou `hex:...`), carregar um arquivo binário (`file:/caminho/payload.bin`) ou usar um **Template Dinâmico (`template:/caminho/pkt.tpl`)** que injeta campos aleatórios de transação/porta em cada pacote UDP enviado!|```bash
+# Sondar servidores DNS autoritativos ou recursivos na porta 53/UDP usando o modulo nativo -M dns do ZMap
+sudo zmap -M dns -p 53 \
+  --probe-args="A,exemplo.com.br" \
+  -B 10M \
+  10.0.0.0/8 \
+  -o /cases/easm/internal_dns_servers.txt
+```|Quando usar **`-M icmp_echoscan`** para mapear quais endereços IP respondem a ping dentro dos blocos `/8` e `/16` internos de uma grande empresa, nenhuma porta (`-p`) precisa ser informada, pois o módulo constrói pacotes `ICMP Echo Request (Type 8)` e valida os `Echo Reply (Type 0)`.|Execute `zmap -M udp --help` ou `zmap -M dns --help` para consultar a documentação embutida de `--probe-args` daquele módulo específico.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-modulos-saida-output-modules-campos-output-filter-json-csv, masscan-payloads-udp-nmap-payloads-pcap-payloads-customizados
+
+===NOTE===
+0793|zmap-controle-banda-taxa-bandwidth-rate-cooldown-time-sender-threads|ZMap: Controle de Largura de Banda (**`-B 10M` / `--bandwidth`**) vs Taxa de Pacotes (**`-r` / `--rate`**), `--sender-threads` e `--cooldown-time`|Diferente da maioria das ferramentas que só aceitam taxa em pacotes por segundo, o ZMap oferece uma opção muito intuitiva para engenheiros de rede: limitar a transmissão diretamente em **bits/bytes por segundo com `-B` / `--bandwidth`** (suportando sufixos `G`, `M` e `K`, como **`-B 10M`** para 10 Mbps ou `-B 100M` para 100 Mbps), ou em pacotes por segundo com **`-r` / `--rate`**!|Se você não especificar `-B` nem `-r`, **o ZMap por padrão tentará transmitir na velocidade máxima suportada pela placa de rede e pela CPU** — o que em um servidor de 1 Gbps ou 10 Gbps pode saturar imediatamente o link do roteador se não for limitado!|Por isso, a regra de ouro operacional do ZMap é **sempre especificar explicitamente `-B` (ex.: `-B 10M` em redes corporativas) ou `-r` (ex.: `-r 5000`)**, além de respeitar o **`--cooldown-time`** (padrão `8` segundos que o ZMap aguarda após enviar o último pacote para receber as respostas em trânsito).|```bash
+# Varrer a porta 443/TCP na sub-rede 10.20.0.0/16 limitando estritamente a largura de banda a 10 Mbps (-B 10M)
+sudo zmap -p 443 \
+  -B 10M \
+  --cooldown-time=8 \
+  10.20.0.0/16 \
+  -o /cases/easm/zmap_443_hosts.txt
+```|Para testes rápidos de amostragem estatística (por exemplo, descobrir 100 servidores web aleatórios dentro de uma grande rede sem varrer a rede inteira), o ZMap suporta **`-n` (`--max-targets`, número ou porcentagem como `-n 1%`)**, **`--max-results <N>`** (para assim que encontrar $N$ hosts abertos!) e **`--max-runtime <segundos>`**!|Monitore na saída de status em tempo real (`stderr`) a taxa de envio (`send rate`), taxa de recepção (`recv rate`), porcentagem concluída e `pcap drop rate` (que deve ser `0%`; se houver drops no pcap, reduza `-B` ou `-r`).|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-listas-bloqueio-blocklist-allowlist-conformidade-rfc, masscan-controle-taxa-rate-pf-ring-excludefile-protecao-rede
+
+===NOTE===
+0794|zmap-listas-bloqueio-blocklist-allowlist-conformidade-rfc|ZMap: Governança de Escopo com **`/etc/zmap/blocklist.conf` (`-b`)**, **Allowlist (`-w`)** e **`--ignore-blocklist-errors`**|Por padrão, o ZMap carrega automaticamente o arquivo **`/etc/zmap/blocklist.conf`** (configurável com **`-b` / `--blocklist-file`**), que já bloqueia o envio de pacotes para sub-redes reservadas pelo IANA/IETF: endereços privados **RFC 1918 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`)**, loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), multicast (`224.0.0.0/4`) e redes governamentais/militares sensíveis.|Isso explica um detalhe prático importantíssimo: **quando você tenta usar o ZMap para varrer uma rede interna corporativa (`10.0.0.0/8` ou `192.168.1.0/24`) sem alterar a blocklist padrão, o ZMap reporta `0 addresses allowed to be scanned` porque o `/etc/zmap/blocklist.conf` bloqueia o RFC 1918 por padrão!**|Para varrer redes privadas internas autorizadas (`10.0.0.0/8`), passe um arquivo de blocklist customizado para redes internas (ex.: `-b /cases/easm/internal_blocklist.conf` contendo apenas loopback/multicast e as sub-redes OT/impressoras excluídas) combinado com uma **Allowlist (`-w /cases/easm/scope_allowlist.txt`)** contendo exatamente os blocos CIDR do escopo!|```bash
+# Criar uma blocklist e uma allowlist explicitas para varredura interna de sub-redes RFC 1918 autorizadas
+cat << 'EOF' > /cases/easm/internal_blocklist.conf
+127.0.0.0/8
+224.0.0.0/4
+10.250.0.0/16
+EOF
+
+sudo zmap -p 443 -B 10M \
+  -b /cases/easm/internal_blocklist.conf \
+  -w /cases/easm/authorized_cidrs.txt \
+  -o /cases/easm/zmap_internal_443.txt
+```|Internamente, o ZMap compila a união da Allowlist (`-w`) menos a Blocklist (`-b`) em uma árvore binária radix (*Radix Tree / Constraint Tree*) em memória antes de iniciar o loop do grupo cíclico, garantindo que **nenhum IP contido na blocklist jamais seja gerado pelo iterador**!|Verifique no log inicial do ZMap (`[INFO] constraint: ... addresses allowed`) a contagem exata de endereços IP que serão sondados.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-boas-praticas-varredura-etica-sinalizacao-rdns-opt-out-shards, masscan-controle-taxa-rate-pf-ring-excludefile-protecao-rede
+
+===NOTE===
+0795|zmap-modulos-saida-output-modules-campos-output-filter-json-csv|ZMap **Output Modules (`-O`)**, Seleção de Campos (**`-f` / `--output-fields`**) e Expressões Booleanas **`--output-filter`**|Por padrão, o ZMap utiliza o módulo de saída `csv` exportando apenas uma coluna (`saddr`, o endereço IP que respondeu com sucesso), o que permite canalizar `zmap -p 443 -q` diretamente via pipe para outra ferramenta.|Porém, cada módulo de sondagem do ZMap disponibiliza dezenas de campos de telemetria de camada de rede e transporte (listados com **`zmap -M tcp_synscan --list-output-fields`**), incluindo `saddr`, `daddr`, `sport`, `dport`, `seqnum`, `acknum`, **`window`** (tamanho da janela TCP!), **`ttl`** (Time-To-Live do pacote IP para fingerprinting passivo de SO!), `classification` (`synack` vs `rst`), `success` e `timestamp_str`!|Combinando **`-O json`** (ou **`-O csv`**) com **`-f "saddr,sport,ttl,window,classification"`** e a expressão booleana **`--output-filter="success = 1 && repeat = 0"`**, você exporta metadados ricos eliminando duplicatas!|```bash
+# Exportar resultados do ZMap em JSON Lines (-O json) incluindo TTL e TCP Window para fingerprinting passivo de SO
+sudo zmap -p 443 -B 10M \
+  -b /cases/easm/internal_blocklist.conf \
+  -O json \
+  -f "saddr,dport,ttl,window,classification,timestamp_str" \
+  --output-filter="success = 1 && repeat = 0" \
+  10.20.0.0/16 \
+  -o /cases/easm/zmap_rich_443.jsonl
+```|Por que capturar os campos **`ttl`** e **`window`** no `-f` do ZMap é tão valioso? Porque sem enviar **nenhum** pacote adicional, o TTL inicial do `SYN-ACK` já diferencia instantaneamente se o servidor é **Linux/Unix (`TTL <= 64`)**, **Windows (`TTL <= 128`)** ou **Roteador/Equipamento de Rede Cisco/F5 (`TTL <= 255`)**!|Execute `zmap -M tcp_synscan --list-output-fields` para ver todos os campos que podem ser passados em `-f` e filtrados em `--output-filter`.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-pipeline-dois-estagios-zmap-l4-zgrab2-l7-handshakes, tshark-extracao-campos-t-fields-e-filtros-leitura-y-json-ek
+
+===NOTE===
+0796|zmap-pipeline-dois-estagios-zmap-l4-zgrab2-l7-handshakes|Arquitetura **ZMap (L4) + ZGrab 2.0 (L7)**: Pipeline de Sondagem em Escala de Camada de Transporte para Transcrição Completa de Handshakes de Aplicação|Como o ZMap é propositalmente um scanner *stateless* de pacote único (ele envia `SYN`, recebe `SYN-ACK` e o kernel envia `RST`), o ZMap sozinho não completa handshakes TCP nem fala protocolos de aplicação (TLS, HTTP, SSH, SMTP, Modbus).|Conforme documentado no `README.md` oficial do **ZGrab 2.0 (`zmap/zgrab2`)**, o projeto ZMap foi desenhado para operar em dupla com o **ZGrab 2.0** em um pipeline Unix nativo (**`zmap -p 443 | zgrab2 tls`**): o **ZMap** descobre em alta velocidade quais IPs têm a porta L4 aberta e alimenta em streaming via `stdin` o **ZGrab 2.0** (escrito em Go), que realiza o handshake completo de Camada 7 e grava a transcrição estruturada em JSON!|O ZGrab 2.0 inclui **30 módulos nativos de protocolo L7**: `amqp`, `bacnet`, `banner`, `dnp3`, `fox`, `ftp`, `http`, `imap`, `ipp`, `jarm`, `managesieve`, `memcached`, `modbus`, `mongodb`, `mqtt`, `mssql`, `mysql`, `ntp`, `oracle`, `pop3`, `postgres`, `pptp`, `redis`, `siemens`, `smb`, `smtp`, `socks5`, `ssh`, `telnet` e `tls`!|```bash
+# Pipeline classico ZMap (L4 stateless) -> ZGrab 2.0 (L7 stateful) para auditar certificados e cifras TLS na porta 443
+sudo zmap -p 443 -B 10M -q \
+  -b /cases/easm/internal_blocklist.conf \
+  10.20.0.0/16 \
+  | zgrab2 tls --port 443 --output-file=/cases/easm/zgrab2_tls_443.jsonl
+```|Conforme destaca a nota de **Ethical Scanning** no `README.md` oficial do ZGrab 2.0: o ZGrab coleta exclusivamente informações de handshake disponíveis antes da autenticação (banners, certificados X.509, versões de protocolo, algoritmos SSH KEX/HostKey) e **aborta a conexão antes de qualquer tentativa de login**, garantindo segurança operacional total em auditorias de inventário.|Inspecione os certificados X.509 e versões TLS negociadas no arquivo JSONL com `jq '.data.tls.result.handshake_log.server_certificates.certificate.parsed.subject' /cases/easm/zgrab2_tls_443.jsonl`.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-zgrab2-configuracao-multiplos-modulos-multiple-ini-triggers, testssl-inventario-lote-mass-testing-serial-parallel-openssl-timeout
+
+===NOTE===
+0797|zmap-zgrab2-configuracao-multiplos-modulos-multiple-ini-triggers|**ZGrab 2.0 (`zgrab2 multiple -c config.ini`)**: Orquestração de Múltiplos Protocolos L7, Formato CSV (`IP, DOMAIN, TAG, PORT`) e **`--trigger`**|Muitas vezes, uma auditoria de superfície de ataque precisa coletar **múltiplos protocolos no mesmo host** (por exemplo: fazer handshake HTTP na porta `80`, HTTP + TLS + fingerprinting **JARM** na porta `443` e coletar o algoritmo de HostKey **SSH** na porta `22`), ou precisa conectar no endereço `IP` enviando um `DOMAIN` específico no cabeçalho HTTP `Host` e na extensão TLS **SNI**!|Conforme documentado no `README.md` oficial do **ZGrab 2.0**, ambos os requisitos são atendidos nativamente: **(1)** o formato de entrada CSV do ZGrab 2.0 aceita até quatro colunas **`IP, DOMAIN, TAG, PORT`** (quando `IP` e `DOMAIN` são informados juntos, o ZGrab2 conecta no `IP` mas envia `DOMAIN` no TLS SNI e no HTTP `Host`!); e **(2)** o módulo **`zgrab2 multiple -c multiple.ini`** executa múltiplos módulos e portas em uma única passagem usando gatilhos **`trigger="<TAG>"`**!|Isso permite alimentar o `zgrab2 multiple` diretamente com a saída do **OWASP Amass (`IP, FQDN`)** para inspecionar milhares de Virtual Hosts com SNI correto!|```ini
+# /cases/easm/multiple_audit.ini — Configuracao ZGrab 2.0 para auditar HTTP (80), HTTPS (443) e SSH (22) simultaneamente
+[Application Options]
+output-file="/cases/easm/multi_protocol_results.jsonl"
+senders=200
+
+[http]
+name="http80"
+port=80
+endpoint="/"
+max-redirects=1
+
+[http]
+name="https443"
+port=443
+use-https=true
+endpoint="/"
+
+[ssh]
+name="ssh22"
+port=22
+```|Para executar o arquivo `.ini` acima contra uma lista CSV contendo `10.20.1.10, portal.internal.corp`, basta rodar: **`zgrab2 multiple -c /cases/easm/multiple_audit.ini --input-file=/cases/easm/targets.csv`**!|Verifique no arquivo `multi_protocol_results.jsonl` que cada linha JSON contém as chaves `.data.http80`, `.data.https443` e `.data.ssh22` agrupadas para aquele ativo.|zmap-pipeline-dois-estagios-zmap-l4-zgrab2-l7-handshakes, amass-banco-dados-grafo-persistencia-consultas-oam-subs-amass-db, httpx-sondagem-http-massa-status-title-tech-detect-tls-probe
+
+===NOTE===
+0798|zmap-auditoria-protocolos-industriais-ot-ics-scada-zgrab2-modbus-siemens-dnp3|ZGrab 2.0 em Auditoria de Redes **OT / ICS / SCADA** e Bancos de Dados: Módulos `modbus`, `siemens` (S7), `dnp3`, `bacnet`, `fox` e `mongodb`/`redis`|Um dos recursos mais valiosos do **ZGrab 2.0** para equipes de segurança industrial (OT/ICS) e auditoria de exposição de infraestrutura é que ele inclui módulos de protocolo nativos e seguros (somente-leitura de identificação) para **Controladores Lógicos Programáveis (CLPs / PLCs) e Automação Predial**: **`modbus`** (porta `502`), **`siemens`** (protocolo S7comm na porta `102`), **`dnp3`** (subestações elétricas, porta `20000`), **`bacnet`** (automação predial HVAC, porta `47808`) e **`fox`** (Tridium Niagara, porta `1911`), além de **`jarm`** (fingerprinting ativo de servidores TLS C2)!|Em vez de enviar probes genéricos agressivos (como `nmap -sV --version-all`) que podem travar a pilha TCP de um CLP industrial antigo, os módulos OT do ZGrab 2.0 enviam uma única requisição oficial de identificação de dispositivo (como *Read Device Identification — Function Code 43 / MEI 14* no Modbus) para inventariar fabricante, modelo e firmware com segurança.|Da mesma forma, os módulos `redis`, `memcached`, `mongodb`, `postgres`, `mysql` e `mssql` identificam bancos de dados expostos sem autenticação.|```bash
+# Auditar o fingerprint TLS JARM (para deteccao de servidores C2) ou identificar bancos Redis expostos com ZGrab 2.0
+echo "10.20.30.40" | zgrab2 jarm --port 443
+echo "10.20.30.50" | zgrab2 redis --port 6379
+```|Em redes industriais OT/ICS reais, **nunca** execute varreduras de alta velocidade com ZMap/Masscan: alimente o `zgrab2 modbus` / `zgrab2 siemens` apenas com a lista conhecida de IPs e limite `--senders=5` para não sobrecarregar switches industriais de 10/100 Mbps.|Analise o hash **JARM** de 62 caracteres retornado pelo módulo `zgrab2 jarm` comparando-o contra listas de hashes JARM conhecidos de frameworks de Command & Control (Cobalt Strike, Sliver, Mythic, Metasploit).|zmap-pipeline-dois-estagios-zmap-l4-zgrab2-l7-handshakes, suricata-regras-http-tls-ja3-ja4-dns-deteccao-c2, masscan-controle-taxa-rate-pf-ring-excludefile-protecao-rede
+
+===NOTE===
+0799|zmap-boas-praticas-varredura-etica-sinalizacao-rdns-opt-out-shards|ZMap: Boas Práticas de **Varredura Ética (*Ethical Scanning*)**, Reprodutibilidade Científica (**`--seed`**), Distribuição (**`--shards`**) e Metadados (`--notes`)|Os autores do ZMap estabeleceram no artigo original e na Wiki oficial as diretrizes internacionais de **Varredura Ética de Rede (*Ethical Internet Scanning*)**, que devem ser seguidas por qualquer equipe de pesquisa ou EASM externo.|As práticas recomendadas incluem: **(1)** configurar **DNS Reverso (`PTR`)** e uma página web explicativa na porta `80` dos IPs de origem da varredura informando quem é a organização responsável e como solicitar exclusão imediata (*opt-out*); **(2)** monitorar a caixa de e-mail de `abuse@` e atualizar o **`/etc/zmap/blocklist.conf`** imediatamente; **(3)** usar múltiplos IPs de origem (**`-S 203.0.113.10-203.0.113.20`**) se autorizado; e **(4)** registrar metadados de auditoria com **`--metadata-file=/cases/easm/scan_meta.json`** e **`--notes="Ticket-SecOps-2026"`**!|Para **reprodutibilidade determinística** e divisão de trabalho entre vários coletores, fixar **`--seed <uint64>`** combinado com **`--shards <N>`** e **`--shard <id>`** garante que cada coletor varra uma fatia matematicamente disjunta do grupo cíclico $\mathbb{Z}_p^*$!|```bash
+# Executar o shard 0 de 4 coletores distribuidos compartilhando a mesma semente (--seed) e gravando metadados completos de auditoria
+sudo zmap -p 443 -B 20M \
+  --seed=987654321 \
+  --shards=4 --shard=0 \
+  --notes="Auditoria Mensal de Superficie Externa - Ticket SEC-4092" \
+  --metadata-file=/cases/easm/zmap_shard0_metadata.json \
+  -w /cases/easm/authorized_cidrs.txt \
+  -o /cases/easm/zmap_shard0_results.txt
+```|Atenção: na sintaxe do ZMap, a numeração de **`--shard`** começa em **`0`** (portanto, para `--shards=4`, os quatro coletores usam `--shard=0`, `--shard=1`, `--shard=2` e `--shard=3`), e é obrigatório que todos os 4 coletores recebam exatamente o mesmo valor em **`--seed`**!|Inspecione o arquivo JSON gerado por `--metadata-file` para auditar o horário exato de início/fim, a versão do ZMap, a taxa de pacotes efetiva e o hash SHA-256 da blocklist utilizada.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, zmap-listas-bloqueio-blocklist-allowlist-conformidade-rfc, masscan-arquivos-configuracao-pausa-retomada-paused-conf-echo
+
+===NOTE===
+0800|zmap-deteccao-defensiva-assinatura-ip-id-54321-suricata-zeek|Engenharia de Detecção (Blue Team): Identificação da Assinatura Clássica do **ZMap (`IP ID = 54321` / `0xd431`)** no **Suricata**, **Zeek** e **`tcpdump`**|Para otimizar ao máximo a construção de pacotes em memória e validar respostas *stateless*, a implementação padrão do ZMap preenche um valor constante famoso no cabeçalho IPv4 de todos os pacotes gerados: o campo de 16 bits **IP Identification (`ip.id`) é fixado por padrão no número decimal `54321` (`0xd431` em hexadecimal)**!|Isso significa que qualquer analista de SOC ou engenheiro de detecção pode identificar instantaneamente pacotes de sondagem enviados por instalações padrão do ZMap na borda da rede usando um filtro BPF de uma linha no **`tcpdump`** (`ip[4:2] == 54321`), no **Wireshark** (`ip.id == 54321 and tcp.flags.syn == 1 and tcp.flags.ack == 0`) ou uma regra no **Suricata**!|Combinar a detecção da assinatura estática (`ip.id == 54321`) com a detecção comportamental de varredura horizontal no **Zeek (`Scan::addr_scan`)** e listas de inteligência de IPs de scanners no **CrowdSec / Firewalls de Borda** garante visibilidade completa sobre reconhecimentos em escala de internet.|```bash
+# Capturar em tempo real no tcpdump pacotes TCP SYN de varredura ZMap identificando a assinatura padrao IP ID = 54321 (0xd431)
+sudo tcpdump -ni eth0 'ip[4:2] == 54321 and (tcp[tcpflags] & (tcp-syn|tcp-ack)) == tcp-syn' -c 20
+```|Mesmo que um operador modifique o código-fonte do ZMap para randomizar o campo `ip.id`, o padrão comportamental de um **único pacote `SYN` sem retransmissão** (quando a porta está filtrada, uma pilha TCP real do Linux/Windows tenta retransmitir o `SYN` após 1s, 3s, 7s; já um scanner *stateless* como ZMap ou Masscan com `-P 1` envia apenas 1 `SYN` e nunca retransmite!) continua identificando a ferramenta no Zeek!|Adicione no SIEM uma correlação para IPs externos que enviam pacotes `SYN` com `ip.id == 54321` e verifique se pertencem a projetos legítimos de pesquisa (Censys, Shadowserver, Rapid7 Sonar) ou a varreduras hostis.|zmap-arquitetura-varredura-internet-grupos-ciclicos-multiplicativos-stateless, suricata-regras-http-tls-ja3-ja4-dns-deteccao-c2, tcpdump-filtros-bpf-avancados-flags-tcp-offsets-bytes-icmp-vlan
