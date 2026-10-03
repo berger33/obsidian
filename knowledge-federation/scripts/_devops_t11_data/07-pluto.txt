@@ -1,0 +1,172 @@
+=== NOTE: 1061 | pluto-deteccao-apiversions-depreciadas-removidas-kubernetes | Fairwinds Pluto: utilitário para detecção de apiVersions depreciadas e removidas do Kubernetes em IaC e releases Helm ===
+ONE_LINER: O Fairwinds Pluto (`FairwindsOps/pluto`, Apache-2.0) é um utilitário de linha de comando e CI/CD projetado para localizar **`apiVersions` depreciadas (`DEPRECATED`) ou removidas (`REMOVED`)** do Kubernetes tanto em repositórios de Infrastructure-as-Code (manifestos YAML estáticos e Helm charts) quanto em clusters vivos (releases Helm e recursos de API).
+IMPORTANCE: Antes de atualizar a versão do plano de controle do Kubernetes (por exemplo, em upgrades do EKS, GKE, AKS ou clusters autogerenciados), identificar todos os recursos que ainda foram aplicados usando `apiVersions` que serão removidas na versão alvo evita que deploys, Helm upgrades e reconciliações GitOps quebrem imediatamente após a atualização do cluster.
+HOW_IT_WORKS: Conforme explica a seção *Purpose* do README oficial (`FairwindsOps/pluto`), simplesmente pedir ao `kube-apiserver` um recurso (`kubectl get deployments.v1.apps -o yaml`) é enganoso e perigoso: mesmo que o Deployment tenha sido originalmente implantado como `extensions/v1beta1`, o API Server converte internamente o esquema e devolve o manifesto exibindo `apps/v1`, ocultando o fato de que seu pipeline ou release Helm ainda usa a versão depreciada. O Pluto resolve esse problema inspecionando diretamente a fonte da verdade — os arquivos YAML/Helm no disco (`detect-files` / `detect`), os segredos/configmaps das releases Helm no cluster (`detect-helm`) e a anotação `kubectl.kubernetes.io/last-applied-configuration` dos recursos da API (`detect-api-resources` / `detect-all-in-cluster`).
+EXAMPLE:
+```bash
+# Instalar o Pluto via Homebrew Tap oficial e inspecionar um diretório de manifestos Kubernetes
+brew install FairwindsOps/tap/pluto
+pluto detect-files -d ./deploy/
+```
+TRADE_OFFS: O Pluto verifica especificamente a depreciação e remoção de `apiVersions` (como `networking.k8s.io/v1beta1` → `networking.k8s.io/v1` ou `policy/v1beta1` `PodSecurityPolicy`); ele não audita configurações de segurança ou limites de CPU/memória dentro do spec (papel que cabe ao **Fairwinds Polaris**).
+VERIFY: Execute `pluto detect-files -d ./deploy/ -o wide` para visualizar as colunas `KIND`, `VERSION`, `REPLACEMENT`, `DEPRECATED`, `DEPRECATED IN`, `REMOVED` e `REMOVED IN`.
+LINKS: [[pluto-armadilha-conversao-apiserver-last-applied-configuration]] | [[pluto-inspecao-arquivos-iac-detect-files-helm-template]] | [[polaris-motor-politicas-validacao-remediacao-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/ | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1062 | pluto-armadilha-conversao-apiserver-last-applied-configuration | Por que consultar o kube-apiserver diretamente oculta apiVersions depreciadas e como o Pluto contorna essa armadilha ===
+ONE_LINER: Consultar diretamente o `kube-apiserver` com `kubectl get <recurso> -o yaml` não revela se um objeto foi implantado com uma `apiVersion` depreciada porque o servidor converte automaticamente o objeto armazenado para a versão preferencial solicitada na query; o Pluto contorna isso analisando os metadados reais de aplicação e os registros do Helm.
+IMPORTANCE: Muitos administradores de cluster executam um script com `kubectl get ingress -A -o yaml | grep apiVersion`, veem `networking.k8s.io/v1` em todas as linhas e assumem que o cluster está pronto para o upgrade, apenas para descobrir após o upgrade do Kubernetes que o Helm upgrade ou o pipeline de CD falha porque o manifesto original armazenado no release secret do Helm ainda declarava `networking.k8s.io/v1beta1`.
+HOW_IT_WORKS: Conforme documentado no README oficial (`FairwindsOps/pluto`), o Kubernetes mantém internamente uma representação hub do objeto no etcd e realiza conversão automática (*version conversion*) entre todas as versões servidas de um mesmo Group/Kind. Por isso, quando você pede `deployments.v1.apps`, o API Server devolve `apps/v1` independentemente de o manifesto ter sido enviado como `extensions/v1beta1`. Para descobrir a versão **originalmente enviada** no cluster vivo, o Pluto inspeciona: (1) os objetos `Secret` (Helm 3) ou `ConfigMap` (Helm 2) onde o Helm armazena o manifesto exato renderizado no momento do `helm install/upgrade` (`pluto detect-helm`); e (2) os metadados de recursos aplicados (`pluto detect-api-resources`).
+EXAMPLE:
+```bash
+# Combinar todas as detecções em-cluster (releases Helm + recursos da API) com saída detalhada (-o wide)
+pluto detect-all-in-cluster -o wide 2>/dev/null
+```
+TRADE_OFFS: Para recursos aplicados diretamente na API do Kubernetes sem Helm (inspecionados por `pluto detect-api-resources`), a detecção em-cluster depende da presença da anotação `last-applied-configuration` (gerada por `kubectl apply`) ou metadados equivalentes; recursos criados de forma puramente imperativa sem `last-applied-configuration` são melhor auditados diretamente no repositório Git com `pluto detect-files`.
+VERIFY: Execute `pluto detect-all-in-cluster -o wide` no cluster antes de qualquer upgrade de versão minor do Kubernetes e compare com a saída de `pluto detect-files -d .` nos seus repositórios GitOps.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-deteccao-em-cluster-detect-helm-api-resources-all]] | [[pluto-inspecao-arquivos-iac-detect-files-helm-template]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/ | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1063 | pluto-inspecao-arquivos-iac-detect-files-helm-template | Inspeção de arquivos locais e Helm charts com o Pluto: detect-files -d e helm template | pluto detect - ===
+ONE_LINER: Para repositórios de código e pipelines de CI, o Pluto oferece o subcomando **`pluto detect-files -d <diretório>`** para varrer árvores de arquivos YAML/templates e o comando **`helm template <chart-dir> | pluto detect -`** para validar a saída renderizada de Helm charts via `stdin`.
+IMPORTANCE: Detectar uma `apiVersion` depreciada no momento em que o desenvolvedor abre um Pull Request (Shift-Left) é muito mais simples e seguro do que remediar dezenas de releases Helm em produção na véspera de uma janela de manutenção do cluster.
+HOW_IT_WORKS: Conforme mostra o guia oficial *QuickStart* (`pluto.docs.fairwinds.com/quickstart/`): (1) **`pluto detect-files -d <DIRECTORY>`** percorre recursivamente o diretório informado e lista cada recurso encontrado com `NAME`, `KIND`, `VERSION`, `REPLACEMENT`, `REMOVED` (`true`/`false`) e `DEPRECATED` (`true`/`false`); e (2) para charts Helm locais parametrizados (onde a `apiVersion` pode inclusive depender de condicionais `.Capabilities.KubeVersion`), o engenheiro executa **`helm template <chart-dir> | pluto detect -`**, canalizando os manifestos renderizados pelo Helm para a entrada padrão (`-`) do Pluto.
+EXAMPLE:
+```bash
+# 1. Escanear recursivamente um diretório de manifestos Kubernetes em busca de apiVersions depreciadas
+pluto detect-files -d ./k8s/manifests -o wide
+
+# 2. Renderizar um Helm chart localmente e validar os manifestos via stdin no Pluto
+helm template ./charts/meu-servico | pluto detect - -o wide
+```
+TRADE_OFFS: Ao usar `helm template <chart-dir> | pluto detect -`, lembre-se de que charts que usam `.Capabilities.KubeVersion` no template Helm renderizarão a `apiVersion` correspondente à versão padrão do cliente Helm local, a menos que você passe `--kube-version <versão-alvo>` para o comando `helm template`.
+VERIFY: Execute `helm template --kube-version 1.31.0 ./charts/meu-servico | pluto detect -` para testar se o chart renderiza `apiVersions` válidas para a versão alvo do seu próximo upgrade de Kubernetes.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-integracao-github-action-ci-cd-detect-files]] | [[helm-chart-structure-and-packaging]]
+SOURCES: https://pluto.docs.fairwinds.com/quickstart/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1064 | pluto-deteccao-em-cluster-detect-helm-api-resources-all | Auditoria em-cluster com o Pluto: detect-helm, detect-api-resources e detect-all-in-cluster ===
+ONE_LINER: Para auditar clusters Kubernetes em execução, o Pluto disponibiliza três comandos especializados: **`pluto detect-helm`** (inspeciona releases Helm 2 e Helm 3 no cluster, com filtro opcional `-n <namespace>`), **`pluto detect-api-resources`** (inspeciona recursos da API no cluster) e **`pluto detect-all-in-cluster`** (combina ambas as detecções em uma única execução).
+IMPORTANCE: Em clusters onde diferentes equipes instalam charts de terceiros diretamente via Helm ou controladores GitOps, o repositório de código de uma aplicação individual não mostra o panorama completo do cluster. Os comandos em-cluster do Pluto revelam exatamente qual release Helm em qual namespace ainda carrega uma `apiVersion` depreciada ou removida.
+HOW_IT_WORKS: Conforme documentado no *QuickStart* oficial (`pluto.docs.fairwinds.com/quickstart/`): (1) **`pluto detect-helm -owide`** (ou restrito a um único namespace com `pluto detect-helm -n cert-manager -owide`) lê os metadados das releases Helm no cluster e exibe o `NAME` no formato `<release>/<recurso>`, `NAMESPACE`, `KIND`, `VERSION`, `REPLACEMENT`, `DEPRECATED`, `DEPRECATED IN`, `REMOVED` e `REMOVED IN`; (2) **`pluto detect-api-resources -owide`** inspeciona os recursos diretamente na API do cluster; e (3) **`pluto detect-all-in-cluster -o wide`** executa todas as detecções em-cluster disponíveis em uma única tabela consolidada.
+EXAMPLE:
+```bash
+# Auditar todas as releases Helm em um namespace específico com saída detalhada (-owide)
+pluto detect-helm -n cert-manager -owide
+
+# Auditar simultaneamente todas as releases Helm e recursos de API em todo o cluster
+pluto detect-all-in-cluster -o wide 2>/dev/null
+```
+TRADE_OFFS: Quando uma `apiVersion` foi totalmente removida sem substituto direto no core do Kubernetes (como `PodSecurityPolicy` em `policy/v1beta1`, depreciada na `v1.21.0` e removida na `v1.25.0`), a coluna `REPLACEMENT` na saída do Pluto aparece em branco, indicando que a migração exige adotar uma nova arquitetura (como Pod Security Admission ou Kyverno/Polaris) em vez de apenas trocar a string `apiVersion`.
+VERIFY: Execute `pluto detect-all-in-cluster -o wide` usando um `kubeconfig` com permissão de leitura sobre `secrets`, `configmaps` e recursos do cluster, verificando se alguma linha apresenta `REMOVED: true` para a versão alvo.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-armadilha-conversao-apiserver-last-applied-configuration]] | [[pluto-diferenca-deprecated-vs-removed-politica-kubernetes]]
+SOURCES: https://pluto.docs.fairwinds.com/quickstart/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1065 | pluto-diferenca-deprecated-vs-removed-politica-kubernetes | Política de depreciação do Kubernetes no Pluto: diferença operacional entre DEPRECATED e REMOVED ===
+ONE_LINER: Seguindo a *Kubernetes Deprecation Policy* oficial, o Pluto diferencia claramente entre uma versão de API **`DEPRECATED`** (que continua funcionando no cluster atual, mas emite avisos e tem remoção agendada) e uma versão **`REMOVED`** (que já deixou de ser servida pelo `kube-apiserver` na versão alvo).
+IMPORTANCE: Em um planejamento de upgrade (por exemplo, do Kubernetes `v1.28` para `v1.29`), uma API marcada apenas como `DEPRECATED` (com `REMOVED IN` em uma versão futura como `v1.32`) gera dívida técnica que deve ser agendada no backlog, mas uma API marcada como **`REMOVED: true`** para a versão alvo é um **bloqueador imediato** que quebrará o upgrade.
+HOW_IT_WORKS: Conforme explica o README oficial (`FairwindsOps/pluto`) na seção *Kubernetes Deprecation Policy* e demonstra a saída `-o wide` do *QuickStart*: cada entrada do catálogo de versões do Pluto registra exatamente em qual release do Kubernetes a `apiVersion` foi depreciada (`DEPRECATED IN`, ex.: `v1.19.0`), em qual release ela foi ou será removida (`REMOVED IN`, ex.: `v1.22.0`) e qual é a `apiVersion` substituta (`REPLACEMENT`, ex.: `networking.k8s.io/v1` substituindo `networking.k8s.io/v1beta1` para `Ingress`). Com base na versão alvo comparada, o Pluto preenche os booleanos `DEPRECATED` e `REMOVED` e define o código de saída do processo.
+EXAMPLE:
+```bash
+# Inspecionar manifestos em formato JSON ou wide para filtrar recursos com REMOVED == true
+pluto detect-files -d ./deploy/ -o wide
+```
+TRADE_OFFS: Quando você atualiza um `Helm chart` no repositório Git para corrigir a `apiVersion` de `networking.k8s.io/v1beta1` para `networking.k8s.io/v1`, você precisa aplicar esse `helm upgrade` no cluster **antes** de atualizar o plano de controle do Kubernetes para a versão onde `v1beta1` foi removida; caso contrário, o próprio `helm upgrade` poderá falhar ao tentar comparar o estado antigo da release com a API removida (exigindo o plugin `helm-mapkubeapis`).
+VERIFY: Revise nas colunas `DEPRECATED IN` e `REMOVED IN` de `pluto detect-all-in-cluster -o wide` se há algum recurso cuja versão de remoção seja menor ou igual à versão de Kubernetes para a qual o cluster será atualizado.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-deteccao-em-cluster-detect-helm-api-resources-all]] | [[pluto-integracao-github-action-ci-cd-detect-files]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/ | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1066 | pluto-integracao-github-action-ci-cd-detect-files | Automação do Pluto no GitHub Actions (FairwindsOps/pluto/github-action) para validação de Pull Requests ===
+ONE_LINER: O Pluto disponibiliza a GitHub Action oficial **`FairwindsOps/pluto/github-action`** para instalar o binário no runner de CI e executar `pluto detect-files` automaticamente em cada Pull Request, impedindo que novos manifestos com `apiVersions` depreciadas entrem no repositório.
+IMPORTANCE: Mesmo após uma grande força-tarefa de limpeza de APIs depreciadas no repositório GitOps, desenvolvedores frequentemente copiam exemplos antigos da internet ou de fóruns contendo `batch/v1beta1` (`CronJob`) ou `autoscaling/v2beta2` (`HorizontalPodAutoscaler`). O gate no GitHub Actions bloqueia a regressão na origem.
+HOW_IT_WORKS: Conforme documenta a seção *GitHub Action Usage* no README oficial (`FairwindsOps/pluto`) e na página principal da documentação (`pluto.docs.fairwinds.com`), basta adicionar um passo com `uses: FairwindsOps/pluto/github-action@master` (ou fixado em tag/commit) para fazer o download do Pluto no ambiente do workflow e, no passo seguinte, executar `pluto detect-files -d <diretório>` sobre os diretórios de manifestos Kubernetes ou Kustomize do repositório.
+EXAMPLE:
+```yaml
+# Workflow do GitHub Actions utilizando a action oficial do Fairwinds Pluto para validar manifestos
+name: Pluto Kubernetes API Deprecation Check
+on: [pull_request]
+jobs:
+  pluto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Pluto
+        uses: FairwindsOps/pluto/github-action@master
+      - name: Use pluto to detect deprecated apiVersions
+        run: |
+          pluto detect-files -d ./deploy -o wide
+```
+TRADE_OFFS: Se o repositório contiver Helm charts além de manifestos YAML estáticos, execute tanto `pluto detect-files -d ./deploy` quanto um passo de `helm template` canalizado para `pluto detect -`, garantindo cobertura completa das expressões condicionais dos templates Helm.
+VERIFY: Abra um Pull Request de teste contendo um manifesto com `apiVersion: extensions/v1beta1` e confirme que a etapa `pluto detect-files` falha o check do GitHub Actions identificando a substituição por `apps/v1`.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-inspecao-arquivos-iac-detect-files-helm-template]] | [[polaris-github-action-setup-polaris-automacao-pr]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/ | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1067 | pluto-instalacao-asdf-homebrew-scoop-binarios | Métodos de instalação do Pluto: plugin asdf, Homebrew Tap, binários de release e Scoop ===
+ONE_LINER: O Pluto pode ser instalado localmente e em agentes de CI por meio do plugin oficial para **asdf** (`FairwindsOps/asdf-pluto`), do **Homebrew Tap** (`FairwindsOps/tap/pluto`), de binários pré-compilados nas releases do GitHub ou via **Scoop** no Windows.
+IMPORTANCE: Como o catálogo interno de `apiVersions` depreciadas e removidas do Kubernetes evolui a cada novo lançamento do Kubernetes (`1.29`, `1.30`, `1.31`, `1.32`...), gerenciar a versão do binário `pluto` via gerenciadores de versão como `asdf` (ou `mise`) garante que toda a equipe de engenharia utilize uma versão atualizada do catálogo de depreciações.
+HOW_IT_WORKS: Conforme detalha o guia oficial *Installation* (`pluto.docs.fairwinds.com/installation/`): (1) via **asdf**, executa-se `asdf plugin-add pluto`, `asdf list-all pluto`, `asdf install pluto <version>` e `asdf local pluto <version>`; (2) no macOS/Linux via **Homebrew**, executa-se `brew install FairwindsOps/tap/pluto`; (3) no Windows via **Scoop** (mantido pela comunidade), executa-se `scoop install pluto`; ou (4) baixa-se o binário diretamente da página de releases do GitHub (`FairwindsOps/pluto/releases`).
+EXAMPLE:
+```bash
+# Instalar e fixar a versão do Pluto em um repositório de infraestrutura usando asdf ou Homebrew
+asdf plugin-add pluto
+asdf install pluto latest
+asdf local pluto latest
+
+# Ou via Homebrew Tap oficial da Fairwinds:
+brew install FairwindsOps/tap/pluto
+```
+TRADE_OFFS: Uma versão antiga do binário `pluto` conhece apenas as depreciações anunciadas pelo Kubernetes até a data em que aquela versão do Pluto foi compilada; portanto, atualize sempre o binário do Pluto antes de auditar a prontidão de um cluster para uma versão recente do Kubernetes.
+VERIFY: Execute `pluto version` no terminal para verificar a versão instalada do binário e a versão padrão das APIs do Kubernetes embutida na ferramenta.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[pluto-migracao-registro-verificacao-cosign-checksums-v5-24]] | [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]]
+SOURCES: https://pluto.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/
+
+=== NOTE: 1068 | pluto-migracao-registro-verificacao-cosign-checksums-v5-24 | Cadeia de suprimentos do Pluto (v5.24.0+): migração para Artifact Registry, tags imutáveis e verificação com Cosign ===
+ONE_LINER: A partir da versão **`v5.24.0`** (`v5.23.6 → v5.24.0`), as imagens de container do Pluto migraram de `quay.io/fairwinds/pluto` para **`us-docker.pkg.dev/fairwinds-ops/oss/pluto`** com tags imutáveis (`v<major>.<minor>.<patch>`), e tanto a imagem quanto o arquivo `checksums.txt` de releases podem ser verificados criptograficamente com **Cosign** usando a chave pública oficial `https://artifacts.fairwinds.com/cosign.pub`.
+IMPORTANCE: Em pipelines de CI/CD corporativos ou CronJobs de auditoria que executam o Pluto com acesso de leitura a todos os Secrets de releases Helm do cluster, verificar a assinatura criptográfica do binário (`cosign verify-blob`) ou da imagem de container (`cosign verify`) garante que o artefato baixado é autêntico e não foi adulterado.
+HOW_IT_WORKS: Conforme documentam o README oficial (`FairwindsOps/pluto`) e a página *Installation — Verify Artifacts* (`pluto.docs.fairwinds.com/installation/`): (1) a Fairwinds assina a imagem Docker do Pluto e o arquivo `checksums.txt` com o **Sigstore Cosign**, disponibilizando a chave pública em `https://artifacts.fairwinds.com/cosign.pub`; (2) para validar os binários de release, usa-se `cosign verify-blob checksums.txt --signature=checksums.txt.sig --key https://artifacts.fairwinds.com/cosign.pub`; (3) para validar a imagem de container, usa-se `cosign verify`; e (4) desde a `v5.24.0`, tags flutuantes (`v5`, `v5.23`, `latest`) não são mais publicadas, exigindo tags semânticas completas ou digest `@sha256:<digest>`.
+EXAMPLE:
+```bash
+# Verificar a assinatura criptográfica do arquivo checksums.txt e da imagem OCI do Pluto usando Cosign
+cosign verify-blob checksums.txt \
+  --signature=checksums.txt.sig \
+  --key https://artifacts.fairwinds.com/cosign.pub
+
+cosign verify us-docker.pkg.dev/fairwinds-ops/oss/pluto:v5.24.0 \
+  --key https://artifacts.fairwinds.com/cosign.pub
+```
+TRADE_OFFS: Pipelines de CI ou manifestos de CronJob que ainda utilizavam `quay.io/fairwinds/pluto:latest` ou `:v5` precisam ser atualizados para `us-docker.pkg.dev/fairwinds-ops/oss/pluto:v<major>.<minor>.<patch>` para continuar recebendo o catálogo atualizado de depreciações do Kubernetes.
+VERIFY: Execute o comando `cosign verify` acima em uma estação com `cosign` instalado e confirme o retorno do payload JSON de assinatura válida da Fairwinds.
+LINKS: [[pluto-instalacao-asdf-homebrew-scoop-binarios]] | [[cosign-container-signing-verification-and-storage]] | [[goldilocks-migracao-registro-imagens-imutaveis-assinadas-v4-15]]
+SOURCES: https://pluto.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/quickstart/
+
+=== NOTE: 1069 | pluto-exemplos-classicos-ingress-webhook-psp-migracao | Casos reais de detecção do Pluto: MutatingWebhookConfiguration, Ingress (v1beta1 -> v1) e PodSecurityPolicy ===
+ONE_LINER: Os exemplos oficiais do Pluto ilustram três padrões clássicos de depreciação no Kubernetes: recursos administrativos de webhook (`admissionregistration.k8s.io/v1beta1` → `v1`), objetos de rede `Ingress` (`networking.k8s.io/v1beta1` → `v1`) e recursos removidos sem substituto direto de API (`policy/v1beta1` `PodSecurityPolicy`).
+IMPORTANCE: Em clusters reais, as depreciações mais críticas frequentemente não estão nos Deployments das aplicações de negócio (que já migraram para `apps/v1` há anos), mas sim em **charts de infraestrutura** instalados anos atrás (como `cert-manager`, ingress controllers ou políticas `PodSecurityPolicy` padrão de provedores de nuvem como `eks.privileged`).
+HOW_IT_WORKS: Conforme demonstram as saídas reais na documentação *QuickStart* (`pluto.docs.fairwinds.com/quickstart/`): (1) ao executar `pluto detect-helm -owide`, o Pluto flagra por exemplo `cert-manager/cert-manager-webhook` (`MutatingWebhookConfiguration`) implantado com `admissionregistration.k8s.io/v1beta1` (depreciado na `v1.16.0`, removido na `v1.19.0`, substituto `admissionregistration.k8s.io/v1`); (2) ao executar `pluto detect-all-in-cluster -o wide`, flagra objetos `Ingress` com `networking.k8s.io/v1beta1` (depreciado na `v1.19.0`, removido na `v1.22.0`, substituto `networking.k8s.io/v1`); e (3) flagra `PodSecurityPolicy` (`eks.privileged` / `psp`) em `policy/v1beta1` (depreciado na `v1.21.0`, removido na `v1.25.0`, sem `REPLACEMENT` de mesmo Kind).
+EXAMPLE:
+```bash
+# Inspecionar releases Helm e recursos de API em busca de webhooks, Ingresses ou CRDs com versões depreciadas
+pluto detect-all-in-cluster -o wide 2>/dev/null
+```
+TRADE_OFFS: Quando o `pluto detect-helm` aponta que uma release de infraestrutura (como `cert-manager` ou `ingress-nginx`) contém uma `apiVersion` depreciada, você não deve editar manualmente o objeto vivo no cluster com `kubectl edit`; a correção correta é atualizar a versão do Helm chart (`helm upgrade`) para uma release que emita a nova `apiVersion`.
+VERIFY: Após atualizar o Helm chart da ferramenta apontada, reexecute `pluto detect-helm -n <namespace> -owide` e confirme que a release não aparece mais na listagem de depreciações.
+LINKS: [[pluto-deteccao-em-cluster-detect-helm-api-resources-all]] | [[pluto-diferenca-deprecated-vs-removed-politica-kubernetes]] | [[pluto-armadilha-conversao-apiserver-last-applied-configuration]]
+SOURCES: https://pluto.docs.fairwinds.com/quickstart/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/installation/
+
+=== NOTE: 1070 | pluto-fluxo-pre-upgrade-clusters-kubernetes-gitops | Roteiro de pré-upgrade de clusters Kubernetes combinando Pluto, Polaris e Popeye ===
+ONE_LINER: Em operações de plataforma, o Pluto atua como o verificador obrigatório de compatibilidade de APIs antes de qualquer upgrade de versão do Kubernetes, combinando a varredura estática nos repositórios GitOps (`pluto detect-files` / `helm template | pluto detect -`) com a varredura dinâmica no cluster vivo (`pluto detect-all-in-cluster`).
+IMPORTANCE: Executar apenas a varredura no Git deixa passar charts instalados manualmente no cluster; executar apenas a varredura no cluster vivo deixa passar manifestos de Jobs sazonais ou pipelines de deploy que não estão rodando naquele instante no cluster, mas que falharão na próxima execução após o upgrade.
+HOW_IT_WORKS: Combinando os fluxos documentados no README e no *QuickStart* oficial do Pluto (`pluto.docs.fairwinds.com/quickstart/`), um checklist robusto de pré-upgrade de cluster executa quatro verificações: (1) `pluto detect-files -d .` em todos os repositórios GitOps e de aplicações; (2) `helm template <chart> | pluto detect -` para todos os Helm charts internos; (3) `pluto detect-all-in-cluster -o wide` conectado ao cluster que sofrerá o upgrade; e (4) uma varredura complementar de saúde do cluster vivo com o **Popeye** (código `403` de depreciação e checagem de recursos órfãos) e **Polaris** (conformidade dos workloads).
+EXAMPLE:
+```bash
+# Script de pré-validação antes de atualizar um cluster Kubernetes (GitOps + Cluster Vivo)
+set -e
+echo "1. Verificando manifestos estáticos no repositório GitOps..."
+pluto detect-files -d ./clusters/producao -o wide
+
+echo "2. Verificando releases Helm e recursos aplicados no cluster vivo..."
+pluto detect-all-in-cluster -o wide 2>/dev/null
+```
+TRADE_OFFS: Como o Pluto opera de forma rápida e somente-leitura tanto no CI quanto contra o cluster vivo, não há impacto de performance ao executá-lo periodicamente (por exemplo, em um workflow semanal agendado no GitHub Actions ou CronJob no cluster) para antecipar depreciações muitos meses antes da janela de upgrade.
+VERIFY: Confirme que ambos os comandos (`detect-files` e `detect-all-in-cluster`) retornam código de saída `0` antes de iniciar a atualização do control plane do Kubernetes.
+LINKS: [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]] | [[popeye-codigos-erro-severidades-containers-pods-seguranca]] | [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]]
+SOURCES: https://pluto.docs.fairwinds.com/quickstart/ | https://raw.githubusercontent.com/FairwindsOps/pluto/master/README.md | https://pluto.docs.fairwinds.com/installation/

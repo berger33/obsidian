@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1000 / 2.000 (50,00%)**
-- Gate automatizado: **1000/1000 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 10)
-- Revisão factual humana: **0/1000**
-- Revisão factual por IA: **1000/1000**
-- Contabilizadas como válidas: **1000/1000**
-- Revisor das 1000 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–10 (1000 notas, IDs 1–1000) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1100 / 2.000 (55,00%)**
+- Gate automatizado: **1100/1100 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 11)
+- Revisão factual humana: **0/1100**
+- Revisão factual por IA: **1100/1100**
+- Contabilizadas como válidas: **1100/1100**
+- Revisor das 1100 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–11 (1100 notas, IDs 1–1100) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-10.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-10.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-11.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-11.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1000 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1000 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1100 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 900 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1338,6 +1338,138 @@
 999. [Stern: integração em pipelines Unix com jq (--only-log-lines / -o raw, --color) e funções de tempo (toUTC, toTimestamp)](../../domains/software-0008/software/devops/stern-pipeline-jq-only-log-lines-raw-color-control.md)
 1000. [Stern: instalação via Krew/Homebrew/asdf/WinGet, precedência de KUBECONFIG e autocompletar de shell (--completion)](../../domains/software-0008/software/devops/stern-instalacao-krew-homebrew-autocompletar-shells-kubeconfig.md)
 
+## Tranche 11 — Keycloak, Dex, OAuth2 Proxy, Stakater Reloader, Fairwinds Goldilocks, Fairwinds Polaris, Fairwinds Pluto, Popeye, KubeVela e mise (100 notas; revisão factual por IA registrada)
+
+### Keycloak (plataforma open-source CNCF de gerenciamento de identidade e acesso — IAM com OpenID Connect, OAuth 2.0, SAML 2.0 e Operator)
+
+1001. [Keycloak: plataforma open-source CNCF de gerenciamento de identidade e acesso (IAM) com OpenID Connect, OAuth 2.0 e SAML 2.0](../../domains/software-0008/software/devops/keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf.md)
+1002. [Keycloak em produção: TLS, Hostname v2, separação da URL administrativa e configuração de Reverse Proxy](../../domains/software-0008/software/devops/keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy.md)
+1003. [Keycloak: proteção contra sobrecarga (http-max-queued-requests) e inicialização assíncrona (--server-async-bootstrap)](../../domains/software-0008/software/devops/keycloak-protecao-sobrecarga-queued-requests-async-bootstrap.md)
+1004. [Keycloak em cluster de alta disponibilidade: JGroups, caches distribuídos Infinispan, banco relacional e pilha IPv4/IPv6](../../domains/software-0008/software/devops/keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco.md)
+1005. [Keycloak Operator no Kubernetes: CRDs para implantação declarativa, importação de Realms e gestão de Clients](../../domains/software-0008/software/devops/keycloak-operator-kubernetes-crds-realm-import-clients.md)
+1006. [Observabilidade no Keycloak: OpenTelemetry tracing, métricas de eventos, SLIs/SLOs, Exemplars e Java Flight Recorder](../../domains/software-0008/software/devops/keycloak-observabilidade-opentelemetry-metricas-sli-jfr.md)
+1007. [Padrões avançados no Keycloak: DPoP, Token Exchange, JWT Authorization Grant, AuthZEN, SSF e servidores MCP](../../domains/software-0008/software/devops/keycloak-padroes-modernos-seguranca-dpop-token-exchange-mcp.md)
+1008. [Segurança corporativa no Keycloak: mTLS, conformidade FIPS 140-2, Truststore e integração com Vault](../../domains/software-0008/software/devops/keycloak-mtls-fips-140-2-vault-truststore.md)
+1009. [Automação no Keycloak: Admin REST API, Admin Client, registro de clientes via CLI e importação/exportação de Realms](../../domains/software-0008/software/devops/keycloak-automacao-admin-rest-api-cli-export-import-realms.md)
+1010. [Integração do Keycloak com infraestrutura: Distribution Registry (OCI), Apache mod_auth_openidc / mod_auth_mellon e Adapters](../../domains/software-0008/software/devops/keycloak-integracao-distribution-registry-apache-oidc-saml-adapters.md)
+
+### Dex (provedor de identidade federado OpenID Connect da CNCF com conectores para LDAP, GitHub, OIDC e autenticação Kubernetes)
+
+1011. [Dex: provedor de identidade federado OpenID Connect (CNCF) baseado em conectores upstream](../../domains/software-0008/software/devops/dex-provedor-identidade-federado-openid-connect-cncf.md)
+1012. [ID Tokens no Dex: estrutura do JWT assinado, claims padrão (iss, sub, aud, email, groups) e consumo por Kubernetes e AWS STS](../../domains/software-0008/software/devops/dex-id-tokens-jwt-claims-padrao-consumidores-sts.md)
+1013. [Dex e Kubernetes: autenticação do API Server via plugin OIDC, armazenamento em CRDs e integração com kubelogin / kubectl](../../domains/software-0008/software/devops/dex-autenticacao-kubernetes-apiserver-kubelogin-crds.md)
+1014. [Conectores do Dex: matriz de capacidades (refresh tokens, groups, preferred_username) e níveis de maturidade (stable, beta, alpha)](../../domains/software-0008/software/devops/dex-conectores-upstream-ldap-github-oidc-matriz-suporte.md)
+1015. [Limitações de protocolo e alerta de segurança do conector SAML 2.0 no Dex](../../domains/software-0008/software/devops/dex-limitacoes-protocolo-saml-aviso-seguranca-refresh-tokens.md)
+1016. [Distribuição e implantação do Dex: imagens oficiais Alpine e Distroless, Helm chart e compilação com Go](../../domains/software-0008/software/devops/dex-distribuicao-imagens-alpine-distroless-helm-build.md)
+1017. [Configuração do Dex: pré-processamento com gomplate no entrypoint do container e expansão nativa de variáveis ($VAR / DEX_EXPAND_ENV)](../../domains/software-0008/software/devops/dex-configuracao-gomplate-expansao-variaveis-ambiente.md)
+1018. [Teste local e descoberta OIDC no Dex: staticClients, enablePasswordDB e validação com example-app](../../domains/software-0008/software/devops/dex-fluxo-descoberta-oidc-example-app-static-clients.md)
+1019. [Conector LDAP no Dex: autenticação e resolução de grupos em diretórios OpenLDAP e Active Directory](../../domains/software-0008/software/devops/dex-conector-ldap-active-directory-buscas-usuarios-grupos.md)
+1020. [Arquitetura de integração do Dex como bloco de construção para OAuth2 Proxy, Argo CD e plataformas internas](../../domains/software-0008/software/devops/dex-arquitetura-ecossistema-argocd-oauth2proxy-clientes.md)
+
+### OAuth2 Proxy (proxy reverso e middleware CNCF Sandbox para autenticação OAuth2 e OpenID Connect em aplicações e Ingresses)
+
+1021. [OAuth2 Proxy: proxy reverso e middleware de autenticação OAuth2/OIDC (projeto CNCF Sandbox)](../../domains/software-0008/software/devops/oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2.md)
+1022. [Configuração do OAuth2 Proxy: ordem de precedência (CLI > variáveis de ambiente > arquivo TOML) e validação com --config-test](../../domains/software-0008/software/devops/oauth2proxy-precedencia-configuracao-cli-env-toml-config-test.md)
+1023. [Geração segura do Cookie Secret no OAuth2 Proxy para criptografia AES de sessões](../../domains/software-0008/software/devops/oauth2proxy-geracao-cookie-secret-aes-sessoes.md)
+1024. [Configuração OIDC no OAuth2 Proxy: claims customizadas (aud, email, groups), --allowed-group, PKCE (S256) e validação JWKS](../../domains/software-0008/software/devops/oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks.md)
+1025. [Segurança de validação OIDC no OAuth2 Proxy: verificação de nonce, email verificado, issuer multi-tenant e CAs privadas](../../domains/software-0008/software/devops/oauth2proxy-flags-seguranca-oidc-nonce-issuer-ca-files.md)
+1026. [Imagens de container e segurança do OAuth2 Proxy: migração para Distroless (v7.6.0+), tags -alpine e histórico de segurança](../../domains/software-0008/software/devops/oauth2proxy-imagens-distroless-alpine-arquiteturas-seguranca.md)
+1027. [OAuth2 Proxy como Middleware de Ingress (NGINX auth-url / Envoy ext_authz) e repasse de cabeçalhos de identidade](../../domains/software-0008/software/devops/oauth2proxy-integracao-ingress-nginx-ext-authz-headers.md)
+1028. [Provedores especializados no OAuth2 Proxy: Google, Microsoft Entra ID, GitHub, login.gov e JWT Signing Keys](../../domains/software-0008/software/devops/oauth2proxy-provedores-especializados-entra-github-google-logingov.md)
+1029. [Controle do fluxo de autenticação no OAuth2 Proxy: --prompt, --approval-prompt, --acr-values e --auth-request-response-mode](../../domains/software-0008/software/devops/oauth2proxy-controle-fluxo-login-prompt-acr-values-approval.md)
+1030. [Verificação de assinatura JWT no OAuth2 Proxy: --oidc-enabled-signing-alg, --oidc-jwks-url e --oidc-public-key-file](../../domains/software-0008/software/devops/oauth2proxy-verificacao-assinatura-jwks-chaves-publicas-algoritmos.md)
+
+### Stakater Reloader (controlador Kubernetes para rollout automático de workloads após alterações em ConfigMaps, Secrets e CSI)
+
+1031. [Stakater Reloader: controlador Kubernetes para rollout automático de workloads após alterações em ConfigMaps e Secrets](../../domains/software-0008/software/devops/reloader-controlador-kubernetes-rollout-configmaps-secrets.md)
+1032. [Descoberta automática no Reloader: anotações auto, tipadas (secret/configmap) e flag --auto-reload-all](../../domains/software-0008/software/devops/reloader-anotacoes-auto-secret-configmap-regras-precedencia.md)
+1033. [Controle granular no Reloader: recursos nomeados (reload), modo opt-in (search + match) e exclusão (ignore)](../../domains/software-0008/software/devops/reloader-padroes-named-reload-search-match-ignore.md)
+1034. [Reloader com GitOps (Argo CD / Flux) e Argo Rollouts: reload-strategy annotations e rollout-strategy restart](../../domains/software-0008/software/devops/reloader-integracao-gitops-argocd-argo-rollouts-estrategias.md)
+1035. [Suporte do Reloader ao Secrets Store CSI Driver (SecretProviderClassPodStatus e --enable-csi-integration)](../../domains/software-0008/software/devops/reloader-integracao-secrets-store-csi-driver-podstatus.md)
+1036. [Estabilidade operacional no Reloader: janela de pausa (pause-period) e alertas de reload (Slack, Teams, Google Chat e Webhook)](../../domains/software-0008/software/devops/reloader-pausa-deployments-pause-period-alertas-webhook.md)
+1037. [Operação do Reloader em produção: escopo de namespaces, ignorar tipos de recursos, eleição de líder HA e métricas Prometheus](../../domains/software-0008/software/devops/reloader-escopo-namespaces-rbac-alta-disponibilidade-metricas.md)
+1038. [Arquitetura do Reloader v2 (Operator SDK) e matriz de workloads suportados (Deployment, StatefulSet, DaemonSet, CronJob, Job e DeploymentConfig)](../../domains/software-0008/software/devops/reloader-evolucao-v2-operator-sdk-workloads-suportados.md)
+1039. [Mecânica interna do Reloader: comparação de dados reais (SHA1) versus metadados e estratégias de patch no Pod Template](../../domains/software-0008/software/devops/reloader-mecanismo-deteccao-dados-sha1-patch-pod-template.md)
+1040. [Integração do Reloader com a pilha de segredos: External Secrets Operator, Sealed Secrets, cert-manager e Vault](../../domains/software-0008/software/devops/reloader-integracao-pilha-segredos-eso-sealedsecrets-certmanager.md)
+
+### Fairwinds Goldilocks (dimensionamento right-sizing de resource requests e limits no Kubernetes com VerticalPodAutoscaler em modo recomendação)
+
+1041. [Fairwinds Goldilocks: utilitário Kubernetes para dimensionamento (right-sizing) de resource requests e limits via VPA](../../domains/software-0008/software/devops/goldilocks-dimensionamento-requests-limits-vpa-kubernetes.md)
+1042. [Requisitos de infraestrutura do Goldilocks: VPA Recommender isolado (sem webhook), metrics-server, Prometheus e GKE](../../domains/software-0008/software/devops/goldilocks-requisitos-vpa-recommender-metrics-server-gke.md)
+1043. [Controlador do Goldilocks: precedência de labels sobre flags de CLI, --on-by-default, --ignore-controller-kind e métricas Prometheus](../../domains/software-0008/software/devops/goldilocks-controlador-flags-labels-namespaces-metricas.md)
+1044. [Configuração avançada de VPA no Goldilocks: vpa-update-mode e vpa-resource-policy por namespace ou workload](../../domains/software-0008/software/devops/goldilocks-modos-atualizacao-vpa-update-mode-resource-policy.md)
+1045. [Comandos da CLI do Goldilocks (dashboard, summary, create-vpas, delete-vpas) e exclusão de containers sidecar (--exclude-containers)](../../domains/software-0008/software/devops/goldilocks-cli-dashboard-summary-exclusao-containers-sidecars.md)
+1046. [Migração de registro e segurança de imagens no Goldilocks (v4.15.0+): Artifact Registry, tags imutáveis e assinatura](../../domains/software-0008/software/devops/goldilocks-migracao-registro-imagens-imutaveis-assinadas-v4-15.md)
+1047. [Interpretação das recomendações do Goldilocks Dashboard: classes de QoS Guaranteed versus Burstable no Kubernetes](../../domains/software-0008/software/devops/goldilocks-interpretacao-qos-guaranteed-burstable-dashboard.md)
+1048. [Instalação do Goldilocks via manifestos Kubernetes separados (controller e dashboard) e RBAC](../../domains/software-0008/software/devops/goldilocks-instalacao-manifestos-separados-controller-dashboard.md)
+1049. [Exclusão granular de containers e desativação por workload individual no Goldilocks](../../domains/software-0008/software/devops/goldilocks-exclusao-containers-por-workload-anotacoes-granulares.md)
+1050. [Integração do Goldilocks com Polaris e Pluto em fluxos contínuos de governança e FinOps no Kubernetes](../../domains/software-0008/software/devops/goldilocks-integracao-ecossistema-fairwinds-polaris-pluto-finops.md)
+
+### Fairwinds Polaris (motor open-source de políticas para validação, auditoria e remediação de configurações Kubernetes em CLI, Dashboard e Webhook)
+
+1051. [Fairwinds Polaris: motor open-source de políticas para validação e remediação de configurações Kubernetes](../../domains/software-0008/software/devops/polaris-motor-politicas-validacao-remediacao-kubernetes.md)
+1052. [Auditoria IaC em CI/CD com o Polaris: --audit-path, --set-exit-code-on-danger, --set-exit-code-below-score e Helm charts](../../domains/software-0008/software/devops/polaris-auditoria-iac-cli-ci-cd-scores-danger-flags.md)
+1053. [Remediação automática de manifestos YAML na CLI com polaris fix --files-path e --checks](../../domains/software-0008/software/devops/polaris-remediacao-automatica-cli-polaris-fix-yaml.md)
+1054. [Polaris Admission Controller: instalação via Helm, certificados TLS (cert-manager vs caBundle) e comportamento diante de danger vs warning](../../domains/software-0008/software/devops/polaris-admission-controller-validating-mutating-webhook.md)
+1055. [Mutating Webhook do Polaris (--set webhook.mutate=true) e as 19 checagens com suporte nativo a mutação](../../domains/software-0008/software/devops/polaris-mutating-webhook-19-mutations-padrao.md)
+1056. [Categorias de políticas embutidas do Polaris: Segurança (SecurityContext/Host), Eficiência (CPU/Memory) e Confiabilidade (Probes/Replicas/Tags)](../../domains/software-0008/software/devops/polaris-categorias-checagens-seguranca-eficiencia-confiabilidade.md)
+1057. [Políticas customizadas com JSON Schema e configuração de severidades no Fairwinds Polaris](../../domains/software-0008/software/devops/polaris-politicas-customizadas-json-schema-exencoes.md)
+1058. [Automação do Polaris no GitHub Actions com setup-polaris e verificação de Pull Requests](../../domains/software-0008/software/devops/polaris-github-action-setup-polaris-automacao-pr.md)
+1059. [Migração de registro e imagens imutáveis assinadas no Fairwinds Polaris (v10.2.0+)](../../domains/software-0008/software/devops/polaris-migracao-registro-imagens-assinadas-imutaveis-v10-2.md)
+1060. [Polaris Dashboard: visibilidade contínua de conformidade no cluster e combinação dos três modos de execução](../../domains/software-0008/software/devops/polaris-dashboard-auditoria-continua-cluster-scorecard.md)
+
+### Fairwinds Pluto (detecção de apiVersions depreciadas e removidas do Kubernetes em arquivos IaC, charts Helm e clusters vivos)
+
+1061. [Fairwinds Pluto: utilitário para detecção de apiVersions depreciadas e removidas do Kubernetes em IaC e releases Helm](../../domains/software-0008/software/devops/pluto-deteccao-apiversions-depreciadas-removidas-kubernetes.md)
+1062. [Por que consultar o kube-apiserver diretamente oculta apiVersions depreciadas e como o Pluto contorna essa armadilha](../../domains/software-0008/software/devops/pluto-armadilha-conversao-apiserver-last-applied-configuration.md)
+1063. [Inspeção de arquivos locais e Helm charts com o Pluto: detect-files -d e helm template | pluto detect -](../../domains/software-0008/software/devops/pluto-inspecao-arquivos-iac-detect-files-helm-template.md)
+1064. [Auditoria em-cluster com o Pluto: detect-helm, detect-api-resources e detect-all-in-cluster](../../domains/software-0008/software/devops/pluto-deteccao-em-cluster-detect-helm-api-resources-all.md)
+1065. [Política de depreciação do Kubernetes no Pluto: diferença operacional entre DEPRECATED e REMOVED](../../domains/software-0008/software/devops/pluto-diferenca-deprecated-vs-removed-politica-kubernetes.md)
+1066. [Automação do Pluto no GitHub Actions (FairwindsOps/pluto/github-action) para validação de Pull Requests](../../domains/software-0008/software/devops/pluto-integracao-github-action-ci-cd-detect-files.md)
+1067. [Métodos de instalação do Pluto: plugin asdf, Homebrew Tap, binários de release e Scoop](../../domains/software-0008/software/devops/pluto-instalacao-asdf-homebrew-scoop-binarios.md)
+1068. [Cadeia de suprimentos do Pluto (v5.24.0+): migração para Artifact Registry, tags imutáveis e verificação com Cosign](../../domains/software-0008/software/devops/pluto-migracao-registro-verificacao-cosign-checksums-v5-24.md)
+1069. [Casos reais de detecção do Pluto: MutatingWebhookConfiguration, Ingress (v1beta1 -> v1) e PodSecurityPolicy](../../domains/software-0008/software/devops/pluto-exemplos-classicos-ingress-webhook-psp-migracao.md)
+1070. [Roteiro de pré-upgrade de clusters Kubernetes combinando Pluto, Polaris e Popeye](../../domains/software-0008/software/devops/pluto-fluxo-pre-upgrade-clusters-kubernetes-gitops.md)
+
+### Popeye (sanitizador e linter somente-leitura para clusters Kubernetes vivos com SpinachYAML, códigos de severidade e métricas Prometheus)
+
+1071. [Popeye: sanitizador e linter somente-leitura para clusters Kubernetes vivos](../../domains/software-0008/software/devops/popeye-linter-cluster-kubernetes-vivo-readonly.md)
+1072. [Catálogo de Linters do Popeye: recursos auditados, aliases de CLI (-s) e detecção de recursos órfãos](../../domains/software-0008/software/devops/popeye-catalogo-linters-recursos-aliases-selecao.md)
+1073. [Níveis de severidade (0 a 3) e códigos de erro do Popeye para Containers (100–113), Pods (200–209) e Segurança (300–308)](../../domains/software-0008/software/devops/popeye-codigos-erro-severidades-containers-pods-seguranca.md)
+1074. [Códigos de diagnóstico do Popeye para Geral (400–407), Workloads (500–508), HPA (600–605), Nodes (700–712), PV/PVC (1000–1004), Services (1100–1110) e NetworkPolicies (1200–1206)](../../domains/software-0008/software/devops/popeye-codigos-workloads-hpa-nodes-services-networkpolicies.md)
+1075. [Configuração avançada do Popeye com SpinachYAML (-f spinach.yaml): allocations, excludes, FQN, rx:, overrides e registries](../../domains/software-0008/software/devops/popeye-configuracao-spinach-yaml-allocations-excludes-overrides.md)
+1076. [Formatos de saída do Popeye (-o): standard, jurassic, yaml, html, json, junit, prometheus e score](../../domains/software-0008/software/devops/popeye-formatos-saida-html-json-junit-prometheus-score.md)
+1077. [Persistência de relatórios do Popeye: --save, POPEYE_REPORT_DIR, --output-file e upload direto para AWS S3 e MinIO](../../domains/software-0008/software/devops/popeye-persistencia-relatorios-save-s3-minio-docker.md)
+1078. [Observabilidade contínua com Popeye: publicação de métricas no Prometheus Pushgateway e dashboards Grafana](../../domains/software-0008/software/devops/popeye-metricas-prometheus-pushgateway-grafana.md)
+1079. [Execução do Popeye in-cluster via CronJob Kubernetes, flag --force-exit-zero e perfil RBAC somente-leitura](../../domains/software-0008/software/devops/popeye-execucao-in-cluster-cronjob-rbac-force-exit-zero.md)
+1080. [Integração nativa do Popeye com o K9s (:popeye) e diagnóstico de problemas operacionais de linha de comando](../../domains/software-0008/software/devops/popeye-integracao-k9s-preflight-troubleshooting-clusters.md)
+
+### KubeVela (plataforma CNCF de entrega de aplicações multi-cloud baseada em Open Application Model — OAM e módulos programáveis em CUE)
+
+1081. [KubeVela: plataforma CNCF de entrega e gerenciamento de aplicações multi-cloud baseada em Open Application Model (OAM) e CUE](../../domains/software-0008/software/devops/kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf.md)
+1082. [Anatomia do recurso Application (core.oam.dev/v1beta1) no KubeVela: Components, Traits, Policies e Workflow](../../domains/software-0008/software/devops/kubevela-anatomia-crd-application-components-traits-policies-workflow.md)
+1083. [Operação de Workflows e CLI do KubeVela: vela up, status, workflowSuspending, workflow resume, port-forward, exec e logs](../../domains/software-0008/software/devops/kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli.md)
+1084. [Console UI VelaUX vs CLI/GitOps no KubeVela: arquitetura de metadados e regra de fonte única da verdade](../../domains/software-0008/software/devops/kubevela-console-velaux-sincronizacao-fonte-verdade-gitops.md)
+1085. [Posicionamento arquitetural do KubeVela frente a CI/CD, GitOps (Argo CD / Flux), PaaS tradicional e Helm](../../domains/software-0008/software/devops/kubevela-comparacao-cicd-gitops-paas-helm-posicionamento.md)
+1086. [Extensibilidade do KubeVela: programação de Definitions com CUE e ecossistema de Addons](../../domains/software-0008/software/devops/kubevela-extensibilidade-modulos-cue-definitions-addons.md)
+1087. [Entrega Multi-Cluster e Hybrid-Cloud no KubeVela: políticas topology, override e rollout progressivo](../../domains/software-0008/software/devops/kubevela-entrega-multicluster-hybrid-cloud-topology-override.md)
+1088. [Governança no KubeVela: multi-tenancy, autenticação LDAP/SSO, módulos RBAC granulares e observabilidade integrada](../../domains/software-0008/software/devops/kubevela-seguranca-multitenancy-rbac-ldap-observabilidade.md)
+1089. [Eficiência do plano de controle do KubeVela (vela-core): arquitetura de pod único com 0.5 CPU e 1 GB de RAM](../../domains/software-0008/software/devops/kubevela-dimensionamento-control-plane-footprint-vela-core.md)
+1090. [Composição de aplicações híbridas no KubeVela: unificando containers, Helm charts, Kustomize e infraestrutura Cloud (Terraform)](../../domains/software-0008/software/devops/kubevela-orquestracao-recursos-cloud-helm-kustomize-aplicacoes.md)
+
+### mise — mise-en-place (CLI unificada em Rust para gerenciamento de ferramentas de desenvolvimento, variáveis de ambiente e tarefas em mise.toml)
+
+1091. [mise (mise-en-place): CLI unificada em Rust para gerenciar ferramentas de desenvolvimento, variáveis de ambiente e tarefas](../../domains/software-0008/software/devops/mise-gerenciador-ferramentas-variaveis-ambiente-tarefas.md)
+1092. [Estrutura declarativa do mise.toml: seções [tools], [env] e [tasks] versionadas no Git](../../domains/software-0008/software/devops/mise-configuracao-projeto-mise-toml-tools-env-tasks.md)
+1093. [Diferença semântica entre os comandos do mise: mise use, mise use --global, mise install, mise exec e mise run](../../domains/software-0008/software/devops/mise-comandos-operacionais-use-install-exec-run-global.md)
+1094. [Ativação de shell no mise (mise activate vs Shims) e matriz de compatibilidade entre Bash, Zsh, Fish, Nushell, Elvish, Xonsh e PowerShell](../../domains/software-0008/software/devops/mise-ativacao-shell-activate-vs-shims-matriz-shells.md)
+1095. [Segurança de configuração no mise: mise trust e operação em Paranoid Mode](../../domains/software-0008/software/devops/mise-seguranca-confianca-mise-trust-paranoid-mode.md)
+1096. [Registro de ferramentas e arquitetura de Backends do mise (shorthands vs github:, cargo:, npm:, core:)](../../domains/software-0008/software/devops/mise-registro-ferramentas-backends-github-cargo-npm-core.md)
+1097. [Diagnóstico com mise doctor, mitigação de GitHub API Rate Limiting e uso em CI/CD](../../domains/software-0008/software/devops/mise-diagnostico-doctor-rate-limit-github-token-ci.md)
+1098. [Reprodutibilidade entre máquinas e CI no mise: versões flutuantes de série versus pinos exatos e mise.lock](../../domains/software-0008/software/devops/mise-reprodutibilidade-lockfile-mise-lock-pinos-versao.md)
+1099. [Gerenciamento de variáveis de ambiente no mise: seção [env], carregamento de arquivos .env e hierarquia de configuração](../../domains/software-0008/software/devops/mise-gerenciamento-ambientes-diretivas-env-dotenv-hierarquia.md)
+1100. [Task Runner integrado ([tasks]), Bootstrap de máquinas e integração com IDEs no mise](../../domains/software-0008/software/devops/mise-task-runner-integrado-bootstrap-maquinas-ide.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1000 notas 1–1000 das tranches 1–10 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1000/2.000 notas válidas, restando 1000 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1100 notas 1–1100 das tranches 1–11 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1100/2.000 notas válidas, restando 900 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

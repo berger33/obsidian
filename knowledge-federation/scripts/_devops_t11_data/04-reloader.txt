@@ -1,0 +1,280 @@
+=== NOTE: 1031 | reloader-controlador-kubernetes-rollout-configmaps-secrets | Stakater Reloader: controlador Kubernetes para rollout automático de workloads após alterações em ConfigMaps e Secrets ===
+ONE_LINER: O Stakater Reloader (`stakater/Reloader`, Apache-2.0, com a versão v2 reconstruída sobre o Operator SDK) é um controlador Kubernetes que observa alterações em `ConfigMaps`, `Secrets` e segredos montados via CSI, disparando automaticamente rolling restarts nos workloads dependentes (`Deployment`, `StatefulSet`, `DaemonSet`, `Argo Rollout`, `CronJob`, `Job` e `DeploymentConfig`).
+IMPORTANCE: No Kubernetes padrão, atualizar os dados de um `ConfigMap` ou `Secret` (por exemplo, quando o External Secrets Operator, o Bitnami Sealed Secrets ou o cert-manager rotaciona uma senha de banco ou certificado TLS) **não** reinicia os pods em execução, e variáveis de ambiente injetadas na inicialização permanecem estáticas com o valor antigo. O Reloader elimina essa defasagem sem exigir mudanças no código da aplicação.
+HOW_IT_WORKS: Conforme descrevem o README oficial e a documentação em `docs.stakater.com/reloader/latest/`, o Reloader utiliza a **watch API** do Kubernetes para receber eventos em tempo real quando um `ConfigMap` ou `Secret` é modificado. Ele verifica se os **dados (`data`)** realmente mudaram (ignorando alterações puras de metadados) e, caso positivo, localiza todos os workloads com anotações correspondentes e aplica um patch no `pod template` (injetando uma variável de ambiente com o hash SHA1 do recurso ou atualizando uma anotação). O Kubernetes detecta a mudança no template do pod e executa um `RollingUpdate` seguro respeitando `maxUnavailable` e `PodDisruptionBudgets`.
+EXAMPLE:
+```bash
+# Instalar o Stakater Reloader no cluster Kubernetes utilizando o Helm chart oficial
+helm repo add stakater https://stakater.github.io/stakater-charts
+helm repo update
+helm install reloader stakater/reloader \
+  --namespace reloader \
+  --create-namespace
+```
+TRADE_OFFS: Como o Reloader aciona um rolling restart dos pods sempre que o conteúdo de um `ConfigMap` ou `Secret` observado muda, aplicações sem `readinessProbe` configurada ou com apenas uma réplica sem `PodDisruptionBudget` podem sofrer breve indisponibilidade durante o restart automático.
+VERIFY: Verifique se o controlador está em execução com `kubectl -n reloader get pods` e inspecione a métrica Prometheus `reloader_reload_executed_total` após atualizar um `ConfigMap` de teste.
+LINKS: [[reloader-anotacoes-auto-secret-configmap-regras-precedencia]] | [[reloader-padroes-named-reload-search-match-ignore]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1032 | reloader-anotacoes-auto-secret-configmap-regras-precedencia | Descoberta automática no Reloader: anotações auto, tipadas (secret/configmap) e flag --auto-reload-all ===
+ONE_LINER: O Reloader oferece descoberta automática de dependências via anotação **`reloader.stakater.com/auto: "true"`** (ou suas variantes restritas `secret.reloader.stakater.com/auto: "true"` e `configmap.reloader.stakater.com/auto: "true"`), além do modo global `--auto-reload-all` no controlador com opt-out por workload.
+IMPORTANCE: Em clusters com centenas de microsserviços que consomem `ConfigMaps` e `Secrets` via `envFrom`, `valueFrom` ou `volumes`, listar manualmente o nome de cada recurso em anotações é propenso a esquecimentos quando um desenvolvedor adiciona um novo Secret ao pod spec. O modo `auto` descobre automaticamente todas as referências presentes na especificação do pod.
+HOW_IT_WORKS: Conforme a seção *Automatic Reload* e *Annotation Behavior Rules* do README oficial: (1) **`reloader.stakater.com/auto: "true"`** reinicia o workload quando qualquer `ConfigMap` ou `Secret` referenciado no pod spec mudar; (2) **`secret.reloader.stakater.com/auto: "true"`** restringe o reload automático apenas aos `Secrets` referenciados; (3) **`configmap.reloader.stakater.com/auto: "true"`** restringe apenas aos `ConfigMaps` referenciados; (4) se tanto `auto` quanto suas versões tipadas forem usadas simultaneamente, basta que uma delas seja `"true"` para disparar o reload; e (5) se a flag **`--auto-reload-all`** estiver habilitada no controlador, todos os workloads do cluster são tratados como `auto: "true"`, exceto aqueles que definirem explicitamente `reloader.stakater.com/auto: "false"`.
+EXAMPLE:
+```yaml
+# Deployment com descoberta automática habilitada para qualquer ConfigMap ou Secret referenciado no pod spec
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-pagamentos
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-pagamentos
+  template:
+    metadata:
+      labels:
+        app: api-pagamentos
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/exemplo/api-pagamentos:v1.4.0
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-db-secret
+```
+TRADE_OFFS: Conforme documentado nas regras de compatibilidade, `reloader.stakater.com/auto` e `reloader.stakater.com/search` **não podem ser usadas juntas** no mesmo workload — se ambas estiverem presentes, a anotação `auto` tem precedência e ignora o filtro `search`.
+VERIFY: Edite o valor de uma chave em `api-config` (`kubectl patch configmap api-config -p '{"data":{"LOG_LEVEL":"debug"}}'`) e observe o início imediato do rollout em `kubectl rollout status deployment/api-pagamentos`.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-padroes-named-reload-search-match-ignore]] | [[reloader-pausa-deployments-pause-period-alertas-webhook]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1033 | reloader-padroes-named-reload-search-match-ignore | Controle granular no Reloader: recursos nomeados (reload), modo opt-in (search + match) e exclusão (ignore) ===
+ONE_LINER: Para cenários onde nem todo `ConfigMap` ou `Secret` deve reiniciar o pod, o Reloader oferece três mecanismos granulares: anotações por nome (**`secret.reloader.stakater.com/reload`** e **`configmap.reloader.stakater.com/reload`**), o par opt-in **`search: "true"` + `match: "true"`** e a anotação de bloqueio global **`reloader.stakater.com/ignore: "true"`**.
+IMPORTANCE: Em clusters multi-tenant ou aplicações que montam dezenas de `ConfigMaps` (alguns lidos dinamicamente via hot-reload de disco pela própria aplicação e outros lidos apenas no boot via variáveis de ambiente), reiniciar o pod em toda alteração de qualquer ConfigMap gera rollouts desnecessários.
+HOW_IT_WORKS: Segundo o README oficial do Reloader: (1) **Named Resource Reload**: anotar o workload com `secret.reloader.stakater.com/reload: "db-secret,jwt-secret"` ou `configmap.reloader.stakater.com/reload: "app-config"` dispara o rollout apenas quando os recursos nomeados mudam, independentemente de como são usados no pod spec; (2) **Targeted Reload (`search` + `match`)**: o workload recebe `reloader.stakater.com/search: "true"` e somente os `ConfigMaps`/`Secrets` que estiverem simultaneamente referenciados pelo workload **e** anotados com `reloader.stakater.com/match: "true"` disparam restart; e (3) **Resource-Level Ignore**: anotar um `ConfigMap` ou `Secret` com **`reloader.stakater.com/ignore: "true"`** instrui o Reloader a ignorar completamente aquele recurso em todos os workloads do cluster.
+EXAMPLE:
+```yaml
+# Padrão Search + Match: o Deployment só reinicia quando um Secret referenciado possui match: "true"
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credenciais-rotativas
+  annotations:
+    reloader.stakater.com/match: "true"
+type: Opaque
+stringData:
+  API_KEY: "valor-inicial"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-integracao
+  annotations:
+    reloader.stakater.com/search: "true"
+```
+TRADE_OFFS: A anotação `reloader.stakater.com/ignore: "true"` aplicada em um `ConfigMap` ou `Secret` tem efeito global sobre aquele recurso: mesmo que um Deployment o liste explicitamente em `configmap.reloader.stakater.com/reload`, o Reloader pulará toda a lógica de reload para aquele recurso ignorado.
+VERIFY: Atualize um ConfigMap referenciado sem a anotação `match: "true"` em um Deployment com `search: "true"` e confirme que nenhuma nova revisão de `ReplicaSet` é criada; em seguida, atualize o Secret com `match: "true"` e confirme o rollout.
+LINKS: [[reloader-anotacoes-auto-secret-configmap-regras-precedencia]] | [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-integracao-gitops-argocd-argo-rollouts-estrategias]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1034 | reloader-integracao-gitops-argocd-argo-rollouts-estrategias | Reloader com GitOps (Argo CD / Flux) e Argo Rollouts: reload-strategy annotations e rollout-strategy restart ===
+ONE_LINER: Para evitar *Configuration Drift* (`OutOfSync`) em ferramentas GitOps como o Argo CD e controlar entregas progressivas no **Argo Rollouts** (`--is-argo-rollouts=true`), o Reloader suporta a estratégia de reload baseada em anotações (`--reload-strategy=annotations`) e a anotação `reloader.stakater.com/rollout-strategy: "restart"`.
+IMPORTANCE: Por padrão, quando o Reloader injeta ou modifica variáveis de ambiente (`env-vars`) ou o `pod template` de um recurso gerenciado pelo Argo CD ou Argo Rollouts, o controlador GitOps pode detectar a mutação no spec do workload como divergência em relação ao Git (*OutOfSync*). Ajustar a estratégia de reload e de rollout elimina esse atrito operacional.
+HOW_IT_WORKS: Conforme explicam o README oficial e o portal `docs.stakater.com/reloader/latest/`: (1) para compatibilidade com **Argo CD**, usa-se a estratégia de reload **`annotations`** (`--reload-strategy=annotations`), na qual o Reloader atualiza uma anotação no metadata do pod template em vez de adicionar variáveis de ambiente `STAKATER_*` na lista de containers; e (2) especificamente para recursos **`Argo Rollout`** (que exigem habilitar `--is-argo-rollouts=true` ou `reloader.isArgoRollouts: true` no Helm), o comportamento padrão (`reloader.stakater.com/rollout-strategy: "rollout"`) atualiza o pod template para acionar um rollout completo, mas você pode definir **`reloader.stakater.com/rollout-strategy: "restart"`** para deletar/reiniciar o pod diretamente sem modificar o pod template, evitando drift no GitOps.
+EXAMPLE:
+```yaml
+# Configurar um recurso Argo Rollout para usar a estratégia restart sem modificar o pod template no GitOps
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: checkout-service
+  annotations:
+    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/rollout-strategy: "restart"
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      steps:
+        - setWeight: 50
+        - pause: { duration: 1m }
+```
+TRADE_OFFS: Conforme ressalta a documentação oficial, a anotação `reloader.stakater.com/rollout-strategy: "restart"` aplica-se **exclusivamente** a recursos do **Argo Rollouts** (sendo ignorada por `Deployments`, `StatefulSets` e `DaemonSets` padrão do Kubernetes, que sempre realizam rolling update via atualização do pod template).
+VERIFY: Habilite `reloader.isArgoRollouts=true` e `reloader.reloadStrategy=annotations` no Helm chart do Reloader e verifique no painel do Argo CD que a aplicação permanece `Synced` após a rotação de um Secret.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[argocd-declarative-gitops-cd-for-kubernetes]] | [[flagger-progressive-delivery-canary-blue-green-ab]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1035 | reloader-integracao-secrets-store-csi-driver-podstatus | Suporte do Reloader ao Secrets Store CSI Driver (SecretProviderClassPodStatus e --enable-csi-integration) ===
+ONE_LINER: Quando habilitado com **`--enable-csi-integration=true`** (`reloader.enableCSIIntegration: true`), o Reloader monitora recursos **`SecretProviderClassPodStatus`** gerados pelo Secrets Store CSI Driver e reinicia automaticamente workloads cujos segredos montados diretamente via CSI (sem objeto Kubernetes `Secret`) tiveram suas versões atualizadas no cofre externo.
+IMPORTANCE: Equipes de segurança frequentemente utilizam o Secrets Store CSI Driver para montar segredos do AWS Secrets Manager, Azure Key Vault ou HashiCorp Vault diretamente como arquivos tmpfs nos pods **sem criar objetos `Secret` no etcd**. Como não há um objeto Kubernetes `Secret` mudando e aplicações legadas não relêem arquivos do disco sozinhas, os pods continuariam usando a versão antiga do segredo após a rotação se o Reloader não monitorasse o status do CSI.
+HOW_IT_WORKS: Conforme a seção *CSI Secret Provider Support* do README oficial: (1) o Secrets Store CSI Driver deve estar instalado no cluster com a rotação de segredos habilitada; (2) quando um segredo rotaciona no cofre externo, o CSI driver atualiza o recurso `SecretProviderClassPodStatus` refletindo as novas versões de segredos montadas no pod; e (3) o Reloader (com `--enable-csi-integration=true`) observa o `SecretProviderClassPodStatus` no nível de cada segredo individual e dispara o rollout dos workloads anotados com `reloader.stakater.com/auto: "true"`, `secretproviderclass.reloader.stakater.com/auto: "true"` ou `secretproviderclass.reloader.stakater.com/reload: "meu-secretproviderclass"`.
+EXAMPLE:
+```yaml
+# Deployment utilizando descoberta específica de SecretProviderClass (CSI Driver) no Reloader
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servico-financeiro
+  annotations:
+    secretproviderclass.reloader.stakater.com/reload: "vault-db-creds"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: servico-financeiro
+  template:
+    metadata:
+      labels:
+        app: servico-financeiro
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/exemplo/financeiro:v2.1.0
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "vault-db-creds"
+```
+TRADE_OFFS: A detecção via CSI depende de a rotação periódica (`enableSecretRotation`) estar habilitada no Secrets Store CSI Driver para que os objetos `SecretProviderClassPodStatus` sejam atualizados quando o segredo muda no provedor de nuvem ou Vault.
+VERIFY: Verifique que o controlador do Reloader foi iniciado com `--enable-csi-integration=true` e inspecione `kubectl get secretproviderclasspodstatus` no namespace do workload após rotacionar o segredo no cofre.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[vault-integracao-kubernetes-auth-injector-csi-eso]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1036 | reloader-pausa-deployments-pause-period-alertas-webhook | Estabilidade operacional no Reloader: janela de pausa (pause-period) e alertas de reload (Slack, Teams, Google Chat e Webhook) ===
+ONE_LINER: O Reloader evita reinicializações em cascata durante atualizações simultâneas de múltiplos recursos por meio da anotação **`deployment.reloader.stakater.com/pause-period`** e pode enviar notificações em tempo real para **Slack**, **Microsoft Teams**, **Google Chat** ou qualquer endpoint **Webhook** sempre que executa um rollout.
+IMPORTANCE: Quando um Deployment referencia cinco `ConfigMaps` e `Secrets` que são atualizados em sequência por um pipeline de CI/CD ao longo de dois minutos, disparar cinco rollouts consecutivos gera turbulência desnecessária no cluster. Além disso, equipes de SRE precisam saber no canal de operações exatamente quando e por qual motivo um workload de produção sofreu rollout automático.
+HOW_IT_WORKS: Conforme documentam as seções *Alerting on Reload* e *Pause Deployments* do README oficial: (1) ao adicionar `deployment.reloader.stakater.com/pause-period: "5m"` (ou `"1h"`) a um Deployment, após um reload o Deployment entra em estado de pausa pelo período especificado — eventos subsequentes de mudança em ConfigMaps/Secrets durante essa janela não causam novos rollouts até o término do período; e (2) ao definir nas variáveis de ambiente de segredo do Helm chart `ALERT_ON_RELOAD: "true"`, `ALERT_SINK: "slack"` (opções: `slack`, `teams`, `gchat` ou `webhook`), `ALERT_WEBHOOK_URL` e `ALERT_ADDITIONAL_INFO`, o Reloader envia um alerta estruturado a cada rolling upgrade disparado.
+EXAMPLE:
+```yaml
+# Configurar pause-period de 5 minutos em um Deployment e habilitar alertas Slack no values.yaml do Reloader
+# 1. Anotação no Deployment:
+metadata:
+  name: api-core
+  annotations:
+    reloader.stakater.com/auto: "true"
+    deployment.reloader.stakater.com/pause-period: "5m"
+
+# 2. Valores Helm do Reloader para alertas no Slack:
+reloader:
+  deployment:
+    env:
+      secret:
+        ALERT_ON_RELOAD: "true"
+        ALERT_SINK: "slack"
+        ALERT_WEBHOOK_URL: "https://hooks.slack.com/services/T000/B000/XXXX"
+        ALERT_ADDITIONAL_INFO: "Acionado pelo Reloader no cluster de produção"
+```
+TRADE_OFFS: Se uma segunda alteração urgente em um `Secret` ocorrer dentro da janela de `pause-period` (por exemplo, uma correção imediata de uma senha digitada incorretamente há 1 minuto), o Reloader não iniciará um novo rollout automático até que os 5 minutos da pausa tenham transcorrido.
+VERIFY: Aplique duas alterações seguidas em `ConfigMaps` de um Deployment anotado com `pause-period: "5m"` e verifique em `kubectl rollout history deployment/api-core` que apenas uma nova revisão foi disparada imediatamente.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-anotacoes-auto-secret-configmap-regras-precedencia]] | [[reloader-escopo-namespaces-rbac-alta-disponibilidade-metricas]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1037 | reloader-escopo-namespaces-rbac-alta-disponibilidade-metricas | Operação do Reloader em produção: escopo de namespaces, ignorar tipos de recursos, eleição de líder HA e métricas Prometheus ===
+ONE_LINER: Em clusters corporativos, o Reloader pode ser restrito a um único namespace ou a um subconjunto selecionado por labels, desabilitar globalmente a observação de `Secrets` (`ignoreSecrets`) ou `ConfigMaps` (`ignoreConfigMaps`), operar em alta disponibilidade com múltiplas réplicas e eleição de líder e expor a métrica Prometheus **`reloader_reload_executed_total`**.
+IMPORTANCE: Em clusters multi-tenant com restrições de RBAC, um operador de equipe pode precisar rodar uma instância do Reloader restrita apenas ao seu namespace ou observar apenas `ConfigMaps` sem permissão de leitura sobre objetos `Secret`. Já em nível de plataforma, rodar múltiplas réplicas com leader election garante que a rotação de segredos não pare se um nó cair.
+HOW_IT_WORKS: Conforme descreve o guia oficial (`docs.stakater.com/reloader/latest/`): (1) por padrão o Reloader observa tanto `Secrets` quanto `ConfigMaps` em todos os namespaces, mas pode-se desativar um dos tipos com `reloader.ignoreSecrets: true` ou `reloader.ignoreConfigMaps: true` no Helm chart; (2) o escopo pode ser limitado a um namespace específico (`watchGlobally: false` / `--Namespaces-to-ignore` / seletores de namespace e recursos); (3) múltiplas réplicas podem ser executadas com **leader election** habilitada para alta disponibilidade; e (4) o controlador expõe métricas Prometheus — em especial o contador `reloader_reload_executed_total` — rastreando cada reload executado.
+EXAMPLE:
+```yaml
+# Exemplo de values.yaml do Helm chart do Reloader habilitando múltiplas réplicas com leader election e métricas
+reloader:
+  watchGlobally: true
+  ignoreSecrets: false
+  ignoreConfigMaps: false
+  enableHA: true
+  deployment:
+    replicas: 2
+  serviceMonitor:
+    enabled: true
+```
+TRADE_OFFS: Se você rodar múltiplas réplicas do Reloader (`replicas: 2` ou mais) **sem** habilitar a eleição de líder (`enableHA: true`), todas as réplicas processarão o mesmo evento de watch simultaneamente e tentarão aplicar patches concorrentes nos mesmos Deployments.
+VERIFY: Consulte o endpoint `/metrics` do pod do Reloader (`curl -s http://localhost:9090/metrics | grep reloader_reload_executed_total`) e verifique o objeto `Lease` de eleição de líder no namespace `reloader`.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-pausa-deployments-pause-period-alertas-webhook]] | [[reloader-evolucao-v2-operator-sdk-workloads-suportados]]
+SOURCES: https://docs.stakater.com/reloader/latest/ | https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://github.com/stakater/Reloader
+
+=== NOTE: 1038 | reloader-evolucao-v2-operator-sdk-workloads-suportados | Arquitetura do Reloader v2 (Operator SDK) e matriz de workloads suportados (Deployment, StatefulSet, DaemonSet, CronJob, Job e DeploymentConfig) ===
+ONE_LINER: O Reloader v2 foi reconstruído sobre o **Operator SDK** (`controller-runtime`) como evolução da branch `v1` (congelada para novas funcionalidades) e suporta `Deployment`, `StatefulSet`, `DaemonSet`, `Argo Rollout`, `CronJob`, `Job` e `DeploymentConfig` (auto-detectado no OpenShift).
+IMPORTANCE: Compreender a transição arquitetural entre o Reloader v1 (branch `master`, que recebe apenas correções críticas e de segurança) e o Reloader v2 (branch `v2`, onde ocorre todo o novo desenvolvimento sobre o Operator SDK), bem como quais tipos de controladores de workload são suportados, evita abrir issues/PRs na branch errada ou tentar usar anotações em recursos não suportados.
+HOW_IT_WORKS: Conforme documentam o README oficial e a tabela *Supported workloads* (`docs.stakater.com/reloader/latest/`): (1) `Deployment`, `StatefulSet` e `DaemonSet` possuem suporte completo nativo; (2) `Argo Rollout` é suportado mediante `reloader.isArgoRollouts: true`; (3) `CronJob` e `Job` são suportados para disparar execuções quando configurações mudam; e (4) `DeploymentConfig` é suportado exclusivamente no Red Hat OpenShift e detectado automaticamente pelo controlador. Na arquitetura v2 baseada no Operator SDK, o gerenciamento de informers, caches, reconciliação e leader election segue o padrão moderno do ecossistema Kubernetes.
+EXAMPLE:
+```yaml
+# Exemplo de StatefulSet e DaemonSet anotados para receber rolling updates automáticos do Reloader
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cache-cluster
+  annotations:
+    configmap.reloader.stakater.com/reload: "cache-tuning-config"
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+  annotations:
+    secret.reloader.stakater.com/reload: "log-sink-credentials"
+```
+TRADE_OFFS: Para `StatefulSets` e `DaemonSets`, o Reloader delega o reinício à estratégia de atualização configurada no próprio recurso (`updateStrategy.type`); se um `StatefulSet` estiver configurado com `updateStrategy.type: OnDelete` em vez de `RollingUpdate`, o patch do Reloader atualizará o template do pod, mas o Kubernetes não recriará os pods automaticamente até que sejam deletados.
+VERIFY: Confira `kubectl get statefulset cache-cluster -o jsonpath='{.spec.updateStrategy.type}'` (confirmando `RollingUpdate`) antes de habilitar o Reloader sobre o StatefulSet.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-integracao-gitops-argocd-argo-rollouts-estrategias]] | [[reloader-escopo-namespaces-rbac-alta-disponibilidade-metricas]]
+SOURCES: https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://docs.stakater.com/reloader/latest/ | https://github.com/stakater/Reloader
+
+=== NOTE: 1039 | reloader-mecanismo-deteccao-dados-sha1-patch-pod-template | Mecânica interna do Reloader: comparação de dados reais (SHA1) versus metadados e estratégias de patch no Pod Template ===
+ONE_LINER: Ao receber um evento de atualização da watch API do Kubernetes, o Reloader calcula e compara se os **dados (`data` / `binaryData`)** do `ConfigMap` ou `Secret` realmente mudaram (ignorando alterações apenas em labels ou annotations) e aplica o patch no `pod template` usando o hash **SHA1** do recurso.
+IMPORTANCE: Controladores GitOps (como Argo CD e Flux), operadores de backup (como Velero) e ferramentas de auditoria frequentemente adicionam ou atualizam labels e annotations nos objetos `ConfigMap` e `Secret` sem alterar seus valores de configuração. Se o Reloader reagisse a qualquer mudança de `metadata.resourceVersion`, todo sync de metadados causaria reinicializações em massa no cluster.
+HOW_IT_WORKS: Conforme explica a seção *How it works* da documentação oficial (`docs.stakater.com/reloader/latest/`): (1) um `ConfigMap` ou `Secret` é atualizado na API do Kubernetes; (2) o Reloader recebe o evento via watch API e verifica se o conteúdo de dados realmente mudou em comparação ao estado anterior; (3) somente se houve alteração de dados, o Reloader localiza os workloads anotados que dependem daquele recurso; e (4) aplica um patch no `spec.template` do workload — seja injetando/atualizando uma variável de ambiente contendo o hash SHA1 do recurso (estratégia `env-vars`), seja atualizando uma anotação no pod template (estratégia `annotations`). O controller-manager do Kubernetes detecta a diferença no `spec.template` e executa o rolling restart.
+EXAMPLE:
+```bash
+# Inspecionar o pod template de um Deployment após um reload para ver a mutação aplicada pelo Reloader
+kubectl get deployment api-pagamentos -o yaml | grep -E "STAKATER|reloader.stakater.com"
+```
+TRADE_OFFS: A estratégia padrão baseada em variáveis de ambiente (`env-vars`) adiciona uma variável `STAKATER_<RESOURCE>_<TYPE>` com o hash SHA1 no container; embora inofensiva para a maioria das aplicações, ela altera a lista de variáveis de ambiente do container (o que pode acusar diff no Argo CD se não for usada a estratégia `annotations`).
+VERIFY: Adicione apenas uma label arbitrária a um `ConfigMap` observado (`kubectl label configmap api-config teste=123`) e confirme que o Reloader **não** reinicia os pods porque o campo `data` permaneceu idêntico.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[reloader-integracao-gitops-argocd-argo-rollouts-estrategias]] | [[reloader-integracao-pilha-segredos-eso-sealedsecrets-certmanager]]
+SOURCES: https://docs.stakater.com/reloader/latest/ | https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://github.com/stakater/Reloader
+
+=== NOTE: 1040 | reloader-integracao-pilha-segredos-eso-sealedsecrets-certmanager | Integração do Reloader com a pilha de segredos: External Secrets Operator, Sealed Secrets, cert-manager e Vault ===
+ONE_LINER: Sendo agnóstico à ferramenta geradora, o Reloader completa o ciclo de rotação de segredos em conjunto com **External Secrets Operator (ESO)**, **Bitnami Sealed Secrets**, **cert-manager** (`Certificate`) e **Secrets Store CSI Driver**, garantindo que a renovação de um segredo ou certificado no Kubernetes reflita imediatamente nos pods em execução.
+IMPORTANCE: Ferramentas como o ESO e o cert-manager resolvem a primeira metade do problema de rotação de credenciais: elas buscam a nova senha no Vault/AWS ou renovam o certificado X.509 na Let's Encrypt e atualizam o objeto `Secret` no Kubernetes. Porém, para aplicações que carregam o certificado TLS ou a senha do banco apenas na inicialização do processo, a rotação falha silenciosamente sem o Reloader para acionar a segunda metade (o rolling restart dos pods).
+HOW_IT_WORKS: Conforme o diagrama arquitetural do README oficial e a seção *Works with your secrets stack* (`docs.stakater.com/reloader/latest/`): (1) fontes como `ExternalSecret` (ESO), `SealedSecret` (Bitnami) ou `Certificate` (`cert-manager`) criam e atualizam objetos `Secret` nativos no Kubernetes; (2) o Reloader observa esses objetos `Secret` (ou `SecretProviderClassPodStatus` no caso do CSI Driver); e (3) assim que o ESO sincroniza uma nova versão da senha do cofre ou o cert-manager grava o novo `tls.crt`/`tls.key`, o Reloader detecta a alteração no `data` do `Secret` e dispara o rolling restart do `Deployment`, `StatefulSet` ou `DaemonSet` consumidor.
+EXAMPLE:
+```yaml
+# Combinação de ExternalSecret (ESO) com Deployment anotado pelo Reloader para rotação ponta a ponta de credenciais
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: db-credentials-sync
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: db-credentials
+  data:
+    - secretKey: password
+      remoteRef:
+        key: secret/data/prod/db
+        property: password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app
+  annotations:
+    secret.reloader.stakater.com/reload: "db-credentials"
+```
+TRADE_OFFS: Ao rotacionar uma senha de banco de dados no cofre externo, use estratégias de credenciais duplas (*dual-account* ou período de graça onde tanto a senha antiga quanto a nova permanecem válidas durante alguns minutos), pois o `refreshInterval` do ESO e o `RollingUpdate` acionado pelo Reloader levam alguns segundos/minutos até substituir todos os pods antigos.
+VERIFY: Force a sincronização do `ExternalSecret` após alterar o segredo no cofre e acompanhe os eventos do Deployment (`kubectl describe deployment backend-app`) para verificar o rollout disparado pelo Reloader.
+LINKS: [[reloader-controlador-kubernetes-rollout-configmaps-secrets]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]] | [[sealedsecrets-criptografia-assimetrica-gitops-kubeseal-crd]]
+SOURCES: https://docs.stakater.com/reloader/latest/ | https://raw.githubusercontent.com/stakater/Reloader/master/README.md | https://github.com/stakater/Reloader

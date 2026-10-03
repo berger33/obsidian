@@ -1,0 +1,226 @@
+=== NOTE: 1011 | dex-provedor-identidade-federado-openid-connect-cncf | Dex: provedor de identidade federado OpenID Connect (CNCF) baseado em conectores upstream ===
+ONE_LINER: O Dex (`dexidp/dex`) é um serviço de identidade open-source da CNCF que utiliza **OpenID Connect (OIDC)** para fornecer autenticação padronizada a aplicações clientes, atuando como um portal (*shim*) que delega a verificação de credenciais a provedores upstream — como servidores LDAP, Active Directory, SAML, GitHub, GitLab, Google e Microsoft — por meio de **conectores**.
+IMPORTANCE: Em engenharia de plataforma, ferramentas como o Kubernetes API Server, Argo CD, Grafana e OAuth2 Proxy entendem OpenID Connect, mas o diretório corporativo da empresa frequentemente é um servidor LDAP legado, Active Directory ou GitHub Organization que não expõe OIDC nativamente ou não emite as claims de grupos necessárias. Com o Dex, os clientes escrevem sua lógica de autenticação uma única vez falando OIDC com o Dex, e o Dex traduz os protocolos específicos de cada backend.
+HOW_IT_WORKS: Conforme documenta o README oficial (`dexidp/dex`), quando um usuário tenta autenticar-se em uma aplicação cliente (como `kubectl` via `kubelogin` ou uma aplicação web): (1) o cliente redireciona o navegador para o endpoint OAuth2/OIDC do Dex; (2) o Dex consulta seu conector configurado (ex.: realizando um bind e busca de usuário/grupos no LDAP ou autenticando via API do GitHub); e (3) após validar a identidade upstream, o Dex assina criptograficamente e retorna um **ID Token** (JSON Web Token — JWT) padronizado ao cliente, além de expor suas chaves públicas de verificação no endpoint `.well-known/openid-configuration` / JWKS.
+EXAMPLE:
+```bash
+# Iniciar o servidor Dex localmente usando o arquivo de configuração de exemplo com datastore SQLite3
+git clone https://github.com/dexidp/dex.git
+cd dex && make build
+./bin/dex serve examples/config-dev.yaml
+```
+TRADE_OFFS: Diferentemente do Keycloak, o Dex não é um sistema completo de gerenciamento de ciclo de vida de usuários (ele não oferece telas para auto-cadastro de usuários, redefinição de senha nem edição de grupos próprios); ele é projetado especificamente como um intermediário federado leve que reflete identidades mantidas em um sistema upstream.
+VERIFY: Com o Dex em execução na porta `5556`, consulte `curl -s http://127.0.0.1:5556/dex/.well-known/openid-configuration | jq .` para inspecionar os endpoints `authorization_endpoint`, `token_endpoint` e `jwks_uri`.
+LINKS: [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]] | [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]] | [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1012 | dex-id-tokens-jwt-claims-padrao-consumidores-sts | ID Tokens no Dex: estrutura do JWT assinado, claims padrão (iss, sub, aud, email, groups) e consumo por Kubernetes e AWS STS ===
+ONE_LINER: O principal artefato emitido pelo Dex é o **ID Token**, um JSON Web Token (JWT) assinado criptograficamente pelo Dex na resposta OAuth2 que atesta a identidade do usuário final por meio de claims padronizadas (`iss`, `sub`, `aud`, `exp`, `iat`, `email`, `email_verified`, `groups`, `name`) consumíveis diretamente pelo Kubernetes e pelo AWS STS.
+IMPORTANCE: Em vez de usar tokens opacos que obrigam cada microsserviço a consultar um banco de dados de sessão a cada requisição, os ID Tokens assinados pelo Dex são autocontidos e verificáveis via chave pública (JWKS), permitindo que sistemas de infraestrutura os consumam como credenciais *service-to-service* ou *user-to-cluster*.
+HOW_IT_WORKS: Conforme mostra o README oficial do Dex, o payload JSON de um ID Token emitido contém: (1) **`iss`** (issuer URL do Dex, ex.: `http://127.0.0.1:5556/dex`); (2) **`sub`** (identificador único codificado pelo Dex combinando o ID do usuário upstream e o conector); (3) **`aud`** (o `client_id` da aplicação que autenticou o usuário, ex.: `example-app`); (4) **`exp`** e **`iat`** (timestamps Unix de expiração e emissão); (5) **`at_hash`** (hash do access token); e (6) claims de identidade como **`email`**, **`email_verified`**, **`name`** e a lista **`groups`** (ex.: `["admins", "developers"]`). Por seguir as especificações OpenID Connect Core 1.0, esses tokens são aceitos nativamente pelo plugin OIDC do **Kubernetes API Server** e pelo **AWS Security Token Service (AWS STS)** (`AssumeRoleWithWebIdentity`).
+EXAMPLE:
+```json
+{
+  "iss": "http://127.0.0.1:5556/dex",
+  "sub": "CgcyMzQyNzQ5EgZnaXRodWI",
+  "aud": "example-app",
+  "exp": 1492882042,
+  "iat": 1492795642,
+  "email": "jane.doe@coreos.com",
+  "email_verified": true,
+  "groups": ["admins", "developers"],
+  "name": "Jane Doe"
+}
+```
+TRADE_OFFS: Como os ID Tokens são JWTs assinados e validados localmente pelos consumidores até o timestamp `exp`, revogar o acesso de um usuário no diretório upstream não invalida instantaneamente um ID Token já emitido; por isso, mantenha o tempo de expiração dos ID Tokens curto e utilize *refresh tokens* para renová-los periodicamente contra o Dex.
+VERIFY: Decodifique o payload de um ID Token retornado pela aplicação de exemplo (`./bin/example-app`) usando `jq -R 'split(".") | .[1] | @base64d | fromjson'` para verificar as claims `iss`, `aud`, `email` e `groups`.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[dex-autenticacao-kubernetes-apiserver-kubelogin-crds]] | [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1013 | dex-autenticacao-kubernetes-apiserver-kubelogin-crds | Dex e Kubernetes: autenticação do API Server via plugin OIDC, armazenamento em CRDs e integração com kubelogin / kubectl ===
+ONE_LINER: O Dex roda nativamente sobre clusters Kubernetes utilizando **Custom Resource Definitions (CRDs)** como backend de armazenamento sem necessidade de banco externo e impulsiona a autenticação de usuários no `kube-apiserver` por meio do plugin OpenID Connect integrado a clientes como `kubectl` e `kubelogin`.
+IMPORTANCE: Certificados X.509 de cliente no Kubernetes não possuem mecanismo nativo de revogação nem integração automática com grupos corporativos. Ao conectar o `kube-apiserver` ao Dex via OIDC, engenheiros fazem login no cluster com suas contas do LDAP/GitHub/Google e recebem permissões RBAC mapeadas diretamente a partir da claim `groups` do ID Token.
+HOW_IT_WORKS: Conforme descreve a seção *Kubernetes and Dex* do README oficial, o Dex pode armazenar todo o seu estado interno (chaves de assinatura rotacionadas, sessões de login, refresh tokens e clientes dinâmicos) diretamente em CRDs na API do Kubernetes. Do lado do cluster, o `kube-apiserver` é configurado com as flags `--oidc-issuer-url`, `--oidc-client-id`, `--oidc-username-claim=email` e `--oidc-groups-claim=groups` apontando para o Dex. Na estação do desenvolvedor, o plugin `kubelogin` (`kubectl oidc-login`) abre o navegador, executa o fluxo OIDC com o Dex, armazena o ID Token e o refresh token (quando o conector suporta `offline_access`) e injeta o Bearer Token nas chamadas do `kubectl`.
+EXAMPLE:
+```yaml
+# Trecho de configuração do Dex usando CRDs do Kubernetes como storage nativo
+issuer: https://dex.exemplo.com/dex
+storage:
+  type: kubernetes
+  config:
+    inCluster: true
+web:
+  https: 0.0.0.0:5556
+  tlsCert: /etc/dex/tls/tls.crt
+  tlsKey: /etc/dex/tls/tls.key
+```
+TRADE_OFFS: Para que ferramentas de linha de comando como o `kubectl` / `kubelogin` renovem tokens silenciosamente sem exigir login interativo no navegador a cada expiração, o conector upstream configurado no Dex precisa suportar **refresh tokens** (`offline_access`) — algo suportado por conectores como LDAP, GitHub, GitLab e OIDC, mas não pelo conector SAML 2.0.
+VERIFY: Após autenticar via `kubectl oidc-login`, execute `kubectl auth whoami` para confirmar que o Kubernetes API Server reconheceu seu `Username` e a lista de `Groups` emitidos pelo Dex.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]] | [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1014 | dex-conectores-upstream-ldap-github-oidc-matriz-suporte | Conectores do Dex: matriz de capacidades (refresh tokens, groups, preferred_username) e níveis de maturidade (stable, beta, alpha) ===
+ONE_LINER: Os conectores do Dex abstraem protocolos heterogêneos de autenticação upstream (como LDAP, GitHub, GitLab, OpenID Connect, Microsoft, Google, Atlassian Crowd e Gitea), mas diferem no suporte a **refresh tokens**, **groups claim**, **preferred_username claim** e no nível de estabilidade (**stable**, **beta** ou **alpha**).
+IMPORTANCE: Escolher um conector sem verificar sua matriz de capacidades no README oficial pode quebrar requisitos essenciais da plataforma — por exemplo, escolher um conector que não retorna a claim `groups` inviabiliza `ClusterRoleBindings` por equipe no Kubernetes, enquanto um conector sem suporte a refresh tokens força logins manuais repetitivos no `kubectl`.
+HOW_IT_WORKS: Conforme a tabela oficial de conectores do Dex: (1) **LDAP** e **GitHub** são classificados como `stable` e suportam simultaneamente *refresh tokens*, *groups claim* e *preferred_username claim*; (2) **GitLab**, **OpenID Connect** (incluindo Salesforce, Azure etc.) e **Atlassian Crowd** são `beta` e suportam as três capacidades (no Crowd, `preferred_username` exige configuração explícita); (3) **Microsoft** (`beta`), **Google** (`alpha`), **Bitbucket Cloud** (`alpha`), **OpenShift** (`alpha`) e **OpenStack Keystone** (`alpha`) suportam *refresh tokens* e *groups claim*, mas não `preferred_username`; e (4) **LinkedIn** (`beta`) e **Gitea** (`beta`) suportam *refresh tokens*, mas não retornam `groups claim`. O projeto define `stable` como bem testado e sem quebras incompatíveis, `beta` como testado e improvável de quebrar compatibilidade, e `alpha` como sujeito a mudanças incompatíveis.
+EXAMPLE:
+```yaml
+# Exemplo de conector GitHub (stable) configurado no Dex para autenticar membros de uma organização e equipes
+connectors:
+  - type: github
+    id: github
+    name: GitHub Corp
+    config:
+      clientID: $GITHUB_CLIENT_ID
+      clientSecret: $GITHUB_CLIENT_SECRET
+      redirectURI: https://dex.exemplo.com/dex/callback
+      orgs:
+        - name: minha-organizacao
+```
+TRADE_OFFS: O conector **OAuth 2.0** genérico (`alpha`) e o conector **AuthProxy** (`alpha`) não suportam *refresh tokens* (`supports refresh tokens: no`), sendo inadequados para fluxos que exigem o escopo `offline_access`.
+VERIFY: Verifique a seção `connectors:` do seu arquivo de configuração do Dex contra a tabela oficial do README e teste o login com `scopes: ["openid", "profile", "email", "groups", "offline_access"]` para confirmar quais claims retornam.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[dex-limitacoes-protocolo-saml-aviso-seguranca-refresh-tokens]] | [[dex-autenticacao-kubernetes-apiserver-kubelogin-crds]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1015 | dex-limitacoes-protocolo-saml-aviso-seguranca-refresh-tokens | Limitações de protocolo e alerta de segurança do conector SAML 2.0 no Dex ===
+ONE_LINER: No Dex, limitações inerentes ao protocolo upstream impedem o conector **SAML 2.0** de emitir *refresh tokens*, e a documentação oficial exibe um alerta explícito de que o conector SAML 2.0 encontra-se sem manutenção ativa e provavelmente vulnerável a contornos de autenticação (*auth bypasses*).
+IMPORTANCE: Muitas organizações que possuem provedores de identidade corporativos legados cogitam conectar o Dex via SAML 2.0. Conhecer tanto a limitação estrutural de renovação não interativa do SAML quanto o alerta oficial de segurança da biblioteca XML/SAML evita expor o cluster a vulnerabilidades críticas de falsificação de asserções.
+HOW_IT_WORKS: Conforme explica o README oficial do Dex em dois pontos distintos: primeiro, como o protocolo SAML 2.0 não fornece um mecanismo não interativo para renovar asserções em background, quando um usuário faz login pelo conector SAML o Dex **não emite um refresh token** para o cliente (`supports refresh tokens: no`), o que inviabiliza clientes que dependem de acesso offline como o `kubectl`. Segundo, na tabela oficial de conectores, a linha do SAML 2.0 traz a nota explícita: **`WARNING: Unmaintained and likely vulnerable to auth bypasses`**, recomendando evitar seu uso em favor de conectores mantidos como OpenID Connect ou LDAP.
+EXAMPLE:
+```yaml
+# Recomendação arquitetural: quando o IdP corporativo suportar ambos, prefira sempre o conector OIDC em vez de SAML no Dex
+connectors:
+  - type: oidc
+    id: idp-corporativo
+    name: IdP Corporativo OIDC
+    config:
+      issuer: https://idp.exemplo.com/oauth2/default
+      clientID: $OIDC_CLIENT_ID
+      clientSecret: $OIDC_CLIENT_SECRET
+      redirectURI: https://dex.exemplo.com/dex/callback
+      getUserInfo: true
+```
+TRADE_OFFS: Caso um sistema legado suporte exclusivamente SAML 2.0 e não possa expor OIDC ou LDAP diretamente ao Dex, utilize um broker intermediário com suporte SAML ativamente mantido (como o Keycloak) que exponha um endpoint OpenID Connect padrão para o Dex ou diretamente para os clientes.
+VERIFY: Audite os arquivos `config.yaml` de todas as instâncias do Dex na sua infraestrutura com `grep -n "type: saml" config.yaml` para garantir que nenhum ambiente produtivo dependa do conector SAML descontinuado.
+LINKS: [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]] | [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[dex-provedor-identidade-federado-openid-connect-cncf]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1016 | dex-distribuicao-imagens-alpine-distroless-helm-build | Distribuição e implantação do Dex: imagens oficiais Alpine e Distroless, Helm chart e compilação com Go ===
+ONE_LINER: O Dex é distribuído oficialmente como imagem de container em `ghcr.io/dexidp/dex` e `docker.io/dexidp/dex` em duas variantes (**`alpine`** e **`distroless`**), conta com um Helm chart oficial de referência em `charts.dexidp.io` e pode ser compilado a partir do código-fonte com `make build` em ambientes Go 1.19+.
+IMPORTANCE: Em clusters Kubernetes de produção com políticas estritas de segurança de containers, escolher entre a variante `distroless` (sem shell nem gerenciador de pacotes para minimizar superfície de ataque) e a variante `alpine` (que inclui utilitários e pré-processamento no entrypoint) impacta diretamente como a configuração e o diagnóstico são operados.
+HOW_IT_WORKS: Segundo o guia oficial *Getting Started* (`dexidp.io/docs/getting-started/`), as imagens oficiais são publicadas no GitHub Container Registry (`ghcr.io/dexidp/dex`) e no Docker Hub (`docker.io/dexidp/dex`). Para implantações Kubernetes declarativas, o projeto mantém o chart Helm oficial em `https://charts.dexidp.io/`. Para desenvolvimento ou auditoria local do binário, basta clonar `https://github.com/dexidp/dex.git` em um ambiente com Go 1.19 ou superior e executar `make build` (que gera `./bin/dex`) e `make examples` (que compila `./bin/example-app`).
+EXAMPLE:
+```bash
+# Instalar o Dex no Kubernetes usando o repositório oficial de Helm charts (charts.dexidp.io)
+helm repo add dex https://charts.dexidp.io
+helm repo update
+helm upgrade --install dex dex/dex \
+  --namespace auth \
+  --create-namespace \
+  -f values-dex.yaml
+```
+TRADE_OFFS: Ao utilizar a variante de imagem `distroless`, não há shell (`/bin/sh`) dentro do container para depuração interativa com `kubectl exec`; caso precise diagnosticar conectividade de rede ou certificados LDAP de dentro do pod em produção, utilize containers efêmeros (`kubectl debug`) ou teste temporariamente com a variante `alpine`.
+VERIFY: Verifique a assinatura e a imagem em execução no cluster com `kubectl -n auth get pods -o jsonpath='{.items[*].spec.containers[*].image}'` e valide o endpoint `/healthz` do Dex.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[dex-configuracao-gomplate-expansao-variaveis-ambiente]] | [[helm-chart-structure-and-packaging]]
+SOURCES: https://dexidp.io/docs/getting-started/ | https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://github.com/dexidp/dex
+
+=== NOTE: 1017 | dex-configuracao-gomplate-expansao-variaveis-ambiente | Configuração do Dex: pré-processamento com gomplate no entrypoint do container e expansão nativa de variáveis ($VAR / DEX_EXPAND_ENV) ===
+ONE_LINER: O Dex lê suas opções exclusivamente de um arquivo de configuração YAML (`dex serve config.yaml`), suportando tanto o pré-processamento de templates via **gomplate** no entrypoint padrão das imagens de container quanto a expansão nativa de variáveis de ambiente (`$VAR` e `${VAR}`) controlada por `DEX_EXPAND_ENV`.
+IMPORTANCE: Arquivos de configuração do Dex contêm segredos sensíveis — como `clientSecret` de clientes OAuth2, senhas de bind LDAP (`bindPW`) e credenciais de provedores upstream. Injetar esses valores a partir de variáveis de ambiente originadas de Kubernetes Secrets permite versionar o template `config.yaml` em Git sem expor credenciais.
+HOW_IT_WORKS: Conforme documentado na seção *Configuration / Templated configuration* do guia oficial (`dexidp.io/docs/getting-started/`), existem dois mecanismos complementares: (1) **Gomplate no entrypoint do container**: o entrypoint padrão das imagens distribuídas utiliza o `gomplate` para pré-processar arquivos `.tpl`, `.tmpl` ou `.yaml` passados como argumento, permitindo sintaxe como `secret: "{{ .Env.MY_SECRET_ENV }}"`. Contudo, se o Deployment sobrescrever o `command` do container para invocar o binário `dex` diretamente (ex.: `dex serve /etc/dex/config.yaml`), o entrypoint é ignorado e os templates gomplate não são renderizados; e (2) **Expansão nativa de ambiente**: o próprio binário do Dex expande referências `$VAR` e `${VAR}` nos valores YAML antes de fazer o parse da configuração (comportamento que pode ser desativado definindo `DEX_EXPAND_ENV=false`).
+EXAMPLE:
+```yaml
+# Exemplo de uso de expansão nativa de variáveis de ambiente ($VAR / ${VAR}) e sintaxe gomplate no config do Dex
+issuer: https://dex.exemplo.com/dex
+storage:
+  type: sqlite3
+  config:
+    file: /var/dex/dex.db
+staticClients:
+  - id: argo-cd
+    redirectURIs:
+      - https://argocd.exemplo.com/auth/callback
+    name: Argo CD
+    secret: "${ARGOCD_DEX_CLIENT_SECRET}"
+```
+TRADE_OFFS: Se uma senha de bind LDAP ou segredo contiver o caractere literal `$` e a expansão nativa estiver ativa (padrão), o Dex tentará interpretá-lo como nome de variável de ambiente; nesses casos, escape adequadamente ou defina `DEX_EXPAND_ENV=false` caso utilize apenas renderização controlada via gomplate ou montagem direta do arquivo.
+VERIFY: Inicie o container do Dex passando variáveis de ambiente de teste e valide nos logs de inicialização que os clientes e conectores foram carregados sem erros de parse YAML.
+LINKS: [[dex-distribuicao-imagens-alpine-distroless-helm-build]] | [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]]
+SOURCES: https://dexidp.io/docs/getting-started/ | https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://github.com/dexidp/dex
+
+=== NOTE: 1018 | dex-fluxo-descoberta-oidc-example-app-static-clients | Teste local e descoberta OIDC no Dex: staticClients, enablePasswordDB e validação com example-app ===
+ONE_LINER: O Dex inclui uma aplicação cliente de referência (`./bin/example-app`, compilada com `make examples`) e suporte a clientes estáticos (`staticClients`) e banco de senhas estático (`enablePasswordDB`) em `examples/config-dev.yaml` para validar localmente o fluxo completo de descoberta OIDC e emissão de tokens.
+IMPORTANCE: Antes de conectar o Dex a um servidor Active Directory corporativo ou alterar flags do `kube-apiserver`, engenheiros de plataforma precisam testar localmente o mapeamento de escopos (`openid`, `profile`, `email`, `groups`, `offline_access`), a assinatura de JWTs e o redirecionamento de callback OAuth2.
+HOW_IT_WORKS: Conforme descreve a seção *Running a client* do guia *Getting Started* (`dexidp.io/docs/getting-started/`): (1) `./bin/dex serve examples/config-dev.yaml` inicia o Dex na porta `5556` com um datastore SQLite3 e credenciais OAuth2 pré-definidas; (2) `./bin/example-app` inicia um cliente OAuth2 de teste em `http://localhost:5555/` que consulta automaticamente o **discovery endpoint** do Dex (`/.well-known/openid-configuration`) para descobrir os endpoints de autorização, token e chaves públicas; e (3) ao clicar em login no navegador, o usuário pode autenticar-se com dados simulados (*Login with Example*) ou com as credenciais estáticas de demonstração (`admin@example.com` / `password`), aprovar os escopos solicitados e inspecionar o ID Token e o Refresh Token retornados.
+EXAMPLE:
+```bash
+# Compilar o Dex e a aplicação cliente de exemplo para testar o fluxo OIDC ponta a ponta localmente
+make build
+make examples
+./bin/dex serve examples/config-dev.yaml &
+./bin/example-app --issuer http://127.0.0.1:5556/dex --listen http://127.0.0.1:5555
+```
+TRADE_OFFS: A opção `enablePasswordDB: true` com `staticPasswords` no arquivo `config-dev.yaml` é útil para desenvolvimento, demonstrações e testes automatizados de CI, mas em produção as identidades devem vir de conectores corporativos auditáveis (como LDAP ou OIDC) em vez de hashes bcrypt estáticos no YAML.
+VERIFY: Acesse `http://localhost:5555/`, conclua o fluxo de login com `admin@example.com` e verifique na página de callback a presença do `ID Token` decodificado e do `Refresh Token`.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]] | [[dex-configuracao-gomplate-expansao-variaveis-ambiente]]
+SOURCES: https://dexidp.io/docs/getting-started/ | https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://github.com/dexidp/dex
+
+=== NOTE: 1019 | dex-conector-ldap-active-directory-buscas-usuarios-grupos | Conector LDAP no Dex: autenticação e resolução de grupos em diretórios OpenLDAP e Active Directory ===
+ONE_LINER: O conector **LDAP** do Dex (classificado como `stable`) autentica usuários realizando bind contra diretórios OpenLDAP ou Microsoft Active Directory e executa buscas configuráveis (`userSearch` e `groupSearch`) para popular as claims `email`, `preferred_username` e `groups` no ID Token.
+IMPORTANCE: Muitas empresas mantêm toda a hierarquia de permissões de engenharia em grupos LDAP/Active Directory (`cn=k8s-admins,ou=Groups,dc=exemplo,dc=com`), mas aplicações cloud-native exigem tokens JWT OpenID Connect. O conector LDAP do Dex faz essa ponte mantendo suporte completo a *refresh tokens*, `groups` e `preferred_username`.
+HOW_IT_WORKS: Conforme documentado no README e no guia de conectores LDAP do Dex, o conector conecta-se ao servidor LDAP (usando TLS ou `startTLS` com `rootCA`), utiliza uma conta de serviço (`bindDN` e `bindPW`) para localizar o Distinguished Name (DN) do usuário com base no filtro configurado em `userSearch` (ex.: `attr: mail` ou `sAMAccountName`), valida a senha do usuário realizando um bind com o DN encontrado e, em seguida, executa `groupSearch` para descobrir todos os grupos aos quais o usuário pertence, injetando os nomes dos grupos na claim `groups` do JWT emitido.
+EXAMPLE:
+```yaml
+# Exemplo de configuração do conector LDAP (stable) no Dex com busca de usuários e grupos
+connectors:
+  - type: ldap
+    name: OpenLDAP Corporativo
+    id: ldap
+    config:
+      host: ldap.exemplo.com:636
+      rootCA: /etc/dex/ldap-ca.crt
+      bindDN: cn=dex-readonly,dc=exemplo,dc=com
+      bindPW: "${LDAP_BIND_PASSWORD}"
+      userSearch:
+        baseDN: ou=People,dc=exemplo,dc=com
+        filter: "(objectClass=person)"
+        username: mail
+        idAttr: DN
+        emailAttr: mail
+        nameAttr: cn
+      groupSearch:
+        baseDN: ou=Groups,dc=exemplo,dc=com
+        filter: "(objectClass=groupOfNames)"
+        userMatchers:
+          - userAttr: DN
+            groupAttr: member
+        nameAttr: cn
+```
+TRADE_OFFS: Se o atributo configurado em `userMatchers` não corresponder exatamente ao formato armazenado nos objetos de grupo do diretório (por exemplo, usar `uid` quando o grupo armazena o `DN` completo no atributo `member`), o login do usuário funcionará, mas a claim `groups` retornará vazia no ID Token.
+VERIFY: Realize um login solicitando o escopo `groups` no Dex e inspecione os logs do servidor Dex (que informam a query LDAP executada e a lista de grupos encontrados para o usuário).
+LINKS: [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]] | [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]] | [[dex-autenticacao-kubernetes-apiserver-kubelogin-crds]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex
+
+=== NOTE: 1020 | dex-arquitetura-ecossistema-argocd-oauth2proxy-clientes | Arquitetura de integração do Dex como bloco de construção para OAuth2 Proxy, Argo CD e plataformas internas ===
+ONE_LINER: Conforme destaca a documentação oficial, o Dex é projetado como um bloco de construção (*building block*) para impulsionar a autenticação de outras ferramentas cloud-native — sendo amplamente emparelhado com o **OAuth2 Proxy**, o **Argo CD** e o **Kubernetes API Server** para unificar o Single Sign-On da plataforma.
+IMPORTANCE: Em vez de configurar credenciais de cliente no GitHub, Google ou Active Directory separadamente para cada uma das 20 ferramentas internas do cluster (Prometheus, Alertmanager, Dashboards, Argo CD), a equipe de plataforma registra apenas o Dex no provedor corporativo upstream e conecta todas as ferramentas internas ao Dex via OIDC.
+HOW_IT_WORKS: No arquivo de configuração do Dex, cada ferramenta interna da plataforma é registrada em `staticClients` (ou via API gRPC do Dex) e pode compartilhar identidade por meio de `trustedPeers`. Por exemplo, o **OAuth2 Proxy** (atuando como middleware de Ingress Nginx/Envoy) aponta seu `--oidc-issuer-url` para o Dex para proteger dashboards que não possuem autenticação própria, enquanto o **Argo CD** (que inclusive embarca o Dex em sua instalação padrão) delega o login SSO e o mapeamento de grupos RBAC ao Dex.
+EXAMPLE:
+```yaml
+# Definição de múltiplos clientes internos de plataforma (OAuth2 Proxy e Grafana) autenticando contra a mesma instância do Dex
+staticClients:
+  - id: oauth2-proxy
+    redirectURIs:
+      - https://auth-proxy.exemplo.com/oauth2/callback
+    name: OAuth2 Proxy Ingress Gatekeeper
+    secret: "${OAUTH2_PROXY_CLIENT_SECRET}"
+  - id: grafana
+    redirectURIs:
+      - https://grafana.exemplo.com/login/generic_oauth
+    name: Grafana Observability
+    secret: "${GRAFANA_CLIENT_SECRET}"
+```
+TRADE_OFFS: Como o Dex passa a ser a dependência central do caminho de login de todos os painéis operacionais e do `kubectl`, sua implantação em produção deve contar com múltiplas réplicas, storage persistente compartilhado (como CRDs do Kubernetes ou PostgreSQL) e monitoramento contínuo de disponibilidade.
+VERIFY: Verifique a conectividade entre os clientes internos e o Dex consultando `https://dex.exemplo.com/dex/.well-known/openid-configuration` a partir do namespace onde rodam o OAuth2 Proxy e o Grafana.
+LINKS: [[dex-provedor-identidade-federado-openid-connect-cncf]] | [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[argocd-declarative-gitops-cd-for-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/dexidp/dex/master/README.md | https://dexidp.io/docs/getting-started/ | https://github.com/dexidp/dex

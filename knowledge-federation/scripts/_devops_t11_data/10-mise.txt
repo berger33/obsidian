@@ -1,0 +1,186 @@
+=== NOTE: 1091 | mise-gerenciador-ferramentas-variaveis-ambiente-tarefas | mise (mise-en-place): CLI unificada em Rust para gerenciar ferramentas de desenvolvimento, variáveis de ambiente e tarefas ===
+ONE_LINER: O **mise** (`jdx/mise`, *mise-en-place*, licenciado sob MIT e escrito em Rust) é uma ferramenta de linha de comando que unifica em um único arquivo declarativo (`mise.toml`) o gerenciamento de versões de ferramentas de desenvolvimento (Node.js, Python, Go, Rust, Terraform, kubectl e centenas de outras), variáveis de ambiente por projeto (`.env` e `[env]`) e execução de tarefas (`[tasks]`), além de bootstrap de máquinas.
+IMPORTANCE: Tradicionalmente, equipes de engenharia precisavam combinar três ou quatro utilitários distintos com sintaxes incompatíveis — `asdf` ou `nvm`/`pyenv` para versões de linguagens, `direnv` para variáveis de ambiente por diretório e `make` ou scripts shell para tarefas de build/teste. O `mise` consolida essas três funções com alta performance (sem shims lentos em shell script) e funciona de forma idêntica no terminal do desenvolvedor, na IDE e no pipeline de CI/CD.
+HOW_IT_WORKS: Conforme descrevem o README oficial (`jdx/mise`) e o guia *Getting started* (`mise.jdx.dev/getting-started.html`), o instalador oficial (`curl https://mise.run | sh`, ou pacotes via Homebrew, apt, dnf, Nix e `winget install jdx.mise`) posiciona o binário em `~/.local/bin/mise`. Em cada repositório, o arquivo **`mise.toml`** declara as seções `[tools]`, `[env]` e `[tasks.<nome>]`. Ao executar `mise install`, `mise exec` ou `mise run`, ou ao navegar até o diretório com o shell ativado (`mise activate`), o `mise` resolve e disponibiliza exatamente as versões de ferramentas e variáveis configuradas para aquele projeto.
+EXAMPLE:
+```bash
+# Instalar o mise no Linux/macOS e executar um comando com Node.js 24 sem alterar o ambiente global
+curl https://mise.run | sh
+~/.local/bin/mise --version
+mise exec node@24 -- node --version
+```
+TRADE_OFFS: Conforme destaca a documentação oficial, uma especificação de série como `node = "24"` em `mise.toml` seleciona uma release dentro da série 24 do Node.js, não um pino imutável exato; quando toda a equipe e o CI precisam usar exatamente a mesma versão patch resolvida, utilize pinos exatos (ex.: `24.0.0`) ou o recurso de lockfile (`mise.lock`) do `mise`.
+VERIFY: Execute `mise config ls`, `mise ls --current` e `mise doctor` dentro do diretório do projeto para verificar quais arquivos `mise.toml` estão ativos e se as ferramentas selecionadas estão íntegras.
+LINKS: [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[mise-comandos-operacionais-use-install-exec-run-global]] | [[mise-ativacao-shell-activate-vs-shims-matriz-shells]]
+SOURCES: https://raw.githubusercontent.com/jdx/mise/main/README.md | https://mise.jdx.dev/getting-started.html | https://github.com/jdx/mise
+
+=== NOTE: 1092 | mise-configuracao-projeto-mise-toml-tools-env-tasks | Estrutura declarativa do mise.toml: seções [tools], [env] e [tasks] versionadas no Git ===
+ONE_LINER: O arquivo **`mise.toml`** na raiz do repositório centraliza a configuração reproduzível do projeto em três blocos TOML principais: **`[tools]`** (versões das ferramentas e runtimes), **`[env]`** (variáveis de ambiente e diretivas `.env`) e **`[tasks.<nome>]`** (comandos de build, lint e teste que herdam automaticamente as ferramentas e variáveis do projeto).
+IMPORTANCE: Quando um novo engenheiro clona um repositório ou quando um job de CI inicia, ter `[tools]`, `[env]` e `[tasks]` declarados e versionados juntos no `mise.toml` garante que `mise run test` ou `mise run hello` execute sempre com a versão certa do compilador/runtime e com as variáveis de ambiente exigidas, mesmo em máquinas onde o shell interativo não foi customizado.
+HOW_IT_WORKS: Conforme demonstra o guia *Getting started* (`mise.jdx.dev/getting-started.html`): (1) na seção **`[tools]`**, declaram-se os runtimes e utilitários necessários (ex.: `node = "24"`, `python = "3.14"`, `ripgrep = "latest"`); (2) na seção **`[env]`**, definem-se variáveis de ambiente do projeto (ex.: `NODE_ENV = "development"`) ou diretivas para carregar arquivos `.env`; e (3) em **`[tasks.<nome>]`**, define-se `description` e o comando `run`. Ao rodar **`mise run <tarefa>`**, o `mise` instala automaticamente quaisquer ferramentas configuradas que estejam faltando na máquina, carrega as variáveis de `[env]` e executa a tarefa no ambiente isolado do projeto.
+EXAMPLE:
+```toml
+# Exemplo oficial de arquivo mise.toml declarando ferramentas, variáveis de ambiente e uma tarefa executável
+[tools]
+node = "24"
+
+[env]
+NODE_ENV = "development"
+
+[tasks.hello]
+description = "Print the project's Node.js version and environment"
+run = '''node -e "console.log(process.version, process.env.NODE_ENV)"'''
+```
+TRADE_OFFS: Como tarefas (`[tasks]`), hooks e certas diretivas de ambiente em um `mise.toml` podem executar código arbitrário, nunca execute cegamente um `mise.toml` de repositórios não confiáveis sem antes revisar seu conteúdo (utilizando `mise trust` e o modo `paranoid` quando apropriado).
+VERIFY: Com o arquivo `mise.toml` acima salvo no diretório, execute `mise tasks ls` para listar a tarefa descoberta e `mise run hello` para confirmar a impressão de `v24.x.x development`.
+LINKS: [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]] | [[mise-comandos-operacionais-use-install-exec-run-global]] | [[mise-seguranca-confianca-mise-trust-paranoid-mode]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1093 | mise-comandos-operacionais-use-install-exec-run-global | Diferença semântica entre os comandos do mise: mise use, mise use --global, mise install, mise exec e mise run ===
+ONE_LINER: O `mise` distingue claramente entre comandos que **modificam a configuração** (`mise use <tool>@<ver>` no projeto ou `mise use --global` em `~/.config/mise/config.toml`), comandos que **apenas instalam o que já está declarado** (`mise install`) e comandos que **executam processos no ambiente do projeto** (`mise exec` e `mise run`).
+IMPORTANCE: Uma dúvida recorrente de quem migra de outras ferramentas é a diferença entre `mise install` e `mise use`: rodar `mise use node@24` altera o arquivo `mise.toml` do diretório atual, enquanto em um projeto já existente clonado do Git (ou no pipeline de CI) o comando correto para baixar as ferramentas sem tocar no arquivo de configuração é `mise install` (ou diretamente `mise exec` / `mise run`).
+HOW_IT_WORKS: Conforme a tabela comparativa oficial *Project configuration or global defaults?* (`mise.jdx.dev/getting-started.html`):
+1. **`mise use node@24`**: instala o Node.js e grava a requisição de versão no `mise.toml` do diretório do projeto;
+2. **`mise use --global node@24`**: instala o Node.js e salva como padrão pessoal global em `~/.config/mise/config.toml` (sendo sobrescrito por configurações de projetos específicos);
+3. **`mise install`**: instala todas as ferramentas já declaradas nos arquivos de configuração ativos sem modificar o `mise.toml`;
+4. **`mise exec -- <comando>`** (ou `mise exec node@24 -- node --version`): executa um comando avulso com as ferramentas e variáveis do projeto (ou com a ferramenta especificada) sem exigir ativação do shell;
+5. **`mise run <tarefa>`**: executa uma tarefa nomeada definida no `mise.toml` com todas as ferramentas e variáveis do projeto carregadas.
+EXAMPLE:
+```bash
+# Definir um padrão global pessoal, sobrescrever no diretório do projeto e verificar a resolução ativa
+mise use --global node@22
+mkdir meu-servico && cd meu-servico
+mise use node@24
+mise config ls
+mise ls --current
+```
+TRADE_OFFS: Se você rodar `mise exec node@24 -- node --version` fora de um projeto, o `mise` baixa o Node 24 se necessário e executa aquele único comando, mas **não** adiciona o Node 24 ao `mise.toml` nem altera o `PATH` da sua sessão de shell atual.
+VERIFY: Execute `mise ls --current` dentro e fora do diretório `meu-servico` para observar como a configuração de projeto (`node@24`) sobrescreve o padrão global (`node@22`).
+LINKS: [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]] | [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[mise-ativacao-shell-activate-vs-shims-matriz-shells]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1094 | mise-ativacao-shell-activate-vs-shims-matriz-shells | Ativação de shell no mise (mise activate vs Shims) e matriz de compatibilidade entre Bash, Zsh, Fish, Nushell, Elvish, Xonsh e PowerShell ===
+ONE_LINER: Para disponibilizar ferramentas e variáveis de ambiente automaticamente no `PATH`, o `mise` oferece duas abordagens — **`mise activate`** (hook de prompt recomendado para shells interativos) e **Shims** (executáveis intermediários úteis para IDEs e processos que não carregam o rc do shell) — além da opção de operar sem nenhum dos dois via `mise exec` / `mise run`.
+IMPORTANCE: Em shells interativos, o `mise activate` atualiza diretamente a variável `PATH` e as variáveis de `[env]` sempre que o prompt é exibido ou o diretório muda (`chpwd`), evitando o overhead de execução de shims a cada chamada de binário. Já editores gráficos (VS Code, IntelliJ, Neovim GUI) e processos background frequentemente não executam `~/.bashrc` ou `~/.zshrc`, tornando os Shims ou `mise exec` a escolha adequada para essas integrações.
+HOW_IT_WORKS: Conforme a seção *4. Activate mise* e a tabela *Shell Feature Compatibility* (`mise.jdx.dev/getting-started.html`): (1) para ativar no Bash (`~/.bashrc`), adiciona-se `eval "$(~/.local/bin/mise activate bash)"`; no Zsh (`~/.zshrc`), `eval "$(~/.local/bin/mise activate zsh)"`; e no Fish (`~/.config/fish/config.fish`), `~/.local/bin/mise activate fish | source`; (2) o `mise` adiciona automaticamente seu próprio diretório `~/.local/bin` ao `PATH` quando ativado; e (3) na matriz de compatibilidade de recursos entre **Bash, Zsh, Fish, Nushell, Elvish, Xonsh e PowerShell**, todos os 7 shells suportam `mise activate`, `mise shell` e o hook `chpwd` (no PowerShell exigindo PowerShell 7+), enquanto aliases de shell (`[shell_alias]`) são suportados em Bash, Zsh e Fish (e não em Nushell, Elvish, Xonsh ou PowerShell).
+EXAMPLE:
+```bash
+# Adicionar a ativação do mise no Bash ou Zsh (executar apenas uma vez para evitar hooks duplicados)
+echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+
+# Diagnosticar se a ativação do shell e o PATH estão configurados corretamente
+mise doctor
+```
+TRADE_OFFS: Conforme alerta a documentação oficial: (1) adicione a linha `mise activate` **apenas uma vez** ao arquivo rc do seu shell, pois repetir o comando `>>` cria hooks duplicados no prompt; e (2) **Shims não suportam todas as funcionalidades do `mise activate`** (por exemplo, um shim intercepta a chamada de um binário, mas não injeta variáveis de ambiente de `[env]` na sessão do shell pai ao entrar em um diretório).
+VERIFY: Se `mise exec -- node --version` funcionar mas `node --version` falhar diretamente no terminal interativo, reinicie a sessão do shell e execute `mise doctor` para verificar o status de ativação.
+LINKS: [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]] | [[mise-comandos-operacionais-use-install-exec-run-global]] | [[mise-diagnostico-doctor-rate-limit-github-token-ci]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1095 | mise-seguranca-confianca-mise-trust-paranoid-mode | Segurança de configuração no mise: mise trust e operação em Paranoid Mode ===
+ONE_LINER: Como arquivos `mise.toml` podem definir tarefas, hooks e diretivas de ambiente capazes de executar código, o `mise` inclui o comando **`mise trust`** e o **modo paranóico (*paranoid mode*)** para controlar quando configurações não globais de projetos são autorizadas a rodar.
+IMPORTANCE: Ao clonar um repositório de terceiros ou fazer checkout de uma branch de um Pull Request externo, um arquivo `mise.toml` malicioso poderia tentar sobrescrever variáveis críticas de ambiente (como `LD_PRELOAD` ou `PATH`) ou executar comandos arbitrários. Revisar o arquivo e gerenciar a confiança protege a estação do desenvolvedor.
+HOW_IT_WORKS: Conforme explica a seção *Trusting config files* do guia oficial (`mise.jdx.dev/getting-started.html`): (1) você deve sempre revisar configurações escritas por outras pessoas antes de executá-las, usando **`mise trust`** para marcar explicitamente como confiável um arquivo de configuração que você já auditou; (2) no **modo normal** (fora de ambientes de CI), comandos que executam explicitamente o comportamento do projeto — incluindo `mise install`, `mise exec` e `mise run` — confiam automaticamente na configuração ativa; porém (3) com o **paranoid mode** habilitado, nenhuma configuração não global é confiável automaticamente, exigindo que o usuário execute explicitamente `mise trust` após revisar cada arquivo `mise.toml`.
+EXAMPLE:
+```bash
+# Revisar o conteúdo do mise.toml de um repositório recém-clonado e marcá-lo explicitamente como confiável
+cat mise.toml
+mise trust
+mise config ls
+```
+TRADE_OFFS: Habilitar o modo paranóico adiciona um passo extra manual (`mise trust`) toda vez que você clona um novo repositório ou quando o arquivo `mise.toml` sofre alterações que invalidam o hash de confiança anterior, trocando conveniência imediata por segurança máxima contra execução acidental ao navegar por diretórios com `mise activate` ativo.
+VERIFY: Execute `mise config ls` no diretório do projeto para verificar os arquivos de configuração detectados e seu estado de carregamento pelo `mise`.
+LINKS: [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[mise-ativacao-shell-activate-vs-shims-matriz-shells]] | [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1096 | mise-registro-ferramentas-backends-github-cargo-npm-core | Registro de ferramentas e arquitetura de Backends do mise (shorthands vs github:, cargo:, npm:, core:) ===
+ONE_LINER: O `mise` resolve nomes curtos de ferramentas (como `node`, `python`, `jq`, `ripgrep`) por meio de seu **Registry** embutido, mas permite especificar explicitamente qualquer **backend** de origem (como `github:BurntSushi/ripgrep`) para baixar e instalar ferramentas diretamente de releases do GitHub, pacotes de linguagens ou runtimes core.
+IMPORTANCE: Em equipes de DevOps e plataforma que utilizam dezenas de CLIs cloud-native (como `kubectl`, `helm`, `opentofu`, `terragrunt`, `pluto`, `polaris`, `popeye`, `stern`, `k9s`, `vcluster`, `goreleaser`), nem sempre um utilitário interno ou recém-lançado possui um plugin dedicado. O sistema de backends do `mise` permite instalar diretamente qualquer binário publicado em GitHub Releases sem precisar escrever scripts de download manual.
+HOW_IT_WORKS: Conforme a seção *5. Find more tools* do guia *Getting started* (`mise.jdx.dev/getting-started.html`): (1) na maioria das vezes, basta usar o nome curto registrado no **registry** (`mise use ripgrep`, `mise exec -- rg --version`), que mapeia o apelido para o backend recomendado; (2) um **backend** informa ao `mise` de onde obter a ferramenta e como instalá-la; e (3) você pode escolher o backend explicitamente — inclusive para ferramentas que não possuem um apelido no registry — usando prefixos como **`github:<owner>/<repo>`** (por exemplo, `mise exec github:BurntSushi/ripgrep -- rg --version`).
+EXAMPLE:
+```bash
+# Instalar uma ferramenta pelo apelido do registry ou invocar explicitamente via backend github:
+mise use ripgrep
+mise exec -- rg --version
+
+# Executar diretamente uma ferramenta a partir de um repositório GitHub Releases sem precisar de plugin
+mise exec github:BurntSushi/ripgrep -- rg --version
+```
+TRADE_OFFS: Conforme alerta a documentação oficial, alguns backends (como backends que compilam pacotes ou instalam via gerenciadores de pacotes de ecossistemas específicos como `cargo:` ou `npm:`) exigem que o runtime ou gerenciador de pacotes subjacente já esteja disponível ou instalado pelo próprio `mise`.
+VERIFY: Execute `mise registry` no terminal para consultar o catálogo de ferramentas registradas e ver para qual backend cada apelido aponta.
+LINKS: [[mise-gerenciador-ferramentas-variaveis-ambiente-tarefas]] | [[mise-comandos-operacionais-use-install-exec-run-global]] | [[mise-diagnostico-doctor-rate-limit-github-token-ci]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1097 | mise-diagnostico-doctor-rate-limit-github-token-ci | Diagnóstico com mise doctor, mitigação de GitHub API Rate Limiting e uso em CI/CD ===
+ONE_LINER: O comando **`mise doctor`** (`mise dr`) audita toda a instalação do `mise` (versão, diretórios XDG, ativação do shell, shims, variáveis de ambiente e toolsets), e a configuração de um **`GITHUB_TOKEN`** evita erros de *GitHub API rate limiting* ao baixar múltiplas ferramentas em pipelines de CI/CD ou redes corporativas com IP compartilhado.
+IMPORTANCE: Como grande parte das ferramentas de DevOps e releases de linguagens são hospedadas e descobertas via API do GitHub, runners de CI ou escritórios corporativos atrás de um mesmo NAT atingem rapidamente o limite de 60 requisições/hora da API não autenticada do GitHub. Configurar o token do GitHub eleva esse limite e garante instalações determinísticas.
+HOW_IT_WORKS: Conforme as seções *If something doesn't work* e *GitHub API rate limiting* (`mise.jdx.dev/getting-started.html`): (1) se uma ferramenta funciona via `mise exec -- <cmd>` mas não funciona ao digitar `<cmd>` diretamente no shell, `mise doctor` identifica imediatamente se falta o hook de ativação (`mise activate`) ou se o diretório de shims/binários não está no `PATH`; (2) em pipelines de CI/CD e scripts automatizados, não é necessário ativar o shell interativo — basta invocar `mise install` e usar `mise exec -- <cmd>` ou `mise run <task>`; e (3) caso ocorra erro de limite de taxa da API do GitHub durante a resolução ou download de ferramentas, basta exportar um token do GitHub (`GITHUB_TOKEN`).
+EXAMPLE:
+```bash
+# Executar diagnóstico completo da instalação do mise e instalar ferramentas em CI autenticando na API do GitHub
+mise doctor
+
+GITHUB_TOKEN="${GITHUB_TOKEN}" mise install
+mise run ci-check
+```
+TRADE_OFFS: Em pipelines de CI/CD, evite baixar e recompilar ferramentas do zero a cada execução; combine `GITHUB_TOKEN`, pinos exatos ou lockfile (`mise.lock`) e cache do diretório de dados do `mise` (`~/.local/share/mise`) no seu provedor de CI.
+VERIFY: Execute `mise doctor` e confirme que a saída final não reporta problemas (`No problems found`).
+LINKS: [[mise-ativacao-shell-activate-vs-shims-matriz-shells]] | [[mise-registro-ferramentas-backends-github-cargo-npm-core]] | [[mise-reprodutibilidade-lockfile-mise-lock-pinos-versao]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1098 | mise-reprodutibilidade-lockfile-mise-lock-pinos-versao | Reprodutibilidade entre máquinas e CI no mise: versões flutuantes de série versus pinos exatos e mise.lock ===
+ONE_LINER: Enquanto pedidos de versão por prefixo (como `node = "24"` ou `python = "3.14"`) selecionam a release mais recente daquela série no momento da instalação, o `mise` suporta **pinos exatos de versão** e arquivos de trava (**`mise.lock`**) para garantir que todos os desenvolvedores e pipelines de CI utilizem exatamente o mesmo binário resolvido.
+IMPORTANCE: Se o arquivo `mise.toml` declarar apenas `terraform = "1"` ou `node = "24"`, um desenvolvedor que rodou `mise install` no mês passado pode estar na `24.1.0` enquanto o runner de CI hoje baixa a `24.2.0`, introduzindo diferenças sutis de comportamento ou quebras inesperadas no pipeline.
+HOW_IT_WORKS: Conforme destacam o README oficial (`jdx/mise`) e a seção *Run a task* do guia *Getting started* (`mise.jdx.dev/getting-started.html`), quando você executa `mise use node@24`, o `mise` grava `node = "24"` no `mise.toml`, o que representa uma solicitação para qualquer release dentro da série 24 do Node.js (*it is not an exact pin*). Para garantir reprodutibilidade estrita entre todas as estações da equipe e os agentes de integração contínua, a documentação orienta duas práticas: especificar a versão completa exata (ex.: `mise use node@24.0.1`) ou utilizar o suporte a **lockfiles (`mise.lock`)** para compartilhar as versões exatas resolvidas e seus respectivos checksums no repositório Git.
+EXAMPLE:
+```bash
+# Fixar uma versão exata no mise.toml e inspecionar as versões exatas atualmente resolvidas no projeto
+mise use node@24.0.0
+mise ls --current
+```
+TRADE_OFFS: Fixar versões exatas ou usar lockfile impede que novas versões patch de segurança sejam instaladas silenciosamente em cada novo `mise install`; por isso, combine o pin exato / lockfile com atualizações periódicas revisadas em Pull Request (`mise upgrade`).
+VERIFY: Execute `mise ls --current` na sua máquina local e no job de CI, confirmando que a coluna de versão instalada coincide até o número de patch.
+LINKS: [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[mise-comandos-operacionais-use-install-exec-run-global]] | [[mise-diagnostico-doctor-rate-limit-github-token-ci]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1099 | mise-gerenciamento-ambientes-diretivas-env-dotenv-hierarquia | Gerenciamento de variáveis de ambiente no mise: seção [env], carregamento de arquivos .env e hierarquia de configuração ===
+ONE_LINER: A seção **`[env]`** do `mise.toml` permite declarar variáveis de ambiente específicas por projeto e carregar arquivos `.env` automaticamente, aplicando sobreposição hierárquica desde a configuração global (`~/.config/mise/config.toml`) até os diretórios de projetos e ambientes locais.
+IMPORTANCE: Em vez de manter scripts `source env.sh` manuais ou exigir a instalação separada do `direnv` com arquivos `.envrc` adicionais, o `mise` gerencia tanto os binários quanto as variáveis de ambiente (`KUBECONFIG`, `AWS_PROFILE`, `NODE_ENV`, `DATABASE_URL`) no mesmo ciclo de ativação de diretório e execução de tarefas.
+HOW_IT_WORKS: Conforme documentado em `mise.jdx.dev/getting-started.html` (*Set an environment variable* e *Project configuration or global defaults?*): (1) chaves definidas sob `[env]` no `mise.toml` são injetadas automaticamente quando você executa `mise exec -- <cmd>`, `mise run <task>` ou quando entra no diretório com `mise activate` ativo no shell; (2) é possível usar diretivas de ambiente para carregar variáveis a partir de arquivos `.env` locais (que permanecem no `.gitignore` para não vazar segredos no Git, enquanto variáveis não sensíveis ficam versionadas no `mise.toml`); e (3) `mise config ls` exibe todos os arquivos de configuração ativos na hierarquia e a ordem em que são aplicados.
+EXAMPLE:
+```toml
+# Configurar variáveis de ambiente de desenvolvimento e apontar um KUBECONFIG isolado por projeto no mise.toml
+[tools]
+kubectl = "1.31"
+helm = "3.16"
+
+[env]
+KUBECONFIG = "./.kube/config-dev.yaml"
+HELM_NAMESPACE = "desenvolvimento"
+```
+TRADE_OFFS: Nunca versione segredos reais (chaves privadas, tokens de produção ou senhas de banco) diretamente na seção `[env]` do `mise.toml` commitado no Git; mantenha apenas valores padrão de desenvolvimento no `mise.toml` e carregue credenciais sensíveis de arquivos `.env` ignorados pelo Git ou de gerenciadores de segredos como **SOPS** ou **HashiCorp Vault**.
+VERIFY: Execute `mise exec -- env | grep -E "KUBECONFIG|HELM_NAMESPACE"` para confirmar que as variáveis declaradas no `mise.toml` foram injetadas corretamente no processo filho.
+LINKS: [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[sops-arquivos-binarios-exec-env-exec-file-processos]] | [[mise-ativacao-shell-activate-vs-shims-matriz-shells]]
+SOURCES: https://mise.jdx.dev/getting-started.html | https://raw.githubusercontent.com/jdx/mise/main/README.md | https://github.com/jdx/mise
+
+=== NOTE: 1100 | mise-task-runner-integrado-bootstrap-maquinas-ide | Task Runner integrado ([tasks]), Bootstrap de máquinas e integração com IDEs no mise ===
+ONE_LINER: Além de gerenciar versões de ferramentas e variáveis de ambiente, o `mise` funciona como um **Task Runner** completo (`mise run <task>`, `mise tasks ls`) e suporta **Bootstrap** declarativo de máquinas (pacotes de sistema, dotfiles e serviços) e integração direta com IDEs e pipelines de CI/CD.
+IMPORTANCE: Quando um projeto usa `Makefile` ou scripts Bash avulsos, a tarefa falha se o desenvolvedor esquecer de ativar o ambiente virtual ou instalar a versão correta do linter. No `mise`, toda tarefa executada com `mise run` já garante automaticamente que as ferramentas declaradas em `[tools]` estão instaladas e no `PATH` e que as variáveis de `[env]` estão carregadas antes de iniciar o comando.
+HOW_IT_WORKS: Conforme destacam o README oficial (`jdx/mise`) e o guia *Getting started* (`mise.jdx.dev/getting-started.html`): (1) **`mise tasks ls`** descobre e lista todas as tarefas configuradas no projeto com suas descrições; (2) **`mise run <task>`** instala automaticamente ferramentas ausentes de `[tools]`, aplica `[env]` e executa o script definido em `run`; (3) para uso fora do terminal interativo (como **IDEs** — VS Code, JetBrains, Neovim — ou runners de **CI**), pode-se usar `mise run`, `mise exec` ou o diretório de **Shims** (`~/.local/share/mise/shims`); e (4) o recurso de **Bootstrap** (`mise.jdx.dev/bootstrap.html`) permite declarar a configuração completa da estação de trabalho.
+EXAMPLE:
+```toml
+# Definir um conjunto de tarefas de plataforma (lint, audit e test) no mise.toml usando as ferramentas do projeto
+[tools]
+polaris = "latest"
+pluto = "latest"
+
+[tasks.audit-k8s]
+description = "Auditar manifestos Kubernetes com Polaris e Pluto"
+run = '''
+pluto detect-files -d ./deploy
+polaris audit --audit-path ./deploy --set-exit-code-on-danger
+'''
+```
+TRADE_OFFS: Para projetos que já possuem dezenas de tarefas complexas em um `Taskfile.yml` (Task) ou `Makefile`, você não precisa reescrever tudo de imediato: pode gerenciar o próprio binário `task` ou `make` na seção `[tools]` do `mise.toml` e migrar tarefas gradualmente para `[tasks]` conforme a conveniência da equipe.
+VERIFY: Execute `mise tasks ls` para confirmar que a tarefa `audit-k8s` aparece documentada na listagem da CLI e invoque `mise run audit-k8s` para validar a execução encadeada.
+LINKS: [[mise-configuracao-projeto-mise-toml-tools-env-tasks]] | [[taskfile-automacao-tarefas-go-task-alternativa-make]] | [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]]
+SOURCES: https://raw.githubusercontent.com/jdx/mise/main/README.md | https://mise.jdx.dev/getting-started.html | https://github.com/jdx/mise

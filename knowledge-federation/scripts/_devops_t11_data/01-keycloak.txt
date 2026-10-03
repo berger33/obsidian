@@ -1,0 +1,184 @@
+=== NOTE: 1001 | keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf | Keycloak: plataforma open-source CNCF de gerenciamento de identidade e acesso (IAM) com OpenID Connect, OAuth 2.0 e SAML 2.0 ===
+ONE_LINER: O Keycloak é uma plataforma open-source de gerenciamento de identidade e acesso (IAM), mantida sob governança da CNCF e licenciada sob Apache 2.0, que provê autenticação centralizada (Single Sign-On), federação de usuários, autorização granular e gerenciamento de sessões utilizando protocolos padronizados como OpenID Connect (OIDC), OAuth 2.0 e SAML 2.0.
+IMPORTANCE: Construir autenticação própria em cada microsserviço ou painel interno de plataforma dispersa credenciais, dificulta a adoção de MFA/WebAuthn e impede o Single Sign-On corporativo. O Keycloak centraliza o ciclo de vida de identidades para aplicações web, APIs, CLIs (`kubectl`, Argo CD, Grafana, Harbor) e servidores Model Context Protocol (MCP) sem acoplar o código de negócio ao armazenamento de senhas.
+HOW_IT_WORKS: Conforme documentado no repositório oficial (`keycloak/keycloak`) e no portal de guias, o servidor Keycloak (distribuído via `quay.io/keycloak/keycloak` e operado pela CLI `bin/kc.sh`) organiza identidades em **Realms** isolados. Dentro de cada Realm, administradores configuram **Clients** (aplicações que solicitam autenticação OIDC/SAML), **Identity Providers** (brokering com provedores externos OIDC/SAML/redes sociais) e **User Federation** (sincronização com diretórios LDAP e Active Directory). Para desenvolvimento rápido, `bin/kc.sh start-dev` (ou `docker run quay.io/keycloak/keycloak start-dev`) sobe uma instância pronta para testes locais.
+EXAMPLE:
+```bash
+# Iniciar o Keycloak em modo de desenvolvimento local via container oficial
+docker run --rm -p 8080:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:latest start-dev
+```
+TRADE_OFFS: O modo `start-dev` desabilita exigências estritas de HTTPS, utiliza banco de dados embarcado H2/dev-file e expõe configurações voltadas à ergonomia local; ele jamais deve ser exposto em produção, onde o comando `kc.sh start` exige TLS, hostname explícito, banco de dados relacional externo e cache distribuído.
+VERIFY: Com o container em execução, consulte o endpoint de descoberta OIDC do realm padrão (`curl -s http://localhost:8080/realms/master/.well-known/openid-configuration | jq .issuer`) para confirmar a emissão de metadados OpenID Connect.
+LINKS: [[keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy]] | [[keycloak-operator-kubernetes-crds-realm-import-clients]] | [[dex-provedor-identidade-federado-openid-connect-cncf]]
+SOURCES: https://raw.githubusercontent.com/keycloak/keycloak/main/README.md | https://www.keycloak.org/guides | https://www.keycloak.org/server/configuration-production
+
+=== NOTE: 1002 | keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy | Keycloak em produção: TLS, Hostname v2, separação da URL administrativa e configuração de Reverse Proxy ===
+ONE_LINER: A preparação do Keycloak para produção (`kc.sh start`) exige canais criptografados com TLS, configuração explícita do Hostname v2 diferenciando URLs públicas de frontend das URLs de administração/backchannel e integração adequada com proxies reversos ou balanceadores de carga.
+IMPORTANCE: Em ambientes corporativos, as instâncias do Keycloak rodam em sub-redes privadas atrás de Ingress Controllers ou API Gateways. Sem separar o hostname público de login da interface administrativa (`Admin REST API` e `Admin Console`), toda a superfície de gerenciamento do IAM fica exposta à internet pública, ampliando o risco de ataques contra credenciais administrativas.
+HOW_IT_WORKS: Segundo o guia oficial *Configuring Keycloak for production*, o operador deve: (1) habilitar HTTPS/TLS para tráfego de entrada, requisições HTTP de saída e tráfego de cache entre nós; (2) configurar o **Hostname (v2)** (`--hostname` e `--hostname-admin`) para expor os fluxos públicos de login em um domínio público (ex.: `auth.exemplo.com`) enquanto restringe a Admin Console e a Admin REST API a um hostname administrativo interno ou bloqueia seus caminhos na camada do reverse proxy; e (3) configurar os cabeçalhos de encaminhamento do reverse proxy (`--proxy-headers xforwarded` ou `forwarded`) para que o Keycloak reconheça o IP real do cliente e o esquema HTTPS.
+EXAMPLE:
+```bash
+# Iniciar o Keycloak em modo de produção separando o hostname público de login do hostname administrativo interno
+bin/kc.sh start \
+  --hostname=https://auth.exemplo.com \
+  --hostname-admin=https://admin-auth.interno.exemplo.com \
+  --proxy-headers=xforwarded \
+  --https-certificate-file=/etc/x509/https/tls.crt \
+  --https-certificate-key-file=/etc/x509/https/tls.key
+```
+TRADE_OFFS: Quando `--proxy-headers` está habilitado no Keycloak, o servidor passa a confiar nos cabeçalhos `X-Forwarded-*` ou `Forwarded` recebidos; portanto, o firewall ou a NetworkPolicy do Kubernetes deve garantir que apenas o Ingress Controller / Reverse Proxy confiável consiga alcançar a porta HTTP/HTTPS dos pods do Keycloak.
+VERIFY: Inspecione o JSON retornado em `https://auth.exemplo.com/realms/master/.well-known/openid-configuration` para confirmar que os endpoints públicos usam `https://auth.exemplo.com` e verifique no reverse proxy que `/admin` retorna bloqueio a partir da rede pública.
+LINKS: [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[keycloak-protecao-sobrecarga-queued-requests-async-bootstrap]] | [[keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco]]
+SOURCES: https://www.keycloak.org/server/configuration-production | https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1003 | keycloak-protecao-sobrecarga-queued-requests-async-bootstrap | Keycloak: proteção contra sobrecarga (http-max-queued-requests) e inicialização assíncrona (--server-async-bootstrap) ===
+ONE_LINER: O Keycloak protege instâncias produtivas contra exaustão em picos de tráfego por meio do limite de enfileiramento `--http-max-queued-requests` (load shedding com HTTP `503`) e evita que o Kubernetes mate containers durante migrações longas de banco de dados graças ao bootstrap assíncrono com endpoints de saúde independentes (`/health/ready`).
+IMPORTANCE: Em tempestades de reconexão (quando milhares de clientes tentam renovar tokens simultaneamente), aceitar requisições infinitamente na fila esgota a memória da JVM e derruba todo o cluster. Da mesma forma, em upgrades de versão com esquemas de banco extensos, se o servidor demorar minutos para abrir a porta de gerenciamento, o `startupProbe`/`livenessProbe` do Kubernetes reiniciará o pod em loop antes do término da migração.
+HOW_IT_WORKS: Conforme detalha a documentação oficial de produção: (1) a opção **`http-max-queued-requests`** limita quantas requisições HTTP que não puderam ser processadas imediatamente aguardam em fila; qualquer requisição acima desse limiar é rejeitada imediatamente com **`503 Server not Available`**, preservando a capacidade de resposta para requisições válidas; e (2) quando os endpoints de health check estão habilitados, o Keycloak abre as portas HTTP(S) e de gerenciamento logo no início enquanto a inicialização (como migrações de banco) avança em background — reportando `UP` nas probes de startup/liveness e `DOWN` em **`/health/ready`** até a conclusão. Se um health check HTTP não puder ser usado no balanceador, pode-se desativar esse comportamento com `--server-async-bootstrap=false`.
+EXAMPLE:
+```bash
+# Iniciar o Keycloak com limite de requisições enfileiradas (load shedding) e health checks ativos
+bin/kc.sh start \
+  --http-max-queued-requests=200 \
+  --health-enabled=true \
+  --metrics-enabled=true
+```
+TRADE_OFFS: Com o bootstrap assíncrono padrão ativo, um balanceador de carga configurado apenas com verificação de porta TCP (em vez de checar explicitamente o caminho HTTP `/health/ready` na interface de gerenciamento) roteará tráfego de usuários para instâncias que ainda estão executando migrações de banco; nesses casos, configure `/health/ready` ou passe `--server-async-bootstrap=false`.
+VERIFY: Durante a inicialização do servidor, consulte a porta de gerenciamento (padrão `9000`) em `curl -i http://localhost:9000/health/live` e `curl -i http://localhost:9000/health/ready` para observar a diferença entre liveness (`200`) e readiness.
+LINKS: [[keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy]] | [[keycloak-observabilidade-opentelemetry-metricas-sli-jfr]] | [[keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco]]
+SOURCES: https://www.keycloak.org/server/configuration-production | https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1004 | keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco | Keycloak em cluster de alta disponibilidade: JGroups, caches distribuídos Infinispan, banco relacional e pilha IPv4/IPv6 ===
+ONE_LINER: Em implantações de alta disponibilidade com duas ou mais réplicas, o Keycloak persiste dados de usuários, clientes e realms em um banco de dados relacional de nível produtivo e sincroniza sessões e caches em memória entre os nós usando **Infinispan** e **JGroups** com criptografia TLS por padrão.
+IMPORTANCE: Se uma instância do Keycloak falhar durante o horário comercial, os usuários autenticados não podem perder suas sessões nem ficar impedidos de emitir novos tokens. A combinação de banco relacional compartilhado com caches distribuídos garante continuidade de serviço e evita leituras repetitivas ao banco em cada validação de token.
+HOW_IT_WORKS: Segundo o guia *Configuring Keycloak for production*, o cluster Keycloak apoia-se em **JGroups** (descoberta e transporte de mensagens entre membros do cluster) e **Infinispan** (cache distribuído e replicado), mantendo a comunicação entre nós criptografada com TLS na configuração padrão. Por padrão, o Keycloak aceita conexões IPv4 e IPv6 simultaneamente, mas para formar clusters determinísticos em redes exclusivamente IPv4 ou IPv6 a documentação orienta ajustar as propriedades da JVM via `JAVA_OPTS_APPEND` (`-Djava.net.preferIPv4Stack=true` para IPv4 puro, ou `-Djava.net.preferIPv4Stack=false -Djava.net.preferIPv6Addresses=true` para IPv6 puro) e liberar as portas de rede exigidas pelos caches distribuídos no firewall/NetworkPolicy.
+EXAMPLE:
+```bash
+# Configurar preferência estrita por pilha IPv4 via JAVA_OPTS_APPEND e iniciar nó em cluster com PostgreSQL
+export JAVA_OPTS_APPEND="-Djava.net.preferIPv4Stack=true"
+bin/kc.sh start \
+  --db=postgres \
+  --db-url=jdbc:postgresql://pg-ha.interno:5432/keycloak \
+  --db-username=keycloak \
+  --db-password="${KC_DB_PASSWORD}" \
+  --cache=ispn
+```
+TRADE_OFFS: Se as portas de comunicação do JGroups/Infinispan estiverem bloqueadas entre os pods por uma NetworkPolicy restritiva ou se houver mistura inconsistente de resolução IPv4/IPv6 entre os nós, cada réplica formará um cluster isolado de um único nó (*split-brain*), causando invalidação intermitente de sessões e falhas no fluxo de login.
+VERIFY: Verifique nos logs de inicialização do Keycloak a mensagem do JGroups confirmando a visão do cluster (`Received new cluster view` com o número esperado de membros ativos) e consulte as métricas de cache na interface de gerenciamento.
+LINKS: [[keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy]] | [[keycloak-protecao-sobrecarga-queued-requests-async-bootstrap]] | [[keycloak-operator-kubernetes-crds-realm-import-clients]]
+SOURCES: https://www.keycloak.org/server/configuration-production | https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1005 | keycloak-operator-kubernetes-crds-realm-import-clients | Keycloak Operator no Kubernetes: CRDs para implantação declarativa, importação de Realms e gestão de Clients ===
+ONE_LINER: O Keycloak Operator (distribuído no OperatorHub/Artifact Hub para Kubernetes e OpenShift) automatiza o ciclo de vida do servidor, a importação declarativa de Realms e o gerenciamento de Clients OIDC e SAML por meio de Custom Resource Definitions (CRDs), além de suportar imagens customizadas pré-otimizadas (`kc.sh build`) e rolling updates sem downtime.
+IMPORTANCE: Gerenciar instâncias do Keycloak, realms e dezenas de clientes OIDC manualmente pela interface gráfica viola os princípios de GitOps e dificulta a reprodutibilidade entre ambientes de staging e produção. O Operator permite versionar toda a topologia de identidade como manifestos Kubernetes reconciliados continuamente.
+HOW_IT_WORKS: Conforme listado na seção *Operator* do portal oficial de guias (`keycloak.org/guides`), o Keycloak Operator oferece: (1) instalação declarativa do cluster Keycloak via recurso customizado (`Keycloak`), configurando banco de dados, TLS, recursos e réplicas; (2) importação automatizada de Realms (`KeycloakRealmImport`) a partir de especificações declarativas; (3) gerenciamento declarativo de clientes OIDC e SAML (`KeycloakClient`); (4) uso de imagens customizadas otimizadas (`kc.sh build`), evitando recompilação de providers/temas na inicialização do pod; e (5) verificação de compatibilidade de rolling updates (`Checking if rolling updates are possible`) para evitar indisponibilidade ao atualizar configurações ou versões.
+EXAMPLE:
+```dockerfile
+# Construir uma imagem customizada e pré-otimizada do Keycloak (kc.sh build) para inicialização rápida no Kubernetes
+FROM quay.io/keycloak/keycloak:latest AS builder
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+ENV KC_DB=postgres
+RUN /opt/keycloak/bin/kc.sh build
+
+FROM quay.io/keycloak/keycloak:latest
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
+```
+TRADE_OFFS: Quando você passa a flag `--optimized` para acelerar o boot dos pods no Kubernetes, o Keycloak ignora opções de tempo de build (`build options` como `--db`, `--health-enabled` ou `--features`) se elas não tiverem sido gravadas previamente durante a etapa `kc.sh build` da imagem.
+VERIFY: Execute `/opt/keycloak/bin/kc.sh show-config` dentro do container construído para inspecionar todas as propriedades gravadas na etapa de build (`Runtime` vs `Build time` configuration).
+LINKS: [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco]] | [[keycloak-observabilidade-opentelemetry-metricas-sli-jfr]]
+SOURCES: https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md | https://www.keycloak.org/server/configuration-production
+
+=== NOTE: 1006 | keycloak-observabilidade-opentelemetry-metricas-sli-jfr | Observabilidade no Keycloak: OpenTelemetry tracing, métricas de eventos, SLIs/SLOs, Exemplars e Java Flight Recorder ===
+ONE_LINER: O Keycloak oferece uma pilha completa de observabilidade exposta em sua interface de gerenciamento isolada, abrangendo health checks REST, métricas Prometheus de sistema e de eventos de usuários, rastreamento distribuído via **OpenTelemetry**, correlação por **Exemplars**, dashboards Grafana oficiais e diagnóstico JVM com thread dumps e **Java Flight Recorder (JFR)**.
+IMPORTANCE: Em uma plataforma onde todas as aplicações dependem do provedor de identidade para autenticar requisições, um aumento de latência no login ou uma taxa elevada de erros de token afeta toda a empresa. A correlação entre métricas de eventos de usuário, SLIs/SLOs e traces OpenTelemetry permite isolar rapidamente se o gargalo está no banco de dados, em um servidor LDAP federado lento ou na própria JVM.
+HOW_IT_WORKS: Conforme documentado na seção *Observability* do guia oficial (`keycloak.org/guides`), os operadores habilitam: (1) **Management Interface** separada da porta pública para servir `/health` e `/metrics` sem expor dados internos na internet; (2) **Event metrics**, que agregam atividades de usuários (logins bem-sucedidos, falhas de autenticação, emissões de token) como métricas Prometheus; (3) **OpenTelemetry tracing** e **Exemplars**, que vinculam picos de latência nos histogramas Prometheus diretamente ao trace ID da requisição lenta; e (4) ferramentas de perfilamento de baixo overhead como captura de thread dumps da JVM e gravações do **Java Flight Recorder (JFR)** para diagnosticar contenção de locks ou pressão de Garbage Collection.
+EXAMPLE:
+```bash
+# Iniciar o Keycloak habilitando métricas, health checks e exportação de traces OpenTelemetry via OTLP
+bin/kc.sh start \
+  --health-enabled=true \
+  --metrics-enabled=true \
+  --tracing-enabled=true \
+  --tracing-endpoint=http://otel-collector.monitoring:4317
+```
+TRADE_OFFS: Habilitar métricas detalhadas de eventos de usuários com alta cardinalidade de labels (ou amostragem de 100% em tracing OpenTelemetry em clusters com milhares de logins por segundo) aumenta o consumo de memória e tráfego de rede; calibre a taxa de amostragem e restrinja o acesso à Management Interface exclusivamente ao scraper do Prometheus.
+VERIFY: Consulte `curl -s http://localhost:9000/metrics | grep keycloak_` para confirmar a exposição das métricas do servidor e o funcionamento da porta de gerenciamento.
+LINKS: [[keycloak-protecao-sobrecarga-queued-requests-async-bootstrap]] | [[keycloak-operator-kubernetes-crds-realm-import-clients]] | [[otelcol-vendor-agnostic-telemetry-pipeline]]
+SOURCES: https://www.keycloak.org/guides | https://www.keycloak.org/server/configuration-production | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1007 | keycloak-padroes-modernos-seguranca-dpop-token-exchange-mcp | Padrões avançados no Keycloak: DPoP, Token Exchange, JWT Authorization Grant, AuthZEN, SSF e servidores MCP ===
+ONE_LINER: Além dos fluxos clássicos OIDC e SAML, o Keycloak implementa especificações modernas de segurança e delegação de identidade, incluindo **DPoP (Demonstrating Proof-of-Possession)**, **OAuth 2.0 Token Exchange**, **JWT Authorization Grant (RFC 7521/7523)**, **Identity Assertion JWT Authorization Grant (ID-JAG)**, **AuthZEN (PDP)**, **Shared Signals Framework (SSF)** e autorização para servidores **Model Context Protocol (MCP)**.
+IMPORTANCE: Arquiteturas modernas de microsserviços, malhas de serviços zero-trust e agentes de IA que invocam ferramentas externas via MCP exigem mais do que simples Bearer Tokens estáticos: elas precisam vincular criptograficamente o token à chave privada do cliente (DPoP), trocar tokens entre domínios de confiança sem compartilhar credenciais de usuário (Token Exchange) e transmitir sinais de revogação em tempo real (SSF).
+HOW_IT_WORKS: Conforme listado na seção *Securing applications* de `keycloak.org/guides`, o Keycloak atua como: (1) emissor e validador **DPoP**, exigindo prova de posse de chave assimétrica para impedir o reuso de tokens roubados; (2) servidor de **Token Exchange** e encadeamento de identidade/autorização entre domínios (*OAuth Identity and Authorization Chaining Across Domains*); (3) servidor de autorização para servidores **Model Context Protocol (MCP)** consumidos por agentes de IA; (4) **Policy Decision Point (PDP)** compatível com o padrão **AuthZEN** para avaliar requisições de autorização; e (5) transmissor **Shared Signals Framework (SSF)** para entregar sinais de eventos de segurança a receptores downstream.
+EXAMPLE:
+```bash
+# Habilitar funcionalidades opcionais ou preview (como token-exchange) via flag --features no Keycloak
+bin/kc.sh start \
+  --features=token-exchange \
+  --hostname=https://auth.exemplo.com
+```
+TRADE_OFFS: Algumas especificações emergentes ou perfis avançados podem depender de flags explícitas em `--features` (Enabling and disabling features); sempre revise a matriz de funcionalidades suportadas vs preview antes de atualizar versões principais do Keycloak em produção.
+VERIFY: Execute `bin/kc.sh --help` ou consulte a lista de features suportadas da sua distribuição para verificar o status de ativação de `token-exchange` e demais extensões OAuth/OIDC.
+LINKS: [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[keycloak-mtls-fips-140-2-vault-truststore]] | [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]]
+SOURCES: https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md | https://www.keycloak.org/server/configuration-production
+
+=== NOTE: 1008 | keycloak-mtls-fips-140-2-vault-truststore | Segurança corporativa no Keycloak: mTLS, conformidade FIPS 140-2, Truststore e integração com Vault ===
+ONE_LINER: Para ambientes regulados e de alta segurança, o Keycloak suporta autenticação mútua TLS (**mTLS**) para verificar certificados X.509 de clientes, operação em modo de conformidade **FIPS 140-2**, gerenciamento centralizado de certificados confiáveis (**Truststore**) e leitura segura de segredos externos via **Vault**.
+IMPORTANCE: No setor financeiro, governamental e de saúde, aplicações machine-to-machine (como Open Banking / FAPI) exigem autenticação de cliente baseada em certificado mTLS (`tls_client_auth`) e módulos criptográficos validados sob FIPS 140-2, além de proibir senhas de banco de dados ou chaves SMTP em texto claro nos arquivos de configuração.
+HOW_IT_WORKS: Conforme detalham os guias de servidor (`keycloak.org/guides`), o administrador pode: (1) configurar **Mutual TLS (mTLS)** (`--https-client-auth=request` ou `required`) junto ao **Keycloak Truststore** (`--truststore-paths`) para validar certificados de clientes que se conectam ao Keycloak e certificados TLS de serviços externos (como LDAPS ou provedores OIDC); (2) habilitar o modo **FIPS 140-2** (`--fips-mode=non-strict` ou `strict`) utilizando provedores criptográficos BouncyCastle FIPS; e (3) configurar um **Vault** no Keycloak (ex.: Kubernetes Secrets montados em arquivos ou integrações de cofre) referenciando segredos por expressões `${vault.ID}` em vez de strings literais.
+EXAMPLE:
+```bash
+# Iniciar o Keycloak exigindo ou solicitando certificados mTLS de clientes e carregando certificados confiáveis na Truststore
+bin/kc.sh start \
+  --https-client-auth=request \
+  --truststore-paths=/etc/keycloak/truststore/ca-bundle.pem \
+  --vault=file \
+  --vault-dir=/var/run/secrets/keycloak-vault
+```
+TRADE_OFFS: Em modo `--fips-mode=strict`, algoritmos criptográficos legados, tamanhos de chave curtos e formatos de keystore não aprovados pelo padrão FIPS (como JKS tradicionais em vez de BCFKS/PKCS12 compatíveis) são rejeitados imediatamente na inicialização ou durante o handshake TLS.
+VERIFY: Teste a conexão mTLS contra o endpoint de token usando `curl --cert client.crt --key client.key --cacert ca.pem https://auth.exemplo.com/realms/corp/protocol/openid-connect/token` para validar a aceitação do certificado de cliente.
+LINKS: [[keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy]] | [[keycloak-padroes-modernos-seguranca-dpop-token-exchange-mcp]] | [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]]
+SOURCES: https://www.keycloak.org/guides | https://www.keycloak.org/server/configuration-production | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1009 | keycloak-automacao-admin-rest-api-cli-export-import-realms | Automação no Keycloak: Admin REST API, Admin Client, registro de clientes via CLI e importação/exportação de Realms ===
+ONE_LINER: O Keycloak permite automatizar integralmente o provisionamento de identidades e configurações por meio da **Keycloak Admin REST API**, das bibliotecas **Keycloak Admin Client**, do serviço de registro dinâmico de clientes via CLI e dos comandos `kc.sh import` e `kc.sh export` para serializar Realms em arquivos JSON.
+IMPORTANCE: Em plataformas self-service (Internal Developer Platforms), quando uma equipe cria um novo microsserviço ou ambiente efêmero, o pipeline de CI/CD precisa registrar automaticamente o cliente OIDC, definir redirect URIs, atribuir roles e exportar/importar templates de realms sem intervenção humana no painel web.
+HOW_IT_WORKS: De acordo com a documentação oficial (`keycloak.org/guides`), existem três frentes complementares de automação: (1) **Importing and exporting realms**: o comando `bin/kc.sh export --dir /tmp/export --realm meu-realm` exporta a configuração do realm em JSON e `bin/kc.sh import --dir /tmp/export` (ou `--import-realm` no boot) carrega realms declarativos; (2) **Client Registration CLI (`kcadm.sh` / `kcreg.sh`)**: permite registrar e atualizar clientes OIDC/SAML pela linha de comando usando tokens de registro inicial; e (3) **Keycloak Admin REST API e Admin Client**: fornecem acesso programático autenticado para gerenciar usuários, grupos, roles e clientes a partir de código Go, Java, Python ou Terraform.
+EXAMPLE:
+```bash
+# Exportar a configuração de um realm para um diretório JSON e importar realms automaticamente na inicialização
+bin/kc.sh export --dir=/opt/keycloak/data/import --realm=plataforma --users=realm_file
+bin/kc.sh start --import-realm
+```
+TRADE_OFFS: Conforme alerta a documentação de produção, a **Keycloak Administration REST API** possui privilégios amplos sobre os realms; ela deve ser bloqueada no nível do reverse proxy público ou exposta apenas em um hostname interno dedicado (`--hostname-admin`), concedendo tokens de serviço com escopo mínimo por realm.
+VERIFY: Liste os arquivos JSON gerados em `/opt/keycloak/data/import` após o comando `kc.sh export` e valide nos logs de `kc.sh start --import-realm` a mensagem de importação concluída do realm.
+LINKS: [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[keycloak-operator-kubernetes-crds-realm-import-clients]] | [[keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy]]
+SOURCES: https://www.keycloak.org/guides | https://www.keycloak.org/server/configuration-production | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md
+
+=== NOTE: 1010 | keycloak-integracao-distribution-registry-apache-oidc-saml-adapters | Integração do Keycloak com infraestrutura: Distribution Registry (OCI), Apache mod_auth_openidc / mod_auth_mellon e Adapters ===
+ONE_LINER: O Keycloak protege tanto aplicações modernas quanto infraestrutura de plataforma por meio de integrações nativas com registros de containers **Distribution Registry (Docker/OCI Registry v2)**, módulos **Apache HTTPD (`mod_auth_openidc` e `mod_auth_mellon`)**, clientes de autorização (`authz client` / `policy enforcer`) e bibliotecas adaptadoras para JavaScript e Node.js.
+IMPORTANCE: Nem todo sistema em uma plataforma corporativa é uma SPA moderna que implementa OIDC nativamente: registros de imagens OCI (`Distribution Registry`), servidores web Apache legados e aplicações corporativas Java/WildFly precisam delegar autenticação e controle de acesso de pull/push ao mesmo provedor central de identidade.
+HOW_IT_WORKS: Conforme os guias da seção *Securing applications* (`keycloak.org/guides`), o Keycloak suporta: (1) **Distribution Registry**: atua como servidor de token compatível com a especificação Docker Registry v2 Token Authentication, emitindo tokens assinados que autorizam ações `pull` e `push` por repositório; (2) **Apache HTTPD**: integra-se via `mod_auth_openidc` (para OpenID Connect) ou `mod_auth_mellon` (para SAML 2.0) atuando como gatekeeper na frente de aplicações internas; e (3) **Keycloak Authorization Client e Policy Enforcer**: avaliam permissões granulares baseadas em recursos, escopos e políticas diretamente no servidor Keycloak (UMA 2.0 / Fine-grained Authorization).
+EXAMPLE:
+```apache
+# Exemplo de configuração do módulo Apache mod_auth_openidc apontando para um Realm do Keycloak
+OIDCProviderMetadataURL https://auth.exemplo.com/realms/plataforma/.well-known/openid-configuration
+OIDCClientID apache-portal-interno
+OIDCClientSecret "${OIDC_CLIENT_SECRET}"
+OIDCRedirectURI https://portal.exemplo.com/oauth2/callback
+OIDCCryptoPassphrase "${OIDC_CRYPTO_PASSPHRASE}"
+
+<Location />
+   AuthType openid-connect
+   Require valid-user
+</Location>
+```
+TRADE_OFFS: Quando você protege aplicações usando módulos de servidor web (`mod_auth_openidc`) ou proxies reversos de autenticação (como o `oauth2-proxy`), a aplicação backend recebe a identidade do usuário por variáveis de ambiente ou cabeçalhos HTTP; portanto, a aplicação backend não deve aceitar conexões diretas que contornem o proxy autenticador.
+VERIFY: Acesse a rota protegida sem sessão ativa e confirme o redirecionamento HTTP `302` para o endpoint `/protocol/openid-connect/auth` do realm configurado no Keycloak.
+LINKS: [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]] | [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[harbor-enterprise-authentication-oidc-ldap-and-rbac]]
+SOURCES: https://www.keycloak.org/guides | https://raw.githubusercontent.com/keycloak/keycloak/main/README.md | https://www.keycloak.org/server/configuration-production
