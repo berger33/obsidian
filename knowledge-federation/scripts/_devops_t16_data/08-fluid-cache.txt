@@ -1,0 +1,124 @@
+1571|fluid-cache-arquitetura-orquestrador-datasets-aceleracao-cncf|Fluid: arquitetura CNCF Incubating de abstração de Datasets e aceleração elástica de cache no Kubernetes|O Fluid (projeto CNCF Incubating, escrito em Go) é um orquestrador e acelerador nativo de Kubernetes para *datasets* distribuídos que reconstrói a localidade de dados em arquiteturas de separação entre computação e armazenamento para cargas de IA/ML e Big Data.|Na arquitetura cloud-native moderna, os dados residem em object stores remotos (S3, OSS, GCS, Ceph, HDFS) separados dos nós de computação efêmeros. Treinar modelos de Deep Learning lendo milhões de pequenos arquivos pela rede a cada época (*epoch*) deixa GPUs caras ociosas aguardando I/O remoto.|O Fluid introduz dois Custom Resources centrais (`data.fluid.io/v1alpha1`): `Dataset` (que define a origem lógica dos dados e pontos de montagem) e `Runtime` (como `AlluxioRuntime`, `JuiceFSRuntime`, `JindoRuntime`, `EFCOSRuntime` ou `VineyardRuntime`, que provisiona um cluster de cache distribuído usando discos NVMe/SSD e RAM dos próprios nós Kubernetes), expondo o conjunto acelerado como um `PersistentVolumeClaim` padrão via CSI.|```bash
+helm repo add fluid https://fluid-cloudnative.github.io/charts
+helm upgrade --install fluid fluid/fluid --namespace fluid-system --create-namespace
+kubectl get pods -n fluid-system
+```|O Fluid requer um cluster Kubernetes com suporte a CSI (*Container Storage Interface*), pois o plugin `csi-nodeplugin-fluid` monta o sistema de arquivos FUSE do motor de cache selecionado dentro dos Pods das aplicações consumidoras.|Verifique os controladores `dataset-controller`, os controladores de runtime ativos e o DaemonSet `csi-nodeplugin-fluid` no namespace `fluid-system` após a instalação.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1572|fluid-cache-crd-dataset-unificacao-multiplas-fontes-pvc|Fluid: abstração unificada de dados heterogêneos via CRD `Dataset` e exposição transparente por PVC|O CRD `Dataset` (`data.fluid.io/v1alpha1`) abstrai uma ou múltiplas fontes de armazenamento subjacentes (*Under File Systems* — UFS, como buckets S3/OSS, HDFS, Ceph, NFS ou PVCs Kubernetes existentes) em uma visão unificada e isolada por namespace.|Sem uma camada de abstração de datasets no Kubernetes, cientistas de dados precisam embutir SDKs proprietários de S3/HDFS, endpoints e credenciais de acesso diretamente no código de treinamento PyTorch/Spark, criando acoplamento rígido e "ilhas de dados".|Ao declarar um `Dataset` de nome `imagenet` no namespace `ai-team`, o usuário especifica em `spec.mounts` as URIs de origem (`s3://...`, `hdfs://...`, `pvc://...`) e o `mountPoint` virtual. Quando vinculado a um `Runtime` de mesmo nome (`imagenet`), o Fluid cria automaticamente um `PersistentVolume` e um `PersistentVolumeClaim` chamado `imagenet` naquele namespace: qualquer Pod só precisa montar esse PVC padrão via POSIX sem conhecer o protocolo remoto.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: Dataset
+metadata:
+  name: imagenet-train
+  namespace: ai-workloads
+spec:
+  mounts:
+    - mountPoint: https://mirrors.tuna.tsinghua.edu.cn/apache/spark/
+      name: spark-releases
+      path: /spark
+  accessModes:
+    - ReadOnlyMany
+```|Um objeto `Dataset` permanece na fase `NotBound` até que um objeto de Runtime correspondente (por exemplo um `AlluxioRuntime` ou `JuiceFSRuntime`) com exatamente o mesmo `metadata.name` e `metadata.namespace` seja criado no cluster.|Execute `kubectl get dataset -n ai-workloads` e confirme que a coluna `PHASE` transita de `NotBound` para `Bound` assim que o Runtime pareado fica pronto.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://github.com/fluid-cloudnative/fluid
+1573|fluid-cache-alluxioruntime-tieredstore-mem-ssd-hdd-workers|Fluid: aceleração de cache distribuído com `AlluxioRuntime` e armazenamento em camadas (`tieredstore`)|O `AlluxioRuntime` (`data.fluid.io/v1alpha1`) é o motor clássico de cache distribuído gerenciado pelo Fluid, orquestrando Pods `master`, `worker` e `fuse` do Alluxio com armazenamento hierárquico em camadas (`MEM`, `SSD`, `HDD`).|Configurar manualmente um cluster Alluxio sobre Kubernetes — dimensionando masters Raft, workers com volumes de cache hostPath/emptyDir, daemons FUSE e sincronização de metadados UFS — exige dezenas de manifestos complexos.|Com o `AlluxioRuntime`, o engenheiro define apenas `spec.replicas` (número de workers de cache) e `spec.tieredstore.levels` (por exemplo `mediumtype: MEM` ou `SSD`, `path: /dev/shm` ou `/var/lib/cache`, `quota: 20Gi`, `high: "0.95"`, `low: "0.7"`). O controlador do Fluid provisiona o StatefulSet de masters, os workers de cache e gerencia o ciclo de vida do volume CSI correspondente.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: AlluxioRuntime
+metadata:
+  name: imagenet-train
+  namespace: ai-workloads
+spec:
+  replicas: 2
+  tieredstore:
+    levels:
+      - mediumtype: MEM
+        path: /dev/shm
+        quota: 4Gi
+        high: "0.95"
+        low: "0.7"
+```|Os parâmetros `high` e `low` do `tieredstore` definem as marcas d'água de evicção de cache: quando o uso da camada atinge `95%` (`high`), o worker despeja blocos menos usados até reduzir a ocupação para `70%` (`low`).|Execute `kubectl get dataset,alluxioruntime,pvc -n ai-workloads` e verifique o percentual de dados em cache (`CACHED` e `CACHED PERCENTAGE`) reportado pelo `Dataset`.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://github.com/fluid-cloudnative/fluid
+1574|fluid-cache-co-orquestracao-data-affinity-scheduling-localidade|Fluid: co-orquestração de dados e computação via agendamento por afinidade de cache (*Data-Affinity Scheduling*)|O Fluid injeta automaticamente regras de afinidade de nó nos Pods das aplicações consumidoras para agendá-los preferencialmente ou obrigatoriamente nos nós Kubernetes onde os workers de cache do `Dataset` já estão alocados.|Mesmo que um dataset esteja em cache na memória RAM de 4 nós de um cluster de 100 nós, se o `kube-scheduler` agendar o Pod de treinamento de IA no nó 85 (que não possui worker de cache local), a leitura continuará trafegando pela rede entre nós.|Quando o `AlluxioRuntime` (ou outro runtime do Fluid) aloca seus workers em determinados nós, o controlador aplica labels de localidade nesses nós (como `fluid.io/s-<namespace>-<dataset>=true`). Ao mesmo tempo, o webhook mutante do Fluid (`fluid-webhook`) intercepta qualquer Pod serverless ou de treinamento que monte o PVC daquele `Dataset` e injeta `nodeAffinity` apontando para os nós que hospedam o cache, unindo computação e dados sem exigir configuração manual no Pod.|```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pytorch-trainer
+  namespace: ai-workloads
+spec:
+  containers:
+    - name: trainer
+      image: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+      command: ["python", "train.py", "--data-dir", "/data/spark"]
+      volumeMounts:
+        - mountPath: /data
+          name: dataset-vol
+  volumes:
+    - name: dataset-vol
+      persistentVolumeClaim:
+        claimName: imagenet-train
+```|Se todos os nós com workers de cache já estiverem com GPUs ou CPUs 100% ocupadas, a afinidade preferencial (`preferredDuringSchedulingIgnoredDuringExecution`) permite que novos Pods transbordem para nós vizinhos na mesma zona/rack acessando o cache distribuído via rede local.|Inspecione o Pod criado com `kubectl get pod pytorch-trainer -n ai-workloads -o yaml` e confirme a presença das regras de `nodeAffinity` injetadas pelo webhook do Fluid.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://github.com/fluid-cloudnative/fluid
+1575|fluid-cache-dataload-pre-aquecimento-declarativo-datasets|Fluid: pré-carregamento declarativo de dados (`DataLoad`) antes da execução de treinamentos|O CRD `DataLoad` (`data.fluid.io/v1alpha1`) permite disparar jobs declarativos de pré-aquecimento (*cache warmup*) que carregam o dataset inteiro ou subpastas específicas do armazenamento remoto para os workers de cache do Fluid antes que os jobs de treinamento de GPU iniciem.|Na primeira época (*epoch 1*) de um treinamento distribuído sobre um cache frio (*cold cache*), todos os workers sofrem cache miss simultâneo e precisam buscar os objetos no S3/HDFS, subutilizando GPUs caras durante a primeira passagem pelos dados.|Ao aplicar um manifesto `DataLoad` apontando para `spec.dataset.name` (e opcionalmente `loadMetadata: true` e uma lista de `target` paths), o controlador do Fluid lança um Job distribuído que popula os blocos de dados na camada `MEM`/`SSD` dos workers do Runtime. O `DataLoad` também pode ser agendado por política `Cron` ou encadeado após outras operações de dados.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: DataLoad
+metadata:
+  name: warmup-imagenet
+  namespace: ai-workloads
+spec:
+  dataset:
+    name: imagenet-train
+    namespace: ai-workloads
+  loadMetadata: true
+  target:
+    - path: /spark
+      replicas: 2
+```|Se a soma do tamanho dos arquivos solicitados no `DataLoad` exceder a cota total (`quota * replicas`) configurada no `tieredstore` do Runtime, os blocos recém-carregados sofrerão evicção imediata (cache thrashing), reduzindo a eficácia do pré-aquecimento.|Monitore `kubectl get dataload warmup-imagenet -n ai-workloads` até que `PHASE` atinja `Complete` e verifique em `kubectl get dataset imagenet-train -n ai-workloads` que `CACHED PERCENTAGE` subiu para `100.0%`.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1576|fluid-cache-runtimes-pluggables-juicefs-jindo-vineyard-efc|Fluid: arquitetura plugável de Runtimes de cache (`JuiceFSRuntime`, `JindoRuntime`, `VineyardRuntime`, `ThinRuntime`)|O Fluid define uma interface padrão de ciclo de vida de Runtime que suporta múltiplos motores de armazenamento e cache distribuído além do Alluxio, incluindo `JuiceFSRuntime`, `JindoRuntime`, `GooseFSRuntime`, `EFCOSRuntime`, `VineyardRuntime` (para dados intermediários em memória) e `ThinRuntime` (extensão genérica para qualquer sistema FUSE/CSI).|Diferentes cargas de trabalho possuem padrões distintos de I/O: treinamentos de visão computacional com milhões de arquivos pequenos se beneficiam da separação de metadados do JuiceFS; pipelines nativos em OSS usam JindoFS; e grafos analíticos em memória compartilhada entre etapas de um DAG usam o CNCF Vineyard.|O usuário mantém exatamente o mesmo CRD `Dataset` e a mesma interface de consumo via PVC nas aplicações, trocando apenas o CRD de Runtime pareado (por exemplo, aplicando um `JuiceFSRuntime` em vez de `AlluxioRuntime`). Com o `ThinRuntime` e `ThinRuntimeProfile`, engenheiros de plataforma podem integrar um cliente FUSE proprietário em minutos sem precisar recompilar o código Go do Fluid.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: JuiceFSRuntime
+metadata:
+  name: llm-corpus
+  namespace: ai-workloads
+spec:
+  replicas: 3
+  tieredstore:
+    levels:
+      - mediumtype: SSD
+        path: /mnt/nvme-cache
+        quota: 100Gi
+```|Cada controlador de Runtime no Fluid é implantado de forma modular; no chart Helm do Fluid, apenas os controladores dos runtimes habilitados em `values.yaml` consomem recursos no namespace `fluid-system`.|Verifique os CRDs de runtime instalados no cluster com `kubectl api-resources --api-group=data.fluid.io` e confirme a disponibilidade dos motores necessários.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1577|fluid-cache-operacoes-automatizadas-databackup-datamigrate-dataprocess|Fluid: automação de operações de dados (`DataBackup`, `DataMigrate` e `DataProcess`) e encadeamento em fluxo|Além do `DataLoad`, o Fluid provê CRDs declarativos para operações automatizadas sobre datasets (`DataBackup`, `DataMigrate` e `DataProcess`), permitindo encadear pipelines completos de preparação, pré-aquecimento e treinamento via campo `runAfter`.|Em pipelines de MLOps, antes do treinamento iniciar é comum precisar copiar um lote bruto de um bucket externo (`DataMigrate`), executar um script de limpeza/tokenização (`DataProcess`), pré-aquecer o resultado em memória (`DataLoad`) e fazer backup dos metadados (`DataBackup`).|Todas essas operações de dados compartilham uma abstração comum no Fluid e podem referenciar umas às outras por meio de `spec.runAfter` (`kind: DataMigrate | DataLoad | DataProcess`, `name: ...`), criando um workflow declarativo nativo em Kubernetes sem exigir um orquestrador de workflow externo apenas para preparar o cache.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: DataProcess
+metadata:
+  name: tokenize-corpus
+  namespace: ai-workloads
+spec:
+  dataset:
+    name: llm-corpus
+    namespace: ai-workloads
+  processor:
+    job:
+      podSpec:
+        restartPolicy: Never
+        containers:
+          - name: tokenizer
+            image: ghcr.io/org/tokenizer:v1.0
+            command: ["python", "clean.py", "/data/raw", "/data/clean"]
+            volumeMounts:
+              - name: data-vol
+                mountPath: /data
+```|No `DataProcess`, o nome do volume especificado em `volumeMounts` do `podSpec` é vinculado automaticamente pelo controlador do Fluid ao PVC do `Dataset` alvo referenciado em `spec.dataset`.|Inspecione `kubectl get dataprocess,dataload,datamigrate -n ai-workloads` e valide a execução sequencial governada por `runAfter`.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1578|fluid-cache-escalonamento-elastico-autoscale-clean-cache-policy|Fluid: escalabilidade elástica de workers de cache e políticas de limpeza (`cleanCachePolicy`)|Os Runtimes do Fluid suportam escalonamento elástico manual (`kubectl scale`) e automático (via HPA sobre a sub-resource `/scale` do Runtime) do número de workers de cache, além de políticas configuráveis de desalocação de cache (`cleanCachePolicy`) ao encerrar os Pods consumidores.|Manter um cluster de cache ocupando centenas de gigabytes de RAM e NVMe 24x7 para um dataset que só é lido por jobs de treinamento noturnos desperdiça recursos que poderiam ser usados por outras cargas durante o dia.|O operador pode escalar um `AlluxioRuntime` ou `JuiceFSRuntime` (`kubectl scale alluxioruntime imagenet-train --replicas=6`) antes de uma bateria pesada de treinamentos e reduzi-lo a `0` ou usar políticas de limpeza automática quando nenhum Pod estiver montando o PVC, liberando a memória e o SSD dos nós Kubernetes.|```bash
+kubectl scale alluxioruntime imagenet-train -n ai-workloads --replicas=4
+kubectl get alluxioruntime imagenet-train -n ai-workloads
+```|Reduzir `replicas` de um Runtime de cache com dados que foram gravados apenas no cache local (*write-back* ainda não persistido no UFS remoto) pode causar perda de dados se o flush não tiver sido concluído antes do scale-down.|Monitore o campo `READY` dos workers em `kubectl get alluxioruntime -n ai-workloads` e a capacidade `CACHE CAPACITY` em `kubectl get dataset -n ai-workloads` após o escalonamento.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1579|fluid-cache-recuperacao-automatica-fuse-sidecar-serverless-csi|Fluid: modos de implantação FUSE (CSI HostMount vs Sidecar Serverless) e auto-recuperação de pontos de montagem|O Fluid suporta dois modos de entrega do cliente FUSE para os Pods consumidores: via DaemonSet CSI nos worker nodes padrão (com recuperação automática de mount point caso o Pod FUSE reinicie) e via injeção automática de container Sidecar para ambientes Serverless Kubernetes (como AWS Fargate, Alibaba ECI ou Virtual Kubelet).|No Kubernetes tradicional, se o container que hospeda o daemon FUSE no nó sofrer crash ou for atualizado, todos os Pods de aplicação que já tinham o volume montado passam a receber o erro fatal `Transport endpoint is not connected` (`ENOTCONN`), exigindo recriação manual dos Pods de treinamento.|No modo CSI padrão, o componente `csi-nodeplugin-fluid` monitora a saúde dos daemons FUSE e executa a recuperação automática da montagem (`mount point recovery`) propagando a nova conexão para os containers de aplicação sem derrubá-los. Já em nós Serverless (onde DaemonSets privilegiados não são permitidos), o webhook do Fluid injeta o cliente FUSE diretamente como um sidecar dentro do próprio Pod da aplicação.|```bash
+kubectl label namespace serverless-ai fluid.io/enable-injection=true
+kubectl get pods -n fluid-system -l app=csi-nodeplugin-fluid
+```|No modo Sidecar para ambientes Serverless, se o container FUSE não dispuser de `/dev/fuse` exposto pelo provedor de container serverless, é necessário configurar o modo de acesso sem privilégios suportado pelo runtime específico (ou `Unprivileged` FUSE).|Verifique nos logs do `csi-nodeplugin-fluid` o registro de monitoramento de pontos de montagem FUSE ativos no nó.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid
+1580|fluid-cache-aceleracao-pvc-existente-isolamento-seguranca-namespace|Fluid: aceleração de `PersistentVolumeClaim` existente (`pvc://`) e isolamento de dados por namespace|O Fluid pode acelerar um `PersistentVolumeClaim` já existente no cluster (como um volume NFS corporativo lento ou um disco de rede compartilhado) simplesmente apontando `mountPoint: pvc://<nome-do-pvc>` no CRD `Dataset`, mantendo o isolamento de acesso por namespace Kubernetes.|Equipes frequentemente armazenam datasets em um servidor NFS legado já montado via PVC no Kubernetes; quando 50 Pods de treinamento tentam ler esse mesmo PVC simultaneamente, o servidor NFS satura sua placa de rede e trava todas as cargas.|Ao criar um `Dataset` com `mountPoint: pvc://nfs-shared-dataset` e associá-lo a um `AlluxioRuntime` ou `JuiceFSRuntime`, o Fluid monta o PVC original nos workers de cache e expõe um novo PVC acelerado para os Pods de treinamento. As leituras repetidas passam a ser servidas diretamente da RAM/NVMe local dos nós do cluster, aliviando o armazenamento NFS de origem.|```yaml
+apiVersion: data.fluid.io/v1alpha1
+kind: Dataset
+metadata:
+  name: accelerated-nfs
+  namespace: ai-workloads
+spec:
+  mounts:
+    - mountPoint: pvc://legacy-nfs-pvc
+      name: nfs-data
+```|O PVC de origem (`legacy-nfs-pvc`) deve estar no mesmo namespace que o `Dataset` (`ai-workloads`) e suportar montagem pelos múltiplos Pods do Runtime (tipicamente `ReadWriteMany` ou `ReadOnlyMany`).|Compare o throughput de leitura (`dd` ou benchmark PyTorch DataLoader) lendo diretamente de `legacy-nfs-pvc` versus lendo do novo PVC `accelerated-nfs` após a primeira passagem de cache.|https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/README.md;https://raw.githubusercontent.com/fluid-cloudnative/fluid/master/docs/en/userguide/overview.md;https://github.com/fluid-cloudnative/fluid

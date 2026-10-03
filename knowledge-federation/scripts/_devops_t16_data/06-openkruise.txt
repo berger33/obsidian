@@ -1,0 +1,176 @@
+1551|openkruise-arquitetura-controladores-workloads-avancados-cncf|OpenKruise: suíte CNCF de controladores avançados de workloads e atualizações in-place no Kubernetes|O OpenKruise (projeto CNCF Incubating, escrito em Go) é uma suíte de controladores e webhooks que estende e complementa os controladores nativos do Kubernetes (`Deployment`, `StatefulSet`, `DaemonSet`, `Job`, `CronJob`) com atualizações *in-place*, orquestração de sidecars, distribuição multi-domínio e proteção contra deleção em cascata.|Os controladores core do Kubernetes recriam o Pod inteiro (gerando novo IP, novo agendamento e remontagem de volumes) até mesmo quando apenas a tag de imagem de um container mudou, o que causa alto custo de inicialização e perda de cache de memória ou estado local em clusters de grande escala.|Instalado via Helm (`kruise-manager` e `kruise-daemon`), o OpenKruise registra Custom Resource Definitions no grupo `apps.kruise.io` e `policy.kruise.io`. Seus controladores gerenciam Pods diretamente (padrão sufixo `-Set`), coordenando com o daemon de nó (`kruise-daemon`) para reiniciar containers individualmente via CRI sem destruir o Pod sandbox nem alterar o endereço IP.|```bash
+helm repo add openkruise https://openkruise.github.io/charts/
+helm upgrade --install kruise openkruise/kruise --version 1.8.0 --namespace kruise-system --create-namespace
+kubectl get pods -n kruise-system
+```|Como o OpenKruise utiliza mutating e validating admission webhooks para injetar metadados de atualização in-place e proteger recursos, a indisponibilidade de todos os pods do `kruise-controller-manager` pode bloquear a criação de novos Pods caso as políticas de falha não estejam dimensionadas em alta disponibilidade.|Verifique que os Pods `kruise-controller-manager` (em múltiplas réplicas com leader election) e o DaemonSet `kruise-daemon` estão `Running` e `Ready` no namespace `kruise-system`.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1552|openkruise-cloneset-in-place-update-preservacao-ip-sandbox|OpenKruise CloneSet: atualização in-place de containers (`InPlaceIfPossible`) preservando IP e Pod sandbox|O `CloneSet` (`apps.kruise.io/v1alpha1`) é o controlador do OpenKruise para aplicações stateless e semi-stateful de larga escala que gerencia Pods diretamente (sem `ReplicaSet` intermediário) e suporta atualização *in-place* (`InPlaceIfPossible` e `InPlaceOnly`).|Em um `Deployment` tradicional, atualizar a imagem da aplicação destrói o Pod antigo e agenda um novo Pod, trocando o IP do Pod, desconectando malhas de serviço ou registros de descoberta e exigindo reaquecimento de volumes locais.|Quando `spec.updateStrategy.type: InPlaceIfPossible` está configurado no `CloneSet` e apenas campos mutáveis in-place (como `spec.template.spec.containers[x].image` ou metadados) são alterados, o controlador atualiza o hash da imagem no Pod existente e aciona o container runtime para trocar apenas aquele container. O Pod mantém exatamente o mesmo `uid`, o mesmo nome, o mesmo `podIP` e os mesmos volumes montados.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: CloneSet
+metadata:
+  name: order-service
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: order-service
+  updateStrategy:
+    type: InPlaceIfPossible
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 10
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/org/order:v1.1.0
+```|Se a alteração no `template` modificar campos que o Kubernetes não permite mutar em um Pod vivo (como `resources.requests` em versões sem *In-Place Pod Vertical Scaling* ativo ou novos volumes), `InPlaceIfPossible` faz fallback automático para recriação do Pod, enquanto `InPlaceOnly` rejeita ou ignora a recriação.|Atualize a tag da imagem no `CloneSet`, execute `kubectl get pods -l app=order-service -o wide` antes e depois do rollout e confirme que os nomes e IPs dos Pods permaneceram idênticos enquanto `RESTARTS` incrementou em `1`.|https://openkruise.io/docs/user-manuals/cloneset/;https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://github.com/openkruise/kruise
+1553|openkruise-cloneset-volumeclaimtemplates-pvc-por-pod-reuso|OpenKruise CloneSet: suporte a `volumeClaimTemplates` por Pod e controle de reuso de PVCs (`disablePVCReuse`)|Diferentemente do `Deployment` nativo do Kubernetes, o `CloneSet` permite declarar `volumeClaimTemplates` para provisionar e associar automaticamente PersistentVolumeClaims dedicados a cada Pod sem impor a ordenação sequencial rígida de um `StatefulSet`.|Muitas cargas de trabalho distribuídas ou workers com cache em disco precisam de um volume persistente individual por réplica, mas querem escalar e atualizar em paralelo sem os índices sequenciais (`-0`, `-1`, `-2`) que travam o `StatefulSet` quando um único Pod falha.|Cada Pod e seus PVCs criados pelo `CloneSet` recebem o mesmo valor no label `apps.kruise.io/cloneset-instance-id`. Quando um Pod é atualizado via `in-place` ou deletado manualmente, os PVCs são preservados e reutilizados pelo novo Pod que assume o mesmo `instance-id`. Caso o nó sofra falha permanente e o volume local impeça a subida do Pod em outro nó, configurar `scaleStrategy.disablePVCReuse: true` faz o controlador deletar e recriar os PVCs automaticamente.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: CloneSet
+metadata:
+  name: cache-worker
+spec:
+  replicas: 4
+  scaleStrategy:
+    disablePVCReuse: true
+  selector:
+    matchLabels:
+      app: cache-worker
+  template:
+    metadata:
+      labels:
+        app: cache-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/org/worker:v1.0
+          volumeMounts:
+            - name: workdir
+              mountPath: /var/lib/worker
+  volumeClaimTemplates:
+    - metadata:
+        name: workdir
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+```|Por padrão, se a imagem e o tamanho do `volumeClaimTemplates` mudarem simultaneamente com atualização `in-place`, o volume existente não é reconstruído; para forçar recriação do Pod e do volume ao alterar o template de PVC, habilita-se o feature-gate `RecreatePodWhenChangeVCTInCloneSetGate=true` (Kruise v1.7.0+).|Inspecione os PVCs criados com `kubectl get pvc -l apps.kruise.io/cloneset-instance-id` e confirme a correspondência 1:1 com cada Pod do `CloneSet`.|https://openkruise.io/docs/user-manuals/cloneset/;https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://github.com/openkruise/kruise
+1554|openkruise-cloneset-selective-pod-deletion-pods-to-delete-cost|OpenKruise CloneSet: exclusão seletiva de Pods (`podsToDelete`) e sequência de prioridades de scale-down|Ao reduzir réplicas ou substituir instâncias específicas, o `CloneSet` permite escolher exatamente quais Pods serão removidos via `spec.scaleStrategy.podsToDelete` ou pelo label `apps.kruise.io/specified-delete: "true"`, além de seguir uma sequência de 8 critérios de ordenação de deleção.|Em um `Deployment`, reduzir `replicas` de `10` para `9` escolhe o Pod a deletar por heurísticas internas do `ReplicaSet`, e em um `StatefulSet` remove obrigatoriamente o maior ordinal (`-9`), impedindo descomissionar cirurgicamente a réplica `-3` que está apresentando degradação ou que roda em um nó específico.|Se o operador listar nomes de Pods em `spec.scaleStrategy.podsToDelete` (ou rotular o Pod com `apps.kruise.io/specified-delete: "true"`) e reduzir `replicas`, o `CloneSet` deleta primeiro os Pods especificados e limpa a lista automaticamente. Se `replicas` não for reduzido, o controlador deleta o Pod marcado e cria um substituto respeitando `maxUnavailable`, `maxSurge` e o hook de ciclo de vida `PreparingDelete`.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: CloneSet
+metadata:
+  name: order-service
+spec:
+  replicas: 5
+  scaleStrategy:
+    podsToDelete:
+      - order-service-9m4hp
+  selector:
+    matchLabels:
+      app: order-service
+```|Para os demais Pods não listados explicitamente, o `CloneSet` ordena a deleção avaliando: 1) sem nó < agendado; 2) Pending < Unknown < Running; 3) não Ready < Ready; 4) menor `controller.kubernetes.io/pod-deletion-cost`; 5) maior concentração de spread; 6) menor tempo Ready; 7) mais restarts; 8) mais novo < mais antigo.|Aplique o label `kubectl label pod order-service-xyz apps.kruise.io/specified-delete=true` e observe a substituição controlada do Pod respeitando o orçamento de indisponibilidade do `CloneSet`.|https://openkruise.io/docs/user-manuals/cloneset/;https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://github.com/openkruise/kruise
+1555|openkruise-advanced-statefulset-parallel-in-place-unordered-ready|OpenKruise Advanced StatefulSet: escalonamento paralelo, rollout não ordenado e atualização in-place|O `StatefulSet` avançado do OpenKruise (`apps.kruise.io/v1beta1`, `kind: StatefulSet`) é um substituto drop-in do `apps/v1 StatefulSet` que adiciona atualização *in-place*, rollout não ordenado (`UnorderedUpdate`), pausa de rollout (`paused: true`) e tolerância `maxUnavailable`.|No `StatefulSet` nativo do Kubernetes, atualizar um cluster de 50 nós de banco de dados ou fila de mensagens de forma estritamente sequencial (`49 -> 0`) recriando cada Pod inteiro leva horas e trava completamente na primeira réplica que demorar a ficar pronta.|Ao migrar `apiVersion` para `apps.kruise.io/v1beta1`, o administrador habilita `podManagementPolicy: Parallel` combinada com `updateStrategy.rollingUpdate.podUpdatePolicy: InPlaceIfPossible`, `maxUnavailable: 20%` e `unorderedUpdate: {priorityStrategy: ...}`. As réplicas são atualizadas in-place em paralelo sem perder seus volumes nem seus ordinais DNS (`pod-0`, `pod-1`).|```yaml
+apiVersion: apps.kruise.io/v1beta1
+kind: StatefulSet
+metadata:
+  name: kafka-brokers
+spec:
+  replicas: 6
+  serviceName: kafka-headless
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      podUpdatePolicy: InPlaceIfPossible
+      maxUnavailable: 2
+      unorderedUpdate:
+        priorityStrategy:
+          weightPriority:
+            - weight: 100
+              matchSelector:
+                matchLabels:
+                  role: follower
+```|Ao usar `unorderedUpdate` com `weightPriority`, é recomendável atribuir peso maior às réplicas `follower` e peso menor à réplica `leader` para que o líder do cluster stateful seja atualizado por último, evitando múltiplas eleições de líder durante o rollout.|Inspecione `kubectl get asts kafka-brokers -o yaml` (atalho `asts` para Advanced StatefulSet) e monitore o progresso de `updatedReplicas` e `readyReplicas`.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1556|openkruise-sidecarset-injecao-upgrade-independente-sidecars|OpenKruise SidecarSet: injeção mutante e atualização in-place independente de containers sidecar|O `SidecarSet` (`apps.kruise.io/v1alpha1`) desacopla o ciclo de vida de containers auxiliares (como coletores de logs Fluent Bit, agentes de monitoramento, proxies Envoy ou agentes de segurança) do ciclo de vida do container principal da aplicação.|Em clusters Kubernetes padrão, atualizar a versão do agente de log ou proxy sidecar exige reeditar e fazer redeploy de centenas de `Deployments` de todas as equipes de produto, reiniciando desnecessariamente os processos das aplicações principais.|Com o `SidecarSet`, a equipe de plataforma define o template do sidecar e um seletor de Pods (`spec.selector`). O webhook do OpenKruise injeta automaticamente o sidecar na criação de qualquer Pod correspondente e, quando a imagem do `SidecarSet` é atualizada, o controlador realiza o upgrade *in-place* apenas do container sidecar em toda a frota de Pods em execução, sem reiniciar o container da aplicação principal.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: SidecarSet
+metadata:
+  name: log-collector-sidecar
+spec:
+  selector:
+    matchLabels:
+      logging.platform.io/enabled: "true"
+  updateStrategy:
+    type: RollingUpdate
+    maxUnavailable: 10%
+  containers:
+    - name: fluent-bit
+      image: fluent/fluent-bit:3.1.9
+```|Para que a atualização in-place de um sidecar ocorra sem recriação do Pod, apenas campos mutáveis pelo kubelet (essencialmente `image`) podem ser alterados no container do `SidecarSet`; adicionar novos containers ao `SidecarSet` só surtirá efeito em Pods criados posteriormente.|Execute `kubectl get sidecarset log-collector-sidecar` após atualizar a tag da imagem e confirme que `UPDATED` atinge o total de `MATCHED` sem incremento de `RESTARTS` no container principal da aplicação.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1557|openkruise-container-launch-priority-job-sidecar-terminator|OpenKruise: ordenação de partida (`Container Launch Priority`) e encerramento de sidecars em Jobs (`Sidecar Terminator`)|O OpenKruise resolve dois problemas clássicos de coordenação multi-container dentro de um Pod: garantir a ordem de inicialização entre containers regulares via `apps.kruise.io/container-launch-priority` e encerrar automaticamente sidecars quando o container principal de um `Job` termina.|Antes ou fora de KEP-753 (Native Sidecar Containers), se o container da aplicação iniciar antes do proxy de rede ou agente de cofre estar pronto, as primeiras requisições falham; e quando um `Job` batch termina seu processamento principal, o Pod nunca passa para `Completed` porque o container sidecar continua rodando indefinidamente.|Ao definir a variável de ambiente `KRUISE_CONTAINER_PRIORITY` (ou a anotação `apps.kruise.io/container-launch-priority: Ordered`), o OpenKruise bloqueia a partida dos containers de menor prioridade até que os de maior prioridade estejam prontos. Já o *Sidecar Job Terminator* monitora Pods do tipo `Job` (`restartPolicy: Never`/`OnFailure`) e envia sinal de término aos sidecars marcados com `kruise.io/sidecar-target` assim que os containers principais concluem com código `0`.|```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ordered-startup-pod
+  annotations:
+    apps.kruise.io/container-launch-priority: Ordered
+spec:
+  containers:
+    - name: mesh-proxy
+      image: envoyproxy/envoy:v1.31.0
+    - name: business-app
+      image: ghcr.io/org/app:v1.0
+```|No modo `Ordered`, os containers iniciam estritamente na ordem em que estão declarados na lista `spec.containers` (ou segundo os valores inteiros atribuídos a `KRUISE_CONTAINER_PRIORITY`, do maior para o menor).|Descreva o Pod (`kubectl describe pod ordered-startup-pod`) e verifique nos eventos que `business-app` só foi iniciado após `mesh-proxy` passar em seu `startupProbe`/`readinessProbe`.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1558|openkruise-workloadspread-uniteddeployment-distribuicao-multi-dominio|OpenKruise: distribuição multi-domínio elástica com `WorkloadSpread` e `UnitedDeployment`|Para gerenciar aplicações distribuídas entre múltiplos domínios de falha ou pools heterogêneos (zonas de disponibilidade, arquiteturas x86/ARM, nós on-demand vs spot ou Virtual Kubelet), o OpenKruise oferece o `WorkloadSpread` e o `UnitedDeployment`.|As `topologySpreadConstraints` nativas do Kubernetes distribuem Pods de maneira simétrica, mas não permitem facilmente definir cotas numéricas ou percentuais por subconjunto (por exemplo: manter exatamente 20 réplicas fixas em nós on-demand e transbordar todo o restante do autoescalonamento para nós spot ou elásticos).|O `WorkloadSpread` atua de forma não intrusiva por webhook sobre workloads existentes (`Deployment`, `CloneSet`, `ReplicaSet`, `Job`), dividindo as réplicas em `subsets` com `maxReplicas` e injetando `nodeSelector`, `affinity` e `tolerations` específicas em cada fatia. Já o `UnitedDeployment` é um workload guarda-chuva que cria e reconcilia múltiplos sub-workloads (`StatefulSet`, `CloneSet` ou `Deployment`) dedicados por domínio.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: WorkloadSpread
+metadata:
+  name: checkout-spread
+spec:
+  targetReference:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: checkout
+  subsets:
+    - name: on-demand-baseline
+      maxReplicas: 10
+      requiredNodeSelectorTerm:
+        matchExpressions:
+          - key: node.kubernetes.io/capacity
+            operator: In
+            values: ["on-demand"]
+    - name: spot-elastic
+      requiredNodeSelectorTerm:
+        matchExpressions:
+          - key: node.kubernetes.io/capacity
+            operator: In
+            values: ["spot"]
+```|Na lista `subsets` do `WorkloadSpread`, os Pods são alocados sequencialmente do primeiro subset até atingir seu `maxReplicas`, transbordando para o subset seguinte (cujo último item geralmente omite `maxReplicas` para absorver o crescimento ilimitado do HPA).|Escale o `Deployment` `checkout` de `8` para `25` réplicas e verifique com `kubectl get pods -o wide` que exatamente 10 Pods foram alocados no pool `on-demand` e 15 no pool `spot`.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1559|openkruise-imagepulljob-containerrecreaterequest-operacoes-no|OpenKruise: pré-aquecimento de imagens (`ImagePullJob`) e reinício cirúrgico (`ContainerRecreateRequest`)|O OpenKruise fornece CRDs operacionais de dia 2 que atuam diretamente sobre os nós via `kruise-daemon`: o `ImagePullJob` para pré-baixar imagens de container em lote nos nós antes de um rollout e o `ContainerRecreateRequest` (`CRR`) para reiniciar containers individuais dentro de um Pod ativo.|Quando um `CloneSet` ou `Deployment` de 500 réplicas é atualizado para uma nova imagem de 2 GB, o download simultâneo no momento do rollout causa lentidão e timeouts. Além disso, quando apenas um container em um Pod multi-container trava, deletar o Pod inteiro derruba os demais containers saudáveis.|O `ImagePullJob` distribui tarefas de pull para o `kruise-daemon` em todos os nós selecionados (com controle de paralelismo `parallelism` e `completionPolicy`), garantindo que as camadas já estejam no cache do CRI antes do deploy. Já o `ContainerRecreateRequest` instrui o `kruise-daemon` do nó onde o Pod reside a parar e recriar apenas os containers listados sem remover o Pod da API.|```yaml
+apiVersion: apps.kruise.io/v1alpha1
+kind: ImagePullJob
+metadata:
+  name: prewarm-release-v2
+spec:
+  image: ghcr.io/org/order-service:v2.0.0
+  parallelism: 10
+  completionPolicy:
+    type: Always
+    activeDeadlineSeconds: 1200
+    ttlSecondsAfterFinished: 300
+```|Para imagens hospedadas em registries privados, o `ImagePullJob` precisa que os nomes dos `Secrets` de credenciais sejam listados explicitamente em `spec.pullSecrets` para que o `kruise-daemon` possa autenticar o pull no CRI.|Acompanhe `kubectl get imagepulljob prewarm-release-v2` e confirme que `SUCCEEDED` iguala o número de nós desejados (`DESIRED`) antes de disparar o rollout do `CloneSet`.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise
+1560|openkruise-deletion-protection-pod-unavailable-budget-sla|OpenKruise: proteção contra deleção em cascata (`Deletion Protection`) e `PodUnavailableBudget` (`PUB`)|Na camada de proteção de disponibilidade e SLA, o OpenKruise implementa o webhook de *Deletion Protection* (`policy.kruise.io/delete-protection`) e o recurso `PodUnavailableBudget` (`policy.kruise.io/v1alpha1`).|O `PodDisruptionBudget` (`PDB`) nativo do Kubernetes protege aplicações apenas contra evicções voluntárias que usam a Eviction API (como `kubectl drain`), mas não intercepta um `kubectl delete pod` direto, uma atualização in-place concorrente ou um `kubectl delete namespace` acidental que apague workloads inteiros em produção.|Com o label `policy.kruise.io/delete-protection: Always` (ou `Cascading`), o webhook do OpenKruise rejeita a exclusão de `Namespace`, `CustomResourceDefinition`, `Deployment`, `StatefulSet` ou `CloneSet` enquanto `Cascading` impedir apagar objetos que ainda possuam Pods ativos (`replicas > 0`). Já o `PodUnavailableBudget` intercepta via webhook tanto evicções quanto deleções diretas de Pods e atualizações in-place, garantindo que o número de Pods disponíveis nunca caia abaixo de `minAvailable` (ou `maxUnavailable`).|```yaml
+apiVersion: policy.kruise.io/v1alpha1
+kind: PodUnavailableBudget
+metadata:
+  name: order-service-pub
+  namespace: prod
+spec:
+  selector:
+    matchLabels:
+      app: order-service
+  maxUnavailable: 10%
+```|Se um nó inteiro sofrer falha de hardware abrupta (queda física), os Pods naquele nó ficam indisponíveis fora do controle de admissão da API; o `PodUnavailableBudget` contabilizará essa indisponibilidade e bloqueará novas alterações voluntárias até que a capacidade mínima seja restaurada.|Tente deletar diretamente um lote de Pods acima de `maxUnavailable` com `kubectl delete pod` em um workload protegido por `PodUnavailableBudget` e confirme que o webhook bloqueia a operação excedente.|https://raw.githubusercontent.com/openkruise/kruise/master/README.md;https://openkruise.io/docs/user-manuals/cloneset/;https://github.com/openkruise/kruise

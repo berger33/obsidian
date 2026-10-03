@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1500 / 2.000 (75,00%)**
-- Gate automatizado: **1500/1500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 15)
-- Revisão factual humana: **0/1500**
-- Revisão factual por IA: **1500/1500**
-- Contabilizadas como válidas: **1500/1500**
-- Revisor das 1500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–15 (1500 notas, IDs 1–1500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1600 / 2.000 (80,00%)**
+- Gate automatizado: **1600/1600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
+- Revisão factual humana: **0/1600**
+- Revisão factual por IA: **1600/1600**
+- Contabilizadas como válidas: **1600/1600**
+- Revisor das 1600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–16 (1600 notas, IDs 1–1600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-15.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-15.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-16.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-16.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 500 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 400 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1998,6 +1998,138 @@
 1499. [Eraser: coordenação distribuída de pods de limpeza por nó via recurso `ImageJob`](../../domains/software-0008/software/devops/eraser-crd-imagejob-execucao-efemera-node-selectors-limpeza.md)
 1500. [Eraser: governança CNCF, OpenSSF Scorecard e boas práticas operacionais com registries e mirrors](../../domains/software-0008/software/devops/eraser-governanca-cncf-openssf-scorecard-operacao-segura.md)
 
+## Tranche 16 — Carvel ytt, Carvel kapp, Carvel kbld, Carvel imgpkg, Timoni, OpenKruise, Koordinator, Fluid, Volcano e Kubernetes Kueue (100 notas; revisão factual por IA registrada)
+
+### Carvel `ytt` (motor CNCF Carvel de templating estrutural YAML, `#@data/values-schema`, `@ytt:overlay` e Starlark sandboxed)
+
+1501. [Carvel ytt: templating estrutural de YAML guiado por árvore sintática e Starlark](../../domains/software-0008/software/devops/carvel-ytt-templating-estrutural-yaml-starlark-arquitetura.md)
+1502. [Carvel ytt: declaração de `#@data/values-schema` para tipagem forte e valores padrão](../../domains/software-0008/software/devops/carvel-ytt-data-values-schema-validacao-tipagem-defaults.md)
+1503. [Carvel ytt: aplicação de patches estruturais declarativos com o módulo `@ytt:overlay`](../../domains/software-0008/software/devops/carvel-ytt-overlays-patch-estrutural-matchers-expects.md)
+1504. [Carvel ytt: validações customizadas com `#@schema/validation` e módulo `@ytt:assert`](../../domains/software-0008/software/devops/carvel-ytt-validacoes-customizadas-schema-validation-assert.md)
+1505. [Carvel ytt: modularização com funções Starlark, fragmentos YAML e `load()`](../../domains/software-0008/software/devops/carvel-ytt-modularizacao-funcoes-fragmentos-yaml-load.md)
+1506. [Carvel ytt: bibliotecas privadas (`_ytt_lib`) e instanciação programática via `@ytt:library`](../../domains/software-0008/software/devops/carvel-ytt-bibliotecas-privadas-ytt-lib-module-instanciacao.md)
+1507. [Carvel ytt: módulos Starlark embutidos (`@ytt:json`, `@ytt:yaml`, `@ytt:base64`, `@ytt:sha256`, `@ytt:regexp`)](../../domains/software-0008/software/devops/carvel-ytt-bibliotecas-embutidas-json-yaml-base64-sha256-regexp.md)
+1508. [Carvel ytt: ordem de precedência e injeção de Data Values via arquivos, variáveis de ambiente e flags CLI](../../domains/software-0008/software/devops/carvel-ytt-precedencia-valores-data-values-file-env-flags.md)
+1509. [Carvel ytt: padrões de integração como executável externo versus módulo Go in-process](../../domains/software-0008/software/devops/carvel-ytt-integracao-executavel-vs-go-module-kapp-controller.md)
+1510. [Carvel ytt: pós-processamento seguro de gráficos Helm de terceiros sem fork de templates](../../domains/software-0008/software/devops/carvel-ytt-pos-processamento-helm-template-kustomize-pipeline.md)
+
+### Carvel `kapp` (CLI CNCF Carvel de implantação declarativa de aplicações Kubernetes com estágio de diff, recursos versionados, ordenação `change-group` e espera ativa de reconciliação)
+
+1511. [Carvel kapp: gerenciamento declarativo de aplicações Kubernetes por agrupamento de labels client-side](../../domains/software-0008/software/devops/carvel-kapp-agrupamento-recursos-labels-convergencia-client-side.md)
+1512. [Carvel kapp: estágio de diff e estratégias de comparação contra `last-applied` versus recurso ativo](../../domains/software-0008/software/devops/carvel-kapp-diff-stage-estrategias-last-applied-vs-live.md)
+1513. [Carvel kapp: recursos versionados (`kapp.k14s.io/versioned`) para rollout automático de ConfigMaps e Secrets](../../domains/software-0008/software/devops/carvel-kapp-versioned-resources-configmap-secret-rollout.md)
+1514. [Carvel kapp: ordenação determinística de mudanças com `change-group` e `change-rule`](../../domains/software-0008/software/devops/carvel-kapp-ordenacao-mudancas-change-group-change-rule.md)
+1515. [Carvel kapp: espera ativa de convergência (`apply waiting`), `waitRules` e streaming de logs (`--logs`)](../../domains/software-0008/software/devops/carvel-kapp-apply-waiting-reconciliacao-wait-rules-streaming-logs.md)
+1516. [Carvel kapp: `rebaseRules` para preservar campos mutados pelo cluster (HPA, `clusterIP`, webhooks)](../../domains/software-0008/software/devops/carvel-kapp-rebase-rules-preservacao-campos-hpa-cluster-ip.md)
+1517. [Carvel kapp: estratégias de atualização (`update-strategy`) para campos imutáveis em Jobs e Services](../../domains/software-0008/software/devops/carvel-kapp-update-strategies-fallback-on-replace-always-replace.md)
+1518. [Carvel kapp: políticas de propriedade (`kapp.k14s.io/exists` e `kapp.k14s.io/noop`) para recursos compartilhados](../../domains/software-0008/software/devops/carvel-kapp-ownership-exists-noop-compartilhamento-recursos.md)
+1519. [Carvel kapp: operação sem privilégios de cluster-admin e escopo de namespace único (`-n`)](../../domains/software-0008/software/devops/carvel-kapp-operacao-sem-privilegios-admin-single-namespace-rbac.md)
+1520. [Carvel kapp: implantação em lote via `app-group` e inspeção de recursos existentes por seletor `label:`](../../domains/software-0008/software/devops/carvel-kapp-app-group-deploy-gitops-inspecao-label-arbitrario.md)
+
+### Carvel `kbld` (ferramenta CNCF Carvel de orquestração de build de imagens, resolução imutável de digests `@sha256` e rastreabilidade de supply chain)
+
+1521. [Carvel kbld: resolução de referências de imagens para digests imutáveis SHA-256 e anotações de rastreabilidade](../../domains/software-0008/software/devops/carvel-kbld-resolucao-imutavel-digests-sha256-anotacoes-metadados.md)
+1522. [Carvel kbld: configuração de `searchRules` com `keyMatcher` e `valueMatcher`](../../domains/software-0008/software/devops/carvel-kbld-config-search-rules-keymatcher-valuematcher.md)
+1523. [Carvel kbld: `updateStrategy` para resolver imagens dentro de strings YAML ou JSON embutidas em `ConfigMap`](../../domains/software-0008/software/devops/carvel-kbld-update-strategy-yaml-json-embutidos-configmap.md)
+1524. [Carvel kbld: orquestração declarativa de builds de imagem a partir do código-fonte (`sources`)](../../domains/software-0008/software/devops/carvel-kbld-sources-orquestracao-builds-docker-buildx-pack-ko-bazel.md)
+1525. [Carvel kbld: publicação automática de imagens construídas em registries OCI via `destinations`](../../domains/software-0008/software/devops/carvel-kbld-destinations-publicacao-registries-remotos.md)
+1526. [Carvel kbld: redirecionamento de imagens e pré-resolução offline via `overrides`](../../domains/software-0008/software/devops/carvel-kbld-overrides-redirecionamento-repositorios-preresolved.md)
+1527. [Carvel kbld: geração de arquivos de lock (`--lock-output` e `--imgpkg-lock-output`) para reprodutibilidade](../../domains/software-0008/software/devops/carvel-kbld-lock-output-imgpkg-imageslock-geracao.md)
+1528. [Carvel kbld: empacotamento e importação de imagens em tarball único (`pkg` / `unpkg`) mantendo digests](../../domains/software-0008/software/devops/carvel-kbld-empacotamento-tarball-pkg-unpkg-transporte-imagens.md)
+1529. [Carvel kbld: auditoria de supply chain no cluster via anotação `kbld.k14s.io/images`](../../domains/software-0008/software/devops/carvel-kbld-anotacoes-rastreabilidade-git-build-auditoria.md)
+1530. [Carvel kbld: composição Unix em pipeline com `ytt`, `kbld` e `kapp` para entrega contínua](../../domains/software-0008/software/devops/carvel-kbld-pipeline-composicao-ytt-kbld-kapp-unix-philosophy.md)
+
+### Carvel `imgpkg` (empacotador CNCF Carvel de configurações e imagens dependentes em OCI Bundles com relocação espessa air-gapped)
+
+1531. [Carvel imgpkg: empacotamento de configurações e referências de imagens em OCI Bundles imutáveis](../../domains/software-0008/software/devops/carvel-imgpkg-conceito-oci-bundle-arquivos-imagens-dependentes.md)
+1532. [Carvel imgpkg: estrutura e restrições do diretório `.imgpkg/` (`images.yml` e `bundle.yml`)](../../domains/software-0008/software/devops/carvel-imgpkg-diretorio-metadados-imageslock-bundle-yml.md)
+1533. [Carvel imgpkg: cópia espessa (*thick copy*) de bundles e imagens dependentes entre registries e tarballs air-gapped](../../domains/software-0008/software/devops/carvel-imgpkg-copy-relocacao-espessa-registries-air-gapped-tar.md)
+1534. [Carvel imgpkg: composição recursiva de Nested Bundles e extração estruturada em disco](../../domains/software-0008/software/devops/carvel-imgpkg-nested-bundles-composicao-recursiva-sem-limites.md)
+1535. [Carvel imgpkg: rastreamento determinístico de releases com `BundleLock` (`--lock-output`)](../../domains/software-0008/software/devops/carvel-imgpkg-bundlelock-lock-output-promocao-gitops.md)
+1536. [Carvel imgpkg: cache de metadados de cópia via Locations OCI Image (`image-locations.yml`)](../../domains/software-0008/software/devops/carvel-imgpkg-locations-oci-image-cache-image-locations-yml.md)
+1537. [Carvel imgpkg: reescrita automática de `.imgpkg/images.yml` no `imgpkg pull` e integração com `kbld`](../../domains/software-0008/software/devops/carvel-imgpkg-reescrita-automatica-imageslock-pull-kbld.md)
+1538. [Carvel imgpkg: cópia de coleções de imagens via `--lock` (`ImagesLock`) sem criar um Bundle](../../domains/software-0008/software/devops/carvel-imgpkg-copy-via-lock-file-sem-bundle-imageslock.md)
+1539. [Carvel imgpkg: compatibilidade universal de registries via Docker layer media type e gestão de tags (`tag ls`)](../../domains/software-0008/software/devops/carvel-imgpkg-compatibilidade-registries-docker-layer-media-type-tags.md)
+1540. [Carvel imgpkg: preservação de assinaturas Cosign (`--cosign-signatures`) na cópia de bundles air-gapped](../../domains/software-0008/software/devops/carvel-imgpkg-assinatura-cosign-copy-cosign-signatures-airgap.md)
+
+### Timoni (gerenciador de pacotes e ciclo de vida para Kubernetes movido por CUE e distribuído via artefatos OCI assinados)
+
+1541. [Timoni: arquitetura de gerenciamento de pacotes Kubernetes tipado com CUE e artefatos OCI](../../domains/software-0008/software/devops/timoni-arquitetura-gerenciador-pacotes-kubernetes-cue-oci.md)
+1542. [Timoni: importação de schemas da API Kubernetes e CRDs (`timoni mod vendor k8s` e `vendor crds`)](../../domains/software-0008/software/devops/timoni-mod-vendor-k8s-crds-schemas-cue-tipagem-estrita.md)
+1543. [Timoni: reconciliação de Instances com Server-Side Apply, detecção de drift Flux e Garbage Collector](../../domains/software-0008/software/devops/timoni-instance-server-side-apply-flux-drift-detection-gc.md)
+1544. [Timoni: customização de instâncias via `values.cue` e validação por unificação de tipos CUE](../../domains/software-0008/software/devops/timoni-values-cue-unificacao-tipos-constraints-validacao.md)
+1545. [Timoni: composição declarativa de aplicações e dependências com `bundle.cue` e pinagem por digest](../../domains/software-0008/software/devops/timoni-bundles-composicao-multi-modulos-digest-pinning.md)
+1546. [Timoni: carregamento dinâmico de segredos e parâmetros de cluster via Bundle Runtime (`--runtime`)](../../domains/software-0008/software/devops/timoni-bundle-runtime-injecao-dinamica-segredos-multi-cluster.md)
+1547. [Timoni: distribuição de módulos e bundles como artefatos OCI reproduzíveis (`application/vnd.timoni.*`)](../../domains/software-0008/software/devops/timoni-oci-artifacts-media-types-builds-reprodutiveis-git.md)
+1548. [Timoni: assinatura criptográfica (`--sign`) e verificação (`--verify`) de módulos OCI com Cosign](../../domains/software-0008/software/devops/timoni-assinatura-verificacao-modulos-cosign-sigstore.md)
+1549. [Timoni: transporte de bundles, runtimes e arquivos arbitrários com `timoni artifact push` e `pull`](../../domains/software-0008/software/devops/timoni-artifact-push-pull-transporte-bundles-runtimes.md)
+1550. [Timoni: operação assistida por agentes de IA via Agent Skills e servidor MCP de documentação](../../domains/software-0008/software/devops/timoni-integracao-agentes-ia-skills-mcp-server-operacao.md)
+
+### OpenKruise (suíte CNCF Incubating de controladores avançados de workloads Kubernetes com `CloneSet`, atualização in-place, `SidecarSet`, `WorkloadSpread` e proteção contra deleção)
+
+1551. [OpenKruise: suíte CNCF de controladores avançados de workloads e atualizações in-place no Kubernetes](../../domains/software-0008/software/devops/openkruise-arquitetura-controladores-workloads-avancados-cncf.md)
+1552. [OpenKruise CloneSet: atualização in-place de containers (`InPlaceIfPossible`) preservando IP e Pod sandbox](../../domains/software-0008/software/devops/openkruise-cloneset-in-place-update-preservacao-ip-sandbox.md)
+1553. [OpenKruise CloneSet: suporte a `volumeClaimTemplates` por Pod e controle de reuso de PVCs (`disablePVCReuse`)](../../domains/software-0008/software/devops/openkruise-cloneset-volumeclaimtemplates-pvc-por-pod-reuso.md)
+1554. [OpenKruise CloneSet: exclusão seletiva de Pods (`podsToDelete`) e sequência de prioridades de scale-down](../../domains/software-0008/software/devops/openkruise-cloneset-selective-pod-deletion-pods-to-delete-cost.md)
+1555. [OpenKruise Advanced StatefulSet: escalonamento paralelo, rollout não ordenado e atualização in-place](../../domains/software-0008/software/devops/openkruise-advanced-statefulset-parallel-in-place-unordered-ready.md)
+1556. [OpenKruise SidecarSet: injeção mutante e atualização in-place independente de containers sidecar](../../domains/software-0008/software/devops/openkruise-sidecarset-injecao-upgrade-independente-sidecars.md)
+1557. [OpenKruise: ordenação de partida (`Container Launch Priority`) e encerramento de sidecars em Jobs (`Sidecar Terminator`)](../../domains/software-0008/software/devops/openkruise-container-launch-priority-job-sidecar-terminator.md)
+1558. [OpenKruise: distribuição multi-domínio elástica com `WorkloadSpread` e `UnitedDeployment`](../../domains/software-0008/software/devops/openkruise-workloadspread-uniteddeployment-distribuicao-multi-dominio.md)
+1559. [OpenKruise: pré-aquecimento de imagens (`ImagePullJob`) e reinício cirúrgico (`ContainerRecreateRequest`)](../../domains/software-0008/software/devops/openkruise-imagepulljob-containerrecreaterequest-operacoes-no.md)
+1560. [OpenKruise: proteção contra deleção em cascata (`Deletion Protection`) e `PodUnavailableBudget` (`PUB`)](../../domains/software-0008/software/devops/openkruise-deletion-protection-pod-unavailable-budget-sla.md)
+
+### Koordinator (sistema CNCF de agendamento e co-localização híbrida baseado em QoS para cargas sensíveis à latência e jobs batch no Kubernetes)
+
+1561. [Koordinator: arquitetura de co-localização híbrida baseada em QoS (`koord-scheduler`, `koord-manager` e `koordlet`)](../../domains/software-0008/software/devops/koordinator-arquitetura-colocation-qos-scheduler-koordlet.md)
+1562. [Koordinator: classes de QoS diferenciadas (`LSE`, `LSR`, `LS`, `BE` e `SYSTEM`) para cargas híbridas](../../domains/software-0008/software/devops/koordinator-modelo-qos-lse-lsr-ls-be-system-prioridades.md)
+1563. [Koordinator: adoção transparente de co-localização via `ClusterColocationProfile` sem alterar manifestos](../../domains/software-0008/software/devops/koordinator-colocation-profile-injecao-automatica-sem-modificar-workloads.md)
+1564. [Koordinator: agendamento sensível à carga real (`Load-Aware Scheduling`) no `koord-scheduler`](../../domains/software-0008/software/devops/koordinator-koord-scheduler-load-aware-scheduling-prevencao-hotspots.md)
+1565. [Koordinator: orquestração fina de CPU, topologia NUMA e isolamento de cache L3 (`LLC`) e banda de memória](../../domains/software-0008/software/devops/koordinator-orquestracao-fina-cpu-numa-topology-llc-isolamento.md)
+1566. [Koordinator: detecção de interferência e supressão dinâmica de cargas batch pelo `koordlet` QoS Manager](../../domains/software-0008/software/devops/koordinator-koordlet-qos-manager-supressao-dinamica-interferencia.md)
+1567. [Koordinator: reserva explícita de recursos de nó via CRD `Reservation` e `NodeReservation`](../../domains/software-0008/software/devops/koordinator-resource-reservation-crd-descheduling-preempcao.md)
+1568. [Koordinator: `koord-descheduler` com migração segura apoiada em `Reservation` e balanceamento de carga](../../domains/software-0008/software/devops/koordinator-koord-descheduler-rebalanceamento-carga-seguro.md)
+1569. [Koordinator: interceptação de requisições CRI via `koord-runtime-proxy` para políticas avançadas de kernel](../../domains/software-0008/software/devops/koordinator-koord-runtime-proxy-interceptacao-cri-cgroup-kernel.md)
+1570. [Koordinator: agendamento de jobs batch/IA com `Elastic Quota`, `Gang Scheduling` e dispositivos heterogêneos](../../domains/software-0008/software/devops/koordinator-job-scheduling-elastic-quota-gang-heterogeneo-ai.md)
+
+### Fluid (orquestrador e acelerador CNCF Incubating de Datasets distribuídos e cache elástico para aplicações de IA e Big Data no Kubernetes)
+
+1571. [Fluid: arquitetura CNCF Incubating de abstração de Datasets e aceleração elástica de cache no Kubernetes](../../domains/software-0008/software/devops/fluid-cache-arquitetura-orquestrador-datasets-aceleracao-cncf.md)
+1572. [Fluid: abstração unificada de dados heterogêneos via CRD `Dataset` e exposição transparente por PVC](../../domains/software-0008/software/devops/fluid-cache-crd-dataset-unificacao-multiplas-fontes-pvc.md)
+1573. [Fluid: aceleração de cache distribuído com `AlluxioRuntime` e armazenamento em camadas (`tieredstore`)](../../domains/software-0008/software/devops/fluid-cache-alluxioruntime-tieredstore-mem-ssd-hdd-workers.md)
+1574. [Fluid: co-orquestração de dados e computação via agendamento por afinidade de cache (*Data-Affinity Scheduling*)](../../domains/software-0008/software/devops/fluid-cache-co-orquestracao-data-affinity-scheduling-localidade.md)
+1575. [Fluid: pré-carregamento declarativo de dados (`DataLoad`) antes da execução de treinamentos](../../domains/software-0008/software/devops/fluid-cache-dataload-pre-aquecimento-declarativo-datasets.md)
+1576. [Fluid: arquitetura plugável de Runtimes de cache (`JuiceFSRuntime`, `JindoRuntime`, `VineyardRuntime`, `ThinRuntime`)](../../domains/software-0008/software/devops/fluid-cache-runtimes-pluggables-juicefs-jindo-vineyard-efc.md)
+1577. [Fluid: automação de operações de dados (`DataBackup`, `DataMigrate` e `DataProcess`) e encadeamento em fluxo](../../domains/software-0008/software/devops/fluid-cache-operacoes-automatizadas-databackup-datamigrate-dataprocess.md)
+1578. [Fluid: escalabilidade elástica de workers de cache e políticas de limpeza (`cleanCachePolicy`)](../../domains/software-0008/software/devops/fluid-cache-escalonamento-elastico-autoscale-clean-cache-policy.md)
+1579. [Fluid: modos de implantação FUSE (CSI HostMount vs Sidecar Serverless) e auto-recuperação de pontos de montagem](../../domains/software-0008/software/devops/fluid-cache-recuperacao-automatica-fuse-sidecar-serverless-csi.md)
+1580. [Fluid: aceleração de `PersistentVolumeClaim` existente (`pvc://`) e isolamento de dados por namespace](../../domains/software-0008/software/devops/fluid-cache-aceleracao-pvc-existente-isolamento-seguranca-namespace.md)
+
+### Volcano (sistema CNCF Incubating de agendamento batch, HPC e IA/ML para Kubernetes com `PodGroup`, `VolcanoJob`, `Queue`, gang scheduling e topologia `HyperNode`)
+
+1581. [Volcano: arquitetura CNCF Incubating de agendamento batch, HPC e IA/ML no Kubernetes (`scheduler`, `controllermanager`, `admission`, `vcctl`)](../../domains/software-0008/software/devops/volcano-scheduler-arquitetura-batch-hpc-ai-cncf-vcctl.md)
+1582. [Volcano Job (`vcjob`): especificação multi-task (`ps`/`worker`) e políticas de reação a eventos de falha](../../domains/software-0008/software/devops/volcano-scheduler-vcjob-multi-task-lifecycle-policies-eventos.md)
+1583. [Volcano: `PodGroup` e plugin `gang` para agendamento all-or-nothing sem deadlocks de recursos](../../domains/software-0008/software/devops/volcano-scheduler-podgroup-gang-scheduling-all-or-nothing-deadlock.md)
+1584. [Volcano Scheduler: arquitetura de pipeline de sessão (`enqueue`, `allocate`, `preempt`, `reclaim`, `backfill`)](../../domains/software-0008/software/devops/volcano-scheduler-pipeline-sessao-actions-enqueue-allocate-preempt-backfill.md)
+1585. [Volcano: governança multi-tenant de recursos com CRD `Queue`, plugin `proportion` e `reclaimable`](../../domains/software-0008/software/devops/volcano-scheduler-crd-queue-proportion-reclaimable-fair-share.md)
+1586. [Volcano: algoritmo `drf` (*Dominant Resource Fairness*) e filas hierárquicas para justiça multi-recurso](../../domains/software-0008/software/devops/volcano-scheduler-drf-dominant-resource-fairness-multi-recurso.md)
+1587. [Volcano: plugins de ciclo de vida de VCJob (`ssh`, `env` e `svc`) para MPI, PyTorch e Horovod](../../domains/software-0008/software/devops/volcano-scheduler-plugins-ssh-env-svc-mpi-pytorch-horovod.md)
+1588. [Volcano: agendamento consciente de topologia de rede via `HyperNode` para treinamento de LLMs](../../domains/software-0008/software/devops/volcano-scheduler-network-topology-hypernode-llm-training.md)
+1589. [Volcano: integração nativa com Spark, KubeRay, Kubeflow Trainer e Flink sobre Kubernetes](../../domains/software-0008/software/devops/volcano-scheduler-integracao-ecossistema-spark-ray-kubeflow-flink.md)
+1590. [Volcano: operação de jobs e filas pela linha de comando com `vcctl`](../../domains/software-0008/software/devops/volcano-scheduler-vcctl-cli-operacao-jobs-filas-suspensao.md)
+
+### Kubernetes Kueue (controlador oficial SIG-Scheduling de enfileiramento de jobs, reserva de cotas, `ResourceFlavor`, `Cohort`, `Fair Sharing`, `TAS` e `MultiKueue`)
+
+1591. [Kubernetes Kueue: arquitetura SIG-Scheduling de enfileiramento no nível de Job, reserva de cota e admissão](../../domains/software-0008/software/devops/kueue-arquitetura-job-level-manager-quota-reservation-admission.md)
+1592. [Kubernetes Kueue: modelo de três camadas com `ResourceFlavor`, `ClusterQueue` e `LocalQueue`](../../domains/software-0008/software/devops/kueue-resourceflavor-clusterqueue-localqueue-modelo-tres-camadas.md)
+1593. [Kubernetes Kueue: empréstimo de cotas via `Cohort`, `Fair Sharing` e políticas de preempção](../../domains/software-0008/software/devops/kueue-cohorts-borrowing-lending-fair-sharing-preempcao.md)
+1594. [Kubernetes Kueue: fungibilidade de flavors (`flavorFungibility`) para fallback automático entre Spot e On-Demand](../../domains/software-0008/software/devops/kueue-flavor-fungibility-fallback-spot-ondemand.md)
+1595. [Kubernetes Kueue: `WorkloadPriorityClass` para priorização de fila independente de `PriorityClass` de Pod](../../domains/software-0008/software/devops/kueue-workload-priority-class-independente-pod-priority.md)
+1596. [Kubernetes Kueue: `AdmissionChecks` e integração com `ProvisioningRequest` do Cluster Autoscaler](../../domains/software-0008/software/devops/kueue-admission-checks-provisioning-request-cluster-autoscaler.md)
+1597. [Kubernetes Kueue: `waitForPodsReady` (*all-or-nothing*), admissão parcial e reclamação dinâmica de cota](../../domains/software-0008/software/devops/kueue-wait-for-pods-ready-all-or-nothing-partial-admission-reclaim.md)
+1598. [Kubernetes Kueue: *Topology-Aware Scheduling* (`TAS`) com CRD `Topology` para comunicação Pod-a-Pod](../../domains/software-0008/software/devops/kueue-topology-aware-scheduling-tas-hierarquia-racks-blocos.md)
+1599. [Kubernetes Kueue: despacho multi-cluster de cargas de trabalho com `MultiKueue`](../../domains/software-0008/software/devops/kueue-multikueue-despacho-jobs-multi-cluster-offloading.md)
+1600. [Kubernetes Kueue: integração com `JobSet`, Kubeflow, KubeRay, `Deployment`/`StatefulSet` e DRA (`v1beta2`)](../../domains/software-0008/software/devops/kueue-integracao-ecossistema-kubeflow-ray-jobset-deployments-dra.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1500 notas 1–1500 das tranches 1–15 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1500/2.000 notas válidas, restando 500 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1600 notas 1–1600 das tranches 1–16 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1600/2.000 notas válidas, restando 400 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

@@ -1,0 +1,109 @@
+1501|carvel-ytt-templating-estrutural-yaml-starlark-arquitetura|Carvel ytt: templating estrutural de YAML guiado por árvore sintática e Starlark|O Carvel `ytt` (CNCF Carvel, escrito em Go) é um motor de templating e sobreposição (*overlay*) que opera diretamente sobre a estrutura de dados YAML em vez de manipular strings de texto bruto, combinando anotações comentadas (`#@`) com a linguagem determinística Starlark.|Ferramentas baseadas em templating textual (como Go templates no Helm) tratam arquivos YAML como texto livre, exigindo contagens manuais de espaços (`nindent`), escapamento frágil de aspas e gerando erros de sintaxe YAML somente após a renderização. O `ytt` elimina essa classe de falhas porque constrói e valida nós de mapas, listas e escalares YAML nativamente durante toda a avaliação.|Ao processar arquivos com `ytt -f`, o parser converte os documentos YAML anotados em uma representação intermediária estruturada e executa as expressões Starlark em um ambiente *sandboxed* determinístico (sem acesso a rede, relógio ou sistema de arquivos arbitrário). As diretivas `#@` acoplam-se ao nó YAML imediatamente seguinte (ou à linha correspondente), garantindo que qualquer lista, mapa ou escalar injetado preserve tipos e indentação válidos.|```yaml
+#@ load("@ytt:data", "data")
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: #@ data.values.app_name
+spec:
+  replicas: #@ data.values.replicas
+  template:
+    spec:
+      containers:
+        - name: app
+          image: #@ data.values.image_repo + ":" + data.values.image_tag
+```|Comentários comuns que não começam com `#@` (ou `#!`) geram erro no `ytt` para evitar que diretivas mal digitadas passem despercebidas; comentários descritivos em templates `ytt` devem usar a sintaxe explícita `#! comentário`.|Execute `ytt -f template.yml -v app_name=payments -v replicas=3 -v image_repo=ghcr.io/org/pay -v image_tag=v1.4.0` e valide que o documento YAML é emitido com tipos inteiros e strings corretos.|https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1502|carvel-ytt-data-values-schema-validacao-tipagem-defaults|Carvel ytt: declaração de `#@data/values-schema` para tipagem forte e valores padrão|A anotação `#@data/values-schema` do `ytt` define o contrato de entrada (*Data Values Schema*) de um pacote de configuração, inferindo automaticamente os tipos esperados (string, int, bool, map, array) a partir dos valores padrão declarados no próprio documento de esquema.|Sem um esquema estrito, passar `"true"` (string) onde um template espera `true` (booleano) ou omitir uma chave aninhada crítica pode produzir manifestos Kubernetes inválidos que só falham na admissão da API. O `#@data/values-schema` rejeita tipos incompatíveis e chaves desconhecidas imediatamente no início da execução do `ytt`.|O autor cria um arquivo `schema.yml` iniciado por `#@data/values-schema`, onde cada chave declara seu valor default e, opcionalmente, modificadores como `#@schema/nullable`, `#@schema/type any=True` ou `#@schema/desc`. Quando o usuário fornece arquivos `--data-values-file` ou flags `-v` / `--data-value-yaml`, o `ytt` valida cada campo contra a árvore do schema antes de avaliar os templates.|```yaml
+#@data/values-schema
+---
+environment: production
+replicas: 2
+resources:
+  cpu: "500m"
+  memory: "512Mi"
+#@schema/nullable
+ingress_host: null
+```|Por padrão, no modo schema, qualquer chave passada em um arquivo de valores que não tenha sido declarada previamente no `#@data/values-schema` é rejeitada como erro de chave desconhecida.|Execute `ytt -f schema.yml --data-values-inspect` para inspecionar os valores efetivos resolvidos e teste passar `-v replicas=invalido` para confirmar o bloqueio imediato por conflito de tipo.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1503|carvel-ytt-overlays-patch-estrutural-matchers-expects|Carvel ytt: aplicação de patches estruturais declarativos com o módulo `@ytt:overlay`|O módulo `@ytt:overlay` do `ytt` permite modificar documentos YAML existentes (como manifestos upstream de terceiros ou saídas de Helm) por meio de regras declarativas de correspondência (`matcher`) e verificação explícita de cardinalidade (`expects`).|Diferentemente do `StrategicMergePatch` do Kustomize — que depende de metadados específicos da API do Kubernetes — ou de `JSONPatch` posicional frágil por índice numérico (`containers/0`), os overlays do `ytt` funcionam em qualquer documento YAML (Kubernetes, Concourse, Docker Compose, GitHub Actions) e localizam elementos de lista por predicados semânticos.|Um documento anotado com `#@overlay/match by=overlay.subset({"kind": "Deployment"})` localiza os documentos alvo. Dentro dele, anotações como `#@overlay/match missing_ok=True`, `#@overlay/replace`, `#@overlay/remove` e `#@overlay/merge` especificam a operação exata sobre cada chave ou item de array, falhando por padrão se o seletor não encontrar exatamente 1 alvo (`expects=1`).|```yaml
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind": "Deployment", "metadata": {"name": "coredns"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: coredns
+          #@overlay/match missing_ok=True
+          resources:
+            limits:
+              memory: 256Mi
+```|Como o `@ytt:overlay` exige por padrão que cada seletor case com exatamente um nó (`expects=1`), aplicar um overlay genérico a múltiplos Deployments sem declarar `expects="1+"` ou `expects=0` interromperá a execução com erro de cardinalidade.|Execute `ytt -f base-deployment.yml -f patch-overlay.yml` e verifique que o container `coredns` recebeu o bloco `resources.limits.memory` mantendo os demais campos intocados.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1504|carvel-ytt-validacoes-customizadas-schema-validation-assert|Carvel ytt: validações customizadas com `#@schema/validation` e módulo `@ytt:assert`|O `ytt` oferece validações declarativas acopladas ao esquema (`#@schema/validation`) e asserções imperativas (`@ytt:assert`) para impor invariantes de negócio e segurança sobre os valores de configuração antes de gerar qualquer manifesto.|Apenas validar tipos primitivos (como `int` ou `string`) não impede configurações operacionais inválidas, como definir `replicas: 1` em ambiente `production`, configurar `min_tls_version` abaixo de `1.2` ou habilitar dois modos mutuamente exclusivos.|Com `#@schema/validation`, o autor associa regras como `min_len=1`, `one_of=["dev", "staging", "prod"]` ou funções predicado `(lambda v: v % 2 == 1, "deve ser ímpar para quórum Raft")` diretamente aos nós do `#@data/values-schema`. O motor acumula todas as violações de validação e apresenta um relatório consolidado indicando o campo e a regra violada.|```yaml
+#@ load("@ytt:assert", "assert")
+#@data/values-schema
+---
+#@schema/validation one_of=["staging", "production"]
+env: staging
+#@schema/validation min=3
+etcd_members: 3
+#@schema/validation ("deve ser ímpar para quórum", lambda v: v % 2 == 1)
+raft_nodes: 3
+```|Funções lambda dentro de `#@schema/validation` não são executadas quando o valor do campo é `None` (a menos que `when_null=False` seja ajustado), pois a nulidade é tratada separadamente por `not_null=True` ou `#@schema/nullable`.|Execute `ytt -f schema-validacao.yml -v raft_nodes=4 --data-values-inspect` e confirme que o `ytt` recusa a execução exibindo a mensagem `"deve ser ímpar para quórum"`.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1505|carvel-ytt-modularizacao-funcoes-fragmentos-yaml-load|Carvel ytt: modularização com funções Starlark, fragmentos YAML e `load()`|O `ytt` permite encapsular tanto cálculos Starlark quanto fragmentos completos de estruturas YAML dentro de funções reutilizáveis (`def ...: ... end`) armazenadas em módulos `.star` ou `.lib.yml` importados via `load()`.|Em plataformas corporativas, dezenas de microsserviços compartilham blocos padronizados de `securityContext`, `livenessProbe`, labels de telemetria e anotações de cofre de segredos. Copiar e colar esses blocos ou usar macros de texto baseadas em indentação manual gera deriva e erros frequentes.|No `ytt`, uma função definida entre `#@ def pod_security_defaults():` e `#@ end` retorna um fragmento estruturado de mapa ou lista YAML. Qualquer template do projeto pode importar essa função com `#@ load("common.lib.yml", "pod_security_defaults")` e inseri-la em qualquer nível de aninhamento do manifesto sem se preocupar com o número de espaços de recuo.|```yaml
+#@ def restricted_security_context():
+runAsNonRoot: true
+runAsUser: 65532
+allowPrivilegeEscalation: false
+seccompProfile:
+  type: RuntimeDefault
+#@ end
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: worker
+spec:
+  securityContext: #@ restricted_security_context()
+```|Arquivos com extensão `.star` contêm código Starlark puro (sem anotações `#@`), enquanto arquivos `.lib.yml` ou `.lib.yaml` permitem misturar estruturas YAML e diretivas `#@` para construir fragmentos YAML.|Renderize o arquivo com `ytt -f pod.yml` e confirme que o bloco `securityContext` do Pod é expandido como um mapa YAML perfeitamente indentado.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1506|carvel-ytt-bibliotecas-privadas-ytt-lib-module-instanciacao|Carvel ytt: bibliotecas privadas (`_ytt_lib`) e instanciação programática via `@ytt:library`|O mecanismo de bibliotecas do `ytt` (`_ytt_lib` e `@ytt:library`) permite empacotar conjuntos completos de templates, esquemas e overlays em unidades isoladas que podem ser instanciadas múltiplas vezes com diferentes valores dentro de uma mesma execução.|Quando uma aplicação composta precisa instanciar três bancos de dados ou múltiplos subcomponentes baseados no mesmo pacote de templates, variáveis globais compartilhadas colidiriam se todos os arquivos fossem avaliados em um único escopo plano.|Todo diretório colocado dentro de `_ytt_lib/<nome-da-lib>/` permanece inativo na avaliação principal até ser carregado explicitamente com `library.get("<nome-da-lib>")`. O template consumidor pode então aplicar valores customizados (`lib.with_data_values(...)`) e overlays específicos (`lib.with_ague(...)`) e chamar `.eval()` para emitir os documentos YAML daquela instância isolada.|```yaml
+#@ load("@ytt:library", "library")
+#@ load("@ytt:template", "template")
+
+#@ redis_cache = library.get("redis").with_data_values({"name": "redis-cache", "port": 6379})
+#@ redis_queue = library.get("redis").with_data_values({"name": "redis-queue", "port": 6380})
+--- #@ template.replace(redis_cache.eval())
+--- #@ template.replace(redis_queue.eval())
+```|Arquivos localizados dentro de `_ytt_lib` não são renderizados automaticamente quando se passa o diretório raiz para `ytt -f .`; eles exigem invocação explícita via `@ytt:library` ou referência direta ao subdiretório.|Crie uma estrutura com `_ytt_lib/redis/config.yml`, execute `ytt -f .` e verifique que duas instâncias independentes (`redis-cache` e `redis-queue`) são emitidas na saída.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1507|carvel-ytt-bibliotecas-embutidas-json-yaml-base64-sha256-regexp|Carvel ytt: módulos Starlark embutidos (`@ytt:json`, `@ytt:yaml`, `@ytt:base64`, `@ytt:sha256`, `@ytt:regexp`)|O `ytt` disponibiliza uma biblioteca padrão de módulos determinísticos (`@ytt:json`, `@ytt:yaml`, `@ytt:base64`, `@ytt:sha256`, `@ytt:md5`, `@ytt:regexp`, `@ytt:url`, `@ytt:version`) para serializar configurações embutidas em `ConfigMap`/`Secret` e calcular hashes de rollout.|Muitas aplicações leem arquivos `config.json` ou `app.yaml` montados a partir de um `ConfigMap`, além de exigirem uma anotação de checksum SHA-256 no template do Pod para acionar rollouts automáticos quando o conteúdo da configuração muda.|Em vez de manter strings JSON ou YAML escapadas manualmente dentro de um `ConfigMap`, o autor define a estrutura como um dicionário nativo no `ytt`, usa `yaml.encode(...)` ou `json.encode(...)` para preencher a chave do `ConfigMap` e calcula `sha256.sum(...)` sobre o mesmo conteúdo para injetar na anotação `checksum/config` do `Deployment`.|```yaml
+#@ load("@ytt:yaml", "yaml")
+#@ load("@ytt:sha256", "sha256")
+
+#@ app_cfg = {"server": {"port": 8080, "tls": True}, "log_level": "info"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.yaml: #@ yaml.encode(app_cfg)
+  config.sha256: #@ sha256.sum(yaml.encode(app_cfg))
+```|Por garantia de determinismo e segurança de sandbox, o `ytt` não inclui funções para gerar UUIDs aleatórios, ler variáveis de ambiente do host sem flags explícitas ou consultar timestamps do relógio do sistema.|Execute `ytt -f configmap-hash.yml` duas vezes consecutivas e confirme que o `config.sha256` gerado é idêntico bit a bit em ambas as execuções.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1508|carvel-ytt-precedencia-valores-data-values-file-env-flags|Carvel ytt: ordem de precedência e injeção de Data Values via arquivos, variáveis de ambiente e flags CLI|O `ytt` resolve entradas de configuração combinando defaults do `#@data/values-schema`, overlays `#@data/values`, arquivos `--data-values-file`, variáveis de ambiente `--data-values-env` e flags individuais `-v` / `--data-value-yaml` segundo uma ordem estrita e determinística.|Em pipelines multi-ambiente, a configuração base do serviço vem do repositório Git, os parâmetros de região vêm de um arquivo `prod-eu.yml` e segredos ou tags de build efêmeras são injetados via variáveis de ambiente ou flags da CLI no job de CI.|O `ytt` avalia primeiro o `#@data/values-schema`, aplica em seguida os documentos `#@data/values` na ordem em que foram passados via `-f`, e depois sobrepõe os valores passados pelas flags específicas de dados (`--data-values-file`, `--data-values-env`, `--data-values-env-yaml`, `-v` / `--data-value`, `--data-value-yaml` e `--data-value-file`) exatamente na ordem de aparição na linha de comando.|```bash
+export YTT_DB_HOST="pg-prod.internal"
+export YTT_DB_PORT="5432"
+ytt -f schema.yml -f deployment.yml \
+  --data-values-file env/prod.yml \
+  --data-values-env-yaml YTT \
+  --data-value-yaml replicas=5
+```|A flag `-v` (`--data-value`) interpreta o valor fornecido sempre como string pura (por exemplo, `-v replicas=5` passa a string `"5"`), enquanto `--data-value-yaml` faz o parse YAML do valor (passando o inteiro `5` ou booleano `true`).|Use `ytt -f schema.yml --data-values-env-yaml YTT --data-value-yaml replicas=5 --data-values-inspect` para auditar o mapa final de valores antes de renderizar os manifestos.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md
+1509|carvel-ytt-integracao-executavel-vs-go-module-kapp-controller|Carvel ytt: padrões de integração como executável externo versus módulo Go in-process|A documentação oficial de APIs do `ytt` estabelece duas estratégias para integrar o motor em ferramentas de plataforma: invocação out-of-process do binário `ytt` como executável ou importação in-process do pacote Go `carvel.dev/ytt`.|Engenheiros que constroem operadores GitOps (como o `kapp-controller`), provedores Terraform (`terraform-provider-carvel`) ou CLIs internas precisam decidir entre acoplamento de biblioteca Go ou isolamento de processo.|Para a maioria dos casos, a equipe Carvel recomenda a integração como executável externo, pois desacopla o ciclo de atualização do `ytt` da ferramenta hospedeira, preserva todas as verificações de entrada da CLI e executa bibliotecas complexas em menos de um segundo. A integração como módulo Go (`template.NewOptions()` e `opts.RunWithFiles(inputs, ui)`) é indicada quando a distribuição em binário único estático é obrigatória, ciente de que as interfaces Go internas podem mudar entre versões.|```bash
+ytt -f config/ --output-files /tmp/rendered-manifests
+ls -la /tmp/rendered-manifests
+```|Ao importar `carvel.dev/ytt` diretamente no `go.mod`, o projeto assume o custo de adaptar chamadas internas em bumps de versão, já que o Carvel garante compatibilidade retroativa para o comportamento da CLI, mas não congela as assinaturas Go internas.|Teste o pipeline de renderização invocando `ytt -f config/ --output-files out/` e valide o código de retorno `0` e os arquivos YAML gerados no diretório de destino.|https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://carvel.dev/ytt/docs/v0.52.x/
+1510|carvel-ytt-pos-processamento-helm-template-kustomize-pipeline|Carvel ytt: pós-processamento seguro de gráficos Helm de terceiros sem fork de templates|O `ytt` atua como pós-processador estrutural em pipelines que consomem gráficos Helm de terceiros (`helm template ... | ytt -f - -f overlay.yml`), permitindo injetar sidecars, políticas de rede ou ajustes de recursos sem fazer fork do chart upstream.|Muitos charts Helm comunitários não expõem variáveis em `values.yaml` para todos os campos do PodSpec (como `topologySpreadConstraints`, `securityContext` customizado ou anotações específicas de malha de serviço). Fazer fork do chart inteiro inviabiliza atualizações rápidas de segurança.|O operador renderiza o chart upstream com `helm template` para `stdout` e canaliza o YAML resultante para `ytt -f - -f custom-overlay.yml`. O módulo `@ytt:overlay` localiza os recursos gerados pelo Helm por `kind` e `metadata.name`, valida que os alvos esperados existem (`expects=1`) e aplica cirurgicamente as modificações antes de entregar o resultado ao `kbld` e ao `kapp`.|```bash
+helm template ingress-nginx ingress-nginx/ingress-nginx --version 4.11.2 \
+  | ytt -f - -f overlays/enforce-topology-spread.yml \
+  > rendered-ingress.yml
+```|Se uma atualização futura do chart Helm renomear o container ou remover o recurso alvo do patch, o `ytt` interromperá imediatamente o pipeline graças à verificação padrão `expects=1` do overlay, prevenindo deploys silenciosamente incompletos.|Execute o pipeline com `ytt -f rendered-helm.yml -f overlays/enforce-topology-spread.yml` e confirme a presença de `topologySpreadConstraints` no manifesto final.|https://carvel.dev/ytt/docs/v0.52.x/;https://raw.githubusercontent.com/carvel-dev/ytt/develop/README.md;https://raw.githubusercontent.com/carvel-dev/ytt/develop/examples/integrating-with-ytt/apis.md

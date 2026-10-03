@@ -1,0 +1,165 @@
+1581|volcano-scheduler-arquitetura-batch-hpc-ai-cncf-vcctl|Volcano: arquitetura CNCF Incubating de agendamento batch, HPC e IA/ML no Kubernetes (`scheduler`, `controllermanager`, `admission`, `vcctl`)|O Volcano (projeto CNCF Incubating, evoluído a partir do `kube-batch`) é um sistema nativo de agendamento em lote (*batch scheduling*) para Kubernetes projetado para cargas de alto desempenho de IA/ML/DL, Big Data e HPC (PyTorch, TensorFlow, Spark, Flink, Ray, MPI, Horovod).|O `kube-scheduler` padrão do Kubernetes agenda Pod por Pod individualmente (*pod-by-pod*), sem visibilidade nativa do conceito de um job distribuído composto por dezenas de tarefas interdependentes nem de filas compartilhadas com justiça (*fair-share*) entre departamentos.|O Volcano é composto por quatro módulos principais: **Volcano Scheduler** (motor de agendamento orientado a sessões, `Actions` e `Plugins` que opera sobre `PodGroup`), **ControllerManager** (que gerencia o ciclo de vida dos CRDs `Queue`, `PodGroup` e `VolcanoJob`/`vcjob`), **Admission** (webhook de validação e mutação de CRDs) e **vcctl** (cliente de linha de comando para operar jobs e filas).|```bash
+kubectl apply -f https://raw.githubusercontent.com/volcano-sh/volcano/master/installer/volcano-development.yaml
+kubectl get pods -n volcano-system
+```|Para que um workload comum ou CRD externo seja agendado pelo Volcano, o campo `spec.schedulerName` dos Pods deve ser configurado como `volcano` (nos objetos `batch.volcano.sh/v1alpha1` `Job`, o controlador já define isso automaticamente).|Verifique no namespace `volcano-system` que os Pods `volcano-admission`, `volcano-controllers` e `volcano-scheduler` estão `Running` e prontos.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1582|volcano-scheduler-vcjob-multi-task-lifecycle-policies-eventos|Volcano Job (`vcjob`): especificação multi-task (`ps`/`worker`) e políticas de reação a eventos de falha|O CRD `Job` do Volcano (`batch.volcano.sh/v1alpha1`, abreviado como `vcjob`) permite declarar em um único recurso múltiplos templates de tarefas heterogêneas (`tasks`, como `ps` parameter server, `master` e `worker`) e políticas granulares de ciclo de vida (`policies`) acionadas por eventos como `PodFailed`, `PodEvicted` ou `TaskCompleted`.|O `batch/v1 Job` nativo do Kubernetes suporta apenas um único template homogêneo de Pod. Já treinamentos distribuídos (TensorFlow PS/Worker, MPI Master/Worker, Ray Head/Worker) exigem papéis distintos com diferentes quantidades de GPU/CPU e regras coordenadas de reinício (por exemplo, reiniciar o job inteiro se um worker falhar, ou encerrar o job com sucesso assim que a tarefa `master` terminar).|No `vcjob`, cada entrada em `spec.tasks` define seu próprio `replicas`, `template` e `policies` locais, enquanto `spec.policies` define reações globais mapeando eventos (`Event`) para ações como `RestartJob`, `AbortJob`, `CompleteJob` ou `TerminateJob`. O ControllerManager cria automaticamente o `PodGroup` associado e gerencia as transições de fase do job.|```yaml
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: distributed-pytorch
+spec:
+  minAvailable: 3
+  schedulerName: volcano
+  queue: default
+  policies:
+    - event: PodEvicted
+      action: RestartJob
+  tasks:
+    - replicas: 1
+      name: master
+      policies:
+        - event: TaskCompleted
+          action: CompleteJob
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: trainer
+              image: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+    - replicas: 2
+      name: worker
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: trainer
+              image: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+```|Se `minAvailable` no nível do `vcjob` não for informado explicitamente, o Volcano calcula o valor somando as réplicas de todas as `tasks` (ou os `minAvailable` individuais de cada task).|Submeta o manifesto acima e execute `kubectl get vcjob distributed-pytorch` para inspecionar o status (`Running` -> `Completed`) e a criação automática dos Pods `distributed-pytorch-master-0` e `worker-0/1`.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1583|volcano-scheduler-podgroup-gang-scheduling-all-or-nothing-deadlock|Volcano: `PodGroup` e plugin `gang` para agendamento all-or-nothing sem deadlocks de recursos|O recurso `PodGroup` (`scheduling.volcano.sh/v1beta1`) e o plugin `gang` do Volcano Scheduler garantem a semântica de agendamento *all-or-nothing*: um job distribuído só tem seus Pods vinculados aos nós se pelo menos `minMember` Pods (e recursos `minResources`) puderem ser alocados simultaneamente.|Quando dois jobs de treinamento que pedem 8 GPUs cada competem em um cluster com apenas 12 GPUs livres, o agendamento individual Pod a Pod aloca 6 GPUs para o Job A e 6 GPUs para o Job B: nenhum dos dois consegue iniciar o treinamento (`all-reduce` trava aguardando os demais pares) e ambos retêm as GPUs indefinidamente em *deadlock*.|Durante cada ciclo de sessão do Volcano Scheduler, as ações `enqueue` e `allocate` consultam o plugin `gang`. Se o cluster não tiver capacidade livre para satisfazer `minResources` e `minMember` do `PodGroup` inteiro, nenhum Pod daquele grupo é comitado aos nós naquela rodada, deixando as GPUs livres para um job que caiba integralmente.|```yaml
+apiVersion: scheduling.volcano.sh/v1beta1
+kind: PodGroup
+metadata:
+  name: ray-cluster-pg
+  namespace: default
+spec:
+  minMember: 4
+  minResources:
+    cpu: "16"
+    memory: "64Gi"
+    nvidia.com/gpu: "4"
+  queue: default
+```|Frameworks externos como Spark Operator, Kubeflow Training Operator, KubeRay e Flink Operator criam objetos `PodGroup` automaticamente quando configurados para usar o Volcano como scheduler.|Execute `kubectl get pg` (atalho para `podgroups.scheduling.volcano.sh`) e observe a transição de fase de `Pending` para `Inqueue` e `Running` apenas quando todos os `minMember` recursos estão disponíveis.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1584|volcano-scheduler-pipeline-sessao-actions-enqueue-allocate-preempt-backfill|Volcano Scheduler: arquitetura de pipeline de sessão (`enqueue`, `allocate`, `preempt`, `reclaim`, `backfill`)|O Volcano Scheduler processa o agendamento em ciclos de sessão (*Session*), executando uma sequência configurável de **Actions** (`enqueue`, `allocate`, `preempt`, `reclaim`, `backfill`, `reserve`) orquestradas por **Plugins** (`gang`, `proportion`, `drf`, `priority`, `nodeorder`, `binpack`, `predicates`).|Diferentes clusters têm objetivos distintos: um cluster de treinamento de LLMs prioriza empacotamento denso (`binpack`) e gang scheduling com reclamação de cotas entre filas (`reclaim`), enquanto um cluster de CI prioriza preenchimento rápido de lacunas com jobs pequenos (`backfill`).|Configurado via `ConfigMap` `volcano-scheduler-configmap`, o scheduler abre um snapshot do cluster a cada ciclo, executa `enqueue` (admitindo `PodGroups` de `Pending` para `Inqueue`), `allocate` (alocando recursos livres segundo os scores dos plugins), `preempt` (preemptando tarefas de menor prioridade dentro da mesma fila), `reclaim` (recuperando recursos emprestados para outras filas quando a fila dona precisa) e `backfill` (alocando Pods pequenos `BestEffort` ou unitários nas sobras).|```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: volcano-scheduler-configmap
+  namespace: volcano-system
+data:
+  volcano-scheduler.conf: |
+    actions: "enqueue, allocate, backfill, reclaim, preempt"
+    tiers:
+    - plugins:
+      - name: priority
+      - name: gang
+      - name: conformance
+    - plugins:
+      - name: drf
+      - name: predicates
+      - name: proportion
+      - name: nodeorder
+      - name: binpack
+```|A ordem declarada tanto na string `actions` quanto na lista `tiers` de `plugins` altera diretamente as decisões de agendamento; por exemplo, omitir `reclaim` em `actions` impede que uma `Queue` recupere recursos que foram emprestados por outra `Queue`.|Inspecione `kubectl get configmap volcano-scheduler-configmap -n volcano-system -o yaml` para verificar o pipeline de ações e plugins ativo no cluster.|https://volcano.sh/docs/home/architecture/;https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://github.com/volcano-sh/volcano
+1585|volcano-scheduler-crd-queue-proportion-reclaimable-fair-share|Volcano: governança multi-tenant de recursos com CRD `Queue`, plugin `proportion` e `reclaimable`|O CRD `Queue` (`scheduling.volcano.sh/v1beta1`) e o plugin `proportion` permitem dividir a capacidade do cluster entre diferentes equipes ou projetos usando pesos relativos (`weight`), limites de capacidade (`capability`), garantias (`deserved`) e empréstimo elástico de ociosidade (`reclaimable: true`).|Travar cotas rígidas via `ResourceQuota` nativo deixa GPUs ociosas na Fila A mesmo quando a Fila B tem 50 treinamentos aguardando na fila. O modelo de filas proporcionais do Volcano permite que a Fila B use 100% do cluster quando a Fila A está ociosa e devolva a fatia imediatamente quando a Fila A submeter novos jobs.|Cada `Queue` declara seu `weight` (por exemplo `weight: 2` para pesquisa e `weight: 1` para analytics) e `reclaimable: true`. O plugin `proportion` calcula a fatia justa (`deserved`) de cada fila a cada ciclo; se uma fila estiver abaixo de seu `deserved` com jobs pendentes, a ação `reclaim` evicta tarefas marcadas como reclamáveis das filas que estão usando recursos emprestados acima do seu `deserved`.|```yaml
+apiVersion: scheduling.volcano.sh/v1beta1
+kind: Queue
+metadata:
+  name: llm-research
+spec:
+  weight: 3
+  reclaimable: true
+  capability:
+    cpu: "128"
+    memory: "512Gi"
+    nvidia.com/gpu: "16"
+```|Se uma fila hospedar jobs críticos que não suportam checkpointing e não podem sofrer preempção inter-fila sob nenhuma hipótese, configure `reclaimable: false` naquela `Queue` (ou proteja o job específico), sabendo que isso restringe o empréstimo elástico.|Execute `kubectl get queue` para verificar o estado (`Open`), o peso (`WEIGHT`) e os contadores de `PodGroups` (`PENDING`, `RUNNING`, `UNKNOWN`) em cada fila.|https://volcano.sh/docs/home/architecture/;https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://github.com/volcano-sh/volcano
+1586|volcano-scheduler-drf-dominant-resource-fairness-multi-recurso|Volcano: algoritmo `drf` (*Dominant Resource Fairness*) e filas hierárquicas para justiça multi-recurso|O plugin `drf` (*Dominant Resource Fairness*) do Volcano Scheduler garante compartilhamento justo dentro de uma fila e em árvores de filas hierárquicas quando jobs demandam proporções muito diferentes de múltiplos tipos de recursos (CPU, RAM, GPU, NPU).|Um algoritmo de agendamento que olha apenas para CPU trataria como iguais um job de pré-processamento que usa 32 CPUs e 0 GPUs e um job de treinamento que usa 4 CPUs e 8 GPUs (100% das GPUs do nó), permitindo que um único job monopolize o recurso escasso.|O plugin `drf` calcula para cada job (e usuário/subfila) o seu *recurso dominante* — a maior fração de qualquer recurso total do cluster que aquele job consome (por exemplo, `8/16 = 50%` de GPUs é maior que `4/128 = 3,1%` de CPUs, logo o share dominante é `0.50`). O Volcano prioriza o agendamento dos jobs cujo share dominante acumulado seja o menor, equilibrando cargas intensivas em CPU, memória e aceleradores.|```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: volcano-drf-hierarchy
+  namespace: volcano-system
+data:
+  volcano-scheduler.conf: |
+    actions: "enqueue, allocate, reclaim"
+    tiers:
+    - plugins:
+      - name: gang
+      - name: drf
+        enableHierarchy: true
+      - name: proportion
+```|Quando `enableHierarchy: true` é habilitado no plugin `drf` / `capacity`, as filas podem ser organizadas em árvore pai-filho usando anotações de hierarquia para refletir departamentos e subequipes.|Verifique nos logs do `volcano-scheduler` (com verbosidade `-v=4`) o cálculo do *dominant resource* e do valor de *share* atribuído a cada `PodGroup` durante a fase `allocate`.|https://volcano.sh/docs/home/architecture/;https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://github.com/volcano-sh/volcano
+1587|volcano-scheduler-plugins-ssh-env-svc-mpi-pytorch-horovod|Volcano: plugins de ciclo de vida de VCJob (`ssh`, `env` e `svc`) para MPI, PyTorch e Horovod|O `VolcanoJob` (`vcjob`) inclui plugins nativos de controlador (`ssh`, `env` e `svc`) que configuram automaticamente chaves SSH passwordless entre Pods, variáveis de ambiente de índice de task e registros DNS Headless Service sem exigir scripts manuais de bootstrap.|Para executar um job distribuído MPI ou Horovod sobre Kubernetes puro, o engenheiro normalmente precisa criar manualmente um `Secret` com par de chaves RSA, um `Service` headless, um `ConfigMap` com a lista de hosts (`hostfile`) e scripts de espera por DNS.|Ao declarar `spec.plugins: {ssh: [], env: [], svc: []}` em um `vcjob`, o ControllerManager do Volcano gera e monta automaticamente as chaves SSH e o `/etc/ssh/ssh_config` em todos os Pods do job, cria o Headless Service e um `ConfigMap` com as listas de hosts por tarefa (ex.: `VK_TASK_INDEX`, `MPI_HOST`), permitindo que o `mpirun` ou `torchrun` comunique-se imediatamente entre `master` e `workers`.|```yaml
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: mpi-ring-allreduce
+spec:
+  minAvailable: 3
+  schedulerName: volcano
+  plugins:
+    ssh: []
+    env: []
+    svc: []
+  tasks:
+    - replicas: 1
+      name: mpimaster
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mpi
+              image: volcanosh/example-mpi:0.0.3
+    - replicas: 2
+      name: mpiworker
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mpi
+              image: volcanosh/example-mpi:0.0.3
+```|Para que o plugin `ssh` permita comunicação direta do `mpimaster` para os `mpiworkers`, a imagem dos containers workers precisa ter o servidor `sshd` instalado e escutando na porta configurada.|Após criar o `vcjob` com `plugins: {ssh: [], env: [], svc: []}`, verifique com `kubectl get secret,svc,cm -l volcano.sh/job-name=mpi-ring-allreduce` os recursos auxiliares provisionados automaticamente.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1588|volcano-scheduler-network-topology-hypernode-llm-training|Volcano: agendamento consciente de topologia de rede via `HyperNode` para treinamento de LLMs|O Volcano introduz a modelagem de topologia de rede baseada em `HyperNode` (*Network Topology Aware Scheduling*) para alocar todos os Pods de um treinamento distribuído de LLM dentro do mesmo domínio de switches ToR/Spine de alta velocidade (InfiniBand / RoCE RDMA).|Em treinamentos de grandes modelos de linguagem com dezenas ou centenas de GPUs, o tempo gasto sincronizando gradientes (`AllReduce` / `AllGather`) domina o tempo de época; se os Pods de um job forem espalhados entre switches Spine distantes, a latência e contenção de rede reduzem drasticamente o *Model FLOPs Utilization* (MFU).|Os recursos `HyperNode` modelam a árvore hierárquica de switches do data center (Tier 1 ToR, Tier 2 Leaf, Tier 3 Spine) agrupando os nós Kubernetes. Quando um `vcjob` especifica restrições de topologia de rede (`networkTopology`), o Volcano Scheduler prioriza alocar todo o `PodGroup` no `HyperNode` de menor nível (mais próximo fisicamente) que comporte os recursos solicitados.|```yaml
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: llm-pretrain-64gpu
+spec:
+  minAvailable: 8
+  schedulerName: volcano
+  networkTopology:
+    mode: hard
+    highestTierAllowed: 2
+  tasks:
+    - replicas: 8
+      name: trainer
+      template:
+        spec:
+          containers:
+            - name: llm
+              image: nvcr.io/nvidia/pytorch:24.07-py3
+```|No modo `mode: hard` com `highestTierAllowed: 2`, se nenhum `HyperNode` de Tier 1 ou Tier 2 tiver capacidade livre para alocar todos os 8 Pods juntos, o job permanecerá aguardando na fila em vez de sofrer degradação severa de banda em Tier 3.|Verifique a árvore de `HyperNode` do cluster e confirme com `kubectl get pods -l volcano.sh/job-name=llm-pretrain-64gpu -o wide` que os nós selecionados pertencem à mesma sub-árvore de switches.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1589|volcano-scheduler-integracao-ecossistema-spark-ray-kubeflow-flink|Volcano: integração nativa com Spark, KubeRay, Kubeflow Trainer e Flink sobre Kubernetes|O Volcano integra-se nativamente como motor de agendamento batch nos principais operadores do ecossistema cloud-native, incluindo Apache Spark (nativo e Spark Operator), KubeRay (`RayJob`/`RayCluster`), Kubeflow Trainer (v1 e v2), Flink Kubernetes Operator e Argo Workflows.|Sem um scheduler batch unificado, um cluster que executa pipelines mistos de ETL em Spark, pré-processamento em Ray e treinamento em Kubeflow PyTorch teria três controladores disputando recursos às cegas sem fila única nem proteção contra deadlocks de `PodGroup`.|No Spark nativo sobre Kubernetes, basta configurar `spark.kubernetes.scheduler.name=volcano` e o step de feature de `PodGroup` do Volcano; no KubeRay e Kubeflow Training Operator, habilita-se `enableGangScheduling: true` apontando para o grupo `scheduling.volcano.sh`. Todos os jobs passam a compartilhar as mesmas `Queues`, prioridades e políticas de `drf`/`proportion` do Volcano.|```bash
+spark-submit \
+  --master k8s://https://kubernetes.default.svc \
+  --deploy-mode cluster \
+  --conf spark.kubernetes.scheduler.name=volcano \
+  --conf spark.kubernetes.scheduler.volcano.podGroupTemplateFile=/opt/spark/conf/podgroup-template.yaml \
+  local:///opt/spark/examples/jars/spark-examples.jar
+```|Ao habilitar `enableGangScheduling` em operadores externos como KubeRay ou Kubeflow, verifique se o operador está configurado para emitir `PodGroups` da API `scheduling.volcano.sh/v1beta1` (e não apenas `scheduling.x-k8s.io/v1alpha1` do scheduler-plugins), ou se o adaptador correspondente está ativo.|Submeta um `PyTorchJob` ou `RayCluster` com gang scheduling habilitado e confirme que um objeto `podgroups.scheduling.volcano.sh` foi criado automaticamente no mesmo namespace.|https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://volcano.sh/docs/home/architecture/;https://github.com/volcano-sh/volcano
+1590|volcano-scheduler-vcctl-cli-operacao-jobs-filas-suspensao|Volcano: operação de jobs e filas pela linha de comando com `vcctl`|O `vcctl` é o cliente oficial de linha de comando do Volcano para listar, inspecionar, suspender (`job suspend`), retomar (`job resume`), deletar jobs e gerenciar o estado de filas (`queue get`, `queue list`, `queue operate`).|Durante manutenções emergenciais em nós de GPU ou quando um job prioritário precisa entrar imediatamente, operadores de plataforma precisam pausar jobs batch em andamento ou fechar temporariamente uma `Queue` para novas admissões com um único comando.|Com o binário `vcctl`, o operador pode executar `vcctl job list -n ai-training`, `vcctl job view --name <job>`, `vcctl job suspend --name <job>` (que libera os Pods ativos mantendo a definição do `vcjob` pronta para retomada posterior via `vcctl job resume`) e `vcctl queue operate --name <queue> --action close` / `open`.|```bash
+vcctl queue list
+vcctl job list --namespace default
+vcctl job suspend --name distributed-pytorch --namespace default
+vcctl job resume --name distributed-pytorch --namespace default
+```|Suspender um `vcjob` em execução com `vcctl job suspend` encerra os Pods ativos daquele job; para que o treinamento retome sem perder horas de progresso no `vcctl job resume`, o código de treinamento deve salvar checkpoints periódicos em um volume persistente.|Execute `vcctl job list` antes e depois de `vcctl job suspend` e verifique a mudança de status do job e a liberação imediata dos recursos alocáveis na fila.|https://volcano.sh/docs/home/architecture/;https://raw.githubusercontent.com/volcano-sh/volcano/master/README.md;https://github.com/volcano-sh/volcano

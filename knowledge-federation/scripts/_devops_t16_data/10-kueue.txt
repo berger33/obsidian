@@ -1,0 +1,183 @@
+1591|kueue-arquitetura-job-level-manager-quota-reservation-admission|Kubernetes Kueue: arquitetura SIG-Scheduling de enfileiramento no nível de Job, reserva de cota e admissão|O Kueue (`kubernetes-sigs/kueue`, mantido pelo Kubernetes SIG Scheduling) é um controlador e conjunto de APIs (`kueue.x-k8s.io/v1beta2`) que atua no nível de *Job* para decidir quando uma carga de trabalho deve ser admitida para iniciar (permitindo a criação de Pods) e quando deve ser suspensa ou preemptada.|Diferentemente de substituir o `kube-scheduler` inteiro, o Kueue separa a **admissão de cota no nível de Workload/Job** do **agendamento de Pod no nó** (que continua sendo feito pelo `kube-scheduler` padrão e pelo `cluster-autoscaler`), evitando que milhares de Pods impossíveis de agendar inundem a API do Kubernetes.|Quando um usuário cria um `Job` (ou `RayJob`, `PyTorchJob`, `JobSet`), o webhook do Kueue o inicia com `spec.suspend: true` e cria um objeto interno `Workload` que entra em uma `LocalQueue` vinculada a uma `ClusterQueue`. O Kueue avalia prioridades, cotas e `AdmissionChecks`; somente quando o `Workload` obtém `QuotaReservation` e é **admitido**, o Kueue altera `spec.suspend: false` e injeta os `nodeSelectors` correspondentes ao `ResourceFlavor` alocado.|```bash
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/latest/download/manifests.yaml
+kubectl get pods -n kueue-system
+```|Como o Kueue modifica recursos existentes e gerencia CRDs grandes, a instalação dos manifestos oficiais deve ser feita com `kubectl apply --server-side` para evitar limites de tamanho da anotação `last-applied-configuration`.|Verifique que o Deployment `kueue-controller-manager` está `Running` no namespace `kueue-system` e que os CRDs `clusterqueues`, `localqueues`, `resourceflavors` e `workloads` estão registrados.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
+1592|kueue-resourceflavor-clusterqueue-localqueue-modelo-tres-camadas|Kubernetes Kueue: modelo de três camadas com `ResourceFlavor`, `ClusterQueue` e `LocalQueue`|A governança de recursos no Kueue estrutura-se em três objetos complementares: `ResourceFlavor` (cluster-scoped, descreve variantes físicas/comerciais de nós), `ClusterQueue` (cluster-scoped, define pools de cotas e políticas de fila) e `LocalQueue` (namespaced, ponto de entrada para os jobs de uma equipe).|Em nuvens públicas e data centers híbridos, "1 GPU" ou "1 CPU" não é um recurso uniforme: existem nós spot, on-demand, GPUs A100 vs H100 e arquiteturas x86 vs ARM. Ao mesmo tempo, equipes trabalham isoladas em seus namespaces sem permissão para editar objetos globais de cota.|O administrador declara `ResourceFlavors` (por exemplo `spot-gpu` e `ondemand-gpu` associados a `nodeLabels` e `nodeTaints`), agrupa as cotas `nominalQuota` por flavor dentro de uma `ClusterQueue` e cria em cada namespace de equipe uma `LocalQueue` que aponta para aquela `ClusterQueue`. Os usuários apenas adicionam o label `kueue.x-k8s.io/queue-name: <local-queue>` em seus Jobs.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ResourceFlavor
+metadata:
+  name: on-demand- flavor
+spec:
+  nodeLabels:
+    cloud.google.com/gke-spot: "false"
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: team-a-cq
+spec:
+  namespaceSelector: {}
+  resourceGroups:
+    - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+      flavors:
+        - name: on-demand-flavor
+          resources:
+            - name: "cpu"
+              nominalQuota: 64
+            - name: "memory"
+              nominalQuota: 256Gi
+            - name: "nvidia.com/gpu"
+              nominalQuota: 8
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: LocalQueue
+metadata:
+  namespace: team-a
+  name: user-queue
+spec:
+  clusterQueue: team-a-cq
+```|Se o campo `spec.namespaceSelector` da `ClusterQueue` for omitido completamente, a `ClusterQueue` não admitirá workloads de nenhum namespace; use `namespaceSelector: {}` para permitir qualquer namespace ou um seletor de labels explícito.|Execute `kubectl get clusterqueue team-a-cq` e `kubectl get localqueue -n team-a` e confirme que ambas reportam condição `Active: True`.|https://kueue.sigs.k8s.io/docs/concepts/;https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://github.com/kubernetes-sigs/kueue
+1593|kueue-cohorts-borrowing-lending-fair-sharing-preempcao|Kubernetes Kueue: empréstimo de cotas via `Cohort`, `Fair Sharing` e políticas de preempção|Múltiplas `ClusterQueues` podem pertencer a um mesmo `cohort`, permitindo que uma fila tome emprestada cota ociosa (`borrowingLimit`) de outras filas do grupo (`lendingLimit`) sob regras de *Fair Sharing* e preempção automática.|Quando a equipe de Pesquisa não está usando suas 16 GPUs nominais no fim de semana, a equipe de Engenharia de Dados pode usar essa capacidade ociosa via `cohort`, com a garantia contratual de que, assim que a Pesquisa submeter um job na segunda-feira, a cota emprestada será retomada imediatamente.|Quando uma `ClusterQueue` submete um `Workload` que cabe dentro de sua própria `nominalQuota`, mas essa capacidade está atualmente emprestada a outra `ClusterQueue` do mesmo `cohort`, a política `preemption.reclaimWithinCohort: Any` (ou `LowerPriority`) instrui o Kueue a preemptar o workload que está tomando recursos emprestados, liberando a cota para o dono legítimo.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: research-cq
+spec:
+  cohortName: ai-shared-cohort
+  queueingStrategy: BestEffortFIFO
+  preemption:
+    reclaimWithinCohort: Any
+    withinClusterQueue: LowerPriority
+  resourceGroups:
+    - coveredResources: ["nvidia.com/gpu"]
+      flavors:
+        - name: on-demand-flavor
+          resources:
+            - name: "nvidia.com/gpu"
+              nominalQuota: 16
+              borrowingLimit: 8
+              lendingLimit: 12
+```|A diferença entre `StrictFIFO` e `BestEffortFIFO` em `queueingStrategy` é crítica: no `StrictFIFO`, se o primeiro job da fila for grande demais para caber na cota livre atual, ele bloqueia todos os jobs menores atrás dele; no `BestEffortFIFO` (padrão), jobs menores podem ultrapassar o job bloqueado e aproveitar a cota disponível.|Submeta jobs nas duas `ClusterQueues` do mesmo `cohort` e inspecione `kubectl describe clusterqueue research-cq` para verificar o uso nominal versus o uso emprestado (`Borrowed`).|https://kueue.sigs.k8s.io/docs/concepts/;https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://github.com/kubernetes-sigs/kueue
+1594|kueue-flavor-fungibility-fallback-spot-ondemand|Kubernetes Kueue: fungibilidade de flavors (`flavorFungibility`) para fallback automático entre Spot e On-Demand|O mecanismo de *Flavor Fungibility* do Kueue permite que um `Workload` tente alocar recursos na ordem de preferência dos `ResourceFlavors` listados na `ClusterQueue` (por exemplo, tentando primeiro nós `spot` mais baratos e fazendo fallback automático para `on-demand`, ou vice-versa).|Sem fungibilidade automática no controlador de fila, o desenvolvedor precisaria escolher manualmente no manifesto do Job se quer usar nós Spot ou On-Demand, e reenviar o Job manualmente caso a cota ou capacidade Spot se esgote.|Em `spec.resourceGroups[*].flavors`, a ordem da lista define a preferência da `ClusterQueue`. Com `spec.flavorFungibility` (`whenCanBorrow: Borrow | TryNextFlavor` e `whenCanPreempt: Preempt | TryNextFlavor`), o administrador controla se o Kueue deve primeiro tentar emprestar cota do `cohort` no primeiro flavor antes de passar para o segundo flavor, ou se deve tentar primeiro a cota própria no próximo flavor.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: hybrid-spot-cq
+spec:
+  flavorFungibility:
+    whenCanBorrow: TryNextFlavor
+    whenCanPreempt: TryNextFlavor
+  resourceGroups:
+    - coveredResources: ["cpu", "memory"]
+      flavors:
+        - name: spot-flavor
+          resources:
+            - name: "cpu"
+              nominalQuota: 32
+            - name: "memory"
+              nominalQuota: 128Gi
+        - name: on-demand-flavor
+          resources:
+            - name: "cpu"
+              nominalQuota: 32
+            - name: "memory"
+              nominalQuota: 128Gi
+```|Quando o Kueue escolhe um `ResourceFlavor` específico para admitir o `Workload`, ele injeta automaticamente os `nodeLabels` e `tolerations` daquele flavor nos templates de Pod do Job antes de mudar `suspend: false`.|Inspecione o objeto `Workload` (`kubectl get workload -o yaml`) após a admissão e verifique em `status.admission.podSetAssignments` qual `ResourceFlavor` foi atribuído a cada conjunto de Pods.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
+1595|kueue-workload-priority-class-independente-pod-priority|Kubernetes Kueue: `WorkloadPriorityClass` para priorização de fila independente de `PriorityClass` de Pod|O CRD `WorkloadPriorityClass` (`kueue.x-k8s.io/v1beta2`) permite atribuir prioridades exclusivas para ordenação de enfileiramento e preempção de `Workloads` no Kueue, separadamente da `scheduling.k8s.io/v1 PriorityClass` usada pelo `kube-scheduler` nos Pods.|Se uma equipe aumentar a `PriorityClass` padrão do Kubernetes em um Job batch para furar a fila de batch, os Pods desse Job também ganhariam o poder de preemptar Pods de microsserviços online de produção no nível do `kube-scheduler`.|Ao referenciar uma `WorkloadPriorityClass` através do label `kueue.x-k8s.io/priority-class` no Job, o valor numérico daquela classe governa exclusivamente a ordem de admissão e a preempção entre `Workloads` gerenciados pelo Kueue, mantendo a `PriorityClass` de Pod intacta para proteger cargas online no nível de nó.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: WorkloadPriorityClass
+metadata:
+  name: urgent-batch-priority
+value: 5000
+description: "Prioridade alta apenas dentro das filas batch do Kueue"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hotfix-model-eval
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+    kueue.x-k8s.io/priority-class: urgent-batch-priority
+spec:
+  parallelism: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: eval
+          image: ghcr.io/org/eval:v1.0
+```|Uma `WorkloadPriorityClass` nunca é copiada para `spec.priorityClassName` do Pod; as duas hierarquias de prioridade são completamente ortogonais por design.|Execute `kubectl get workloads` e confirme que o `Workload` correspondente ao Job exibe `urgent-batch-priority` e é admitido à frente de jobs de menor prioridade na mesma `ClusterQueue`.|https://kueue.sigs.k8s.io/docs/concepts/;https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://github.com/kubernetes-sigs/kueue
+1596|kueue-admission-checks-provisioning-request-cluster-autoscaler|Kubernetes Kueue: `AdmissionChecks` e integração com `ProvisioningRequest` do Cluster Autoscaler|O mecanismo de `AdmissionCheck` do Kueue permite que controladores internos ou externos retenham a liberação dos Pods de um `Workload` (mesmo após a reserva de cota `QuotaReservation`) até que condições físicas externas — como o provisionamento atômico de nós de GPU na nuvem via `ProvisioningRequest` do Cluster Autoscaler — sejam confirmadas.|Reservar cota lógica em uma `ClusterQueue` não significa que a nuvem pública tenha estoque físico de 64 GPUs H100 naquele instante; liberar os Pods imediatamente faria metade deles subir (gerando cobrança ociosa na nuvem) enquanto a outra metade fica presa por falta de estoque na zona.|Ao associar um `AdmissionCheck` baseado no controlador `kueue.x-k8s.io/provisioning-request` à `ClusterQueue`, o Kueue reserva a cota do `Workload` e cria um objeto `ProvisioningRequest` (`autoscaling.x-k8s.io`) para o `cluster-autoscaler`. Somente quando o autoscaler provisiona todas as VMs necessárias e marca o check como `Ready`, o Kueue conclui a admissão e libera a criação dos Pods.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: AdmissionCheck
+metadata:
+  name: gpu-Dynamic-provisioning
+spec:
+  controllerName: kueue.x-k8s.io/provisioning-request
+  parametersRef:
+    apiGroup: kueue.x-k8s.io
+    kind: ProvisioningRequestConfig
+    name: gpu-prov-config
+```|Se o `cluster-autoscaler` falhar ao obter capacidade na nuvem após o número configurado de tentativas (`retryStrategy`), o Kueue pode liberar a reserva ou tentar automaticamente o próximo `ResourceFlavor` disponível na `ClusterQueue`.|Inspecione `status.admissionChecks` no objeto `Workload` (`kubectl get workload <nome> -o yaml`) para acompanhar o estado (`Pending` -> `Ready`) da solicitação de provisionamento.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
+1597|kueue-wait-for-pods-ready-all-or-nothing-partial-admission-reclaim|Kubernetes Kueue: `waitForPodsReady` (*all-or-nothing*), admissão parcial e reclamação dinâmica de cota|O Kueue oferece três mecanismos para otimizar o uso de cota durante o ciclo de vida dos Pods: `waitForPodsReady` (timeout *all-or-nothing* até que todos os Pods estejam `Ready`), *Partial Admission* (redução elástica de paralelismo para caber na cota livre) e *Dynamic Reclaim* (devolução progressiva de cota conforme Pods individuais concluem).|Se um Job admitido tiver um Pod travado em `ImagePullBackOff` ou aguardando volume quebrado, ele reteria toda a cota da fila sem progredir; e em um Job paralelo de 100 tarefas independentes, esperar os últimos 2 Pods terminarem mantendo a cota de 100 Pods bloqueada desperdiça capacidade.|Com `waitForPodsReady` configurado no Kueue, se todos os Pods de um `Workload` admitido não atingirem `Ready` dentro do `timeout`, o workload é suspenso/evictado e re-enfileirado para desbloquear a fila. Já para Jobs elásticos com `kueue.x-k8s.io/max-exec-time` ou admissão parcial habilitada, o Kueue ajusta `spec.parallelism` para caber na cota disponível e reduz o consumo de cota em tempo real à medida que os Pods terminam com `Succeeded`.|```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: elastic-sweep-job
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  annotations:
+    kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
+spec:
+  parallelism: 10
+  completions: 10
+  suspend: true
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: worker
+          image: ghcr.io/org/sweep:v1.0
+```|Para que a admissão parcial (*Partial Admission*) redimensione um `batch/v1 Job`, o Job deve habilitar a anotação ou configuração de paralelismo mutável suportada pelo controlador do Kueue.|Monitore `kubectl get clusterqueue -o wide` durante a execução de um Job com múltiplas completions para observar a liberação incremental de recursos reservados.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
+1598|kueue-topology-aware-scheduling-tas-hierarquia-racks-blocos|Kubernetes Kueue: *Topology-Aware Scheduling* (`TAS`) com CRD `Topology` para comunicação Pod-a-Pod|O *Topology-Aware Scheduling* (`TAS`) do Kueue utiliza o CRD `Topology` (`kueue.x-k8s.io/v1beta2`) vinculado a um `ResourceFlavor` para alocar todos os Pods de um `Workload` (ou fatias de `PodSet`) dentro do mesmo bloco, rack ou nó do data center.|Em treinamentos distribuídos multi-nó (como `JobSet` ou `PyTorchJob`), o Kueue não deve apenas verificar se existem 16 GPUs livres espalhadas pelo cluster; ele precisa garantir que existam 16 GPUs livres no mesmo bloco/rack de rede de baixa latência antes de admitir o workload.|O administrador declara um objeto `Topology` listando os níveis hierárquicos de labels de nó (por exemplo: `cloud.provider.com/topology-block` -> `cloud.provider.com/topology-rack` -> `kubernetes.io/hostname`) e referencia `topologyName` no `ResourceFlavor`. Nos Pods do Job, a anotação `kueue.x-k8s.io/podset-required-topology` (ou `preferred-topology`) instrui o Kueue a só admitir o workload quando houver capacidade física contígua naquele nível de topologia.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: Topology
+metadata:
+  name: datacenter-fabric
+spec:
+  levels:
+    - nodeLabel: cloud.provider.com/topology-block
+    - nodeLabel: cloud.provider.com/topology-rack
+    - nodeLabel: kubernetes.io/hostname
+```|Quando o `TAS` é utilizado em um `ResourceFlavor`, um `Workload` só é admitido quando satisfaz simultaneamente a `QuotaReservation` na `ClusterQueue` e a disponibilidade física real nos nós agrupados pelo `Topology`.|Aplique a anotação `kueue.x-k8s.io/podset-required-topology: cloud.provider.com/topology-rack` em um Job e verifique que todos os Pods admitidos recebem seletores para o mesmo rack.|https://kueue.sigs.k8s.io/docs/concepts/;https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://github.com/kubernetes-sigs/kueue
+1599|kueue-multikueue-despacho-jobs-multi-cluster-offloading|Kubernetes Kueue: despacho multi-cluster de cargas de trabalho com `MultiKueue`|O `MultiKueue` é o mecanismo nativo de federação de filas do Kueue que permite a um cluster gerenciador (*Management Cluster*) enfileirar jobs localmente e despachá-los automaticamente para execução no cluster worker (*Worker Cluster*) que tiver cota e capacidade disponíveis.|Grandes organizações operam múltiplos clusters de GPU em diferentes regiões ou provedores de nuvem; obrigar cientistas de dados a descobrir manualmente qual cluster tem GPUs livres e trocar de `kubeconfig` gera fragmentação e filas desbalanceadas.|Configurado por meio de um `AdmissionCheck` do controlador `kueue.x-k8s.io/multikueue`, `MultiKueueConfig` e `MultiKueueCluster` (apontando para os `kubeconfigs` dos clusters workers), o `MultiKueue` espelha o `Workload` nas filas dos clusters workers candidatos. O primeiro cluster worker que reservar cota para o `Workload` recebe o Job real para execução e sincroniza o status e a conclusão de volta para o cluster gerenciador.|```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: MultiKueueConfig
+metadata:
+  name: global-gpu-pool
+spec:
+  clusters:
+    - worker-us-east
+    - worker-eu-west
+```|No cluster gerenciador, o Job submetido pelo usuário permanece sem criar Pods locais: os Pods são criados exclusivamente no cluster worker selecionado pelo `MultiKueue`, enquanto o objeto `Job`/`Workload` no cluster central reflete o status remoto.|Inspecione `kubectl get multikueuecluster` para validar a conectividade (`Active: True`) com os clusters workers e verifique no `Workload` em qual cluster remoto o job foi admitido.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
+1600|kueue-integracao-ecossistema-kubeflow-ray-jobset-deployments-dra|Kubernetes Kueue: integração com `JobSet`, Kubeflow, KubeRay, `Deployment`/`StatefulSet` e DRA (`v1beta2`)|O Kueue suporta nativamente uma ampla gama de tipos de carga de trabalho — `batch/v1 Job`, `JobSet`, Kubeflow (`PyTorchJob`, `TFJob`, `MPIJob`, `XGBoostJob`, `PaddleJob`), KubeRay (`RayJob`, `RayCluster`), `Pod` avulso, grupos de Pods e workloads de serving (`Deployment` e `StatefulSet`) — além de gerenciamento de cotas para Kubernetes *Dynamic Resource Allocation* (`DRA`).|Plataformas modernas de IA não rodam apenas jobs batch isolados: elas misturam treinamento distribuído (`JobSet`/`PyTorchJob`) e inferência contínua (`Deployment`/`StatefulSet` ou `RayCluster`) competindo pelo mesmo pool de aceleradores e `ResourceClaims` de DRA.|Ao rotular qualquer um desses objetos com `kueue.x-k8s.io/queue-name`, o controlador de integração correspondente do Kueue intercepta o recurso, calcula os `PodSets` equivalentes (incluindo mapeamento de dispositivos via DRA em `kueue.x-k8s.io/v1beta2`) e governa sua admissão e preempção dentro da mesma `ClusterQueue` e `cohort`, além de expor métricas Prometheus e o endpoint de visibilidade sob demanda de workloads pendentes.|```yaml
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: distributed-llm-jobset
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+spec:
+  replicatedJobs:
+    - name: workers
+      replicas: 2
+      template:
+        spec:
+          parallelism: 4
+          completions: 4
+          template:
+            spec:
+              containers:
+                - name: trainer
+                  image: ghcr.io/org/llm-trainer:v1.0
+```|Para gerenciar `Deployment`, `StatefulSet` ou `Pod` avulso com o Kueue, certifique-se de que as respectivas integrações (`pod`, `deployment`, `statefulset`) estão listadas em `integrations.frameworks` na configuração do `kueue-controller-manager`.|Consulte as métricas do Kueue (`kueue_pending_workloads`, `kueue_admitted_workloads_total`) ou `kubectl get workloads -A` para auditar de forma unificada jobs batch e serviços de inferência.|https://raw.githubusercontent.com/kubernetes-sigs/kueue/main/README.md;https://kueue.sigs.k8s.io/docs/concepts/;https://github.com/kubernetes-sigs/kueue
