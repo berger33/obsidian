@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1600 / 2.000 (80,00%)**
-- Gate automatizado: **1600/1600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
-- Revisão factual humana: **0/1600**
-- Revisão factual por IA: **1600/1600**
-- Contabilizadas como válidas: **1600/1600**
-- Revisor das 1600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–16 (1600 notas, IDs 1–1600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1700 / 2.000 (85,00%)**
+- Gate automatizado: **1700/1700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
+- Revisão factual humana: **0/1700**
+- Revisão factual por IA: **1700/1700**
+- Contabilizadas como válidas: **1700/1700**
+- Revisor das 1700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–17 (1700 notas, IDs 1–1700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-16.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-16.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-17.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-17.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md), [`tranche 16`](../reports/ai-review-software-devops-2000-0002-tranche-16.md), [`tranche 17`](../reports/ai-review-software-devops-2000-0002-tranche-17.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 400 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 300 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -2130,6 +2130,138 @@
 1599. [Kubernetes Kueue: despacho multi-cluster de cargas de trabalho com `MultiKueue`](../../domains/software-0008/software/devops/kueue-multikueue-despacho-jobs-multi-cluster-offloading.md)
 1600. [Kubernetes Kueue: integração com `JobSet`, Kubeflow, KubeRay, `Deployment`/`StatefulSet` e DRA (`v1beta2`)](../../domains/software-0008/software/devops/kueue-integracao-ecossistema-kubeflow-ray-jobset-deployments-dra.md)
 
+## Tranche 17 — Karmada, Clusternet, Liqo, KubeEdge, OpenYurt, SuperEdge, Akri, RKE2, k0s e Canonical MicroK8s (100 notas; revisão factual por IA registrada)
+
+### Karmada (orquestração multi-cluster e multi-cloud CNCF Incubating com `PropagationPolicy`, `OverridePolicy`, `ResourceBinding`, `Work` e modos `Push`/`Pull`)
+
+1601. [Karmada: arquitetura de plano de controle multi-cluster CNCF Graduated (`apiserver`, `controller-manager` e `scheduler`)](../../domains/software-0008/software/devops/karmada-arquitetura-control-plane-multi-cluster-cncf-graduated.md)
+1602. [Karmada: fluxo de propagação em quatro estágios (`PropagationPolicy` -> `ResourceBinding` -> `Work` -> Member Cluster)](../../domains/software-0008/software/devops/karmada-pipeline-propagacao-resourcebinding-work-execution.md)
+1603. [Karmada: modos de registro de clusters membros (`Push` direto vs `Pull` via `karmada-agent`)](../../domains/software-0008/software/devops/karmada-modos-registro-clusters-push-vs-pull-karmada-agent.md)
+1604. [Karmada: políticas de posicionamento `PropagationPolicy` e `ClusterPropagationPolicy` com mapeamento `1:N`](../../domains/software-0008/software/devops/karmada-propagationpolicy-clusterpropagationpolicy-seletores-1-para-n.md)
+1605. [Karmada: estratégias de divisão de réplicas (`Duplicated` vs `Divided`, `StaticWeight` vs `DynamicWeight`)](../../domains/software-0008/software/devops/karmada-replica-scheduling-duplicated-divided-static-dynamic-weight.md)
+1606. [Karmada: customização por cluster via `OverridePolicy` (`imageOverrider`, `plaintext`, `labelsOverrider`)](../../domains/software-0008/software/devops/karmada-overridepolicy-especializacao-regional-image-overrider-plaintext.md)
+1607. [Karmada: restrições de espalhamento multi-dimensional (`spreadConstraints`) por provedor, região, zona e cluster](../../domains/software-0008/software/devops/karmada-spreadconstraints-alta-disponibilidade-multi-dimensao-regiao-az.md)
+1608. [Karmada: failover automático de cluster e de aplicação com reagendamento de réplicas e preservação de estado](../../domains/software-0008/software/devops/karmada-failover-automatico-cluster-application-taints-eviction.md)
+1609. [Karmada: *Resource Interpreter Framework* e customização em Lua para CRDs de terceiros](../../domains/software-0008/software/devops/karmada-resource-interpreter-framework-crds-customizados-lua.md)
+1610. [Karmada: autoescalonamento multi-cluster (`FederatedHPA`, `CronFederatedHPA`) e descoberta `MultiClusterService`](../../domains/software-0008/software/devops/karmada-federatedhpa-cronfederatedhpa-multicluster-service-ingress.md)
+
+### Clusternet (gerenciamento de frotas multi-cluster Kubernetes com `clusternet-hub`, `clusternet-agent`, Dual Sockets, `Subscription`, `Description`, `Base` e `Manifest`)
+
+1611. [Clusternet: arquitetura CNCF Sandbox (`clusternet-hub`, `clusternet-agent`, `clusternet-scheduler` e `clusternet-controller-manager`)](../../domains/software-0008/software/devops/clusternet-arquitetura-hub-agent-scheduler-controller-cncf.md)
+1612. [Clusternet: *Shadow APIs* via Aggregated APIServer (`shadow/v1alpha1`) para captura transparente de recursos](../../domains/software-0008/software/devops/clusternet-shadow-apis-aggregated-apiserver-manifest-encapsulation.md)
+1613. [Clusternet: túnel reverso WebSocket e visitação direta de clusters filhos com regras RBAC dinâmicas](../../domains/software-0008/software/devops/clusternet-sockets-websocket-tunnel-acesso-clusters-filhos-rbac.md)
+1614. [Clusternet: agendamento multi-cluster via CRD `Subscription` (`Replication`, `Static` e `Dynamic` Dividing)](../../domains/software-0008/software/devops/clusternet-subscription-scheduling-replication-dividing-static-dynamic.md)
+1615. [Clusternet: overrides em dois estágios (`Globalization` e `Localization`) com prioridades e rollback](../../domains/software-0008/software/devops/clusternet-globalization-localization-overrides-duas-etapas-canary.md)
+1616. [Clusternet: distribuição nativa de Helm Charts e artefatos OCI via CRD `HelmChart` e `HelmRelease`](../../domains/software-0008/software/devops/clusternet-helm-charts-oci-registries-distribuicao-multi-cluster.md)
+1617. [Clusternet: *Cluster Resource Predictor Framework* para agendamento dinâmico baseado em capacidade](../../domains/software-0008/software/devops/clusternet-resource-predictor-framework-agendamento-capacidade-dinamica.md)
+1618. [Clusternet: auto-descoberta de clusters Cluster API (CAPI) e rotulagem automática via Node Feature Discovery](../../domains/software-0008/software/devops/clusternet-auto-descoberta-cluster-api-node-feature-discovery-labels.md)
+1619. [Clusternet: compatibilidade com *Kubernetes Version Skew* amplo e descoberta de serviços via `mcs-api`](../../domains/software-0008/software/devops/clusternet-tolerancia-version-skew-multi-arquitetura-mcs-api.md)
+1620. [Clusternet: integração programática com `client-go` wrapper e operação via plugin `kubectl-clusternet`](../../domains/software-0008/software/devops/clusternet-client-go-wrapper-kubectl-plugin-integracao-programatica.md)
+
+### Liqo (federação dinâmica multi-cluster Kubernetes sem controlador central com peering P2P, Virtual Nodes, offloading de Pods, IPAM/WireGuard e Storage Fabric)
+
+1621. [Liqo: arquitetura de peering dinâmico P2P e abstração de cluster remoto como nó virtual (`Virtual Kubelet`)](../../domains/software-0008/software/devops/liqo-arquitetura-peering-dinamico-virtual-kubelet-multi-cluster.md)
+1622. [Liqo: estabelecimento de peering entre clusters com `liqoctl peer` e representação `ForeignCluster`](../../domains/software-0008/software/devops/liqo-liqoctl-peer-autenticacao-negociacao-recursos-foreigncluster.md)
+1623. [Liqo: *Namespace Offloading* (`liqoctl offload namespace`), namespaces gêmeos e estratégias de mapeamento](../../domains/software-0008/software/devops/liqo-namespace-offloading-twin-namespaces-politicas-posicionamento.md)
+1624. [Liqo: offloading transparente de Pods via Virtual Kubelet e suporte nativo a `kubectl logs` e `exec`](../../domains/software-0008/software/devops/liqo-pod-offloading-virtual-kubelet-reflexao-status-logs-exec.md)
+1625. [Liqo: *Network Fabric* multi-cluster agnóstica de CNI com túneis seguros e remapeamento IPAM sem colisão de CIDRs](../../domains/software-0008/software/devops/liqo-network-fabric-wireguard-ipam-nat-remapping-cni-agnostic.md)
+1626. [Liqo: reflexão de `Services` e `EndpointSlices` para descoberta e balanceamento de carga multi-cluster](../../domains/software-0008/software/devops/liqo-service-offloading-endpointslice-reflection-multi-cluster.md)
+1627. [Liqo: *Storage Fabric* e `StorageClass` virtual (`liqo`) para aplicações stateful com gravidade de dados](../../domains/software-0008/software/devops/liqo-storage-fabric-virtual-storageclass-data-gravity-stateful.md)
+1628. [Liqo: sincronização de Custom Resources entre clusters via `liqo-crd-replicator` e modos de peering](../../domains/software-0008/software/devops/liqo-crd-replicator-sincronizacao-estado-out-of-band-in-band.md)
+1629. [Liqo: operação multi-cloud heterogênea entre AWS EKS, Google GKE, Azure AKS, OpenShift e K3s](../../domains/software-0008/software/devops/liqo-compatibilidade-multi-cloud-eks-gke-aks-openshift-k3s.md)
+1630. [Liqo: descomissionamento seguro de offloading e encerramento de peering (`liqoctl unoffload` e `unpeer`)](../../domains/software-0008/software/devops/liqo-unoffload-unpeer-descomissionamento-limpo-topologias.md)
+
+### KubeEdge (plataforma CNCF Graduated de computação de borda nativa de Kubernetes com `CloudCore`, `EdgeCore`, `CloudHub`, `EdgeHub`, `MetaManager`, `Edged` e `DeviceTwin`)
+
+1631. [KubeEdge: arquitetura CNCF Graduated de computação de borda (`CloudCore` na nuvem e `EdgeCore` na borda)](../../domains/software-0008/software/devops/kubeedge-arquitetura-cloudcore-edgecore-cncf-graduated.md)
+1632. [KubeEdge: comunicação bidirecional resiliente entre `CloudHub` e `EdgeHub` via WebSocket e QUIC](../../domains/software-0008/software/devops/kubeedge-cloudhub-edgehub-websocket-quic-channelq-mensageria.md)
+1633. [KubeEdge: autonomia de borda offline e recuperação pós-reboot via `MetaManager`, SQLite e `Edged`](../../domains/software-0008/software/devops/kubeedge-metamanager-sqlite-autonomia-offline-edged-recuperacao.md)
+1634. [KubeEdge: sincronização bidirecional de metadados Kubernetes pelo `EdgeController`](../../domains/software-0008/software/devops/kubeedge-edgecontroller-sincronizacao-pods-nodes-configmaps-secrets.md)
+1635. [KubeEdge: gerenciamento nativo de dispositivos IoT com `DeviceController`, `DeviceTwin` e CRDs `DeviceModel`/`Device`](../../domains/software-0008/software/devops/kubeedge-devicecontroller-devicetwin-crds-devicemodel-device.md)
+1636. [KubeEdge: integração MQTT na borda via `EventBus` e arquitetura de *Device Mappers*](../../domains/software-0008/software/devops/kubeedge-eventbus-mqtt-mosquitto-integracao-mappers-iot.md)
+1637. [KubeEdge: invocação de serviços HTTP na borda a partir da nuvem via `Router` e `ServiceBus`](../../domains/software-0008/software/devops/kubeedge-servicebus-router-invocacao-http-rest-nuvem-para-borda.md)
+1638. [KubeEdge: `EdgeMesh` e `CloudStream`/`EdgeStream` para rede Pod-a-Pod entre bordas e `kubectl logs`/`exec`](../../domains/software-0008/software/devops/kubeedge-edgemesh-comunicacao-pod-a-pod-cross-subnet-logs-exec.md)
+1639. [KubeEdge: provisionamento de plano de controle e nós de borda com o instalador `keadm`](../../domains/software-0008/software/devops/kubeedge-keadm-bootstrap-cloudcore-init-edgecore-join-token.md)
+1640. [KubeEdge: entrega confiável de mensagens sem perda sobre redes instáveis via `ObjectSync` (`reliablesyncs`)](../../domains/software-0008/software/devops/kubeedge-reliablesyncs-objectsync-garantia-entrega-sem-perda.md)
+
+### OpenYurt (plataforma CNCF Incubating de extensão de Kubernetes nativo para borda com `YurtHub`, `Yurt-Tunnel`, `NodePool`, `YurtAppSet` e autonomia offline)
+
+1641. [OpenYurt: arquitetura cloud-edge não intrusiva CNCF Incubating (`YurtHub`, `Yurt-Manager`, `Raven` e `YurtIoTDock`)](../../domains/software-0008/software/devops/openyurt-arquitetura-nao-intrusiva-cloud-edge-cncf-incubating.md)
+1642. [OpenYurt `YurtHub`: proxy sidecar de nó e cache em disco local para autonomia de borda em desconexões](../../domains/software-0008/software/devops/openyurt-yurthub-proxy-local-cache-disco-autonomia-borda.md)
+1643. [OpenYurt `NodePool`: agrupamento declarativo de nós por região física e fechamento de tráfego intra-pool](../../domains/software-0008/software/devops/openyurt-nodepool-gerenciamento-regioes-fisicas-isolamento-trafego.md)
+1644. [OpenYurt: orquestração regional de cargas de trabalho com `YurtAppSet` e `YurtAppDaemon`](../../domains/software-0008/software/devops/openyurt-yurtappset-yurtappdaemon-orquestracao-multi-pool-workloads.md)
+1645. [OpenYurt `Raven-Agent`: conectividade de rede L3 cross-region e proxy reverso L7 para `kubectl exec`/`logs`](../../domains/software-0008/software/devops/openyurt-raven-agent-conectividade-l3-vpn-proxy-reverso-l7.md)
+1646. [OpenYurt `YurtIoTDock`: fusão cloud-native com EdgeX Foundry via CRD `PlatformAdmin`](../../domains/software-0008/software/devops/openyurt-yurtiotdock-edgex-foundry-platformadmin-crds-iot.md)
+1647. [OpenYurt: prevenção de evicção indevida de Pods durante desconexão nuvem-borda (`node-autonomy`)](../../domains/software-0008/software/devops/openyurt-autonomia-no-prevencao-eviccao-pods-desconexao-wan.md)
+1648. [OpenYurt `Node Resource Manager`: gerenciamento de armazenamento local de borda (LVM, QuotaPath e PMEM)](../../domains/software-0008/software/devops/openyurt-node-resource-manager-lvm-quotapath-pmem-armazenamento-borda.md)
+1649. [OpenYurt `Yurt-Manager`: consolidação de controladores e webhooks cloud-edge em alta disponibilidade](../../domains/software-0008/software/devops/openyurt-yurt-manager-controladores-webhooks-alta-disponibilidade.md)
+1650. [OpenYurt: instalação de componentes de control plane e ingresso de nós de borda (`yurtadm join`)](../../domains/software-0008/software/devops/openyurt-conversao-cluster-kubernetes-instalacao-control-plane-join-nodes.md)
+
+### SuperEdge (sistema de gerenciamento de containers nativo de Kubernetes para borda com `lite-apiserver`, `Kins` L4/L5, `edge-health`, `ServiceGroup` e `tunnel`)
+
+1651. [SuperEdge: arquitetura de gerenciamento de containers em múltiplas regiões de borda](../../domains/software-0008/software/devops/superedge-arquitetura-edge-computing-cloud-edge-componentes.md)
+1652. [SuperEdge `lite-apiserver`: proxy HTTPS por Common Name TLS e cache persistente (`file`, `bolt`, `badger`) para autonomia L3](../../domains/software-0008/software/devops/superedge-lite-apiserver-proxy-tls-cn-cache-bolt-badger-autonomia-l3.md)
+1653. [SuperEdge `Kins` (*K3s in SuperEdge*): autonomia de borda L4 e L5 com clusters K3s leves por `NodeUnit`](../../domains/software-0008/software/devops/superedge-kins-k3s-in-superedge-autonomia-l4-l5-nodeunit-offline.md)
+1654. [SuperEdge `edge-health` e `edge-health-admission`: detecção distribuída de saúde na borda e proteção contra falsos positivos](../../domains/software-0008/software/devops/superedge-edge-health-monitoramento-distribuido-consenso-admission.md)
+1655. [SuperEdge `ServiceGroup`: orquestração multi-região com `DeploymentGrid`, `StatefulSetGrid` e `ServiceGrid`](../../domains/software-0008/software/devops/superedge-servicegroup-deploymentgrid-statefulsetgrid-servicegrid.md)
+1656. [SuperEdge `tunnel-cloud` e `tunnel-edge`: tunelamento reverso TCP, HTTP, HTTPS e SSH para manutenção na borda](../../domains/software-0008/software/devops/superedge-tunnel-cloud-tunnel-edge-tcp-http-https-ssh-proxy.md)
+1657. [SuperEdge `site-manager`: modelagem topológica de sites com `NodeUnit` e `NodeGroup`](../../domains/software-0008/software/devops/superedge-site-manager-nodeunit-nodegroup-modelagem-topologica.md)
+1658. [SuperEdge `lite-apiserver`: autenticação multi-cliente (X.509 mTLS, Bearer Token) e suporte a rotação de certificados](../../domains/software-0008/software/devops/superedge-lite-apiserver-autenticacao-mtls-rotacao-certificados-x509.md)
+1659. [SuperEdge `edgeadm`: instalação one-click offline de clusters de borda e conversão de clusters Kubernetes nativos](../../domains/software-0008/software/devops/superedge-edgeadm-instalacao-offline-conversao-cluster-nativo.md)
+1660. [SuperEdge: atualizações graduais por região com `StatefulSetGrid` e templates diferenciados por `NodeUnit`](../../domains/software-0008/software/devops/superedge-canary-upgrades-multi-regiao-statefulsetgrid-servicegrid.md)
+
+### Akri (interface CNCF Sandbox em Rust para descoberta e exposição dinâmica de *Leaf Devices* no Kubernetes com `Configuration`, `Instance`, `Discovery Handlers`, `Agent` e `Controller`)
+
+1661. [Akri: arquitetura CNCF Sandbox em Rust para descoberta e exposição de dispositivos folha (*Leaf Devices*) no Kubernetes](../../domains/software-0008/software/devops/akri-arquitetura-leaf-devices-cncf-sandbox-rust-device-plugin.md)
+1662. [Akri CRD `Configuration`: definição de protocolo de descoberta, `capacity`, `brokerPodSpec` e `Services` automáticos](../../domains/software-0008/software/devops/akri-crd-configuration-brokerpodspec-capacity-servicespecs.md)
+1663. [Akri CRD `Instance`: representação de dispositivos individuais e coordenação de compartilhamento (`deviceUsage`)](../../domains/software-0008/software/devops/akri-crd-instance-rastreamento-estado-compartilhamento-deviceusage.md)
+1664. [Akri Agent: implementação dinâmica de Kubernetes Device Plugin e injeção de `brokerProperties` no container](../../domains/software-0008/software/devops/akri-agent-kubernetes-device-plugin-injecao-broker-properties-env.md)
+1665. [Akri Discovery Handlers: descoberta de dispositivos por protocolo (`ONVIF`, `udev`, `OPC UA` e `debugEcho`) via `discovery.proto`](../../domains/software-0008/software/devops/akri-discovery-handlers-onvif-udev-opcua-debug-echo-grpc.md)
+1666. [Akri Controller: orquestração automática de Broker Pods, Services por instância e Services por configuração](../../domains/software-0008/software/devops/akri-controller-reconciliacao-broker-pods-instance-configuration-services.md)
+1667. [Akri: compartilhamento multi-nó e alta disponibilidade de dispositivos de rede com `spec.capacity`](../../domains/software-0008/software/devops/akri-alta-disponibilidade-compartilhamento-dispositivos-rede-capacity.md)
+1668. [Akri: simulação de dispositivos folha intermitentes em CI/CD com o handler `debugEcho`](../../domains/software-0008/software/devops/akri-debug-echo-discovery-handler-simulacao-testes-ci.md)
+1669. [Akri: execução de `brokerJobSpec` vs `brokerPodSpec` para tarefas batch disparadas por dispositivos](../../domains/software-0008/software/devops/akri-broker-jobs-vs-pods-processamento-batch-dispositivos-borda.md)
+1670. [Akri: desenvolvimento de Custom Discovery Handlers via contrato gRPC `discovery.proto`](../../domains/software-0008/software/devops/akri-extensibilidade-desenvolvimento-custom-discovery-handler.md)
+
+### RKE2 / RKE Government (distribuição Kubernetes da Rancher com conformidade FIPS 140-2 `Go+BoringCrypto`, CIS Benchmark, SELinux/MCS, Static Pods e `helm-controller`)
+
+1671. [RKE2 (RKE Government): arquitetura da distribuição Kubernetes da Rancher com conformidade FIPS 140-2 e CIS Benchmark](../../domains/software-0008/software/devops/rke2-arquitetura-rancher-government-fips-140-2-cis-benchmark.md)
+1672. [RKE2: processo de *Content Bootstrap* a partir da imagem `rancher/rke2-runtime` e tarballs air-gapped](../../domains/software-0008/software/devops/rke2-content-bootstrap-rke2-runtime-data-key-airgap-tarballs.md)
+1673. [RKE2: configuração declarativa em `/etc/rancher/rke2/config.yaml` e regras de precedência com flags CLI](../../domains/software-0008/software/devops/rke2-config-yaml-systemd-precedencia-flags-cli-listas.md)
+1674. [RKE2: coreografia de inicialização de `server` e `agent` via goroutines e Static Pods](../../domains/software-0008/software/devops/rke2-sequencia-boot-server-agent-static-pods-etcd-apiserver.md)
+1675. [RKE2: seleção de plugins CNI (`canal`, `cilium`, `calico`, `flannel`) e composição multi-NIC com `multus`](../../domains/software-0008/software/devops/rke2-cni-plugins-canal-cilium-calico-flannel-multus.md)
+1676. [RKE2: gerenciamento declarativo de add-ons via `helm-controller` e customização com `HelmChartConfig`](../../domains/software-0008/software/devops/rke2-helm-controller-manifests-helmchartconfig-customizacao-addons.md)
+1677. [RKE2: transição de Ingress NGINX (EOL em março de 2026) para Traefik como Ingress Controller padrão no RKE2 v1.36+](../../domains/software-0008/software/devops/rke2-migracao-ingress-nginx-eol-para-traefik-v1-36.md)
+1678. [RKE2: endurecimento CIS Kubernetes Benchmark (`profile: cis`) e isolamento SELinux Multi-Category Security (MCS)](../../domains/software-0008/software/devops/rke2-cis-hardening-profile-selinux-mcs-pod-security.md)
+1679. [RKE2: cadência de releases, esquema de versionamento `+rke2r<N>` e upgrades automatizados](../../domains/software-0008/software/devops/rke2-cadencia-releases-versionamento-semver-rke2r-upgrades.md)
+1680. [RKE2: alta disponibilidade com `etcd` gerenciado, snapshots agendados e restauração de desastres via S3](../../domains/software-0008/software/devops/rke2-alta-disponibilidade-etcd-embutido-snapshots-restore-s3.md)
+
+### k0s (distribuição Kubernetes *Zero Friction* CNCF Sandbox em binário único sem dependências de OS, processos *naked*, `Konnectivity`, `kine`, `k0sctl` e `Autopilot`)
+
+1681. [k0s: arquitetura *Zero Friction* em binário único auto-extraível sem dependências de sistema operacional](../../domains/software-0008/software/devops/k0s-arquitetura-zero-friction-binario-unico-sem-dependencias-os.md)
+1682. [k0s: isolamento de Control Plane executando componentes como processos *naked* sem CRI nem Kubelet no controller](../../domains/software-0008/software/devops/k0s-isolamento-control-plane-processos-naked-sem-container-engine.md)
+1683. [k0s: comunicação reversa entre Control Plane e Workers via `Konnectivity` (`konnectivity-server` e `konnectivity-agent`)](../../domains/software-0008/software/devops/k0s-konnectivity-server-agent-comunicacao-control-plane-workers.md)
+1684. [k0s: armazenamento de estado com `etcd` gerenciado ou bancos SQL via `kine` (`SQLite`, `MySQL`, `PostgreSQL`)](../../domains/software-0008/software/devops/k0s-storage-backends-etcd-gerenciado-kine-sqlite-mysql-postgres.md)
+1685. [k0s `k0sctl`: provisionamento declarativo, upgrades zero-downtime, backup e restore de clusters multi-nó via SSH](../../domains/software-0008/software/devops/k0s-k0sctl-gerenciamento-ciclo-vida-multi-node-upgrades-backups.md)
+1686. [k0s: opções de rede CNI (`kube-router` padrão, `calico` pré-configurado e CNI customizada)](../../domains/software-0008/software/devops/k0s-cni-kube-router-padrao-calico-custom-cni-networking.md)
+1687. [k0s `Autopilot`: atualizações declarativas in-cluster de controladores, workers e imagens airgap via CRD `Plan`](../../domains/software-0008/software/devops/k0s-autopilot-upgrades-declarativos-in-cluster-controlplanes-workers.md)
+1688. [k0s: suporte nativo a `x86-64`, `ARM64`, `ARMv7` e `RISC-V` e execução de clusters em containers Docker](../../domains/software-0008/software/devops/k0s-suporte-multi-arquitetura-x86-arm64-armv7-riscv-docker.md)
+1689. [k0s: gerenciamento do `containerd` embutido, importação de bundles airgap e configuração de CRI customizado](../../domains/software-0008/software/devops/k0s-cri-runtimes-containerd-padrao-custom-cri-gvisor-kata.md)
+1690. [k0s: geração de tokens de ingresso (`k0s token create`) com expiração por papel e backup/restore nativo (`k0s backup`)](../../domains/software-0008/software/devops/k0s-backup-restore-cluster-state-tokens-join-controller-worker.md)
+
+### Canonical MicroK8s (distribuição Kubernetes certificada em pacote único Snap com alta disponibilidade automática via `dqlite`, domínios de falha `ha-conf` e add-ons curados)
+
+1691. [Canonical MicroK8s: distribuição Kubernetes certificada em pacote único Snap para estações, CI/CD, IoT e borda](../../domains/software-0008/software/devops/microk8s-arquitetura-snap-single-package-canonical-kubernetes.md)
+1692. [Canonical MicroK8s: alta disponibilidade (HA) automática com `dqlite` e papéis `voter`, `standby` e `spare`](../../domains/software-0008/software/devops/microk8s-alta-disponibilidade-automatica-dqlite-voters-standby-spare.md)
+1693. [Canonical MicroK8s: formação de cluster (`add-node` / `join`) e remoção segura de nós (`leave` / `remove-node`)](../../domains/software-0008/software/devops/microk8s-clustering-add-node-join-leave-remove-node-force.md)
+1694. [Canonical MicroK8s: configuração de domínios de falha (`failure-domain` em `ha-conf`) para eleições do `dqlite`](../../domains/software-0008/software/devops/microk8s-failure-domains-ha-conf-distribuicao-voters-dqlite.md)
+1695. [Canonical MicroK8s: arquitetura de add-ons curados (`microk8s enable` / `disable`) em `${SNAP}/actions/`](../../domains/software-0008/software/devops/microk8s-sistema-addons-enable-disable-dns-dashboard-storage-gpu.md)
+1696. [Canonical MicroK8s: governança de versões via canais Snap (`--channel=1.xx/stable`) e controle de updates](../../domains/software-0008/software/devops/microk8s-canais-snap-tracks-atualizacoes-transacionais-refresh-hold.md)
+1697. [Canonical MicroK8s: customização de flags de serviços (`kube-apiserver`, `kubelet`, `containerd`) em `/var/snap/microk8s/current/args/`](../../domains/software-0008/software/devops/microk8s-customizacao-argumentos-servicos-var-snap-current-args.md)
+1698. [Canonical MicroK8s: gerenciamento de imagens no `containerd` isolado (`microk8s ctr` e `microk8s images`)](../../domains/software-0008/software/devops/microk8s-containerd-interno-microk8s-ctr-images-import-registry.md)
+1699. [Canonical MicroK8s: diagnóstico automatizado de saúde e coleta de pacote de suporte com `microk8s inspect`](../../domains/software-0008/software/devops/microk8s-inspect-diagnostico-troubleshooting-pacote-logs.md)
+1700. [Canonical MicroK8s: execução multiplataforma (macOS/Windows via Multipass) e laboratórios HA em containers LXD/Incus](../../domains/software-0008/software/devops/microk8s-execucao-multiplataforma-multipass-lxd-incus-ci.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1600 notas 1–1600 das tranches 1–16 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1600/2.000 notas válidas, restando 400 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1700 notas 1–1700 das tranches 1–17 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1700/2.000 notas válidas, restando 300 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
