@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1400 / 2.000 (70,00%)**
-- Gate automatizado: **1400/1400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 14)
-- Revisão factual humana: **0/1400**
-- Revisão factual por IA: **1400/1400**
-- Contabilizadas como válidas: **1400/1400**
-- Revisor das 1400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–14 (1400 notas, IDs 1–1400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1500 / 2.000 (75,00%)**
+- Gate automatizado: **1500/1500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 15)
+- Revisão factual humana: **0/1500**
+- Revisão factual por IA: **1500/1500**
+- Contabilizadas como válidas: **1500/1500**
+- Revisor das 1500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–15 (1500 notas, IDs 1–1500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-14.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-14.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-15.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-15.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md), [`tranche 13`](../reports/ai-review-software-devops-2000-0002-tranche-13.md), [`tranche 14`](../reports/ai-review-software-devops-2000-0002-tranche-14.md), [`tranche 15`](../reports/ai-review-software-devops-2000-0002-tranche-15.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 600 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 500 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1866,6 +1866,138 @@
 1399. [crictl: Teste Isolado de Runtimes CRI sem Kubelet usando Arquivos JSON/YAML (runp, create, start e run)](../../domains/software-0008/software/devops/crictl-execucao-sandboxes-containers-json-yaml-runp-create-start.md)
 1400. [crictl & critest: Suíte Oficial de Conformidade e Benchmark de Performance para Runtimes CRI](../../domains/software-0008/software/devops/crictl-critest-validacao-conformidade-benchmark-cri-tools.md)
 
+## Tranche 15 — Project Copacetic, Kepler, K8sGPT, Lima, Colima, Incus, Spegel, Kamaji, Capsule e Eraser (100 notas; revisão factual por IA registrada)
+
+### Project Copacetic (`copa`, CLI CNCF Sandbox baseada em BuildKit para aplicação direta de patches de vulnerabilidades de SO em imagens de container sem rebuild completo)
+
+1401. [Project Copacetic (copa): aplicação direta de patches de vulnerabilidades em imagens OCI via BuildKit](../../domains/software-0008/software/devops/copacetic-arquitetura-direct-container-image-patching-buildkit.md)
+1402. [Project Copacetic: patching direcionado (Targeted Patching) guiado por relatórios JSON do Trivy](../../domains/software-0008/software/devops/copacetic-targeted-patching-relatorios-trivy-vuln-type-os.md)
+1403. [Project Copacetic: patching abrangente (Comprehensive Patching) sem relatório de scanner](../../domains/software-0008/software/devops/copacetic-comprehensive-patching-atualizacao-completa-sem-relatorio.md)
+1404. [Project Copacetic: aplicação de patches em imagens Ubuntu Chiseled (`dpkg/status` vs `manifest.wall`)](../../domains/software-0008/software/devops/copacetic-ubuntu-chiseled-images-dpkg-status-vs-manifest-wall.md)
+1405. [Project Copacetic: autodeteccão e configuração de endpoints BuildKit (`--addr`)](../../domains/software-0008/software/devops/copacetic-autodeteccao-instancias-buildkit-docker-buildx-socket.md)
+1406. [Project Copacetic: controle de compressão da camada de patch (`--compression` e `--force-compression`)](../../domains/software-0008/software/devops/copacetic-compressao-camadas-patch-uncompressed-force-compression.md)
+1407. [Project Copacetic: aplicação de patches em imagens multiplataforma e preservação de OCI Image Index](../../domains/software-0008/software/devops/copacetic-multi-platform-patching-oci-image-index-preservacao.md)
+1408. [Project Copacetic: arquitetura extensível de adaptadores de gerenciadores de pacotes e scanners](../../domains/software-0008/software/devops/copacetic-arquitetura-extensivel-adaptadores-pkgmgr-scanners.md)
+1409. [Project Copacetic: redução de custos de armazenamento, tráfego de rede e tempo de resposta a incidentes](../../domains/software-0008/software/devops/copacetic-economia-armazenamento-rede-camada-diferencial-cache.md)
+1410. [Project Copacetic: integração em pipelines DevSecOps com Trivy, Cosign, Notation e Kubescape](../../domains/software-0008/software/devops/copacetic-integracao-pipelines-devsecops-assinatura-cosign-kubescape.md)
+
+### Kepler (Kubernetes-based Efficient Power Level Exporter, exportador Prometheus CNCF Sandbox de consumo de energia e potência para nós, containers, pods, processos e VMs)
+
+1411. [Kepler v0.10+: reescrita arquitetural do exportador Prometheus de consumo de energia para Kubernetes](../../domains/software-0008/software/devops/kepler-arquitetura-rewrite-v010-prometheus-energy-exporter.md)
+1412. [Kepler: zonas de energia RAPL (`psys`, `package`, `core`, `uncore`, `dram`) e regra de não soma](../../domains/software-0008/software/devops/kepler-zonas-energia-rapl-psys-package-core-uncore-dram.md)
+1413. [Kepler: métricas de energia e potência de CPU no nível do nó (`active`, `idle`, `joules_total` e `watts`)](../../domains/software-0008/software/devops/kepler-metricas-nivel-no-active-idle-joules-watts-cpu-usage.md)
+1414. [Kepler: atribuição de potência e energia por container e Pod (`kepler_container_cpu_watts` e `joules_total`)](../../domains/software-0008/software/devops/kepler-metricas-containers-pods-atribuicao-energia-cpu-gpu.md)
+1415. [Kepler: monitoramento energético de GPUs (`kepler_node_gpu_*`, `kepler_container_gpu_*` e `kepler_process_gpu_*`)](../../domains/software-0008/software/devops/kepler-monitoramento-gpu-nvidia-active-idle-watts-joules.md)
+1416. [Kepler: visibilidade energética por processo Linux (`kepler_process_*`) e máquinas virtuais (`kepler_vm_*`)](../../domains/software-0008/software/devops/kepler-metricas-processos-maquinas-virtuais-kvm-kubevirt.md)
+1417. [Kepler: endurecimento de segurança na série v0.10+ com acesso somente leitura a `/proc` e `/sys`](../../domains/software-0008/software/devops/kepler-reducao-privilegios-seguranca-readonly-proc-sys-sem-cap-bpf.md)
+1418. [Kepler: implantação via Helm OCI, Kustomize, Kepler Operator e alinhamento estrito entre manifesto e imagem](../../domains/software-0008/software/devops/kepler-implantacao-helm-oci-kustomize-alinhamento-tag-probes.md)
+1419. [Kepler: conversão de Joules para kWh e cálculo de pegada de carbono em consultas PromQL](../../domains/software-0008/software/devops/kepler-calculo-kwh-intensidade-carbono-promql-greenops.md)
+1420. [Kepler: integração com KEDA, OpenCost e ambiente local Docker Compose com Prometheus e Grafana](../../domains/software-0008/software/devops/kepler-integracao-finops-autoscaling-keda-desenvolvimento-compose.md)
+
+### K8sGPT & K8sGPT Operator (ferramenta e operador CNCF Sandbox de diagnóstico e triagem SRE para Kubernetes com analisadores embutidos, anonimização, MCP Server e auto-remediação controlada)
+
+1421. [K8sGPT: arquitetura de diagnóstico e triagem SRE de clusters Kubernetes enriquecida por IA](../../domains/software-0008/software/devops/k8sgpt-arquitetura-sre-analyzers-triagem-diagnostico-kubernetes.md)
+1422. [K8sGPT: analisadores embutidos padrão e opcionais (`k8sgpt filters`) para recursos nativos, Gateway API e OLM](../../domains/software-0008/software/devops/k8sgpt-analyzers-embutidos-default-opcionais-filters.md)
+1423. [K8sGPT: anonimização reversível de metadados sensíveis (`--anonymize`) antes do envio ao LLM](../../domains/software-0008/software/devops/k8sgpt-anonimizacao-dados-sensiveis-anonymize-masking-llm.md)
+1424. [K8sGPT: gerenciamento de provedores de IA (`k8sgpt auth`), modelos locais (Ollama/LocalAI) e proxy LiteLLM](../../domains/software-0008/software/devops/k8sgpt-backends-llm-openai-bedrock-ollama-localai-litellm.md)
+1425. [K8sGPT: modo servidor gRPC e Model Context Protocol (`k8sgpt serve --mcp`) para agentes de IA](../../domains/software-0008/software/devops/k8sgpt-serve-mode-grpc-mcp-server-claude-desktop.md)
+1426. [K8sGPT Operator: monitoramento contínuo in-cluster com CRDs `K8sGPT` e `Result` e rotação automática de Secrets](../../domains/software-0008/software/devops/k8sgpt-operator-crd-result-monitoramento-continuo-incluster.md)
+1427. [K8sGPT Operator: monitoramento multi-cluster sem agentes nos clusters filhos via `spec.kubeconfig` e Cluster API](../../domains/software-0008/software/devops/k8sgpt-operator-multi-cluster-cluster-api-kubeconfig-remoto.md)
+1428. [K8sGPT Operator: auto-remediação opt-in com gate de segurança determinístico e recurso `Mutation`](../../domains/software-0008/software/devops/k8sgpt-operator-auto-remediation-safety-gate-mutation.md)
+1429. [K8sGPT: integrações com Trivy, Prometheus, sinks de notificação Slack e catálogo Backstage](../../domains/software-0008/software/devops/k8sgpt-integrations-trivy-prometheus-sinks-slack-backstage.md)
+1430. [K8sGPT: estatísticas de latência por analisador (`-s`), captura de diagnóstico (`dump`) e proxies corporativos](../../domains/software-0008/software/devops/k8sgpt-diagnostico-performance-stats-dump-custom-headers-proxy.md)
+
+### Lima (Linux Machines, gerenciador CNCF Incubating de máquinas virtuais Linux com compartilhamento automático de arquivos, encaminhamento de portas, templates Docker/K8s e QEMU/VZ)
+
+1431. [Lima (Linux Machines): máquinas virtuais Linux na CNCF com compartilhamento automático de arquivos e portas](../../domains/software-0008/software/devops/lima-arquitetura-linux-virtual-machines-cncf-incubating.md)
+1432. [Lima: catálogo de templates prontos (`template:docker`, `template:k8s`, Podman e múltiplas distribuições Linux)](../../domains/software-0008/software/devops/lima-templates-docker-kubernetes-podman-distros-linux.md)
+1433. [Lima: backends de virtualização (`vz` Virtualization.framework vs `qemu`) e aceleração Rosetta 2 em Apple Silicon](../../domains/software-0008/software/devops/lima-vm-types-vz-virtualization-framework-vs-qemu-rosetta.md)
+1434. [Lima: montagem de sistemas de arquivos (`virtiofs`, `reverse-sshfs`, `9p`) e controle de escrita em diretórios do host](../../domains/software-0008/software/devops/lima-filesystem-mounts-virtiofs-reverse-sshfs-9p-writable.md)
+1435. [Lima: encaminhamento automático de portas (`portForwards`) entre a VM Linux e o localhost da máquina host](../../domains/software-0008/software/devops/lima-port-forwarding-automatico-guest-agent-regras-portforwards.md)
+1436. [Lima: execução multi-arquitetura (Intel-on-ARM, ARM-on-Intel) e emulação transparente via QEMU/binfmt](../../domains/software-0008/software/devops/lima-multi-arch-emulacao-intel-on-arm-arm-on-intel-binfmt.md)
+1437. [Lima: modos de rede (`user-v2`, `socket_vmnet`, `vzNAT`) e comunicação direta entre múltiplas VMs](../../domains/software-0008/software/devops/lima-redes-user-v2-socket-vmnet-bridged-comunicacao-vms.md)
+1438. [Lima: discos extras (`disks`), scripts de provisionamento (`provision`) e verificações de prontidão (`probes`)](../../domains/software-0008/software/devops/lima-disks-adicionais-provision-scripts-probes-cloud-init.md)
+1439. [Lima: modo `plain`, variáveis de ambiente (`env`), política de `sudo` e endurecimento de acesso SSH](../../domains/software-0008/software/devops/lima-plain-mode-ssh-sudo-environment-variables-isolamento.md)
+1440. [Lima: geração de SBOM CycloneDX em duas visões (`app` vs `mod`) para auditoria de cadeia de suprimentos](../../domains/software-0008/software/devops/lima-sbom-cyclonedx-app-vs-mod-seguranca-supply-chain.md)
+
+### Colima (Containers on Lima, CLI para provisão rápida de runtimes Docker, containerd, Kubernetes, Incus e modelos de IA com GPU via krunkit em macOS e Linux)
+
+1441. [Colima: arquitetura de runtimes de containers no macOS e Linux sobre Lima com configuração mínima](../../domains/software-0008/software/devops/colima-arquitetura-containers-on-lima-docker-containerd-incus.md)
+1442. [Colima: seleção de runtimes (`docker`, `containerd` com `nerdctl` e `incus`) na inicialização da instância](../../domains/software-0008/software/devops/colima-runtimes-docker-containerd-nerdctl-incus-selecao.md)
+1443. [Colima: cluster Kubernetes local (`--kubernetes`) e compartilhamento direto de imagens com Docker e containerd](../../domains/software-0008/software/devops/colima-kubernetes-integrado-compartilhamento-imagens-k8s-io.md)
+1444. [Colima: aceleração por GPU para modelos de IA (`--vm-type krunkit`) com Docker Model Runner e Ramalama](../../domains/software-0008/software/devops/colima-ai-workloads-gpu-krunkit-docker-model-runner-ramalama.md)
+1445. [Colima: dimensionamento de CPU, memória, expansão de disco, Rosetta 2 (`--vz-rosetta`) e múltiplos perfis](../../domains/software-0008/software/devops/colima-dimensionamento-cpu-memory-disk-vz-rosetta-perfis.md)
+1446. [Colima: configuração declarativa (`colima.yaml`), precedência de diretórios `$COLIMA_HOME` e templates](../../domains/software-0008/software/devops/colima-configuracao-yaml-colima-home-xdg-template-editor.md)
+1447. [Colima: customização de `daemon.json` do Docker, `config.toml` do containerd e variáveis de ambiente na VM](../../domains/software-0008/software/devops/colima-customizacao-daemon-docker-containerd-registries-mirrors.md)
+1448. [Colima: endereço IP roteável da VM (`--network-address`), autostart em background e recuperação de espaço em disco](../../domains/software-0008/software/devops/colima-rede-network-address-ip-alcancavel-port-forwarding.md)
+1449. [Colima: scripts de provisionamento customizados (`provision`), overrides do Lima e atualização de runtimes](../../domains/software-0008/software/devops/colima-lima-overrides-provision-scripts-atualizacao-runtime.md)
+1450. [Colima: comparação arquitetural com Lima, Minikube, kind e k3d e resolução de problemas comuns](../../domains/software-0008/software/devops/colima-comparacao-lima-minikube-kind-k3d-troubleshooting.md)
+
+### Linux Containers Incus (gerenciador comunitário de containers de sistema LXC e máquinas virtuais QEMU com API REST unificada, user namespaces e segurança de bridge nftables)
+
+1451. [Linux Containers Incus: gerenciador unificado de containers de sistema (LXC) e máquinas virtuais (QEMU)](../../domains/software-0008/software/devops/incus-arquitetura-system-containers-lxc-vms-qemu-rest-api.md)
+1452. [Incus: controle de acesso local pelos grupos `incus` vs `incus-admin` e implicações de segurança do socket Unix](../../domains/software-0008/software/devops/incus-grupos-acesso-incus-vs-incus-admin-seguranca-socket.md)
+1453. [Incus: containers não privilegiados por padrão (`user namespaces`) e isolamento de UID/GID (`security.idmap.isolated`)](../../domains/software-0008/software/devops/incus-containers-unprivileged-user-namespaces-idmap-isolated.md)
+1454. [Incus: aplicação dinâmica de limites de CPU, memória (`limits.cpu`, `limits.memory`) e redimensionamento de disco](../../domains/software-0008/software/devops/incus-configuracao-limites-cpu-memory-root-disk-live-updates.md)
+1455. [Incus: segurança de rede na bridge `incusbr0` e proteção contra spoofing via `security.mac_filtering` e `ipv4/ipv6_filtering`](../../domains/software-0008/software/devops/incus-seguranca-rede-incusbr0-mac-ipv4-ipv6-filtering-nftables.md)
+1456. [Incus: execução remota de comandos (`incus exec`), transferência de arquivos (`incus file`) e snapshots de estado](../../domains/software-0008/software/devops/incus-interacao-exec-file-push-pull-snapshots-stateful.md)
+1457. [Incus: exposição segura da API REST remota sobre TLS (`core.https_address`) e prevenção de vazamento de cgroups](../../domains/software-0008/software/devops/incus-exposicao-remota-api-tls-core-https-address-hardening.md)
+1458. [Incus: clonagem rápida de instâncias (`incus copy`), perfis reutilizáveis e gerenciamento de ciclo de vida](../../domains/software-0008/software/devops/incus-ciclo-vida-instancias-copy-stop-delete-force-profiles.md)
+1459. [Incus: governança comunitária Linux Containers, licença Apache-2.0 sem CLA e pacotes Zabbly](../../domains/software-0008/software/devops/incus-governanca-comunitaria-migracao-lxd-apache2-sem-cla.md)
+1460. [Incus: escolha arquitetural entre containers de sistema (Incus) e containers de aplicação (Docker/Kubernetes)](../../domains/software-0008/software/devops/incus-diferenca-system-containers-vs-oci-docker-aninhamento.md)
+
+### Spegel (mirror de registro OCI stateless e peer-to-peer local ao cluster Kubernetes com roteamento automático via containerd e descoberta por DHT)
+
+1461. [Spegel: espelho de registro OCI stateless e peer-to-peer local ao cluster Kubernetes](../../domains/software-0008/software/devops/spegel-arquitetura-stateless-cluster-local-oci-registry-mirror.md)
+1462. [Spegel: requisitos obrigatórios do `containerd` (`config_path` e `discard_unpacked_layers = false`)](../../domains/software-0008/software/devops/spegel-pre-requisitos-containerd-config-path-discard-unpacked-layers.md)
+1463. [Spegel: matriz de compatibilidade entre distribuições Kubernetes (AKS, Minikube, EKS, GKE, K3s, kind e Talos)](../../domains/software-0008/software/devops/spegel-matriz-compatibilidade-distribuicoes-aks-eks-gke-k3s-talos.md)
+1464. [Spegel: configuração de nós Amazon EKS em AMIs AL2023 (`nodeadm`) e Bottlerocket](../../domains/software-0008/software/devops/spegel-configuracao-eks-al2023-nodeadm-nodeconfig-bottlerocket.md)
+1465. [Spegel: verificação funcional de espelhamento P2P e página de diagnóstico `/debug/web`](../../domains/software-0008/software/devops/spegel-verificacao-funcional-debug-web-last-mirror-success.md)
+1466. [Spegel: implantação declarativa via GitOps com Flux (`HelmRepository` OCI e `HelmRelease`)](../../domains/software-0008/software/devops/spegel-implantacao-gitops-flux-helmrepository-oci-helmrelease.md)
+1467. [Spegel: resiliência contra quedas de registries externos, mitigação de rate-limiting e redução de tráfego egress](../../domains/software-0008/software/devops/spegel-resiliencia-indisponibilidade-registry-externo-rate-limits.md)
+1468. [Spegel: funcionamento do roteamento via Containerd Registry Mirroring (`/etc/containerd/certs.d` e `hosts.toml`)](../../domains/software-0008/software/devops/spegel-roteamento-containerd-registry-mirroring-certs-d-hosts-toml.md)
+1469. [Spegel: aplicação em clusters Edge, homelabs e comparação arquitetural com Dragonfly e Harbor](../../domains/software-0008/software/devops/spegel-edge-computing-homelab-comparacao-dragonfly-harbor.md)
+1470. [Spegel: considerações de segurança no compartilhamento de camadas entre nós e registries privados](../../domains/software-0008/software/devops/spegel-seguranca-isolamento-registries-privados-limites.md)
+
+### Clastix Kamaji (gerenciador de Hosted Control Planes Kubernetes rodando como Pods sobre Datastores compartilhados etcd/Kine com integração nativa ao Cluster API)
+
+1471. [Clastix Kamaji: gerenciamento de Hosted Control Planes Kubernetes rodando como Pods](../../domains/software-0008/software/devops/kamaji-arquitetura-hosted-control-planes-pods-kubernetes.md)
+1472. [Kamaji: especificação do CRD `TenantControlPlane` (`version`, `replicas`, `network` e `kubelet`)](../../domains/software-0008/software/devops/kamaji-crd-tenantcontrolplane-replicas-network-kubelet-version.md)
+1473. [Kamaji: desacoplamento e multi-tenancy do `Datastore` com etcd ou Kine (PostgreSQL, MySQL e NATS)](../../domains/software-0008/software/devops/kamaji-datastore-multitenancy-etcd-kine-postgresql-mysql-nats.md)
+1474. [Kamaji: gerenciamento automático e auto-healing dos addons `coreDNS`, `kubeProxy` e `konnectivity`](../../domains/software-0008/software/devops/kamaji-addons-gerenciados-coredns-kubeproxy-konnectivity.md)
+1475. [Kamaji: comunicação segura entre Control Plane e Worker Nodes em redes distintas via Konnectivity](../../domains/software-0008/software/devops/kamaji-konnectivity-redes-mistas-nat-hibrido-cloud-onprem.md)
+1476. [Kamaji: ciclo de vida automatizado de certificados X.509 (`kubeadm`), rotação e auto-healing de estado](../../domains/software-0008/software/devops/kamaji-gestao-automatica-certificados-kubeadm-rotacao-autohealing.md)
+1477. [Kamaji: provedor de Control Plane para Cluster API (CAPI) e matriz de provedores de infraestrutura](../../domains/software-0008/software/devops/kamaji-cluster-api-control-plane-provider-infraestrutura-suportada.md)
+1478. [Kamaji: separação de recursos de alto volume com `dataStoreOverrides` no `TenantControlPlane`](../../domains/software-0008/software/devops/kamaji-datastore-overrides-separacao-eventos-etcd-escalabilidade.md)
+1479. [Kamaji: upgrades Blue/Green de versão Kubernetes em 10 segundos e escalonamento elástico de Control Planes](../../domains/software-0008/software/devops/kamaji-upgrades-blue-green-10s-scale-to-zero-otimizacao.md)
+1480. [Kamaji: casos de uso em Platform Engineering, Control Plane as a Service e Kubernetes at the Edge](../../domains/software-0008/software/devops/kamaji-casos-uso-paas-eks-alternativa-edge-kubernetes-inception.md)
+
+### Clastix Capsule & Capsule Proxy (operador CNCF Sandbox de multi-tenancy e governança baseada em políticas para Kubernetes com abstração Tenant e listagem filtrada cluster-scoped)
+
+1481. [Clastix Capsule: operador CNCF Sandbox de multi-tenancy em Kubernetes baseado na abstração `Tenant`](../../domains/software-0008/software/devops/capsule-arquitetura-multi-tenancy-tenant-crd-cluster-sprawl.md)
+1482. [Capsule: autoatendimento de namespaces e herança automática de RBAC, ResourceQuotas e LimitRanges](../../domains/software-0008/software/devops/capsule-self-service-namespaces-heranca-rbac-quotas-limitranges.md)
+1483. [Capsule: governança de políticas com Admission Controllers para redes, StorageClasses, IngressClasses e registries](../../domains/software-0008/software/devops/capsule-governanca-admission-controllers-network-storage-ingress.md)
+1484. [Capsule: modelo Bring Your Own Device (BYOD) e isolamento de nós contra o efeito Noisy Neighbor](../../domains/software-0008/software/devops/capsule-byod-bring-your-own-device-isolamento-nos-noisy-neighbor.md)
+1485. [Capsule Proxy: superando a limitação do Kubernetes API Server na listagem filtrada de recursos cluster-scoped](../../domains/software-0008/software/devops/capsule-proxy-listagem-recursos-cluster-scoped-namespaces-nodes.md)
+1486. [Capsule Proxy: fronteira de segurança entre `ProxySetting` (namespaced) e `GlobalProxySettings` (cluster-wide)](../../domains/software-0008/software/devops/capsule-proxy-proxysetting-vs-globalproxysettings-fronteira-seguranca.md)
+1487. [Capsule: operação declarativa GitOps-ready de Tenants e delegação segura para Argo CD e Flux CD](../../domains/software-0008/software/devops/capsule-gitops-ready-flux-argocd-provisionamento-tenants.md)
+1488. [Capsule e Kamaji: escolha e combinação entre Soft Multi-Tenancy (namespaces) e Hard Multi-Tenancy (control planes)](../../domains/software-0008/software/devops/capsule-combinado-kamaji-hard-vs-soft-multitenancy-kubernetes.md)
+1489. [Capsule: artefatos OCI com SBOM CycloneDX JSON, conformidade OpenSSF Best Practices e CLOMonitor](../../domains/software-0008/software/devops/capsule-sbom-cyclonedx-clomonitor-openssf-seguranca-releases.md)
+1490. [Capsule: operação em produção, alta disponibilidade do controlador de admissão e diagnóstico de webhooks](../../domains/software-0008/software/devops/capsule-operacao-producao-alta-disponibilidade-webhooks-troubleshooting.md)
+
+### CNCF Eraser (operador Kubernetes de limpeza automatizada de imagens de container não utilizadas e vulneráveis nos nós via pipeline collector, scanner e remover)
+
+1491. [CNCF Eraser: arquitetura de limpeza automatizada de imagens não executadas e vulneráveis nos nós Kubernetes](../../domains/software-0008/software/devops/eraser-arquitetura-limpeza-imagens-oci-nao-utilizadas-nos-kubernetes.md)
+1492. [Eraser: pipeline de três estágios por nó (`collector`, `scanner` e `remover`) nos Pods de limpeza](../../domains/software-0008/software/devops/eraser-pipeline-tres-containers-collector-scanner-remover-pod.md)
+1493. [Eraser: agendamento periódico de varredura (`manager.scheduling.repeatInterval`) via ConfigMap](../../domains/software-0008/software/devops/eraser-agendamento-automatico-repeat-interval-configmap-scheduling.md)
+1494. [Eraser: desativação do container `scanner` (`components.scanner.enabled: false`) para remoção total de imagens ociosas](../../domains/software-0008/software/devops/eraser-modo-sem-scanner-remocao-total-imagens-ociosas-2-containers.md)
+1495. [Eraser: remoção sob demanda de imagens específicas em todo o cluster via CRD `ImageList`](../../domains/software-0008/software/devops/eraser-crd-imagelist-remocao-seletiva-lista-imagens-comprometidas.md)
+1496. [Eraser: listas de exclusão (`eraser.sh/cleanup.exclude`) para proteger imagens críticas e pré-cacheadas](../../domains/software-0008/software/devops/eraser-exclusao-imagens-protegidas-excluded-configmap-pause-cache.md)
+1497. [Eraser: fluxo de validação prática com DaemonSet de teste e inspeção de `containerd` via `ctr -n k8s.io`](../../domains/software-0008/software/devops/eraser-demo-daemonset-alpine-validacao-containerd-kind-ctr.md)
+1498. [Eraser vs Kubelet Image Garbage Collection: diferenças entre limpeza por pressão de disco e limpeza orientada a CVEs](../../domains/software-0008/software/devops/eraser-comparacao-kubelet-image-gc-thresholds-seguranca-cve.md)
+1499. [Eraser: coordenação distribuída de pods de limpeza por nó via recurso `ImageJob`](../../domains/software-0008/software/devops/eraser-crd-imagejob-execucao-efemera-node-selectors-limpeza.md)
+1500. [Eraser: governança CNCF, OpenSSF Scorecard e boas práticas operacionais com registries e mirrors](../../domains/software-0008/software/devops/eraser-governanca-cncf-openssf-scorecard-operacao-segura.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1400 notas 1–1400 das tranches 1–14 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1400/2.000 notas válidas, restando 600 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1500 notas 1–1500 das tranches 1–15 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1500/2.000 notas válidas, restando 500 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

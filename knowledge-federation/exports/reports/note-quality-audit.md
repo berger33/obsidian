@@ -1,6 +1,6 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-03T16:42:33+00:00`
+Executada em: `2026-10-03T16:58:59+00:00`
 
 > O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.
 
@@ -9,11 +9,11 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - Escopo de notas: `knowledge-federation/domains`
 - Escopo de resolução de links: `knowledge-federation`, `knowledge-federation/domains`
 - MOCs: fora do gate de qualidade; servem apenas como navegação.
-- Arquivos avaliados: **3,540**
-- Candidatas aprovadas no gate e prontas para revisão factual: **3,440**
+- Arquivos avaliados: **3,640**
+- Candidatas aprovadas no gate e prontas para revisão factual: **3,540**
 - Com revisão factual humana aprovada: **49**
-- Com revisão factual por IA aprovada e identificada: **3,391**
-- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **3,440**
+- Com revisão factual por IA aprovada e identificada: **3,491**
+- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **3,540**
 - Com pendências de qualidade: **100**
 - Critério aplicado: mínimo de 100 palavras, seções de conteúdo, 2 fontes HTTPS específicas, links wiki resolvidos e sem frases de placeholder conhecidas.
 
@@ -2175,6 +2175,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/bytebase-integracao-ia-mcp-server-text-to-sql-page-agent.md` — 522 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/bytebase-plataforma-governanca-banco-dados-humanos-ia.md` — 471 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/bytebase-rollout-multi-ambiente-batch-change-multi-tenant.md` — 477 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-arquitetura-multi-tenancy-tenant-crd-cluster-sprawl.md` — 326 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-byod-bring-your-own-device-isolamento-nos-noisy-neighbor.md` — 342 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-combinado-kamaji-hard-vs-soft-multitenancy-kubernetes.md` — 370 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-gitops-ready-flux-argocd-provisionamento-tenants.md` — 348 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-governanca-admission-controllers-network-storage-ingress.md` — 349 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-operacao-producao-alta-disponibilidade-webhooks-troubleshooting.md` — 295 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-proxy-listagem-recursos-cluster-scoped-namespaces-nodes.md` — 355 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-proxy-proxysetting-vs-globalproxysettings-fronteira-seguranca.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-sbom-cyclonedx-clomonitor-openssf-seguranca-releases.md` — 335 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/capsule-self-service-namespaces-heranca-rbac-quotas-limitranges.md` — 335 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/certmanager-acme-vault-cyberark-and-in-cluster-sources.md` — 302 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/certmanager-automated-renewal-before-expiry.md` — 307 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/certmanager-go-import-path-v1-8-transition.md` — 317 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -2215,6 +2225,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/clusterapi-provedores-infraestrutura-bootstrap-control-plane.md` — 461 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/clusterapi-recursos-cluster-machine-imutabilidade.md` — 428 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/clusterapi-topologia-clusterclass-ponto-unico-controle.md` — 411 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-ai-workloads-gpu-krunkit-docker-model-runner-ramalama.md` — 344 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-arquitetura-containers-on-lima-docker-containerd-incus.md` — 342 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-comparacao-lima-minikube-kind-k3d-troubleshooting.md` — 341 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-configuracao-yaml-colima-home-xdg-template-editor.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-customizacao-daemon-docker-containerd-registries-mirrors.md` — 316 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-dimensionamento-cpu-memory-disk-vz-rosetta-perfis.md` — 317 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-kubernetes-integrado-compartilhamento-imagens-k8s-io.md` — 328 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-lima-overrides-provision-scripts-atualizacao-runtime.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-rede-network-address-ip-alcancavel-port-forwarding.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/colima-runtimes-docker-containerd-nerdctl-incus-selecao.md` — 310 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/consul-busl-1-1-licensing-and-consul-enterprise-tier.md` — 454 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/consul-consul-api-gateway-north-south-traffic-and-policies.md` — 460 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/consul-consul-service-mesh-mtls-and-transparent-proxy.md` — 485 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -2235,6 +2255,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/containerd-runtime-requirements-runc-hcsshim-and-kernel.md` — 367 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/containerd-security-audits-governance-and-adopters.md` — 316 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/containerd-what-it-is-and-embedded-design.md` — 370 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-arquitetura-direct-container-image-patching-buildkit.md` — 401 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-arquitetura-extensivel-adaptadores-pkgmgr-scanners.md` — 331 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-autodeteccao-instancias-buildkit-docker-buildx-socket.md` — 320 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-comprehensive-patching-atualizacao-completa-sem-relatorio.md` — 354 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-compressao-camadas-patch-uncompressed-force-compression.md` — 344 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-economia-armazenamento-rede-camada-diferencial-cache.md` — 386 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-integracao-pipelines-devsecops-assinatura-cosign-kubescape.md` — 344 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-multi-platform-patching-oci-image-index-preservacao.md` — 324 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-targeted-patching-relatorios-trivy-vuln-type-os.md` — 356 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/copacetic-ubuntu-chiseled-images-dpkg-status-vs-manifest-wall.md` — 330 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/coredns-corefile-import-globs-and-env-var-single-token.md` — 342 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/coredns-default-whoami-behavior-and-dns-port-override.md` — 333 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/coredns-json-logging-format-and-structured-fields.md` — 364 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -2405,6 +2435,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/envoy-release-process-and-lifecycle-governance.md` — 287 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/envoy-third-party-security-audits-cure53-and-adalogics.md` — 317 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/envoy-vulnerability-reporting-and-security-release-process.md` — 305 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-agendamento-automatico-repeat-interval-configmap-scheduling.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-arquitetura-limpeza-imagens-oci-nao-utilizadas-nos-kubernetes.md` — 338 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-comparacao-kubelet-image-gc-thresholds-seguranca-cve.md` — 357 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-crd-imagejob-execucao-efemera-node-selectors-limpeza.md` — 319 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-crd-imagelist-remocao-seletiva-lista-imagens-comprometidas.md` — 328 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-demo-daemonset-alpine-validacao-containerd-kind-ctr.md` — 314 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-exclusao-imagens-protegidas-excluded-configmap-pause-cache.md` — 343 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-governanca-cncf-openssf-scorecard-operacao-segura.md` — 317 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-modo-sem-scanner-remocao-total-imagens-ociosas-2-containers.md` — 332 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/eraser-pipeline-tres-containers-collector-scanner-remover-pod.md` — 317 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/etcd-ci-verification-codeql-coverage-and-scorecard.md` — 275 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/etcd-distributed-raft-key-value-store-pillars.md` — 348 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/etcd-kubernetes-state-store-and-robustness-testing.md` — 336 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -2575,6 +2615,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/helm-sdk-go-package-v4-reference.md` — 303 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/helm-v4-stable-vs-v3-support-timeline.md` — 395 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/helm-what-it-is-and-five-uses.md` — 327 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-arquitetura-system-containers-lxc-vms-qemu-rest-api.md` — 384 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-ciclo-vida-instancias-copy-stop-delete-force-profiles.md` — 371 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-configuracao-limites-cpu-memory-root-disk-live-updates.md` — 371 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-containers-unprivileged-user-namespaces-idmap-isolated.md` — 390 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-diferenca-system-containers-vs-oci-docker-aninhamento.md` — 382 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-exposicao-remota-api-tls-core-https-address-hardening.md` — 386 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-governanca-comunitaria-migracao-lxd-apache2-sem-cla.md` — 387 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-grupos-acesso-incus-vs-incus-admin-seguranca-socket.md` — 387 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-interacao-exec-file-push-pull-snapshots-stateful.md` — 370 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/incus-seguranca-rede-incusbr0-mac-ipv4-ipv6-filtering-nftables.md` — 382 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/infracost-autenticacao-oauth-pkce-device-flow-organizacoes.md` — 411 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/infracost-comandos-cli-scan-inspect-price-flags-globais.md` — 446 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/infracost-estimativa-custos-nuvem-terraform-finops-shift-left.md` — 472 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -2625,6 +2675,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/k3s-instalacao-air-gap-imagens-tarball-registries-privados.md` — 439 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k3s-remocao-in-tree-drivers-suporte-csi-ccm-conformidade.md` — 475 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k3s-seguranca-identidade-nos-node-password-secrets-certificados.md` — 475 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-analyzers-embutidos-default-opcionais-filters.md` — 287 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-anonimizacao-dados-sensiveis-anonymize-masking-llm.md` — 337 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-arquitetura-sre-analyzers-triagem-diagnostico-kubernetes.md` — 346 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-backends-llm-openai-bedrock-ollama-localai-litellm.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-diagnostico-performance-stats-dump-custom-headers-proxy.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-integrations-trivy-prometheus-sinks-slack-backstage.md` — 301 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-operator-auto-remediation-safety-gate-mutation.md` — 346 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-operator-crd-result-monitoramento-continuo-incluster.md` — 316 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-operator-multi-cluster-cluster-api-kubeconfig-remoto.md` — 298 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/k8sgpt-serve-mode-grpc-mcp-server-claude-desktop.md` — 308 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k9s-atalhos-operacao-logs-shell-port-forward-benchmark.md` — 477 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k9s-configuracao-xdg-diretorios-logs-debug-screendumps.md` — 435 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k9s-execucao-container-docker-build-multiplataforma-compatibilidade.md` — 410 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -2635,6 +2695,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/k9s-navegacao-modo-comando-filtros-regex-labels-contextos.md` — 468 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k9s-ordenacao-colunas-marcacao-lote-operacoes-nodes.md` — 454 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/k9s-visoes-diagnostico-pulses-xray-popeye-usedby.md` — 457 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-addons-gerenciados-coredns-kubeproxy-konnectivity.md` — 302 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-arquitetura-hosted-control-planes-pods-kubernetes.md` — 343 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-casos-uso-paas-eks-alternativa-edge-kubernetes-inception.md` — 335 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-cluster-api-control-plane-provider-infraestrutura-suportada.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-crd-tenantcontrolplane-replicas-network-kubelet-version.md` — 316 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-datastore-multitenancy-etcd-kine-postgresql-mysql-nats.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-datastore-overrides-separacao-eventos-etcd-escalabilidade.md` — 307 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-gestao-automatica-certificados-kubeadm-rotacao-autohealing.md` — 335 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-konnectivity-redes-mistas-nat-hibrido-cloud-onprem.md` — 337 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kamaji-upgrades-blue-green-10s-scale-to-zero-otimizacao.md` — 335 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/kaniko-custom-ca-certificates-and-registry-mirrors-configuration.md` — 409 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/kaniko-how-kaniko-works-base-image-extraction-and-userspace-snapshotting.md` — 480 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/kaniko-known-issues-official-executor-image-requirement.md` — 485 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -2675,6 +2745,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/keda-local-operator-outside-cluster-and-certs.md` — 345 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/keda-operator-sdk-build-and-goproxy-gosumdb.md` — 319 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/keda-quickstarts-rabbitmq-azure-kafka-and-scaledjob.md` — 313 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-arquitetura-rewrite-v010-prometheus-energy-exporter.md` — 345 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-calculo-kwh-intensidade-carbono-promql-greenops.md` — 363 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-implantacao-helm-oci-kustomize-alinhamento-tag-probes.md` — 329 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-integracao-finops-autoscaling-keda-desenvolvimento-compose.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-metricas-containers-pods-atribuicao-energia-cpu-gpu.md` — 334 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-metricas-nivel-no-active-idle-joules-watts-cpu-usage.md` — 329 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-metricas-processos-maquinas-virtuais-kvm-kubevirt.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-monitoramento-gpu-nvidia-active-idle-watts-joules.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-reducao-privilegios-seguranca-readonly-proc-sys-sem-cap-bpf.md` — 346 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/kepler-zonas-energia-rapl-psys-package-core-uncore-dram.md` — 343 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/keycloak-automacao-admin-rest-api-cli-export-import-realms.md` — 415 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/keycloak-cluster-alta-disponibilidade-infinispan-jgroups-banco.md` — 435 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/keycloak-configuracao-producao-tls-hostname-v2-reverse-proxy.md` — 419 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
@@ -2815,6 +2895,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/lefthook-local-yml-overrides-pessoais-skip-tags-docker.md` — 317 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/lefthook-scripts-commit-msg-runners-docker-containerizados.md` — 312 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/lefthook-seguranca-shift-left-gitleaks-trivy-kubeconform-tflint.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-arquitetura-linux-virtual-machines-cncf-incubating.md` — 325 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-disks-adicionais-provision-scripts-probes-cloud-init.md` — 325 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-filesystem-mounts-virtiofs-reverse-sshfs-9p-writable.md` — 323 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-multi-arch-emulacao-intel-on-arm-arm-on-intel-binfmt.md` — 352 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-plain-mode-ssh-sudo-environment-variables-isolamento.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-port-forwarding-automatico-guest-agent-regras-portforwards.md` — 334 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-redes-user-v2-socket-vmnet-bridged-comunicacao-vms.md` — 326 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-sbom-cyclonedx-app-vs-mod-seguranca-supply-chain.md` — 344 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-templates-docker-kubernetes-podman-distros-linux.md` — 328 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/lima-vm-types-vz-virtualization-framework-vs-qemu-rosetta.md` — 333 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/linkerd-container-registry-and-k3d-dev-workflow.md` — 298 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/linkerd-control-plane-destination-injector-identity.md` — 322 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/linkerd-control-plane-distributed-tracing-flag.md` — 310 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -3245,6 +3335,16 @@ Executada em: `2026-10-03T16:42:33+00:00`
 - `knowledge-federation/domains/software-0008/software/devops/sops-operacoes-arvore-extract-set-unset-in-place.md` — 414 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/sops-provedores-identidades-kms-age-pgp-vault.md` — 463 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/sops-regras-criacao-arquivo-sops-yaml-path-regex.md` — 428 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-arquitetura-stateless-cluster-local-oci-registry-mirror.md` — 327 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-configuracao-eks-al2023-nodeadm-nodeconfig-bottlerocket.md` — 277 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-edge-computing-homelab-comparacao-dragonfly-harbor.md` — 323 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-implantacao-gitops-flux-helmrepository-oci-helmrelease.md` — 271 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-matriz-compatibilidade-distribuicoes-aks-eks-gke-k3s-talos.md` — 350 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-pre-requisitos-containerd-config-path-discard-unpacked-layers.md` — 290 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-resiliencia-indisponibilidade-registry-externo-rate-limits.md` — 359 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-roteamento-containerd-registry-mirroring-certs-d-hosts-toml.md` — 301 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-seguranca-isolamento-registries-privados-limites.md` — 313 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0008/software/devops/spegel-verificacao-funcional-debug-web-last-mirror-success.md` — 321 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/spiffe-comparing-spire-to-secret-stores-iam-and-service-meshes.md` — 503 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/spiffe-cure53-and-cncf-tag-security-audits.md` — 466 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0008/software/devops/spiffe-envoy-secret-discovery-service-sds-integration.md` — 451 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
