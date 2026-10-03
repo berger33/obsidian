@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1100 / 2.000 (55,00%)**
-- Gate automatizado: **1100/1100 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 11)
-- Revisão factual humana: **0/1100**
-- Revisão factual por IA: **1100/1100**
-- Contabilizadas como válidas: **1100/1100**
-- Revisor das 1100 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–11 (1100 notas, IDs 1–1100) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1200 / 2.000 (60,00%)**
+- Gate automatizado: **1200/1200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 12)
+- Revisão factual humana: **0/1200**
+- Revisão factual por IA: **1200/1200**
+- Contabilizadas como válidas: **1200/1200**
+- Revisor das 1200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–12 (1200 notas, IDs 1–1200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-11.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-11.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-12.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-12.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md), [`tranche 11`](../reports/ai-review-software-devops-2000-0002-tranche-11.md), [`tranche 12`](../reports/ai-review-software-devops-2000-0002-tranche-12.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1100 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 900 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 800 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1470,6 +1470,138 @@
 1099. [Gerenciamento de variáveis de ambiente no mise: seção [env], carregamento de arquivos .env e hierarquia de configuração](../../domains/software-0008/software/devops/mise-gerenciamento-ambientes-diretivas-env-dotenv-hierarquia.md)
 1100. [Task Runner integrado ([tasks]), Bootstrap de máquinas e integração com IDEs no mise](../../domains/software-0008/software/devops/mise-task-runner-integrado-bootstrap-maquinas-ide.md)
 
+## Tranche 12 — Kratix, Score, Jetify Devbox, direnv, Fairwinds Nova, Fairwinds RBAC Manager, Robusta, Botkube, Kured e just (100 notas; revisão factual por IA registrada)
+
+### Kratix (framework open-source de engenharia de plataforma para construir Internal Developer Platforms compostas com Promises sobre Kubernetes)
+
+1101. [Kratix: Arquitetura com Promises, Platform Cluster, Destinations e State Stores](../../domains/software-0008/software/devops/kratix-arquitetura-promises-platform-destinations-statestores.md)
+1102. [Kratix: Definição de Promise e Contrato de API entre Produtor e Consumidor](../../domains/software-0008/software/devops/kratix-promise-crd-api-contrato-produtor-consumidor.md)
+1103. [Kratix: Ciclo de Vida de Resource Requests e Retorno de Status ao Consumidor](../../domains/software-0008/software/devops/kratix-resource-requests-ciclo-vida-status-connectiondetails.md)
+1104. [Kratix: Workflows Imperativos-Declarativos com Containers (/kratix/input, /kratix/output e /kratix/metadata)](../../domains/software-0008/software/devops/kratix-workflows-pipelines-containers-input-output-metadata.md)
+1105. [Kratix: State Stores (GitStateStore e BucketStateStore) e Desacoplamento GitOps](../../domains/software-0008/software/devops/kratix-statestores-gitstatestore-bucketstatestore-gitops.md)
+1106. [Kratix: Destinations, Agendamento por Label Selectors e WorkPlacements](../../domains/software-0008/software/devops/kratix-destinations-scheduling-label-selectors-workplacements.md)
+1107. [Kratix: Dependências de Promise e Workflows de Bootstrapping de Frota](../../domains/software-0008/software/devops/kratix-dependencies-promise-workflows-fleet-bootstrapping.md)
+1108. [Kratix: Gestão de Frota no Dia 2 e Atualização em Massa de Instâncias via Promise](../../domains/software-0008/software/devops/kratix-gestao-frota-day2-upgrades-reconciliacao-instancias.md)
+1109. [Kratix: Compound Promises e Composição de Paved Roads Multicamada](../../domains/software-0008/software/devops/kratix-compound-promises-composicao-paved-roads-multicamada.md)
+1110. [Kratix: Workflows de Deleção (resource.delete) e Descomissionamento Seguro](../../domains/software-0008/software/devops/kratix-delete-workflows-garbage-collection-descomissionamento.md)
+
+### Score (especificação CNCF Sandbox de workload agnóstica de plataforma com score.yaml, score-compose e score-k8s)
+
+1111. [Score: Especificação de Workload Agnóstica de Plataforma (score.yaml v1b1)](../../domains/software-0008/software/devops/score-especificacao-workload-platform-agnostic-score-yaml.md)
+1112. [Score: Declaração de Recursos Dependentes e Interpolação de Outputs (${resources.*})](../../domains/software-0008/software/devops/score-resources-dependencias-declarativas-interpolacao-outputs.md)
+1113. [Score: score-compose para Geração de Ambientes Locais Docker Compose](../../domains/software-0008/software/devops/score-compose-desenvolvimento-local-docker-compose-generation.md)
+1114. [Score: score-k8s para Tradução de Workloads em Manifestos Kubernetes](../../domains/software-0008/software/devops/score-k8s-geracao-manifestos-kubernetes-init-generate.md)
+1115. [Score: Provisionadores Customizados (template:// e cmd://) em score-compose e score-k8s](../../domains/software-0008/software/devops/score-custom-provisioners-template-cmd-extensibilidade-plataforma.md)
+1116. [Score: Configuração de Containers (Variables, Files, Volumes, Probes e Resources)](../../domains/software-0008/software/devops/score-containers-files-volumes-variables-probes-limits.md)
+1117. [Score: Recursos Compartilhados entre Múltiplos Workloads (id e service-port)](../../domains/software-0008/software/devops/score-shared-resources-id-multi-workload-communication.md)
+1118. [Score: Exposição de Tráfego Externo com Recursos dns e route](../../domains/software-0008/software/devops/score-dns-route-exposicao-http-roteamento-ingress.md)
+1119. [Score: Pós-Processamento de Manifestos no score-k8s com --patch-templates](../../domains/software-0008/software/devops/score-k8s-patch-templates-post-processing-customizacao.md)
+1120. [Score: Integração do Score em Fluxos GitOps, Kratix Promises e Orquestradores de Plataforma](../../domains/software-0008/software/devops/score-fluxo-gitops-integracao-kratix-argocd-humanitec.md)
+
+### Jetify Devbox (ambientes de desenvolvimento portáveis, isolados e reprodutíveis em devbox.json alimentados pelo gerenciador de pacotes Nix)
+
+1121. [Jetify Devbox: Ambientes de Desenvolvimento Reprodutíveis Baseados em Nix (devbox.json)](../../domains/software-0008/software/devops/devbox-ambientes-desenvolvimento-reprodutiveis-nix-devbox-json.md)
+1122. [Jetify Devbox: Busca e Pinagem Exata de Versões de Pacotes com Nixhub e devbox.lock](../../domains/software-0008/software/devops/devbox-search-add-pinning-versoes-nixhub-lockfile.md)
+1123. [Jetify Devbox: Automação com init_hook, Variáveis env e devbox run Scripts](../../domains/software-0008/software/devops/devbox-shell-init-hook-env-scripts-automacao-projeto.md)
+1124. [Jetify Devbox: Execução de Serviços em Background (PostgreSQL, Redis, Nginx) sem Docker](../../domains/software-0008/software/devops/devbox-services-process-compose-bancos-locais-sem-docker.md)
+1125. [Jetify Devbox: Integração com direnv para Ativação Automática ao Entrar no Diretório](../../domains/software-0008/software/devops/devbox-direnv-integracao-ativacao-automatica-diretorio.md)
+1126. [Jetify Devbox: Geração de Dockerfile e Devcontainer a partir do devbox.json](../../domains/software-0008/software/devops/devbox-generate-dockerfile-devcontainer-portabilidade-producao.md)
+1127. [Jetify Devbox: Perfil Global (devbox global) para Ferramentas de Linha de Comando do Usuário](../../domains/software-0008/software/devops/devbox-global-substituicao-gerenciador-pacotes-usuario.md)
+1128. [Jetify Devbox: Sistema de Plugins Embutidos e Customizados para Configuração de Pacotes](../../domains/software-0008/software/devops/devbox-plugins-sistema-configuracao-automatica-pacotes.md)
+1129. [Jetify Devbox: Execução de Pipelines CI/CD com devbox run e Cache da Store Nix](../../domains/software-0008/software/devops/devbox-ci-cd-github-actions-cache-nix-store-determinismo.md)
+1130. [Jetify Devbox: Referência Direta a Nix Flakes e Outputs Customizados no devbox.json](../../domains/software-0008/software/devops/devbox-flakes-nixpkgs-custom-outputs-patches-avancado.md)
+
+### direnv (extensão de shell para carregamento e descarregamento automático de variáveis de ambiente por diretório com .envrc e stdlib)
+
+1131. [direnv: Arquitetura de Hook de Prompt e Captura de Diff de Ambiente via Sub-Shell Bash](../../domains/software-0008/software/devops/direnv-arquitetura-shell-hook-subshell-bash-diff-ambiente.md)
+1132. [direnv: Mecanismo de Segurança com direnv allow, direnv deny e Hash de Autorização](../../domains/software-0008/software/devops/direnv-seguranca-allow-deny-bloqueio-execucao-envrc.md)
+1133. [direnv: Configuração de Hooks em Bash, Zsh, Fish, Nushell e PowerShell](../../domains/software-0008/software/devops/direnv-configuracao-hooks-bash-zsh-fish-nushell-pwsh.md)
+1134. [direnv: Biblioteca Padrão (stdlib) com PATH_add, dotenv, source_up e watch_file](../../domains/software-0008/software/devops/direnv-stdlib-path-add-source-up-dotenv-watch-file.md)
+1135. [direnv: Funções de Layout (layout python, layout node, layout go) para Isolamento por Projeto](../../domains/software-0008/software/devops/direnv-layouts-python-go-node-ruby-isolamento-linguagem.md)
+1136. [direnv: Funções use nix, use flake e Integração com Devbox e mise](../../domains/software-0008/software/devops/direnv-use-nix-use-flake-integracao-devbox-mise.md)
+1137. [direnv: Extensões Pessoais e Corporativas em ~/.config/direnv/direnvrc e lib/*.sh](../../domains/software-0008/software/devops/direnv-extensoes-customizadas-direnvrc-config-lib.md)
+1138. [direnv: Isolamento de Contexto Multi-Cluster e Multi-Cloud (KUBECONFIG, AWS_PROFILE e TF_WORKSPACE)](../../domains/software-0008/software/devops/direnv-isolamento-multi-cluster-kubeconfig-aws-profile-terraform.md)
+1139. [direnv: Configuração Global no direnv.toml (load_dotenv, strict_env e warn_timeout)](../../domains/software-0008/software/devops/direnv-toml-configuracao-global-load-dotenv-strict-env.md)
+1140. [direnv: Execução Não Interativa com direnv exec e direnv export em IDEs e CI/CD](../../domains/software-0008/software/devops/direnv-exec-export-ci-cd-editors-vscode-headless.md)
+
+### Fairwinds Nova (auditoria de releases Helm charts e imagens de containers desatualizadas ou depreciadas em clusters Kubernetes)
+
+1141. [Fairwinds Nova: Detecção de Helm Charts Desatualizados e Depreciados no Cluster (nova find)](../../domains/software-0008/software/devops/nova-auditoria-helm-charts-desatualizados-depreciados-find.md)
+1142. [Fairwinds Nova: Auditoria de Imagens de Containers Desatualizadas com --containers](../../domains/software-0008/software/devops/nova-auditoria-imagens-containers-semver-minor-patch.md)
+1143. [Fairwinds Nova: Uso com Repositórios Helm Privados (--url e --poll-artifacthub=false)](../../domains/software-0008/software/devops/nova-repositorios-helm-privados-artifacthub-poll-url.md)
+1144. [Fairwinds Nova: Arquivo de Configuração (nova.yaml), Ignore Lists e Override de Versões Desejadas](../../domains/software-0008/software/devops/nova-configuracao-declarativa-generate-config-desired-versions.md)
+1145. [Fairwinds Nova: Diagnóstico de Erros de Registry e Tags Não-SemVer (--show-errored-containers e --show-non-semver)](../../domains/software-0008/software/devops/nova-containers-errored-non-semver-timeout-diagnostico-registries.md)
+1146. [Fairwinds Nova: Migração de Registry (us-docker.pkg.dev) e Imagens Assinadas e Imutáveis](../../domains/software-0008/software/devops/nova-migracao-registry-imagens-assinadas-imutaveis-pkg-dev.md)
+1147. [Fairwinds Nova: Configuração de RBAC de Mínimo Privilégio para Execução In-Cluster](../../domains/software-0008/software/devops/nova-rbac-minimo-serviceaccount-leitura-helm-secrets-pods.md)
+1148. [Fairwinds Nova: Uso Combinado com Pluto, Polaris e Goldilocks no Planejamento de Upgrades de Cluster](../../domains/software-0008/software/devops/nova-combinado-pluto-polaris-goldilocks-governanca-upgrades.md)
+1149. [Fairwinds Nova: Escopo por Namespace (--namespace), Multi-Contexto (--context) e Exportação JSON](../../domains/software-0008/software/devops/nova-filtragem-namespace-context-include-all-relatorios-json.md)
+1150. [Fairwinds Nova: Análise de Drift entre Chart Version e appVersion em Upgrades Graduais](../../domains/software-0008/software/devops/nova-planejamento-atualizacao-minor-vs-major-helm-appversion.md)
+
+### Fairwinds RBAC Manager (operador Kubernetes declarativo para gestão em escala de RoleBindings, ClusterRoleBindings e ServiceAccounts via RBACDefinition)
+
+1151. [Fairwinds RBAC Manager: Operador Declarativo e CRD RBACDefinition no Kubernetes](../../domains/software-0008/software/devops/rbacmanager-operador-declarativo-rbacdefinition-crd.md)
+1152. [Fairwinds RBAC Manager: Recriação Automática de RoleBindings ao Alterar roleRef](../../domains/software-0008/software/devops/rbacmanager-atualizacao-imutavel-roleref-recriacao-automatica.md)
+1153. [Fairwinds RBAC Manager: Revogação Automática de Acessos e Limpeza de RoleBindings Órfãos](../../domains/software-0008/software/devops/rbacmanager-revogacao-acesso-remocao-bindings-ownerreferences.md)
+1154. [Fairwinds RBAC Manager: RoleBindings Dinâmicos com namespaceSelector (matchLabels e matchExpressions)](../../domains/software-0008/software/devops/rbacmanager-namespaceselector-matchlabels-matchexpressions-dinamico.md)
+1155. [Fairwinds RBAC Manager: Provisionamento Declarativo de ServiceAccounts e Bindings Associados](../../domains/software-0008/software/devops/rbacmanager-gestao-serviceaccounts-automacao-bots-ci.md)
+1156. [Fairwinds RBAC Manager: Instalação via Helm e Migração para Imagens Assinadas em us-docker.pkg.dev](../../domains/software-0008/software/devops/rbacmanager-instalacao-helm-migracao-registry-pkg-dev.md)
+1157. [Fairwinds RBAC Manager: Mapeamento de Grupos OIDC e IAM em Clusters EKS, GKE e AKS](../../domains/software-0008/software/devops/rbacmanager-integracao-oidc-grupos-idp-eks-gke-aks.md)
+1158. [Fairwinds RBAC Manager: Auditoria de Permissões Efetivas em Conjunto com rbac-lookup](../../domains/software-0008/software/devops/rbacmanager-auditoria-combinada-rbac-lookup-visibilidade.md)
+1159. [Fairwinds RBAC Manager: Prevenção de Escalação de Privilégios no Acesso à CRD RBACDefinition](../../domains/software-0008/software/devops/rbacmanager-seguranca-escalacao-privilegios-controle-acesso-crd.md)
+1160. [Fairwinds RBAC Manager: Padrão GitOps Separando Definição de Roles/ClusterRoles e RBACDefinitions](../../domains/software-0008/software/devops/rbacmanager-padroes-gitops-separacao-roles-customizadas-bindings.md)
+
+### Robusta (motor open-source de enriquecimento de alertas Prometheus, detecção nativa de eventos Kubernetes, auto-remediação e investigação com HolmesGPT)
+
+1161. [Robusta: Arquitetura de Enriquecimento de Alertas Prometheus e Observabilidade no Kubernetes](../../domains/software-0008/software/devops/robusta-arquitetura-enriquecimento-alertas-prometheus-kubernetes.md)
+1162. [Robusta: Modelo de Playbooks com Triggers, Actions e Sinks (generated_values.yaml)](../../domains/software-0008/software/devops/robusta-playbooks-triggers-actions-sinks-modelo-regras.md)
+1163. [Robusta: Detecção Nativa de OOMKills, CrashLoops e Falhas de Jobs sem PromQL](../../domains/software-0008/software/devops/robusta-deteccao-nativa-oomkill-crashloop-jobs-sem-promql.md)
+1164. [Robusta: Smart Grouping e Roteamento Avançado para Sinks (Slack, MS Teams, PagerDuty e Jira)](../../domains/software-0008/software/devops/robusta-smart-grouping-roteamento-sinks-slack-teams-jira-pagerduty.md)
+1165. [Robusta: Auto-Remediação (Self-Healing) e Ações Interativas sobre Alertas Kubernetes](../../domains/software-0008/software/devops/robusta-auto-remediacao-self-healing-playbooks-seguranca.md)
+1166. [Robusta: Change-Tracking de Recursos Kubernetes para Correlação entre Deploys e Incidentes](../../domains/software-0008/software/devops/robusta-change-tracking-correlacao-rollouts-config-alertas.md)
+1167. [Robusta: Investigação Automática de Causa Raiz com HolmesGPT e Fontes de Dados Externas](../../domains/software-0008/software/devops/robusta-holmesgpt-investigacao-causa-raiz-ia-mcp.md)
+1168. [Robusta: Integração com KRR (Kubernetes Resource Recommender) para Otimização de CPU e Memória](../../domains/software-0008/software/devops/robusta-krr-kubernetes-resource-recommender-otimizacao-custos.md)
+1169. [Robusta: Integração com kube-prometheus-stack, VictoriaMetrics, Thanos e Managed Prometheus (AWS, GCP, Azure)](../../domains/software-0008/software/devops/robusta-integracao-prometheus-gerenciado-amp-gmp-azure-victoriametrics.md)
+1170. [Robusta: Geração de Valores com Robusta CLI e Implantação GitOps (Argo CD e Flux)](../../domains/software-0008/software/devops/robusta-cli-wizard-helm-instalacao-gitops-argocd-flux.md)
+
+### Botkube (assistente ChatOps colaborativo para monitoramento de eventos, autodiagnóstico e execução segura de kubectl e helm com RBAC por canal)
+
+1171. [Botkube: Arquitetura ChatOps para Monitoramento e Debugging Colaborativo de Clusters Kubernetes](../../domains/software-0008/software/devops/botkube-arquitetura-chatops-monitoramento-debugging-kubernetes.md)
+1172. [Botkube: Source Plugins para Eventos Kubernetes e Alertas Prometheus](../../domains/software-0008/software/devops/botkube-source-plugins-eventos-kubernetes-prometheus-filtros.md)
+1173. [Botkube: Executor Plugins para Execução Controlada de kubectl e helm via Chat](../../domains/software-0008/software/devops/botkube-executor-plugins-kubectl-helm-comandos-chat.md)
+1174. [Botkube: Políticas de RBAC por Canal de Chat e Isolamento Multi-Tenant](../../domains/software-0008/software/devops/botkube-rbac-por-canal-channel-mapping-least-privilege.md)
+1175. [Botkube: Comparação de Integrações Bidirecionais (Bots) e Unidirecionais (Sinks)](../../domains/software-0008/software/devops/botkube-integracoes-bots-sinks-slack-discord-mattermost-elasticsearch.md)
+1176. [Botkube: Repositórios de Plugins (botkube e botkubeExtra) e Desenvolvimento de Plugins Customizados](../../domains/software-0008/software/devops/botkube-repositorios-plugins-index-extensoes-customizadas.md)
+1177. [Botkube: Ações Automatizadas (Actions) Disparadas por Eventos de Source Plugins](../../domains/software-0008/software/devops/botkube-automated-actions-autodiagnostico-eventos-kubectl.md)
+1178. [Botkube: Conexão Segura com Slack via Socket Mode sem Expor Webhook Público](../../domains/software-0008/software/devops/botkube-slack-socket-mode-seguranca-sem-ingress-publico.md)
+1179. [Botkube: Operação Multi-Cluster em Discord, Mattermost, Elasticsearch e Webhooks](../../domains/software-0008/software/devops/botkube-multi-cluster-discord-mattermost-webhooks-identificacao.md)
+1180. [Botkube: Configuração de Aliases de Comandos (aliases) para Produtividade no ChatOps](../../domains/software-0008/software/devops/botkube-alias-comandos-atalhos-chatops-produtividade-oncall.md)
+
+### Kured — Kubernetes Reboot Daemon (DaemonSet CNCF Sandbox para reinicialização automática segura de nós após atualizações de kernel e pacotes de SO)
+
+1181. [Kured: Arquitetura do Kubernetes Reboot Daemon (DaemonSet e Arquivo Sentinela)](../../domains/software-0008/software/devops/kured-arquitetura-daemonset-sentinel-file-node-reboot.md)
+1182. [Kured: Controle de Concorrência e Lock Distribuído na Anotação do DaemonSet](../../domains/software-0008/software/devops/kured-lock-distribuido-annotations-concurrency-ttl-release-delay.md)
+1183. [Kured: Detecção de Reboot por Comando Sentinela (--reboot-sentinel-command) em RHEL e Derivados](../../domains/software-0008/software/devops/kured-reboot-sentinel-command-rhel-centos-fedora-custom.md)
+1184. [Kured: Agendamento de Janelas de Reinicialização (--reboot-days, --start-time, --end-time e --time-zone)](../../domains/software-0008/software/devops/kured-janelas-manutencao-reboot-days-start-time-end-time-timezone.md)
+1185. [Kured: Bloqueio Preventivo de Reboots via Alertas Prometheus e Seletores de Pods](../../domains/software-0008/software/devops/kured-bloqueio-reboots-prometheus-alerts-blocking-pod-selector.md)
+1186. [Kured: Parametrização de Drain (--drain-timeout, --drain-grace-period) e Taint PreferNoSchedule](../../domains/software-0008/software/devops/kured-drain-timeout-grace-period-prefer-no-schedule-taint.md)
+1187. [Kured: Operação Manual de Pausa (Lock Manual), Desbloqueio (Unlock) e Teste de Sentinela](../../domains/software-0008/software/devops/kured-operacao-manual-lock-unlock-teste-reboot-required.md)
+1188. [Kured: Métodos de Reinicialização (--reboot-method command vs signal) e Segurança de Container](../../domains/software-0008/software/devops/kured-reboot-method-command-vs-signal-privilegios-container.md)
+1189. [Kured: Notificações de Eventos (--notify-url), Anotações de Nós e Rastreabilidade de Reboots](../../domains/software-0008/software/devops/kured-notificacoes-shoutrrr-notify-url-annotations-labels-auditoria.md)
+1190. [Kured: Métricas Prometheus ( Porta 8080 ) e Alerta de Nós com Reboot Pendente Estagnado](../../domains/software-0008/software/devops/kured-metricas-prometheus-kured-reboot-required-monitoramento-frota.md)
+
+### just (executor de comandos de projeto em Rust com justfile, receitas parametrizadas, receitas shebang, módulos e funções embutidas)
+
+1191. [just: Command Runner Declarativo (justfile) e Eliminação de Idiossincrasias do Make](../../domains/software-0008/software/devops/just-command-runner-justfile-diferencas-make-phony.md)
+1192. [just: Parâmetros de Receitas, Valores Padrão, Argumentos Variádicos e Flags no justfile](../../domains/software-0008/software/devops/just-parametros-receitas-valores-padrao-variadic-flags.md)
+1193. [just: Configurações de Comportamento no justfile (set shell, dotenv-load, export e positional-arguments)](../../domains/software-0008/software/devops/just-settings-set-shell-dotenv-load-positional-arguments-export.md)
+1194. [just: Receitas Shebang (#!/usr/bin/env) para Execução em Bloco Único e Múltiplas Linguagens](../../domains/software-0008/software/devops/just-shebang-recipes-execucao-bloco-unico-python-bash-node.md)
+1195. [just: Linguagem de Expressões, Condicionais e Funções Embutidas (os(), arch(), env_var(), sha256())](../../domains/software-0008/software/devops/just-expressoes-funcoes-embutidas-arch-os-env-var-sha256.md)
+1196. [just: Grafo de Dependências de Receitas (Pré-Dependências, Pós-Dependências e Passagem de Argumentos)](../../domains/software-0008/software/devops/just-dependencias-receitas-pre-post-argumentos-encadeamento.md)
+1197. [just: Organização de Monorepos e Plataformas com import e Módulos (mod)](../../domains/software-0008/software/devops/just-modulos-imports-organizacao-monorepos-devops.md)
+1198. [just: Atributos de Receita ([confirm], [private], [no-cd], [linux], [macos]) para Segurança Operacional](../../domains/software-0008/software/devops/just-atributos-confirm-private-no-cd-os-specific-safety.md)
+1199. [just: Descoberta Interativa de Tarefas (--list, --summary, --choose com fzf e Shell Completions)](../../domains/software-0008/software/devops/just-descoberta-interativa-choose-list-summary-completions.md)
+1200. [just: Padronização de Workflows entre Laptop e CI Combinando just com mise, Devbox e direnv](../../domains/software-0008/software/devops/just-integracao-mise-devbox-direnv-padronizacao-local-ci.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1100 notas 1–1100 das tranches 1–11 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1100/2.000 notas válidas, restando 900 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1200 notas 1–1200 das tranches 1–12 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1200/2.000 notas válidas, restando 800 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
