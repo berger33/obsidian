@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1659 / 2.000 (82,95%)**
-- Gate automatizado: **1659/1659 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 22)
+- Notas efetivamente redigidas até agora: **1759 / 2.000 (87,95%)**
+- Gate automatizado: **1759/1759 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 23)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1659**
-- Revisão factual por IA: **1650/1659**
-- Contabilizadas como válidas: **1659/1659**
+- Revisão factual humana: **9/1759**
+- Revisão factual por IA: **1750/1759**
+- Contabilizadas como válidas: **1759/1759**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1650 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–22 (1650 notas, IDs 10–1659) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1750 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–23 (1750 notas, IDs 10–1759) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
 - Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-22.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-22.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
 - Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 21`](../reports/ai-review-software-testes-2000-0001-tranche-21.md), [`tranche 22`](../reports/ai-review-software-testes-2000-0001-tranche-22.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1659 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 341 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1759 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 241 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -2123,6 +2123,138 @@
 1658. [gcovr: ciclo de release visível na doc](../../domains/software-0007/software/testes/gcovr-versions.md)
 1659. [gcovr: quando lcov basta e quando não](../../domains/software-0007/software/testes/gcovr-vs-lcov.md)
 
+## Tranche 23 — runners de navegador para JavaScript, JUnit 4, approval tests, fuzzing em Go/Rust/C/Python, boofuzz, Hyperfoil e Infection (100 notas; revisão factual por IA registrada)
+
+### Karma — execução de testes JavaScript em navegadores reais
+
+1660. [Karma: um executor de JavaScript em navegadores reais](../../domains/software-0007/software/testes/karma-what-it-is.md)
+1661. [Karma está descontinuado: só correções de segurança](../../domains/software-0007/software/testes/karma-deprecated-officially.md)
+1662. [Karma não é framework de teste nem biblioteca de asserção](../../domains/software-0007/software/testes/karma-not-a-framework.md)
+1663. [karma init: um assistente que escreve o arquivo de configuração](../../domains/software-0007/software/testes/karma-init-wizard.md)
+1664. [Onde o Karma procura o karma.conf.js (inclusive TypeScript)](../../domains/software-0007/software/testes/karma-config-discovery.md)
+1665. [files, exclude e basePath: minimatch define o que entra na página](../../domains/software-0007/software/testes/karma-file-patterns.md)
+1666. [Captura de navegadores: launchers, a porta 9876 e o timeout de capture](../../domains/software-0007/software/testes/karma-browsers-capture.md)
+1667. [Três opções para conexões instáveis com o navegador](../../domains/software-0007/software/testes/karma-timeouts-flakiness.md)
+1668. [Watch contínuo no dev, single run no CI](../../domains/software-0007/software/testes/karma-watch-run-once.md)
+1669. [Launchers, reporters e preprocessors são todos plugins](../../domains/software-0007/software/testes/karma-frameworks-plugins.md)
+
+### JUnit 4 — anotações, regras e o modo manutenção do xUnit clássico em Java
+
+1670. [JUnit 4 é um xUnit clássico em modo manutenção](../../domains/software-0007/software/testes/junit4-maintenance-mode.md)
+1671. [Rodar um teste JUnit 4 direto com JUnitCore](../../domains/software-0007/software/testes/junit4-run-without-build.md)
+1672. [Quatro anotações de fixture e a ordem real de execução](../../domains/software-0007/software/testes/junit4-fixtures.md)
+1673. [assertThat e Hamcrest: falhas que descrevem a expectativa](../../domains/software-0007/software/testes/junit4-assertthat-hamcrest.md)
+1674. [assertThrows chegou no 4.13 e virou o jeito padrão de testar exceções](../../domains/software-0007/software/testes/junit4-assertthrows.md)
+1675. [@Test(expected) passa cedo demais — use com cuidado](../../domains/software-0007/software/testes/junit4-expected-peril.md)
+1676. [Timeout por método com fork e timeout por classe com a regra](../../domains/software-0007/software/testes/junit4-timeout-two-ways.md)
+1677. [TemporaryFolder apaga sozinha — e pode cobrar prova disso](../../domains/software-0007/software/testes/junit4-temporaryfolder.md)
+1678. [O kit de regras: ExternalResource, ErrorCollector, Verifier, TestWatcher](../../domains/software-0007/software/testes/junit4-rules-collection.md)
+1679. [Parameterized: o produto cartesiano entre testes e dados](../../domains/software-0007/software/testes/junit4-parameterized.md)
+
+### ApprovalTests — verificação por aprovação com arquivos received e approved
+
+1680. [ApprovalTests: capturar inteligência humana em vez de codar expectativas](../../domains/software-0007/software/testes/approvaltests-capturing-human-intelligence.md)
+1681. [O par .received e .approved é o protocolo do teste](../../domains/software-0007/software/testes/approvaltests-received-approved.md)
+1682. [verify para o todo, verifyAll para itens rotulados](../../domains/software-0007/software/testes/approvaltests-verify-and-verifyall.md)
+1683. [verifyAsJson quando o toString não resolve](../../domains/software-0007/software/testes/approvaltests-json-objects.md)
+1684. [Testar Swing e AWT por imagem, com namer específico de SO](../../domains/software-0007/software/testes/approvaltests-awt-image.md)
+1685. [verifyAllCombinations: o produto cartesiano aprovado de uma vez](../../domains/software-0007/software/testes/approvaltests-combinations.md)
+1686. [Reporters: a diferença é apresentada pela ferramenta certa](../../domains/software-0007/software/testes/approvaltests-reporters.md)
+1687. [Compatibilidade Java: JUnit 3/4/5, TestNG e JDK 8+](../../domains/software-0007/software/testes/approvaltests-java-fitness.md)
+1688. [Approval testing como ponte para legado e dogfood](../../domains/software-0007/software/testes/approvaltests-legacy-code.md)
+1689. [Filosofia sem exceções checked e API de runtime apenas](../../domains/software-0007/software/testes/approvaltests-no-checked-exceptions.md)
+
+### Fuzzing nativo em Go — testing.F, corpus e minimização na toolchain
+
+1690. [Fuzzing nativo na toolchain do Go desde a 1.18](../../domains/software-0007/software/testes/gofuzz-what-it-is.md)
+1691. [As regras rígidas de um fuzz test: nome, arquivo e alvo único](../../domains/software-0007/software/testes/gofuzz-test-requirements.md)
+1692. [Tipos permitidos nos argumentos de fuzzing (e por que a lista é curta)](../../domains/software-0007/software/testes/gofuzz-argument-types.md)
+1693. [Seed corpus: f.Add e o diretório testdata/fuzz](../../domains/software-0007/software/testes/gofuzz-seed-corpus.md)
+1694. [O formato literal do arquivo de corpus: go test fuzz v1](../../domains/software-0007/software/testes/gofuzz-corpus-format.md)
+1695. [Dois modos de execução: go test puro e go test -fuzz](../../domains/software-0007/software/testes/gofuzz-two-modes.md)
+1696. [Lendo a saída do motor: execs, new interesting e baseline](../../domains/software-0007/software/testes/gofuzz-output-metrics.md)
+1697. [O que conta como falha — inclusive o timeout de um segundo](../../domains/software-0007/software/testes/gofuzz-failure-causes.md)
+1698. [Minimização automática e a falha que vira teste permanente](../../domains/software-0007/software/testes/gofuzz-minimization-regression.md)
+1699. [Corpus gerado na GOCACHE, campanha contínua no OSS-Fuzz](../../domains/software-0007/software/testes/gofuzz-cache-and-ossfuzz.md)
+
+### cargo-fuzz — fuzzing libFuzzer para crates Rust via subcommand do cargo
+
+1700. [cargo fuzz: o subcomando do cargo para libFuzzer](../../domains/software-0007/software/testes/cargofuzz-what-it-is.md)
+1701. [Restrições de plataforma: sanitizers pedem x86-64/AArch64, Unix e nightly](../../domains/software-0007/software/testes/cargofuzz-platform-limits.md)
+1702. [cargo fuzz init: o diretório fuzz dentro (ou fora) do workspace](../../domains/software-0007/software/testes/cargofuzz-init-workspace.md)
+1703. [Anatomia de um fuzz target: no_main, macro e fatia de bytes](../../domains/software-0007/software/testes/cargofuzz-target-anatomy.md)
+1704. [cargo fuzz run: lendo a saída do libFuzzer até o crash](../../domains/software-0007/software/testes/cargofuzz-run-crash.md)
+1705. [cargo fuzz list e add: múltiplos alvos por crate](../../domains/software-0007/software/testes/cargofuzz-list-add.md)
+1706. [cargo fuzz fmt: o que aquele input arbitrário realmente é](../../domains/software-0007/software/testes/cargofuzz-fmt-arbitrary.md)
+1707. [Minificação local e global: tmin para um caso, cmin para o corpus](../../domains/software-0007/software/testes/cargofuzz-tmin-cmin.md)
+1708. [cargo fuzz coverage e onde a documentação real mora](../../domains/software-0007/software/testes/cargofuzz-coverage-docs.md)
+1709. [Troféus e licença: MIT mais Apache-2.0, bugs em crates famosos](../../domains/software-0007/software/testes/cargofuzz-trophy-license.md)
+
+### AFL++ — o fork de referência do AFL com instrumentação, cmplog e campanhas paralelas
+
+1710. [AFL++: o fork superior ao AFL do Google, na série 5.03c](../../domains/software-0007/software/testes/aflpp-what-it-is.md)
+1711. [Licença AGPL com harness Apache, Docker pronto e branches stable/dev](../../domains/software-0007/software/testes/aflpp-license-docker-branches.md)
+1712. [afl-cc: a árvore de decisão LTO, LLVM e GCC_PLUGIN](../../domains/software-0007/software/testes/aflpp-compiler-modes.md)
+1713. [cmplog/redqueen, laf-intel e allowlists de instrumentação](../../domains/software-0007/software/testes/aflpp-instrumentation-options.md)
+1714. [Sanitizers de primeira classe — e a regra de um fuzzer por tipo](../../domains/software-0007/software/testes/aflpp-sanitizers.md)
+1715. [Ajudar o alvo a ser fuzzável: checksums off e estático on](../../domains/software-0007/software/testes/aflpp-target-modification.md)
+1716. [Corpus primeiro: afl-cmin, afl-merge e afl-tmin em sequência](../../domains/software-0007/software/testes/aflpp-corpus-prep.md)
+1717. [Executando afl-fuzz: system-config, -i/-o, @@ e resume por traço](../../domains/software-0007/software/testes/aflpp-run-basics.md)
+1718. [Dicionários automáticos e o limite de memória que ninguém configura](../../domains/software-0007/software/testes/aflpp-dictionaries-memory.md)
+1719. [Campanha paralela: um -M main, N -S variantes e o mesmo -o](../../domains/software-0007/software/testes/aflpp-parallel-campaign.md)
+
+### boofuzz — fuzzing de protocolos de rede com Requests, grafo de estados e SQLite
+
+1720. [boofuzz: o sucessor extensível do Sulley, "fuzz everything"](../../domains/software-0007/software/testes/boofuzz-successor-of-sulley.md)
+1721. [Session é o centro; Target carrega a conexão](../../domains/software-0007/software/testes/boofuzz-session-target.md)
+1722. [Requests com String, Delim e Static: o protocolo como AST](../../domains/software-0007/software/testes/boofuzz-request-grammar.md)
+1723. [O grafo de Requests decide a ordem do fuzzing](../../domains/software-0007/software/testes/boofuzz-state-graph.md)
+1724. [session.fuzz() — e a honestidade do "basic fuzzer"](../../domains/software-0007/software/testes/boofuzz-fuzz-run.md)
+1725. [Cada run é um banco SQLite aberto no boofuzz com boo open](../../domains/software-0007/software/testes/boofuzz-results-sqlite.md)
+1726. [post_test_case_callbacks e ProtocolSessionReference: resposta que alimenta a próxima requisição](../../domains/software-0007/software/testes/boofuzz-callbacks.md)
+1727. [Monitores fora do processo: os scripts de processo e rede no root](../../domains/software-0007/software/testes/boofuzz-monitors.md)
+1728. [Instalação por pip e o modelo de script Python](../../domains/software-0007/software/testes/boofuzz-install-python.md)
+1729. [Onde aprender mais: repositório, Read the Docs e Stack Overflow](../../domains/software-0007/software/testes/boofuzz-docs-sources.md)
+
+### Hyperfoil — benchmark distribuído de microsserviços com modelo aberto e YAML
+
+1730. [Hyperfoil: framework distribuído de benchmark orientado a microsserviços](../../domains/software-0007/software/testes/hyperfoil-what-it-is.md)
+1731. [Software livre para benchmarks auditáveis, Apache 2.0](../../domains/software-0007/software/testes/hyperfoil-apache-license.md)
+1732. [Modelo aberto contra coordinated omission: cada VU é uma máquina de estado](../../domains/software-0007/software/testes/hyperfoil-open-system.md)
+1733. [Controller, agents e o Vert.x eventbus por trás](../../domains/software-0007/software/testes/hyperfoil-leader-follower.md)
+1734. [Fases: workloads independentes, quatro estados, escala gradual](../../domains/software-0007/software/testes/hyperfoil-phases.md)
+1735. [Sessões pré-alocadas: o custo de não alocar no caminho quente](../../domains/software-0007/software/testes/hyperfoil-sessions-prealloc.md)
+1736. [Cenário = sequências = steps: a gramática do teste de carga](../../domains/software-0007/software/testes/hyperfoil-scenario-steps.md)
+1737. [Do zero ao primeiro run: download, start-local, upload, run, stats](../../domains/software-0007/software/testes/hyperfoil-first-run.md)
+1738. [O stats por dentro: percentis, classes de status e os contadores de erro](../../domains/software-0007/software/testes/hyperfoil-stats.md)
+1739. [Fora do YAML: REST API OpenAPI, steps customizados em JVM e guia de migração](../../domains/software-0007/software/testes/hyperfoil-extensions-api.md)
+
+### Infection — mutation testing para PHP com MSI, mutators AST e integração de CI
+
+1740. [Mutation testing: matar mutantes em vez de cobrir linhas](../../domains/software-0007/software/testes/infection-what-mutation-testing.md)
+1741. [Infection: biblioteca PHP de mutação por AST, CLI na raiz do projeto](../../domains/software-0007/software/testes/infection-what-infection.md)
+1742. [As três métricas: MSI, Mutation Code Coverage e Covered Code MSI](../../domains/software-0007/software/testes/infection-msi-metrics.md)
+1743. [Instalar o phar assinado: GPG, phive, composer e brew](../../domains/software-0007/software/testes/infection-install-phar.md)
+1744. [--threads: paralelismo primeiro, depois benchmark](../../domains/software-0007/software/testes/infection-threads.md)
+1745. [Reusar cobertura existente em vez de gerar de novo](../../domains/software-0007/software/testes/infection-reuse-coverage.md)
+1746. [Mutar só a diferença do pull request: --git-diff-filter e --git-diff-lines](../../domains/software-0007/software/testes/infection-git-diff.md)
+1747. [Loggers nativos de PR: GitHub annotations, GitLab code quality, HTML e JSON](../../domains/software-0007/software/testes/infection-loggers.md)
+1748. [Mutators: famílias AST, o describe e o --id para matar um de cada vez](../../domains/software-0007/software/testes/infection-mutators.md)
+1749. [--test-framework: o adaptador que escolhe como o Infection roda seus testes](../../domains/software-0007/software/testes/infection-test-framework.md)
+
+### Atheris — fuzzing nativo de Python com cobertura, mutators custom e libFuzzer
+
+1750. [Atheris: fuzzer coverage-guided para Python que também encosta no nativo](../../domains/software-0007/software/testes/atheris-what-it-is.md)
+1751. [Instalação: pip com libFuzzer embutido, LLVM novo quando há nativo](../../domains/software-0007/software/testes/atheris-install-platform.md)
+1752. [O harness de cinco linhas e o que conta como crash](../../domains/software-0007/software/testes/atheris-minimal-harness.md)
+1753. [Três granularidades de instrumentação — e as pegadinhas de cada uma](../../domains/software-0007/software/testes/atheris-instrumentation-modes.md)
+1754. ["No interesting inputs were found": a porta de entrada mais comum](../../domains/software-0007/software/testes/atheris-no-interesting.md)
+1755. [Ver cobertura linha a linha com coverage.py e -atheris_runs](../../domains/software-0007/software/testes/atheris-coverage-viz.md)
+1756. [A API de três faces: Setup, Fuzz e o internal_libfuzzer](../../domains/software-0007/software/testes/atheris-setup-api.md)
+1757. [FuzzedDataProvider: bytes viram tipos sem parser de fita](../../domains/software-0007/software/testes/atheris-fuzzeddataprovider.md)
+1758. [Mutators custom: ensinar a gramática sem ensinar gramática](../../domains/software-0007/software/testes/atheris-custom-mutator.md)
+1759. [Integração com OSS-Fuzz e o caso dos módulos nativos](../../domains/software-0007/software/testes/atheris-ossfuzz-native.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1650 notas 10–1659 das tranches 2–22 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1659/2.000 notas válidas, restando 341 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1750 notas 10–1759 das tranches 2–23 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1759/2.000 notas válidas, restando 241 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
