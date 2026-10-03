@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs AppArmor & SELinux), DFIR/Threat Intelligence (MISP/Velociraptor/auditd), criptografia moderna, postura multi-cloud e de host (Lynis/USBGuard/CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (BloodHound CE/Paralus/OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs AppArmor & SELinux), DFIR/Threat Intelligence (TheHive/Cortex/OpenCTI/Timesketch/Volatility 3/CAPEv2/Wireshark/MISP/Velociraptor/auditd), criptografia moderna, postura multi-cloud e de host (Lynis/USBGuard/CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e auditoria/identidade Active Directory & Zero-Trust (Bettercap/Responder/Impacket/NetExec/BloodHound CE/Paralus/OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **500 / 2.000 (25,00%)**
-- Gate automatizado: **500/500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 5)
-- Revisão factual humana: **0/500**
-- Revisão factual por IA: **500/500**
-- Contabilizadas como válidas: **500/500**
-- Revisor das 500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–5 (500 notas, IDs 1–500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **600 / 2.000 (30,00%)**
+- Gate automatizado: **600/600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 6)
+- Revisão factual humana: **0/600**
+- Revisão factual por IA: **600/600**
+- Contabilizadas como válidas: **600/600**
+- Revisor das 600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–6 (600 notas, IDs 1–600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-05.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-05.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-06.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-06.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md)
 
-Existem 500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.500 restantes.
+Existem 600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.400 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -680,6 +680,138 @@ Existem 500 notas materiais listadas abaixo; não há IDs reservados, placeholde
 499. [SELinux: Auditoria e Consulta Formal da Política Binária com `setools` (`sesearch`, `seinfo` e Desativação Temporária de `dontaudit`)](../../domains/software-0009/software/seguranca/selinux-analise-politicas-setools-sesearch-seinfo-auditoria.md)
 500. [SELinux: Backup, Replicação Atômica (`semanage export` / `semanage import`) e Automação Idempotente de Políticas em Frota](../../domains/software-0009/software/seguranca/selinux-exportacao-importacao-customizacoes-semanage-export-ansible.md)
 
+## Tranche 6 — TheHive & Cortex, Filigran OpenCTI, Google Timesketch & Plaso, Volatility 3 & `dwarf2json`, CAPEv2 Sandbox, Wireshark & `tshark`, Bettercap, Responder, Fortra Impacket e NetExec (`nxc`) (100 notas; revisão factual por IA registrada)
+
+### TheHive & Cortex — Plataforma de Resposta a Incidentes (SIRP), Cases, Observables, Analyzers, Responders e Integração MISP
+
+501. [TheHive: Arquitetura da Plataforma de Resposta a Incidentes (SIRP) — Fluxo `Alerts` -> `Cases` -> `Tasks` -> `Observables`](../../domains/software-0009/software/seguranca/thehive-arquitetura-sirp-alerts-cases-tasks-observables.md)
+502. [TheHive: Padronização de Playbooks de Resposta a Incidentes com `Case Templates`, `Tasks` Obrigatórias e Métricas Customizadas](../../domains/software-0009/software/seguranca/thehive-templates-casos-playbooks-padronizados-metricas-kpis.md)
+503. [TheHive: Ingestão Automatizada de Alertas via `TheHive4py` (`type`, `source`, `sourceRef`), Merge em Casos e Correlação de Observáveis](../../domains/software-0009/software/seguranca/thehive-ingestao-alertas-thehive4py-siem-phishing-deduplicacao.md)
+504. [TheHive: Governança de `Observables` — Diferença Operacional entre **TLP** (*Traffic Light Protocol*) e **PAP** (*Permissible Actions Protocol*)](../../domains/software-0009/software/seguranca/thehive-governanca-observables-tlp-pap-ioc-sighted-marking.md)
+505. [TheHive & Cortex: Análise em Escala de Observáveis com **Cortex Analyzers** e Guardrails Automáticos de `TLP`/`PAP`](../../domains/software-0009/software/seguranca/thehive-orquestracao-cortex-analyzers-tlp-pap-opsec.md)
+506. [TheHive & Cortex: Contenção e Resposta Ativa a Incidentes com **Cortex Responders** (Isolamento EDR, Bloqueio Firewall/RPZ e Revogação IAM)](../../domains/software-0009/software/seguranca/thehive-orquestracao-cortex-responders-contencao-ativa-edr-firewall.md)
+507. [TheHive: Integração Bidirecional com o **MISP** (Importação Filtrada de Eventos para Alertas e Exportação de IOCs Confirmados)](../../domains/software-0009/software/seguranca/thehive-sincronizacao-bidirecional-misp-import-export-iocs.md)
+508. [Cortex: Desenvolvimento de `Analyzers` e `Responders` Customizados em Python (`cortexutils`) e Isolamento em Containers Docker](../../domains/software-0009/software/seguranca/thehive-desenvolvimento-analyzers-customizados-cortexutils-docker.md)
+509. [TheHive: Customização de `Report Templates` do Cortex (Short / Long Reports), Fusão de Casos (`Case Merging`) e Fechamento Auditável](../../domains/software-0009/software/seguranca/thehive-templates-relatorios-curtos-longos-fusao-casos.md)
+510. [TheHive & Cortex: Multi-Tenancy por Organizações, RBAC, Autenticação SSO/LDAP/OAuth2 e Notificações via Webhooks](../../domains/software-0009/software/seguranca/thehive-multi-tenancy-organizacoes-rbac-auditoria-webhooks.md)
+
+### Filigran OpenCTI — Plataforma de Threat Intelligence em Grafo STIX 2.1, Conectores, Inferência, RBAC Markings e Feeds
+
+511. [OpenCTI: Arquitetura da Plataforma de Threat Intelligence Baseada em Grafo de Conhecimento **STIX 2.1** e API GraphQL](../../domains/software-0009/software/seguranca/opencti-arquitetura-stix21-knowledge-graph-graphql-filigran.md)
+512. [OpenCTI: Modelagem com Objetos **STIX 2.1** — Domain Objects (SDOs), Cyber Observables (SCOs), Relationships (SROs) e `Confidence`](../../domains/software-0009/software/seguranca/opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes.md)
+513. [OpenCTI: Arquitetura dos Cinco Tipos de Conectores (`EXTERNAL_IMPORT`, `INTERNAL_IMPORT_FILE`, `INTERNAL_ENRICHMENT`, `INTERNAL_EXPORT_FILE` e `STREAM`)](../../domains/software-0009/software/seguranca/opencti-ecossistema-conectores-import-enrichment-stream-export.md)
+514. [OpenCTI: Motor de Raciocínio e Inferência (`Rule Engine`) para Dedução Automática de Relações Transitivas no Grafo](../../domains/software-0009/software/seguranca/opencti-motor-inferencia-regras-deducao-relacoes-transitivas.md)
+515. [OpenCTI: Ciclo de Vida de Indicadores — **Decay Rules** (Curvas de Decaimento de `x_opencti_score`), Expiração `valid_until` e Revogação](../../domains/software-0009/software/seguranca/opencti-ciclo-vida-indicadores-decay-rules-score-revogacao.md)
+516. [OpenCTI: Controle de Acesso Baseado em **Marking Definitions** (`TLP`, `PAP`, `Statement`), Segregação por Organizações e `Max Confidence Level`](../../domains/software-0009/software/seguranca/opencti-governanca-rbac-marking-definitions-tlp-confianca-organizacoes.md)
+517. [OpenCTI: Compartilhamento de Inteligência em Tempo Real — **Live Streams** (SSE), Coleções **TAXII 2.1** e **CSV Feeds** para Firewalls/EDRs](../../domains/software-0009/software/seguranca/opencti-streams-taxii21-live-streams-feeds-csv-integracao-siem.md)
+518. [OpenCTI: Automação de Fluxos de Conhecimento com **Playbooks** (Gatilhos de Stream, Filtros, Enriquecimento, Marcação e Criação de Casos)](../../domains/software-0009/software/seguranca/opencti-automacao-playbooks-enriquecimento-notificacoes-triage.md)
+519. [OpenCTI: Módulo de `Cases` (`Incident Response`, `Requests for Information — RFI`, `Requests for Takedown`) e `Analyst Workbenches`](../../domains/software-0009/software/seguranca/opencti-gestao-casos-incident-response-rfi-tasks-workbenches.md)
+520. [OpenCTI: Desenvolvimento de Conectores Customizados com o SDK Python **`pycti`** (`OpenCTIConnectorHelper` e Envio de Bundles STIX 2.1)](../../domains/software-0009/software/seguranca/opencti-desenvolvimento-conectores-pycti-stix2-bundles-workers.md)
+
+### Google Timesketch & Plaso (log2timeline) — Análise Colaborativa de Super-Timelines Forenses, DFIQ, Analyzers e Sigma
+
+521. [Google Timesketch: Arquitetura de Análise Colaborativa de *Super-Timelines* Forenses (Python/Flask, Celery, PostgreSQL e OpenSearch)](../../domains/software-0009/software/seguranca/timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch.md)
+522. [Timesketch: Geração de *Super-Timelines* com **Plaso (`log2timeline.py`)** e Ingestão via `timesketch_importer` (Plaso, JSONL e CSV)](../../domains/software-0009/software/seguranca/timesketch-ingestao-plaso-log2timeline-jsonl-csv-timesketch-importer.md)
+523. [Timesketch: Sintaxe de Busca OpenSearch Query String, Filtros de Tipo de Dados (`data_type`), *Context Queries* e *Saved Views*](../../domains/software-0009/software/seguranca/timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query.md)
+524. [Timesketch: Execução de **Analyzers** Automatizados em Background (Taggers, Chain Analyzer, Account Finder, Domain/Hash Enrichment)](../../domains/software-0009/software/seguranca/timesketch-analisadores-automaticos-analyzers-chain-tagger-similarity.md)
+525. [Timesketch: Caça a Ameaças (*Threat Hunting*) Retroativa em Timelines com Regras **Sigma** e `tsctl`](../../domains/software-0009/software/seguranca/timesketch-deteccao-ameacas-regras-sigma-tsctl-sigma-analyzer.md)
+526. [Timesketch: Investigação Guiada com **DFIQ** (*Digital Forensics Investigative Questions* — Scenarios, Facets, Questions e Approaches)](../../domains/software-0009/software/seguranca/timesketch-investigacao-guiada-dfiq-questions-facets-approaches.md)
+527. [Timesketch: Aba **Intelligence**, Marcação de IOCs na Timeline e Integração com Plataformas de CTI (Yeti, MISP e OpenCTI)](../../domains/software-0009/software/seguranca/timesketch-aba-intelligence-iocs-integracao-yeti-misp-opencti.md)
+528. [Timesketch: Construção de Relatórios Forenses Reprodutíveis com **Stories**, Agregações Gráficas e Grafos de Relacionamento](../../domains/software-0009/software/seguranca/timesketch-narrativa-forense-stories-grafos-relatorios-markdown.md)
+529. [Timesketch: Ciência de Dados Forense com **`timesketch-api-client`**, DataFrames `pandas` e Container Jupyter Notebook (`picatrix`)](../../domains/software-0009/software/seguranca/timesketch-automacao-python-timesketch-api-client-notebooks-jupyter.md)
+530. [Timesketch: Governança de Acesso (ACLs de Sketch), Rótulos de Preservação Legal (`protected` / `preserved`), Arquivamento e `tsctl`](../../domains/software-0009/software/seguranca/timesketch-governanca-acls-protecao-delecao-arquivamento-tsctl.md)
+
+### Volatility 3 — Forense de Memória RAM (Windows, Linux, macOS), Tabelas de Símbolos ISF (dwarf2json), Malfind e Rootkits
+
+531. [Volatility 3: Arquitetura de Análise Forense de Memória RAM, *Intermediate Symbol Format* (`ISF`) e *Translation Layers*](../../domains/software-0009/software/seguranca/volatility3-arquitetura-forense-memoria-ram-isf-symbols-plugins.md)
+532. [Volatility 3: Geração de Tabelas de Símbolos **ISF** para Kernels Linux e macOS com `dwarf2json`](../../domains/software-0009/software/seguranca/volatility3-geracao-simbolos-linux-macos-dwarf2json-vmlinux-system-map.md)
+533. [Volatility 3: Análise de Processos Windows (`pslist`, `pstree`, `psscan`, `cmdline`, `envars` e Detecção de *DKOM*)](../../domains/software-0009/software/seguranca/volatility3-analise-processos-windows-pslist-pstree-psscan-cmdline.md)
+534. [Volatility 3: Detecção de Injeção de Código em Memória, *Reflective DLL* e *Process Hollowing* (`malfind`, `vadinfo` e `hollowprocesses`)](../../domains/software-0009/software/seguranca/volatility3-deteccao-injecao-memoria-malfind-hollowprocesses-vadinfo.md)
+535. [Volatility 3: Auditoria de DLLs Desvinculadas (`dlllist` vs `ldrmodules`), *Handles*/Mutexes (`handles`) e Tokens (`privs` / `getsids`)](../../domains/software-0009/software/seguranca/volatility3-inspecao-dlls-handles-ldrmodules-mutants-privs.md)
+536. [Volatility 3: Reconstrução de Conexões de Rede e Sockets em Memória (`windows.netscan.NetScan` e `windows.netstat.NetStat`)](../../domains/software-0009/software/seguranca/volatility3-conexoes-rede-windows-netscan-netstat-sockets.md)
+537. [Volatility 3: Forense de Registro Windows em Memória (`hivelist`, `printkey`, `userassist`) e Auditoria de Credenciais (`hashdump` / `lsadump`)](../../domains/software-0009/software/seguranca/volatility3-registro-windows-memoria-hivelist-printkey-userassist-hashdump.md)
+538. [Volatility 3: Detecção de Rootkits de Kernel Windows, Drivers Maliciosos (*BYOVD*), SSDT, Callbacks e Serviços (`svcscan`, `modules`, `driverscan`, `ssdt`, `callbacks`)](../../domains/software-0009/software/seguranca/volatility3-persistencia-servicos-callbacks-ssdt-drivers-windows.md)
+539. [Volatility 3: Forense de Memória Linux — Processos, Histórico `bash`, Sockets (`sockstat`) e Detecção de Rootkits LKM (`check_syscall`, `check_modules`, `check_idt`)](../../domains/software-0009/software/seguranca/volatility3-forense-linux-rootkits-check-syscall-modules-bash-sockstat.md)
+540. [Volatility 3: Caça em Memória com Regras YARA (`yarascan.YaraScan` / `windows.vadyarascan.VadYaraScan`) e Extração de Arquivos (`dumpfiles`)](../../domains/software-0009/software/seguranca/volatility3-varredura-yarascan-memoria-virtual-fisica-extracao-dumps.md)
+
+### CAPEv2 Malware Sandbox — Detonação Dinâmica, API/Syscall Hooking, Debugger Programável por YARA e Extração de Configuração
+
+541. [CAPEv2 Sandbox: Arquitetura de Detonação de Malware, *API/Syscall Hooking* (`capemon`) e Debugger Furtivo Programável](../../domains/software-0009/software/seguranca/capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara.md)
+542. [CAPEv2 Sandbox: Desempacotamento Dinâmico Automático (*Passive* vs *Active Unpacking* `unpacker=2`) e Captura de Injeções](../../domains/software-0009/software/seguranca/capev2-desempacotamento-dinamico-process-injection-unpacking.md)
+543. [CAPEv2 Sandbox: Programação Dinâmica do Debugger via Assinaturas **YARA** (`meta: cape_options`) para Unpacking e Anti-Sandbox](../../domains/software-0009/software/seguranca/capev2-debugger-programavel-assinaturas-yara-breakpoints-anti-sandbox.md)
+544. [CAPEv2 Sandbox: Extração Estática e Dinâmica de Configuração de Malware (`CAPE-parsers`, `extract_config`, `MaCo` e `MalDuck`)](../../domains/software-0009/software/seguranca/capev2-extracao-configuracao-malware-cape-parsers-maco-malduck.md)
+545. [CAPEv2 Sandbox: Captura de Payloads **AMSI** (*Anti-Malware Scan Interface*), `.NET` / PowerShell / WSH e *Syscall Hooking* Anti-Evasão](../../domains/software-0009/software/seguranca/capev2-captura-amsi-powershell-dotnet-syscall-hooking-nirvana.md)
+546. [CAPEv2 Sandbox: Classificação Tripla — Assinaturas Comportamentais Python, Inspeção PCAP com **Suricata** e Mapeamento MITRE ATT&CK](../../domains/software-0009/software/seguranca/capev2-assinaturas-comportamentais-rede-suricata-mitre-attack.md)
+547. [CAPEv2 Sandbox: Automação via **REST API v2** (`/apiv2/`, Autenticação por Token DRF, `throttling.py` e Integração com Cortex/MISP)](../../domains/software-0009/software/seguranca/capev2-integracao-api-rest-v2-automacao-submissao-thehive-misp.md)
+548. [CAPEv2 Sandbox: Hardening Anti-Detecção de VM (*Anti-VM Cloaking* em KVM/QEMU, SMBIOS/ACPI, Artefatos de Usuário e *Interactive Desktop*)](../../domains/software-0009/software/seguranca/capev2-anti-vm-hardening-kvm-qemu-acpi-smbios-human-interaction.md)
+549. [CAPEv2 Sandbox: Roteamento Por Tarefa (`route=inetsim`, `route=tor`, `route=vpn`, `route=none`) e Prevenção de Abuso Lateral](../../domains/software-0009/software/seguranca/capev2-roteamento-rede-inetsim-tor-vpn-isolamento-pcap.md)
+550. [CAPEv2 Sandbox: Geração de Dumps Completos de Memória RAM (`memory=1`) e Pós-Processamento Integrado com **Volatility 3**](../../domains/software-0009/software/seguranca/capev2-integracao-memoria-volatility3-processamento-dumps-forenses.md)
+
+### Wireshark, TShark & Dumpcap — Análise Forense de Pacotes (PCAPNG), Filtros BPF vs Display, Decriptação TLS/Kerberos e Extração
+
+551. [Wireshark & `dumpcap`: Arquitetura de Separação de Privilégios, Formato Nativo **`pcapng`** e Isolamento da Superfície de Ataque de Dissecadores](../../domains/software-0009/software/seguranca/wireshark-arquitetura-dissecadores-separacao-privilegios-dumpcap.md)
+552. [`tshark`: Diferença entre Filtros de Captura **BPF** (`-f`) e **Display Filters** (`-Y` / `-R`), e Análise em Duas Passagens (`-2`)](../../domains/software-0009/software/seguranca/wireshark-tshark-filtros-captura-bpf-vs-display-filters-duas-passagens.md)
+553. [`tshark`: Extração Estruturada de Campos (`-T fields -e ...`, `-T json`, `-T ek`) para Triagem Rápida em Linha de Comando](../../domains/software-0009/software/seguranca/wireshark-extracao-campos-tshark-json-ek-fields-automacao-dfir.md)
+554. [`tshark`: Estatísticas Forenses (`-q -z conv,tcp`, `-z io,phs`, `-z endpoints`, `-z dns,tree`, `-z http,tree`) e Reconstrução de Streams (`-z follow`)](../../domains/software-0009/software/seguranca/wireshark-estatisticas-forenses-tshark-z-conversations-io-follow.md)
+555. [Wireshark & `tshark`: Decriptação Passiva de Tráfego **TLS 1.2/1.3** (`SSLKEYLOGFILE` e `editcap --inject-secrets`) e **Kerberos** (`keytab`)](../../domains/software-0009/software/seguranca/wireshark-decriptacao-tls13-sslkeylogfile-dsb-kerberos-keytab.md)
+556. [Wireshark & `tshark`: Extração Forense de Arquivos e Payloads Transferidos via Rede (`--export-objects http,smb,tftp,imf`)](../../domains/software-0009/software/seguranca/wireshark-extracao-arquivos-objetos-http-smb-dicom-tshark.md)
+557. [Wireshark & `tshark`: Filtros de Detecção de Ataques em Active Directory (Kerberos Roasting, `DCSync` `DRSUAPI`, NTLM Relay e `psexec`)](../../domains/software-0009/software/seguranca/wireshark-analise-ataques-active-directory-kerberos-ldap-smb-dcerpc.md)
+558. [Utilitários de Manipulação Forense de PCAPs do Wireshark: `capinfos`, `editcap`, `mergecap` e `reordercap`](../../domains/software-0009/software/seguranca/wireshark-manipulacao-pcaps-editcap-mergecap-capinfos-reordercap.md)
+559. [Wireshark & `tshark`: Desenvolvimento de Dissecadores Customizados em **Lua** (`Proto`, `ProtoField`, `DissectorTable`) para Protocolos C2 Proprietários](../../domains/software-0009/software/seguranca/wireshark-dissecadores-customizados-lua-protocolos-c2-proprietarios.md)
+560. [Wireshark & `tshark`: Captura Remota Segura via **Extcap (`sshdump` / `ciscodump`)** e Padronização de *Configuration Profiles* (`-C`) para o SOC](../../domains/software-0009/software/seguranca/wireshark-captura-remota-sshdump-extcap-perfis-analise-soc.md)
+
+### Bettercap — Auditoria de Redes Ethernet IPv4/IPv6, WiFi 802.11, Bluetooth Low Energy (BLE), HID 2.4GHz, CAN-bus e Caplets
+
+561. [Bettercap: Arquitetura em Go, Sessões Interativas, Automação Reprodutível com **Caplets (`.cap`)** e API REST / WebSocket (`api.rest`)](../../domains/software-0009/software/seguranca/bettercap-arquitetura-modulos-interativos-caplets-api-rest-websocket.md)
+562. [Bettercap: Reconhecimento de Host em Camada 2/3 (`net.recon`, `net.probe`, `net.show` e `syn.scan` Assíncrono)](../../domains/software-0009/software/seguranca/bettercap-reconhecimento-rede-net-recon-net-probe-syn-scan.md)
+563. [Bettercap: Auditoria de Resiliência de Camada 2 contra Spoofing (`arp.spoof`, `ndp.spoof`, `dhcp6.spoof`) e Validação de **DAI / RA Guard**](../../domains/software-0009/software/seguranca/bettercap-auditoria-mitm-arp-spoof-ndp-spoof-dhcp6-defesas-l2.md)
+564. [Bettercap: Simulação de Redirecionamento DNS (`dns.spoof`) e Proxies Transparentes Scriptáveis (`http.proxy`, `https.proxy`, `tcp.proxy` e `packet.proxy`)](../../domains/software-0009/software/seguranca/bettercap-auditoria-dns-spoof-proxies-http-https-packet-proxy.md)
+565. [Bettercap: Captura Seletiva e Inspeção de Tráfego com `net.sniff` (Filtros BPF, Expressões Regulares e Gravação PCAP)](../../domains/software-0009/software/seguranca/bettercap-sniffer-rede-net-sniff-filtros-bpf-expressao-regular.md)
+566. [Bettercap: Auditoria de Redes Sem Fio **WiFi 802.11** (`wifi.recon`, Descoberta de APs/Clientes, Captura EAPOL/PMKID e Validação de **802.11w PMF**)](../../domains/software-0009/software/seguranca/bettercap-auditoria-wifi-80211-recon-wpa-pmkid-80211w-pmf.md)
+567. [Bettercap: Auditoria de Dispositivos **Bluetooth Low Energy (BLE)** (`ble.recon`, `ble.show`, `ble.enum` e Inspeção de Características **GATT**)](../../domains/software-0009/software/seguranca/bettercap-auditoria-bluetooth-low-energy-ble-recon-enum-gatt.md)
+568. [Bettercap: Auditoria de Periféricos Sem Fio **2.4GHz HID** (`hid.recon`) e Barramentos Automotivos/Industriais **CAN-bus** (`can.recon` / Arquivos **DBC**)](../../domains/software-0009/software/seguranca/bettercap-auditoria-hid-24ghz-canbus-automotivo-dbc-industrial.md)
+569. [Bettercap: Monitoramento de Eventos (`events.stream`), Filtros (`events.ignore`), Gatilhos Reativos (`events.on`) e Sensores de Honeypot L2](../../domains/software-0009/software/seguranca/bettercap-monitoramento-eventos-events-stream-triggers-webhooks.md)
+570. [Bettercap: Desenvolvimento de **Caplets (`.cap`)** Auditáveis, Hardening do Módulo `api.rest` e Governança de Escopo em Pentests](../../domains/software-0009/software/seguranca/bettercap-automacao-caplets-api-rest-tls-seguranca-operacional.md)
+
+### Responder — Envenenamento LLMNR, NBT-NS, mDNS, DHCPv6 e WPAD, Captura NetNTLMv2/Kerberos, MultiRelay e Hardening Windows
+
+571. [Responder: Arquitetura de Resolução de Nomes Multicast/Broadcast (**LLMNR** UDP 5355, **NBT-NS** UDP 137 e **mDNS** UDP 5353) e Modo Passivo (`-A`)](../../domains/software-0009/software/seguranca/responder-arquitetura-envenenamento-llmnr-nbtns-mdns-analise-passiva.md)
+572. [Responder: Servidores de Autenticação *Rogue* Integrados (SMB, HTTP/HTTPS, LDAP, MSSQL, SMTP/IMAP, WinRM, RDP) e Captura **NetNTLMv1/v2**](../../domains/software-0009/software/seguranca/responder-servidores-autenticacao-rogue-smb-http-ldap-mssql-ntlmv2.md)
+573. [Responder: Servidor Kerberos Integrado (`KerberosMode = CAPTURE` vs `FORCE_NTLM` via `KDC_ERR_ETYPE_NOSUPP`)](../../domains/software-0009/software/seguranca/responder-captura-kerberos-asrep-roasting-force-ntlm-downgrade.md)
+574. [Responder: Auditoria de **DHCPv6 DNS Takeover** (`--dhcpv6`, `SendRA`) e Descoberta Automática de Proxy **WPAD** (`-w` / `-P`)](../../domains/software-0009/software/seguranca/responder-envenenamento-ipv6-dhcpv6-dns-takeover-wpad-mitigacao.md)
+575. [Responder: Controle Estrito de Escopo em `Responder.conf` (`RespondTo`, `DontRespondTo`, `RespondToName`, `DontRespondToTLD` e `AutoIgnoreAfterSuccess`)](../../domains/software-0009/software/seguranca/responder-escopo-responder-conf-respondto-dontrespondto-autoignore.md)
+576. [Responder & `ntlmrelayx.py`: Desativação dos Servidores `SMB` e `HTTP` no `Responder.conf` para **NTLM Relay** em Tempo Real](../../domains/software-0009/software/seguranca/responder-fluxo-ntlm-relay-desativar-smb-http-ntlmrelayx-multirelay.md)
+577. [Ferramentas Auxiliares da Suíte Responder (`tools/RunFinger.py`, `tools/FindSQLSrv.py` e `tools/MultiRelay.py`)](../../domains/software-0009/software/seguranca/responder-utilitarios-runfinger-findsqlsrv-icmp-redirect-multirelay.md)
+578. [Auditoria de Força de Senhas sobre Hashes Capturados pelo Responder (`NetNTLMv2` Hashcat `-m 5600` vs `NetNTLMv1` `-m 5500`)](../../domains/software-0009/software/seguranca/responder-auditoria-offline-senhas-hashcat-netntlmv2-netntlmv1-regras.md)
+579. [Detecção de Envenenamento LLMNR/NBT-NS/mDNS/DHCPv6 pelo **Blue Team** (Suricata, Zeek, Windows Event Logs e *Canary Name Queries*)](../../domains/software-0009/software/seguranca/responder-deteccao-blue-team-suricata-zeek-sysmon-canary-queries.md)
+580. [Hardening Definitivo do Windows e Active Directory contra o Responder (Desativar **LLMNR**, **NBT-NS**, **mDNS**, **WPAD** e Exigir **SMB/LDAP Signing**)](../../domains/software-0009/software/seguranca/responder-defesa-hardening-gpo-desativar-llmnr-nbtns-wpad-smb-signing.md)
+
+### Fortra Impacket — Pilha de Protocolos de Rede Windows (SMB1-3, MSRPC, Kerberos, LDAP, TDS), Exemplos e Defesas de AD
+
+581. [Fortra Impacket: Arquitetura da Biblioteca Python de Protocolos de Rede (`ImpactPacket`, `SMBConnection`, `DCERPC v5`, `Kerberos` e `LDAP`)](../../domains/software-0009/software/seguranca/impacket-arquitetura-biblioteca-protocolos-rede-smb-msrpc-kerberos.md)
+582. [Impacket: Auditoria de Protocolo Kerberos (`GetNPUsers.py` AS-REP Roasting, `GetUserSPNs.py` Kerberoasting, `getTGT.py`, `getST.py` e `ticketer.py`)](../../domains/software-0009/software/seguranca/impacket-ataques-kerberos-getnpusers-getuserspns-ticketer-silver-golden.md)
+583. [Impacket: Comparação Forense e de OPSEC dos 5 Métodos de Execução Remota (`psexec.py`, `smbexec.py`, `wmiexec.py`, `atexec.py` e `dcomexec.py`)](../../domains/software-0009/software/seguranca/impacket-execucao-remota-psexec-smbexec-wmiexec-atexec-dcomexec-opsec.md)
+584. [Impacket: Auditoria de Extração de Credenciais com `secretsdump.py` (`SAM` / `LSA Secrets` Remotos, Parsing Offline de `NTDS.dit` e **`DCSync`** `DRSUAPI`)](../../domains/software-0009/software/seguranca/impacket-extracao-credenciais-secretsdump-ntds-sam-lsa-dcsync-defesa.md)
+585. [Impacket: Retransmissão Multiprocolo com `ntlmrelayx.py` (SMB, LDAP/LDAPS, HTTP **AD CS ESC8**, *RBCD*, *Shadow Credentials* e SOCKS Proxy)](../../domains/software-0009/software/seguranca/impacket-retransmissao-ntlmrelayx-smb-ldap-adcs-esc8-rbcd-shadow-credentials.md)
+586. [Impacket: Enumeração MSRPC e Controle de Serviços (`rpcdump.py`, `samrdump.py`, `lookupsid.py`, `netview.py`, `reg.py` e `services.py`)](../../domains/software-0009/software/seguranca/impacket-enumeracao-msrpc-rpcdump-samrdump-lookupsid-netview-services.md)
+587. [Impacket: Auditoria de Microsoft SQL Server com `mssqlclient.py` (Autenticação Windows/SQL, `enable_xp_cmdshell`, *Impersonation* `EXECUTE AS` e *Linked Servers*)](../../domains/software-0009/software/seguranca/impacket-cliente-mssqlclient-xp-cmdshell-linked-servers-trusted-links.md)
+588. [Impacket: Inspeção de Compartilhamentos com `smbclient.py` e Servidor SMB Efêmero com `smbserver.py` (`-smb2support` e Autenticação)](../../domains/software-0009/software/seguranca/impacket-compartilhamentos-smbclient-smbserver-transferencia-segura-smb2.md)
+589. [Impacket: Auditoria de Objetos de Diretório e Criptografia (`addcomputer.py`, `dacledit.py`, `rbcd.py`, `GetLAPSPassword.py` e **`dpapi.py`**)](../../domains/software-0009/software/seguranca/impacket-gestao-contas-acl-addcomputer-dacledit-rbcd-laps-dpapi.md)
+590. [Impacket: Desenvolvimento de Scripts de Auditoria em Python com `SMBConnection` e `DCERPCTransportFactory`, e Suíte de Testes `pytest` / `tox`](../../domains/software-0009/software/seguranca/impacket-desenvolvimento-scripts-customizados-dcerpc-smbconnection-pytest.md)
+
+### NetExec (nxc) — Auditoria Multi-Protocolo de Redes Corporativas e Active Directory (SMB, LDAP, WinRM, WMI, MSSQL, SSH, RDP)
+
+591. [NetExec (`nxc` & `nxcdb`): Arquitetura do Sucessor Open-Source do CrackMapExec, Protocolos Suportados e Isolamento por *Workspaces*](../../domains/software-0009/software/seguranca/netexec-arquitetura-sucessor-crackmapexec-protocolos-nxcdb-workspaces.md)
+592. [NetExec (`nxc smb`): Mapeamento de Sub-Redes SMB, Verificação de `signing:False` / `SMBv1:True`, Compartilhamentos (`--shares`) e Sessões (`--sessions`)](../../domains/software-0009/software/seguranca/netexec-protocolo-smb-enumeracao-signing-shares-sessoes-disks.md)
+593. [NetExec: Auditoria de Reutilização de Credenciais Locais (*LAPS Audit*), *Pass-the-Hash* (`-H`) e *Password Spraying* Seguro (`--no-bruteforce` / `--continue-on-success`)](../../domains/software-0009/software/seguranca/netexec-auditoria-credenciais-password-spraying-pass-the-hash-lockout.md)
+594. [NetExec (`nxc ldap`): Auditoria de Active Directory via LDAP/LDAPS (`--kerberoasting`, `--asreproast`, `--trusted-for-delegation`, `--gmsa` e `--bloodhound`)](../../domains/software-0009/software/seguranca/netexec-protocolo-ldap-kerberoasting-asreproast-bloodhound-delegacao.md)
+595. [NetExec: Operação 100% Kerberos (`-k`, `--use-kcache`, `--aesKey` e `--kdcHost`) em Redes com NTLM Restrito](../../domains/software-0009/software/seguranca/netexec-autenticacao-kerberos-ccache-aeskey-kdchost-opsec.md)
+596. [NetExec (`nxc winrm` & `nxc wmi`): Auditoria de Gerenciamento Remoto Windows (WS-Management Portas `5985`/`5986` e WMI) e Execução (`-x` / `-X`)](../../domains/software-0009/software/seguranca/netexec-protocolos-winrm-wmi-execucao-remota-powershell-dpapi.md)
+597. [NetExec (`nxc mssql`, `ssh`, `rdp`, `ftp`, `vnc`): Auditoria Multiprocolo Híbrida Windows/Linux, Capturas de Tela RDP e Privileged Escalation](../../domains/software-0009/software/seguranca/netexec-protocolos-mssql-ssh-rdp-ftp-vnc-auditoria-multi-servico.md)
+598. [NetExec: Catálogo de Módulos (`-M` / `--list-modules`) para Auditoria de **AD CS**, **Coerção RPC** (`coerce_plus`), **WebDAV** e **LAPS**](../../domains/software-0009/software/seguranca/netexec-modulos-auditoria-adcs-petitpotam-nopac-zerologon-slinky.md)
+599. [NetExec (`nxcdb`): Consulta Estruturada do Banco de Dados de Auditoria (`hosts`, `creds`, `admin`, `shares`) e Reutilização por ID (`-id`)](../../domains/software-0009/software/seguranca/netexec-gerenciamento-banco-nxcdb-credenciais-hosts-exportacao.md)
+600. [Detecção do NetExec pelo **Blue Team** (Correlação de Eventos Windows `4624`/`4625`/`5140`/`5145`/`4697`, Zeek e Hardening de Tiering AD)](../../domains/software-0009/software/seguranca/netexec-deteccao-blue-team-telemetria-windows-zeek-suricata-hardening.md)
+
 ## Critérios e próximo passo
 
-As 500 notas 1–500 das tranches 1–5 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 500/2.000 notas válidas, restando 1.500 notas materiais.
+As 600 notas 1–600 das tranches 1–6 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 600/2.000 notas válidas, restando 1.400 notas materiais.

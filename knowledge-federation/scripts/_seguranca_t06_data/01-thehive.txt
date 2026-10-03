@@ -1,0 +1,179 @@
+TOPIC: TheHive & Cortex — Plataforma de Resposta a Incidentes (SIRP), Cases, Observables, Analyzers, Responders e Integração MISP
+SOURCES: https://raw.githubusercontent.com/TheHive-Project/TheHive/master/README.md | https://raw.githubusercontent.com/TheHive-Project/Cortex/master/README.md | https://github.com/TheHive-Project/cortex-analyzers
+
+===NOTE===
+0501|thehive-arquitetura-sirp-alerts-cases-tasks-observables|TheHive: Arquitetura da Plataforma de Resposta a Incidentes (SIRP) — Fluxo `Alerts` -> `Cases` -> `Tasks` -> `Observables`|**TheHive** (`TheHive-Project/TheHive`, originalmente AGPLv3 em Scala) é uma plataforma colaborativa de resposta a incidentes de segurança (SIRP) projetada para SOCs, CSIRTs e CERTs conduzirem investigações estruturadas em tempo real.|Substitui sistemas genéricos de chamados (como Jira ou ServiceNow sem modelo de segurança) por um fluxo nativo de DFIR onde alertas do SIEM e eventos do MISP são triados, transformados em casos com playbooks padronizados e enriquecidos com análise automatizada de observáveis.|O modelo operacional do TheHive estrutura-se em cinco entidades interligadas: **Alerts** (eventos brutos recebidos de SIEM, EDR, caixas de phishing ou MISP com deduplicação por `sourceRef`), **Cases** (investigações formais abertas a partir de alertas ou do zero), **Tasks** (etapas do playbook atribuídas a analistas), **Task Logs** (registros cronológicos em Markdown com evidências anexadas) e **Observables** (artefatos técnicos como IPs, hashes, domínios, URLs, e-mails e arquivos com classificação `TLP` e `PAP`).|```python
+from thehive4py.api import TheHiveApi
+from thehive4py.models import Case, CaseTask
+
+api = TheHiveApi("https://thehive.soc.internal.corp", "SOC_ANALYST_API_KEY")
+new_case = Case(
+    title="Incidente #2026-104: Beaconing C2 Detectado em Estacao Financeira",
+    tlp=2,  # TLP:AMBER
+    pap=2,  # PAP:AMBER
+    severity=3,  # High
+    tags=["c2", "edr-alert", "finance-vlan"],
+    tasks=[CaseTask(title="1. Isolar host no EDR"), CaseTask(title="2. Coletar dump de memoria RAM")]
+)
+response = api.create_case(new_case)
+```|Converter alertas de SIEM diretamente em `Cases` sem passar pela fila de triagem (`Alerts`) inunda o painel de investigação do SOC caso uma regra de correlação do SIEM sofra um pico de falsos positivos.|Consulte a API do TheHive verificando `response.status_code == 201` e confirme a criação das `Tasks` vinculadas ao novo caso.|thehive-templates-casos-playbooks-padronizados-metricas-kpis, thehive-ingestao-alertas-thehive4py-siem-phishing-deduplicacao, thehive-orquestracao-cortex-analyzers-tlp-pap-opsec
+
+===NOTE===
+0502|thehive-templates-casos-playbooks-padronizados-metricas-kpis|TheHive: Padronização de Playbooks de Resposta a Incidentes com `Case Templates`, `Tasks` Obrigatórias e Métricas Customizadas|O motor de **Case Templates** do TheHive permite codificar os playbooks operacionais do SOC (ex.: *Phishing Triage*, *Ransomware Containment*, *Compromised Cloud IAM Key*, *Data Exfiltration*) em modelos reutilizáveis.|Garante que, independentemente de qual analista de plantão assuma o incidente às 3h da manhã, todas as etapas críticas de contenção, preservação forense, erradicação e notificação regulatória sejam executadas na mesma ordem.|Um `Case Template` pré-define o prefixo do título, a severidade padrão, os níveis `TLP` e `PAP`, as tags obrigatórias, a lista ordenada de **Tasks** (com descrições detalhadas em Markdown dos comandos e procedimentos) e **Custom Fields / Metrics** (ex.: `mttd_minutes`, `hosts_affected_count`, `data_exfiltrated_boolean`) que alimentam os dashboards gerenciais do SOC.|```json
+{
+  "name": "Playbook-Ransomware-Response-v3",
+  "titlePrefix": "[RANSOMWARE]",
+  "severity": 4,
+  "tlp": 3,
+  "pap": 2,
+  "tags": ["ransomware", "critical-response", "playbook-v3"],
+  "tasks": [
+    { "title": "Contencao de Rede: Isolar host via EDR Responder", "group": "Containment" },
+    { "title": "Preservacao Forense: Coletar triagem Velociraptor e RAM", "group": "Forensics" },
+    { "title": "Escopo: Exportar IOCs confirmados para o MISP", "group": "Intelligence" }
+  ]
+}
+```|Alterar um `Case Template` existente aplica as novas tarefas apenas aos casos criados **após** a edição; casos já abertos mantêm a estrutura de tarefas do momento da sua instanciação.|Importe um alerta em homologação selecionando o template `Playbook-Ransomware-Response-v3` e confirme que todas as tarefas e grupos foram instanciados automaticamente.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-orquestracao-cortex-responders-contencao-ativa-edr-firewall, velociraptor-arquitetura-dfir-vql-velociraptor-query-language
+
+===NOTE===
+0503|thehive-ingestao-alertas-thehive4py-siem-phishing-deduplicacao|TheHive: Ingestão Automatizada de Alertas via `TheHive4py` (`type`, `source`, `sourceRef`), Merge em Casos e Correlação de Observáveis|A biblioteca Python **`TheHive4py`** e o endpoint `/api/alert` permitem que SIEMs (Wazuh, Splunk, Elastic), coletores de caixas de denúncia de phishing (IMAP/Graph API) e sensores NIDS enviem alertas estruturados com observáveis anexados diretamente para o painel `Alerts` do TheHive.|A chave primária de idempotência de um alerta no TheHive é a tupla **`(type, source, sourceRef)`**: se o script de integração gerar um `sourceRef` determinístico (como o ID único do alerta no SIEM ou o `Message-ID` do e-mail), reexecuções do script não criarão alertas duplicados.|Ao revisar a fila de `Alerts`, o analista vê imediatamente se os observáveis contidos no novo alerta já apareceram em **casos anteriores ou em andamento** (*Similar Alerts / Cases*), podendo promover o alerta a um novo caso (`Import as new case`), mesclá-lo a uma investigação aberta (`Merge into existing case`) ou descartá-lo.|```python
+from thehive4py.api import TheHiveApi
+from thehive4py.models import Alert, AlertArtifact
+
+hive = TheHiveApi("https://thehive.soc.internal.corp", "SIEM_FEEDER_KEY")
+alert = Alert(
+    title="Suricata ET MALWARE Cobalt Strike Beacon Detectado",
+    tlp=2,
+    severity=3,
+    type="nids-alert",
+    source="suricata-prod-sensor-01",
+    sourceRef="suricata-eve-20261003-994812",
+    description="Fluxo TLS suspeito para IP externo fora do padrao corporativo.",
+    artifacts=[
+        AlertArtifact(dataType="ip", data="198.51.100.214", ioc=True, tags=["c2-candidate"]),
+        AlertArtifact(dataType="hostname", data="wkst-fin-09.internal.corp", ioc=False)
+    ]
+)
+hive.create_alert(alert)
+```|Usar `uuid.uuid4()` aleatório no campo `sourceRef` a cada polling do SIEM desativa a proteção de deduplicação do TheHive e causa criação massiva de alertas repetidos caso o job de polling reprocessar a mesma janela de tempo.|Submeta o mesmo objeto `Alert` duas vezes seguidas com idêntico `(type, source, sourceRef)` e confirme que a segunda chamada retorna erro HTTP `400/409` de alerta já existente.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-sincronizacao-bidirecional-misp-import-export-iocs, suricata-formato-eve-json-tipos-eventos-correlacao-flow-id
+
+===NOTE===
+0504|thehive-governanca-observables-tlp-pap-ioc-sighted-marking|TheHive: Governança de `Observables` — Diferença Operacional entre **TLP** (*Traffic Light Protocol*) e **PAP** (*Permissible Actions Protocol*)|No TheHive, cada observável adicionado a um caso possui dois controles independentes de segurança operacional (OPSEC): o **TLP** (*com quem a informação pode ser compartilhada*) e o **PAP** (*quais ações técnicas ativas o analista ou o Cortex podem executar com o indicador*).|Um erro clássico de OPSEC em resposta a incidentes é submeter um arquivo de malware direcionado ou fazer `ping`/`curl`/consulta ativa ao domínio de Comando e Controle (C2) do atacante a partir de IPs públicos ou sandboxes abertos, avisando imediatamente o adversário de que ele foi descoberto.|Enquanto `TLP:RED/AMBER/GREEN/WHITE` controla a divulgação, o **PAP** controla o contato com a infraestrutura adversária: **`PAP:RED`** permite apenas análise 100% passiva/offline em logs internos (proibindo tocar no servidor do atacante ou enviar para serviços em nuvem de terceiros); **`PAP:AMBER`** permite consultas passivas em bases reputacionais de terceiros (ex.: buscar o hash SHA-256 no VirusTotal sem fazer upload do binário); e **`PAP:GREEN`/`WHITE`** autoriza sondagem ativa.|```python
+from thehive4py.models import CaseObservable
+
+# Cadastrar o binario suspeito com PAP:RED para impedir upload externo acidental para sandboxes na nuvem
+obs = CaseObservable(
+    dataType="hash",
+    data="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    tlp=3,  # TLP:RED
+    pap=2,  # PAP:AMBER (permite apenas consulta de hash, nunca upload do arquivo)
+    ioc=True,
+    sighted=True,
+    tags=["targeted-implant", "no-cloud-upload"],
+    message="Hash SHA-256 extraido da memoria RAM do servidor critico."
+)
+```|Apenas adicionar um observável ao caso para investigação (ex.: o endereço IP do próprio servidor interno da empresa ou o e-mail da vítima) **não** o torna um IOC malicioso; marque a flag booleana **`ioc=True`** exclusivamente após confirmar que o artefato pertence à ameaça.|Verifique na aba `Observables` do caso que apenas os artefatos confirmados como maliciosos possuem `ioc: true` antes de exportar o caso para o MISP.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-orquestracao-cortex-analyzers-tlp-pap-opsec, mispsoc-taxonomias-tlp-pap-sharing-groups-federacao-sincronizacao
+
+===NOTE===
+0505|thehive-orquestracao-cortex-analyzers-tlp-pap-opsec|TheHive & Cortex: Análise em Escala de Observáveis com **Cortex Analyzers** e Guardrails Automáticos de `TLP`/`PAP`|**Cortex** (`TheHive-Project/Cortex`) é o motor de análise e resposta ativa que acompanha o TheHive e o MISP, permitindo executar mais de 100 **Analyzers** (VirusTotal, AbuseIPDB, Shodan, GreyNoise, PassiveTotal, YARA, CAPEv2, Joe Sandbox, MaxMind, DNS/WHOIS) sobre observáveis individuais ou em lote via uma única API.|Em vez de o analista abrir 15 abas no navegador e copiar chaves de API manualmente para consultar a reputação de 50 IPs e domínios de um incidente, o Cortex executa todos os *Analyzers* em paralelo dentro de containers Docker ou ambientes Python/Linux isolados e devolve o relatório padronizado.|Crucialmente, cada *Analyzer* no Cortex possui configurações explícitas de **`tlp` máximo** e **`pap` máximo** permitidos: por exemplo, o analyzer `VirusTotal_Scan_3_0` (que faz upload do arquivo) é configurado para exigir `TLP <= GREEN` e `PAP <= GREEN`, enquanto `VirusTotal_GetReport_3_0` (que consulta apenas o hash) aceita `TLP <= AMBER` e `PAP <= AMBER`. Se um analista tentar rodar o upload em um arquivo `TLP:RED`, o próprio Cortex **bloqueia a execução automaticamente**.|```bash
+# Disparar um job de analise passiva no Cortex via API REST para um observavel de IP
+curl -sS -X POST "https://cortex.soc.internal.corp/api/analyzer/AbuseIPDB_1_0/run" \
+  -H "Authorization: Bearer ${CORTEX_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "198.51.100.214",
+    "dataType": "ip",
+    "tlp": 2,
+    "pap": 2
+  }' | jq .
+```|Configure sempre no Cortex os limites `auto_extract_artifacts` e verifique os tetos de `tlp`/`pap` de cada Analyzer externo antes de liberar chaves de API comerciais para a equipe de Nível 1 do SOC.|Tente executar um Analyzer restrito a `TLP:GREEN` contra um observável marcado como `TLP:RED` (`tlp: 3`) e confirme que o Cortex recusa o job por violação de política OPSEC.|thehive-governanca-observables-tlp-pap-ioc-sighted-marking, thehive-desenvolvimento-analyzers-customizados-cortexutils-docker, capev2-integracao-api-rest-v2-automacao-submissao-thehive-misp
+
+===NOTE===
+0506|thehive-orquestracao-cortex-responders-contencao-ativa-edr-firewall|TheHive & Cortex: Contenção e Resposta Ativa a Incidentes com **Cortex Responders** (Isolamento EDR, Bloqueio Firewall/RPZ e Revogação IAM)|Além dos *Analyzers* (que leem e enriquecem dados), o Cortex executa **Responders** — módulos de ação ativa que podem ser disparados a partir de um `Case`, `Alert`, `Task` ou `Observable` no TheHive para conter ameaças em segundos.|Durante um ataque de ransomware ou exfiltração ativa, permite ao analista clicar em *Run Responder* diretamente sobre o observável de hostname/IP/usuário no TheHive para isolar a máquina no EDR (Velociraptor, CrowdStrike, Defender), bloquear o domínio no firewall/DNS RPZ ou revogar sessões OIDC no IdP.|Cada execução de *Responder* fica registrada na aba `Responders` do caso com o usuário que disparou a ação, o carimbo de tempo, os parâmetros enviados e o status de retorno (`Success` / `Failure`), além de poder adicionar automaticamente tags ao observável (ex.: `action:blocked-on-firewall` ou `host:isolated`).|```bash
+# Acionar um Responder do Cortex via API para bloquear um IP de C2 confirmado na borda
+curl -sS -X POST "https://cortex.soc.internal.corp/api/responder/FirewallBlockIP_1_0/run" \
+  -H "Authorization: Bearer ${CORTEX_Responder_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dataType": "thehive:case_artifact",
+    "data": {
+      "dataType": "ip",
+      "data": "198.51.100.214",
+      "ioc": true,
+      "tlp": 2
+    }
+  }' | jq .
+```|Um *Responder* que bloqueia IPs no firewall ou isola servidores em produção pode causar indisponibilidade severa se disparado contra o IP de um gateway interno ou servidor DNS corporativo; valide sempre o alvo contra uma *allowlist* de infraestrutura crítica dentro do código do Responder.|Execute o Responder em ambiente de homologação contra um IP de teste e verifique que o status retorna `Success` e que a tag de bloqueio é anexada ao artefato no TheHive.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-orquestracao-cortex-analyzers-tlp-pap-opsec, velociraptor-resposta-ativa-quarentena-isolamento-rede-remocao-persistencia
+
+===NOTE===
+0507|thehive-sincronizacao-bidirecional-misp-import-export-iocs|TheHive: Integração Bidirecional com o **MISP** (Importação Filtrada de Eventos para Alertas e Exportação de IOCs Confirmados)|O TheHive foi projetado desde a origem para operar em simbiose bidirecional com uma ou múltiplas instâncias **MISP**: importando novos eventos de inteligência como alertas e exportando de volta para o MISP apenas os observáveis marcados com `ioc=True` ao concluir um caso.|Fecha o ciclo de inteligência (*Intelligence Loop*): uma investigação iniciada no SOC local descobre novos domínios e hashes do atacante; ao clicar em *Export to MISP* no caso do TheHive, esses indicadores viram um evento estruturado no MISP que atualiza imediatamente as regras do Suricata/Zeek e protege as demais unidades.|Na configuração do conector MISP do TheHive, filtros granulares (`whitelist-tags`, `blacklist-tags`, `blacklist-orgs`, `max-attributes`, `max-age`) impedem que eventos gigantescos de feeds públicos OSINT do MISP inundem a fila de alertas do TheHive.|```hocon
+# Configuracao do conector MISP no TheHive com filtros estritos de tags e idade
+misp {
+  interval = 5m
+  servers = [
+    {
+      name = "MISP-CSIRT-Internal"
+      url = "https://misp.soc.internal.corp"
+      auth {
+        type = "key"
+        key = "${MISP_THEHIVE_SYNC_KEY}"
+      }
+      purpose = ImportAndExport
+      inclusionFilter {
+        tags = ["tlp:amber", "tlp:green", "csirt:escalate-to-soc"]
+        maxAge = 7 days
+        maxAttributes = 200
+      }
+    }
+  ]
+}
+```|Configurar `purpose = ImportAndExport` sem definir `inclusionFilter` (especialmente `tags` e `maxAttributes`) fará o TheHive importar todos os eventos históricos do MISP como milhares de alertas na primeira sincronização.|Crie um caso de teste no TheHive, marque apenas 1 observável como `ioc=True`, exporte para a instância MISP de homologação e confirme que apenas o artefato com `ioc=True` foi exportado com `to_ids=true`.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-governanca-observables-tlp-pap-ioc-sighted-marking, mispsoc-arquitetura-threat-intelligence-events-attributes-objects-galaxies
+
+===NOTE===
+0508|thehive-desenvolvimento-analyzers-customizados-cortexutils-docker|Cortex: Desenvolvimento de `Analyzers` e `Responders` Customizados em Python (`cortexutils`) e Isolamento em Containers Docker|Quando o SOC precisa consultar bancos de dados internos (CMDB de ativos, logs de DHCP/VPN corporativos, diretório interno de funcionários) ou acionar APIs proprietárias durante um incidente, o **Cortex** permite criar *Analyzers* e *Responders* customizados em Python usando o SDK **`cortexutils`**.|Um *Analyzer* interno de CMDB que responde instantaneamente *"a quem pertence esta estação de trabalho, qual o departamento do usuário e se o servidor é de produção Tier 1"* economiza dezenas de minutos de triagem em cada alerta.|Cada módulo customizado consiste em um arquivo descritor JSON (definindo `name`, `version`, `dataTypeList`, `baseConfig`, `configurationItems`) e um script executável que herda de `cortexutils.analyzer.Analyzer` (implementando `summary()`, `artifacts()` e `run()`) ou `cortexutils.responder.Responder`, empacotado preferencialmente como imagem Docker isolada executada pelo *Job Runner* do Cortex.|```python
+#!/usr/bin/env python3
+from cortexutils.analyzer import Analyzer
+
+class InternalCmdbLookupAnalyzer(Analyzer):
+    def summary(self, raw):
+        taxonomies = []
+        level = "warning" if raw.get("criticality") == "tier-0" else "info"
+        taxonomies.append(self.build_taxonomy(level, "CMDB", "Criticality", raw.get("criticality", "unknown")))
+        return {"taxonomies": taxonomies}
+
+    def run(self):
+        hostname = self.get_data()
+        asset_info = {"hostname": hostname, "owner": "secops@internal.corp", "criticality": "tier-0"}
+        self.report(asset_info)
+
+if __name__ == "__main__":
+    InternalCmdbLookupAnalyzer().run()
+```|O método `summary()` retorna **Taxonomies** curtas coloridas (`info`, `safe`, `suspicious`, `malicious`) que aparecem diretamente como *badges* ao lado do observável no TheHive sem que o analista precise abrir o JSON completo do relatório.|Rode o Analyzer customizado passando um JSON de entrada via `stdin` em teste local e valide que a saída contém `{"success": true, "summary": {"taxonomies": [...]}}`.|thehive-orquestracao-cortex-analyzers-tlp-pap-opsec, thehive-orquestracao-cortex-responders-contencao-ativa-edr-firewall, thehive-templates-relatorios-curtos-longos-fusao-casos
+
+===NOTE===
+0509|thehive-templates-relatorios-curtos-longos-fusao-casos|TheHive: Customização de `Report Templates` do Cortex (Short / Long Reports), Fusão de Casos (`Case Merging`) e Fechamento Auditável|O TheHive possui um motor de **Report Templates** em AngularJS/HTML que formata o JSON bruto retornado pelos *Analyzers* do Cortex em duas visualizações: **Short Report** (as badges de taxonomia exibidas na linha do observável) e **Long Report** (o relatório detalhado formatado ao clicar no resultado da análise).|Além da visualização de relatórios, quando dois analistas investigam alertas distintos que acabam revelando o mesmo grupo atacante ou observáveis em comum, a funcionalidade de **Case Merging** funde os dois casos preservando todas as tarefas, logs, anexos e observáveis deduplicados.|No encerramento de um caso, o TheHive exige classificar a resolução (`TruePositive` — `WithImpact` ou `WithoutImpact`, `FalsePositive`, `Indeterminate`, `Other`) e preencher o resumo executivo de fechamento, gerando métricas auditáveis de taxa de falsos positivos por regra do SIEM e MTTR (*Mean Time to Respond*).|```python
+# Consultar via API REST do TheHive todos os casos abertos que compartilham um mesmo observavel para fusao
+import requests
+
+resp = requests.post(
+    "https://thehive.soc.internal.corp/api/case/ artifact/_search",
+    headers={"Authorization": "Bearer SOC_ANALYST_API_KEY"},
+    json={"query": {"_field": "data", "_value": "198.51.100.214"}}
+)
+```|Ao realizar o *Merge* de dois casos com níveis de `TLP` ou `PAP` diferentes, revise sempre a classificação do caso resultante para garantir que ele assuma o nível mais restritivo entre os dois.|Encerre um caso de teste preenchendo `resolutionStatus = "TruePositive"` e `impactStatus = "NoImpact"` e verifique a atualização imediata no dashboard de métricas.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-templates-casos-playbooks-padronizados-metricas-kpis, thehive-multi-tenancy-organizacoes-rbac-auditoria-webhooks
+
+===NOTE===
+0510|thehive-multi-tenancy-organizacoes-rbac-auditoria-webhooks|TheHive & Cortex: Multi-Tenancy por Organizações, RBAC, Autenticação SSO/LDAP/OAuth2 e Notificações via Webhooks|Tanto o TheHive quanto o Cortex suportam nativamente **Multi-Tenancy baseado em Organizações**, onde cada unidade de negócios ou cliente de um MSSP opera em uma organização totalmente isolada, com seus próprios casos, templates, chaves de API e instâncias de Analyzers/Responders.|Em um CSIRT corporativo global ou MSSP, analistas da filial A jamais devem visualizar incidentes confidenciais da filial B ou do conselho executivo, a menos que o caso seja explicitamente compartilhado.|O controle de acesso combina autenticação corporativa (Active Directory/LDAP, OAuth2/OIDC, certificados X.509 ou chaves de API dedicadas para contas de serviço) com perfis granulares (`org-admin`, `read`, `write`, `analyze`) e **Webhooks** de saída que enviam eventos em tempo real (`case_create`, `case_task_log_create`, `case_artifact_create`) para canais de guerra no Mattermost/Slack ou motores de automação.|```hocon
+# Configuracao de Webhook de saida no TheHive para acionar automacao SOAR a cada mudanca em casos
+webhooks {
+  endpoints = [
+    {
+      name = "soar-audit-receiver"
+      url = "https://soar.soc.internal.corp/webhooks/thehive"
+      version = 0
+      wsConfig {}
+      includedTheHiveOrganisations = ["CSIRT-Global"]
+    }
+  ]
+}
+```|Nunca utilize uma conta com papel `superAdmin` (administrador de plataforma que cria organizações) para investigar casos ou rodar Analyzers; no TheHive e no Cortex, `superAdmin` e contas operacionais de organização (`org-admin` / `analyst`) são estritamente segregados.|Valide na matriz de usuários que as contas de integração (`TheHive4py` / SIEM feeder) pertencem exclusivamente à organização operacional com permissões restritas à criação de alertas.|thehive-arquitetura-sirp-alerts-cases-tasks-observables, thehive-orquestracao-cortex-analyzers-tlp-pap-opsec, opencti-arquitetura-stix21-knowledge-graph-graphql-filigran

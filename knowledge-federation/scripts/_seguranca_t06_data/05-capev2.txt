@@ -1,0 +1,118 @@
+TOPIC: CAPEv2 Malware Sandbox — Detonação Dinâmica, API/Syscall Hooking, Debugger Programável por YARA e Extração de Configuração
+SOURCES: https://raw.githubusercontent.com/kevoreilly/CAPEv2/master/README.md | https://capev2.readthedocs.io/en/latest/usage/api.html | https://github.com/CAPESandbox/CAPE-parsers
+
+===NOTE===
+0541|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara|CAPEv2 Sandbox: Arquitetura de Detonação de Malware, *API/Syscall Hooking* (`capemon`) e Debugger Furtivo Programável|**CAPEv2** (*Config And Payload Extraction v2*, `kevoreilly/CAPEv2`, GPLv3, Python 3) é a plataforma open-source de sandbox de análise dinâmica de malware que estende a arquitetura clássica de detonação com desempacotamento automático de payloads em memória, debugger furtivo integrado e extração de configurações de C2.|Malwares modernos raramente chegam como o binário final: eles usam *packers*, *crypters* e múltiplos estágios de injeção em memória; enquanto um sandbox tradicional observa apenas chamadas de API externas, o CAPEv2 captura o payload real desempacotado na memória e extrai sua configuração interna (URLs de C2, chaves RC4/AES, mutexes, campanha/botnet ID).|O host de controle Linux gerencia máquinas virtuais convidadas isoladas (KVM/QEMU, Windows 10/11 ou Linux) e injeta o monitor **`capemon`** (DLL 32/64-bit) nos processos monitorados. O `capemon` combina ganchos de API/Syscall com um **debugger próprio baseado em exceções e registradores de debug de hardware** (que evita usar as APIs de depuração da Microsoft facilmente detectadas por `IsDebuggerPresent` / `CheckRemoteDebuggerPresent`).|```bash
+# Verificar o status do motor principal do CAPEv2, maquinas virtuais disponiveis e fila de tarefas
+curl -sS -H "Authorization: Token ${CAPE_API_TOKEN}" \
+  http://127.0.0.1:8000/apiv2/cuckoo/status/ | jq .
+```|Nunca execute um servidor CAPEv2 conectado diretamente à rede de produção corporativa; a rede das VMs de análise (*guest network*) deve ficar estritamente isolada em uma VLAN dedicada, roteada apenas para simulação local (**INetSim** / FakeNet-NG) ou saída suja dedicada (*dirty line*/Tor/VPN isolada) controlada por firewall.|Inspecione `/apiv2/machines/list/` para confirmar que as VMs convidadas Windows/Linux estão registradas e com snapshots limpos prontos.|capev2-desempacotamento-dinamico-process-injection-unpacking, capev2-debugger-programavel-assinaturas-yara-breakpoints-anti-sandbox, capev2-extracao-configuracao-malware-cape-parsers-maco-malduck
+
+===NOTE===
+0542|capev2-desempacotamento-dinamico-process-injection-unpacking|CAPEv2 Sandbox: Desempacotamento Dinâmico Automático (*Passive* vs *Active Unpacking* `unpacker=2`) e Captura de Injeções|O CAPEv2 intercepta automaticamente técnicas de evasão e injeção de processos — incluindo *Shellcode Injection*, *DLL Injection*, *Process Hollowing*, *Process Doppelgänging* e alocação/descompressão de módulos PE em memória — para capturar e salvar os payloads desempacotados antes ou durante sua execução.|Mesmo quando o binário submetido está ofuscado com um *crypter* inédito (0/70 no VirusTotal), no momento em que o *stub* do crypter decifra o executável real na RAM para transferi-lo a um processo filho ou saltar para o *Original Entry Point* (OEP), o CAPEv2 despeja a imagem PE limpa em disco.|Além do modo padrão (*Passive Unpacking*, que captura payloads no momento da injeção, chamada de API ou término do processo), o CAPEv2 oferece o **Active Unpacking** (ativado pela opção **`unpacker=2`**): ele arma *guard pages* / breakpoints de escrita sobre regiões de memória recém-alocadas ou cuja proteção foi alterada (`VirtualAlloc` / `VirtualProtect`), capturando o payload no exato instante em que ele termina de ser escrito e antes de executar.|```bash
+# Submeter amostra suspeita via REST API v2 ativando o Active Unpacker (unpacker=2) e captura de dump de RAM
+curl -sS -X POST "https://cape.soc.internal.corp/apiv2/tasks/create/file/" -H "Authorization: Token ${CAPE_API_TOKEN}" \
+  -F "file=@/cases/samples/packed_loader.exe" \
+  -F "options=unpacker=2,procdump=1" \
+  -F "memory=1" | jq .
+```|Conforme documentado no README oficial do CAPEv2, a opção `unpacker=2` (*Active Unpacking*) vem desativada por padrão porque o overhead de exceções de página de memória pode alterar o tempo de execução (*timing*) de certos malwares; use o modo padrão primeiro e acione `unpacker=2` quando o packer exigir captura pré-execução.|Consulte a seção `CAPE payloads` do relatório gerado e confirme que os arquivos PE desempacotados foram extraídos com seus respectivos hashes SHA-256 e classificações YARA.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-debugger-programavel-assinaturas-yara-breakpoints-anti-sandbox, volatility3-deteccao-injecao-memoria-malfind-hollowprocesses-vadinfo
+
+===NOTE===
+0543|capev2-debugger-programavel-assinaturas-yara-breakpoints-anti-sandbox|CAPEv2 Sandbox: Programação Dinâmica do Debugger via Assinaturas **YARA** (`meta: cape_options`) para Unpacking e Anti-Sandbox|Um dos recursos mais avançados do CAPEv2 é a capacidade de **programar o debugger em tempo real durante a detonação usando regras YARA**: sempre que uma região de memória é alocada ou decifrada, o `capemon` executa um scan YARA em memória e, se uma regra casar, lê a diretiva **`cape_options`** nos metadados da regra para setar breakpoints de hardware nos offsets exatos encontrados.|Em vez de escrever um desempacotador manual em C para cada variante de packer (como derivados de UPX, VMProtect ou loaders customizados), o analista escreve uma regra YARA que localiza a sequência de bytes do *tail jump* (o salto para o OEP) e instrui o debugger a pausar naquele endereço exato (`bp0=$tail_jmp`) e despejar o processo limpo.|O mesmo mecanismo YARA + Debugger permite criar **contramedidas dinâmicas anti-sandbox**: se a regra YARA detectar uma rotina específica de checagem de VM ou atraso malicioso em memória, `cape_options` pode instruir o debugger a pular a instrução (`eip` / `rip` patch) ou forçar o valor de retorno do registrador.|```yara
+rule Custom_UPX_Variant_OEP_Dumper {
+    meta:
+        description = "Localiza o salto final (OEP) de variante UPX e programa breakpoint no debugger do CAPE"
+        cape_options = "bp0=$oep_jump,action0=dump,type=upx"
+    strings:
+        $oep_jump = { 83 EC ?? E9 ?? ?? ?? ?? 00 }
+    condition:
+        uint16(0) == 0x5A4D and $oep_jump
+}
+```|O debugger do CAPEv2 dispõe de 4 registradores de debug de hardware da arquitetura x86/x64 (`dr0` a `dr3`, mapeados como `bp0` a `bp3` em `cape_options`); evite definir mais de 4 breakpoints simultâneos na mesma assinatura.|Adicione a regra YARA de teste no diretório de assinaturas YARA do monitor do CAPEv2, detone um binário empacotado com UPX e verifique no log do debugger o acionamento de `bp0` e o dump no OEP.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-desempacotamento-dinamico-process-injection-unpacking, yarax-anatomia-regra-meta-strings-hex-text-regex-condition
+
+===NOTE===
+0544|capev2-extracao-configuracao-malware-cape-parsers-maco-malduck|CAPEv2 Sandbox: Extração Estática e Dinâmica de Configuração de Malware (`CAPE-parsers`, `extract_config`, `MaCo` e `MalDuck`)|Uma vez que o CAPEv2 captura o payload desempacotado em memória e o classifica via YARA (ex.: identificando `AsyncRAT`, `Remcos`, `QakBot`, `LummaStealer`, `RedLine` ou `CobaltStrike`), o motor aciona automaticamente o extrator de configuração correspondente do repositório oficial **`CAPE-parsers`** (`CAPESandbox/CAPE-parsers`).|Extrair a configuração estática diretamente do payload desempacotado revela **toda** a lista de servidores de C2 primários e de backup embutidos no malware — mesmo que durante os 3 minutos de detonação dinâmica o malware tenha tentado conectar apenas ao primeiro servidor ou estivesse aguardando um gatilho.|Conforme documentado no README oficial, o framework nativo de parsers do CAPE utiliza Python puro com um único ponto de entrada padronizado **`def extract_config(data: bytes) -> dict | None:`** chamado por `cape_utils.py`, além de suportar integração com os frameworks **MaCo** (Cybercentre Canada), **MalDuck** (CERT Polska), **DC3-MWCP** e **RATDecoders**.|```python
+# Exemplo de extrator de configuracao padrao do CAPE-parsers (def extract_config(data))
+import re
+
+def extract_config(data: bytes) -> dict | None:
+    match = re.search(rb"C2_CFG_START\|([a-zA-Z0-9\.\-:]+)\|MUTEX:([a-zA-Z0-9_\-]+)\|END", data)
+    if not match:
+        return None
+    return {
+        "CNCs": [match.group(1).decode("ascii", errors="ignore")],
+        "mutex": match.group(2).decode("ascii", errors="ignore"),
+        "family": "CustomLabTrojan"
+    }
+```|Como autores de malware alteram estruturas de configuração a cada nova versão, um extrator pode ser importado e testado de forma totalmente isolada na linha de comando (`python3 -c "import my_parser; print(my_parser.extract_config(open('dump.bin','rb').read()))"`) antes de ir para produção no sandbox.|Execute o extrator sobre um dump de teste e confirme que o dicionário retornado popula a aba `CAPE Config` do relatório final.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-desempacotamento-dinamico-process-injection-unpacking, capev2-integracao-api-rest-v2-automacao-submissao-thehive-misp
+
+===NOTE===
+0545|capev2-captura-amsi-powershell-dotnet-syscall-hooking-nirvana|CAPEv2 Sandbox: Captura de Payloads **AMSI** (*Anti-Malware Scan Interface*), `.NET` / PowerShell / WSH e *Syscall Hooking* Anti-Evasão|No Windows 10 e Windows 11, o CAPEv2 instrumenta a **AMSI** (*Anti-Malware Scan Interface*) e utiliza técnicas avançadas de *syscall hooking* e *debugger-based direct/indirect syscall countermeasures* para derrotar malwares que tentam contornar ganchos em `ntdll.dll`.|Scripts maliciosos em PowerShell, VBScript, JScript, macros Office VBA e assemblies `.NET` carregados em memória via `Assembly.Load(byte[])` passam obrigatoriamente pelo buffer da AMSI (`AmsiScanBuffer`) completamente desofuscados imediatamente antes de serem interpretados; o CAPEv2 intercepta e salva cada buffer AMSI como um artefato limpo.|Para binários nativos C/C++/Rust/Go que usam *Unhooking* de `ntdll.dll`, *Hell's Gate* / *Halo's Gate* (*Direct Syscalls*) ou *Indirect Syscalls* (saltando para a instrução `syscall` dentro da `ntdll.dll` para fingir uma chamada legítima), o CAPEv2 combina instrumentação estilo Microsoft Nirvana e verificação da pilha de chamadas no debugger para capturar a telemetria mesmo sem depender do prólogo da função na `ntdll.dll`.|```bash
+# Submeter script PowerShell ofuscado forcando pacote ps1 e inspecao de buffers AMSI no Windows 11
+curl -sS -X POST "https://cape.soc.internal.corp/apiv2/tasks/create/file/" -F "file=@/cases/samples/obfuscated_stage1.ps1" \
+  -H "Authorization: Token ${CAPE_AMSI_TOKEN}" \
+  -F "package=ps1" -F "platform=windows" -F "tags=win11_x64" | jq .
+```|Ao analisar instaladores `.msi`, scripts `.vbs`/`.js`/`.ps1` ou bibliotecas `.dll` exportando funções específicas (`options=function=DllRegisterServer`), especifique explicitamente o `package` adequado se a extensão original do arquivo tiver sido removida.|Verifique nos artefatos extraídos da tarefa a presença dos buffers capturados pela AMSI contendo o código PowerShell/C# totalmente desofuscado.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-desempacotamento-dinamico-process-injection-unpacking, capev2-assinaturas-comportamentais-rede-suricata-mitre-attack
+
+===NOTE===
+0546|capev2-assinaturas-comportamentais-rede-suricata-mitre-attack|CAPEv2 Sandbox: Classificação Tripla — Assinaturas Comportamentais Python, Inspeção PCAP com **Suricata** e Mapeamento MITRE ATT&CK|O CAPEv2 classifica cada execução combinando três motores independentes: **(1)** scans **YARA** sobre o binário inicial e todos os payloads/dumps de memória extraídos, **(2)** inspeção de rede **Suricata** (e Zeek/JA3/HTTP/DNS) sobre o arquivo `dump.pcap` capturado na interface da VM e **(3)** **Behavioral Signatures** em Python que analisam a sequência de chamadas de API, arquivos, chaves de registro e mutexes.|Um malware pode não ter nenhuma regra YARA estática conhecida ainda, mas se durante a execução ele apagar *Volume Shadow Copies* (`vssadmin.exe delete shadows /all /quiet`), injetar em `explorer.exe` e comunicar-se via TLS com um certificado autoassinado de Cobalt Strike detectado pelo Suricata, a classificação comportamental e de rede crava o veredito malicioso.|As assinaturas comportamentais (`modules/signatures/`) mapeiam cada comportamento observado diretamente para técnicas **MITRE ATT&CK** (`ttp` IDs como `T1490` *Inhibit System Recovery*, `T1055` *Process Injection*, `T1547.001` *Registry Run Keys*) e atribuem um `malscore` numérico consolidado.|```python
+# Estrutura de uma Behavioral Signature customizada no CAPEv2 mapeada para MITRE ATT&CK (T1490)
+from lib.cuckoo.common.abstracts import Signature
+
+class DeletesShadowCopiesVssadmin(Signature):
+    name = "deletes_shadow_copies_vssadmin"
+    description = "Tenta excluir Volume Shadow Copies via vssadmin ou wmic (comportamento tipico de Ransomware)"
+    severity = 3
+    categories = ["ransomware"]
+    ttp = ["T1490"]
+
+    def run(self):
+        for cmd in self.results.get("behavior", {}).get("summary", {}).get("executed_commands", []):
+            if "shadow" in cmd.lower() and ("delete" in cmd.lower() or "resize" in cmd.lower()):
+                self.data.append({"command": cmd})
+                return True
+        return False
+```|Mantenha o conjunto de regras do Suricata (`Emerging Threats Open / ET Pro`) atualizado no servidor host do CAPEv2 para que o módulo de processamento PCAP identifique padrões de tráfego C2 recentes.|Consulte o campo `malscore`, `signatures` e `suricata.alerts` no relatório JSON da tarefa via `/apiv2/tasks/report/<id>/`.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, suricata-regras-sintaxe-action-header-options-pcre-buffers, yarax-integracao-dfir-velociraptor-clamav-cape-misp-fluxo-caca
+
+===NOTE===
+0547|capev2-integracao-api-rest-v2-automacao-submissao-thehive-misp|CAPEv2 Sandbox: Automação via **REST API v2** (`/apiv2/`, Autenticação por Token DRF, `throttling.py` e Integração com Cortex/MISP)|A **REST API v2** do CAPEv2 (`/apiv2/`, construída sobre *Django REST Framework*) expõe endpoints autenticados por token (`Authorization: Token <TOKEN>`) para submeter arquivos (`/apiv2/tasks/create/file/`) e URLs (`/apiv2/tasks/create/url/`), consultar status (`/apiv2/tasks/view/<id>/`), baixar relatórios JSON/MAEC/Lite (`/apiv2/tasks/report/<id>/`), recuperar PCAPs (`/apiv2/pcap/get/<id>/`) e baixar payloads extraídos.|Permite que plataformas de SOAR, o analyzer `CAPE` do **Cortex/TheHive** ou gateways de e-mail submetam anexos suspeitos automaticamente, aguardem o término da detonação e injetem a configuração de C2 extraída de volta no caso de resposta a incidentes e no **MISP**.|Para proteger o cluster de sandboxes contra sobrecarga, o módulo `web/apiv2/throttling.py` aplica limites de taxa por minuto/hora/dia (padrão `5/m` configurável em `api.conf` e ajustável individualmente por perfil de usuário no Django Admin `/admin/`).|```bash
+# Gerar token de API para conta de automacao do SOC e consultar o relatorio JSON de uma tarefa concluida
+sudo -u cape poetry run python3 /opt/CAPEv2/web/manage.py drf_create_token soc_automation_bot
+
+curl -sS -H "Authorization: Token ${CAPE_API_TOKEN}" \
+  "http://127.0.0.1:8000/apiv2/tasks/report/1042/json/" | jq '{malscore: .malscore, detections: .detections, cape_cfg: .CAPE.configs}'
+```|A documentação oficial alerta que o antigo `utils/api.py` (porta `8090`) está **depreciado**; utilize sempre a API `/apiv2/` servida pelo stack web principal com autenticação por Token DRF habilitada e HTTPS.|Valide que requisições sem o cabeçalho `Authorization: Token ...` para `/apiv2/tasks/create/file/` são rejeitadas com `HTTP 401/403` e ajuste a cota de throttling da conta do Cortex.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, thehive-orquestracao-cortex-analyzers-tlp-pap-opsec, mispsoc-arquitetura-threat-intelligence-events-attributes-objects-galaxies
+
+===NOTE===
+0548|capev2-anti-vm-hardening-kvm-qemu-acpi-smbios-human-interaction|CAPEv2 Sandbox: Hardening Anti-Detecção de VM (*Anti-VM Cloaking* em KVM/QEMU, SMBIOS/ACPI, Artefatos de Usuário e *Interactive Desktop*)|Malwares modernos executam dezenas de verificações ambientais antes de detonar (*Anti-VM* e *Anti-Sandbox*): checam nomes de fabricantes na BIOS/SMBIOS (`QEMU`, `VMware`, `VirtualBox`, `Bochs`), prefixos de endereço MAC (`52:54:00`), tamanho de disco `< 60 GB`, menos de 2 núcleos de CPU, menos de 4 GB de RAM, ausência de histórico de navegação/documentos recentes ou movimento artificial do cursor do mouse.|Se a VM convidada parecer uma instalação recém-formatada padrão do QEMU com placa de vídeo `QXL` e disco `QEMU HARDDISK`, o malware encerra silenciosamente (`exit(0)`) parecendo benigno.|A infraestrutura recomendada do CAPEv2 utiliza **KVM/QEMU corrigido** (substituindo todas as strings `QEMU`/`BOCHS` nas tabelas ACPI, SMBIOS, identificadores de disco NVMe/SATA, placas PCI e endereços MAC por identificadores de hardware real Dell/HP/Lenovo), provisiona VMs com >= 4 vCPUs, >= 8 GB RAM e >= 128 GB de disco populado com documentos, histórico de navegador e cookies realistas, além de oferecer o modo **Interactive Desktop** (e **CAPEsolo**) para interação manual com instaladores complexos.|```xml
+<!-- Exemplo de customizacao SMBIOS no XML do libvirt/KVM para ocultar assinatura padrao do hipervisor -->
+<os>
+  <type arch='x86_64' machine='pc-q35-8.2'>hvm</type>
+  <smbios mode='sysinfo'/>
+</os>
+<sysinfo type='smbios'>
+  <bios>
+    <entry name='vendor'>Dell Inc.</entry>
+    <entry name='version'>1.18.0</entry>
+  </bios>
+  <system>
+    <entry name='manufacturer'>Dell Inc.</entry>
+    <entry name='product'>OptiPlex 7090</entry>
+  </system>
+</sysinfo>
+```|Jamais instale o pacote completo `spice-vdagent` ou *VMware Tools / VirtualBox Guest Additions* padrão com nomes de processos e drivers facilmente enumeráveis dentro da VM de análise de malware.|Execute ferramentas públicas de auditoria de detecção de VM (*Pafish* ou *Al-Khaser*) dentro da VM convidada do CAPEv2 e ajuste o XML do KVM até que as checagens de hipervisor passem como máquina física.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-debugger-programavel-assinaturas-yara-breakpoints-anti-sandbox, capev2-roteamento-rede-inetsim-tor-vpn-isolamento-pcap
+
+===NOTE===
+0549|capev2-roteamento-rede-inetsim-tor-vpn-isolamento-pcap|CAPEv2 Sandbox: Roteamento Por Tarefa (`route=inetsim`, `route=tor`, `route=vpn`, `route=none`) e Prevenção de Abuso Lateral|O daemon auxiliar **`rooter.py`** do CAPEv2 gerencia dinamicamente regras de roteamento `iptables`/`nftables` e tabelas `iproute2` no host Linux para permitir que o analista escolha, **por tarefa submetida**, como o tráfego de rede daquela VM convidada será tratado.|Para malwares cujo payload já está embutido no binário, rodar com **`route=inetsim`** (simulando DNS, HTTP/HTTPS, SMTP e IRC localmente) é 100% seguro e fechado; porém, *downloaders* de primeiro estágio precisam baixar o segundo estágio do servidor real do atacante na internet para que o payload principal possa ser capturado e analisado.|Ao selecionar `route=tor` ou `route=vpn_country_x` (ou `route=internet` via link dedicado sujo), o `rooter` cria regras de *Policy-Based Routing* para o IP da VM convidada durante a janela de detonação, bloqueando estritamente qualquer tráfego direcionado a faixas privadas RFC 1918 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) e limitando conexões de saída de spam SMTP (porta `25`).|```bash
+# Submeter um downloader de 1o estagio roteando a saida da VM exclusivamente pelo tunel VPN isolado
+curl -sS -X POST "https://cape.soc.internal.corp/apiv2/tasks/create/file/" -F "options=route=vpn_nl" \
+  -H "Authorization: Token ${CAPE_NET_TOKEN}" \
+  -F "file=@/cases/samples/stage1_downloader.docm" -F "timeout=180" | jq .
+```|Antes de habilitar qualquer rota externa (`tor`, `vpn` ou `internet`) no `routing.conf`, verifique com regras explícitas de firewall (`DROP` para RFC 1918 e link-local `169.254.0.0/16`) que a VM convidada não consegue alcançar a rede local do host nem metadados de nuvem.|Teste dentro da VM convidada (em modo manutenção) que `ping 10.0.0.1` e conexões para a LAN interna são bloqueados pelo firewall do host.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, capev2-assinaturas-comportamentais-rede-suricata-mitre-attack, wireshark-extracao-arquivos-objetos-http-smb-dicom-tshark
+
+===NOTE===
+0550|capev2-integracao-memoria-volatility3-processamento-dumps-forenses|CAPEv2 Sandbox: Geração de Dumps Completos de Memória RAM (`memory=1`) e Pós-Processamento Integrado com **Volatility 3**|Quando uma tarefa é submetida ao CAPEv2 com o parâmetro **`memory=1`** (ou quando `memory_dump = on` está ativo em `cuckoo.conf`), o hipervisor KVM/QEMU salva um dump completo da memória RAM física da máquina virtual convidada no final da detonação, imediatamente antes de reverter o snapshot.|Embora o `capemon` capture artefatos no espaço de usuário dos processos monitorados, ameaças que injetam código em processos de sistema excluídos do monitoramento ou que instalam drivers de kernel (*rootkits* / *BYOVD*) exigem análise forense completa da memória física da VM.|O módulo de processamento de memória do CAPEv2 executa automaticamente plugins do **Volatility 3** (`pslist`, `pstree`, `malfind`, `netscan`, `callbacks`, `ssdt`, `ldrmodules`) sobre o dump `.dmp`/`.raw` da VM e anexa os resultados estruturados diretamente ao relatório final da tarefa.|```bash
+# Consultar na API do CAPEv2 os resultados do modulo de analise de memoria Volatility de uma tarefa
+curl -sS -H "Authorization: Token ${CAPE_API_TOKEN}" \
+  "http://127.0.0.1:8000/apiv2/tasks/report/1042/json/" | jq '.memory'
+```|Habilitar `memory=1` para 100% das submissões em uma fila de alto volume grava arquivos de 4 GB a 8 GB em disco por tarefa; habilite `memory=1` seletivamente para amostras críticas ou configure a limpeza automática de dumps antigos (`clean_memory`) após o processamento do Volatility 3.|Submeta uma amostra com `memory=1` e verifique a população da chave `.memory` no relatório JSON após o término do processamento.|capev2-arquitetura-sandbox-malware-api-hooking-debugger-yara, volatility3-arquitetura-forense-memoria-ram-isf-symbols-plugins, volatility3-deteccao-injecao-memoria-malfind-hollowprocesses-vadinfo
