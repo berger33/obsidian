@@ -1,19 +1,19 @@
 ---
 tipo: indice-global
-ultima_verificacao: 2026-10-02
+ultima_verificacao: 2026-10-03
 tags: [indice, global, ledger-1m]
 ---
 # Índice Global — Knowledge Federation (inventário legado de 1 milhão)
 
 > As contagens abaixo descrevem registros, arquivos e pacotes. A auditoria identificou texto-template em todos os 1.000.000 registros virtuais; não são notas válidas. Consulte [[note-quality-audit]] e [[MOC-Confiabilidade-e-Contratos]].
 
-Atualizado em: 2026-10-02
+Atualizado em: 2026-10-03
 
 ## Estado editorial do diretório ativo
 
-- Arquivos Markdown em `domains/`: **1089** (100 sementes legadas + 989 notas autorais substantivas).
-- Candidatas aprovadas no gate automatizado: **989**; revisões humanas registradas: **49**; revisões factuais por IA: **940**; 100 sementes legadas mantêm pendências.
-- Os lotes atuais totalizam 989 notas válidas pelo protocolo; o lote `software-testes-2000-0001` tem 949/2.000, incluindo as notas 850–949 revisadas por IA na [tranche 15](../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md) e na [reconciliação da tranche 15](../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md), as notas 750–849 na [tranche 14](../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), as notas 550–649 na [tranche 12](../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md) e as notas 450–549 na [tranche 11](../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Veja também [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila de revisão](../exports/reports/human-review-queue.md).
+- Arquivos Markdown em `domains/`: **1195** (100 sementes legadas + 1095 notas autorais substantivas).
+- Candidatas aprovadas no gate automatizado: **1095**; revisões humanas registradas: **49**; revisões factuais por IA: **1046**; 100 sementes legadas mantêm pendências.
+- Os lotes atuais totalizam 1095 notas válidas pelo protocolo; o lote `software-testes-2000-0001` tem 1055/2.000, incluindo as notas 950–1055 revisadas por IA na [tranche 16](../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md) e na [reconciliação da tranche 16](../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-16.md), as notas 850–949 na [tranche 15](../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), as notas 750–849 na [tranche 14](../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), as notas 550–649 na [tranche 12](../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md) e as notas 450–549 na [tranche 11](../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md). Veja também [[MOC-Dados-Distribuidos-e-Eventos]], [[MOC-Operacao-e-Seguranca-Kubernetes]], [[MOC-Cache-HTTP]], [[MOC-Testes-Software-0007]] e a [fila de revisão](../exports/reports/human-review-queue.md).
 
 ## Resumo Executivo
 

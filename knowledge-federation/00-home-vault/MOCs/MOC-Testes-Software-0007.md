@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 949 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 949 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 940 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1055 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1055 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1046 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1194,6 +1194,144 @@
 948. [[nextest-doctests-boundary]] — O nextest executa binários de teste compilados e não cobre exemplos de documentação, que continuam precisando do comando clássico do Cargo.
 949. [[nextest-listing-and-ignored]] — O comando de listagem mostra o conjunto descoberto sem executar, e a opção de execução de ignorados permite rodar casos marcados como pendentes.
 
+## Tranche 16 — desempenho, cobertura, acessibilidade e contratos
+
+### Detox — testes end-to-end de React Native com sincronização de dispositivo
+
+950. [[detox-synchronization-gray-box]] — O Detox observa rede, temporizadores e animações do aplicativo e espera a estabilização antes de executar cada ação ou asserção.
+951. [[detox-testid-selectors]] — Matchers baseados em identificador procuram o valor de testabilidade definido no componente, enquanto texto e rótulo dependem de conteúdo visível.
+952. [[detox-launchapp-options]] — A chamada de lançamento aceita opções como instância nova, permissões de sistema, argumentos e abertura por link, definindo o estado inicial do cenário.
+953. [[detox-reload-react-native]] — A recarga do pacote JavaScript restaura o estado da aplicação sem reconstruir o binário nem reiniciar o processo nativo, reduzindo o tempo entre casos.
+954. [[detox-waitfor-explicit]] — A espera explícita por um elemento aceita limite de tempo e pode rolar uma lista até o alvo aparecer, cobrindo eventos que a sincronização padrão não acompanha.
+955. [[detox-assertions-visibility-existence]] — As asserções de visibilidade verificam o que está apresentado na tela, enquanto as de existência apenas confirmam que o elemento está montado na hierarquia.
+956. [[detox-disable-synchronization-scope]] — A sincronização pode ser desativada e reativada durante o teste, delimitando um trecho em que a ferramenta não aguarda operações pendentes.
+957. [[detox-device-actions]] — Ações de dispositivo cobrem operações fora da árvore de interface, como enviar o aplicativo ao segundo plano, retomá-lo e capturar a tela em um ponto nomeado.
+958. [[detox-artifacts-failure]] — A execução pode capturar telas e gravar vídeos nos casos que falham, produzindo evidência sem exigir reprodução local do problema.
+959. [[detox-configuration-file]] — O arquivo de configuração declara aplicativos, dispositivos e configurações nomeadas usadas pelos comandos de build e de teste.
+960. [[detox-ci-stability]] — Ambientes de integração contínua sofrem com animações habilitadas, emuladores lentos e recursos limitados, o que altera o tempo das transições.
+
+### Artillery — fases de carga, cenários HTTP e limites de desempenho
+
+961. [[artillery-load-phases]] — Cada fase informa duração e taxa de chegada de usuários virtuais, e a opção de progressão transforma a taxa inicial em taxa final ao longo do período.
+962. [[artillery-scenario-flow]] — O bloco de cenários descreve a sequência de passos que cada usuário virtual executa, incluindo requisições, pausas e agrupamentos.
+963. [[artillery-capture-and-reuse]] — Valores extraídos da resposta podem ser guardados em variáveis nomeadas e reutilizados nos passos seguintes do mesmo cenário.
+964. [[artillery-thresholds]] — A extensão de verificação compara métricas da execução com limites declarados e encerra com código de erro quando algum deles é ultrapassado.
+965. [[artillery-metrics-interpretation]] — Durante a execução a ferramenta publica resumo periódico, e ao final apresenta contagens de cenários, requisições, taxas e distribuição de latência.
+966. [[artillery-browser-engine]] — Além de requisições HTTP, a ferramenta aceita mecanismo que controla navegador real, permitindo medir carregamento completo de páginas sob carga.
+967. [[artillery-expect-plugin]] — A extensão de asserções permite declarar condições sobre cada resposta, como código de status e campo do corpo, falhando o passo quando o contrato não é atendido.
+968. [[artillery-quick-and-run]] — O comando de execução rápida parte de um alvo e gera um cenário mínimo para verificação imediata, enquanto a execução por arquivo usa a definição completa.
+969. [[artillery-scenario-weights]] — Cenários podem receber pesos relativos, fazendo com que a carga gerada combine jornadas distintas na proporção declarada.
+970. [[artillery-rate-vs-concurrency]] — A ferramenta modela taxa de chegada de usuários virtuais ao longo do tempo, e não uma quantidade fixa de requisições por segundo.
+971. [[artillery-ci-integration]] — A execução pode gravar o resumo em arquivo e devolver código de erro pelos limites, permitindo que a verificação de desempenho participe do fluxo automático.
+
+### Vegeta — ataques HTTP de taxa constante, relatórios e análise
+
+972. [[vegeta-attack-basics]] — O subcomando de ataque recebe alvos, uma taxa em requisições por segundo e uma duração, emitindo um fluxo binário com os resultados.
+973. [[vegeta-targets-file]] — O arquivo de alvos contém método e URL por linha, aceitando cabeçalhos adicionais no bloco seguinte e referência a arquivo de corpo para requisições que enviam dados.
+974. [[vegeta-report-metrics]] — O subcomando de relatório resume o fluxo de resultados com latências por percentil, taxa efetiva, volume de dados e proporção de sucesso.
+975. [[vegeta-plot-timeline]] — O subcomando de gráfico gera uma página com série temporal de latências, permitindo correlacionar picos com eventos ocorridos durante o ataque.
+976. [[vegeta-encode-and-dump]] — Os subcomandos de codificação e descarga convertem o fluxo binário em formatos legíveis, como JSON e CSV, permitindo consumo por ferramentas de análise.
+977. [[vegeta-rate-workers-connections]] — A taxa define quantas requisições iniciar por segundo, os trabalhadores definem o paralelismo inicial e as conexões limitam conexões ociosas por host.
+978. [[vegeta-timeouts-and-transport]] — O ataque aceita tempo limite por requisição, conexões persistentes, negociação de versão do protocolo e opções de certificado para ambientes de teste.
+979. [[vegeta-thresholds-in-ci]] — O relatório pode ser emitido em formato estruturado, o que permite extrair percentuais e proporções e reprovar a execução quando os valores desviam do esperado.
+980. [[vegeta-library-usage]] — A ferramenta expõe biblioteca em Go que permite definir alvos dinâmicos, alimentar dados variáveis e consumir resultados no mesmo processo.
+981. [[vegeta-load-model-limits]] — O ataque mantém taxa fixa de início de requisições, comportamento que difere de sistemas reais com usuários que esperam respostas antes de agir.
+
+### JMH — microbenchmarks de JVM com aquecimento, estados e modos de medição
+
+982. [[jmh-benchmark-annotation]] — O método anotado como benchmark é envolvido em código gerado que executa e mede repetidamente a mesma operação.
+983. [[jmh-blackhole-consumption]] — A estrutura oferece objeto de consumo que registra o valor produzido, impedindo que o compilador remova o cálculo por falta de uso aparente.
+984. [[jmh-modes]] — Os modos disponíveis medem vazão por unidade de tempo, tempo médio por operação, amostragem de distribuição e execução única.
+985. [[jmh-warmup-and-measurement]] — As anotações definem quantas iterações preparam a máquina virtual e quantas produzem os números que entram no relatório.
+986. [[jmh-forking]] — O parâmetro de fork define quantos processos independentes executam o benchmark, cada um com sua própria máquina virtual.
+987. [[jmh-state-scope]] — O escopo do objeto de estado define se os dados são compartilhados entre threads, exclusivos de cada thread ou limitados a um grupo.
+988. [[jmh-setup-and-teardown]] — A preparação e a limpeza podem ocorrer uma vez por execução, por iteração ou por invocação, conforme o nível escolhido.
+989. [[jmh-parameters]] — Campos anotados como parâmetros recebem cada valor declarado, e o benchmark é expandido em uma execução por combinação de valores.
+990. [[jmh-profiling-aids]] — A execução aceita perfis embutidos, como contabilização de coleta de lixo, e permite escolher perfiladores externos por linha de comando.
+991. [[jmh-execution-and-pitfalls]] — A ferramenta pode ser executada por linha de comando a partir de artefato construído ou por chamada programática em método principal.
+
+### coverage.py — execução instrumentada, ramos, configuração e relatórios
+
+992. [[coveragepy-run-basics]] — O comando de execução instrumenta o interpretador, roda o módulo ou script indicado e grava os dados coletados em arquivo.
+993. [[coveragepy-branch-coverage]] — Com cobertura de ramos ativa, a medição registra quais desfechos de decisões foram executados, inclusive caminhos parciais de expressões lógicas.
+994. [[coveragepy-config-files]] — As opções podem ser declaradas em arquivo próprio, no arquivo de configuração do projeto ou no empacotamento, com precedência definida.
+995. [[coveragepy-omit-and-exclude]] — Padrões de omissão removem arquivos inteiros da medição, e comentários ou expressões de exclusão removem linhas específicas do cálculo.
+996. [[coveragepy-parallel-and-combine]] — O modo paralelo faz cada processo gravar arquivo próprio, e os arquivos podem ser combinados antes da geração dos relatórios.
+997. [[coveragepy-fail-under]] — A opção de limite mínimo faz o comando terminar com código de erro quando o total fica abaixo do valor definido, tanto na configuração quanto na linha de comando.
+998. [[coveragepy-report-formats]] — A ferramenta gera resumo em terminal, página navegável, formato estruturado e formato de intercâmbio, todos derivados dos mesmos dados.
+999. [[coveragepy-contexts]] — Cada execução pode receber um rótulo e os relatórios podem filtrar por expressão sobre esses contextos, distinguindo o que cada tipo de teste cobre.
+1000. [[coveragepy-subprocesses]] — Processos filhos iniciados durante a execução só são medidos quando a instrumentação é propagada por configuração de ambiente ou por opção de simultaneidade.
+1001. [[coveragepy-limits-and-quality]] — Percentual de linhas e ramos descreve o que foi executado, sem atestar que as asserções verificam o comportamento correto.
+
+### nyc e Istanbul — instrumentação JavaScript, limites e consolidação
+
+1002. [[nyc-wrap-command]] — A ferramenta envolve o comando informado, instrumentando os módulos carregados durante a execução e gravando dados brutos em diretório temporário.
+1003. [[nyc-all-and-filters]] — A opção de instrumentar tudo faz a medição abranger arquivos que a suíte não carregou, e os filtros de inclusão e exclusão delimitam esse conjunto.
+1004. [[nyc-negated-excludes]] — Na lista de exclusão, um padrão iniciado por exclamação restaura caminhos que seriam removidos pela regra anterior ou padrão.
+1005. [[nyc-reporters]] — A lista de geradores define os formatos produzidos, e o diretório de relatórios concentra os artefatos publicados.
+1006. [[nyc-check-coverage-thresholds]] — A verificação de cobertura compara cada métrica com o limite declarado e encerra com erro quando algum valor fica abaixo do mínimo.
+1007. [[nyc-temp-dir-and-merge]] — Os dados brutos ficam no diretório temporário, e a ferramenta permite mesclar arquivos de execuções distintas antes de gerar o relatório consolidado.
+1008. [[nyc-typescript-and-source-maps]] — Quando o teste executa código traduzido, os relatórios precisam mapear posições de volta ao original para apontar linhas úteis.
+1009. [[nyc-project-root-and-monorepo]] — A raiz do projeto orienta a busca de fontes, a formação de padrões e a localização dos diretórios de artefato.
+1010. [[nyc-ci-multi-job]] — Cada trabalho do pipeline publica seu diretório de dados brutos como artefato, e uma etapa final baixa todos, mescla e publica o resultado consolidado.
+1011. [[nyc-excludes-and-generated-code]] — Artefatos produzidos por geradores de contrato e de esquema entram na medição quando os padrões não os alcançam.
+1012. [[nyc-interpreting-numbers]] — Statements, branches, functions e lines medem dimensões distintas, e um arquivo pode estar integralmente coberto em uma delas e descoberto em outra.
+
+### Lighthouse CI — coleta, asserções, orçamentos e publicação de métricas web
+
+1013. [[lighthouseci-autorun-steps]] — O comando automático encadeia coleta das auditorias, verificação das asserções e publicação dos resultados em uma única execução.
+1014. [[lighthouseci-collect-targets]] — A coleta recebe uma lista de endereços, um diretório estático ou um comando que sobe o servidor, com padrão e prazo para considerar o serviço pronto.
+1015. [[lighthouseci-number-of-runs]] — A configuração permite repetir a auditoria várias vezes por página e consolidar o resultado, geralmente pelo valor mediano.
+1016. [[lighthouseci-assertions-presets]] — A verificação aceita um conjunto pré-definido de regras e permite desligar ou ajustar itens específicos, com nível de erro ou aviso.
+1017. [[lighthouseci-numeric-assertions]] — Asserções podem fixar pontuação mínima ou valor máximo de métrica, com escolha do método de agregação entre as repetições.
+1018. [[lighthouseci-performance-budgets]] — Um arquivo de orçamento declara limites de tamanho ou quantidade por tipo de recurso, e a auditoria correspondente pode ser verificada na esteira.
+1019. [[lighthouseci-upload-targets]] — A publicação pode enviar ao armazenamento temporário público, gravar em diretório local ou integrar servidor próprio com histórico.
+1020. [[lighthouseci-config-file]] — A configuração pode ficar em arquivo JavaScript, JSON ou YAML, com seções para coleta, verificação, publicação, servidor e assistente.
+1021. [[lighthouseci-artifacts-and-reports]] — A coleta grava relatórios e um manifesto no diretório de resultados, e há comando para abrir as páginas geradas localmente.
+1022. [[lighthouseci-limits-in-ci]] — Métricas de laboratório sofrem influência do executor, e diferenças pequenas entre revisões podem não corresponder a mudança de código.
+
+### Pa11y — varredura de acessibilidade, padrões, ações e limites de automação
+
+1023. [[pa11y-cli-basics]] — O comando recebe um endereço, abre a página em navegador sem interface e aplica verificações do motor escolhido, reportando os problemas encontrados.
+1024. [[pa11y-standards-and-levels]] — O nível de conformidade pode ser declarado entre os três níveis de acessibilidade e é usado apenas pelo motor baseado em regras estáticas.
+1025. [[pa11y-runners]] — A ferramenta aceita dois motores distintos de análise, e cada um mantém conjunto próprio de regras e forma de reportar resultados.
+1026. [[pa11y-actions]] — Uma lista de ações executada antes da análise permite preencher campos, acionar botões e esperar mudanças de endereço, alcançando estados que exigem interação.
+1027. [[pa11y-reporters-and-exit]] — A ferramenta oferece relatórios em texto, formato estruturado e formato de valores separados, e o código de saída indica se o limite de problemas foi excedido.
+1028. [[pa11y-threshold-policy]] — Um limite numérico permite que a execução passe com quantidade pequena de problemas, controlado por parâmetro ou configuração.
+1029. [[pa11y-ignore-and-scope]] — Regras específicas podem ser ignoradas, e a análise pode ser limitada a um elemento raiz ou excluir trechos selecionados da página.
+1030. [[pa11y-config-file]] — As opções podem ser reunidas em arquivo de configuração, o que mantém a linha de comando curta e documenta o comportamento esperado.
+1031. [[pa11y-ci-multiple-urls]] — A ferramenta complementar lê uma lista de endereços em arquivo de configuração ou os descobre por mapa do site e produz resumo conjunto da varredura.
+1032. [[pa11y-ci-environment]] — A configuração pode declarar argumentos de lançamento do navegador, tempo limite e espera inicial, além de ajustes necessários em contêineres.
+1033. [[pa11y-automation-limits]] — A varredura detecta parte dos problemas de acessibilidade, mas não avalia qualidade da experiência com tecnologia assistiva real.
+
+### Prism — simulação e validação de contratos HTTP a partir de especificação
+
+1034. [[prism-mock-mode]] — O comando de simulação lê um documento de contrato e expõe rotas que respondem conforme os exemplos ou os esquemas descritos nele.
+1035. [[prism-static-vs-dynamic]] — O modo predefinido responde com os exemplos declarados no contrato, enquanto o modo dinâmico gera valores a partir dos esquemas.
+1036. [[prism-prefer-header]] — O cabeçalho de preferência permite escolher código de resposta, exemplo específico e modo de geração para uma requisição simulada.
+1037. [[prism-validation-errors]] — Na função de proxy, requisições que não respeitam o contrato são reportadas e podem ser rejeitadas com resposta de erro estruturada.
+1038. [[prism-proxy-mode]] — O modo de intermediação encaminha requisições ao serviço real e pode comparar o tráfego com a especificação, mantendo o trânsito inalterado quando não há modo estrito.
+1039. [[prism-generated-errors]] — Quando a requisição não corresponde ao contrato, a ferramenta responde com documento de problema estruturado e cabeçalho descrevendo a violação.
+1040. [[prism-spec-quality]] — Rotas, parâmetros e respostas simuladas derivam diretamente do documento, e imprecisões aparecem como comportamento inesperado do servidor.
+1041. [[prism-cli-workflow]] — A ferramenta de linha de comando oferece execução do servidor de simulação e do intermediário, com opções de porta, modo estrito e hospedagem do documento a partir de endereço remoto.
+1042. [[prism-client-programmatic]] — A biblioteca permite criar instância de simulação a partir de operações específicas do contrato, com opções de geração dinâmica, validação e erro.
+1043. [[prism-contract-first-workflow]] — A simulação só é útil quando o contrato é a fonte acordada entre quem consome e quem fornece, mantido antes da implementação.
+1044. [[prism-limits]] — A ferramenta reproduz respostas previstas no contrato, sem manter estado entre chamadas nem aplicar regras de negócio.
+
+### Hurl — arquivos de requisição, capturas, asserções e execução em lote
+
+1045. [[hurl-file-structure]] — O arquivo descreve uma entrada com a requisição e, opcionalmente, a resposta esperada logo abaixo, incluindo código de status e cabeçalhos.
+1046. [[hurl-implicit-assertions]] — Cabeçalhos declarados na resposta esperada são verificados automaticamente, sem necessidade de bloco explícito de asserções.
+1047. [[hurl-captures]] — O bloco de capturas extrai valores da resposta por expressão e os disponibiliza como variáveis para as entradas seguintes do arquivo.
+1048. [[hurl-assertions]] — O bloco de asserções aceita consultas ao corpo estruturado, contagens, comparações textuais e verificação de existência de cabeçalhos.
+1049. [[hurl-status-and-error-handling]] — A execução considera falha quando a resposta diverge do esperado, e o código de saída indica se houve erro de asserção, de execução ou de configuração.
+1050. [[hurl-options-block]] — O bloco de opções permite declarar por entrada ajustes como repetição com intervalo, atraso entre requisições e política de continuidade após erro.
+1051. [[hurl-cli-test-mode]] — O modo de teste recebe arquivos ou diretórios, executa em paralelo com número controlado de tarefas e apresenta resumo por arquivo.
+1052. [[hurl-session-scope]] — As entradas de um mesmo arquivo compartilham sessão, o que mantém cookies e variáveis entre requisições, enquanto arquivos distintos não compartilham.
+1053. [[hurl-variables-and-reports]] — Variáveis podem ser definidas por linha de comando ou arquivo, e a execução gera relatórios em formatos de página e de resultado de testes.
+1054. [[hurl-ci-integration]] — O código de saída e os relatórios permitem integrar a verificação de contrato a um pipeline, com recapitulação legível e resultado consumível por máquina.
+1055. [[hurl-contract-verification-limits]] — Os arquivos verificam forma e valores das respostas que o serviço realmente devolve, sem validar a especificação nem substituir testes de comportamento.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 949/949 notas e as 949 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 940 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (949 notas substantivas; 1.051 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md) e [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1055/1055 notas e as 1055 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1046 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1055 notas substantivas; 945 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-16.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md) e [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).

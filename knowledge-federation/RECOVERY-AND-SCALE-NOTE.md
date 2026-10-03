@@ -1,12 +1,12 @@
 # Retomada pós-merge: escala com qualidade
 
-Atualizado em 2026-10-02. A meta ativa é **500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas**. Revisão humana não é obrigatória para novas notas; revisão factual por IA é aceita somente quando registrada separadamente, com relatório.
+Atualizado em 2026-10-03. A meta ativa é **500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas**. Revisão humana não é obrigatória para novas notas; revisão factual por IA é aceita somente quando registrada separadamente, com relatório.
 
 ## Estado editorial atual
 
 Os artefatos massivos permanecem como arquivos históricos compactados e não precisam ser recriados para continuar. O checkpoint legado contém 1.000.000 de registros virtuais, 8.000 caminhos marcados como materializados e 100 registros físicos iniciais. Os registros virtuais têm texto-template e os arquivos legados têm pendências; não contam como notas válidas.
 
-No diretório ativo `knowledge-federation/domains/` há 1089 arquivos: 100 legados com pendências e 989 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 940 revisões por IA). O lote `software-testes-2000-0001` tem 949/2.000 notas válidas (9 humanas + 940 IA), com status `in_progress` e 1.051 notas qualificadas restantes. As notas 850–949 passaram pelo gate e têm revisão factual por IA registrada na [tranche 15](exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), com [reconciliação](exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md); as notas 550–649 passaram pelo gate e têm relatório de revisão factual por IA da [tranche 12](exports/reports/ai-review-software-testes-2000-0001-tranche-12.md); as notas 450–549 estão na [tranche 11](exports/reports/ai-review-software-testes-2000-0001-tranche-11.md), e as 350–449 na [tranche 10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md).
+No diretório ativo `knowledge-federation/domains/` há 1195 arquivos: 100 legados com pendências e 1095 notas válidas pelo protocolo atual (49 aprovações humanas históricas + 1046 revisões por IA). O lote `software-testes-2000-0001` tem 1055/2.000 notas válidas (9 humanas + 1046 IA), com status `in_progress` e 945 notas qualificadas restantes. As notas 950–1055 passaram pelo gate e têm revisão factual por IA registrada na [tranche 16](exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), com [reconciliação](exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-16.md); as notas 550–649 passaram pelo gate e têm relatório de revisão factual por IA da [tranche 12](exports/reports/ai-review-software-testes-2000-0001-tranche-12.md); as notas 450–549 estão na [tranche 11](exports/reports/ai-review-software-testes-2000-0001-tranche-11.md), e as 350–449 na [tranche 10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md).
 
 ## Decisão técnica e estados
 
@@ -35,7 +35,7 @@ python3 knowledge-federation/scripts/audit_note_quality.py \
 
 ## Próximo ciclo
 
-1. Continuar o lote atual em tranches de conteúdo real; faltam 1.051 notas qualificadas para completar as 2.000 configuradas.
+1. Continuar o lote atual em tranches de conteúdo real; faltam 945 notas qualificadas para completar as 2.000 configuradas.
 2. Consultar fontes específicas, revisar afirmações e registrar relatório factual por IA antes de contar cada nota nova.
 3. Auditar gate, fontes, links e duplicatas; atualizar manifesto, índice, fila e métricas.
 4. Abrir os 499 lotes seguintes de 2.000 notas somente após concluir o lote atual.

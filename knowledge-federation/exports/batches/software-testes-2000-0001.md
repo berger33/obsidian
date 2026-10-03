@@ -1,24 +1,24 @@
 # Lote de escala software-testes-2000-0001
 
 - Data de início: 2026-10-01
-- Última atualização: 2026-10-02
+- Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **949 / 2.000 (47,45%)**
-- Gate automatizado: **949/949 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 15)
+- Notas efetivamente redigidas até agora: **1055 / 2.000 (52,75%)**
+- Gate automatizado: **1055/1055 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/949**
-- Revisão factual por IA: **940/949**
-- Contabilizadas como válidas: **949/949**
+- Revisão factual humana: **9/1055**
+- Revisão factual por IA: **1046/1055**
+- Contabilizadas como válidas: **1055/1055**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 940 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–15 (940 notas, IDs 10–949) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1046 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–16 (1046 notas, IDs 10–1055) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-15.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-15.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-16.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-16.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 949 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.051 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1055 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 945 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1189,6 +1189,144 @@
 948. [nextest: reconhecer o limite dos doctests](../../domains/software-0007/software/testes/nextest-doctests-boundary.md)
 949. [nextest: listar e reexecutar testes ignorados](../../domains/software-0007/software/testes/nextest-listing-and-ignored.md)
 
+## Tranche 16 — desempenho, cobertura, acessibilidade e contratos (106 notas; revisão factual por IA registrada)
+
+### Detox — testes end-to-end de React Native com sincronização de dispositivo
+
+950. [Detox: confiar na sincronização com operações pendentes](../../domains/software-0007/software/testes/detox-synchronization-gray-box.md)
+951. [Detox: preferir identificadores de testabilidade](../../domains/software-0007/software/testes/detox-testid-selectors.md)
+952. [Detox: controlar o lançamento do aplicativo](../../domains/software-0007/software/testes/detox-launchapp-options.md)
+953. [Detox: recarregar o JavaScript entre casos](../../domains/software-0007/software/testes/detox-reload-react-native.md)
+954. [Detox: esperar condições que a ferramenta não observa](../../domains/software-0007/software/testes/detox-waitfor-explicit.md)
+955. [Detox: distinguir visível de existente](../../domains/software-0007/software/testes/detox-assertions-visibility-existence.md)
+956. [Detox: restringir a desativação da sincronização](../../domains/software-0007/software/testes/detox-disable-synchronization-scope.md)
+957. [Detox: usar ações de dispositivo no fluxo](../../domains/software-0007/software/testes/detox-device-actions.md)
+958. [Detox: preservar artefatos das falhas](../../domains/software-0007/software/testes/detox-artifacts-failure.md)
+959. [Detox: descrever alvos no arquivo de configuração](../../domains/software-0007/software/testes/detox-configuration-file.md)
+960. [Detox: estabilizar a execução em integração contínua](../../domains/software-0007/software/testes/detox-ci-stability.md)
+
+### Artillery — fases de carga, cenários HTTP e limites de desempenho
+
+961. [Artillery: descrever a carga em fases](../../domains/software-0007/software/testes/artillery-load-phases.md)
+962. [Artillery: compor a jornada do usuário virtual](../../domains/software-0007/software/testes/artillery-scenario-flow.md)
+963. [Artillery: encadear requisições com capturas](../../domains/software-0007/software/testes/artillery-capture-and-reuse.md)
+964. [Artillery: impor limites de desempenho](../../domains/software-0007/software/testes/artillery-thresholds.md)
+965. [Artillery: interpretar o resumo de métricas](../../domains/software-0007/software/testes/artillery-metrics-interpretation.md)
+966. [Artillery: medir navegador com mecanismo de browser](../../domains/software-0007/software/testes/artillery-browser-engine.md)
+967. [Artillery: verificar respostas com asserções](../../domains/software-0007/software/testes/artillery-expect-plugin.md)
+968. [Artillery: escolher entre execução rápida e arquivo](../../domains/software-0007/software/testes/artillery-quick-and-run.md)
+969. [Artillery: distribuir carga entre cenários](../../domains/software-0007/software/testes/artillery-scenario-weights.md)
+970. [Artillery: compreender o modelo de geração de carga](../../domains/software-0007/software/testes/artillery-rate-vs-concurrency.md)
+971. [Artillery: integrar a carga ao pipeline](../../domains/software-0007/software/testes/artillery-ci-integration.md)
+
+### Vegeta — ataques HTTP de taxa constante, relatórios e análise
+
+972. [Vegeta: executar um ataque de taxa constante](../../domains/software-0007/software/testes/vegeta-attack-basics.md)
+973. [Vegeta: descrever alvos com cabeçalhos e corpos](../../domains/software-0007/software/testes/vegeta-targets-file.md)
+974. [Vegeta: ler o relatório de resultados](../../domains/software-0007/software/testes/vegeta-report-metrics.md)
+975. [Vegeta: visualizar a latência ao longo do tempo](../../domains/software-0007/software/testes/vegeta-plot-timeline.md)
+976. [Vegeta: converter resultados em formatos analisáveis](../../domains/software-0007/software/testes/vegeta-encode-and-dump.md)
+977. [Vegeta: distinguir taxa, trabalhadores e conexões](../../domains/software-0007/software/testes/vegeta-rate-workers-connections.md)
+978. [Vegeta: configurar tempo limite e transporte HTTP](../../domains/software-0007/software/testes/vegeta-timeouts-and-transport.md)
+979. [Vegeta: transformar o resumo em verificação automática](../../domains/software-0007/software/testes/vegeta-thresholds-in-ci.md)
+980. [Vegeta: usar a biblioteca em programa próprio](../../domains/software-0007/software/testes/vegeta-library-usage.md)
+981. [Vegeta: reconhecer os limites do modelo de taxa constante](../../domains/software-0007/software/testes/vegeta-load-model-limits.md)
+
+### JMH — microbenchmarks de JVM com aquecimento, estados e modos de medição
+
+982. [JMH: escrever o núcleo do benchmark](../../domains/software-0007/software/testes/jmh-benchmark-annotation.md)
+983. [JMH: consumir resultados para evitar eliminação](../../domains/software-0007/software/testes/jmh-blackhole-consumption.md)
+984. [JMH: escolher o modo de medição](../../domains/software-0007/software/testes/jmh-modes.md)
+985. [JMH: separar aquecimento de medição](../../domains/software-0007/software/testes/jmh-warmup-and-measurement.md)
+986. [JMH: isolar execuções com fork](../../domains/software-0007/software/testes/jmh-forking.md)
+987. [JMH: escolher o escopo do estado](../../domains/software-0007/software/testes/jmh-state-scope.md)
+988. [JMH: preparar em níveis adequados](../../domains/software-0007/software/testes/jmh-setup-and-teardown.md)
+989. [JMH: variar entradas com parâmetros](../../domains/software-0007/software/testes/jmh-parameters.md)
+990. [JMH: complementar a medição com perfiladores](../../domains/software-0007/software/testes/jmh-profiling-aids.md)
+991. [JMH: executar e interpretar com critério](../../domains/software-0007/software/testes/jmh-execution-and-pitfalls.md)
+
+### coverage.py — execução instrumentada, ramos, configuração e relatórios
+
+992. [coverage.py: medir a execução de um programa](../../domains/software-0007/software/testes/coveragepy-run-basics.md)
+993. [coverage.py: habilitar cobertura de ramos](../../domains/software-0007/software/testes/coveragepy-branch-coverage.md)
+994. [coverage.py: centralizar regras na configuração](../../domains/software-0007/software/testes/coveragepy-config-files.md)
+995. [coverage.py: excluir o que não deve ser medido](../../domains/software-0007/software/testes/coveragepy-omit-and-exclude.md)
+996. [coverage.py: consolidar dados de execuções paralelas](../../domains/software-0007/software/testes/coveragepy-parallel-and-combine.md)
+997. [coverage.py: falhar o build por limite de cobertura](../../domains/software-0007/software/testes/coveragepy-fail-under.md)
+998. [coverage.py: escolher formatos de saída](../../domains/software-0007/software/testes/coveragepy-report-formats.md)
+999. [coverage.py: separar medições por contexto](../../domains/software-0007/software/testes/coveragepy-contexts.md)
+1000. [coverage.py: medir código executado em subprocessos](../../domains/software-0007/software/testes/coveragepy-subprocesses.md)
+1001. [coverage.py: tratar a métrica como indicação](../../domains/software-0007/software/testes/coveragepy-limits-and-quality.md)
+
+### nyc e Istanbul — instrumentação JavaScript, limites e consolidação
+
+1002. [nyc: instrumentar um comando existente](../../domains/software-0007/software/testes/nyc-wrap-command.md)
+1003. [nyc: incluir arquivos não carregados](../../domains/software-0007/software/testes/nyc-all-and-filters.md)
+1004. [nyc: reabrir caminhos com padrões negados](../../domains/software-0007/software/testes/nyc-negated-excludes.md)
+1005. [nyc: escolher relatórios e destino](../../domains/software-0007/software/testes/nyc-reporters.md)
+1006. [nyc: reprovar por limites de cobertura](../../domains/software-0007/software/testes/nyc-check-coverage-thresholds.md)
+1007. [nyc: consolidar dados de várias execuções](../../domains/software-0007/software/testes/nyc-temp-dir-and-merge.md)
+1008. [nyc: ajustar a medição para código transpilado](../../domains/software-0007/software/testes/nyc-typescript-and-source-maps.md)
+1009. [nyc: resolver raízes em repositório com múltiplos pacotes](../../domains/software-0007/software/testes/nyc-project-root-and-monorepo.md)
+1010. [nyc: consolidar cobertura entre trabalhos do pipeline](../../domains/software-0007/software/testes/nyc-ci-multi-job.md)
+1011. [nyc: excluir código gerado com critério](../../domains/software-0007/software/testes/nyc-excludes-and-generated-code.md)
+1012. [nyc: interpretar as quatro métricas](../../domains/software-0007/software/testes/nyc-interpreting-numbers.md)
+
+### Lighthouse CI — coleta, asserções, orçamentos e publicação de métricas web
+
+1013. [Lighthouse CI: entender o fluxo automático](../../domains/software-0007/software/testes/lighthouseci-autorun-steps.md)
+1014. [Lighthouse CI: definir páginas e servidor de coleta](../../domains/software-0007/software/testes/lighthouseci-collect-targets.md)
+1015. [Lighthouse CI: reduzir variação com repetições](../../domains/software-0007/software/testes/lighthouseci-number-of-runs.md)
+1016. [Lighthouse CI: escolher conjuntos de asserções](../../domains/software-0007/software/testes/lighthouseci-assertions-presets.md)
+1017. [Lighthouse CI: definir limites numéricos e agregação](../../domains/software-0007/software/testes/lighthouseci-numeric-assertions.md)
+1018. [Lighthouse CI: usar orçamento de desempenho](../../domains/software-0007/software/testes/lighthouseci-performance-budgets.md)
+1019. [Lighthouse CI: escolher destino dos resultados](../../domains/software-0007/software/testes/lighthouseci-upload-targets.md)
+1020. [Lighthouse CI: versionar a configuração](../../domains/software-0007/software/testes/lighthouseci-config-file.md)
+1021. [Lighthouse CI: consumir resultados e relatórios locais](../../domains/software-0007/software/testes/lighthouseci-artifacts-and-reports.md)
+1022. [Lighthouse CI: interpretar limites em ambiente compartilhado](../../domains/software-0007/software/testes/lighthouseci-limits-in-ci.md)
+
+### Pa11y — varredura de acessibilidade, padrões, ações e limites de automação
+
+1023. [Pa11y: executar a varredura de uma página](../../domains/software-0007/software/testes/pa11y-cli-basics.md)
+1024. [Pa11y: escolher o padrão de conformidade](../../domains/software-0007/software/testes/pa11y-standards-and-levels.md)
+1025. [Pa11y: combinar motores de verificação](../../domains/software-0007/software/testes/pa11y-runners.md)
+1026. [Pa11y: preparar a página com ações](../../domains/software-0007/software/testes/pa11y-actions.md)
+1027. [Pa11y: escolher formato de saída e código de retorno](../../domains/software-0007/software/testes/pa11y-reporters-and-exit.md)
+1028. [Pa11y: usar limite como política temporária](../../domains/software-0007/software/testes/pa11y-threshold-policy.md)
+1029. [Pa11y: restringir escopo e registrar exceções](../../domains/software-0007/software/testes/pa11y-ignore-and-scope.md)
+1030. [Pa11y: centralizar configuração do projeto](../../domains/software-0007/software/testes/pa11y-config-file.md)
+1031. [Pa11y CI: varrer um conjunto de páginas](../../domains/software-0007/software/testes/pa11y-ci-multiple-urls.md)
+1032. [Pa11y CI: preparar ambiente e navegador](../../domains/software-0007/software/testes/pa11y-ci-environment.md)
+1033. [Pa11y: reconhecer o limite da verificação automática](../../domains/software-0007/software/testes/pa11y-automation-limits.md)
+
+### Prism — simulação e validação de contratos HTTP a partir de especificação
+
+1034. [Prism: iniciar um servidor a partir da especificação](../../domains/software-0007/software/testes/prism-mock-mode.md)
+1035. [Prism: escolher entre exemplo e esquema](../../domains/software-0007/software/testes/prism-static-vs-dynamic.md)
+1036. [Prism: negociar respostas pelo cabeçalho de preferência](../../domains/software-0007/software/testes/prism-prefer-header.md)
+1037. [Prism: validar requisição contra o contrato](../../domains/software-0007/software/testes/prism-validation-errors.md)
+1038. [Prism: intermediar serviço real com contrato](../../domains/software-0007/software/testes/prism-proxy-mode.md)
+1039. [Prism: entender as respostas de violação](../../domains/software-0007/software/testes/prism-generated-errors.md)
+1040. [Prism: a simulação depende da qualidade do contrato](../../domains/software-0007/software/testes/prism-spec-quality.md)
+1041. [Prism: operar a linha de comando](../../domains/software-0007/software/testes/prism-cli-workflow.md)
+1042. [Prism: usar a biblioteca em código de teste](../../domains/software-0007/software/testes/prism-client-programmatic.md)
+1043. [Prism: sustentar o fluxo de contrato primeiro](../../domains/software-0007/software/testes/prism-contract-first-workflow.md)
+1044. [Prism: reconhecer limites da simulação](../../domains/software-0007/software/testes/prism-limits.md)
+
+### Hurl — arquivos de requisição, capturas, asserções e execução em lote
+
+1045. [Hurl: descrever requisição e resposta esperada](../../domains/software-0007/software/testes/hurl-file-structure.md)
+1046. [Hurl: aproveitar asserções implícitas](../../domains/software-0007/software/testes/hurl-implicit-assertions.md)
+1047. [Hurl: capturar valores e reutilizar na sequência](../../domains/software-0007/software/testes/hurl-captures.md)
+1048. [Hurl: escrever asserções sobre a resposta](../../domains/software-0007/software/testes/hurl-assertions.md)
+1049. [Hurl: tratar códigos de status e falhas](../../domains/software-0007/software/testes/hurl-status-and-error-handling.md)
+1050. [Hurl: configurar comportamento por entrada](../../domains/software-0007/software/testes/hurl-options-block.md)
+1051. [Hurl: executar vários arquivos em paralelo](../../domains/software-0007/software/testes/hurl-cli-test-mode.md)
+1052. [Hurl: entender o escopo da sessão](../../domains/software-0007/software/testes/hurl-session-scope.md)
+1053. [Hurl: parametrizar e reportar execuções](../../domains/software-0007/software/testes/hurl-variables-and-reports.md)
+1054. [Hurl: usar o resultado como verificação de esteira](../../domains/software-0007/software/testes/hurl-ci-integration.md)
+1055. [Hurl: reconhecer o escopo da verificação de contrato](../../domains/software-0007/software/testes/hurl-contract-verification-limits.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 940 notas 10–949 das tranches 2–15 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 949/2.000 notas válidas, restando 1.051 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1046 notas 10–1055 das tranches 2–16 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1055/2.000 notas válidas, restando 945 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
