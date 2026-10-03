@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs), DFIR, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs AppArmor & SELinux), DFIR/Threat Intelligence (MISP/Velociraptor/auditd), criptografia moderna, postura multi-cloud e de host (Lynis/USBGuard/CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e identidade/autorização Zero-Trust (BloodHound CE/Paralus/OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **400 / 2.000 (20,00%)**
-- Gate automatizado: **400/400 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 4)
-- Revisão factual humana: **0/400**
-- Revisão factual por IA: **400/400**
-- Contabilizadas como válidas: **400/400**
-- Revisor das 400 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–4 (400 notas, IDs 1–400) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **500 / 2.000 (25,00%)**
+- Gate automatizado: **500/500 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 5)
+- Revisão factual humana: **0/500**
+- Revisão factual por IA: **500/500**
+- Contabilizadas como válidas: **500/500**
+- Revisor das 500 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–5 (500 notas, IDs 1–500) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-04.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-04.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-05.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-05.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md)
 
-Existem 400 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.600 restantes.
+Existem 500 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.500 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -548,6 +548,138 @@ Existem 400 notas materiais listadas abaixo; não há IDs reservados, placeholde
 399. [Sigstore Fulcio: Implantação Corporativa Privada com `certificate-maker`, Cloud KMS e HSM PKCS#11](../../domains/software-0009/software/seguranca/fulcio-implantacao-privada-certificate-maker-kms-pkcs11-tuf.md)
 400. [Sigstore Fulcio: Integração Ponta a Ponta com `cosign`, `gitsign` e Kubernetes `policy-controller` / Kyverno](../../domains/software-0009/software/seguranca/fulcio-integracao-ecossistema-cosign-gitsign-policy-controller.md)
 
+## Tranche 5 — `sqlmap`, Dalfox, MISP / PyMISP, BloodHound CE, CNCF Paralus, CISOfy Lynis, Linux Audit (`auditd`), USBGuard, AppArmor LSM e SELinux (100 notas; revisão factual por IA registrada)
+
+### sqlmap — Detecção Automatizada de SQL Injection, Técnicas BEUSTQ, Tamper Scripts e Validação de Remediação
+
+401. [sqlmap: Arquitetura do Motor de Detecção de SQL Injection e as Seis Técnicas (`--technique=BEUSTQ`)](../../domains/software-0009/software/seguranca/sqlmap-arquitetura-motor-deteccao-sql-injection-tecnicas-beustq.md)
+402. [sqlmap: Calibração de `--level` (1–5), `--risk` (1–3) e Ancoragem de Comparação (`--string`, `--code`, `--text-only`)](../../domains/software-0009/software/seguranca/sqlmap-calibracao-level-risk-heuristica-falsos-positivos-comparacao.md)
+403. [sqlmap: Ingestão de Alvos via Requisição Raw (`-r`), Especificações `--openapi`, Marcadores `*` e Logs de Proxy (`-l`)](../../domains/software-0009/software/seguranca/sqlmap-fontes-alvo-request-file-openapi-swagger-burp-logs.md)
+404. [sqlmap: Detecção de *Second-Order SQL Injection* (`--second-url`), Renovação de `--csrf-token` e `--eval`](../../domains/software-0009/software/seguranca/sqlmap-injecao-second-order-csrf-tokens-sessoes-autenticadas.md)
+405. [sqlmap: Scripts de Transformação (`--tamper`) para Avaliação de Regras de WAF e Normalização de Payloads](../../domains/software-0009/software/seguranca/sqlmap-tamper-scripts-avaliacao-regras-waf-normalizacao.md)
+406. [sqlmap: Aceleração de Blind SQL Injection via Exfiltração *Out-of-Band* DNS (`--dns-domain`)](../../domains/software-0009/software/seguranca/sqlmap-exfiltracao-out-of-band-dns-domain-time-based-blind.md)
+407. [sqlmap: Auditoria de Privilégios Excessivos de SGBD (`--is-dba`, `--privileges`, `--roles` e Vetores de File/OS Access)](../../domains/software-0009/software/seguranca/sqlmap-auditoria-privilegios-dba-file-system-os-shell-riscos.md)
+408. [sqlmap: Otimização de Rede (`-o`, `--keep-alive`, `--null-connection`, `--predict-output`) e Controle de Taxa (`--delay`)](../../domains/software-0009/software/seguranca/sqlmap-otimizacao-threads-keep-alive-null-connection-rate-delay.md)
+409. [sqlmap: Automação Programática com `sqlmapapi.py` (Servidor REST JSON de Tasks Efêmeras)](../../domains/software-0009/software/seguranca/sqlmap-api-rest-sqlmapapi-automacao-remota-ipc-json.md)
+410. [sqlmap: Validação de Remediação (Prepared Statements / Parameterized Queries) e Regressão em CI/CD (`--batch` e `--results-file`)](../../domains/software-0009/software/seguranca/sqlmap-validacao-remediacao-prepared-statements-ci-non-interactive.md)
+
+### Dalfox — Análise de Parâmetros e Scanner de XSS (Reflected, Stored, DOM/AST), WAF Fingerprinting e CI/CD
+
+411. [Dalfox: Arquitetura de Análise de Parâmetros e Varredura de XSS (`dalfox scan`, Tiers `V`/`R`/`A`/`I`)](../../domains/software-0009/software/seguranca/dalfox-arquitetura-scanner-xss-analise-parametros-rust-go.md)
+412. [Dalfox: Fase de Discovery — Parameter Mining (`--mining-dict`, `--mining-dom`), Análise de Contexto e BAV](../../domains/software-0009/software/seguranca/dalfox-descoberta-mining-parametros-dom-dict-bav-static-analysis.md)
+413. [Dalfox: Modelagem de Alvos (`--param name:location`, `--inject-marker FUZZ`, `raw-http` e `har`)](../../domains/software-0009/software/seguranca/dalfox-alvos-multi-localizacao-param-json-graphql-xml-inject-marker.md)
+414. [Dalfox: Verificação DOM/AST, Stored XSS (`SXSS`) e Blind XSS com Callback (`-b` / `--blind`)](../../domains/software-0009/software/seguranca/dalfox-verificacao-dom-ast-headless-blind-xss-callback.md)
+415. [Dalfox: Monitoramento Contínuo de Sessão Autenticada (`--session-check`, `--session-check-url` e `--on-session-loss`)](../../domains/software-0009/software/seguranca/dalfox-monitoramento-sessao-autenticada-session-check-abort.md)
+416. [Dalfox: Governança de Escopo (`--out-of-scope`, `--out-of-scope-file`, `--include-url`, `--exclude-url` e `--ignore-param`)](../../domains/software-0009/software/seguranca/dalfox-controle-escopo-out-of-scope-include-exclude-url.md)
+417. [Dalfox: Fingerprinting de WAF (`--waf-min-confidence`), Rastreamento de Bypass e `--custom-payload`](../../domains/software-0009/software/seguranca/dalfox-waf-fingerprinting-evasao-custom-payloads-encoders.md)
+418. [Dalfox: Operação em Pipeline (`--input-type pipe`), Deduplicação (`--dedup-urls signature`) e Retomada (`--state-file`)](../../domains/software-0009/software/seguranca/dalfox-pipeline-mode-katana-dedup-urls-state-file-resume.md)
+419. [Dalfox: Subcomandos `dalfox server` (REST API) e `dalfox mcp` (Model Context Protocol stdio Server)](../../domains/software-0009/software/seguranca/dalfox-modos-server-rest-api-mcp-stdio-integracao-automacao.md)
+420. [Dalfox: Gates de CI/CD com Comparação de Baseline (`--baseline`, `--baseline-mode`) e Exportação SARIF (`-f sarif`)](../../domains/software-0009/software/seguranca/dalfox-comparacao-baseline-sarif-state-file-ci-cd.md)
+
+### MISP (Malware Information Sharing Platform) — Threat Intelligence, IOCs, Galaxies, Warninglists, PyMISP e IDS Export
+
+421. [MISP: Arquitetura da Plataforma de Threat Intelligence — Events, Attributes, Objects e Galaxies](../../domains/software-0009/software/seguranca/mispsoc-arquitetura-threat-intelligence-events-attributes-objects-galaxies.md)
+422. [MISP: Motor de Correlação Automática (Valores Exatos, Sub-redes CIDR e Fuzzy Hashing `ssdeep`)](../../domains/software-0009/software/seguranca/mispsoc-motor-correlacao-automatica-ssdeep-cidr-grafos-eventos.md)
+423. [MISP: Taxonomias Padronizadas (`TLP`, `PAP`, `admiralty-scale`), Sharing Groups e Sincronização Federada](../../domains/software-0009/software/seguranca/mispsoc-taxonomias-tlp-pap-sharing-groups-federacao-sincronizacao.md)
+424. [MISP: Prevenção de Falsos Positivos e Auto-Sabotagem com `misp-warninglists`](../../domains/software-0009/software/seguranca/mispsoc-prevencao-falsos-positivos-misp-warninglists-validacao-to-ids.md)
+425. [MISP: Automação em Python com `PyMISP` e Consultas Avançadas na API `/attributes/restSearch`](../../domains/software-0009/software/seguranca/mispsoc-automacao-pymisp-restsearch-ingestao-enriquecimento.md)
+426. [MISP: Enriquecimento e Expansão Automatizada com `misp-modules` (DNS, BGP/ASN, Shodan, VirusTotal, YARA e PDF)](../../domains/software-0009/software/seguranca/mispsoc-enriquecimento-misp-modules-hover-expansion-import-export.md)
+427. [MISP: Exportação Automatizada de IOCs para Sensores Suricata, Zeek Intel Framework, DNS RPZ e STIX 2.1](../../domains/software-0009/software/seguranca/mispsoc-exportacao-nids-suricata-zeek-rpz-stix-siem.md)
+428. [MISP: Gestão de Feeds OSINT (Caching vs Ingestão Seletiva), Free-Text Import e Integração STIX/TAXII](../../domains/software-0009/software/seguranca/mispsoc-feeds-osint-caching-freetext-import-stix-taxii.md)
+429. [MISP: Motor de Workflows Visuais, Gatilhos (`event-before-publish`) e Governança de Qualidade de CTI](../../domains/software-0009/software/seguranca/mispsoc-workflows-automacao-gatilhos-bloqueio-publicacao.md)
+430. [MISP: Ciclo de Vida do IOC com Sightings (Avistamentos), False-Positive Reports e *Decaying Models*](../../domains/software-0009/software/seguranca/mispsoc-colaboracao-sightings-opinions-decaying-models-ciclo-vida.md)
+
+### BloodHound CE (SpecterOps) — Gestão de Caminhos de Ataque em Grafos (Active Directory, Entra ID e OpenGraph)
+
+431. [BloodHound CE: Arquitetura de Gestão de Caminhos de Ataque em Grafos (Go REST API, PostgreSQL e Neo4j)](../../domains/software-0009/software/seguranca/bloodhound-arquitetura-attack-path-management-neo4j-postgres-go-api.md)
+432. [BloodHound CE: Coletores Oficiais `SharpHound` (Active Directory) e `AzureHound` (Microsoft Entra ID / Azure RM)](../../domains/software-0009/software/seguranca/bloodhound-coletores-sharphound-azurehound-metodos-coleta-furtividade.md)
+433. [BloodHound CE: Arestas de Abuso de ACLs no Active Directory (`GenericAll`, `GenericWrite`, `WriteDacl`, `WriteOwner`, `ForceChangePassword`)](../../domains/software-0009/software/seguranca/bloodhound-arestas-abuso-acl-genericall-writedacl-forcechangepassword.md)
+434. [BloodHound CE: Movimentação Lateral (`AdminTo` + `HasSession`), Roubo de Credenciais e `DCSync` (`GetChanges` + `GetChangesAll`)](../../domains/software-0009/software/seguranca/bloodhound-movimentacao-lateral-hassession-adminto-dcsync-adminsdholder.md)
+435. [BloodHound CE: Mapeamento de Delegações Kerberos (`Unconstrained`, `Constrained` `AllowedToDelegate` e `RBCD` `AllowedToAct`)](../../domains/software-0009/software/seguranca/bloodhound-delegacao-kerberos-unconstrained-constrained-rbcd.md)
+436. [BloodHound CE: Caminhos de Escalação via Active Directory Certificate Services (`ADCS ESC1` a `ESC13`)](../../domains/software-0009/software/seguranca/bloodhound-escalacao-adcs-certificados-esc1-a-esc13-pkinit.md)
+437. [BloodHound CE: Caminhos de Ataque no Microsoft Entra ID e Ambientes Híbridos (`AZAddSecret`, `AZGlobalAdmin`, `SyncedTo`)](../../domains/software-0009/software/seguranca/bloodhound-caminhos-hibridos-entra-id-azure-ad-sync-roles-app-secrets.md)
+438. [BloodHound CE: Governança do Perímetro **Tier Zero** (`admin_tier_0`) e Erradicação de *Chokepoints*](../../domains/software-0009/software/seguranca/bloodhound-governanca-tier-zero-high-value-assets-isolamento-privilegio.md)
+439. [BloodHound CE: Consultas `Cypher` Customizadas (`shortestPath`, `allShortestPaths`) e Priorização de Remediação](../../domains/software-0009/software/seguranca/bloodhound-consultas-cypher-caminhos-curtos-tier-zero-remediacao.md)
+440. [BloodHound CE: Extensibilidade com **BloodHound OpenGraph** para Plataformas Multi-Cloud, SaaS e CI/CD](../../domains/software-0009/software/seguranca/bloodhound-extensibilidade-opengraph-ingestao-multi-cloud-iam.md)
+
+### CNCF Paralus — Acesso Zero-Trust ao Kubernetes, Kubeconfig Just-in-Time, Federação OIDC/RBAC e Auditoria de kubectl
+
+441. [CNCF Paralus: Arquitetura de Gerenciamento de Acesso Zero-Trust para Frotas de Clusters Kubernetes](../../domains/software-0009/software/seguranca/paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager.md)
+442. [CNCF Paralus: Conexão Segura de Clusters Privados via Relay Agent (Túnel mTLS Outbound sem Expor o `kube-apiserver`)](../../domains/software-0009/software/seguranca/paralus-conexao-clusters-relay-agent-outbound-mtls-dial-in.md)
+443. [CNCF Paralus: Modelo Multi-Tenant com `Projects`, `Groups`, Papéis Pré-Configurados e `Custom Roles` por Namespace](../../domains/software-0009/software/seguranca/paralus-organizacao-projects-groups-custom-roles-namespace-rbac.md)
+444. [CNCF Paralus: Federação SSO com Provedores OIDC (Okta, Microsoft Entra ID, Google, Keycloak e GitHub) e Mapeamento de Grupos](../../domains/software-0009/software/seguranca/paralus-federacao-sso-oidc-okta-entra-github-mapeamento-grupos.md)
+445. [CNCF Paralus: Provisionamento *Just-in-Time* de ServiceAccounts, `kubeconfig` Auditado e Revogação Instantânea](../../domains/software-0009/software/seguranca/paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao.md)
+446. [CNCF Paralus: Acesso `kubectl` Browser-Based via Componente `Prompt` (Sessões Efêmeras sem Credenciais no Desktop)](../../domains/software-0009/software/seguranca/paralus-terminal-web-prompt-sessoes-efemeras-browser-kubectl.md)
+447. [CNCF Paralus: Automação Declarativa (*RBAC-as-Code*) com a CLI `pctl` e API REST em Pipelines GitOps](../../domains/software-0009/software/seguranca/paralus-automacao-cli-pctl-gitops-rbac-as-code-ci-cd.md)
+448. [CNCF Paralus: Trilhas de Auditoria Imutáveis (`System Audit Logs` e `Kubectl / Relay Audit Logs`) para Conformidade e SIEM](../../domains/software-0009/software/seguranca/paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem.md)
+449. [CNCF Paralus: Criação de `Custom Roles` Restritivas (Bloqueio de `pods/exec`, `pods/portforward` e Leitura de `secrets`)](../../domains/software-0009/software/seguranca/paralus-custom-roles-restricao-verbs-exec-portforward-secrets.md)
+450. [CNCF Paralus: Hardening da Própria Instalação do Paralus (Certificados TLS, Isolamento de Rede e Proteção de Segredos)](../../domains/software-0009/software/seguranca/paralus-hardening-producao-postgres-kratos-tls-networkpolicies.md)
+
+### CISOfy Lynis — Auditoria de Segurança e Hardening em Linux/Unix, Perfis .prf, Hardening Index e Dockerfiles
+
+451. [CISOfy Lynis: Arquitetura de Auditoria Local e Hardening de Sistemas Linux/Unix (`lynis audit system`)](../../domains/software-0009/software/seguranca/lynis-arquitetura-auditoria-hardening-unix-linux-test-categories.md)
+452. [CISOfy Lynis: Análise de `Warnings` vs `Suggestions`, `/var/log/lynis-report.dat` e `lynis show details <TEST-ID>`](../../domains/software-0009/software/seguranca/lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details.md)
+453. [CISOfy Lynis: Customização de Políticas com Perfis `custom.prf` (`skip-test`, `config-data` e `--profile`)](../../domains/software-0009/software/seguranca/lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh.md)
+454. [CISOfy Lynis: Remediação de `KRNL-6000` — Hardening de Parâmetros `sysctl` de Kernel, Memória e Pilha de Rede](../../domains/software-0009/software/seguranca/lynis-hardening-kernel-sysctl-krnl-6000-aslr-ptrace-bpf-rede.md)
+455. [CISOfy Lynis: Remediação de `SSH-7408` e `AUTH-*` — Hardening de OpenSSH (`sshd_config`), PAM e Contas Locais](../../domains/software-0009/software/seguranca/lynis-hardening-openssh-ssh-7408-autenticacao-pam-limites.md)
+456. [CISOfy Lynis: Auditoria Estática de Imagens de Container com `lynis audit dockerfile`](../../domains/software-0009/software/seguranca/lynis-auditoria-dockerfiles-lynis-audit-dockerfile-containers.md)
+457. [CISOfy Lynis: Execução em Modo `--pentest` (Auditoria Não-Privilegiada e Avaliação de Vetores de Escalação Local)](../../domains/software-0009/software/seguranca/lynis-modo-pentest-nao-privilegiado-enumeracao-escalacao-privilegio.md)
+458. [CISOfy Lynis: Hardening de Sistemas de Arquivos (`FILE-*`), Opções de Montagem (`nodev`, `nosuid`, `noexec`), `/proc` `hidepid` e GRUB](../../domains/software-0009/software/seguranca/lynis-hardening-sistemas-arquivos-montagens-suid-permissoes-boot.md)
+459. [CISOfy Lynis: Auditoria Contínua Automatizada (`--cronjob`, `systemd timer`) e Detecção de Deriva de Hardening Index](../../domains/software-0009/software/seguranca/lynis-execucao-automatizada-cronjob-systemd-timer-monitoramento-deriva.md)
+460. [CISOfy Lynis: Escrita de Testes e Plugins Customizados (`CUST-*`) com Funções Internas (`Register`, `Display`) e `lynis-sdk`](../../domains/software-0009/software/seguranca/lynis-desenvolvimento-testes-customizados-lynis-sdk-plugins.md)
+
+### Linux Audit Framework (auditd / audit-userspace) — Auditoria de Syscalls no Kernel, augenrules, ausearch e Imutabilidade
+
+461. [Linux Audit (`auditd`): Arquitetura do Subsistema de Auditoria do Kernel, `auditctl`, `augenrules` e `RefuseManualStop`](../../domains/software-0009/software/seguranca/auditd-arquitetura-linux-audit-kernel-auditctl-augenrules.md)
+462. [Linux Audit (`auditd`): Ordenação `10`–`99` em `/etc/audit/rules.d/`, Backlog (`-b`), Modo de Falha (`-f`) e Trava Imutável (`-e 2`)](../../domains/software-0009/software/seguranca/auditd-organiazacao-rules-d-buffer-backlog-failure-mode-imutavel-e2.md)
+463. [Linux Audit (`auditd`): Monitoramento de Integridade de Arquivos Críticos (`-w` / `-F path=`) — Identidade, `sudoers`, SSH e Cron](../../domains/software-0009/software/seguranca/auditd-regras-monitoramento-arquivos-identidade-sudoers-ssh-w.md)
+464. [Linux Audit (`auditd`): Auditoria de Syscalls por Arquitetura (`b64`/`b32`), Execução Privilegiada (`auid!=unset`, `uid!=euid`) e Binários SUID](../../domains/software-0009/software/seguranca/auditd-regras-syscalls-execve-escalacao-privilegio-auid-euid.md)
+465. [Linux Audit (`auditd`): Monitoramento de Carregamento de Módulos do Kernel (`init_module`, `finit_module`), `ptrace`, Alteração de Hora e MAC](../../domains/software-0009/software/seguranca/auditd-regras-modulos-kernel-mount-ptrace-time-change-mac.md)
+466. [Linux Audit (`auditd`): Supressão Cirúrgica de Ruído com Regras `never,exit` e `exclude` em `20-dont-audit.rules`](../../domains/software-0009/software/seguranca/auditd-exclusao-ruido-never-exit-cron-containers-alta-performance.md)
+467. [Linux Audit (`auditd`): Partição `/var/log/audit` Dedicada, `space_left_action`, `admin_space_left_action` e `disk_full_action`](../../domains/software-0009/software/seguranca/auditd-protecao-disco-particao-dedicada-space-left-action-halt.md)
+468. [Linux Audit (`auditd`): Investigação Forense e Resposta a Incidentes com `ausearch` (`-i`, `-k`, `-ua`, `--session`) e `aureport`](../../domains/software-0009/software/seguranca/auditd-investigacao-forense-ausearch-aureport-auid-correlacao.md)
+469. [Linux Audit (`auditd`): Streaming em Tempo Real com Plugins `audisp` (`/etc/audit/plugins.d/`, `af_unix` e `audisp-remote` TLS/Kerberos)](../../domains/software-0009/software/seguranca/auditd-streaming-tempo-real-audisp-af-unix-remote-siem.md)
+470. [Linux Audit (`auditd`): Monitoramento de Hosts de Containers, sockets de Runtime (`/run/containerd`, `/var/run/docker.sock`) e Isolamento de `auditd`](../../domains/software-0009/software/seguranca/auditd-rastreamento-containers-audit-container-id-namespaces.md)
+
+### USBGuard — Autorização de Dispositivos USB no Linux, Prevenção contra BadUSB/HID Injection e Linguagem de Regras
+
+471. [USBGuard: Arquitetura de Autorização de Dispositivos USB no Linux e Defesa contra Ataques *BadUSB* / *Rubber Ducky*](../../domains/software-0009/software/seguranca/usbguard-arquitetura-autorizacao-dispositivos-usb-badusb-daemon.md)
+472. [USBGuard: Gramática da Linguagem de Regras — Alvos (`allow`, `block`, `reject`), `device_id` e Atributos (`hash`, `serial`, `via-port`)](../../domains/software-0009/software/seguranca/usbguard-linguagem-regras-targets-allow-block-reject-atributos.md)
+473. [USBGuard: Prevenção contra Dispositivos Compostos (*BadUSB*) usando Operadores de Conjunto em `with-interface` (`equals`, `none-of`, `one-of`)](../../domains/software-0009/software/seguranca/usbguard-protecao-badusb-operadores-with-interface-hid-storage.md)
+474. [USBGuard: Condições Contextuais de Regras (`if !allowed-matches(...)`, `localtime(...)` e `rule-applied`)](../../domains/software-0009/software/seguranca/usbguard-condicoes-dinamicas-localtime-allowed-matches-rule-applied.md)
+475. [USBGuard: Geração Segura de Política Inicial com `usbguard generate-policy` (`-p`, `-P`, `-H` e `-t`)](../../domains/software-0009/software/seguranca/usbguard-geracao-politica-inicial-generate-policy-port-specific-hash.md)
+476. [USBGuard: Hardening de `/etc/usbguard/usbguard-daemon.conf` (`ImplicitPolicyTarget`, `PresentDevicePolicy`, `PresentControllerPolicy`)](../../domains/software-0009/software/seguranca/usbguard-configuracao-daemon-conf-implicit-policy-present-device.md)
+477. [USBGuard: Administração Dinâmica (`allow-device`, `block-device`, `append-rule -t`) e Controle de Acesso IPC / Polkit](../../domains/software-0009/software/seguranca/usbguard-controle-acesso-ipc-polkit-dbus-allow-device-temporario.md)
+478. [USBGuard: Monitoramento em Tempo Real (`usbguard watch`), Integração com `LinuxAudit` (`AUDIT_USER_DEVICE`) e SIEM](../../domains/software-0009/software/seguranca/usbguard-monitoramento-eventos-watch-linux-audit-journald-siem.md)
+479. [USBGuard: Gerenciamento Centralizado de Políticas USB em Frotas Corporativas via Backend LDAP (`--with-ldap` / `usbguard-ldap`)](../../domains/software-0009/software/seguranca/usbguard-integracao-ldap-centralizada-frotas-corporativas-sssd.md)
+480. [USBGuard: Hardening do Próprio `usbguard-daemon` (Filtro `libseccomp`, Drop de Capabilities `libcap-ng` e Sandboxing `systemd`)](../../domains/software-0009/software/seguranca/usbguard-hardening-daemon-seccomp-libcap-ng-systemd-sandboxing.md)
+
+### AppArmor Linux Security Module — MAC Baseado em Caminhos, Perfis Enforce/Complain, Abstrações e Containers/Kubernetes
+
+481. [AppArmor: Arquitetura do Módulo LSM de Controle de Acesso Obrigatório (MAC Baseado em Caminhos e Confinamento de Superusuário)](../../domains/software-0009/software/seguranca/apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles.md)
+482. [AppArmor: Modos de Operação de Perfis (`enforce`, `complain`, `unconfined`, `kill`) e Comandos `aa-enforce`, `aa-complain` e `aa-disable`](../../domains/software-0009/software/seguranca/apparmor-modos-operacao-enforce-complain-audit-deny-aa-enforce.md)
+483. [AppArmor: Sintaxe de Regras de Perfil — Permissões de Arquivos (`r`, `w`, `a`, `k`, `l`, `m`), `capability`, `network`, `mount`, `ptrace` e `signal`](../../domains/software-0009/software/seguranca/apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal.md)
+484. [AppArmor: Modos de Transição de Execução (`ix`, `px`/`Px`, `cx`/`Cx`, `ux`/`Ux`) e Limpeza de Ambiente (*Environment Scrubbing*)](../../domains/software-0009/software/seguranca/apparmor-transicoes-execucao-ix-px-cx-ux-scrubbing-ambiente.md)
+485. [AppArmor: Modularização com `abstractions/`, Variáveis `tunables/` e Customizações Seguras em `local/`](../../domains/software-0009/software/seguranca/apparmor-abstracoes-tunables-local-overrides-manutencao-perfis.md)
+486. [AppArmor: Criação e Refinamento Guiado de Perfis com `aa-genprof`, `aa-logprof` e `aa-autodep`](../../domains/software-0009/software/seguranca/apparmor-geracao-aprendizado-perfis-aa-genprof-aa-logprof-auditd.md)
+487. [AppArmor: Confinamento de Containers e Pods Kubernetes (`securityContext.appArmorProfile` GA no Kubernetes v1.30+)](../../domains/software-0009/software/seguranca/apparmor-integracao-containers-docker-kubernetes-securitycontext.md)
+488. [AppArmor: Mudança Dinâmica de Privilégio Intra-Processo com `aa_change_hat(2)`, `aa_change_profile(2)` e `pam_apparmor`](../../domains/software-0009/software/seguranca/apparmor-subperfis-change-hat-pam-apparmor-mod-apparmor.md)
+489. [AppArmor: Diagnóstico de Negativas (`apparmor="DENIED"`), `aa-notify` e Decodificação de Campos `operation`, `requested_mask` e `denied_mask`](../../domains/software-0009/software/seguranca/apparmor-diagnostico-violacoes-apparmor-denied-dmesg-ausearch.md)
+490. [AppArmor: Compilação AOT, Cache Binário (`/var/cache/apparmor/`), Pré-Validação em CI e Hardening de Boot (`apparmor=1 security=apparmor`)](../../domains/software-0009/software/seguranca/apparmor-otimizacao-cache-binario-apparmor-parser-boot-systemd.md)
+
+### SELinux (SELinuxProject) — MAC Baseado em Rótulos, Type Enforcement, MCS para Containers, Booleans, semanage e Diagnóstico AVC
+
+491. [SELinux: Arquitetura de Controle de Acesso Obrigatório Baseada em Rótulos (`user:role:type:level`) e *Type Enforcement* (TE)](../../domains/software-0009/software/seguranca/selinux-arquitetura-mac-baseada-rotulos-type-enforcement-contextos.md)
+492. [SELinux: Modos `Enforcing` vs `Permissive`, Domínios Permissivos por Processo (`semanage permissive`) e *Booleans* (`getsebool` / `setsebool -P`)](../../domains/software-0009/software/seguranca/selinux-modos-enforcing-permissive-booleans-getsebool-setsebool.md)
+493. [SELinux: Persistência de Rótulos de Arquivos com `semanage fcontext` e Aplicação com `restorecon -Rv` (Armadilha do `chcon`)](../../domains/software-0009/software/seguranca/selinux-gerenciamento-rotulos-arquivos-semanage-fcontext-restorecon.md)
+494. [SELinux: Controle de Acesso a Portas TCP/UDP com `semanage port` (`http_port_t`, `ssh_port_t`, `mysqld_port_t`)](../../domains/software-0009/software/seguranca/selinux-gerenciamento-portas-rede-semanage-port-http-ssh.md)
+495. [SELinux: Isolamento Multi-Tenant de Containers e Pods Kubernetes com **MCS** (`s0:cX,cY`), `container_t`, `container_file_t` e Montagens `:z` / `:Z`](../../domains/software-0009/software/seguranca/selinux-isolamento-containers-mcs-svirt-lxc-net-t-container-file-t-z.md)
+496. [SELinux: Diagnóstico Forense de Negativas `AVC` com `ausearch -m AVC`, `audit2why` e `sealert`](../../domains/software-0009/software/seguranca/selinux-diagnostico-violacoes-avc-ausearch-audit2why-sealert.md)
+497. [SELinux: Desenvolvimento e Gerenciamento de Módulos de Política (`.te` / `.cil`), `checkmodule`, `semodule_package`, `secilc` e `semodule`](../../domains/software-0009/software/seguranca/selinux-compilacao-modulos-customizados-te-cil-udica-semodule.md)
+498. [SELinux: Confinamento RBAC de Usuários Humanos e Administradores SSH (`semanage login`, `user_u`, `staff_u`, `sysadm_u` e `sudo -r`)](../../domains/software-0009/software/seguranca/selinux-confinamento-usuarios-semanage-login-user-staff-u-sysadm-u.md)
+499. [SELinux: Auditoria e Consulta Formal da Política Binária com `setools` (`sesearch`, `seinfo` e Desativação Temporária de `dontaudit`)](../../domains/software-0009/software/seguranca/selinux-analise-politicas-setools-sesearch-seinfo-auditoria.md)
+500. [SELinux: Backup, Replicação Atômica (`semanage export` / `semanage import`) e Automação Idempotente de Políticas em Frota](../../domains/software-0009/software/seguranca/selinux-exportacao-importacao-customizacoes-semanage-export-ansible.md)
+
 ## Critérios e próximo passo
 
-As 400 notas 1–400 das tranches 1–4 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 400/2.000 notas válidas, restando 1.600 notas materiais.
+As 500 notas 1–500 das tranches 1–5 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 500/2.000 notas válidas, restando 1.500 notas materiais.

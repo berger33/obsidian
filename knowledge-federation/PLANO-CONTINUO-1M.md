@@ -5,13 +5,13 @@ Atualizado em 2026-10-03. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 ## Estado atual
 
 - Meta ativa: **500 lotes de 2.000 notas = 1.000.000 notas válidas**.
-- Notas válidas globais: **4440** (49 aprovações humanas históricas + 4391 revisões factuais por IA).
-- Progresso: **4440 / 1.000.000 (0,4440%)**; faltam **995.560** notas válidas.
+- Notas válidas globais: **4540** (49 aprovações humanas históricas + 4491 revisões factuais por IA).
+- Progresso: **4540 / 1.000.000 (0,4540%)**; faltam **995.460** notas válidas.
 - Lotes completos: **2 / 500** (`software-testes-2000-0001` e `software-devops-2000-0002`).
 - Primeiro lote `software-testes-2000-0001`: **2000 / 2.000 (100%)** notas válidas (9 humanas + 1991 IA); concluído (`complete`).
 - Segundo lote `software-devops-2000-0002`: **2000 / 2.000 (100,00%)** notas válidas (2000 IA nas tranches 1–20); concluído (`complete`).
-- Terceiro lote atual `software-seguranca-2000-0003`: **400 / 2.000 (20,00%)** notas válidas (400 IA nas tranches 1–4); faltam **1.600** notas substantivas.
-- Arquivos Markdown ativos: **4540**; 100 com pendências de qualidade, excluídos da contagem.
+- Terceiro lote atual `software-seguranca-2000-0003`: **500 / 2.000 (25,00%)** notas válidas (500 IA nas tranches 1–5); faltam **1.500** notas substantivas.
+- Arquivos Markdown ativos: **4640**; 100 com pendências de qualidade, excluídos da contagem.
 - O checkpoint legado com 1.000.000 de registros virtuais continua fora da contagem de conteúdo válido.
 
 ## Dez passos e andamento
@@ -22,12 +22,12 @@ Atualizado em 2026-10-03. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 | 2 | Implementar registro de revisão por IA sem promovê-la a humana | **Concluído** | `note_quality.py`, `audit_note_quality.py` e `audit_batch.py` reconhecem revisor, data e relatório de IA. |
 | 3 | Preservar aprovações humanas já concedidas | **Concluído** | As 49 aprovações históricas permanecem limitadas às notas aprovadas pelo usuário. |
 | 4 | Conferir factual e registrar notas 10–2000 do primeiro lote | **Concluído (tranches 2–26)** | 1991 revisões por IA em relatórios das tranches 2–26, além das 9 aprovações humanas. |
-| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2: 2000/2000 (`complete`). Lote 3 (`software-seguranca-2000-0003`): 400/400 no gate (400 IA). Global: 4540 arquivos, 4440 válidas, 100 com pendências legadas; veja a [reconciliação da tranche 4 do lote 3](exports/reports/batch-reconciliation-software-seguranca-2000-0003-tranche-04.md). |
+| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2: 2000/2000 (`complete`). Lote 3 (`software-seguranca-2000-0003`): 500/500 no gate (500 IA). Global: 4640 arquivos, 4540 válidas, 100 com pendências legadas; veja a [reconciliação da tranche 5 do lote 3](exports/reports/batch-reconciliation-software-seguranca-2000-0003-tranche-05.md). |
 | 6 | Remediar as 100 notas legadas | **Inventário concluído; remediação pendente** | Reconstruir com fontes próprias ou mantê-las fora da contagem; não corrigir cosmeticamente em massa. |
 | 7 | Completar o lote `software-testes-2000-0001` até 2.000 notas | **Concluído** | 2000/2.000 (100%); todas as 2.000 notas substantivas contam com gate aprovado, fontes verificadas e revisão factual registrada (`complete`). |
-| 8 | Abrir lotes subsequentes de 2.000 notas | **Em andamento (lote 3 em 20%)** | Terceiro lote `software-seguranca-2000-0003` em 400/2.000 notas válidas nas tranches 1–4; restam 1.600 notas neste lote e 497 lotes subsequentes. |
+| 8 | Abrir lotes subsequentes de 2.000 notas | **Em andamento (lote 3 em 25%)** | Terceiro lote `software-seguranca-2000-0003` em 500/2.000 notas válidas nas tranches 1–5; restam 1.500 notas neste lote e 497 lotes subsequentes. |
 | 9 | Consolidar contagens por tranche, lote e global | **Contínuo** | Atualizar manifestos, relatórios, fila e MOC após auditoria; distinguir gate, revisão humana e revisão por IA. |
-| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 4440 notas válidas, 2/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
+| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 4540 notas válidas, 2/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
 
 ## Regra de continuidade e contagem
 

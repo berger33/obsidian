@@ -1,0 +1,110 @@
+TOPIC: Linux Audit Framework (auditd / audit-userspace) — Auditoria de Syscalls no Kernel, augenrules, ausearch e Imutabilidade
+SOURCES: https://raw.githubusercontent.com/linux-audit/audit-userspace/master/README.md | https://raw.githubusercontent.com/linux-audit/audit-userspace/master/rules/README-rules | https://github.com/linux-audit/audit-userspace/tree/master/rules
+
+===NOTE===
+0461|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules|Linux Audit (`auditd`): Arquitetura do Subsistema de Auditoria do Kernel, `auditctl`, `augenrules` e `RefuseManualStop`|O **Linux Audit System** (`linux-audit/audit-userspace`, GPLv2) é o subsistema nativo do kernel Linux e espaço de usuário projetado para atender requisitos de Common Criteria (FAU_GEN), PCI-DSS, DISA STIG e CIS Benchmarks interceptando chamadas de sistema (*syscalls*) e eventos de aplicações privilegiadas (PAM, `sudo`, `sshd`, SELinux/AppArmor).|Diferente do `syslog` comum, o subsistema de auditoria do kernel vincula cada evento ao **`auid`** (*Audit Login UID* imutável, preservado mesmo após `sudo su -` ou troca de UID efetivo `uid=0`), garantindo atribuição forense irrefutável de quem iniciou a sessão.|O kernel gera os eventos e os envia via socket Netlink para o daemon **`auditd`**, que grava em `/var/log/audit/audit.log` e distribui em tempo real para plugins `audisp`. As regras modulares ficam em `/etc/audit/rules.d/*.rules` (organizadas numericamente de `10-base-config.rules` até `99-finalize.rules`) e são compiladas e carregadas por **`augenrules --load`** (que invoca `auditctl -R`).|```bash
+# Compilar e carregar todas as regras de /etc/audit/rules.d/ e verificar o status do subsistema no kernel
+sudo augenrules --check
+sudo augenrules --load
+sudo auditctl -s
+```|O arquivo `auditd.service` inclui intencionalmente `RefuseManualStop=yes` porque parar o daemon via `systemctl` usa o D-Bus e perderia o `loginuid` de quem enviou o sinal (registrando `auid=-1`); para reiniciar ou parar em conformidade com Common Criteria, use `sudo service auditd restart` (ou `auditctl --signal`).|Execute `sudo auditctl -s` e confirme `enabled 1` (ou `2` se imutável), `lost 0` e o PID ativo do `auditd`.|auditd-organiazacao-rules-d-buffer-backlog-failure-mode-imutavel-e2, auditd-regras-monitoramento-arquivos-identidade-sudoers-ssh-w, auditd-investigacao-forense-ausearch-aureport-auid-correlacao
+
+===NOTE===
+0462|auditd-organiazacao-rules-d-buffer-backlog-failure-mode-imutavel-e2|Linux Audit (`auditd`): Ordenação `10`–`99` em `/etc/audit/rules.d/`, Backlog (`-b`), Modo de Falha (`-f`) e Trava Imutável (`-e 2`)|A documentação oficial de regras do `audit-userspace` estrutura `/etc/audit/rules.d/` em faixas numéricas estritas processadas em ordem pelo `augenrules`: **`10`** (configuração de kernel/auditctl), **`20`** (exceções `never` que devem preceder regras gerais), **`30`** (regras principais STIG/PCI/CIS), **`40–70`** (regras opcionais e locais) e **`90–99`** (finalização e modo imutável).|Como o motor de regras do kernel avalia as listas na ordem de inserção (*first-match wins* dentro de cada lista de filtro), colocar uma regra de exclusão de ruído depois da regra geral de captura em `30-*` faz com que a exclusão nunca seja atingida.|Em `10-base-config.rules`, `-D` limpa regras anteriores, `-b 8192` (ou `16384` em servidores movimentados) dimensiona o buffer de *backlog* do kernel para evitar perda de eventos sob pico, e `-f 1` define o modo de falha (`0=silent`, `1=printk` no dmesg, `2=panic` derrubando o kernel para ambientes de segurança máxima). Em `99-finalize.rules`, **`-e 2`** trava a configuração em **modo imutável**: nem mesmo o `root` pode remover ou alterar regras de auditoria sem reiniciar fisicamente o servidor.|```ini
+# /etc/audit/rules.d/10-base-config.rules
+-D
+-b 16384
+--backlog_wait_time 60000
+-f 1
+
+# /etc/audit/rules.d/99-finalize.rules
+-e 2
+```|Uma vez que `-e 2` (*immutable mode*) é carregado no kernel, qualquer tentativa de `auditctl -D` ou `augenrules --load` retornará erro até o próximo reboot; valide todas as regras com `-e 1` antes de ativar `-e 2`.|Verifique com `sudo auditctl -s` que `backlog_limit` reflete `16384` e que `enabled` passa para `2` após carregar `99-finalize.rules`.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-protecao-disco-particao-dedicada-space-left-action-halt, auditd-exclusao-ruido-never-exit-cron-containers-alta-performance
+
+===NOTE===
+0463|auditd-regras-monitoramento-arquivos-identidade-sudoers-ssh-w|Linux Audit (`auditd`): Monitoramento de Integridade de Arquivos Críticos (`-w` / `-F path=`) — Identidade, `sudoers`, SSH e Cron|O `auditd` monitora acessos e modificações em arquivos e diretórios sensíveis através de regras de *File System Watch* (`-w <caminho> -p <permissoes> -k <chave>` ou a forma equivalente de syscall `-a always,exit -F path=<caminho> -F perm=wa -F key=<chave>`).|Qualquer tentativa de persistência de um invasor em Linux envolve modificar bancos de dados de identidade (`/etc/passwd`, `/etc/shadow`, `/etc/group`, `/etc/gshadow`, `/etc/security/opasswd`), escalação de privilégio (`/etc/sudoers`, `/etc/sudoers.d/`), chaves/configuração SSH (`/etc/ssh/sshd_config`) ou tarefas agendadas (`/etc/crontab`, `/etc/cron.*`, `/var/spool/cron`).|Os filtros de permissão `-p` combinam quatro operações do VFS: **`r`** (*read*), **`w`** (*write*), **`x`** (*execute*) e **`a`** (*attribute change* — `chmod`/`chown`/`setxattr`). Para arquivos de configuração, `-p wa` registra exclusivamente gravações e mudanças de permissão/proprietário sem inundar o log com leituras normais do sistema.|```ini
+# /etc/audit/rules.d/30-identity-and-privilege-files.rules
+-w /etc/passwd -p wa -k identity_tamper
+-w /etc/shadow -p wa -k identity_tamper
+-w /etc/group -p wa -k identity_tamper
+-w /etc/gshadow -p wa -k identity_tamper
+-w /etc/sudoers -p wa -k sudoers_changes
+-w /etc/sudoers.d -p wa -k sudoers_changes
+-w /etc/ssh/sshd_config -p wa -k sshd_config_changes
+-w /etc/ssh/sshd_config.d -p wa -k sshd_config_changes
+```|Regras `-w` resolvem o *inode* do arquivo ou diretório no momento em que a regra é carregada; se o arquivo ainda não existir quando o `auditd` iniciar, a regra falhará — monitore sempre o diretório pai (ex.: `-w /etc/sudoers.d -p wa`) quando arquivos internos puderem ser criados dinamicamente.|Carregue as regras, execute `sudo touch /etc/sudoers` e verifique o registro imediato com `sudo ausearch -k sudoers_changes -i`.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-regras-syscalls-execve-escalacao-privilegio-auid-euid, auditd-investigacao-forense-ausearch-aureport-auid-correlacao
+
+===NOTE===
+0464|auditd-regras-syscalls-execve-escalacao-privilegio-auid-euid|Linux Audit (`auditd`): Auditoria de Syscalls por Arquitetura (`b64`/`b32`), Execução Privilegiada (`auid!=unset`, `uid!=euid`) e Binários SUID|As regras de chamada de sistema (`-a always,exit -F arch=b64 -S <syscall> -F <campo>=<valor> -k <chave>`) interceptam operações diretamente na fronteira do kernel Linux, permitindo rastrear toda execução de comando privilegiado, escalação de privilégio e uso de binários SUID/SGID.|Quando um usuário faz login via SSH com UID `1005` (`auid=1005`) e executa um binário SUID ou `sudo` que eleva seu UID efetivo para `root` (`euid=0`), filtrar `-F auid>=1000 -F auid!=unset -C uid!=euid` captura instantaneamente toda ação com elevação de privilégio ignorando daemons nativos do sistema (`auid=unset` / `4294967295`).|Conforme documentado em `rules/README-rules`, o arquivo `31-privileged.rules` deve ser gerado dinamicamente varrendo todos os binários com bit SUID/SGID (`find / -xdev -perm /6000 -type f`) da imagem do servidor para criar regras `-a always,exit -F path=<binario> -F perm=x -F auid>=1000 -F auid!=unset -k privileged`.|```ini
+# /etc/audit/rules.d/30-privilege-escalation.rules
+# Registrar toda execucao onde o UID real difere do UID efetivo (SUID / sudo) por usuarios humanos
+-a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F auid>=1000 -F auid!=unset -k priv_esc_exec
+-a always,exit -F arch=b64 -S setuid,setreuid,setresuid -F auid>=1000 -F auid!=unset -k uid_change
+```|Diferentes arquiteturas de CPU possuem tabelas de syscalls distintas: por exemplo, `aarch64` (ARM64) não possui a syscall legada `open` nem `chmod` (usa apenas `openat`, `openat2` e `fchmodat`); ajuste as regras para a arquitetura exata do host (`uname -m`).|Execute um comando via `sudo id` com um usuário humano (`UID >= 1000`) e verifique a captura completa dos argumentos (`PROCTITLE` e `EXECVE`) com `sudo ausearch -k priv_esc_exec -i`.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-regras-modulos-kernel-mount-ptrace-time-change-mac, tetragon-tracingpolicy-kprobes-tracepoints-uprobes-lsm
+
+===NOTE===
+0465|auditd-regras-modulos-kernel-mount-ptrace-time-change-mac|Linux Audit (`auditd`): Monitoramento de Carregamento de Módulos do Kernel (`init_module`, `finit_module`), `ptrace`, Alteração de Hora e MAC|Padrões como DISA STIG, PCI-DSS e CIS exigem que o `auditd` monitore eventos capazes de subverter o próprio kernel, adulterar carimbos de tempo forenses ou injetar código em outros processos.|Um rootkit de kernel é carregado via `init_module` / `finit_module` (ou descarregado via `delete_module`, ou injetado via `kexec_load`); um invasor que deseja falsificar a linha do tempo de um ataque altera o relógio do sistema (`adjtimex`, `settimeofday`, `clock_settime`); e o roubo de credenciais em memória usa `ptrace`.|As regras STIG (`30-stig.rules`) interceptam essas syscalls específicas em `arch=b64` (e `b32` em sistemas x86_64 com suporte 32-bit), além de monitorar alterações nas políticas de Mandatory Access Control (`/etc/apparmor/`, `/etc/apparmor.d/`, `/etc/selinux/`).|```ini
+# /etc/audit/rules.d/30-kernel-and-integrity.rules
+-a always,exit -F arch=b64 -S init_module,finit_module,delete_module,kexec_load -k kernel_modules
+-a always,exit -F arch=b64 -S ptrace -F a0=0x4 -k code_injection_ptrace_poketext
+-a always,exit -F arch=b64 -S ptrace -F a0=0x5 -k code_injection_ptrace_pokedata
+-a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time_change
+-w /etc/localtime -p wa -k time_change
+-w /etc/apparmor.d/ -p wa -k mac_policy_changes
+-w /etc/selinux/ -p wa -k mac_policy_changes
+```|Daemons legítimos de sincronização de tempo (como `chronyd` ou `systemd-timesyncd`) invocam `adjtimex` / `clock_adjtime` periodicamente; adicione uma regra de exclusão anterior (`20-dont-audit.rules`) filtrando pelo UID específico do usuário `chrony` se necessário.|Liste as regras carregadas com `sudo auditctl -l | grep kernel_modules` e confirme que as syscalls estão ativas no kernel.|auditd-organiazacao-rules-d-buffer-backlog-failure-mode-imutavel-e2, auditd-exclusao-ruido-never-exit-cron-containers-alta-performance, apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles
+
+===NOTE===
+0466|auditd-exclusao-ruido-never-exit-cron-containers-alta-performance|Linux Audit (`auditd`): Supressão Cirúrgica de Ruído com Regras `never,exit` e `exclude` em `20-dont-audit.rules`|Em servidores de produção com alta carga, certos processos repetitivos (como `cron` trocando credenciais a cada minuto, agentes de monitoramento lendo `/proc` ou mensagens `CRYPTO_KEY_USER` verbosas) podem gerar gigabytes de logs irrelevantes se não forem filtrados em **`20-dont-audit.rules`**.|Sem supressão cirúrgica de ruído benigno, a partição `/var/log/audit` enche rapidamente, rotaciona os logs forenses importantes e consome ciclos de CPU na serialização Netlink.|O filtro `-a never,exclude -F msgtype=<TIPO>` descarta tipos inteiros de mensagens na origem, enquanto `-a never,exit` colocado no arquivo de prefixo **`20-*`** (para ser avaliado antes das regras `always,exit` em `30-*`) ignora eventos específicos quando todos os campos (`-F exe=...`, `-F uid=...`, `-F subj_type=...`) coincidem.|```ini
+# /etc/audit/rules.d/20-dont-audit.rules
+# Ignorar mensagens ruidosas de negociacao de chaves criptograficas internas
+-a never,exclude -F msgtype=CRYPTO_KEY_USER
+
+# Ignorar eventos de troca de credenciais de servicos agendados pelo proprio daemon cron em background
+-a never,user -F subj_type=crond_t
+-a never,exit -F arch=b64 -S adjtimex -F auid=unset -F uid=chrony
+```|Nunca escreva uma regra ampla `-a never,exit -F uid=0` ou `-F dir=/tmp` sem restringir estritamente o executável (`-F exe=/usr/sbin/chronyd`) e `auid=unset`, caso contrário você criará um ponto cego que qualquer invasor poderá explorar.|Execute `sudo augenrules --load` e verifique com `sudo auditctl -l` que as regras `never` aparecem listadas **acima** das regras `always`.|auditd-organiazacao-rules-d-buffer-backlog-failure-mode-imutavel-e2, auditd-regras-modulos-kernel-mount-ptrace-time-change-mac, auditd-protecao-disco-particao-dedicada-space-left-action-halt
+
+===NOTE===
+0467|auditd-protecao-disco-particao-dedicada-space-left-action-halt|Linux Audit (`auditd`): Partição `/var/log/audit` Dedicada, `space_left_action`, `admin_space_left_action` e `disk_full_action`|Conforme destacado na documentação oficial do `audit-userspace`, o daemon `auditd` monitora continuamente o espaço livre na partição de logs através de `/etc/audit/auditd.conf` (`max_log_file`, `num_logs`, `space_left`, `space_left_action`, `admin_space_left` e `admin_space_left_action`).|Se `/var/log/audit` compartilhar a mesma partição que `/var/log` ou `/tmp`, um usuário não-privilegiado pode encher o disco usando o comando `logger` ou arquivos temporários e acionar intencionalmente a ação `admin_space_left_action = HALT` ou `SINGLE`, causando negação de serviço ou silenciando a auditoria.|A arquitetura recomendada exige montar `/var/log/audit` em uma **partição lógica LVM dedicada**, acessível exclusivamente pelo `root` (`0700`), configurando `space_left = 25%` com `space_left_action = SYSLOG` (ou `EMAIL`) para alertar o SOC com antecedência e `max_log_file_action = ROTATE` (ou `KEEP_LOGS` quando o arquivamento externo move os arquivos antigos).|```ini
+# /etc/audit/auditd.conf — Parametros de resiliencia de armazenamento e retencao
+log_file = /var/log/audit/audit.log
+log_format = ENRICHED
+max_log_file = 50
+num_logs = 20
+max_log_file_action = ROTATE
+space_left = 25%
+space_left_action = SYSLOG
+admin_space_left = 5%
+admin_space_left_action = SUSPEND
+disk_full_action = SUSPEND
+```|Usar `log_format = ENRICHED` em `/etc/audit/auditd.conf` faz o `auditd` resolver no momento da escrita os nomes de usuários (`UID -> username`), grupos e números de syscalls locais no próprio host antes de enviar para o SIEM central.|Verifique com `df -h /var/log/audit` que o diretório reside em um volume dedicado e confirme `log_format = ENRICHED` em `/etc/audit/auditd.conf`.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, lynis-hardening-sistemas-arquivos-montagens-suid-permissoes-boot, auditd-streaming-tempo-real-audisp-af-unix-remote-siem
+
+===NOTE===
+0468|auditd-investigacao-forense-ausearch-aureport-auid-correlacao|Linux Audit (`auditd`): Investigação Forense e Resposta a Incidentes com `ausearch` (`-i`, `-k`, `-ua`, `--session`) e `aureport`|As ferramentas de espaço de usuário **`ausearch`** e **`aureport`** reconstroem eventos multi-linha do `audit.log` (agrupando os registros `SYSCALL`, `EXECVE`, `CWD`, `PATH` e `PROCTITLE` que compartilham o mesmo `serial` de evento) e decodificam argumentos codificados em hexadecimal (`-i` / `--interpret`).|No `audit.log`, argumentos de linha de comando que contêm espaços ou caracteres especiais são gravados em hexadecimal no campo `proctitle=62617368002D63...` para evitar injeção de log; usar `ausearch -i` traduz automaticamente o hexadecimal, os UIDs numéricos, os números de syscalls e os timestamps epoch.|Durante um incidente, `ausearch -ua <UID> -ts today -i` reconstrói absolutamente tudo o que um usuário específico fez na máquina desde o login SSH (mesmo após ter virado `root`), enquanto `aureport --summary`, `aureport -au --failed` (falhas de autenticação), `aureport -x` (executáveis) e `aureport -m` (modificações de contas) geram relatórios executivos imediatos.|```bash
+# Reconstruir todas as execucoes privilegiadas de hoje interpretando hex/UIDs e gerar relatorio de anomalias
+sudo ausearch -k priv_esc_exec -ts today -i
+sudo aureport --failed --summary
+sudo aureport -x --summary
+```|Nunca faça `grep` textual simples procurando por comandos com espaços diretamente em `/var/log/audit/audit.log`, pois o campo `PROCTITLE` está codificado em hexadecimal quando contém espaços; use sempre `ausearch -i` para decodificar antes de filtrar.|Execute `sudo ausearch -m USER_LOGIN -ts today -i` e verifique a correlação entre endereço IP de origem (`addr=`), `auid`, `ses` (ID de sessão) e resultado (`res=success`).|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-regras-syscalls-execve-escalacao-privilegio-auid-euid, auditd-streaming-tempo-real-audisp-af-unix-remote-siem
+
+===NOTE===
+0469|auditd-streaming-tempo-real-audisp-af-unix-remote-siem|Linux Audit (`auditd`): Streaming em Tempo Real com Plugins `audisp` (`/etc/audit/plugins.d/`, `af_unix` e `audisp-remote` TLS/Kerberos)|Além de gravar no disco local, o `auditd` incorpora o multiplexador de eventos **`audisp`**, que distribui cada evento de auditoria em tempo real para plugins configurados em `/etc/audit/plugins.d/` (como `af_unix.conf`, `au-remote.conf` e `syslog.conf`).|Se um atacante comprometer o `root` de um servidor sem modo imutável `-e 2` e apagar `/var/log/audit/audit.log`, os eventos já transmitidos em tempo real pelo `audisp` para um servidor central de logs ou coletor EDR permanecem preservados fora do alcance do invasor.|O plugin `af_unix` expõe um socket UNIX local (`/var/run/audispd_events` com permissão `0640`) consumido por agentes locais de segurança (como Wazuh, Osquery ou Laurel), enquanto o plugin `audisp-remote` transmite os registros diretamente pela rede para um agregador central `auditd` usando autenticação mútua Kerrb5/GSSAPI ou TLS.|```ini
+# /etc/audit/plugins.d/af_unix.conf — Habilitar socket UNIX em tempo real para coletores locais de SIEM/EDR
+active = yes
+direction = out
+path = builtin_af_unix
+type = builtin
+args = 0640 /var/run/audispd_events string
+format = string
+```|Se a fila interna de plugins (`q_depth` em `/etc/audit/auditd.conf`) for subdimensionada e o plugin receptor travar, o `auditd` emitirá erros de *overflow* (`overflow_action`); dimensione `q_depth = 4096` em servidores com alto volume de eventos.|Verifique com `sudo auditctl -s` e nos logs do `auditd` que o plugin configurado em `/etc/audit/plugins.d/` foi iniciado sem avisos de fila cheia.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-protecao-disco-particao-dedicada-space-left-action-halt, auditd-rastreamento-containers-audit-container-id-namespaces
+
+===NOTE===
+0470|auditd-rastreamento-containers-audit-container-id-namespaces|Linux Audit (`auditd`): Monitoramento de Hosts de Containers, sockets de Runtime (`/run/containerd`, `/var/run/docker.sock`) e Isolamento de `auditd`|Em nós que hospedam containers (Kubernetes, containerd, CRI-O, Docker), o `auditd` roda exclusivamente no sistema operacional do host (pois o subsistema de auditoria do kernel não é isolado por namespaces de usuário comuns) e monitora toda atividade originada dentro dos containers além do acesso aos sockets do runtime.| Conforme documentado no README oficial do `audit-userspace`, tentar confinar o próprio `auditd.service` dentro de namespaces restritivos sugeridos cegamente pelo `systemd-analyze security` quebra o funcionamento das regras de auditoria e o acesso às bases de usuários do host.|Nos nós de cluster, adicione regras `-w` específicas para monitorar o binário e os sockets do runtime (`/usr/bin/containerd`, `/usr/bin/runc`, `/run/containerd/containerd.sock`, `/etc/kubernetes/manifests`, `/var/lib/kubelet/config.yaml`) e utilize `log_format = ENRICHED` manteniendo o `auditd` no namespace raiz do host.|```ini
+# /etc/audit/rules.d/50-container-runtime.rules
+-w /usr/bin/containerd -p x -k container_runtime_exec
+-w /usr/bin/runc -p x -k container_runtime_exec
+-w /run/containerd/containerd.sock -p rwxa -k containerd_socket_access
+-w /etc/kubernetes/manifests -p wa -k k8s_static_pods_tamper
+-w /var/lib/kubelet/config.yaml -p wa -k kubelet_config_tamper
+```|Monitorar `-w /var/lib/containerd -p rwxa` recursivamente em todo o diretório de camadas de overlay gerará milhões de eventos por segundo durante pulls e escritas de disco dos pods; monitore apenas os binários de runtime, sockets de controle e arquivos de configuração.|Carregue `50-container-runtime.rules` com `sudo augenrules --load` e execute `sudo crictl ps`, confirmando o registro do acesso ao socket via `sudo ausearch -k containerd_socket_access -i`.|auditd-arquitetura-linux-audit-kernel-auditctl-augenrules, auditd-exclusao-ruido-never-exit-cron-containers-alta-performance, tetragon-arquitetura-ebpf-runtime-security-enforcement-cilium

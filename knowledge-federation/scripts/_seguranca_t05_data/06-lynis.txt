@@ -1,0 +1,105 @@
+TOPIC: CISOfy Lynis — Auditoria de Segurança e Hardening em Linux/Unix, Perfis .prf, Hardening Index e Dockerfiles
+SOURCES: https://raw.githubusercontent.com/CISOfy/lynis/master/README.md | https://cisofy.com/documentation/lynis/get-started/ | https://github.com/CISOfy/lynis-sdk
+
+===NOTE===
+0451|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories|CISOfy Lynis: Arquitetura de Auditoria Local e Hardening de Sistemas Linux/Unix (`lynis audit system`)|**Lynis** (`CISOfy/lynis`, GPLv3) é a ferramenta open-source padrão para auditoria profunda de segurança, avaliação de conformidade (ISO 27001, PCI-DSS, HIPAA) e recomendação de *hardening* em sistemas Linux, macOS e BSD, escrita em POSIX shell sem dependências compiladas.|Executa centenas de testes modulares diretamente no host (inspecionando boot/GRUB, kernel `sysctl`, PAM/autenticação, SSH, sistemas de arquivos, firewalls, auditd, AppArmor/SELinux, criptografia e containers) e calcula um **Hardening Index** numérico de `0` a `100`.|Os testes são organizados por categorias (`boot_services`, `kernel`, `memory_processes`, `authentication`, `shells`, `filesystems`, `storage`, `networking`, `firewalls`, `ssh`, `logging`, `crypto`, `mac_frameworks`), gerando três saídas complementares: o resumo visual no terminal, o log detalhado de execução (`/var/log/lynis.log`) e o arquivo estruturado de dados (`/var/log/lynis-report.dat`).|```bash
+# Garantir propriedade root:root exigida pelo Lynis e executar auditoria completa sem pausas
+sudo chown -R 0:0 /usr/local/lynis
+sudo /usr/local/lynis/lynis audit system --quick --auditor "SecOps Platform Team"
+```|Se os scripts do Lynis pertencerem a um usuário não-privilegiado (UID != 0) mas forem executados com `sudo`, o próprio Lynis emitirá um alerta de segurança no início da execução devido ao risco de escalação de privilégio por modificação do script.|Verifique no final da execução a pontuação `Hardening index` e inspecione `/var/log/lynis-report.dat` com `sudo grep "^hardening_index=" /var/log/lynis-report.dat`.|lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details, lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh, lynis-execucao-automatizada-cronjob-systemd-timer-monitoramento-deriva
+
+===NOTE===
+0452|lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details|CISOfy Lynis: Análise de `Warnings` vs `Suggestions`, `/var/log/lynis-report.dat` e `lynis show details <TEST-ID>`|Cada achado do Lynis recebe um identificador alfanumérico único de teste (ex.: `SSH-7408`, `KRNL-6000`, `AUTH-9286`, `FILE-6310`) e é classificado como **Warning** (problema crítico ou falha de controle ativo) ou **Suggestion** (recomendação de endurecimento adicional).|A saída de tela mostra apenas o resumo; para entender exatamente qual linha de arquivo de configuração ou parâmetro `sysctl` motivou um `Warning` ou `Suggestion`, o engenheiro utiliza `lynis show details <TEST-ID>`.|O comando `sudo lynis show details SSH-7408` extrai de `/var/log/lynis.log` todas as verificações internas daquele ID (por exemplo, `PermitRootLogin`, `X11Forwarding`, `MaxAuthTries`, `AllowTcpForwarding`, `ClientAliveCountMax`), indicando quais valores estavam em conformidade (`OK`) e quais precisam ser ajustados (`DIFFERENT` / `WARNING`). Já `/var/log/lynis-report.dat` armazena pares `chave=valor` prontos para parsing automatizado.|```bash
+# Extrair todos os warnings e suggestions do relatório estruturado e inspecionar o detalhe do teste SSH-7408
+sudo grep -E "^(warning|suggestion)\[\]=" /var/log/lynis-report.dat
+sudo lynis show details SSH-7408
+```|O arquivo `/var/log/lynis.log` é sobrescrito a cada nova execução do Lynis; se precisar preservar o histórico de auditoria para comparação forense ou conformidade, arquive `/var/log/lynis.log` e `/var/log/lynis-report.dat` com carimbo de data após cada scan.|Execute `sudo lynis show details KRNL-6000` após uma auditoria e confirme a listagem individual de cada chave `sysctl` avaliada pelo teste.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-hardening-kernel-sysctl-krnl-6000-aslr-ptrace-bpf-rede, lynis-hardening-openssh-ssh-7408-autenticacao-pam-limites
+
+===NOTE===
+0453|lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh|CISOfy Lynis: Customização de Políticas com Perfis `custom.prf` (`skip-test`, `config-data` e `--profile`)|O Lynis utiliza perfis declarativos (`.prf` localizados em `/etc/lynis/`) onde `default.prf` define os padrões globais e **`custom.prf`** permite adaptar os critérios de auditoria à arquitetura da organização sem modificar `default.prf`.|Servidores com papéis distintos (ex.: um nó Kubernetes vs um bastião SSH) possuem requisitos diferentes; colocar exceções justificadas (`skip-test`) e valores esperados (`config-data`) em `/etc/lynis/custom.prf` evita que atualizações de pacote sobrescrevam suas regras.|No `custom.prf`, a diretiva `skip-test=TEST-ID` (ou `skip-test=SSH-7408:loglevel` para pular apenas um subitem específico) silencia falsos positivos documentados, enquanto `config-data=sysctl;kernel.kptr_restrict;2;1;Restrict kernel pointers;` exige que um parâmetro específico do kernel tenha exatamente o valor `2`.|```ini
+# /etc/lynis/custom.prf — Perfil corporativo de hardening Linux
+machine-role=server
+compliance-standards=cis,iso27001,pcidss
+
+# Exigir endurecimento estrito de ponteiros do kernel e dmesg via sysctl
+config-data=sysctl;kernel.kptr_restrict;2;1;Restrict kernel pointers to all users;
+config-data=sysctl;kernel.dmesg_restrict;1;1;Restrict dmesg access to privileged users;
+
+# Pular verificação de servidor USB em VMs de nuvem sem barramento USB físico
+skip-test=USB-1000
+```|Nunca edite `/etc/lynis/default.prf` diretamente, pois qualquer atualização do pacote `lynis` via `apt`/`dnf` substituirá o arquivo ou gerará conflito `.dpkg-dist`.|Execute `sudo lynis show settings` e `sudo lynis show profiles` para confirmar que `/etc/lynis/custom.prf` foi carregado e que as diretivas `skip-test` e `config-data` estão ativas.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-hardening-kernel-sysctl-krnl-6000-aslr-ptrace-bpf-rede, lynis-desenvolvimento-testes-customizados-lynis-sdk-plugins
+
+===NOTE===
+0454|lynis-hardening-kernel-sysctl-krnl-6000-aslr-ptrace-bpf-rede|CISOfy Lynis: Remediação de `KRNL-6000` — Hardening de Parâmetros `sysctl` de Kernel, Memória e Pilha de Rede|O teste **`KRNL-6000`** do Lynis audita dezenas de parâmetros do kernel Linux expostos em `/proc/sys/` (`sysctl`), cobrindo proteção de memória/ponteiros, restrição de depuração `ptrace`, endurecimento de eBPF e blindagem da pilha TCP/IPv4/IPv6.|Parâmetros padrão de distribuições Linux priorizam compatibilidade e depuração; endurecer `sysctl` em `/etc/sysctl.d/99-hardening.conf` impede que usuários locais não-privilegiados leiam endereços de memória do kernel (`kptr_restrict`), anexem `gdb`/`strace` em outros processos do mesmo UID (`yama.ptrace_scope`) ou sofram spoofing de pacotes ICMP/ARP.|Os principais controles verificados pelo `KRNL-6000` incluem `kernel.randomize_va_space = 2` (ASLR total), `kernel.kptr_restrict = 2`, `kernel.dmesg_restrict = 1`, `kernel.yama.ptrace_scope = 1` (ou `2`/`3` em produção), `kernel.unprivileged_bpf_disabled = 1`, `net.core.bpf_jit_harden = 2`, `fs.suid_dumpable = 0`, `fs.protected_hardlinks = 1`, `fs.protected_symlinks = 1`, `net.ipv4.conf.all.rp_filter = 1`, `net.ipv4.conf.all.accept_redirects = 0` e `net.ipv4.tcp_syncookies = 1`.|```ini
+# /etc/sysctl.d/99-lynis-hardening.conf
+kernel.randomize_va_space = 2
+kernel.kptr_restrict = 2
+kernel.dmesg_restrict = 1
+kernel.yama.ptrace_scope = 2
+kernel.unprivileged_bpf_disabled = 1
+net.core.bpf_jit_harden = 2
+fs.suid_dumpable = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.all.log_martians = 1
+```|Em nós Kubernetes que atuam como roteadores de CNI (Cilium/Calico), definir `net.ipv4.ip_forward = 0` ou `rp_filter = 1` estrito nas interfaces de overlay quebrará o roteamento de pods; adapte o perfil `custom.prf` para nós de cluster.|Aplique `sudo sysctl --system` e reexecute `sudo lynis audit system --tests KRNL-6000 --quick`, confirmando que todos os itens de `KRNL-6000` passam com status `OK`.|lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details, lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh, apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal
+
+===NOTE===
+0455|lynis-hardening-openssh-ssh-7408-autenticacao-pam-limites|CISOfy Lynis: Remediação de `SSH-7408` e `AUTH-*` — Hardening de OpenSSH (`sshd_config`), PAM e Contas Locais|A categoria de testes **`SSH-7408`** e **`AUTH-*`** do Lynis audita a configuração do daemon OpenSSH (`/etc/ssh/sshd_config`), políticas de complexidade e expiração de senhas (`/etc/login.defs` e `pam_pwquality`), `umask` padrão (`027`) e limites de recursos (`/etc/security/limits.conf`).|O serviço SSH é a principal porta de administração remota de servidores Linux; configurações permissivas padrão permitem ataques de força bruta, encaminhamento de portas TCP não autorizado ou persistência via `X11Forwarding` e `PermitUserEnvironment`.|Para satisfazer integralmente o teste `SSH-7408`, configure um drop-in `/etc/ssh/sshd_config.d/10-lynis-hardening.conf` com `PermitRootLogin no`, `PasswordAuthentication no`, `MaxAuthTries 3`, `MaxSessions 2`, `ClientAliveCountMax 2`, `AllowTcpForwarding no`, `AllowAgentForwarding no`, `X11Forwarding no`, `LogLevel VERBOSE` e `TCPKeepAlive no`, validando a sintaxe com `sshd -t` antes do reload.|```bash
+# Validar a configuração efetiva do sshd e executar apenas o grupo de testes SSH do Lynis
+sudo sshd -t
+sudo lynis audit system --tests-from-group ssh --quick
+sudo lynis show details SSH-7408
+```|Antes de aplicar `PasswordAuthentication no`, `AllowTcpForwarding no` ou alterar a porta `Port` do SSH, garanta que sua chave pública Ed25519/ECDSA e uma sessão de terminal reserva estão ativas para evitar bloqueio administrativo (*lockout*).|Execute `sudo lynis show details SSH-7408` e confirme que todos os parâmetros avaliados aparecem marcados como `[ OK ]`.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details, auditd-regras-monitoramento-arquivos-identidade-sudoers-ssh-w
+
+===NOTE===
+0456|lynis-auditoria-dockerfiles-lynis-audit-dockerfile-containers|CISOfy Lynis: Auditoria Estática de Imagens de Container com `lynis audit dockerfile`|Além de auditar sistemas operacionais em execução, o Lynis inclui o comando **`lynis audit dockerfile <ARQUIVO>`**, que realiza análise estática de segurança e boas práticas sobre arquivos `Dockerfile` / `Containerfile`.|Permite detectar falhas de segurança na construção da imagem (como ausência da diretiva `USER` não-root, instalação de pacotes SSH/sudo desnecessários, uso da tag `:latest` ou falta de limpeza de cache de pacotes) antes mesmo do `docker build` em CI/CD.|O analisador lê cada instrução (`FROM`, `RUN`, `COPY`, `ADD`, `USER`, `EXPOSE`, `ENTRYPOINT`) do `Dockerfile`, emite avisos e sugestões específicas para containers e grava os resultados estruturados em `lynis-report.dat`.|```bash
+# Auditar estaticamente o Dockerfile de um microsserviço usando o Lynis em modo não-interativo
+lynis audit dockerfile ./deploy/Dockerfile.production --quick --no-colors
+```|A auditoria estática do `Dockerfile` verifica como a camada final é declarada, mas não substitui o escaneamento de CVEs nas bibliotecas instaladas dentro da imagem base (combine `lynis audit dockerfile` com Trivy/Grype).|Execute `lynis audit dockerfile` contra um `Dockerfile` sem instrução `USER` e confirme que o Lynis emite o alerta recomendando execução com usuário não-privilegiado.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-execucao-automatizada-cronjob-systemd-timer-monitoramento-deriva, apparmor-integracao-containers-docker-kubernetes-securitycontext
+
+===NOTE===
+0457|lynis-modo-pentest-nao-privilegiado-enumeracao-escalacao-privilegio|CISOfy Lynis: Execução em Modo `--pentest` (Auditoria Não-Privilegiada e Avaliação de Vetores de Escalação Local)|Quando executado com a flag **`--pentest`** (ou iniciado por um usuário comum sem `root`), o Lynis opera em modo de avaliação de teste de intrusão local, executando todos os testes que não exigem privilégio de superusuário.|Permite simular a visão de um atacante que acabou de obter um shell de baixa permissão (ex.: conta `www-data` ou `appuser`) no servidor, identificando binários SUID/SGID expostos, arquivos de configuração legíveis por todos, compiladores disponíveis (`gcc`/`clang` em produção), sockets Docker/systemd expostos e permissões fracas em `/etc/crontab` ou `/tmp`.|No modo `--pentest`, os arquivos de log e relatório são gravados no diretório temporário do próprio usuário (`/tmp/lynis.log` e `/tmp/lynis-report.dat`), sem exigir acesso de escrita em `/var/log/`.|```bash
+# Executar o Lynis como usuário não-privilegiado para mapear superfícies de escalação local
+./lynis audit system --pentest --quick --log-file /tmp/lynis-pentest.log --report-file /tmp/lynis-pentest-report.dat
+```|Compiladores (`gcc`, `g++`, `make`, `as`) instalados em servidores de produção facilitam a compilação local de exploits de kernel por atacantes; o Lynis detecta sua presença e recomenda removê-los ou restringir sua execução apenas ao `root` (`chmod 700`).|Execute o comando `--pentest` sob a conta de serviço da aplicação e revise todos os achados de permissões de arquivos e binários SUID em `/tmp/lynis-pentest-report.dat`.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-hardening-sistemas-arquivos-montagens-suid-permissoes-boot, auditd-regras-syscalls-execve-escalacao-privilegio-auid-euid
+
+===NOTE===
+0458|lynis-hardening-sistemas-arquivos-montagens-suid-permissoes-boot|CISOfy Lynis: Hardening de Sistemas de Arquivos (`FILE-*`), Opções de Montagem (`nodev`, `nosuid`, `noexec`), `/proc` `hidepid` e GRUB|A categoria **`FILE-*`** e **`BOOT-*`** do Lynis audita a separação de partições críticas (`/tmp`, `/var`, `/var/tmp`, `/var/log`, `/var/log/audit`, `/home`, `/dev/shm`), as flags de montagem em `/etc/fstab` (`nodev`, `nosuid`, `noexec`), o isolamento de processos em `/proc` (`hidepid=2`) e a proteção por senha PBKDF2 do bootloader GRUB2.|Se `/tmp` ou `/dev/shm` forem montados com permissão de execução (`exec`) e `suid`, um processo web comprometido pode gravar um binário malicioso ou script ELF em `/dev/shm` e executá-lo diretamente da memória compartilhada.|O Lynis verifica se `/tmp`, `/var/tmp` e `/dev/shm` possuem `nodev,nosuid,noexec`, se `/home` possui `nodev,nosuid`, se `/proc` está montado com `hidepid=2` (impedindo que um usuário veja os processos e argumentos de linha de comando de outros usuários no host) e se a configuração do GRUB (`/boot/grub/grub.cfg` com permissão `0600`) exige autenticação `grub_pbkdf2` para edição de parâmetros de boot.|```fstab
+# Trecho de /etc/fstab endurecido conforme recomendações FILE-6310 do Lynis
+tmpfs   /tmp        tmpfs   defaults,rw,nosuid,nodev,noexec,relatime,size=2G   0  0
+tmpfs   /dev/shm    tmpfs   defaults,rw,nosuid,nodev,noexec,relatime           0  0
+proc    /proc       proc    defaults,nosuid,nodev,noexec,hidepid=2             0  0
+```|Aplicar `noexec` em `/tmp` pode quebrar instaladores legados ou agentes que extraem e executam binários temporários em `/tmp`; configure a variável `TMPDIR` desses agentes específicos para um diretório controlado pelo administrador antes de remontar `/tmp` com `noexec`.|Execute `sudo lynis audit system --tests-from-group filesystems,boot_services --quick` e confirme a aprovação das montagens.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-modo-pentest-nao-privilegiado-enumeracao-escalacao-privilegio, usbguard-arquitetura-autorizacao-dispositivos-usb-badusb-daemon
+
+===NOTE===
+0459|lynis-execucao-automatizada-cronjob-systemd-timer-monitoramento-deriva|CISOfy Lynis: Auditoria Contínua Automatizada (`--cronjob`, `systemd timer`) e Detecção de Deriva de Hardening Index|A flag **`--cronjob`** do Lynis executa a auditoria completa em modo silencioso e sem cores ANSI, exibindo na saída padrão apenas alertas críticos enquanto atualiza `/var/log/lynis-report.dat` para coleta por agentes de monitoramento (Prometheus Node Exporter Textfile Collector, Wazuh ou SIEM).|O *hardening* inicial de uma imagem base (*Golden Image*) degrada ao longo do tempo quando pacotes são instalados ou configurações são alteradas manualmente; monitorar o `hardening_index` e a contagem de `warning[]` diariamente detecta deriva de configuração (*configuration drift*).|Um `systemd timer` diário executa `lynis audit system --cronjob` e um script pós-execução extrai `hardening_index`, `lynis_tests_done` e o total de `warning[]` e `suggestion[]` de `/var/log/lynis-report.dat`, exportando métricas `.prom` para alerta no Alertmanager caso o índice caia abaixo do limiar mínimo (ex.: `< 82`).|```bash
+#!/usr/bin/env bash
+set -euo pipefail
+/usr/sbin/lynis audit system --cronjob > /dev/null
+INDEX=$(grep "^hardening_index=" /var/log/lynis-report.dat | cut -d= -f2)
+WARNINGS=$(grep -c "^warning\[\]=" /var/log/lynis-report.dat || true)
+cat <<EOF > /var/lib/node_exporter/textfile_collector/lynis.prom
+# HELP lynis_hardening_index Pontuacao de hardening calculada pelo CISOfy Lynis (0-100)
+# TYPE lynis_hardening_index gauge
+lynis_hardening_index ${INDEX}
+lynis_warnings_total ${WARNINGS}
+EOF
+```|Certifique-se de que o diretório `/var/lib/node_exporter/textfile_collector` e o script executável pelo timer possuam permissão `0700`/`0755` de propriedade exclusiva do `root:root`.|Execute o script acima manualmente e verifique o arquivo `/var/lib/node_exporter/textfile_collector/lynis.prom` gerado.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-interpretacao-relatorios-lynis-log-lynis-report-dat-show-details, lynis-desenvolvimento-testes-customizados-lynis-sdk-plugins
+
+===NOTE===
+0460|lynis-desenvolvimento-testes-customizados-lynis-sdk-plugins|CISOfy Lynis: Escrita de Testes e Plugins Customizados (`CUST-*`) com Funções Internas (`Register`, `Display`) e `lynis-sdk`|O Lynis permite que equipes de engenharia de segurança escrevam seus próprios testes internos (`include/tests_custom` com IDs `CUST-xxxx`) e plugins para validar políticas corporativas específicas e testá-los com o **`lynis-sdk`**.|Organizações frequentemente possuem controles internos obrigatórios (ex.: verificar se o agente do EDR corporativo está ativo, se o certificado da CA interna está instalado ou se o `usbguard.service` está em execução) que precisam entrar no cálculo do *Hardening Index* junto com os testes nativos.|Cada teste customizado utiliza a função `Register` (declarando `--test-no CUST-0010`, `--weight L`, `--network NO`, `--category security`, `--description "..."`) e funções utilitárias do Lynis como `IsRunning`, `FileExists`, `Display` e `AddHP <pontos> <maximo>` (que adiciona pontos diretamente ao cálculo do *Hardening Index*).|```sh
+# Exemplo de teste customizado em include/tests_custom verificando se o usbguard-daemon está ativo
+Register --test-no CUST-0010 --weight L --network NO --category security --description "Check active USBGuard daemon"
+if [ ${SKIPTEST} -eq 0 ]; then
+    IsRunning "usbguard-daemon"
+    if [ ${RUNNING} -eq 1 ]; then
+        Display --indent 2 --text "- Checking USBGuard daemon status" --result "${STATUS_FOUND}" --color GREEN
+        AddHP 3 3
+    else
+        Display --indent 2 --text "- Checking USBGuard daemon status" --result "${STATUS_NOT_FOUND}" --color YELLOW
+        AddHP 0 3
+        ReportSuggestion "${TEST_NO}" "Enable and start usbguard.service to block unauthorized USB devices"
+    fi
+fi
+```|Sempre utilize o prefixo reservado `CUST-` para IDs de testes internos customizados, evitando colisão com IDs oficiais futuros do repositório `CISOfy/lynis`.|Execute `sudo lynis audit system --tests CUST-0010 --quick` e confirme que o teste customizado é executado, pontua via `AddHP` e aparece listado em `/var/log/lynis-report.dat`.|lynis-arquitetura-auditoria-hardening-unix-linux-test-categories, lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh, usbguard-arquitetura-autorizacao-dispositivos-usb-badusb-daemon
