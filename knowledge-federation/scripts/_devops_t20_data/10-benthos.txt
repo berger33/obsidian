@@ -1,0 +1,150 @@
+1991|benthos-arquitetura-redpanda-connect-stream-processor-at-least-once|Redpanda Connect (Benthos): arquitetura de processamento declarativo de streams com entrega *at-least-once* sem estado em disco|O **Redpanda Connect** (evolução do projeto **Benthos**, distribuído como um único binário estático em Go ou imagem OCI mínima baseada em `scratch`) é um processador de streams cloud-native declarativo que move, enriquece, filtra e transforma dados entre centenas de fontes (`input`) e destinos (`output`) usando um único arquivo YAML.|Frameworks pesados de processamento de streams (como clusters JVM distribuídos com estado em disco local RocksDB) exigem infraestrutura complexa de checkpoints e recuperação de estado mesmo para pipelines de integração, CDC, roteamento de eventos e ETL em tempo real.|O diferencial arquitetural do Redpanda Connect / Benthos é seu **modelo de transação em processo (*in-process transaction model*) sem estado persistido em disco**: uma mensagem lida do `input` só recebe confirmação (*ACK* / commit de offset no Kafka, SQS, NATS ou RabbitMQ) **depois** que atravessou todos os `processors` em memória e foi confirmada com sucesso pelo `output`. Isso garante entrega **at-least-once por padrão**, mesmo diante de crashes abruptos do Pod ou perda de disco, mantendo os Pods 100% stateless e horizontalmente escaláveis.|```yaml
+input:
+  kafka_franz:
+    seed_brokers: [ "kafka.prod.svc:9092" ]
+    topics: [ "orders.raw" ]
+    consumer_group: "connect-orders-cg"
+
+pipeline:
+  processors:
+    - mapping: |
+        root = this
+        root.processed_at = now()
+
+output:
+  aws_s3:
+    bucket: "corp-orders-lake"
+    path: 'orders/${! timestamp_unix_nano() }.json'
+```|Como não há estado intermediário gravado em disco local (`buffer: none` por padrão), escalar um Deployment do Redpanda Connect no Kubernetes basta alterar `replicas` ou anexar um HPA/KEDA sem preocupar-se com perda de mensagens em volumes locais.|Execute `rpk connect lint config.yaml` (ou `redpanda-connect lint config.yaml`) para validar estaticamente a sintaxe do pipeline.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1992|benthos-linguagem-mapeamento-bloblang-transformacao-filtragem-json|Redpanda Connect `Bloblang`: linguagem declarativa de mapeamento, transformação, enriquecimento e filtragem de streams|O **Bloblang** (`processor: mapping` ou `mutation`) é a linguagem de mapeamento nativa do Redpanda Connect / Benthos projetada especificamente para transformar documentos estruturados (JSON, Avro, Protobuf, Parquet) e metadados de mensagens em tempo real com segurança de tipos e alta performance.|Usar scripts Python externos, expressões regulares frágeis ou templates de texto para reestruturar payloads JSON aninhados, mascarar PII e descartar eventos inválidos em pipelines de alto throughput cria gargalos de CPU e falhas de parsing.|Em um mapeamento Bloblang: 1) `this` (ou `.`) referencia o documento de entrada imutável; 2) `root` é o novo documento de saída sendo construído; 3) `meta("chave")` lê metadados da mensagem (como tópico Kafka, partição ou headers HTTP); e 4) atribuir **`root = deleted()`** descarta a mensagem limpa e imediatamente do stream (confirmando o ACK na origem sem enviá-la ao `output`)!|```yaml
+pipeline:
+  processors:
+    - mapping: |
+        # Descarta eventos de heartbeat ou de teste:
+        if this.event_type == "heartbeat" {
+          root = deleted()
+        } else {
+          root.order_id = this.id.uppercase()
+          root.total_cents = (this.amount * 100).round()
+          root.customer_email_hash = this.customer.email.lowercase().hash("sha256").encode("hex")
+          root.source_topic = meta("kafka_topic")
+        }
+```|A diferença entre `mapping` e `mutation` no Bloblang é que `mapping` cria um documento `root` novo do zero (ideal para filtrar campos e garantir schema limpo), enquanto `mutation` modifica o documento existente *in-place*.|Teste suas expressões Bloblang interativamente ou via CLI executando `rpk connect blobl 'root.upper = this.msg.uppercase()'` com JSON no `stdin`.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1993|benthos-change-data-capture-cdc-postgres-mysql-mongodb-iceberg|Redpanda Connect Change Data Capture (`CDC`) e Lakehouse: streaming de `postgres_cdc` para tabelas Apache Iceberg no S3|Conforme destacado no README oficial, o Redpanda Connect oferece conectores **Change Data Capture (CDC)** de primeira classe (para **PostgreSQL**, **MySQL**, **MongoDB**, **Oracle**, **MSSQL** e **DynamoDB CDC**) combinados com saídas nativas de Lakehouse como **Apache Iceberg** (`output.iceberg` com evolução automática de schema).|Manter um cluster Kafka Connect separado com Debezium, Schema Registry e consumidores Spark apenas para replicar tabelas transacionais do PostgreSQL em tabelas analíticas Apache Iceberg no S3 exige gerenciar três sistemas distribuídos distintos.|Em um único manifesto YAML do Redpanda Connect, o input `postgres_cdc` faz o snapshot inicial (`stream_snapshot: true`) e lê o log de replicação lógica (WAL) das tabelas especificadas, enquanto o output `iceberg` grava diretamente nas tabelas Iceberg no S3 (autenticado no catálogo Glue/REST via SigV4) roteando dinamicamente por `table: ${! meta("table") }` e aplicando `schema_evolution.enabled: true`.|```yaml
+input:
+  postgres_cdc:
+    dsn: postgres://user:pass@db.example.com:5432/app?sslmode=require
+    schema: public
+    tables: [ orders, customers ]
+    stream_snapshot: true
+
+output:
+  iceberg:
+    catalog:
+      url: https://glue.us-east-1.amazonaws.com/iceberg
+      warehouse: "123456789012"
+    namespace: cdc
+    table: ${! meta("table") }
+    storage:
+      aws_s3:
+        bucket: my-iceberg-warehouse
+        region: us-east-1
+    schema_evolution:
+      enabled: true
+      table_location: s3://my-iceberg-warehouse/cdc/
+```|Certifique-se de que o banco PostgreSQL de origem esteja configurado com `wal_level = logical` e que o slot de replicação seja monitorado para evitar retenção excessiva de WAL caso o pipeline fique parado por longo período.|Valide a configuração do conector CDC e Iceberg com `rpk connect lint cdc-iceberg.yaml`.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1994|benthos-tratamento-erros-dead-letter-queue-switch-fallback-retry|Redpanda Connect Tratamento de Erros e Dead-Letter Queues (`DLQ`): uso de `try`, `catch`, `fallback` e `switch` sem perder mensagens|No Redpanda Connect / Benthos, falhas de transformação ou rejeição no destino são tratadas explicitamente no pipeline por meio dos processadores **`try`** e **`catch`**, da função Bloblang **`errored()`** e dos outputs compostos **`fallback`**, **`switch`** e **`retry`**.|Em um pipeline *at-least-once*, se uma única mensagem malformada (*poison pill*) falhar repetidamente no `processor` ou for rejeitada com HTTP `400` pelo `output`, sem uma rota de *Dead-Letter Queue (DLQ)* o pipeline ficaria travado tentando reprocessá-la ou descartaria o dado silenciosamente.|Quando um processor dentro de um bloco `try` falha (ex.: falha de validação JSON Schema ou enriquecimento HTTP), a mensagem não é perdida — ela é marcada internamente com a flag de erro (testável via `if errored()` e `error()`). Em seguida, um bloco `catch` pode anexar o motivo do erro (`root.dlq_error = error()`) e um output **`switch`** roteia mensagens com `check: errored()` para um tópico Kafka de DLQ ou bucket S3 de quarentena, enquanto envia as mensagens válidas para o destino principal!|```yaml
+pipeline:
+  processors:
+    - try:
+        - schema_registry_decode:
+            url: http://schema-registry:8081
+        - mapping: 'root = this.parse_json()'
+    - catch:
+        - mapping: |
+            meta dlq_reason = error()
+
+output:
+  switch:
+    cases:
+      - check: errored()
+        output:
+          kafka_franz:
+            seed_brokers: [ "kafka:9092" ]
+            topic: "orders.dlq"
+      - output:
+          kafka_franz:
+            seed_brokers: [ "kafka:9092" ]
+            topic: "orders.validated"
+```|Atenção: um bloco `catch` limpa a flag de erro das mensagens ao terminar; se você quiser que o `output.switch` posterior ainda detecte `errored()`, não limpe o erro no `catch` (ou defina um metadado explícito `meta is_dlq = "true"` e avalie `meta("is_dlq") == "true"` no `switch`).|Teste o caminho feliz e o caminho de DLQ com testes unitários (`rpk connect test`) antes de implantar o pipeline.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1995|benthos-batching-windowing-agrupamento-alto-throughput-s3-clickhouse|Redpanda Connect Batching e Micro-Batching: configuração de `batching` (`count`, `byte_size`, `period`) e `archive` para S3 e ClickHouse|Para atingir alto throughput ao escrever em destinos que penalizam escritas unitárias pequenas (como **Amazon S3**, **Google Cloud Storage**, **Apache Iceberg**, **ClickHouse**, **Elasticsearch** ou **BigQuery**), o Redpanda Connect oferece políticas declarativas de **`batching`** (`count`, `byte_size`, `period`, `check`) combinadas com processadores de lote (`archive`, `compress`, `parquet_encode`).|Fazer um `PutObject` no S3 ou um `INSERT` no ClickHouse para cada evento individual de 500 bytes geraria milhares de requisições por segundo, estourando limites de taxa e criando milhões de arquivos minúsculos (*small files problem*).|Configurado no `input` ou diretamente dentro do `output`, o bloco `batching` acumula mensagens em memória até que **qualquer uma** das condições seja atingida (ex.: `count: 1000` mensagens, `byte_size: 10485760` [10 MiB] ou `period: 10s`). Dentro de `batching.processors`, você pode compactar o lote inteiro em um único arquivo `.ndjson.gz` ou Parquet antes de o `output` realizar uma única escrita transacional.|```yaml
+output:
+  aws_s3:
+    bucket: "corp-telemetry-archive"
+    path: 'events/${! timestamp_unix() }-${! uuid_v4() }.ndjson.gz'
+    batching:
+      count: 5000
+      byte_size: 10485760
+      period: 30s
+      processors:
+        - archive:
+            format: lines
+        - compress:
+            algorithm: gzip
+```|Graças ao modelo de transação em processo, os offsets de todas as 5.000 mensagens do lote no Kafka/SQS só são confirmados (*committed*) depois que o arquivo `.ndjson.gz` inteiro foi gravado com sucesso no bucket S3.|Verifique nas métricas Prometheus (`output_batch_sent`) que os eventos estão sendo enviados em lotes agrupados.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1996|benthos-enriquecimento-sincrono-branch-http-cache-rate-limit-resources|Redpanda Connect `branch`, `cache` e `rate_limit`: enriquecimento de eventos com APIs externas e caches compartilhados (`redis`/`s3`)|O processador **`branch`** do Redpanda Connect permite extrair um subconjunto de campos de uma mensagem (`request_map`), executar uma cadeia de processadores externos (como uma chamada **`http`**, query **`sql_select`**, invocação **`aws_lambda`** ou inferência **`aws_bedrock_chat`**) protegida por **`cache`** e **`rate_limit`**, e mesclar apenas o resultado de volta no documento original (`result_map`).|Se você executasse um processador `http` diretamente sem `branch`, o corpo inteiro da mensagem atual seria enviado no `POST` e a resposta da API sobrescreveria a mensagem original inteira, perdendo os demais campos do evento.|Combinando `branch` com recursos nomeados declarados em `cache_resources` (ex.: `redis`, `memory`, `aws_s3`, `aws_dynamodb`) e `rate_limit_resources`, o pipeline consulta primeiro o cache Redis; apenas em caso de *cache miss* chama a API HTTP respeitando o limite de taxa e grava no cache para os próximos eventos.|```yaml
+pipeline:
+  processors:
+    - branch:
+        request_map: 'root = ""'
+        processors:
+          - http:
+              url: 'http://GeoIP-service.internal/lookup/${! json("client_ip") }'
+              verb: GET
+              rate_limit: geoip_limiter
+        result_map: 'root.geo = this'
+
+rate_limit_resources:
+  - label: geoip_limiter
+    local:
+      count: 500
+      interval: 1s
+```|Utilize sempre `branch` (com `request_map` enxuto e `result_map` específico) quando precisar enriquecer eventos com chamadas HTTP, SQL ou modelos de IA sem perder o payload original da mensagem.|Teste o enriquecimento `branch` simulando respostas com `rpk connect test`.|https://docs.redpanda.com/redpanda-connect/about;https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://github.com/redpanda-data/connect
+1997|benthos-testes-unitarios-pipelines-rpk-connect-test-assertions|Redpanda Connect Unit Testing (`rpk connect test`): testes unitários determinísticos de pipelines e mapeamentos YAML em CI/CD|O Redpanda Connect possui um framework nativo de **testes unitários declarativos** executado por **`rpk connect test`** (ou `redpanda-connect test`), onde blocos `tests:` (no próprio arquivo YAML do pipeline ou em arquivos `*_benthos_test.yaml` separados) injetam lotes de mensagens de entrada, simulam mocks de processadores externos e validam predicados de saída.|Pipelines de transformação de dados em YAML frequentemente contêm regras complexas de negócio em Bloblang; implantar alterações sem testes unitários automatizados em CI/CD arrisca quebrar contratos de schema dos consumidores.|Cada caso em `tests:` define `name`, `target_processors` (ex.: `"/pipeline/processors"`), `environment` (variáveis simuladas), `input_batch` (conteúdo e metadados de entrada) e `output_batches` (contendo asserções como `json_equals`, `content_equals`, `metadata_equals` ou `bloblang` para verificar a saída exata).|```yaml
+tests:
+  - name: "Filtra heartbeats e transforma pedidos válidos"
+    target_processors: "/pipeline/processors"
+    input_batch:
+      - content: '{"event_type": "heartbeat"}'
+      - content: '{"event_type": "order", "id": "ord-1", "amount": 10.5}'
+    output_batches:
+      - - json_equals:
+            order_id: "ORD-1"
+            total_cents: 1050
+```|Nos testes unitários do Redpanda Connect, o `input` e o `output` reais de rede (como Kafka ou S3) nunca são conectados — apenas os `target_processors` são exercitados em memória em milissegundos, tornando-os ideais para rodar em cada commit no Git.|Execute `rpk connect test ./pipelines/...` em sua pipeline de CI para garantir que 100% dos testes de transformação passem.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1998|benthos-observabilidade-probes-ping-ready-prometheus-opentelemetry-tracing|Redpanda Connect Observabilidade no Kubernetes: probes `/ping` e `/ready` (`:4195`), métricas Prometheus e traces OpenTelemetry|Conforme documentado no README oficial do Redpanda Connect, todo processo expõe um servidor HTTP embutido (porta padrão `4195`) com dois endpoints de probe prontos para o Kubernetes — **`/ping`** (liveness probe) e **`/ready`** (readiness probe) — além de exportar métricas **Prometheus** e traces **OpenTelemetry** ponta-a-ponto.|Em um Deployment Kubernetes, se a `readinessProbe` verificar apenas se a porta TCP está aberta, o Pod será considerado pronto mesmo quando a conexão com o broker Kafka de entrada ou com o banco de destino caiu.|No Redpanda Connect: 1) **`/ping`** retorna sempre HTTP `200 OK` enquanto o processo estiver vivo (ideal para `livenessProbe`); 2) **`/ready`** retorna HTTP `200 OK` **somente quando tanto o `input` quanto o `output` estão ativamente conectados**, retornando `503 Service Unavailable` caso qualquer ponta perca conexão; 3) `metrics.prometheus` expõe contadores e histogramas em `/metrics`; e 4) `tracer.open_telemetry_collector` emite spans para cada processador do pipeline.|```yaml
+http:
+  address: 0.0.0.0:4195
+  enabled: true
+
+metrics:
+  prometheus: {}
+
+tracer:
+  open_telemetry_collector:
+    grpc:
+      - address: otel-collector.monitoring.svc:4317
+```|Nunca aponte a `livenessProbe` do Kubernetes para `/ready` no Redpanda Connect: se um banco de dados externo ficar indisponível por 2 minutos, `/ready` retornará `503` (o que deve apenas marcar o Pod como não-pronto na `readinessProbe`, e não matar o container em loop na `livenessProbe`).|Consulte `curl -i http://localhost:4195/ping`, `curl -i http://localhost:4195/ready` e `curl -s http://localhost:4195/metrics` no container em execução.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+1999|benthos-streams-mode-multiplexacao-pipelines-rest-api-resources|Redpanda Connect `Streams Mode` e `Resources`: execução de múltiplos pipelines independentes em um único processo e API HTTP|O **Streams Mode** (`rpk connect streams ./streams/*.yaml`) permite executar **múltiplos pipelines de streaming independentes** dentro de um único processo Redpanda Connect, compartilhando conexões, caches, rate-limiters e processadores declarados em arquivos de **`resources`** (`--resources` / `-r`) e permitindo criar, atualizar ou remover streams em tempo de execução via **REST API (`/streams`)**.|Quando uma equipe opera 25 pequenos pipelines de integração de baixo volume, subir 25 Deployments separados no Kubernetes (ou 25 VMs) desperdiça memória base e multiplica conexões ociosas com o mesmo cluster Redis ou Kafka.|No *Streams Mode*, cada arquivo `.yaml` no diretório `./streams/` define um pipeline isolado (`input` -> `pipeline` -> `output`), enquanto `--resources ./resources/*.yaml` carrega componentes compartilhados (`input_resources`, `processor_resources`, `output_resources`, `cache_resources`). A API HTTP na porta `4195` (`GET/POST/PUT/DELETE /streams/<id>`) permite gerenciar o ciclo de vida individual de cada stream sem reiniciar os demais.|```bash
+# Executando múltiplos pipelines em Streams Mode compartilhando um arquivo de recursos comuns:
+rpk connect streams --resources ./common/resources.yaml ./streams/*.yaml
+
+# Consultando o status de todos os streams carregados via API HTTP local:
+curl -s http://127.0.0.1:4195/streams | jq .
+```|No *Streams Mode*, a probe global `/ready` verifica a conectividade de todos os streams ativos, enquanto `/streams/<id>/stats` permite inspecionar as métricas isoladas de um stream específico.|Execute `rpk connect streams --help` e valide seus arquivos de stream e recursos com `rpk connect lint --resources ./common/resources.yaml ./streams/*.yaml`.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
+2000|benthos-extensibilidade-plugins-go-sdk-inline-overrides-docker-scratch|Redpanda Connect Extensibilidade e Deploy: plugins customizados em Go (`public/service`), overrides `-s` e imagem OCI `scratch`|Fechando o lote de 2.000 notas de DevOps, o Redpanda Connect / Benthos oferece um **SDK público em Go (`github.com/redpanda-data/benthos/v4/public/service`)** para registrar inputs, processors e outputs customizados em poucas linhas de código, suporte à tag de compilação `x_benthos_extra` (para conectores CGo como `zmq4`), **inline overrides (`-s`)** na CLI e distribuição em imagem OCI mínima baseada em **`scratch`**.|Em ambientes corporativos com protocolos legados internos ou bibliotecas de criptografia próprias em Go, poder compilar um binário único do Redpanda Connect contendo seu próprio plugin customizado (junto com todos os conectores oficiais) elimina gambiarras de sidecars.|Na implantação via Docker ou Kubernetes, a flag **`-s` (`--set`)** permite sobrescrever ou injetar qualquer caminho do YAML via linha de comando (ex.: `-s "input.type=http_server" -s "output.kafka.addresses=kafka:9092"`), combinada com interpolação de variáveis de ambiente `${VAR:default}` dentro do arquivo de configuração.|```bash
+# Executando a imagem oficial scratch do Redpanda Connect com overrides inline via flag -s:
+docker run --rm -p 4195:4195 docker.redpanda.com/redpandadata/connect run \
+  -s "input.type=http_server" \
+  -s "output.type=stdout"
+```|Conforme documentado no README oficial, componentes que dependem de bibliotecas C externas (como `zmq4`) exigem compilar o binário com `-tags "x_benthos_extra"` e ter as bibliotecas do sistema instaladas.|Execute `docker run --rm docker.redpanda.com/redpandadata/connect list inputs` para listar todos os conectores disponíveis no binário.|https://raw.githubusercontent.com/redpanda-data/connect/main/README.md;https://docs.redpanda.com/redpanda-connect/about;https://github.com/redpanda-data/connect
