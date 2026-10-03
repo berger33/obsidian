@@ -1,0 +1,179 @@
+=== NOTE: 971 | vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura | vCluster: criação de Tenant Clusters Kubernetes isolados e certificados pela CNCF sobre infraestrutura compartilhada ===
+ONE_LINER: O **vCluster** (`loft-sh/vcluster`, distribuição Kubernetes certificada pela CNCF e Kubernetes AI Conformant) provisiona **Tenant Clusters** totalmente isolados — cada um com seu próprio API server, controller manager, armazenamento de dados, CRDs e RBAC — rodando dentro de namespaces de um cluster hospedeiro, em Docker ou em bare metal.
+IMPORTANCE: Compartilhar um único cluster Kubernetes entre dezenas de equipes ou clientes apenas por meio de `Namespace`s e `NetworkPolicy` esbarra em um limite arquitetural: CRDs, `ClusterRole`s, webhooks de admissão e versões de API são globais para todo o cluster, impedindo que um tenant seja `cluster-admin` ou instale seus próprios operadores. Por outro lado, criar 200 clusters EKS/GKE separados multiplica o custo de planos de controle e subutiliza GPUs/CPUs. O README oficial e o guia `Architecture` (`vcluster.com/docs/vcluster/introduction/architecture/`) explicam como o vCluster resolve esse dilema.
+HOW_IT_WORKS: Cada Tenant Cluster criado com **`vcluster create my-vcluster --namespace team-x`** executa um plano de controle dedicado dentro de um único container de um pod `StatefulSet` (`vcluster-0`, acompanhado de um pod `vcluster-coredns`) no namespace `team-x` do **Control Plane Cluster**: (1) **Kubernetes API server** dedicado; (2) **controller manager**; (3) **data store** (por padrão SQLite embarcado, ou `etcd`, MySQL, PostgreSQL); (4) **syncer**, que sincroniza recursos de baixo nível (como `Pod`s e `Service`s) com o namespace subjacente; e (5) **scheduler** (reutilizando o scheduler do cluster hospedeiro por padrão ou ativando o virtual scheduler). Para o usuário, tudo funciona como um cluster Kubernetes upstream independente (`kubectl`, Helm, Argo CD, Crossplane e CRDs).
+EXAMPLE:
+```bash
+# Instalar a CLI do vCluster, criar um Tenant Cluster isolado no namespace team-x e interagir com ele via kubectl
+brew install loft-sh/tap/vcluster
+vcluster create my-vcluster --namespace team-x
+kubectl get namespaces
+```
+TRADE_OFFS: Como todos os recursos sincronizados para o namespace do Control Plane Cluster carregam `ownerReferences` apontando para o pod/recurso do Tenant Cluster, conforme destaca a documentação de arquitetura, **deletar o Tenant Cluster — ou deletar o seu namespace no cluster hospedeiro — remove automaticamente todos os recursos associados** sem deixar recursos órfãos; portanto, proteja os namespaces hospedeiros no Control Plane Cluster com RBAC restrito aos operadores de plataforma.
+VERIFY: Dentro de um Tenant Cluster conectado, instale um CRD qualquer como `cluster-admin` e verifique no cluster hospedeiro (ou em um segundo vCluster `team-y`) que aquele CRD não existe fora do seu Tenant Cluster.
+LINKS: [[vcluster-componente-syncer-sincronizacao-recursos-tohost-fromhost]] | [[vcluster-modos-nos-shared-dedicated-private-nodes-standalone]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 972 | vcluster-componente-syncer-sincronizacao-recursos-tohost-fromhost | vCluster: funcionamento do Syncer, recursos puramente virtuais vs sincronizados (toHost e fromHost) ===
+ONE_LINER: No modo de nós compartilhados ou dedicados, o componente **syncer** do vCluster mantém objetos de alto nível (`Deployment`, `StatefulSet`, `CRD`, `RBAC`) exclusivamente dentro do datastore do Tenant Cluster e sincroniza apenas os recursos necessários (`Pod`, `Service`, `PersistentVolumeClaim`, `Ingress`) com o namespace do cluster hospedeiro.
+IMPORTANCE: Se um Tenant Cluster sincronizasse todos os seus `Deployment`s, `Role`s e `CustomResourceDefinition`s para o cluster hospedeiro, haveria colisão de versões de CRDs entre diferentes equipes e sobrecarga no `etcd` do cluster hospedeiro. A página oficial `Architecture` explica como o syncer isola a API mantendo a execução leve.
+HOW_IT_WORKS: Quando um desenvolvedor aplica um `Deployment` de 3 réplicas dentro do seu vCluster: (1) o `Deployment` e o `ReplicaSet` são gravados no datastore do próprio vCluster e reconciliados pelo `controller-manager` interno do vCluster, que cria 3 objetos `Pod` virtuais; (2) o **syncer** detecta esses 3 `Pod`s virtuais e os traduz (`sync.toHost`) criando 3 `Pod`s reais dentro do namespace `team-x` do cluster hospedeiro (reescrevendo nomes para evitar colisões); (3) o scheduler e o `kubelet` do cluster hospedeiro iniciam os containers dos pods; e (4) o syncer atualiza o status/IPs de volta (`sync.fromHost`) no API server do vCluster. Recursos de alto nível nunca saem do vCluster!
+EXAMPLE:
+```yaml
+# Exemplo de configuração vcluster.yaml habilitando sincronização bidirecional customizada no syncer (toHost / fromHost)
+sync:
+  toHost:
+    ingresses:
+      enabled: true
+  fromHost:
+    nodes:
+      enabled: false
+```
+TRADE_OFFS: Como explica uma nota de arquitetura no README oficial do vCluster, a pilha de plataforma compartilhada (reutilização de CNI, CSI e Ingress do Control Plane Cluster) e o **Resource syncing** (`toHost`/`fromHost`) aplicam-se apenas aos modos **Shared Nodes** e **Dedicated Nodes**; nos modos **Private Nodes** e **Standalone**, os nós workers se juntam diretamente ao Tenant Cluster e não há sincronização de pods para um cluster hospedeiro.
+VERIFY: Crie um `Deployment` chamado `nginx` dentro do vCluster e execute `kubectl get deployments -n team-x` no cluster hospedeiro: você verá que o `Deployment` `nginx` não existe no cluster hospedeiro, mas os `Pod`s sincronizados estão rodando lá.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-modos-nos-shared-dedicated-private-nodes-standalone]] | [[vcluster-armazenamento-estado-sqlite-etcd-postgres-mysql-ha]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 973 | vcluster-modos-nos-shared-dedicated-private-nodes-standalone | vCluster: comparação arquitetural entre Shared Nodes, Dedicated Nodes, Private Nodes e vCluster Standalone ===
+ONE_LINER: Conforme a matriz `Architecture comparison` do README oficial e do guia `Architecture` (v0.37), o vCluster oferece quatro arquiteturas progressivas de isolamento: **Shared Nodes**, **Dedicated Nodes**, **Private Nodes** (`v0.27+`) e **vCluster Standalone** (`v0.29+`).
+IMPORTANCE: Um ambiente de desenvolvimento/CI prioriza máxima densidade e custo mínimo (**Shared Nodes**), enquanto um provedor de GPU Cloud ou ambiente regulado exige isolamento total de nós, CNI e CSI sem visibilidade cruzada entre tenants (**Private Nodes** ou **Standalone** em bare metal).
+HOW_IT_WORKS: As quatro arquiteturas combinam onde roda o control plane e como os worker nodes são alocados: (1) **Shared Nodes**: o control plane e os pods do tenant compartilham os mesmos nós do Control Plane Cluster usando pseudo-nodes (`sync.fromHost.nodes.enabled: false`), oferecendo máxima densidade; (2) **Dedicated Nodes**: os pods do tenant são isolados em um node pool rotulado (`sync.fromHost.nodes.selector.labels`), mas ainda gerenciados pelo Control Plane Cluster; (3) **Private Nodes (`privateNodes.enabled: true`)**: nós externos (VMs, bare metal ou nuvens remotas via VPN overlay) juntam-se diretamente ao Tenant Cluster via token com sua própria pilha **CNI, CSI e rede isolada**; e (4) **Standalone (`controlPlane.standalone.enabled: true`)**: o control plane roda como um binário autocontido diretamente em bare metal ou VMs sem precisar de nenhum Control Plane Cluster prévio (resolvendo o problema do *"cluster one"*).
+EXAMPLE:
+```yaml
+# Exemplo oficial de configuração vcluster.yaml para Dedicated Nodes (selecionando um node pool específico por label)
+sync:
+  fromHost:
+    nodes:
+      enabled: true
+      selector:
+        labels:
+          tenant: my-tenant
+```
+TRADE_OFFS: Enquanto **Shared Nodes** e **Dedicated Nodes** já herdam prontos o CNI (rede), CSI (armazenamento) e controladores de Ingress do Control Plane Cluster sem precisar reinstalá-los em cada vCluster, ao escolher **Private Nodes** ou **vCluster Standalone** você obtém isolamento completo de rede/armazenamento (`CNI/CSI isolation: YES`), mas cada Tenant Cluster passa a gerenciar seus próprios nós workers, CNI e CSI.
+VERIFY: Consulte `kubectl get nodes` de dentro do vCluster para verificar se ele está exibindo pseudo-nodes (Shared Nodes) ou os nós dedicados/privados reais associados ao tenant.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-componente-syncer-sincronizacao-recursos-tohost-fromhost]] | [[vcluster-vind-execucao-docker-local-ci-comparacao-kind]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 974 | vcluster-vind-execucao-docker-local-ci-comparacao-kind | vCluster in Docker (vind): execução de Tenant Clusters diretamente em containers Docker sem Kubernetes prévio ===
+ONE_LINER: Introduzido na v0.32+, o **vind (vCluster in Docker)** permite criar um Tenant Cluster completo diretamente em containers Docker na máquina local ou em runners de CI via `vcluster create <nome> --driver docker`, sem exigir nenhum cluster Kubernetes existente.
+IMPORTANCE: Desenvolvedores locais e pipelines de CI/CD frequentemente usam o `kind` para subir um cluster em Docker, mas sofrem porque o `kind` não possui *sleep/wake* (exigindo deletar e recriar o cluster para liberar recursos), exige configuração manual de MetalLB para `LoadBalancer` e exige rodar `kind load docker-image` a cada build. A seção `vind (vCluster in Docker)` da documentação oficial de arquitetura compara diretamente o `vind` ao `KinD`.
+HOW_IT_WORKS: Ao executar **`vcluster create my-vcluster --driver docker`**, a CLI provisiona o control plane e os worker nodes como containers em um único host Docker utilizando a arquitetura de **Private Nodes** por baixo dos panos. Conforme a tabela comparativa oficial (`vind` vs `KinD` em `vcluster.com/docs/vcluster/introduction/architecture/`), o `vind` oferece cinco diferenciais nativos: (1) **Sleep and wake**: pausa o cluster para liberar recursos e o retoma instantaneamente sem deletar; (2) **Load balancers out of the box**: `Services` do tipo `LoadBalancer` funcionam automaticamente sem setup extra; (3) **Pull-through image cache**: usa o cache de imagens do daemon Docker do host diretamente sem precisar de `kind load`; (4) **External nodes**: instâncias de nuvem podem se juntar a um cluster `vind` local via VPN para desenvolvimento híbrido; e (5) escolha livre de CNI/CSI.
+EXAMPLE:
+```bash
+# Criar um Tenant Cluster completo rodando diretamente em containers Docker usando o driver vind (sem Kubernetes prévio)
+vcluster create my-vcluster --driver docker
+kubectl get namespaces
+vcluster pause my-vcluster
+vcluster resume my-vcluster
+```
+TRADE_OFFS: Conforme observa o README oficial do vCluster na seção `vind`, a implantação em Docker é conduzida diretamente pela CLI (`vcluster create --driver docker`) em vez de ser gerenciada por um operador dentro de um Control Plane Cluster; portanto, ele é voltado para desenvolvimento local, pipelines de CI/CD e cenários híbridos de estação de trabalho.
+VERIFY: Execute `vcluster list` após criar um cluster com `--driver docker` para visualizar o status do cluster local e teste criar um `Service` do tipo `LoadBalancer` verificando a atribuição automática de IP.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-modos-nos-shared-dedicated-private-nodes-standalone]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 975 | vcluster-armazenamento-estado-sqlite-etcd-postgres-mysql-ha | vCluster: opções de Backing Store (SQLite embarcado, etcd embarcado/externo, PostgreSQL e MySQL) e Alta Disponibilidade ===
+ONE_LINER: O datastore do plano de controle do vCluster utiliza um banco **SQLite embarcado** por padrão para máxima leveza, mas permite configurar **etcd** (embarcado ou externo em StatefulSet dedicado), **PostgreSQL** ou **MySQL/RDS** com múltiplas réplicas e eleição de líder para Alta Disponibilidade (HA).
+IMPORTANCE: Para ambientes efêmeros de preview ou desenvolvimento, rodar um cluster `etcd` de 3 nós para cada tenant desperdiçaria memória RAM e disco; porém, para Tenant Clusters de produção crítica, um único pod com SQLite em disco local não oferece failover imediato se o nó hospedeiro cair.
+HOW_IT_WORKS: Conforme descreve a seção `Control plane` da página `Architecture` e a tabela `Key features` do README oficial: (1) **SQLite embarcado (padrão)**: roda como parte do processo unificado dentro do pod `vcluster-0` (1 réplica), exigindo mínimo absoluto de CPU/RAM; (2) **Embedded etcd (`v0.35+` com suporte a snapshots etcd v3)** ou **External etcd**: permite escalar o plano de controle com consenso Raft dedicado; e (3) **Bancos relacionais externos (`PostgreSQL`, `MySQL`, Amazon RDS)**: através da camada de tradução Kine, múltiplos Tenant Clusters podem armazenar seu estado em bancos de dados gerenciados de alta disponibilidade na nuvem enquanto o control plane do vCluster roda múltiplas réplicas com **leader election**.
+EXAMPLE:
+```yaml
+# Exemplo de configuração vcluster.yaml habilitando Alta Disponibilidade (múltiplas réplicas do control plane) com etcd embarcado
+controlPlane:
+  statefulSet:
+    highAvailability:
+      replicas: 3
+  backingStore:
+    etcd:
+      embedded:
+        enabled: true
+```
+TRADE_OFFS: Ao utilizar o datastore padrão **SQLite embarcado**, o plano de controle do vCluster deve rodar com `replicas: 1` (pois o SQLite é um banco em arquivo local que não suporta escritas distribuídas concorrentes entre múltiplos pods); para configurar `replicas: 3` no control plane do vCluster, altere sempre o `backingStore` para `etcd` (embedded/deployed) ou para um banco externo (`database.external` PostgreSQL/MySQL).
+VERIFY: No cluster hospedeiro, execute `kubectl get pods -n <vcluster-namespace>` para verificar a quantidade de réplicas do control plane e se o `etcd` roda embarcado ou em StatefulSet separado.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-snapshots-backup-restore-s3-oci-azure-local]] | [[k3s-armazenamento-estado-kine-sqlite-etcd-bancos-relacionais]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 976 | vcluster-escalonador-host-scheduler-vs-virtual-scheduler-gpu-dra | vCluster: Host Scheduler vs Virtual Scheduler e agendamento de GPUs com Dynamic Resource Allocation (DRA) ===
+ONE_LINER: Por padrão, o vCluster reutiliza o **scheduler do Control Plane Cluster** para economizar recursos, mas permite habilitar o **Virtual Scheduler** interno quando o tenant precisa de node labels, taints/tolerations, operações de `drain` ou agendamento avançado de GPUs com **Dynamic Resource Allocation (DRA)**.
+IMPORTANCE: Em um cluster compartilhado de forma densa, rodar um binário `kube-scheduler` separado para cada um dos 100 Tenant Clusters consumiria memória desnecessária; contudo, em cargas de IA/ML ou quando o administrador do Tenant Cluster quer aplicar `kubectl cordon`/`kubectl drain` ou usar taints nos nós visíveis dentro do vCluster, a decisão de agendamento precisa acontecer dentro do próprio vCluster.
+HOW_IT_WORKS: Conforme explica a seção `Control plane` em `vcluster.com/docs/vcluster/introduction/architecture/`: (1) **Host Scheduler (padrão)**: o vCluster não inicia um scheduler próprio; o syncer cria o `Pod` no namespace hospedeiro sem `nodeName` atribuído, deixando o scheduler global do Control Plane Cluster decidir em qual nó colocá-lo; (2) **Virtual Scheduler (`controlPlane.advanced.virtualScheduler.enabled: true`)**: o vCluster executa um scheduler próprio que toma as decisões de posicionamento dentro do Tenant Cluster (respeitando taints, afinidades e `drain` virtuais) e já sincroniza o `Pod` com o `nodeName` definido; e (3) **GPU-aware scheduling (`v0.32+`)**: suporta **Dynamic Resource Allocation (DRA)** com `ResourceClaim`, `ResourceClaimTemplate` e `DeviceClass`, além de redimensionamento de pods in-place (*in-place pod resizing*).
+EXAMPLE:
+```yaml
+# Habilitar o Virtual Scheduler no vcluster.yaml para suportar taints, node labels e drain dentro do Tenant Cluster
+controlPlane:
+  advanced:
+    virtualScheduler:
+      enabled: true
+```
+TRADE_OFFS: Para que o **Virtual Scheduler** consiga tomar decisões precisas de agendamento dentro do Tenant Cluster no modo de nós compartilhados/dedicados, o vCluster precisa sincronizar informações reais dos nós a partir do cluster hospedeiro (`sync.fromHost.nodes.enabled: true`); sem visibilidade da capacidade real dos nós, o scheduler virtual não saberia quais nós possuem recursos livres.
+VERIFY: Com o Virtual Scheduler habilitado, execute `kubectl get events` dentro do vCluster ao criar um pod e confirme que os eventos de `Scheduled` são emitidos pelo scheduler do próprio vCluster.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-modos-nos-shared-dedicated-private-nodes-standalone]] | [[vcluster-auto-nodes-karpenter-gpu-ai-factories-slurm-ray]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 977 | vcluster-sleep-mode-pause-resume-economia-custos | vCluster: redução de custos de infraestrutura com Sleep Mode, vcluster pause/resume e anotações de hibernação ===
+ONE_LINER: O recurso de **Sleep Mode** (e os comandos CLI `vcluster pause` / `vcluster resume`, enriquecidos com anotações em nível de workload na v0.33+) permite pausar Tenant Clusters inativos de desenvolvimento, preview ou treinamento para liberar 100% da CPU/RAM/GPU dos workloads sem perder o estado do cluster.
+IMPORTANCE: Ambientes de desenvolvimento, homologação e preview de Pull Requests costumam ficar ociosos durante a noite e nos finais de semana (mais de 70% das horas da semana), mas continuam consumindo nós caros de computação na nuvem. Deletar o cluster inteiro exigiria reaprovisionar e reinstalar tudo na manhã seguinte; pausar o vCluster zera os pods mantendo todo o estado salvo no datastore.
+HOW_IT_WORKS: Quando um Tenant Cluster entra em **Sleep Mode** (automaticamente por inatividade na vCluster Platform ou manualmente via **`vcluster pause <nome>`**): (1) os `Pod`s dos workloads sincronizados no namespace hospedeiro são encerrados, liberando imediatamente CPU, memória e GPUs para o cluster/autoscaler reduzir os nós; (2) todas as definições de `Deployment`s, `StatefulSet`s, `ConfigMap`s, `Secret`s, `CRD`s e dados no datastore do vCluster permanecem intactos; e (3) assim que o desenvolvedor executa **`vcluster resume <nome>`** (ou faz uma requisição à API do cluster com instant wake configurado), o control plane e os workloads voltam a rodar em segundos exatamente de onde pararam.
+EXAMPLE:
+```bash
+# Pausar um Tenant Cluster inativo para liberar recursos de computação e retomá-lo instantaneamente quando necessário
+vcluster pause my-vcluster --namespace team-x
+vcluster list
+vcluster resume my-vcluster --namespace team-x
+```
+TRADE_OFFS: Quando um vCluster é pausado (`vcluster pause`), todos os processos em memória dentro dos pods daquele Tenant Cluster são terminados (`SIGTERM`); qualquer estado que a aplicação não tenha gravado em um `PersistentVolumeClaim` (`PVC`) ou banco de dados externo será perdido ao pausar, exatamente como ocorreria em um restart de pod.
+VERIFY: Execute `vcluster pause my-vcluster -n team-x` e verifique com `kubectl get pods -n team-x` no cluster hospedeiro que os pods das aplicações do tenant foram removidos, retornando imediatamente após `vcluster resume`.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-vind-execucao-docker-local-ci-comparacao-kind]] | [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 978 | vcluster-snapshots-backup-restore-s3-oci-azure-local | vCluster: Snapshot e Restore de Tenant Clusters para S3, registries OCI, Azure Blob e armazenamento local ===
+ONE_LINER: Conforme destacado nas tabelas `Key features` e `What's new` (`v0.31` a `v0.35`) do README oficial, o vCluster permite capturar **Snapshots** completos de um Tenant Cluster (incluindo SQLite, etcd embarcado ou Standalone) para buckets **S3**, registries **OCI**, **Azure Blob Storage** ou disco local e restaurá-los em qualquer lugar.
+IMPORTANCE: Fazer backup e migrar um cluster Kubernetes tradicional entre regiões ou provedores de nuvem exige ferramentas complexas que exportam centenas de manifestos YAML avulsos. Como todo o estado de controle de um Tenant Cluster está encapsulado no seu datastore, o vCluster consegue empacotar e restaurar um cluster inteiro como uma imagem OCI ou objeto S3.
+HOW_IT_WORKS: Quando o operador executa **`vcluster snapshot create <nome-vcluster> <uri-destino>`** (por exemplo, `oci://ghcr.io/minha-org/snapshots/cluster-a:v1`, `s3://meu-bucket/snap.tar.gz`, `azblob://...` ou `container:///caminho/local.tar.gz`), o vCluster cria um snapshot consistente do datastore do Tenant Cluster (SQLite, etcd v3 embarcado com suporte aprimorado na `v0.35` ou banco externo) e faz upload para o destino escolhido. Para restaurar o estado ou clonar o Tenant Cluster para outro ambiente/cluster hospedeiro, usa-se **`vcluster restore <nome-vcluster> <uri-destino>`** (ou `vcluster create ... --restore <uri>`).
+EXAMPLE:
+```bash
+# Criar um snapshot de um Tenant Cluster diretamente em um registry OCI e restaurá-lo
+vcluster snapshot create my-vcluster oci://ghcr.io/minha-org/vcluster-snaps:prod-backup -n team-x
+vcluster snapshot get my-vcluster oci://ghcr.io/minha-org/vcluster-snaps:prod-backup -n team-x
+```
+TRADE_OFFS: O snapshot nativo do vCluster captura o estado completo do **plano de controle e recursos da API do Kubernetes** (Deployments, Secrets, ConfigMaps, CRDs, PVCs); se os seus pods dentro do vCluster gravam dados de bancos de dados em discos físicos (`PersistentVolumes`), combine o snapshot do vCluster com snapshots de volumes CSI (ou armazene dados persistentes em serviços de banco externos/S3).
+VERIFY: Liste os snapshots gerados com `vcluster snapshot get` e teste a criação de um cluster clone em outro namespace usando `vcluster create clone-vcluster -n team-clone --restore <uri>`.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-armazenamento-estado-sqlite-etcd-postgres-mysql-ha]] | [[talos-bootstrap-etcd-gerenciamento-control-plane-ha]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 979 | vcluster-auto-nodes-karpenter-gpu-ai-factories-slurm-ray | vCluster: Auto Nodes (Karpenter-powered), Node VPN e clusters especializados para IA (Inference, Ray, Run:ai e Slurm) ===
+ONE_LINER: O vCluster suporta provisionamento dinâmico de nós privados baseado em **Karpenter** (**Auto Nodes** `v0.28+` com *node profiles* `v0.36+`), **Node VPN** (`v0.30+`) e serve de fundação certificada (*Kubernetes AI Conformant*) para **Inference Clusters**, **Ray Clusters**, **Run:ai** e **Slurm Clusters**.
+IMPORTANCE: Provedores de nuvem de IA (*AI clouds*), fábricas de IA (*AI factories* on-premises) e plataformas internas que operam milhares de GPUs precisam entregar ambientes isolados onde cada cliente ou execução de treinamento receba seu próprio cluster Kubernetes, Ray ou Slurm com escalonamento automático de nós GPU em nuvem híbrida ou bare metal. O README oficial do vCluster detalha esses casos de uso.
+HOW_IT_WORKS: (1) **Auto Nodes (`autoNodes.enabled: true`)**: utiliza tecnologia baseada no **Karpenter** para provisionar e desprovisionar automaticamente nós privados sob demanda conforme os pods do Tenant Cluster solicitam CPU/GPU, funcionando em nuvem pública, nuvem privada, híbrida e bare metal com perfis por pool (`node profiles` na v0.36+); (2) **Node VPN (`v0.30+`)**: permite que nós privados em diferentes datacenters, redes ou nuvens se juntem ao mesmo Tenant Cluster sobre um overlay VPN criptografado; e (3) **Clusters especializados de IA**: sobre o motor open-source do vCluster, a plataforma entrega clusters dedicados para pilhas de inferência (Dynamo, `llm-d`), **Ray**, **Run:ai** e **Slurm** (*Beta*).
+EXAMPLE:
+```yaml
+# Exemplo oficial do README habilitando Auto Nodes (autoscaling dinâmico baseado em Karpenter) sobre Private Nodes
+autoNodes:
+  enabled: true
+  nodeProvider: aws
+privateNodes:
+  enabled: true
+```
+TRADE_OFFS: Conforme esclarece a seção `Every kind of cluster` do README oficial, enquanto os **Kubernetes Clusters** e **Nested Clusters** (incluindo Shared/Dedicated/Private Nodes, Standalone e `vind`) fazem parte diretamente do motor open-source no repositório `loft-sh/vcluster`, a entrega gerenciada turnkey de clusters **Slurm**, **Ray**, **Run:ai**, **Inference** e **Node VPN** utiliza a camada **vCluster Platform** (que possui tier gratuito até 64 CPUs e 32 GPUs).
+VERIFY: Consulte a conformidade oficial de IA do vCluster no repositório `cncf/k8s-ai-conformance` referenciado no README e verifique a configuração de `autoNodes` com `vcluster create --help`.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-modos-nos-shared-dedicated-private-nodes-standalone]] | [[vcluster-escalonador-host-scheduler-vs-virtual-scheduler-gpu-dra]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster
+
+=== NOTE: 980 | vcluster-integracoes-nativas-cert-manager-eso-istio-gateway-api | vCluster: integrações nativas com a pilha do cluster hospedeiro (cert-manager, External Secrets, Istio, KubeVirt e Gateway API) ===
+ONE_LINER: Nos modos Shared e Dedicated Nodes, o vCluster possui integrações nativas para sincronizar recursos de **cert-manager**, **External Secrets Operator (ESO)**, **KubeVirt**, **Istio**, **metrics-server** e **Gateway API** (`v0.36+`) com uma única instalação compartilhada no Control Plane Cluster.
+IMPORTANCE: Se uma plataforma possui 50 Tenant Clusters rodando dentro de um único Control Plane Cluster, instalar 50 cópias separadas do `cert-manager`, 50 cópias do `external-secrets` e 50 controladores de Ingress/Gateway dentro de cada vCluster multiplicaria por 50 o consumo de memória RAM dos operadores de plataforma.
+HOW_IT_WORKS: Em vez de instalar o operador dentro de cada Tenant Cluster, o administrador instala o operador (como `cert-manager`, `external-secrets` ou o controlador de `Gateway API`) **apenas uma vez** no Control Plane Cluster e habilita a integração correspondente no `vcluster.yaml`. O syncer do vCluster copia a definição dos CRDs (`Certificate`, `Issuer`, `ExternalSecret`, `HTTPRoute`, `Gateway`) para dentro do Tenant Cluster: quando o desenvolvedor cria um `ExternalSecret` ou `Certificate` dentro do seu vCluster, o syncer o encaminha para o namespace hospedeiro, o operador global do Control Plane Cluster processa o recurso e gera o `Secret` nativo, e o syncer devolve o `Secret` pronto para dentro do vCluster!
+EXAMPLE:
+```yaml
+# Exemplo de vcluster.yaml reutilizando o cert-manager e o External Secrets Operator instalados no cluster hospedeiro
+integrations:
+  certManager:
+    enabled: true
+  externalSecrets:
+    enabled: true
+  metricsServer:
+    enabled: true
+```
+TRADE_OFFS: Para que as integrações compartilhadas (`integrations.certManager`, `integrations.externalSecrets` ou sincronização de `Gateway API`) funcionem, os respectivos operadores e CRDs **já devem estar instalados no Control Plane Cluster** hospedeiro; se um tenant precisar de uma versão customizada incompatível do operador que não existe no host, ele ainda pode desativar a integração e instalar o operador diretamente dentro do seu próprio vCluster.
+VERIFY: Com `integrations.metricsServer.enabled: true` no `vcluster.yaml`, conecte-se ao vCluster e execute `kubectl top pods` e `kubectl top nodes` para confirmar o consumo das métricas a partir do `metrics-server` do cluster hospedeiro.
+LINKS: [[vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura]] | [[vcluster-componente-syncer-sincronizacao-recursos-tohost-fromhost]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]]
+SOURCES: https://raw.githubusercontent.com/loft-sh/vcluster/main/README.md | https://www.vcluster.com/docs/vcluster/introduction/architecture/ | https://github.com/loft-sh/vcluster

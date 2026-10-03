@@ -1,0 +1,144 @@
+=== NOTE: 991 | stern-tail-logs-multi-pod-multi-container-kubernetes | Stern: tailing dinâmico de logs de múltiplos pods e múltiplos containers no Kubernetes com codificação por cores ===
+ONE_LINER: O **Stern** (`stern/stern`, fork mantido pela comunidade do antigo `wercker/stern` sob licença Apache-2.0) permite acompanhar (`tail`) em tempo real os logs de múltiplos pods e de todos os containers dentro de cada pod no Kubernetes, codificando cada pod/container com cores distintas no terminal.
+IMPORTANCE: O comando nativo `kubectl logs` tem limitações conhecidas ao depurar sistemas distribuídos: quando um Deployment possui 10 réplicas (ou está fazendo um rolling update onde pods antigos morrem e pods novos nascem com hashes aleatórios) e cada pod possui 3 containers (initContainer, app, sidecar Envoy), o `kubectl logs` não acompanha automaticamente todos os containers de novos pods criados após o início do comando com cores diferenciadas.
+HOW_IT_WORKS: Quando você executa **`stern <pod-query> [flags]`**, a consulta `pod-query` pode ser uma **expressão regular** (ex.: `"web-\w"` para casar com `web-backend-*` e `web-frontend-*`) ou uma referência exata a um recurso Kubernetes no formato **`<resource>/<name>`** (suportando `pod`, `replicationcontroller`, `service`, `daemonset`, `deployment`, `replicaset`, `statefulset` e `job`, como `stern deployment/nginx`). O Stern abre um watch na API do Kubernetes: por padrão, ele escuta **todos os containers** de todos os pods correspondentes (incluindo `initContainers` e `ephemeralContainers`); se um pod for deletado, ele é removido do tail automaticamente, e se um novo pod for adicionado (ex.: durante um deploy ou autoscale), seus logs passam a ser acompanhados imediatamente!
+EXAMPLE:
+```bash
+# Acompanhar em tempo real os logs de todos os pods e containers pertencentes ao deployment/checkout-api
+stern deployment/checkout-api -n production
+```
+TRADE_OFFS: Por padrão, o flag `--tail` do Stern tem valor **`-1`** (o que instrui o Stern a mostrar todas as linhas de log existentes dentro da janela padrão `--since 48h0m0s` ao iniciar!); em pods de produção que geram milhares de linhas de log por minuto, rodar `stern` sem limitar `--tail` ou `--since` despejará uma enxurrada de histórico antigo no terminal — passe **`--tail 50`** ou **`--since 5m`** (ou configure `tail: 10` no `~/.config/stern/config.yaml`) para focar nos logs recentes.
+VERIFY: Instale o Stern (`brew install stern` ou `kubectl krew install stern`), execute `stern --version` e rode `stern . -n kube-system --tail 5` para observar o streaming colorido de múltiplos pods do cluster.
+LINKS: [[stern-selecao-alvos-regex-recursos-labels-containers-estados]] | [[stern-filtragem-linhas-include-exclude-highlight-timestamps]] | [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 992 | stern-selecao-alvos-regex-recursos-labels-containers-estados | Stern: seleção granular de pods e containers (--selector, --field-selector, --node, --container e --container-state) ===
+ONE_LINER: Conforme a tabela oficial de flags da CLI no README do Stern, além da `pod-query`, é possível filtrar alvos por label selector (`-l`), field selector (`--field-selector`), nó (`--node`), expressões regulares de inclusão/exclusão de containers (`-c` / `-E`), exclusão de pods (`--exclude-pod`) e estado do container (`--container-state`).
+IMPORTANCE: Em clusters com service mesh (Istio/Linkerd) ou agentes de coleta de logs, cada pod possui um container sidecar `istio-proxy` que emite centenas de linhas de access log por segundo; durante a investigação de um bug de negócio, você frequentemente quer ver os logs de todos os pods com a label `app=orders`, mas **excluindo** o container `istio-proxy` ou filtrando apenas containers que terminaram com erro (`terminated`).
+HOW_IT_WORKS: As flags de seleção de alvos do Stern combinam-se de forma flexível: (1) **Seletores sem pod-query**: ao passar **`--selector` (`-l`)** ou **`--field-selector`**, a `pod-query` assume automaticamente o padrão `".*"` (não sendo necessário digitar `.` na linha de comando); (2) **Filtro por nó (`--node`)**: acompanha apenas os pods agendados em um nó worker específico; (3) **Filtros de Container**: `--container` (`-c`, regex, padrão `.*`), `--exclude-container` (`-E`, regex para ignorar sidecars como `-E istio-proxy`), `--init-containers=true|false` e `--ephemeral-containers=true|false`; e (4) **Estado do Container (`--container-state`)**: aceita `running`, `waiting`, `terminated` ou `all` (padrão `all`, podendo passar múltiplos estados separados por vírgula).
+EXAMPLE:
+```bash
+# Acompanhar pods pelo label selector (-l) em todos os namespaces (-A), excluindo o container sidecar istio-proxy (-E)
+stern -A -l app.kubernetes.io/part-of=payments -E "istio-proxy|envoy" --tail 20
+```
+TRADE_OFFS: Quando você passa a flag **`--all-namespaces` (`-A`)**, conforme documenta a tabela oficial de flags da CLI do Stern, qualquer namespace específico que tenha sido passado junto na flag `--namespace` (`-n`) é ignorado; se você quiser acompanhar apenas 2 ou 3 namespaces específicos sem buscar no cluster inteiro, repita a flag `-n` ou passe os nomes separados por vírgula (**`-n staging,production`**).
+VERIFY: Execute `stern -l k8s-app=kube-dns -n kube-system --tail 10` (sem passar `pod-query` posicional) e confirme que o Stern assume `.*` automaticamente quando `-l` está presente.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-filtragem-linhas-include-exclude-highlight-timestamps]] | [[stern-formatos-saida-output-templates-go-funcoes-json]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 993 | stern-filtragem-linhas-include-exclude-highlight-timestamps | Stern: filtragem e destaque de conteúdo de logs por Regex (--include, --exclude, --highlight) e formatação de timestamps (-t) ===
+ONE_LINER: Em vez de encadear múltiplos comandos `grep -v` e `grep -E` no shell (que frequentemente sofrem com buffering de pipe), o Stern filtra e destaca o conteúdo das linhas de log nativamente via expressões regulares com **`--include` (`-i`)**, **`--exclude` (`-e`)** e **`--highlight` (`-H`)**, além de formatar datas e fusos com **`--timestamps` (`-t`)** e **`--timezone`**.
+IMPORTANCE: Aplicações web costumam registrar uma linha `GET /healthz 200 OK` a cada 2 segundos por pod devido às probes do `kubelet`, poluindo o terminal. Se você tentar filtrar com `stern app | grep -v healthz | grep ERROR`, perde a capacidade de ver o contexto ao redor de uma linha destacada ou precisa lidar com o buffer do pipe Unix.
+HOW_IT_WORKS: Para cada linha de log recebida dos containers: (1) **`--exclude` (`-e`)**: descarta qualquer linha que case com a expressão regular informada (pode ser repetida para múltiplos padrões, ex.: `-e "/healthz" -e "/metrics"`); (2) **`--include` (`-i`)**: exibe apenas linhas que casem com a expressão regular informada; (3) **`--highlight` (`-H`)**: mantém todas as linhas fluindo na tela, mas colore em destaque qualquer trecho que case com a regex (ex.: `-H "ERROR|WARN|timeout"`); e (4) **`--timestamps` (`-t` / `--timestamps=short|default`) e `--timezone`**: adiciona o timestamp de cada linha convertido para o fuso horário local (`Local`, o padrão) ou para uma timezone específica (ex.: `--timezone UTC` ou `America/Sao_Paulo`).
+EXAMPLE:
+```bash
+# Excluir logs de healthcheck (-e), destacar erros/timeouts (-H) e exibir timestamps curtos (-t) no fuso UTC
+stern deployment/orders-api -e "/healthz|/readyz" -H "ERROR|DEADLINE_EXCEEDED" --timestamps=short --timezone=UTC
+```
+TRADE_OFFS: Conforme detalha a tabela de flags do README oficial do Stern, ao especificar um formato para a flag `--timestamps` (como `default` ou `short`), **o sinal de igual `=` não pode ser omitido** (`--timestamps=short` ou apenas `-t` / `--timestamps` sem valor para usar o formato `default`); se você escrever `--timestamps short` com espaço em branco, a palavra `short` será interpretada pelo parser como um argumento posicional de `pod-query`!
+VERIFY: Execute `stern . -n kube-system --tail 10 --timestamps=short -H "kube"` e verifique a exibição do timestamp curto no início de cada linha e o destaque colorido do termo pesquisado.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-selecao-alvos-regex-recursos-labels-containers-estados]] | [[stern-formatos-saida-output-templates-go-funcoes-json]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 994 | stern-formatos-saida-output-templates-go-funcoes-json | Stern: modos de saída (--output default, raw, json, extjson, ppextjson) e templates Go customizados (--template) ===
+ONE_LINER: O Stern oferece cinco formatos predefinidos de saída via **`--output` (`-o`)** — `default`, `raw`, `json`, `extjson` e `ppextjson` — e permite compilar templates Go customizados via **`--template`** (ou `--template-file` / `-T`) com funções embutidas de parsing de JSON e cores (`extractJSONParts`, `prettyJSON`, `levelColor`).
+IMPORTANCE: Quando os microsserviços emitem logs estruturados em JSON (contendo 20 campos internos como `trace_id`, `span_id`, `level`, `msg`, `http.status`), você às vezes quer canalizar apenas o JSON puro para o `jq` (`-o raw` ou `--only-log-lines`), e às vezes quer que o próprio Stern extraia e imprima apenas `[level] msg (trace_id)` colorido diretamente no terminal sem precisar do `jq`.
+HOW_IT_WORKS: Conforme documenta a seção `templates` do README oficial: (1) **Modos `--output` (`-o`)**: `default` (exibe `pod container mensagem` colorido), `raw` (imprime apenas `Message`, ideal para pipe no `jq`), `json` (serializa a struct completa do Stern com `nodeName`, `namespace`, `podName`, `containerName`, `message`, `labels` e `annotations` em JSON), `extjson` e `ppextjson` (JSON estendido/pretty-printed com nomes coloridos); e (2) **Templates Go (`--template`)**: recebe a struct com `.Message`, `.Timestamp`, `.NodeName`, `.Namespace`, `.PodName`, `.ContainerName`, `.Labels` e `.Annotations`, disponibilizando funções auxiliares como **`parseJSON`**, **`tryExtractJSONParts`**, **`prettyJSON`**, **`toRFC3339Nano`**, **`toTimestamp`**, **`levelColor`** e **`bunyanLevelColor`**.
+EXAMPLE:
+```bash
+# Extrair campos específicos (level e msg) de logs JSON estruturados diretamente com a função tryExtractJSONParts do Stern
+stern deployment/api --template '{{color .PodColor .PodName}} {{tryExtractJSONParts .Message "level" "msg"}}{{"\n"}}'
+```
+TRADE_OFFS: Prefira usar as funções tolerantes a falhas **`tryParseJSON`**, **`tryExtractJSONParts`** ou **`prettyJSON`** dentro do `--template` em vez de `parseJSON` ou `extractJSONParts` estritas: se um container emitir uma única linha de stack trace ou pânico que não seja JSON válido (por exemplo, um log de boot ou `panic:` do runtime), `parseJSON` falhará naquela linha, enquanto `tryExtractJSONParts` e `prettyJSON` imprimirão o texto original sem interromper a formatação.
+VERIFY: Execute `stern . -n kube-system --tail 3 -o json | jq .` para inspecionar todos os metadados (`nodeName`, `podName`, `containerName`, `message`) exportados pelo modo JSON do Stern.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-filtragem-linhas-include-exclude-highlight-timestamps]] | [[stern-processamento-logs-locais-stdin-no-follow-condition]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 995 | stern-processamento-logs-locais-stdin-no-follow-condition | Stern: leitura de logs via entrada padrão (--stdin), execução única (--no-follow) e filtro por condição (--condition) ===
+ONE_LINER: O Stern pode operar como um formatador e filtro de logs locais sem conectar-se ao Kubernetes usando **`--stdin`**, encerrar automaticamente após mostrar os logs atuais com **`--no-follow`** e filtrar pods por condições de status (como `Ready=false`) com **`--condition`**.
+IMPORTANCE: Em scripts de coleta de diagnóstico de CI/CD (onde o comando precisa capturar os logs existentes e **sair** em vez de ficar bloqueado esperando novos logs eternamente), o modo `--no-follow` é obrigatório; já ao analisar arquivos de log salvos em disco, `--stdin` permite aplicar todo o poder de templates Go (`prettyJSON`, `levelColor`, `-H`, `-e`) do Stern sobre arquivos locais.
+HOW_IT_WORKS: Conforme especifica a tabela de flags do README oficial: (1) **`--stdin`**: faz o Stern ler e processar linhas de log vindas da entrada padrão (`cat app.log | stern --stdin -H ERROR`), ignorando todas as flags relacionadas ao Kubernetes; (2) **`--no-follow`**: imprime todos os logs encontrados nos pods selecionados e encerra o processo imediatamente com código `0`; e (3) **`--condition <condition-name>[=<condition-value>]`** (onde o valor padrão é `true`, case-insensitive): filtra pods com base em suas `status.conditions` (por exemplo, `--condition Ready=false`), sendo suportado em conjunto com `--tail=0` ou `--no-follow`.
+EXAMPLE:
+```bash
+# Coletar todos os logs recentes dos pods de um job/deployment e encerrar imediatamente (--no-follow) para uso em CI
+stern job/db-migration -n staging --since 15m --no-follow > /tmp/migration-logs.txt
+```
+TRADE_OFFS: Conforme documenta a tabela oficial de flags da CLI para `--max-log-requests`, quando você usa **`--no-follow`** sem especificar `--max-log-requests`, o limite padrão de requisições concorrentes de log cai de `50` (no modo streaming normal) para **`5`**; se o seu comando `stern --no-follow` precisar coletar logs de 20 pods no mesmo deployment, passe explicitamente **`--max-log-requests 50`** para que ele não aborte ao atingir 5 fluxos de log!
+VERIFY: Execute `echo '{"level":"info","msg":"hello stern"}' | stern --stdin --template '{{prettyJSON .Message}}'` no terminal local (sem precisar de cluster Kubernetes) para validar o modo `--stdin`.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-formatos-saida-output-templates-go-funcoes-json]] | [[stern-limites-concorrencia-max-log-requests-qps-burst-api]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 996 | stern-limites-concorrencia-max-log-requests-qps-burst-api | Stern: controle de concorrência e proteção do API Server (--max-log-requests, --qps, --burst e --verbosity) ===
+ONE_LINER: Para evitar sobrecarregar o API Server do Kubernetes e os `kubelet`s ao observar dezenas de pods simultaneamente, o Stern controla o número máximo de streams concorrentes com **`--max-log-requests`** (padrão 50) e a taxa de chamadas à API com **`--qps`** e **`--burst`**.
+IMPORTANCE: Em um cluster de produção onde um `Deployment` escalou para 120 pods (com 2 containers cada = 240 streams de log), abrir 240 conexões HTTP de streaming simultâneas contra o API Server causaria throttling severo no cliente (`client-go`) ou sobrecarga no control plane; por outro lado, quando o operador realmente precisa observar mais de 50 containers, ele precisa saber ajustar `--max-log-requests`.
+HOW_IT_WORKS: Conforme documenta a tabela de flags e a seção `Log level verbosity` do README oficial: (1) **`--max-log-requests`**: define o número máximo de streams de log concorrentes que o Stern abrirá simultaneamente (padrão **`50`** em modo follow e **`5`** quando `--no-follow` é especificado); (2) **`--qps`** e **`--burst`**: controlam o rate limiter client-side para o API Server do Kubernetes (padrão `0`, que usa os defaults do `client-go`; passar `--qps=-1` desabilita o throttling client-side); e (3) **`--verbosity`**: aumenta o nível de detalhe dos logs internos do próprio Stern para inspecionar como ele está interagindo com o API Server do Kubernetes durante troubleshooting.
+EXAMPLE:
+```bash
+# Aumentar o limite de streams simultâneos (--max-log-requests) e a taxa de QPS/Burst ao observar um deployment grande
+stern deployment/high-scale-worker --max-log-requests 150 --qps 50 --burst 100 --tail 10
+```
+TRADE_OFFS: Embora seja possível colocar `max-log-requests: 999` no arquivo `~/.config/stern/config.yaml` (como mostrado no próprio exemplo de configuração da documentação oficial), em clusters compartilhados combine limites altos de `max-log-requests` sempre com `--tail 10` ou `--since 1m` para que abrir centenas de streams não transfira gigabytes de logs históricos de 48 horas de uma só vez pelo API Server.
+VERIFY: Execute `stern . -n kube-system --tail 1 --verbosity 6` para observar nos logs de diagnóstico as requisições `GET` feitas pelo Stern ao API Server do Kubernetes.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-processamento-logs-locais-stdin-no-follow-condition]] | [[stern-configuracao-persistente-config-yaml-cores-prompt]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 997 | stern-configuracao-persistente-config-yaml-cores-prompt | Stern: arquivo de configuração persistente (~/.config/stern/config.yaml), customização de cores SGR e modo --prompt ===
+ONE_LINER: O Stern permite salvar padrões globais para qualquer flag da CLI no arquivo **`~/.config/stern/config.yaml`** (ou via `--config` / `STERNCONFIG`), customizar a paleta de cores ANSI SGR de pods e containers (`--pod-colors`, `--container-colors`, `--diff-container`) e selecionar instâncias interativamente com **`--prompt` (`-p`)**.
+IMPORTANCE: Digitar `--tail 20 --timestamps=short --max-log-requests 200` em absolutamente todos os comandos `stern` do dia a dia é repetitivo; além disso, usuários com daltonismo ou terminais de fundo claro precisam ajustar os códigos de cores SGR usados para destacar os nomes dos pods e containers.
+HOW_IT_WORKS: Conforme documenta a seção `config file` e a tabela de flags do README oficial: (1) **Config File (`~/.config/stern/config.yaml`)**: aceita pares `<flag-name>: <value>` em YAML (ex.: `tail: 10`, `max-log-requests: 999`, `timestamps: short`), podendo apontar para outro caminho com `--config` ou variável de ambiente **`STERNCONFIG`**; (2) **Customização de Cores**: `--diff-container` (`-d`) força cores diferentes para containers diferentes dentro do mesmo pod, enquanto `--pod-colors` e `--container-colors` aceitam listas separadas por vírgula de sequências SGR (Select Graphic Rendition, ex.: `"91,92,93,94,95,96"` para cores brilhantes); e (3) **Modo interativo (`--prompt` / `-p`)**: exibe um seletor interativo no terminal listando os valores encontrados da label padrão `app.kubernetes.io/instance` no namespace para você escolher qual aplicação acompanhar.
+EXAMPLE:
+```yaml
+# Exemplo oficial de ~/.config/stern/config.yaml definindo valores padrão seguros e práticos para o dia a dia
+tail: 10
+max-log-requests: 999
+timestamps: short
+diff-container: true
+```
+TRADE_OFFS: Conforme observa a descrição oficial da flag `--container-colors`, se você definir tanto `--pod-colors` quanto `--container-colors` (na linha de comando ou no `config.yaml`), **ambas as listas devem ter exatamente o mesmo comprimento (número de cores)**; caso `--container-colors` seja omitida, ela herda automaticamente os mesmos valores de `--pod-colors`.
+VERIFY: Crie o arquivo `~/.config/stern/config.yaml` com `tail: 10` e `timestamps: short` e execute `stern . -n kube-system` sem flags adicionais para confirmar a aplicação automática das preferências.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-limites-concorrencia-max-log-requests-qps-burst-api]] | [[k9s-extensibilidade-plugins-hotkeys-aliases-views-skins]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 998 | stern-containers-efemeros-init-containers-ciclo-vida-pods | Stern: acompanhamento automático de initContainers, ephemeralContainers (kubectl debug) e rollouts dinâmicos ===
+ONE_LINER: Por padrão (`--init-containers=true` e `--ephemeral-containers=true`), o Stern acompanha automaticamente os logs de containers de inicialização, containers principais e containers efêmeros de debug na medida em que são criados ou substituídos durante rollouts do Kubernetes.
+IMPORTANCE: Quando um pod fica travado em `Init:0/2` ou `Init:CrashLoopBackOff`, o comando `kubectl logs <pod>` padrão falha ou tenta ler o container principal que ainda nem iniciou, exigindo que o operador descubra o nome do `initContainer` e rode `kubectl logs <pod> -c <init-container>`. No Stern, todos os `initContainers` e containers de aplicação já aparecem automaticamente no mesmo fluxo cronológico colorido.
+HOW_IT_WORKS: Quando o Stern detecta um pod que corresponde à consulta: (1) ele inspeciona `spec.initContainers`, `spec.containers` e `spec.ephemeralContainers` (criados via `kubectl debug`); (2) abre um stream de log separado para cada container (diferenciável visualmente ativando `--diff-container` / `-d`); (3) durante um `kubectl rollout restart` de um Deployment, à medida que os pods da revisão antiga recebem `SIGTERM` e emitem seus logs de desligamento gracioso (*graceful shutdown*), os novos pods da revisão nova entram em `Init` -> `Running` e têm seus logs intercalados na mesma janela do terminal sem perder nenhuma linha da transição; e (4) caso você queira ocultar os logs de inicialização, basta passar `--init-containers=false`.
+EXAMPLE:
+```bash
+# Observar em uma única janela um rollout completo diferenciando cores por container (-d), incluindo initContainers
+stern deployment/payment-service -d --tail 0
+```
+TRADE_OFFS: Usar `stern deployment/<nome> -d --tail 0` (onde `--tail 0` ignora todas as linhas passadas e mostra apenas linhas geradas a partir do momento em que o comando foi iniciado) em um terminal ao lado de `kubectl rollout restart deployment/<nome>` é a forma mais limpa de validar que os pods antigos encerram conexões sem erros HTTP 500 e que os pods novos passam pelos `initContainers` sem falhas.
+VERIFY: Inicie `stern deployment/<nome> -d --tail 0`, anexe um container efêmero de teste com `kubectl debug` (ou reinicie o deployment) e confirme que o Stern passa a imprimir os logs do novo container automaticamente sem reiniciar o comando.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-selecao-alvos-regex-recursos-labels-containers-estados]] | [[ko-cicd-github-actions-assinatura-cosign-slsa-seguranca]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 999 | stern-pipeline-jq-only-log-lines-raw-color-control | Stern: integração em pipelines Unix com jq (--only-log-lines / -o raw, --color) e funções de tempo (toUTC, toTimestamp) ===
+ONE_LINER: Para integrar o Stern com processadores de linha de comando como `jq`, `awk` ou `grep`, as opções **`--only-log-lines`** (ou **`-o raw`**) e **`--color=never|auto|always`** controlam os prefixos e códigos de escape ANSI, enquanto as funções de template `toUTC`, `toRFC3339Nano` e `toTimestamp` normalizam datas internas do JSON.
+IMPORTANCE: Se você tentar fazer `stern meu-app | jq .`, o `jq` falhará imediatamente com erro de parsing porque a saída padrão do Stern precede cada linha JSON com o nome colorido do pod e do container (`meu-app-7b9f-xk2 api {"level":"info",...}`). Saber emitir apenas a linha bruta (`-o raw` / `--only-log-lines`) ou enriquecer o JSON com o nome do pod (`-o json`) permite compor pipelines Unix perfeitos.
+HOW_IT_WORKS: Conforme a documentação oficial do Stern: (1) **`-o raw`** ou **`--only-log-lines`**: suprime o prefixo de namespace/pod/container e imprime exclusivamente a mensagem de log original, permitindo canalizar logs JSON de 10 pods diferentes diretamente para `| jq .`; (2) **`-o json`**: envolve a linha de log em um envelope JSON do Stern (`{"nodeName":...,"namespace":...,"podName":...,"containerName":...,"message":...}`), ideal quando você quer filtrar no `jq` tanto pelo nome do pod quanto pelo conteúdo da mensagem (`jq 'select(.podName | contains("canary")) | .message | fromjson'`); e (3) **`--color`**: por padrão é `auto` (desativa cores automaticamente quando a saída é redirecionada para um pipe `|` ou arquivo `>`), podendo ser forçado para `always` (ex.: `stern app --color=always | less -R`) ou `never`.
+EXAMPLE:
+```bash
+# Canalizar logs JSON de múltiplos pods diretamente para o jq usando -o raw ou paginar com cores no less -R
+stern deployment/api -o raw --tail 50 | jq 'select(.status >= 500)'
+stern deployment/api --color=always --no-follow --tail 200 | less -R
+```
+TRADE_OFFS: Quando você usa `-o raw` (ou `--only-log-lines`) agregando logs de 10 pods diferentes no `jq`, se o JSON original emitido pela aplicação não contiver um campo identificando o `hostname` ou `pod_name`, você não saberá de qual pod veio aquela linha filtrada pelo `jq`; nesse caso, prefira usar `-o json` ou um `--template` customizado que injete `.PodName` no JSON.
+VERIFY: Execute `stern . -n kube-system --tail 5 --no-follow --only-log-lines` e confirme que os prefixos de pod e container foram removidos da saída.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-formatos-saida-output-templates-go-funcoes-json]] | [[stern-processamento-logs-locais-stdin-no-follow-condition]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern
+
+=== NOTE: 1000 | stern-instalacao-krew-homebrew-autocompletar-shells-kubeconfig | Stern: instalação via Krew/Homebrew/asdf/WinGet, precedência de KUBECONFIG e autocompletar de shell (--completion) ===
+ONE_LINER: O Stern pode ser instalado como plugin oficial do `kubectl` via **Krew** (`kubectl krew install stern`, invocável como `kubectl stern`), além de Homebrew, `asdf`, WinGet ou `go install`, oferecendo autocompletar dinâmico de nomes de pods/deployments para `bash`, `zsh` e `fish` via **`--completion`**.
+IMPORTANCE: Em ambientes Kubernetes, o autocompletar de shell (`--completion`) do Stern não completa apenas nomes de flags estáticas — ele consulta o cluster ativo para autocompletar com `<TAB>` os nomes de `deployment/...`, `statefulset/...`, `service/...` e namespaces (`-n`), acelerando drasticamente a operação na linha de comando.
+HOW_IT_WORKS: Conforme documentam as seções `Installation` e `Usage` do README oficial: (1) **Instalação**: disponível via `brew install stern`, `kubectl krew install stern`, `asdf plugin add stern && asdf install stern latest`, `winget install stern.stern` ou `go install github.com/stern/stern@latest`; (2) **Precedência de `KUBECONFIG`**: o Stern utiliza a variável de ambiente **`$KUBECONFIG`** se estiver definida (suportando múltiplos arquivos separados por `:` no Linux/macOS), mas se tanto `$KUBECONFIG` quanto a flag **`--kubeconfig`** forem passados, a flag da CLI `--kubeconfig` tem precedência; e (3) **Shell Completion**: executar **`source <(stern --completion bash)`** (ou `zsh` / `fish`) registra o autocompletar interativo no shell atual.
+EXAMPLE:
+```bash
+# Instalar o Stern via Krew (como plugin kubectl stern) e habilitar o autocompletar no shell atual
+kubectl krew install stern
+source <(stern --completion bash)
+```
+TRADE_OFFS: Quando instalado via **Krew** (`kubectl krew install stern`), o binário é instalado em `~/.krew/bin/kubectl-stern`, permitindo invocá-lo como subcomando nativo **`kubectl stern deployment/meu-app`**; se você também quiser invocá-lo apenas como `stern` (ou dentro de plugins padrão do K9s que chamam `command: stern`), crie um link simbólico ou instale-o também no `$PATH` padrão.
+VERIFY: Execute `stern --completion bash | head -n 20` para verificar a geração do script de autocompletar e confirme a versão com `stern --version`.
+LINKS: [[stern-tail-logs-multi-pod-multi-container-kubernetes]] | [[stern-configuracao-persistente-config-yaml-cores-prompt]] | [[k9s-extensibilidade-plugins-hotkeys-aliases-views-skins]]
+SOURCES: https://raw.githubusercontent.com/stern/stern/master/README.md | https://raw.githubusercontent.com/stern/stern/master/CONTRIBUTING.md | https://github.com/stern/stern

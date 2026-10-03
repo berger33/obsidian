@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **900 / 2.000 (45,00%)**
-- Gate automatizado: **900/900 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 9)
-- Revisão factual humana: **0/900**
-- Revisão factual por IA: **900/900**
-- Contabilizadas como válidas: **900/900**
-- Revisor das 900 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–9 (900 notas, IDs 1–900) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1000 / 2.000 (50,00%)**
+- Gate automatizado: **1000/1000 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 10)
+- Revisão factual humana: **0/1000**
+- Revisão factual por IA: **1000/1000**
+- Contabilizadas como válidas: **1000/1000**
+- Revisor das 1000 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–10 (1000 notas, IDs 1–1000) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-09.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-09.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-10.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-10.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md), [`tranche 4`](../reports/ai-review-software-devops-2000-0002-tranche-04.md), [`tranche 5`](../reports/ai-review-software-devops-2000-0002-tranche-05.md), [`tranche 6`](../reports/ai-review-software-devops-2000-0002-tranche-06.md), [`tranche 7`](../reports/ai-review-software-devops-2000-0002-tranche-07.md), [`tranche 8`](../reports/ai-review-software-devops-2000-0002-tranche-08.md), [`tranche 9`](../reports/ai-review-software-devops-2000-0002-tranche-09.md), [`tranche 10`](../reports/ai-review-software-devops-2000-0002-tranche-10.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 900 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1100 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 1000 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1000 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -1206,6 +1206,138 @@
 899. [MetalBear mirrord: mirrord for CI, Preview Environments, Multi-cluster e operação Air-gapped (Enterprise)](../../domains/software-0008/software/devops/mirrord-enterprise-preview-environments-ci-multicluster-airgap.md)
 900. [MetalBear mirrord: tipos de alvos suportados (--target pod, deployment, statefulset, job, argoproj Rollout) e modo targetless](../../domains/software-0008/software/devops/mirrord-alvos-execucao-targetless-pod-deployment-rollout-job.md)
 
+## Tranche 10 — HashiCorp Vault, External Secrets Operator (ESO), Bitnami Sealed Secrets, SOPS, Atlantis, Infracost, GoReleaser, vCluster, K9s e Stern (100 notas; revisão factual por IA registrada)
+
+### HashiCorp Vault (gerenciamento centralizado de segredos, segredos dinâmicos, leases, criptografia Transit e Integrated Storage Raft)
+
+901. [HashiCorp Vault: gerenciamento centralizado de segredos, controle de acesso e trilha de auditoria](../../domains/software-0008/software/devops/vault-gerenciamento-centralizado-segredos-arquitetura-acesso.md)
+902. [HashiCorp Vault: criptografia em repouso (barreira de segurança) e backends de armazenamento (Integrated Storage Raft)](../../domains/software-0008/software/devops/vault-armazenamento-criptografado-integrated-storage-raft-backends.md)
+903. [HashiCorp Vault: geração de Segredos Dinâmicos sob demanda, Leases, Renovação e Revogação em árvore](../../domains/software-0008/software/devops/vault-segredos-dinamicos-leases-renovacao-revogacao.md)
+904. [HashiCorp Vault: criptografia de dados como serviço (Encryption as a Service) sem armazenar os dados no Vault](../../domains/software-0008/software/devops/vault-criptografia-como-servico-transit-data-encryption.md)
+905. [HashiCorp Vault: arquitetura modular de plugins (Authentication, General Secrets e Database Plugins)](../../domains/software-0008/software/devops/vault-ecossistema-plugins-auth-secrets-database.md)
+906. [HashiCorp Vault: autorização baseada em caminhos (Path-Based Policies em HCL) e princípio do privilégio mínimo](../../domains/software-0008/software/devops/vault-politicas-autorizacao-hcl-caminhos-least-privilege.md)
+907. [HashiCorp Vault: gerenciamento de segredos estáticos (KV Secrets Engine v2), versionamento e Check-and-Set (CAS)](../../domains/software-0008/software/devops/vault-motor-segredos-estaticos-kv-v2-versionamento-check-and-set.md)
+908. [HashiCorp Vault: emissão automatizada de certificados X.509 de curta duração como Autoridade Certificadora (PKI)](../../domains/software-0008/software/devops/vault-gerenciamento-certificados-pki-x509-ca-interna.md)
+909. [HashiCorp Vault: padrões de integração com Kubernetes (Kubernetes Auth, Vault Agent Injector, CSI e ESO)](../../domains/software-0008/software/devops/vault-integracao-kubernetes-auth-injector-csi-eso.md)
+910. [HashiCorp Vault: compilação a partir do código-fonte (make dev/dev-ui) e bibliotecas oficiais Go (vault/api e vault/sdk)](../../domains/software-0008/software/devops/vault-bibliotecas-go-api-sdk-desenvolvimento-testes.md)
+
+### External Secrets Operator — ESO (operador CNCF para sincronização declarativa de cofres de segredos externos com Kubernetes Secrets)
+
+911. [External Secrets Operator (ESO): sincronização declarativa de gerenciadores de segredos externos com Kubernetes Secrets](../../domains/software-0008/software/devops/externalsecrets-operador-kubernetes-sincronizacao-segredos-externos.md)
+912. [External Secrets Operator: separação de responsabilidades entre SecretStore, ClusterSecretStore e ExternalSecret](../../domains/software-0008/software/devops/externalsecrets-modelo-recursos-secretstore-externalsecret-clustersecretstore.md)
+913. [External Secrets Operator: ciclo de reconciliação (refreshInterval), creationPolicy e templates de Secret](../../domains/software-0008/software/devops/externalsecrets-ciclo-reconciliacao-creationpolicy-templates.md)
+914. [External Secrets Operator: extração de múltiplas chaves com dataFrom (extract, find e rewrite)](../../domains/software-0008/software/devops/externalsecrets-extracao-lote-datafrom-extract-find-rewrite.md)
+915. [External Secrets Operator: personas (Cluster Operator vs App Developer), controle de acesso e múltiplos controladores](../../domains/software-0008/software/devops/externalsecrets-seguranca-rbac-least-privilege-multi-controller.md)
+916. [External Secrets Operator: integração multi-provedor (AWS, Vault, GCP, Azure, IBM, Akeyless, CyberArk e Pulumi ESC)](../../domains/software-0008/software/devops/externalsecrets-provedores-suportados-aws-vault-gcp-azure-pulumi.md)
+917. [External Secrets Operator: sincronização reversa de segredos do cluster para o cofre externo com PushSecret](../../domains/software-0008/software/devops/externalsecrets-pushsecret-sincronizacao-reversa-kubernetes-para-cofre.md)
+918. [External Secrets Operator: geração dinâmica de segredos e tokens com Generators (Password, UUID, ECR, VaultDynamicSecret)](../../domains/software-0008/software/devops/externalsecrets-geradores-dinamicos-password-uuid-ecr-sts.md)
+919. [External Secrets Operator: arquitetura de componentes no cluster (core controller, webhook, cert-controller) e SBOMs de release](../../domains/software-0008/software/devops/externalsecrets-cadeia-suprimentos-sbom-proveniencia-arquitetura-deployments.md)
+920. [External Secrets Operator: atualização imediata sob demanda (force-sync), métricas Prometheus e diagnóstico de eventos](../../domains/software-0008/software/devops/externalsecrets-operacao-forcada-refresh-troubleshooting-metricas.md)
+
+### Bitnami Sealed Secrets (criptografia assimétrica de Secrets para GitOps com kubeseal, CRD SealedSecret e controlador em-cluster)
+
+921. [Bitnami Sealed Secrets: criptografia assimétrica de Secrets para GitOps (kubeseal e controlador SealedSecret)](../../domains/software-0008/software/devops/sealedsecrets-criptografia-assimetrica-gitops-kubeseal-crd.md)
+922. [Bitnami Sealed Secrets: os 3 escopos de criptografia (strict, namespace-wide e cluster-wide) contra movimentação não autorizada](../../domains/software-0008/software/devops/sealedsecrets-escopos-criptografia-strict-namespace-wide-cluster-wide.md)
+923. [Bitnami Sealed Secrets: seção spec.template, labels/annotations do Secret gerado, funções Sprig e ownerReferences](../../domains/software-0008/software/devops/sealedsecrets-templates-metadados-ownerreferences-tipos-secret.md)
+924. [Bitnami Sealed Secrets: obtenção da chave pública (--fetch-cert) e selamento offline (--cert e SEALED_SECRETS_CERT)](../../domains/software-0008/software/devops/sealedsecrets-certificado-publico-fetch-cert-offline-url.md)
+925. [Bitnami Sealed Secrets: renovação periódica de chaves de selamento (30 dias), rotação de segredos e re-encryption](../../domains/software-0008/software/devops/sealedsecrets-rotacao-chaves-sealing-key-renewal-re-encrypt.md)
+926. [Bitnami Sealed Secrets: adição de itens sem conhecer chaves antigas (--merge-into), modo --raw e validação (--validate)](../../domains/software-0008/software/devops/sealedsecrets-atualizacao-merge-into-raw-mode-validacao.md)
+927. [Bitnami Sealed Secrets: funcionamento interno da criptografia híbrida (AES-256-GCM + RSA-OAep-SHA256)](../../domains/software-0008/software/devops/sealedsecrets-criptografia-hibrida-aes-gcm-rsa-oaep-detalhes.md)
+928. [Bitnami Sealed Secrets: backup das chaves privadas de selamento, Disaster Recovery e descriptografia offline (--recovery-unseal)](../../domains/software-0008/software/devops/sealedsecrets-backup-chaves-privadas-recovery-offline-unseal.md)
+929. [Bitnami Sealed Secrets: operação em clusters GKE privados (firewall 8080/8081) e restrições do GKE Warden (system:authenticated)](../../domains/software-0008/software/devops/sealedsecrets-gke-privado-firewall-8080-warden-service-proxier.md)
+930. [Bitnami Sealed Secrets: instalação em ambientes restritos sem RBAC (controller-norbac.yaml) e escopo de namespaces](../../domains/software-0008/software/devops/sealedsecrets-instalacao-ambientes-restritos-norbac-namespaces.md)
+
+### SOPS — Secrets OPerationS (editor CNCF de arquivos estruturados criptografados YAML, JSON, ENV, INI e BINARY com KMS, age e PGP)
+
+931. [SOPS (Secrets OPerationS): editor de arquivos criptografados estruturados (YAML, JSON, ENV, INI e BINARY)](../../domains/software-0008/software/devops/sops-editor-arquivos-criptografados-yaml-json-env-ini.md)
+932. [SOPS: edição in-place (-i) e manipulação cirúrgica da árvore do documento (--extract, sops set e sops unset)](../../domains/software-0008/software/devops/sops-operacoes-arvore-extract-set-unset-in-place.md)
+933. [SOPS: criptografia seletiva de campos (--encrypted-regex, _unencrypted, --encrypted-suffix) e integridade MAC](../../domains/software-0008/software/devops/sops-criptografia-parcial-chaves-encrypted-regex-mac.md)
+934. [SOPS: visualização transparente de diffs em texto claro no Git (.gitattributes e diff.sopsdiffer.textconv)](../../domains/software-0008/software/devops/sops-integracao-git-diff-textconv-gitattributes.md)
+935. [SOPS: automação de políticas de chaves e criptografia por diretório com .sops.yaml (creation_rules e path_regex)](../../domains/software-0008/software/devops/sops-regras-criacao-arquivo-sops-yaml-path-regex.md)
+936. [SOPS: identidades e provedores de chaves mestras (age, PGP, AWS KMS, GCP KMS, Azure Key Vault e HashiCorp Vault)](../../domains/software-0008/software/devops/sops-provedores-identidades-kms-age-pgp-vault.md)
+937. [SOPS: rotação da chave de dados (sops rotate), sincronização de receptores (sops updatekeys) e Key Groups (Shamir)](../../domains/software-0008/software/devops/sops-gerenciamento-chaves-updatekeys-rotate-keygroups.md)
+938. [SOPS: criptografia de arquivos binários e injeção segura em processos em memória (sops exec-env e sops exec-file)](../../domains/software-0008/software/devops/sops-arquivos-binarios-exec-env-exec-file-processos.md)
+939. [SOPS: integração nativa com pipelines GitOps no Kubernetes (Flux kustomize-controller, helm-secrets e KSOPS)](../../domains/software-0008/software/devops/sops-integracao-gitops-flux-argocd-helm-secrets.md)
+940. [SOPS: governança CNCF Sandbox, garantia de retrocompatibilidade do formato 1.0+ e comando sops filestatus](../../domains/software-0008/software/devops/sops-compatibilidade-formato-historico-mozilla-cncf-filestatus.md)
+
+### Atlantis (automação self-hosted de fluxos Terraform em Pull Requests via webhooks, atlantis plan/apply e sistema de Locking)
+
+941. [Atlantis: automação self-hosted de fluxos Terraform em Pull Requests via webhooks](../../domains/software-0008/software/devops/atlantis-automacao-terraform-pull-requests-webhooks.md)
+942. [Atlantis: comandos de comentário em PR (atlantis plan e apply), seleção de projeto (-d, -p, -w) e arquivos env/{workspace}.tfvars](../../domains/software-0008/software/devops/atlantis-comandos-pull-request-plan-apply-flags-workspaces.md)
+943. [Atlantis: sistema de Locking por diretório e workspace, Global Apply Lock e relação com o Terraform State Lock](../../domains/software-0008/software/devops/atlantis-bloqueio-diretorio-workspace-locking-unlock.md)
+944. [Atlantis: configuração de projetos no repositório com atlantis.yaml (projects, workspace, autoplan e when_modified)](../../domains/software-0008/software/devops/atlantis-configuracao-repositorio-atlantis-yaml-autoplan-when-modified.md)
+945. [Atlantis: configuração server-side (repos.yaml), restrição de allowed_overrides e Custom Workflows ($PLANFILE)](../../domains/software-0008/software/devops/atlantis-workflows-customizados-repos-yaml-server-side.md)
+946. [Atlantis: Automerging de Pull Requests, método de merge (--auto-merge-method) e requisito undiverged](../../domains/software-0008/software/devops/atlantis-automerge-apply-requirements-protecao-branches.md)
+947. [Atlantis: importação de recursos (atlantis import), remoção de estado (state rm) e planos destrutivos (-destroy) via PR](../../domains/software-0008/software/devops/atlantis-operacoes-import-state-rm-destroy-pr.md)
+948. [Atlantis: avaliação automatizada de políticas sobre planos Terraform (Policy Checking com Conftest / OPA Rego)](../../domains/software-0008/software/devops/atlantis-verificacao-politicas-policy-checking-conftest-opa.md)
+949. [Atlantis: modelo de segurança do servidor, proteção contra PRs maliciosos, Drift Detection API e implantação em Kubernetes](../../domains/software-0008/software/devops/atlantis-seguranca-webhooks-segredos-autenticacao-implantacao.md)
+950. [Atlantis: execução paralela de planos (parallel_plan), customização do executável (--executable-name) e modo --verbose](../../domains/software-0008/software/devops/atlantis-execucao-paralela-parallel-plan-apply-customizacao-bot.md)
+
+### Infracost (estimativa de custos de nuvem Shift-Left, FinOps Policies, Tagging Policies, extensões de IDE e skills para agentes de IA)
+
+951. [Infracost: estimativa de custos de nuvem e FinOps Shift-Left para Infraestrutura como Código](../../domains/software-0008/software/devops/infracost-estimativa-custos-nuvem-terraform-finops-shift-left.md)
+952. [Infracost: análise de infraestrutura via CLI (infracost scan, inspect, price) e flags globais (--json, --llm, --currency)](../../domains/software-0008/software/devops/infracost-comandos-cli-scan-inspect-price-flags-globais.md)
+953. [Infracost: governança com FinOps Policies, Tagging Policies, Cost Budgets e Cost Guardrails](../../domains/software-0008/software/devops/infracost-politicas-finops-tagging-guardrails-orcamentos.md)
+954. [Infracost: integração com agentes de codificação de IA (Claude Code, Copilot, Codex, Cursor e Gemini CLI) via Agent Skills](../../domains/software-0008/software/devops/infracost-integracao-agentes-ia-skills-claude-copilot-cursor.md)
+955. [Infracost: estimativas de custo inline em tempo real na IDE (Code Lens no VS Code, Cursor, JetBrains, Neovim e Zed)](../../domains/software-0008/software/devops/infracost-extensoes-ide-code-lens-vscode-jetbrains-neovim.md)
+956. [Infracost: comentários automáticos de diff de custos em Pull Requests (infracost ci setup e pipelines CI/CD)](../../domains/software-0008/software/devops/infracost-integracao-cicd-pull-requests-infracost-ci-setup.md)
+957. [Infracost: gerenciamento de autenticação (auth login, device flow, token cache) e múltiplas organizações (infracost org)](../../domains/software-0008/software/devops/infracost-autenticacao-oauth-pkce-device-flow-organizacoes.md)
+958. [Infracost: configuração multi-projeto com infracost.yml e diagnóstico/manutenção da CLI (infracost doctor e update)](../../domains/software-0008/software/devops/infracost-manutencao-diagnostico-doctor-update-config-yml.md)
+959. [Infracost: suporte multi-ferramenta de IaC (Terraform, Terragrunt, CloudFormation e AWS CDK) e multi-cloud](../../domains/software-0008/software/devops/infracost-suporte-multiac-terraform-terragrunt-cloudformation-cdk.md)
+960. [Infracost: consultas instantâneas sobre resultados em cache (infracost inspect) e precificação via pipe (infracost price)](../../domains/software-0008/software/devops/infracost-filtragem-agrupamento-inspect-stdin-price-automacao.md)
+
+### GoReleaser (automação de engenharia de releases multiplataforma para Go, Rust, Zig, Node.js, Bun, Deno e Python com pacotes, SBOM e assinatura)
+
+961. [GoReleaser: automação completa de engenharia de releases para Go, Rust, Zig, Node.js, Bun, Deno e Python](../../domains/software-0008/software/devops/goreleaser-automacao-release-engineering-multilinguagem.md)
+962. [GoReleaser: modos de validação e dry-run (check, healthcheck, build --single-target, --snapshot e --skip=publish)](../../domains/software-0008/software/devops/goreleaser-modos-execucao-snapshot-single-target-skip-publish.md)
+963. [GoReleaser: customização da seção builds (goos, goarch, env, flags, ldflags e hooks de pré/pós-build)](../../domains/software-0008/software/devops/goreleaser-configuracao-builds-matriz-ldflags-env-hooks.md)
+964. [GoReleaser: empacotamento em arquivos (.tar.gz/.zip), pacotes Linux via nFPM (.deb, .rpm, .apk) e gerenciadores (Homebrew/Scoop/Winget)](../../domains/software-0008/software/devops/goreleaser-empacotamento-archives-nfpm-deb-rpm-apk-homebrew.md)
+965. [GoReleaser: segurança de cadeia de suprimentos com checksums SHA-256, geração de SBOM (Syft) e assinatura (Cosign / GPG)](../../domains/software-0008/software/devops/goreleaser-seguranca-checksums-sbom-syft-assinatura-cosign.md)
+966. [GoReleaser: publicação de imagens de container multi-arquitetura (dockers, docker_manifests e integração ko)](../../domains/software-0008/software/devops/goreleaser-imagens-containers-dockers-buildx-ko-manifests.md)
+967. [GoReleaser: publicação em CI/CD (GITHUB_TOKEN, escopos write:packages e contents:write e goreleaser-action)](../../domains/software-0008/software/devops/goreleaser-integracao-github-actions-permissoes-token-ci.md)
+968. [GoReleaser: geração automática de Changelog categorizado com Conventional Commits, grupos e filtros](../../domains/software-0008/software/devops/goreleaser-changelog-automatico-conventional-commits-filtros.md)
+969. [GoReleaser: uso além do Go com builders nativos para Rust (Cargo), Zig, Node.js, Bun, Deno e Python (uv / Poetry)](../../domains/software-0008/software/devops/goreleaser-suporte-rust-zig-node-bun-deno-python.md)
+970. [GoReleaser: motor de Name Templates ({{.Version}}, {{.Os}}, {{.Arch}}) e metadados em dist/artifacts.json](../../domains/software-0008/software/devops/goreleaser-templates-globais-variaveis-artefatos-dist-metadata.md)
+
+### vCluster (criação de Tenant Clusters Kubernetes isolados e certificados pela CNCF em Shared/Dedicated/Private Nodes, Standalone e Docker vind)
+
+971. [vCluster: criação de Tenant Clusters Kubernetes isolados e certificados pela CNCF sobre infraestrutura compartilhada](../../domains/software-0008/software/devops/vcluster-clusters-kubernetes-virtuais-multitenancy-arquitetura.md)
+972. [vCluster: funcionamento do Syncer, recursos puramente virtuais vs sincronizados (toHost e fromHost)](../../domains/software-0008/software/devops/vcluster-componente-syncer-sincronizacao-recursos-tohost-fromhost.md)
+973. [vCluster: comparação arquitetural entre Shared Nodes, Dedicated Nodes, Private Nodes e vCluster Standalone](../../domains/software-0008/software/devops/vcluster-modos-nos-shared-dedicated-private-nodes-standalone.md)
+974. [vCluster in Docker (vind): execução de Tenant Clusters diretamente em containers Docker sem Kubernetes prévio](../../domains/software-0008/software/devops/vcluster-vind-execucao-docker-local-ci-comparacao-kind.md)
+975. [vCluster: opções de Backing Store (SQLite embarcado, etcd embarcado/externo, PostgreSQL e MySQL) e Alta Disponibilidade](../../domains/software-0008/software/devops/vcluster-armazenamento-estado-sqlite-etcd-postgres-mysql-ha.md)
+976. [vCluster: Host Scheduler vs Virtual Scheduler e agendamento de GPUs com Dynamic Resource Allocation (DRA)](../../domains/software-0008/software/devops/vcluster-escalonador-host-scheduler-vs-virtual-scheduler-gpu-dra.md)
+977. [vCluster: redução de custos de infraestrutura com Sleep Mode, vcluster pause/resume e anotações de hibernação](../../domains/software-0008/software/devops/vcluster-sleep-mode-pause-resume-economia-custos.md)
+978. [vCluster: Snapshot e Restore de Tenant Clusters para S3, registries OCI, Azure Blob e armazenamento local](../../domains/software-0008/software/devops/vcluster-snapshots-backup-restore-s3-oci-azure-local.md)
+979. [vCluster: Auto Nodes (Karpenter-powered), Node VPN e clusters especializados para IA (Inference, Ray, Run:ai e Slurm)](../../domains/software-0008/software/devops/vcluster-auto-nodes-karpenter-gpu-ai-factories-slurm-ray.md)
+980. [vCluster: integrações nativas com a pilha do cluster hospedeiro (cert-manager, External Secrets, Istio, KubeVirt e Gateway API)](../../domains/software-0008/software/devops/vcluster-integracoes-nativas-cert-manager-eso-istio-gateway-api.md)
+
+### K9s (interface de terminal TUI interativa para observação, diagnóstico e gerenciamento de clusters Kubernetes em tempo real)
+
+981. [K9s: interface de terminal (TUI) interativa em tempo real para observação e gerenciamento de clusters Kubernetes](../../domains/software-0008/software/devops/k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes.md)
+982. [K9s: modo de comando (:pod, :ctx, :ns) e filtragem avançada por Regex (/), inversa (/!), Labels (/-l) e Fuzzy (/-f)](../../domains/software-0008/software/devops/k9s-navegacao-modo-comando-filtros-regex-labels-contextos.md)
+983. [K9s: atalhos de operação em recursos (YAML y, Describe d, Edit e, Logs l/p, Shell s, Port-Forward SHIFT-F e Benchmark b)](../../domains/software-0008/software/devops/k9s-atalhos-operacao-logs-shell-port-forward-benchmark.md)
+984. [K9s: visões integradas de diagnóstico de saúde e topologia (:pulses, :xray, :popeye, UsedBy u e Jump to Owner SHIFT-J)](../../domains/software-0008/software/devops/k9s-visoes-diagnostico-pulses-xray-popeye-usedby.md)
+985. [K9s: estrutura de diretórios XDG (config.yaml, clusters, screendumps), logs de debug (-l debug) e variável K9S_CONFIG_DIR](../../domains/software-0008/software/devops/k9s-configuracao-xdg-diretorios-logs-debug-screendumps.md)
+986. [K9s: extensibilidade com plugins customizados (plugins.yaml), atalhos (hotkeys.yaml), colunas (views.yaml) e temas (skins)](../../domains/software-0008/software/devops/k9s-extensibilidade-plugins-hotkeys-aliases-views-skins.md)
+987. [K9s: ordenação de colunas (SHIFT-N/A/S/O), seleção múltipla em lote (SPACE / CTRL-SPACE) e operações de Node (cordon/drain)](../../domains/software-0008/software/devops/k9s-ordenacao-colunas-marcacao-lote-operacoes-nodes.md)
+988. [K9s: execução via container Docker (derailed/k9s), compilação com KUBECTL_VERSION e matriz de compatibilidade Kubernetes](../../domains/software-0008/software/devops/k9s-execucao-container-docker-build-multiplataforma-compatibilidade.md)
+989. [K9s: disparo manual de CronJobs (t), inspeção e Rollback de ReplicaSets (z / CTRL-L) e variável K9S_DEFAULT_PF_ADDRESS](../../domains/software-0008/software/devops/k9s-gerenciamento-port-forwards-cronjobs-replicasets-rollback.md)
+990. [K9s: navegação rápida entre namespaces (Warp w e Use u) e controle de layout da TUI (Header CTRL-E, Crumbs CTRL-G)](../../domains/software-0008/software/devops/k9s-navegacao-contextual-warp-namespace-breadcrumbs-cabecalho.md)
+
+### Stern (acompanhamento dinâmico de logs de múltiplos pods e múltiplos containers no Kubernetes com regex, templates Go e cores)
+
+991. [Stern: tailing dinâmico de logs de múltiplos pods e múltiplos containers no Kubernetes com codificação por cores](../../domains/software-0008/software/devops/stern-tail-logs-multi-pod-multi-container-kubernetes.md)
+992. [Stern: seleção granular de pods e containers (--selector, --field-selector, --node, --container e --container-state)](../../domains/software-0008/software/devops/stern-selecao-alvos-regex-recursos-labels-containers-estados.md)
+993. [Stern: filtragem e destaque de conteúdo de logs por Regex (--include, --exclude, --highlight) e formatação de timestamps (-t)](../../domains/software-0008/software/devops/stern-filtragem-linhas-include-exclude-highlight-timestamps.md)
+994. [Stern: modos de saída (--output default, raw, json, extjson, ppextjson) e templates Go customizados (--template)](../../domains/software-0008/software/devops/stern-formatos-saida-output-templates-go-funcoes-json.md)
+995. [Stern: leitura de logs via entrada padrão (--stdin), execução única (--no-follow) e filtro por condição (--condition)](../../domains/software-0008/software/devops/stern-processamento-logs-locais-stdin-no-follow-condition.md)
+996. [Stern: controle de concorrência e proteção do API Server (--max-log-requests, --qps, --burst e --verbosity)](../../domains/software-0008/software/devops/stern-limites-concorrencia-max-log-requests-qps-burst-api.md)
+997. [Stern: arquivo de configuração persistente (~/.config/stern/config.yaml), customização de cores SGR e modo --prompt](../../domains/software-0008/software/devops/stern-configuracao-persistente-config-yaml-cores-prompt.md)
+998. [Stern: acompanhamento automático de initContainers, ephemeralContainers (kubectl debug) e rollouts dinâmicos](../../domains/software-0008/software/devops/stern-containers-efemeros-init-containers-ciclo-vida-pods.md)
+999. [Stern: integração em pipelines Unix com jq (--only-log-lines / -o raw, --color) e funções de tempo (toUTC, toTimestamp)](../../domains/software-0008/software/devops/stern-pipeline-jq-only-log-lines-raw-color-control.md)
+1000. [Stern: instalação via Krew/Homebrew/asdf/WinGet, precedência de KUBECONFIG e autocompletar de shell (--completion)](../../domains/software-0008/software/devops/stern-instalacao-krew-homebrew-autocompletar-shells-kubeconfig.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 900 notas 1–900 das tranches 1–9 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 900/2.000 notas válidas, restando 1100 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 1000 notas 1–1000 das tranches 1–10 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1000/2.000 notas válidas, restando 1000 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

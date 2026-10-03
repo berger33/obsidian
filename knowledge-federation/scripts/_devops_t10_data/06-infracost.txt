@@ -1,0 +1,160 @@
+=== NOTE: 951 | infracost-estimativa-custos-nuvem-terraform-finops-shift-left | Infracost: estimativa de custos de nuvem e FinOps Shift-Left para Infraestrutura como Código ===
+ONE_LINER: O **Infracost** (`infracost.io/docs/`) desloca os custos de nuvem para a esquerda (*shifts cloud costs left*) no fluxo de engenharia, analisando arquivos de Infraestrutura como Código (Terraform, Terragrunt, CloudFormation e AWS CDK) em AWS, Azure e Google Cloud para calcular custos e detectar violações de FinOps antes do deploy.
+IMPORTANCE: Tradicionalmente, engenheiros alteram tipos de instâncias EC2/RDS, provisionam NAT Gateways ou discos provisionados IOPS no Terraform e só descobrem que aumentaram a fatura mensal em US$ 15.000 trinta dias depois, quando a fatura da nuvem chega ao financeiro. Segundo a página oficial `Get started` (`infracost.io/docs/`), o Infracost mostra o impacto financeiro na IDE, no agente de IA e no Pull Request antes que o código seja aplicado.
+HOW_IT_WORKS: Quando o desenvolvedor executa a CLI do Infracost (versão `2.16.3+`, configurada rapidamente via **`infracost setup`**), a ferramenta analisa localmente os arquivos de IaC do projeto para determinar os tipos de recursos e quantidades que seriam criados, consulta os preços das nuvens e avalia as políticas da organização. Crucialmente, conforme destaca a nota de segurança da documentação oficial: **nenhuma credencial ou segredo de nuvem é enviado à API de preços**, e o Infracost **não faz nenhuma alteração** no seu estado do Terraform nem nos recursos da nuvem.
+EXAMPLE:
+```bash
+# Instalar a CLI do Infracost, executar o assistente interativo de configuração e escanear o diretório Terraform atual
+brew install infracost
+infracost setup
+infracost scan
+```
+TRADE_OFFS: Como o Infracost calcula as estimativas analisando estaticamente o código IaC local (ou o JSON de um plano Terraform) sem conectar-se à sua conta real da AWS/Azure/GCP por padrão, recursos cujo custo depende fortemente de métricas variáveis de tráfego/consumo (como gigabytes transferidos no S3/CloudFront ou milhões de invocações no AWS Lambda) são estimados com base nas configurações e parâmetros de uso informados.
+VERIFY: Execute `infracost --version` e rode `infracost scan` na raiz de um projeto Terraform para visualizar o detalhamento de custos por recurso diretamente no terminal.
+LINKS: [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[infracost-politicas-finops-tagging-guardrails-orcamentos]] | [[atlantis-automacao-terraform-pull-requests-webhooks]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 952 | infracost-comandos-cli-scan-inspect-price-flags-globais | Infracost: análise de infraestrutura via CLI (infracost scan, inspect, price) e flags globais (--json, --llm, --currency) ===
+ONE_LINER: Conforme a referência oficial `CLI commands` (`infracost.io/docs/features/cli_commands/`), a análise de custos na CLI divide-se entre **`infracost scan`** (que avalia um diretório IaC ou arquivo `tfplan.json` e faz cache local), **`infracost inspect`** (que filtra e agrupa instantaneamente o último scan) e **`infracost price`** (que precifica IaC recebido via `stdin`).
+IMPORTANCE: Em repositórios grandes com centenas de recursos, reexecutar o parser completo do IaC toda vez que você quer agrupar os custos por serviço, filtrar apenas recursos caros ou exportar para um prompt de LLM desperdiçaria tempo; separar `scan` (com cache local) de `inspect` e `price` torna a exploração interativa instantânea.
+HOW_IT_WORKS: Os comandos do grupo *Analyze infrastructure* operam da seguinte forma: (1) **`infracost scan [caminho|tfplan.json]`**: autodetecta o tipo de IaC no diretório (Terraform, Terragrunt, CloudFormation, CDK) ou lê um arquivo JSON gerado por `terraform show -json`, calcula os custos, avalia as políticas FinOps/tagging, exibe o relatório e salva os resultados no cache local (aceitando `--currency EUR|BRL|USD`); (2) **`infracost inspect`**: filtra, agrupa e resume os resultados do último `scan` em cache instantaneamente; (3) **`infracost price`**: estima o custo de trechos de IaC passados diretamente via pipe no `stdin`; e (4) **Flags globais**: todos os comandos aceitam `--org <slug>`, `--json` (saída estruturada JSON) e **`--llm`** (formato compacto e eficiente em tokens projetado para prompts de LLMs).
+EXAMPLE:
+```bash
+# Escanear o diretório ./terraform na moeda BRL, exportar em JSON ou formato compacto para LLM (--llm)
+infracost scan ./terraform --currency BRL
+infracost scan ./terraform --llm
+infracost inspect
+```
+TRADE_OFFS: Quando seu código Terraform utiliza expressões dinâmicas que só são resolvidas em tempo de `terraform plan` (como `data` sources externos consultados na nuvem ou módulos remotos complexos no HCP Terraform / Terraform Enterprise), conforme aponta a documentação oficial, passe o plano compilado em JSON (**`infracost scan tfplan.json`**) em vez de apontar apenas para o diretório estático.
+VERIFY: Execute `infracost scan --json > /tmp/infracost.json` e verifique a estrutura JSON gerada contendo a lista de recursos, custos mensais e resultados de políticas.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-integracao-agentes-ia-skills-claude-copilot-cursor]] | [[infracost-politicas-finops-tagging-guardrails-orcamentos]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 953 | infracost-politicas-finops-tagging-guardrails-orcamentos | Infracost: governança com FinOps Policies, Tagging Policies, Cost Budgets e Cost Guardrails ===
+ONE_LINER: Além de estimar o valor em dólares de cada recurso, o Infracost valida automaticamente o código IaC contra **FinOps Policies** (ex.: tipos de instância e gerações recomendadas), **Tagging Policies** (tags obrigatórias), **Budgets** e **Guardrails**, consultáveis via `infracost policies`, `budgets` e `guardrails`.
+IMPORTANCE: Saber apenas que um módulo custa US$ 800/mês não diz ao desenvolvedor que ele está usando volumes EBS `gp2` antigos em vez de `gp3` (que são mais baratos e rápidos), instâncias AWS de geração antiga (`m5` em vez de `m6i`/`m7g`) ou que esqueceu a tag `CostCenter` obrigatória para alocação contábil.
+HOW_IT_WORKS: Conforme documenta a página `Get started` e a seção `Organization settings` em `CLI commands`, a organização configura suas regras centralizadamente e a CLI as aplica durante o `infracost scan` (e na IDE / Pull Requests): (1) **`infracost policies`**: lista todas as **FinOps policies** (regras de eficiência de custo, regiões preferidas e tipos de instâncias) e **Tagging policies** (chaves e valores válidos de tags obrigatórias) ativas na organização; (2) **`infracost budgets`**: lista os orçamentos de custo configurados; e (3) **`infracost guardrails`**: lista os limites de alerta/bloqueio (guardrails de aumento percentual ou valor absoluto em dólares) aplicáveis ao repositório atual.
+EXAMPLE:
+```bash
+# Listar as políticas de FinOps/Tagging, os orçamentos e os guardrails ativos para o repositório atual
+infracost policies
+infracost budgets
+infracost guardrails
+```
+TRADE_OFFS: Ao implantar **Tagging Policies** e **FinOps Policies** pela primeira vez em um repositório legado grande que já possui centenas de recursos em produção sem tags padronizadas, configurar os guardrails de PR para bloquear qualquer falha no repositório inteiro travará os desenvolvedores; avalie apenas os recursos novos/modificados no diff do Pull Request enquanto corrige o passivo gradualmente.
+VERIFY: Execute `infracost policies --json` e `infracost scan` em um projeto de teste para confirmar que violações de políticas FinOps e de tags aparecem destacadas ao lado da estimativa de custo.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[atlantis-verificacao-politicas-policy-checking-conftest-opa]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 954 | infracost-integracao-agentes-ia-skills-claude-copilot-cursor | Infracost: integração com agentes de codificação de IA (Claude Code, Copilot, Codex, Cursor e Gemini CLI) via Agent Skills ===
+ONE_LINER: O comando **`infracost agent setup`** (e o repositório oficial `infracost/agent-skills`) equipa agentes de codificação de IA (Claude Code, GitHub Copilot, OpenAI Codex, Cursor e Gemini CLI) com acesso em tempo real a preços de nuvem, orçamentos e políticas de FinOps/tagging da organização.
+IMPORTANCE: Quando um desenvolvedor pede a um agente de IA (*"Crie uma aplicação web de 3 camadas na AWS com ECS e Postgres"*), o modelo de linguagem sem contexto de preços pode gerar instâncias superdimensionadas que custam US$ 2.500/mês e violam todas as políticas de tags e regiões da empresa, exigindo retrabalho posterior no PR. A seção `AI Agent` de `infracost.io/docs/` resolve isso na primeira tentativa.
+HOW_IT_WORKS: O desenvolvedor instala as skills no agente usando **`infracost agent setup`** (com suporte aos escopos `--scope user`, `--scope project` ou `--scope local`) ou diretamente pelos instaladores nativos de cada agente (`claude plugin marketplace add infracost/agent-skills` + `claude plugin install infracost@infracost`, `copilot plugin install`, `$skill-installer infracost/agent-skills` no Codex, Rules no Cursor ou `gemini skills install`). Uma vez instaladas, as skills ficam disponíveis como slash commands (`/infracost:<skill>`) e também são invocadas automaticamente quando o usuário pede ao agente para estimar custos, corrigir violações de tagging ou gerar infraestrutura dentro de um orçamento específico (ex.: *"...que custe menos de $400/mês e cumpra todas as políticas FinOps"*).
+EXAMPLE:
+```bash
+# Instalar as skills do Infracost para agentes de IA no escopo do projeto atual ou via plugin do Claude Code
+infracost agent setup --scope project
+claude plugin marketplace add infracost/agent-skills
+claude plugin install infracost@infracost
+```
+TRADE_OFFS: Conforme observa a nota da documentação oficial para o **OpenAI Codex**, o instalador padrão do Codex espera um único skill por repositório; como `infracost/agent-skills` define múltiplos skills especializados, caso o Codex informe que não é um único skill, basta instruí-lo no prompt a instalar todas as skills do repositório.
+VERIFY: Execute `infracost agent setup --scope project` e peça ao agente de IA um detalhamento de custos do diretório Terraform atual usando `/infracost`.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[mirrord-agentes-ia-claude-code-cursor-codex-testes-cluster]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 955 | infracost-extensoes-ide-code-lens-vscode-jetbrains-neovim | Infracost: estimativas de custo inline em tempo real na IDE (Code Lens no VS Code, Cursor, JetBrains, Neovim e Zed) ===
+ONE_LINER: A extensão de IDE do Infracost (configurável via **`infracost ide setup`** para VS Code, Cursor, JetBrains, VSCodium, Theia, Neovim e Zed) executa um Language Server local que exibe estimativas de custo, violações de FinOps e problemas de tags como **Code Lenses** diretamente acima de cada bloco `resource` enquanto você edita o arquivo.
+IMPORTANCE: Descobrir o custo de um recurso apenas depois de fazer `git commit`, `git push` e abrir um Pull Request ainda exige vários minutos de espera pelo CI; ver um Code Lens inline dizendo `Monthly cost: $142.50 | 1 FinOps issue` no exato segundo em que você digita `instance_type = "m5.2xlarge"` no editor permite corrigir o código antes mesmo do primeiro commit.
+HOW_IT_WORKS: Conforme documenta a seção `IDE` em `infracost.io/docs/`, após instalar a extensão (`ext install Infracost.infracost` no VS Code `v1.75.0+`, plugin `24761-infracost` nas IDEs JetBrains como IntelliJ/GoLand/PyCharm, `infracost/infracost.nvim` no Neovim ou extensão nativa no Zed/Cursor) e autenticar na barra lateral, o Language Server do Infracost escaneia o workspace local continuamente. Acima de cada bloco de recurso Terraform ou CloudFormation, ele renderiza uma linha clicável (**Code Lens**); clicar no Code Lens abre a visão detalhada com a decomposição de custos (computação, armazenamento, IOPS) e as violações de políticas FinOps e tagging daquele recurso específico.
+EXAMPLE:
+```bash
+# Iniciar o assistente interativo para instalar a extensão do Infracost na sua IDE ou instalar via CLI do VS Code
+infracost ide setup
+code --install-extension Infracost.infracost
+```
+TRADE_OFFS: Em ambientes corporativos restritos onde a IDE não tem acesso direto ao Marketplace público na internet, a documentação oficial orienta baixar o arquivo `.vsix` da página de releases `infracost/vscode-infracost` (instalando via `code --install-extension infracost-<version>-<platform>.vsix`) ou o `.zip` do JetBrains Marketplace (*Install Plugin from Disk...*).
+VERIFY: Abra um arquivo `main.tf` no VS Code ou JetBrains com a extensão Infracost ativa e verifique a exibição do Code Lens de custo mensal acima das declarações `resource`.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-integracao-agentes-ia-skills-claude-copilot-cursor]] | [[infracost-integracao-cicd-pull-requests-infracost-ci-setup]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 956 | infracost-integracao-cicd-pull-requests-infracost-ci-setup | Infracost: comentários automáticos de diff de custos em Pull Requests (infracost ci setup e pipelines CI/CD) ===
+ONE_LINER: O comando **`infracost ci setup`** conecta o repositório ao Infracost (via App Integration recomendada ou gerando workflows de CI com `--ci-pipeline`) para que todo Pull Request receba automaticamente um comentário mostrando o diff de custo mensal, violações de FinOps e problemas de tags introduzidos pela mudança.
+IMPORTANCE: Mesmo que um desenvolvedor individual não tenha instalado a extensão na IDE, o Pull Request é o ponto de controle obrigatório onde toda a equipe e os revisores avaliam a mudança: ter uma tabela automática no PR mostrando `+$320/mês (+14%)` junto com o diff de código faz com que o impacto financeiro seja discutido durante o code review.
+HOW_IT_WORKS: Conforme descrevem as seções `CI/CD` (`infracost.io/docs/`) e `CI` (`infracost.io/docs/features/cli_commands/#ci`), existem duas formas de habilitar a verificação em Pull Requests (GitHub, GitLab, Azure DevOps, Bitbucket): (1) **Infracost App Integration (recomendada)**: rodar `infracost ci setup` conecta o repositório diretamente à integração de nuvem do Infracost em poucos minutos sem precisar manter scripts complexos de runner; ou (2) **CI Pipeline (`infracost ci setup --ci-pipeline`)**: gera o arquivo de workflow para GitHub Actions / GitLab CI usando um token de serviço configurado na variável de ambiente **`INFRACOST_CLI_AUTHENTICATION_TOKEN`**.
+EXAMPLE:
+```bash
+# Conectar o repositório atual à integração de Pull Requests do Infracost ou gerar um workflow de pipeline CI/CD
+infracost ci setup
+infracost ci setup --ci-pipeline --yes
+```
+TRADE_OFFS: Em ambientes não-interativos de CI/CD, o runner não possui navegador web para executar o login OAuth interativo (`infracost auth login`); portanto, conforme documenta a seção `Auth` de `CLI commands`, nos runners de CI você deve sempre autenticar definindo a variável de ambiente secreta **`INFRACOST_CLI_AUTHENTICATION_TOKEN`** com um token de conta de serviço ou personal access token.
+VERIFY: Abra um Pull Request alterando o tamanho de uma instância em um arquivo `.tf` e confirme que o comentário automático do Infracost aparece no PR detalhando a diferença de custo mensal antes e depois da mudança.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-politicas-finops-tagging-guardrails-orcamentos]] | [[atlantis-automacao-terraform-pull-requests-webhooks]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 957 | infracost-autenticacao-oauth-pkce-device-flow-organizacoes | Infracost: gerenciamento de autenticação (auth login, device flow, token cache) e múltiplas organizações (infracost org) ===
+ONE_LINER: A CLI do Infracost gerencia identidades via **`infracost auth`** (`login` com OAuth PKCE ou `--oauth-use-device-flow` para terminais remotos, `whoami` e `logout`) e permite alternar ou fixar organizações por repositório com **`infracost org`** (`list`, `current`, `switch --repo`).
+IMPORTANCE: Consultores de DevOps, engenheiros de plataforma em holdings com várias empresas ou desenvolvedores trabalhando via SSH/containers remotos (sem navegador local) precisam autenticar via Device Flow e fixar qual organização do Infracost (com suas respectivas tabelas de descontos corporativos e políticas FinOps) deve ser usada em cada repositório Git.
+HOW_IT_WORKS: Conforme especifica a referência `CLI commands` (`Auth` e `Org`): (1) **Autenticação**: `infracost auth login` realiza login OAuth PKCE via navegador e armazena o token no cache local (`--access-token-use-cache`, padrão `true`). Quando executado em um servidor remoto sem navegador/localhost (como SSH, DevContainer ou WSL sem GUI), passar a flag global **`--oauth-use-device-flow`** exibe um código de dispositivo para autorizar em qualquer navegador; e (2) **Organizações (`infracost org`)**: `infracost org list` lista todas as organizações do usuário, `infracost org switch <slug>` troca a organização ativa globalmente e **`infracost org switch <slug> --repo`** fixa a organização especificamente para o repositório Git atual (ou usa-se `--org <slug>` por comando).
+EXAMPLE:
+```bash
+# Autenticar em um servidor remoto usando OAuth Device Flow e fixar a organização ativa para o repositório atual
+infracost auth login --oauth-use-device-flow
+infracost auth whoami
+infracost org switch minha-empresa --repo
+```
+TRADE_OFFS: Se o token em cache expirar ou apresentar problemas de permissão após uma alteração de papéis na organização, você pode forçar uma renovação limpa desativando temporariamente o cache com `--access-token-use-cache=false` ou executando `infracost auth logout` seguido de `infracost auth login`.
+VERIFY: Execute `infracost auth whoami` e `infracost org current` para confirmar o usuário autenticado e a organização ativa aplicada ao diretório atual.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[infracost-manutencao-diagnostico-doctor-update-config-yml]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 958 | infracost-manutencao-diagnostico-doctor-update-config-yml | Infracost: configuração multi-projeto com infracost.yml e diagnóstico/manutenção da CLI (infracost doctor e update) ===
+ONE_LINER: Para repositórios que contêm múltiplos projetos ou workspaces de IaC, o arquivo **`infracost.yml`** coordena o escaneamento unificado, enquanto os comandos **`infracost doctor`** e **`infracost update`** diagnosticam/reparam a instalação e atualizam o binário da CLI.
+IMPORTANCE: Em monorepos de infraestrutura com dezenas de pastas (`envs/prod/vpc`, `envs/prod/eks`, `envs/prod/rds`) ou múltiplos arquivos de variáveis `.tfvars`, rodar `infracost scan` sem informar como os projetos e variáveis se relacionam pode deixar pastas de fora; além disso, diagnosticar rapidamente falhas de rede/certificados/plugins com `infracost doctor` economiza tempo de suporte.
+HOW_IT_WORKS: Conforme documenta a página `CLI commands`: (1) **Multi-projeto (`infracost.yml`)**: quando o repositório possui múltiplos projetos ou workspaces, declará-los em um arquivo `infracost.yml` na raiz faz com que um único `infracost scan` avalie todos os projetos em conjunto; (2) **`infracost doctor`**: executa uma bateria de verificações de saúde na instalação local da CLI (conectividade, autenticação, extensões, variáveis) e pode reparar problemas automaticamente; e (3) **`infracost update`**, `infracost version` e `infracost completion`: mantêm o binário atualizado na versão mais recente e geram scripts de autocompletar para o shell (`bash`, `zsh`, `fish`).
+EXAMPLE:
+```bash
+# Diagnosticar e reparar problemas na instalação local do Infracost e atualizar o binário da CLI
+infracost doctor
+infracost update
+infracost version
+```
+TRADE_OFFS: Caso você tenha instalado o Infracost através de um gerenciador de pacotes do sistema operacional (como `brew install infracost` no macOS/Linux ou `choco install infracost` no Windows), prefira atualizá-lo pelo próprio gerenciador (`brew upgrade infracost` ou `choco upgrade infracost`) conforme recomendado na seção `Install the CLI` para manter o registro de versões do gerenciador consistente.
+VERIFY: Execute `infracost doctor` no seu ambiente de desenvolvimento e confirme que todas as verificações de saúde da CLI e de autenticação passam sem alertas.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[infracost-autenticacao-oauth-pkce-device-flow-organizacoes]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 959 | infracost-suporte-multiac-terraform-terragrunt-cloudformation-cdk | Infracost: suporte multi-ferramenta de IaC (Terraform, Terragrunt, CloudFormation e AWS CDK) e multi-cloud ===
+ONE_LINER: O Infracost autodetecta e analisa projetos escritos em **Terraform**, **Terragrunt**, **AWS CloudFormation** e **AWS CDK** (em AWS, Azure e Google Cloud), suportando tanto a leitura estática rápida do código-fonte quanto a avaliação de planos compilados (`tfplan.json`).
+IMPORTANCE: Organizações raramente usam uma única ferramenta de IaC em todas as equipes: a equipe de plataforma pode usar Terraform/Terragrunt para redes e clusters EKS/AKS/GKE, enquanto equipes de desenvolvimento serverless usam AWS CDK (TypeScript/Python) ou CloudFormation. Ter uma única ferramenta de FinOps e políticas de tagging que compreende todas essas linguagens evita silos de governança.
+HOW_IT_WORKS: Quando você aponta **`infracost scan <diretório>`** para uma pasta (ou usa `infracost price` via stdin), a CLI inspeciona os arquivos presentes para identificar automaticamente a ferramenta de IaC: (1) em projetos **Terraform** e **Terragrunt**, analisa os arquivos `.tf` / `terragrunt.hcl` e módulos locais/remotos diretamente em segundos sem precisar rodar `terraform init`/`plan` na nuvem; (2) em projetos **CloudFormation** e **AWS CDK**, sintetiza/analisa os templates dos recursos AWS; e (3) caso o projeto dependa de valores gerados apenas no momento do plano (como no HCP Terraform), aceita o arquivo JSON do plano (`infracost scan tfplan.json`).
+EXAMPLE:
+```bash
+# Gerar um arquivo JSON de plano do Terraform e escaneá-lo diretamente com o Infracost
+terraform plan -out=tfplan.binary
+terraform show -json tfplan.binary > tfplan.json
+infracost scan tfplan.json
+```
+TRADE_OFFS: Analisar diretamente o diretório de código-fonte (`infracost scan .`) é muito mais rápido e não exige credenciais de nuvem (sendo o modo padrão usado na IDE, nos agentes de IA e no scan local); já o modo baseado em `tfplan.json` exige executar `terraform init` e `terraform plan` com acesso ao estado e à nuvem antes do `infracost scan`, sendo reservado para pipelines de CI que já geram o `tfplan.binary` como parte do deploy.
+VERIFY: Execute `infracost scan` sobre um diretório contendo arquivos `.tf` sem ter variáveis `AWS_ACCESS_KEY_ID` exportadas no shell e confirme que o cálculo de custos ocorre 100% localmente sem acessar a conta da AWS.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[atlantis-automacao-terraform-pull-requests-webhooks]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost
+
+=== NOTE: 960 | infracost-filtragem-agrupamento-inspect-stdin-price-automacao | Infracost: consultas instantâneas sobre resultados em cache (infracost inspect) e precificação via pipe (infracost price) ===
+ONE_LINER: O par de comandos **`infracost inspect`** e **`infracost price`** permite explorar interativamente o último scan salvo em cache (filtrando e agrupando recursos sem reprocessar o IaC) ou calcular o custo de um trecho de código IaC avulso enviado diretamente pelo `stdin`.
+IMPORTANCE: Durante uma sessão de otimização de custos ou quando um script/agente gera um bloco `resource "aws_db_instance" "main" { ... }` em memória e quer saber quanto aquele recurso específico custaria antes mesmo de salvá-lo em um arquivo de projeto completo, usar `infracost price` via `stdin` ou consultar o cache via `infracost inspect` dá resposta imediata.
+HOW_IT_WORKS: Conforme descrito na seção `Analyze infrastructure` da documentação `CLI commands` (`infracost.io/docs/features/cli_commands/`): (1) após rodar `infracost scan`, todos os recursos precificados e resultados de políticas ficam cacheados localmente; invocar **`infracost inspect`** (com suas opções de filtro, agrupamento e resumo, além de `--json` ou `--llm`) lê diretamente esse cache de forma instantânea; e (2) invocar **`infracost price`** lê definições de IaC passadas pela entrada padrão (`stdin` via pipe `|`), calcula o preço daqueles recursos e imprime a estimativa imediatamente no `stdout`.
+EXAMPLE:
+```bash
+# Estimar rapidamente o custo de um recurso Terraform avulso enviado via stdin com infracost price
+cat << 'EOF' | infracost price
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "m6i.xlarge"
+}
+EOF
+```
+TRADE_OFFS: Como o comando `infracost inspect` opera exclusivamente sobre os dados armazenados pelo último `infracost scan`, se você editar seus arquivos `.tf` no disco e rodar apenas `infracost inspect` sem rodar `infracost scan` novamente, o `inspect` exibirá os valores do scan anterior em cache; lembre-se de reexecutar `infracost scan` sempre que alterar os arquivos de infraestrutura.
+VERIFY: Execute o exemplo de `infracost price` acima via pipe no terminal e verifique a estimativa de custo mensal retornada para a instância `m6i.xlarge`.
+LINKS: [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]] | [[infracost-comandos-cli-scan-inspect-price-flags-globais]] | [[infracost-integracao-agentes-ia-skills-claude-copilot-cursor]]
+SOURCES: https://www.infracost.io/docs/ | https://www.infracost.io/docs/features/cli_commands/ | https://github.com/infracost/infracost

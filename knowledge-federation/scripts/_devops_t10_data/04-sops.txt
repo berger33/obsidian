@@ -1,0 +1,169 @@
+=== NOTE: 931 | sops-editor-arquivos-criptografados-yaml-json-env-ini | SOPS (Secrets OPerationS): editor de arquivos criptografados estruturados (YAML, JSON, ENV, INI e BINARY) ===
+ONE_LINER: O **SOPS** (`getsops/sops`, criado na Mozilla em 2015 e doado à CNCF como projeto Sandbox sob licença MPL-2.0) é um editor de arquivos criptografados que suporta formatos **YAML, JSON, ENV, INI e BINARY**, criptografando valores com AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, **age** e **PGP**.
+IMPORTANCE: Quando se criptografa um arquivo YAML ou JSON inteiro como um bloco binário opaco (por exemplo, com `gpg -c secrets.yaml` ou `openssl enc`), torna-se impossível ver no `git diff` ou em um Pull Request **qual chave** foi alterada ou adicionada sem descriptografar o arquivo inteiro. Segundo o `README.rst` oficial e a documentação em `getsops.io/docs/`, o SOPS preserva as chaves do documento em texto claro e criptografa apenas os valores.
+HOW_IT_WORKS: Quando você criptografa um arquivo estruturado (`YAML`, `JSON`, `ENV` ou `INI`) com **`sops encrypt`** (ou o edita diretamente com **`sops edit arquivo.yaml`**), o SOPS gera uma chave de criptografia de dados simétrica (**Data Encryption Key — DEK**), cifra individualmente cada valor da árvore mantendo os nomes das chaves em texto claro, cifra a DEK usando uma ou mais chaves mestras configuradas (KMS de nuvem, `age` ou `PGP`) e adiciona ao final do arquivo um bloco de metadados chamado **`sops:`** contendo as chaves mestras cifradas, o timestamp `lastmodified` e um código de autenticação de mensagem (**`mac`**) que protege a integridade de todo o arquivo.
+EXAMPLE:
+```bash
+# Criptografar um arquivo existente em um novo arquivo e descriptografá-lo no stdout usando a CLI sops
+sops encrypt secrets.plain.yaml > secrets.enc.yaml
+sops decrypt secrets.enc.yaml
+```
+TRADE_OFFS: Como o SOPS mantém os **nomes das chaves** (e a estrutura de indentação do YAML/JSON) em texto claro para viabilizar code review e diffs legíveis no Git, nunca coloque o próprio segredo dentro do *nome* de uma chave YAML; caso você precise ocultar até mesmo a estrutura e os nomes das chaves do arquivo, criptografe-o usando o formato `binary` (`--input-type binary --output-type binary`).
+VERIFY: Inspecione um arquivo criptografado `secrets.enc.yaml` com `cat` e confirme que os valores apareceram no formato `ENC[AES256_GCM,data:...,iv:...,tag:...,type:str]` e que a seção final `sops:` contém o `mac` e os receptores de chave.
+LINKS: [[sops-criptografia-parcial-chaves-encrypted-regex-mac]] | [[sops-operacoes-arvore-extract-set-unset-in-place]] | [[sealedsecrets-criptografia-assimetrica-gitops-kubeseal-crd]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 932 | sops-operacoes-arvore-extract-set-unset-in-place | SOPS: edição in-place (-i) e manipulação cirúrgica da árvore do documento (--extract, sops set e sops unset) ===
+ONE_LINER: Conforme documenta a página oficial `Common operations` (`getsops.io/docs/usage/common-operations/`), o SOPS permite criptografar/descriptografar arquivos in-place (`-i`), extrair apenas uma sub-árvore ou chave específica (`sops decrypt --extract`) e alterar ou remover valores sem abrir editor interativo (`sops set` e `sops unset`).
+IMPORTANCE: Em scripts de automação e pipelines de CI/CD (onde não há humano para interagir com o editor `$EDITOR` aberto pelo `sops edit`), frequentemente é necessário extrair apenas uma chave específica (ex.: uma chave privada RSA dentro do YAML) sem precisar instalar `yq`/`jq` ou atualizar um único valor criptografado via linha de comando.
+HOW_IT_WORKS: O SOPS utiliza uma sintaxe de caminho de árvore estilo dicionário Python (`'["chavePai"]["chaveFilha"]'` para objetos e `'["meu_array"][1]'` para índices de listas): (1) **Extração (`--extract`)**: `sops decrypt --extract '["app2"]["key"]' example.yaml` descriptografa e imprime exclusivamente aquele valor no `stdout`; (2) **Atualização não-interativa (`sops set`)**: `sops set example.yaml '["app2"]["key"]' '"novoValorJson"'` (ou lendo de arquivo com `--value-file` ou stdin com `--value-stdin`) descriptografa a DEK, atualiza apenas aquela folha da árvore, recalcula o `mac` e regrava o arquivo criptografado; (3) **Remoção (`sops unset`)**: `sops unset example.yaml '["app2"]["key"]'` remove a chave da árvore; e (4) **In-place (`-i` / `--in-place`)**: `sops encrypt -i file.yaml` substitui o próprio arquivo.
+EXAMPLE:
+```bash
+# Extrair uma chave específica e atualizar outra chave diretamente na árvore criptografada sem abrir editor
+sops decrypt --extract '["database"]["password"]' secrets.enc.yaml
+sops set secrets.enc.yaml '["database"]["password"]' '"novaSenhaRotacionada2026"'
+```
+TRADE_OFFS: Conforme alerta a seção `Saving Output to a File` da documentação oficial, passar simultaneamente as flags `--in-place` (`-i`) e `--output` no mesmo comando resulta em erro; além disso, lembre-se de que no comando `sops set <arquivo> <caminho> <valor>`, o `<valor>` passado como argumento na CLI **deve ser formatado como JSON válido** (portanto, uma string simples precisa de aspas duplas internas, como `'"meu_texto"'`).
+VERIFY: Execute `sops set secrets.enc.yaml '["app"]["env"]' '"staging"'` e em seguida `sops decrypt --extract '["app"]["env"]' secrets.enc.yaml` para confirmar que o valor retornado é `staging`.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-criptografia-parcial-chaves-encrypted-regex-mac]] | [[sops-integracao-git-diff-textconv-gitattributes]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 933 | sops-criptografia-parcial-chaves-encrypted-regex-mac | SOPS: criptografia seletiva de campos (--encrypted-regex, _unencrypted, --encrypted-suffix) e integridade MAC ===
+ONE_LINER: Para arquivos que misturam metadados públicos e segredos (como manifestos `Kind: Secret` do Kubernetes), o SOPS permite criptografar apenas chaves específicas usando **`--encrypted-regex`** (ex.: `'^(data|stringData)$'`), sufixos **`_unencrypted`** ou **`--encrypted-suffix`**, mantendo o restante em texto claro mas protegido pelo **MAC** de integridade.
+IMPORTANCE: Se você passar um manifesto `Secret` do Kubernetes para o `sops encrypt` sem filtros, o SOPS criptografará também os valores de `apiVersion: v1`, `kind: Secret` e `metadata.name`, impedindo que ferramentas de validação e indexação identifiquem qual recurso Kubernetes aquele arquivo representa antes da descriptografia. A seção `Encrypting only parts of a file` de `Common operations` resolve isso.
+HOW_IT_WORKS: O SOPS oferece três mecanismos para criptografar apenas parte de um arquivo YAML/JSON/ENV/INI: (1) **Sufixo `_unencrypted`** (customizável com `--unencrypted-suffix`): qualquer chave cujo nome termine em `_unencrypted` (e tudo abaixo dela) permanece em texto claro; (2) **`--encrypted-suffix`**: inverte a lógica para criptografar apenas chaves que terminem no sufixo escolhido; e (3) **`--encrypted-regex`**: criptografa exclusivamente os valores sob chaves que casem com a expressão regular fornecida — por exemplo, **`--encrypted-regex '^(data|stringData)$'`** em um `Secret` Kubernetes deixa `apiVersion`, `kind`, `metadata` e `type` em texto claro e criptografa apenas `data` e `stringData`. Crucialmente, mesmo os campos deixados em texto claro entram no cálculo do checksum **`mac`** do arquivo!
+EXAMPLE:
+```bash
+# Criptografar apenas os blocos data e stringData de um Secret Kubernetes mantendo apiVersion, kind e metadata legíveis
+sops encrypt --encrypted-regex '^(data|stringData)$' k8s-secret.yaml > k8s-secret.enc.yaml
+```
+TRADE_OFFS: Como todos os valores do arquivo — inclusive os valores em texto claro fora de `encrypted-regex` ou marcados com `_unencrypted` — são incluídos por padrão no cálculo do **MAC (Message Authentication Code)** do SOPS, se alguém editar manualmente no editor de texto uma label ou o `metadata.name` em texto claro sem usar o `sops`, a descriptografia falhará com erro de verificação de integridade (`MAC mismatch`); caso você realmente precise permitir edição externa dos campos não criptografados, deve ativar explicitamente **`--mac-only-encrypted`**.
+VERIFY: Criptografe um manifesto Kubernetes com `--encrypted-regex '^(data|stringData)$'`, tente alterar manualmente `metadata.name` com `sed` e execute `sops decrypt` para observar a proteção do MAC bloqueando a adulteração.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-regras-criacao-arquivo-sops-yaml-path-regex]] | [[sealedsecrets-criptografia-assimetrica-gitops-kubeseal-crd]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 934 | sops-integracao-git-diff-textconv-gitattributes | SOPS: visualização transparente de diffs em texto claro no Git (.gitattributes e diff.sopsdiffer.textconv) ===
+ONE_LINER: Conforme documenta a seção `Showing diffs in cleartext in git` de `Common operations`, configurar um filtro `diff=sopsdiffer` no `.gitattributes` junto com `git config diff.sopsdiffer.textconv "sops decrypt"` permite que o `git diff` exiba automaticamente as diferenças em texto claro entre versões de arquivos criptografados.
+IMPORTANCE: Embora o SOPS mantenha os nomes das chaves em texto claro, quando um valor criptografado é alterado (ou quando a DEK do arquivo é rotacionada), o `git diff` padrão mostra apenas a mudança de uma string Base64 `ENC[AES256_GCM,...]` para outra, exigindo que o revisor descriptografe manualmente as duas versões para saber qual era o valor antigo e qual é o novo.
+HOW_IT_WORKS: O Git possui o recurso nativo `textconv` para converter arquivos binários ou cifrados em texto antes de calcular o diff visual na tela. Ao adicionar **`*.enc.yaml diff=sopsdiffer`** (ou `*.yaml diff=sopsdiffer` na pasta de segredos) no arquivo **`.gitattributes`** na raiz do repositório e executar **`git config diff.sopsdiffer.textconv "sops decrypt"`** no repositório local, toda chamada ao comando `git diff` (ou `git log -p` e interfaces gráficas de clientes Git) invoca `sops decrypt` em memória sobre a versão anterior e a versão atual do arquivo antes de exibir o diff colorido linha a linha.
+EXAMPLE:
+```bash
+# Configurar o repositório Git local para exibir diffs de arquivos *.enc.yaml descriptografados automaticamente
+echo "*.enc.yaml diff=sopsdiffer" >> .gitattributes
+git config diff.sopsdiffer.textconv "sops decrypt"
+git diff secrets.enc.yaml
+```
+TRADE_OFFS: O filtro `textconv` do Git altera exclusivamente a **exibição visual** do `git diff` e `git log -p` na máquina do desenvolvedor que possui a chave de descriptografia; ele nunca altera o conteúdo gravado nos commits (`git add` / `git commit` continuam gravando apenas o arquivo criptografado no repositório).
+VERIFY: Verifique a configuração no `.git/config` com `git config --get diff.sopsdiffer.textconv` e execute `git diff` após alterar um segredo com `sops set` para confirmar a visualização do diff em texto claro.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-operacoes-arvore-extract-set-unset-in-place]] | [[sops-regras-criacao-arquivo-sops-yaml-path-regex]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 935 | sops-regras-criacao-arquivo-sops-yaml-path-regex | SOPS: automação de políticas de chaves e criptografia por diretório com .sops.yaml (creation_rules e path_regex) ===
+ONE_LINER: O arquivo de configuração **`.sops.yaml`** na raiz do repositório define regras declarativas (`creation_rules`) baseadas em `path_regex`, selecionando automaticamente quais chaves KMS/age/PGP e qual `encrypted_regex` aplicar a cada arquivo sem precisar passar flags na linha de comando.
+IMPORTANCE: Passar manualmente ARNs longos do AWS KMS (`--kms arn:aws:kms:...`), chaves públicas `age` (`--age age1...`) e `--encrypted-regex` toda vez que alguém cria um arquivo de segredo para `dev`, `staging` ou `prod` é propenso a erro humano (como criptografar um segredo de produção usando a chave KMS de desenvolvimento).
+HOW_IT_WORKS: Quando o usuário executa `sops encrypt` ou `sops edit <caminho/do/arquivo.yaml>`, o SOPS sobe a árvore de diretórios até encontrar um arquivo **`.sops.yaml`**. Ele avalia a lista **`creation_rules:`** de cima para baixo e aplica a **primeira regra** cujo **`path_regex`** case com o caminho do arquivo: se o arquivo estiver em `clusters/prod/.*\.yaml$`, aplica a chave KMS/age de produção e `encrypted_regex: ^(data|stringData)$`; se estiver em `clusters/dev/.*\.yaml$`, aplica as chaves da equipe de desenvolvimento.
+EXAMPLE:
+```yaml
+# Exemplo de arquivo .sops.yaml na raiz do repositório diferenciando chaves e regras entre prod e staging
+creation_rules:
+  - path_regex: clusters/prod/.*\.enc\.yaml$
+     encrypted_regex: ^(data|stringData)$
+    kms: arn:aws:kms:us-east-1:111122223333:key/prod-key-id
+    age: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+
+  - path_regex: clusters/staging/.*\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+```
+TRADE_OFFS: Como o SOPS utiliza a **primeira** regra em `creation_rules` cujo `path_regex` casa com o caminho do arquivo (first-match wins), coloque sempre as regras de caminhos mais específicos (`clusters/prod/...`) **acima** de qualquer regra genérica catch-all (`.*\.yaml$`), pois uma regra genérica no topo sombrearia todas as regras subsequentes.
+VERIFY: Crie um `.sops.yaml` com uma regra `path_regex` e `encrypted_regex`, execute `sops encrypt clusters/staging/secret.enc.yaml` sem passar nenhuma flag de chave na CLI e verifique no bloco `sops:` gerado que as chaves do `.sops.yaml` foram aplicadas.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-criptografia-parcial-chaves-encrypted-regex-mac]] | [[sops-gerenciamento-chaves-updatekeys-rotate-keygroups]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 936 | sops-provedores-identidades-kms-age-pgp-vault | SOPS: identidades e provedores de chaves mestras (age, PGP, AWS KMS, GCP KMS, Azure Key Vault e HashiCorp Vault) ===
+ONE_LINER: O SOPS suporta criptografia envelope multi-receptor combinando chaves assimétricas locais modernas (**age** e **PGP**) com serviços gerenciados de KMS em nuvem (**AWS KMS**, **GCP KMS**, **Azure Key Vault**, **HuaweiCloud KMS**) e o motor Transit do **HashiCorp Vault**.
+IMPORTANCE: Em equipes reais e clusters GitOps, um único arquivo criptografado precisa poder ser aberto tanto pelo controlador do Flux/Argo CD rodando na AWS (via IAM Role no AWS KMS ou chave `age`) quanto por um engenheiro sênior de plantão (via sua chave `age` ou `PGP` de emergência) caso o provedor de nuvem esteja indisponível. A seção `Identities` de `getsops.io/docs/usage/` documenta esse suporte.
+HOW_IT_WORKS: O SOPS nunca usa o KMS ou a chave `age`/`PGP` para criptografar diretamente todos os valores do arquivo: ele usa **Envelope Encryption**. Uma única **Data Encryption Key (DEK)** simétrica AES-256-GCM criptografa os valores do documento, e essa DEK de 32 bytes é criptografada separadamente para cada chave mestra listada (`kms`, `gcp_kms`, `azure_kv`, `hc_vault`, `age`, `pgp`). Para descriptografar o arquivo (`sops decrypt`), o cliente precisa ter acesso a **apenas uma** das chaves mestras registradas no bloco `sops:` do arquivo (a menos que `key_groups` com `shamir_threshold` seja configurado).
+EXAMPLE:
+```bash
+# Criptografar um arquivo usando uma chave pública moderna 'age' (definida via flag --age ou variável SOPS_AGE_RECIPIENTS)
+export SOPS_AGE_RECIPIENTS="age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p"
+sops encrypt secrets.yaml > secrets.enc.yaml
+```
+TRADE_OFFS: Na comunidade Cloud Native e GitOps (como no guia oficial do Flux CD), a ferramenta **`age`** (`FiloSottile/age`) substituiu amplamente o legado `PGP`/`GnuPG` para chaves locais ou em-cluster porque possui chaves públicas compactas de uma única linha (`age1...`), zero configuração de anel de chaves complexo (`gpg-agent`) e criptografia moderna (`X25519` + `ChaCha20-Poly1305`).
+VERIFY: Verifique no bloco final `sops:` do arquivo criptografado as listas `kms:`, `age:` ou `pgp:`, onde cada entrada armazena sua própria cópia cifrada (`enc:`) da mesma chave de dados do arquivo.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-gerenciamento-chaves-updatekeys-rotate-keygroups]] | [[vault-criptografia-como-servico-transit-data-encryption]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/ | https://getsops.io/docs/usage/common-operations/
+
+=== NOTE: 937 | sops-gerenciamento-chaves-updatekeys-rotate-keygroups | SOPS: rotação da chave de dados (sops rotate), sincronização de receptores (sops updatekeys) e Key Groups (Shamir) ===
+ONE_LINER: O SOPS separa a sincronização da lista de chaves mestras autorizadas a abrir um arquivo (**`sops updatekeys`**) da rotação efetiva da chave de criptografia de dados e recifragem de todos os valores (**`sops rotate`**), suportando ainda **Key Groups** com divisão de segredo de Shamir (`shamir_threshold`).
+IMPORTANCE: Quando um novo membro entra na equipe (ou sai da empresa) e você atualiza as chaves públicas no `.sops.yaml`, os 50 arquivos `.enc.yaml` que já estavam comitados no Git continuam cifrados apenas para as chaves antigas até que você sincronize seus cabeçalhos (`updatekeys`) e rotacione a chave de dados (`rotate`).
+HOW_IT_WORKS: (1) **`sops updatekeys arquivo.enc.yaml`**: compara as chaves mestras atualmente presentes no bloco `sops:` do arquivo contra as regras atuais do `.sops.yaml`, mostra um diff das chaves que serão adicionadas ou removidas e cifra/remove a DEK para os receptores afetados; (2) **`sops rotate -i arquivo.enc.yaml`**: gera uma **nova Data Encryption Key (DEK)** aleatória e recifra todos os valores do arquivo com a nova DEK (podendo adicionar/remover chaves mestras ao mesmo tempo com `--add-kms`, `--rm-pgp`, etc.); e (3) **Key Groups e `shamir_threshold`**: permite dividir a DEK usando Shamir's Secret Sharing entre múltiplos grupos de chaves (ex.: exigir simultaneamente 1 chave do AWS KMS **e** 1 chave PGP de um administrador para conseguir descriptografar).
+EXAMPLE:
+```bash
+# Sincronizar os receptores de um arquivo criptografado após editar o .sops.yaml e rotacionar a chave de dados (DEK)
+sops updatekeys -y clusters/prod/secrets.enc.yaml
+sops rotate -i clusters/prod/secrets.enc.yaml
+```
+TRADE_OFFS: Quando um desenvolvedor com acesso à chave privada sai da organização, apenas remover a chave dele via `sops updatekeys` (e mesmo rodar `sops rotate`) impede que ele abra futuras versões do arquivo, mas ele ainda poderia descriptografar commits históricos do Git usando a chave antiga; portanto, ao revogar o acesso de alguém, além de rodar `sops updatekeys` e `sops rotate`, **rotacione os valores das credenciais reais** nos serviços de destino.
+VERIFY: Execute `sops rotate -i secrets.enc.yaml` e verifique com `git diff` que todas as strings `ENC[AES256_GCM,data:...]` e o timestamp `lastmodified` foram recifrados com uma nova DEK.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-regras-criacao-arquivo-sops-yaml-path-regex]] | [[sops-provedores-identidades-kms-age-pgp-vault]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/ | https://getsops.io/docs/usage/common-operations/
+
+=== NOTE: 938 | sops-arquivos-binarios-exec-env-exec-file-processos | SOPS: criptografia de arquivos binários e injeção segura em processos em memória (sops exec-env e sops exec-file) ===
+ONE_LINER: Além de arquivos estruturados, o SOPS criptografa arquivos **binários** arbitrários (armazenando o payload Base64 cifrado sob `tree['data']` em JSON) e executa processos filhos injetando segredos diretamente em variáveis de ambiente (**`sops exec-env`**) ou arquivos temporários FIFO/tmpfs (**`sops exec-file`**) sem deixar texto claro no disco.
+IMPORTANCE: Um erro operacional comum ao usar o SOPS localmente ou em CI é rodar `sops decrypt secrets.enc.env > .env` no disco para executar um comando (`terraform apply` ou `kubectl apply`) e esquecer de apagar o arquivo `.env` descriptografado (ou o script falhar antes do `rm .env`, deixando segredos expostos no runner ou sendo comitados por acidente).
+HOW_IT_WORKS: (1) **Arquivos binários**: conforme explica a seção `Encrypting binary files` de `Common operations`, ao criptografar um binário (certificado `.p12`, arquivo `.tar.gz` ou imagem), o SOPS lê os bytes brutos, cifra-os, armazena o resultado em Base64 sob a chave `data` de um documento JSON e o restaura exatamente com o mesmo hash SHA-512 no `sops decrypt`; (2) **`sops exec-env <arquivo.enc.yaml> '<comando>'`**: descriptografa as chaves de primeiro nível do arquivo em memória, injeta-as como variáveis de ambiente exclusivamente no processo filho `<comando>` e encerra; e (3) **`sops exec-file <arquivo.enc> '<comando> {}'`**: disponibiliza o conteúdo descriptografado em um arquivo temporário em memória/FIFO (`{}`) que é destruído automaticamente assim que `<comando>` termina.
+EXAMPLE:
+```bash
+# Executar o Terraform ou uma aplicação injetando os segredos descriptografados apenas na memória do processo filho
+sops exec-env secrets.enc.yaml 'terraform plan'
+sops exec-file kubeconfig.enc.yaml 'kubectl --kubeconfig {} get nodes'
+```
+TRADE_OFFS: Conforme observa a documentação oficial na seção `Encrypting binary files`, devido à codificação Base64 dos bytes cifrados dentro do envelope JSON, o arquivo binário criptografado pelo SOPS será cerca de 33% maior em disco do que o arquivo binário original em texto claro.
+VERIFY: Execute `sops exec-env secrets.enc.yaml 'env'` para verificar que as variáveis do arquivo criptografado estão presentes no subprocesso sem que nenhum arquivo descriptografado tenha sido gravado no diretório atual (`ls -la`).
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-operacoes-arvore-extract-set-unset-in-place]] | [[sops-integracao-gitops-flux-argocd-helm-secrets]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 939 | sops-integracao-gitops-flux-argocd-helm-secrets | SOPS: integração nativa com pipelines GitOps no Kubernetes (Flux kustomize-controller, helm-secrets e KSOPS) ===
+ONE_LINER: No ecossistema Kubernetes e GitOps, arquivos criptografados com SOPS são descriptografados nativamente em memória pelo **Flux CD (`kustomize-controller`)**, pelo plugin **`helm-secrets`** e pelo gerador Kustomize **KSOPS** no Argo CD.
+IMPORTANCE: Diferentemente do Bitnami Sealed Secrets (que converte o `Secret` em um CRD `SealedSecret` específico de um único cluster), um `Kind: Secret` criptografado com SOPS (`--encrypted-regex '^(data|stringData)$'`) continua sendo um YAML de `Secret` padrão que pode ser descriptografado em múltiplos clusters (DR/multi-região) que compartilhem acesso à mesma chave KMS ou `age`.
+HOW_IT_WORKS: No fluxo GitOps com SOPS: (1) o desenvolvedor cifra os manifestos `Secret` (ou `values.enc.yaml` do Helm) com `sops` usando a chave pública `age` ou KMS do ambiente e faz commit no Git; (2) no **Flux CD**, o recurso `Kustomization` declara `spec.decryption.provider: sops` (referenciando um `Secret` `sops-age` no cluster com a chave privada `age.agekey` ou usando IAM Role KMS do pod do `kustomize-controller`), descriptografando os recursos em memória antes de aplicá-los; e (3) em **Helm / Argo CD**, plugins como `helm-secrets` ou `ksops` invocam a biblioteca do SOPS durante a renderização dos templates para injetar os valores descriptografados sem nunca salvá-los abertos no repositório.
+EXAMPLE:
+```yaml
+# Exemplo de configuração de descriptografia nativa SOPS em uma Kustomization do Flux CD (kustomize.toolkit.fluxcd.io)
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps-prod
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./clusters/prod
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: fleet-infra
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+```
+TRADE_OFFS: Quando você utiliza SOPS com Flux CD ou Argo CD, o controlador GitOps descriptografa o manifesto em memória e aplica um `Kind: Secret` nativo no API Server do Kubernetes; portanto, qualquer usuário com permissão RBAC de `get secrets` naquele namespace poderá ler o segredo aplicado no cluster, e o `etcd` do cluster deve estar com `EncryptionConfiguration` (encryption at rest) habilitada.
+VERIFY: Verifique no status da `Kustomization` do Flux (`flux get kustomizations`) ou na saída de `helm secrets dec values.enc.yaml` que os manifestos criptografados com SOPS são descriptografados sem erros.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-criptografia-parcial-chaves-encrypted-regex-mac]] | [[flux-gitops-continuous-delivery-and-architecture]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/usage/common-operations/ | https://getsops.io/docs/
+
+=== NOTE: 940 | sops-compatibilidade-formato-historico-mozilla-cncf-filestatus | SOPS: governança CNCF Sandbox, garantia de retrocompatibilidade do formato 1.0+ e comando sops filestatus ===
+ONE_LINER: Conforme documenta a página inicial de `getsops.io/docs/`, o SOPS mantém garantia estrita de retrocompatibilidade de formato de arquivo desde a versão **1.0** e oferece utilitários como `sops filestatus` para verificar programaticamente se um arquivo já está criptografado antes de um commit.
+IMPORTANCE: Arquivos criptografados costumam permanecer armazenados em repositórios Git corporativos e backups de longo prazo por muitos anos; saber que novas versões do SOPS (v3.x) preservam compatibilidade com o formato introduzido na v1.0 e validar via pre-commit hook que nenhum arquivo de segredo ficou em texto claro previne vazamentos acidentais.
+HOW_IT_WORKS: (1) **Histórico e Governança**: lançado originalmente na Mozilla em 2015 (por Adrian Utrilla e Julien Vehent, inspirado em `hiera-eyaml`, `credstash`, `sneaker` e `password store`) e doado à **CNCF como projeto Sandbox em 2023** sob licença **MPL-2.0**, o SOPS garante compatibilidade do formato de arquivo em toda a série; e (2) **Verificação de status (`sops filestatus`)**: executar **`sops filestatus <arquivo>`** inspeciona o arquivo e retorna um objeto JSON `{"encrypted": true}` ou `{"encrypted": false}` sem precisar das chaves privadas de descriptografia, permitindo que hooks de `pre-commit` ou jobs de CI bloqueiem instantaneamente qualquer Pull Request que tente comitar um arquivo de segredos com `"encrypted": false`.
+EXAMPLE:
+```bash
+# Verificar em um script de CI ou pre-commit hook se um arquivo de segredos está devidamente criptografado com SOPS
+sops filestatus clusters/prod/secrets.enc.yaml
+```
+TRADE_OFFS: O comando `sops filestatus` verifica se a estrutura de metadados `sops` está presente no arquivo (retornando `"encrypted": true`), mas não verifica a validade criptográfica do MAC nem se todos os campos sensíveis foram cobertos por `encrypted_regex` sem descriptografar; em pipelines de CI com acesso a uma chave de leitura de validação ou usando `pre-commit` hooks oficiais do SOPS, combine a checagem de `filestatus` com regras estritas no `.sops.yaml`.
+VERIFY: Execute `sops filestatus secrets.enc.yaml` em um arquivo criptografado e em um arquivo YAML comum e confirme que a saída JSON reporta `{"encrypted":true}` e `{"encrypted":false}` respectivamente.
+LINKS: [[sops-editor-arquivos-criptografados-yaml-json-env-ini]] | [[sops-regras-criacao-arquivo-sops-yaml-path-regex]] | [[sops-gerenciamento-chaves-updatekeys-rotate-keygroups]]
+SOURCES: https://raw.githubusercontent.com/getsops/sops/main/README.rst | https://getsops.io/docs/ | https://getsops.io/docs/usage/common-operations/
