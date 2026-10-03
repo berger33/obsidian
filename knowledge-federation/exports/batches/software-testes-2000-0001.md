@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1156 / 2.000 (57,80%)**
-- Gate automatizado: **1156/1156 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
+- Notas efetivamente redigidas até agora: **1257 / 2.000 (62,85%)**
+- Gate automatizado: **1257/1257 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1156**
-- Revisão factual por IA: **1147/1156**
-- Contabilizadas como válidas: **1156/1156**
+- Revisão factual humana: **9/1257**
+- Revisão factual por IA: **1248/1257**
+- Contabilizadas como válidas: **1257/1257**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1147 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–17 (1147 notas, IDs 10–1156) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1248 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–18 (1248 notas, IDs 10–1257) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-17.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-17.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-18.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-18.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1156 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 844 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1257 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 743 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1460,6 +1460,139 @@
 1155. [RSpec: configurar e diagnosticar a suíte](../../domains/software-0007/software/testes/rspec-configuration-and-profiling.md)
 1156. [RSpec: reconhecer limites e boas práticas](../../domains/software-0007/software/testes/rspec-limits-and-practices.md)
 
+## Tranche 18 — acessibilidade, análise estática, segurança de artefatos e relatórios de teste (101 notas; revisão factual por IA registrada)
+
+### Cypress — testes end-to-end no navegador, interceptação e sessões
+
+1157. [Cypress: entender a execução dentro do navegador](../../domains/software-0007/software/testes/cypress-architecture-in-browser.md)
+1158. [Cypress: aproveitar a repetição automática de asserções](../../domains/software-0007/software/testes/cypress-retry-ability.md)
+1159. [Cypress: controlar a rede com interceptação](../../domains/software-0007/software/testes/cypress-interception.md)
+1160. [Cypress: reaproveitar sessões de autenticação](../../domains/software-0007/software/testes/cypress-session-caching.md)
+1161. [Cypress: escolher seletores estáveis](../../domains/software-0007/software/testes/cypress-selectors-and-testids.md)
+1162. [Cypress: servir dados com arquivos de apoio](../../domains/software-0007/software/testes/cypress-fixtures.md)
+1163. [Cypress: extrair comandos próprios](../../domains/software-0007/software/testes/cypress-custom-commands.md)
+1164. [Cypress: ajustar tempos e reduzir instabilidade](../../domains/software-0007/software/testes/cypress-timeouts-and-stability.md)
+1165. [Cypress: investigar falhas com artefatos](../../domains/software-0007/software/testes/cypress-debugging-and-artifacts.md)
+1166. [Cypress: paralelizar e executar no pipeline](../../domains/software-0007/software/testes/cypress-ci-parallelization.md)
+
+### WebdriverIO — seletores, esperas, serviços, comandos próprios e execução
+
+1167. [WebdriverIO: localizar elementos com clareza](../../domains/software-0007/software/testes/wdio-selectors.md)
+1168. [WebdriverIO: esperar condições de elemento](../../domains/software-0007/software/testes/wdio-waiting-strategies.md)
+1169. [WebdriverIO: controlar o modo síncrono e assíncrono](../../domains/software-0007/software/testes/wdio-sync-and-async.md)
+1170. [WebdriverIO: compor ações de elemento](../../domains/software-0007/software/testes/wdio-element-commands.md)
+1171. [WebdriverIO: orquestrar serviços de teste](../../domains/software-0007/software/testes/wdio-services.md)
+1172. [WebdriverIO: definir comandos próprios](../../domains/software-0007/software/testes/wdio-custom-commands.md)
+1173. [WebdriverIO: estruturar a configuração](../../domains/software-0007/software/testes/wdio-configuration.md)
+1174. [WebdriverIO: escolher relatórios e evidências](../../domains/software-0007/software/testes/wdio-reporters-and-artifacts.md)
+1175. [WebdriverIO: executar em paralelo](../../domains/software-0007/software/testes/wdio-parallel-execution.md)
+1176. [WebdriverIO: cobrir plataformas e múltiplos alvos](../../domains/software-0007/software/testes/wdio-mobile-and-multiremote.md)
+
+### JUnit 5 — ciclos de vida, parametrização, extensões e execução paralela
+
+1177. [JUnit 5: marcar testes com anotações](../../domains/software-0007/software/testes/junit5-annotations-basics.md)
+1178. [JUnit 5: preparar e limpar nos níveis corretos](../../domains/software-0007/software/testes/junit5-lifecycle.md)
+1179. [JUnit 5: escrever asserções com mensagens úteis](../../domains/software-0007/software/testes/junit5-assertions.md)
+1180. [JUnit 5: variar entradas com testes parametrizados](../../domains/software-0007/software/testes/junit5-parameterized.md)
+1181. [JUnit 5: gerar testes em tempo de execução](../../domains/software-0007/software/testes/junit5-dynamic-tests.md)
+1182. [JUnit 5: estender comportamento com extensões](../../domains/software-0007/software/testes/junit5-extensions.md)
+1183. [JUnit 5: receber parâmetros resolvidos](../../domains/software-0007/software/testes/junit5-dependency-injection.md)
+1184. [JUnit 5: habilitar execução paralela](../../domains/software-0007/software/testes/junit5-parallel-execution.md)
+1185. [JUnit 5: selecionar testes com etiquetas](../../domains/software-0007/software/testes/junit5-tagging-and-filtering.md)
+1186. [JUnit 5: migrar e manter a suíte](../../domains/software-0007/software/testes/junit5-migration-and-practices.md)
+
+### GoogleTest — asserções, fixtures, parametrização e relatórios em C++
+
+1187. [GoogleTest: declarar casos e suítes](../../domains/software-0007/software/testes/googletest-test-macros.md)
+1188. [GoogleTest: escolher entre asserção fatal e não fatal](../../domains/software-0007/software/testes/googletest-assertions.md)
+1189. [GoogleTest: comparar valores com veredito claro](../../domains/software-0007/software/testes/googletest-comparisons.md)
+1190. [GoogleTest: compartilhar preparação com fixtures](../../domains/software-0007/software/testes/googletest-fixtures.md)
+1191. [GoogleTest: variar entradas com testes parametrizados](../../domains/software-0007/software/testes/googletest-parameterized.md)
+1192. [GoogleTest: reutilizar casos entre tipos](../../domains/software-0007/software/testes/googletest-typed-tests.md)
+1193. [GoogleTest: integrar dublês com a suíte](../../domains/software-0007/software/testes/googletest-mocks-integration.md)
+1194. [GoogleTest: verificar encerramentos esperados](../../domains/software-0007/software/testes/googletest-death-tests.md)
+1195. [GoogleTest: executar e filtrar casos](../../domains/software-0007/software/testes/googletest-running-and-filtering.md)
+1196. [GoogleTest: interpretar relatórios e limites](../../domains/software-0007/software/testes/googletest-reports-and-limits.md)
+
+### PHPUnit — asserções, provedores de dados, dublês e cobertura
+
+1197. [PHPUnit: escrever casos como classes de teste](../../domains/software-0007/software/testes/phpunit-test-structure.md)
+1198. [PHPUnit: usar asserções específicas](../../domains/software-0007/software/testes/phpunit-assertions.md)
+1199. [PHPUnit: variar entradas com provedores de dados](../../domains/software-0007/software/testes/phpunit-data-providers.md)
+1200. [PHPUnit: preparar e limpar com métodos de ciclo](../../domains/software-0007/software/testes/phpunit-fixtures.md)
+1201. [PHPUnit: substituir dependências com dublês](../../domains/software-0007/software/testes/phpunit-test-doubles.md)
+1202. [PHPUnit: medir e interpretar cobertura](../../domains/software-0007/software/testes/phpunit-coverage.md)
+1203. [PHPUnit: verificar caminhos de exceção](../../domains/software-0007/software/testes/phpunit-exception-testing.md)
+1204. [PHPUnit: organizar e selecionar execuções](../../domains/software-0007/software/testes/phpunit-groups-and-filtering.md)
+1205. [PHPUnit: integrar ao pipeline com evidências](../../domains/software-0007/software/testes/phpunit-ci-and-reports.md)
+1206. [PHPUnit: reconhecer limites e boas práticas](../../domains/software-0007/software/testes/phpunit-limits-and-practices.md)
+
+### Ginkgo — especificações em Go, ciclo de vida, paralelismo e etiquetas
+
+1207. [Ginkgo: organizar especificações em contêineres](../../domains/software-0007/software/testes/ginkgo-container-nodes.md)
+1208. [Ginkgo: preparar estado nos nós de preparação](../../domains/software-0007/software/testes/ginkgo-setup-nodes.md)
+1209. [Ginkgo: verificar comportamento com asserções](../../domains/software-0007/software/testes/ginkgo-subject-and-assertions.md)
+1210. [Ginkgo: executar especificações em paralelo](../../domains/software-0007/software/testes/ginkgo-parallel-execution.md)
+1211. [Ginkgo: declarar ordem e serialidade](../../domains/software-0007/software/testes/ginkgo-ordered-and-serial.md)
+1212. [Ginkgo: selecionar especificações com etiquetas](../../domains/software-0007/software/testes/ginkgo-labels-and-filtering.md)
+1213. [Ginkgo: estruturar o ponto de entrada da suíte](../../domains/software-0007/software/testes/ginkgo-suite-bootstrap.md)
+1214. [Ginkgo: gerar relatórios e evidências](../../domains/software-0007/software/testes/ginkgo-reporting-and-artifacts.md)
+1215. [Ginkgo: focar, pendente e ignorar](../../domains/software-0007/software/testes/ginkgo-focus-and-pending.md)
+1216. [Ginkgo: operar a linha de comando e reconhecer limites](../../domains/software-0007/software/testes/ginkgo-cli-and-limits.md)
+
+### axe-core — regras de acessibilidade, impacto e integração automatizada
+
+1217. [axe-core: executar a análise e ler o resultado](../../domains/software-0007/software/testes/axe-run-and-results.md)
+1218. [axe-core: selecionar regras por etiquetas](../../domains/software-0007/software/testes/axe-rule-tags.md)
+1219. [axe-core: priorizar por impacto](../../domains/software-0007/software/testes/axe-impact-levels.md)
+1220. [axe-core: configurar regras e excluir trechos](../../domains/software-0007/software/testes/axe-configuration-and-exclusions.md)
+1221. [axe-core: tratar regras experimentais](../../domains/software-0007/software/testes/axe-experimental-rules.md)
+1222. [axe-core: integrar ao teste de navegador](../../domains/software-0007/software/testes/axe-browser-integration.md)
+1223. [axe-core: definir política de bloqueio no pipeline](../../domains/software-0007/software/testes/axe-ci-policy.md)
+1224. [axe-core: complementar com verificação humana](../../domains/software-0007/software/testes/axe-manual-complement.md)
+1225. [axe-core: acompanhar o passivo ao longo do tempo](../../domains/software-0007/software/testes/axe-baseline-and-history.md)
+1226. [axe-core: corrigir violações frequentes](../../domains/software-0007/software/testes/axe-common-violations.md)
+1227. [axe-core: reconhecer limites da ferramenta](../../domains/software-0007/software/testes/axe-limits.md)
+
+### Semgrep — regras de análise estática, padrões, correções e pipeline
+
+1228. [Semgrep: estruturar uma regra própria](../../domains/software-0007/software/testes/semgrep-rule-structure.md)
+1229. [Semgrep: combinar condições com operadores](../../domains/software-0007/software/testes/semgrep-pattern-operators.md)
+1230. [Semgrep: capturar valores com metavariáveis](../../domains/software-0007/software/testes/semgrep-metavariables.md)
+1231. [Semgrep: analisar fluxo com modo de propagação](../../domains/software-0007/software/testes/semgrep-taint-mode.md)
+1232. [Semgrep: sugerir correção automática](../../domains/software-0007/software/testes/semgrep-rule-defined-fix.md)
+1233. [Semgrep: integrar a análise ao pipeline](../../domains/software-0007/software/testes/semgrep-ci-integration.md)
+1234. [Semgrep: registrar exceções de forma auditável](../../domains/software-0007/software/testes/semgrep-suppressions.md)
+1235. [Semgrep: definir severidade e política de bloqueio](../../domains/software-0007/software/testes/semgrep-severity-and-policy.md)
+1236. [Semgrep: manter regras próprias do projeto](../../domains/software-0007/software/testes/semgrep-custom-rules.md)
+1237. [Semgrep: reconhecer limites da análise estática](../../domains/software-0007/software/testes/semgrep-limits-and-practices.md)
+
+### Trivy — varredura de imagens, configurações, segredos e inventário
+
+1238. [Trivy: separar alvos e verificadores](../../domains/software-0007/software/testes/trivy-targets-and-scanners.md)
+1239. [Trivy: analisar imagens de contêiner](../../domains/software-0007/software/testes/trivy-image-scanning.md)
+1240. [Trivy: analisar sistema de arquivos e repositório](../../domains/software-0007/software/testes/trivy-filesystem-and-repo.md)
+1241. [Trivy: detectar falhas de configuração](../../domains/software-0007/software/testes/trivy-misconfiguration.md)
+1242. [Trivy: encontrar segredos expostos](../../domains/software-0007/software/testes/trivy-secret-scanning.md)
+1243. [Trivy: gerar e consumir inventário de software](../../domains/software-0007/software/testes/trivy-sbom.md)
+1244. [Trivy: registrar exceções com validade](../../domains/software-0007/software/testes/trivy-ignore-and-baseline.md)
+1245. [Trivy: definir política no pipeline](../../domains/software-0007/software/testes/trivy-ci-policy.md)
+1246. [Trivy: escolher formato de saída](../../domains/software-0007/software/testes/trivy-formats-and-output.md)
+1247. [Trivy: reconhecer limites da varredura](../../domains/software-0007/software/testes/trivy-limits-and-practices.md)
+
+### Allure — relatórios, passos, anexos, categorias e histórico
+
+1248. [Allure: gerar relatório a partir de resultados](../../domains/software-0007/software/testes/allure-results-and-report.md)
+1249. [Allure: descrever passos do teste](../../domains/software-0007/software/testes/allure-steps.md)
+1250. [Allure: anexar evidências ao resultado](../../domains/software-0007/software/testes/allure-attachments.md)
+1251. [Allure: classificar falhas por categoria](../../domains/software-0007/software/testes/allure-categories.md)
+1252. [Allure: declarar severidade e metadados](../../domains/software-0007/software/testes/allure-severity-and-annotations.md)
+1253. [Allure: acompanhar histórico e tendências](../../domains/software-0007/software/testes/allure-history-and-trends.md)
+1254. [Allure: registrar reexecuções e instabilidade](../../domains/software-0007/software/testes/allure-retries-and-flaky.md)
+1255. [Allure: navegar por suítes e comportamentos](../../domains/software-0007/software/testes/allure-suites-and-behaviors.md)
+1256. [Allure: publicar o relatório no pipeline](../../domains/software-0007/software/testes/allure-ci-publication.md)
+1257. [Allure: reconhecer limites do relatório](../../domains/software-0007/software/testes/allure-limits-and-practices.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1147 notas 10–1156 das tranches 2–17 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1156/2.000 notas válidas, restando 844 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1248 notas 10–1257 das tranches 2–18 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1257/2.000 notas válidas, restando 743 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

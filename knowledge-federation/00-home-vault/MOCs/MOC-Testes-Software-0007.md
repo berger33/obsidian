@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 1156 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1156 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1147 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1257 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1257 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1248 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1465,6 +1465,139 @@
 1155. [[rspec-configuration-and-profiling]] — O arquivo de configuração define filtros, formato de saída, perfil de execução e ordem dos exemplos, e a execução pode apontar os exemplos mais lentos.
 1156. [[rspec-limits-and-practices]] — A suíte verifica comportamento e colaboração, mas depende de disciplina para manter exemplos independentes e mensagens de falha úteis.
 
+## Tranche 18 — acessibilidade, análise estática, segurança de artefatos e relatórios de teste
+
+### Cypress — testes end-to-end no navegador, interceptação e sessões
+
+1157. [[cypress-architecture-in-browser]] — O executor roda no mesmo ciclo do aplicativo, dentro do navegador, comunicando-se com um processo externo responsável por orquestrar a execução.
+1158. [[cypress-retry-ability]] — Consultas e asserções são repetidas até que a condição se torne verdadeira ou o tempo limite se esgote, sem interromper a cadeia de comandos.
+1159. [[cypress-interception]] — O comando de interceptação observa, substitui ou atrasa requisições, permitindo simular respostas e aguardar chamadas específicas por apelido.
+1160. [[cypress-session-caching]] — O comando de sessão executa o fluxo de autenticação uma vez e restaura o estado em testes seguintes, com validação opcional dessa restauração.
+1161. [[cypress-selectors-and-testids]] — As consultas aceitam seletores de estilo, atributos dedicados à automação e textos visíveis, com estabilidade diferente entre eles.
+1162. [[cypress-fixtures]] — Os arquivos de apoio guardam dados de teste e podem alimentar respostas simuladas ou servir de origem para o estado inicial do cenário.
+1163. [[cypress-custom-commands]] — É possível registrar comandos personalizados e sobrescrever comandos existentes, reunindo sequências repetidas em uma operação nomeada.
+1164. [[cypress-timeouts-and-stability]] — Limites de tempo podem ser definidos por comando, por asserção ou para toda a configuração, e a espera por condição é preferível a pausas fixas.
+1165. [[cypress-debugging-and-artifacts]] — A execução registra vídeos e capturas, permite consultar o log de comandos e o tráfego de rede, e oferece modo interativo para inspeção.
+1166. [[cypress-ci-parallelization]] — A suíte pode ser dividida em várias máquinas e os resultados combinados, com balanceamento por tempo de execução ou por grupos declarados.
+
+### WebdriverIO — seletores, esperas, serviços, comandos próprios e execução
+
+1167. [[wdio-selectors]] — Os seletores aceitam estilo, texto, identificador de acessibilidade e estratégias específicas de plataforma móvel, com retorno de um ou vários elementos.
+1168. [[wdio-waiting-strategies]] — Os elementos expõem esperas específicas para exibição, existência, clicabilidade e estado habilitado, com limite de tempo configurável.
+1169. [[wdio-sync-and-async]] — O framework oferece modo síncrono que oculta as promessas e modo assíncrono explícito, com regras distintas de configuração.
+1170. [[wdio-element-commands]] — Os elementos oferecem comandos para interagir, consultar estado e atributos, e as ações podem ser encadeadas na mesma chamada.
+1171. [[wdio-services]] — Os serviços preparam e encerram componentes externos, como servidor de navegador, emulador ou servidor de aplicação, integrados ao ciclo da suíte.
+1172. [[wdio-custom-commands]] — Comandos personalizados podem ser adicionados ao navegador ou aos elementos, encapsulando sequências usadas em vários testes.
+1173. [[wdio-configuration]] — O arquivo de configuração declara navegadores, capacidades, estrutura de testes, relatórios, serviços e opções de execução.
+1174. [[wdio-reporters-and-artifacts]] — A suíte pode gerar relatórios em formatos diferentes, incluir capturas em falhas e publicar resultados para consumo no pipeline.
+1175. [[wdio-parallel-execution]] — A configuração permite distribuir arquivos de teste entre instâncias de navegador, com limite de processos simultâneos definido por capacidade.
+1176. [[wdio-mobile-and-multiremote]] — As mesmas capacidades atendem navegador e dispositivos móveis, e o modo multirremoto permite controlar várias sessões na mesma execução.
+
+### JUnit 5 — ciclos de vida, parametrização, extensões e execução paralela
+
+1177. [[junit5-annotations-basics]] — As anotações identificam métodos e classes de teste, com variantes para desabilitar, exibir nome personalizado e ordenar a execução.
+1178. [[junit5-lifecycle]] — As anotações de ciclo de vida permitem preparar por método, por classe ou por execução, com controle de herança e de ordem entre extensões.
+1179. [[junit5-assertions]] — O conjunto de asserções cobre igualdade, agrupamento de verificações, exceções esperadas e limites de tempo, com mensagem de falha personalizável.
+1180. [[junit5-parameterized]] — Os testes parametrizados recebem argumentos de fontes declaradas, com formatos de exibição que identificam cada invocação no relatório.
+1181. [[junit5-dynamic-tests]] — Métodos de fábrica podem produzir casos dinamicamente, com nome e conteúdo definidos a partir de dados disponíveis apenas durante a execução.
+1182. [[junit5-extensions]] — As extensões podem interceptar fases do ciclo de vida e resolver parâmetros, sendo registradas por anotação, por anotação composta ou por configuração global.
+1183. [[junit5-dependency-injection]] — Construtores e métodos de teste podem receber parâmetros resolvidos por extensões registradas, incluindo informações do teste corrente e recursos preparados.
+1184. [[junit5-parallel-execution]] — A execução paralela é opcional e configurada por parâmetros que definem modo padrão, modo por classe e estratégia de paralelismo.
+1185. [[junit5-tagging-and-filtering]] — As etiquetas classificam testes e podem ser usadas para incluir ou excluir grupos na execução, inclusive por configuração de construção.
+1186. [[junit5-migration-and-practices]] — A versão atual convive com a anterior por meio de mecanismo de compatibilidade, permitindo migração gradual de classes e asserções.
+
+### GoogleTest — asserções, fixtures, parametrização e relatórios em C++
+
+1187. [[googletest-test-macros]] — As macros declaram casos de teste com nome de suíte e nome do caso, gerando a função de entrada e o registro automático no executor.
+1188. [[googletest-assertions]] — As asserções fatais interrompem o caso no primeiro erro, enquanto as não fatais registram a falha e continuam a execução.
+1189. [[googletest-comparisons]] — As macros de comparação cobrem igualdade, desigualdade, comparações numéricas, texto e valores de ponto flutuante com tolerância declarada.
+1190. [[googletest-fixtures]] — Uma classe de fixture herda da classe base de teste e define preparação e limpeza, que são executadas para cada caso que usa a fixture.
+1191. [[googletest-parameterized]] — O gerador de valores combinado com a macro de teste parametrizado cria um caso por valor, com nome derivado e relatório individual.
+1192. [[googletest-typed-tests]] — Os testes por tipo permitem executar a mesma bateria sobre várias implementações que compartilham interface, e a suíte é instanciada para cada tipo.
+1193. [[googletest-mocks-integration]] — A biblioteca de dublês complementa o framework, declarando expectativas sobre chamadas e valores de retorno das dependências.
+1194. [[googletest-death-tests]] — As asserções de morte verificam que determinado trecho encerra o processo, opcionalmente conferindo o código de saída e a mensagem emitida.
+1195. [[googletest-running-and-filtering]] — O executável aceita filtros por nome de suíte e de caso, repetição, ordem aleatória e saída em formatos consumíveis por ferramentas.
+1196. [[googletest-reports-and-limits]] — A saída lista falhas com arquivo e linha, permite formatos estruturados e pode ser combinada com outras ferramentas de execução.
+
+### PHPUnit — asserções, provedores de dados, dublês e cobertura
+
+1197. [[phpunit-test-structure]] — Cada classe de teste herda da classe base do framework, e os métodos de teste são declarados publicamente segundo a convenção de nome.
+1198. [[phpunit-assertions]] — O conjunto cobre igualdade estrita, identidade de objeto, comparações numéricas, expressões regulares, exceções e estado de coleções.
+1199. [[phpunit-data-providers]] — Os provedores fornecem conjuntos de argumentos, e cada conjunto aparece como teste separado no relatório quando identificado por nome.
+1200. [[phpunit-fixtures]] — Os métodos de preparação e limpeza são executados antes e depois de cada teste, e há variantes no nível da classe para recursos compartilhados.
+1201. [[phpunit-test-doubles]] — O framework cria dublês de tipos, com configuração de retornos, exceções e verificação de chamadas, além de restringir a geração automática de valores.
+1202. [[phpunit-coverage]] — Com a extensão apropriada habilitada, a execução coleta dados de linhas e ramos e permite gerar relatórios em formatos distintos.
+1203. [[phpunit-exception-testing]] — As asserções de exceção confirmam a classe lançada e permitem inspecionar a mensagem, com cuidados sobre o trecho realmente coberto pela verificação.
+1204. [[phpunit-groups-and-filtering]] — Grupos e filtros permitem incluir ou excluir conjuntos de testes, e a configuração do projeto pode declarar suítes separadas por tipo.
+1205. [[phpunit-ci-and-reports]] — A execução gera relatórios em formatos consumíveis por ferramentas de integração, com detalhe por teste e resumo de falhas.
+1206. [[phpunit-limits-and-practices]] — O framework verifica unidades e integrações, mas a qualidade da suíte depende de casos independentes e verificações significativas.
+
+### Ginkgo — especificações em Go, ciclo de vida, paralelismo e etiquetas
+
+1207. [[ginkgo-container-nodes]] — Contêineres aninhados de descrição, contexto e condição agrupam especificações e comunicam a hierarquia de cenários.
+1208. [[ginkgo-setup-nodes]] — Nós de preparação são executados antes e depois de cada especificação, com variantes de suíte e de contêiner ordenado.
+1209. [[ginkgo-subject-and-assertions]] — As especificações contêm as verificações, normalmente com a biblioteca de asserções complementar, e o relatório destaca a primeira falha.
+1210. [[ginkgo-parallel-execution]] — A ferramenta de linha de comando distribui especificações entre processos, e cada processo executa uma cópia do binário de teste.
+1211. [[ginkgo-ordered-and-serial]] — Contêineres podem ser marcados como ordenados, e especificações ou contêineres podem ser declarados seriais para nunca rodarem simultaneamente.
+1212. [[ginkgo-labels-and-filtering]] — Etiquetas aplicadas a especificações e contêineres podem ser combinadas em expressões para filtrar a execução por linha de comando.
+1213. [[ginkgo-suite-bootstrap]] — O ponto de entrada cria o executor, prepara e limpa recursos da suíte e entrega o controle ao framework para executar as especificações.
+1214. [[ginkgo-reporting-and-artifacts]] — A suíte produz relatórios com hierarquia de contêineres, permite saída consumível por máquina e grava arquivos de perfil para depuração.
+1215. [[ginkgo-focus-and-pending]] — É possível marcar especificações como focadas, pendentes de implementação ou ignoradas temporariamente, com aviso sobre o uso de foco.
+1216. [[ginkgo-cli-and-limits]] — A ferramenta de linha de comando gera, executa, filtra e perfila suítes, inclusive em modo de observação contínua durante o desenvolvimento.
+
+### axe-core — regras de acessibilidade, impacto e integração automatizada
+
+1217. [[axe-run-and-results]] — A chamada de análise recebe contexto e opções e devolve violações, itens aprovados, avisos e regras não aplicáveis.
+1218. [[axe-rule-tags]] — Cada regra possui etiquetas que indicam nível de conformidade e critério relacionado, e a análise pode ser restringida a elas.
+1219. [[axe-impact-levels]] — Cada violação traz um nível de impacto, e cada elemento afetado inclui seletor, trecho de marcação e resumo da falha.
+1220. [[axe-configuration-and-exclusions]] — As opções permitem habilitar ou desabilitar regras específicas e limitar a análise a regiões da página.
+1221. [[axe-experimental-rules]] — Regras marcadas como experimentais não rodam por padrão e precisam ser nomeadas explicitamente para entrar na análise.
+1222. [[axe-browser-integration]] — O pacote de integração injeta a biblioteca na página e executa a análise durante o teste de interface, com limite de tempo e opções.
+1223. [[axe-ci-policy]] — A execução pode falhar conforme a política escolhida, seja por qualquer violação, por níveis de impacto ou por lista de regras.
+1224. [[axe-manual-complement]] — A análise automática cobre parte dos critérios e não avalia experiência real com tecnologia assistiva nem ordem de foco percebida.
+1225. [[axe-baseline-and-history]] — Registrar a contagem por regra e por versão do código permite medir a evolução do passivo e comparar execuções.
+1226. [[axe-common-violations]] — As regras mais acionadas costumam envolver texto alternativo, rótulos de formulário, contraste, estrutura de cabeçalhos e identificação de idioma.
+1227. [[axe-limits]] — A biblioteca detecta uma parte dos problemas de acessibilidade e não substitui avaliação com pessoas usuárias nem revisão de conteúdo.
+
+### Semgrep — regras de análise estática, padrões, correções e pipeline
+
+1228. [[semgrep-rule-structure]] — Uma regra declara identificador, linguagem, severidade, mensagem e o padrão que deve corresponder ao código analisado.
+1229. [[semgrep-pattern-operators]] — Operadores permitem exigir várias condições, alternativas, negação, contexto interno e correspondência por expressão regular sobre metavariáveis.
+1230. [[semgrep-metavariables]] — As metavariáveis representam trechos variáveis do código e podem ser reutilizadas para exigir que duas posições correspondam ao mesmo valor.
+1231. [[semgrep-taint-mode]] — O modo de propagação descreve fontes, destinos e saneadores, acompanhando a passagem de dados não confiáveis até operações sensíveis.
+1232. [[semgrep-rule-defined-fix]] — Regras podem declarar a substituição apropriada, e a ferramenta aplica a correção diretamente ou mostra a prévia para revisão.
+1233. [[semgrep-ci-integration]] — A execução pode analisar o repositório inteiro ou apenas as mudanças, gerar saída estruturada e falhar o trabalho pela presença de achados.
+1234. [[semgrep-suppressions]] — Achados podem ser silenciados com anotação no código, e a supressão pode ser restrita ao escopo onde o risco é aceito.
+1235. [[semgrep-severity-and-policy]] — As regras declaram severidade, e a execução pode falhar por severidade mínima ou por regra específica conforme a política do projeto.
+1236. [[semgrep-custom-rules]] — Regras locais ficam versionadas com o código e podem cobrir convenções internas que ferramentas genéricas não conhecem.
+1237. [[semgrep-limits-and-practices]] — A análise identifica padrões e fluxos modelados, mas não substitui execução, revisão de projeto nem testes de comportamento.
+
+### Trivy — varredura de imagens, configurações, segredos e inventário
+
+1238. [[trivy-targets-and-scanners]] — A ferramenta distingue o que é analisado, como imagem, sistema de arquivos ou configuração, do que é procurado, como vulnerabilidades, segredos ou falhas de configuração.
+1239. [[trivy-image-scanning]] — A imagem é analisada camada a camada, cruzando os pacotes instalados com bases de vulnerabilidades e filtrando por gravidade.
+1240. [[trivy-filesystem-and-repo]] — A varredura pode percorrer diretório local ou repositório remoto, encontrando dependências declaradas, segredos e configurações no código.
+1241. [[trivy-misconfiguration]] — O verificador de configuração avalia arquivos de infraestrutura como definições de contêiner, manifestos de orquestração e modelos de provisionamento.
+1242. [[trivy-secret-scanning]] — O verificador de segredos procura credenciais, chaves e tokens em arquivos e camadas, com regras próprias e possibilidade de exceções.
+1243. [[trivy-sbom]] — A ferramenta produz inventário em formatos padronizados a partir de imagens e sistemas de arquivos, e também analisa inventários existentes.
+1244. [[trivy-ignore-and-baseline]] — Achados podem ser ignorados por arquivo de configuração com identificadores e, quando suportado, prazo de expiração e justificativa.
+1245. [[trivy-ci-policy]] — A execução pode falhar por código de saída a partir de gravidade mínima ou de achados encontrados, com filtros de severidade e de correção disponível.
+1246. [[trivy-formats-and-output]] — A ferramenta gera saída em tabela para leitura e em formatos estruturados, inclusive padronizados para intercâmbio com outras ferramentas.
+1247. [[trivy-limits-and-practices]] — A ferramenta encontra componentes conhecidos e padrões de configuração, mas não substitui análise de falhas de lógica nem testes de invasão.
+
+### Allure — relatórios, passos, anexos, categorias e histórico
+
+1248. [[allure-results-and-report]] — A execução dos testes grava arquivos de resultado em diretório próprio, e o gerador transforma esse conjunto em relatório navegável estático.
+1249. [[allure-steps]] — Anotações de passo dividem o teste em ações nomeadas, com possibilidade de aninhamento e parametrização do nome exibido.
+1250. [[allure-attachments]] — Arquivos podem ser anexados ao teste ou a um passo específico, com tipo declarado, incluindo texto, imagem e conteúdo estruturado.
+1251. [[allure-categories]] — O arquivo de configuração define categorias por status e por expressões sobre mensagem e rastro, agrupando falhas segundo a origem provável.
+1252. [[allure-severity-and-annotations]] — Anotações registram gravidade, descrição, vínculo com requisito e agrupamento por épico, funcionalidade e história.
+1253. [[allure-history-and-trends]] — Ao manter relatórios anteriores acessíveis, o gerador calcula tendências de resultado e duração entre execuções.
+1254. [[allure-retries-and-flaky]] — O relatório mostra tentativas do mesmo caso, distinguindo o resultado final do histórico de execuções intermediárias.
+1255. [[allure-suites-and-behaviors]] — O relatório organiza os casos por estrutura de execução, por pacotes e por agrupamento de comportamento declarado nas anotações.
+1256. [[allure-ci-publication]] — O gerador produz página estática que pode ser publicada como artefato do trabalho ou em serviço de hospedagem de relatórios.
+1257. [[allure-limits-and-practices]] — O relatório apresenta o que a execução registrou, sem julgar a qualidade das verificações nem substituir a análise das causas.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 1156/1156 notas e as 1156 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1147 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1156 notas substantivas; 844 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-17.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md) e [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1257/1257 notas e as 1257 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1248 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1257 notas substantivas; 743 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-18.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md) e [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
