@@ -1,0 +1,111 @@
+TOPIC: Fail2ban — Prevenção de Intrusão Baseada em Logs, Jails, Filtros Seguros contra ReDoS, Actions nftables/ipset e Backoff
+SOURCES: https://raw.githubusercontent.com/fail2ban/fail2ban/master/README.md | https://raw.githubusercontent.com/fail2ban/fail2ban/master/man/jail.conf.5 | https://github.com/fail2ban/fail2ban/wiki
+
+===NOTE===
+0661|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client|Fail2ban: Arquitetura do Daemon, Ordem Estrita de Precedência (`*.conf` vs `*.local`) e Operação via **`fail2ban-client`**|**Fail2ban** (`fail2ban/fail2ban`, GPLv2+, Python 3) é o daemon de prevenção de intrusão em nível de host que monitora arquivos de log (`/var/log/auth.log`, Nginx, Postfix, OpenVPN) ou o `systemd-journal` em tempo real e atualiza dinamicamente o firewall do sistema (`nftables`, `iptables`/`ipset`, `ufw`, `firewalld`) para bloquear endereços IPv4 e IPv6 que realizam força bruta ou varreduras.|Reduz drasticamente o ruído de ataques automatizados de força bruta contra serviços expostos (SSH, gateways de e-mail, portais de autenticação e APIs) e persiste os banimentos no banco SQLite **`/var/lib/fail2ban/fail2ban.sqlite3`** para restaurá-los automaticamente após reinicializações.|Conforme documentado na manpage oficial `jail.conf(5)`, a configuração é carregada na ordem estrita: **`jail.conf` -> `jail.d/*.conf` -> `jail.local` -> `jail.d/*.local`**. O administrador **jamais deve editar os arquivos `.conf` originais** (que são sobrescritos em atualizações de pacotes da distribuição), devendo colocar todas as customizações exclusivamente em arquivos **`.local`** (`jail.local` ou `jail.d/99-hardening.local`).|```bash
+# Verificar a versao do daemon, status de todas as jails ativas e recarregar configuracoes sem derrubar o servico
+sudo fail2ban-client version
+sudo fail2ban-client status
+sudo fail2ban-client reload
+```|Conforme alerta o `README.md` oficial do Fail2ban, sempre interaja com o daemon através do **`fail2ban-client`** (que se comunica pelo socket `/var/run/fail2ban/fail2ban.sock`) e nunca invoque `fail2ban-server` diretamente na mão.|Execute `sudo fail2ban-client -d` para imprimir toda a configuração final mesclada (`conf` + `local`) e validar as diretivas efetivas.|fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip, fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos, fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive
+
+===NOTE===
+0662|fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip|Fail2ban: Anatomia de uma **Jail** (`findtime`, `maxretry`, `bantime`, `ignoreip`, `ignoreself` e `backend = systemd`)|Cada **Jail** em `/etc/fail2ban/jail.d/*.local` conecta um **Filter** (`filter.d/<nome>.conf`, que define *o que* procurar no log) a uma ou mais **Actions** (`action.d/<nome>.conf`, que definem *como* bloquear o IP) dentro de uma janela deslizante de tempo.|Três parâmetros governam a máquina de estados de detecção de uma jail: se um mesmo endereço IPv4/IPv6 (não listado em `ignoreip`) acumular **`maxretry`** falhas dentro da janela temporal **`findtime`** (ex.: `5` falhas em `10m`), a jail dispara a ação `actionban` bloqueando o IP por **`bantime`** (ex.: `1h` ou `-1` para banimento permanente).|Em distribuições Linux modernas baseadas em `systemd` (Debian 12+, Ubuntu 24.04+, RHEL 9+, Fedora), onde muitos serviços gravam apenas no `journald` binário sem criar arquivos em `/var/log/`, definir **`backend = systemd`** (com `journalmatch = _SYSTEMD_UNIT=sshd.service`) lê os eventos diretamente da API C do `systemd-journal` com zero latência de polling em disco.|```ini
+# /etc/fail2ban/jail.d/10-sshd-hardened.local
+[DEFAULT]
+ignoreself = true
+ignoreip = 127.0.0.1/8 ::1 10.99.0.0/24
+bantime = 1h
+findtime = 10m
+maxretry = 5
+banaction = nftables-multiport
+banaction_allports = nftables-allports
+
+[sshd]
+enabled = true
+port = ssh
+backend = systemd
+mode = aggressive
+```|Sempre inclua a sub-rede de gerência/bastion do SOC em **`ignoreip`** e mantenha `ignoreself = true` para impedir que um atacante com capacidade de falsificar pacotes UDP ou injetar strings em logs de aplicação provoque um auto-bloqueio (*Self-DoS*) contra os próprios servidores internos.|Verifique o estado detalhado da jail com `sudo fail2ban-client status sshd` confirmando `Currently failed` e `Currently banned`.|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client, fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos, fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive
+
+===NOTE===
+0663|fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos|Fail2ban: Escrita Segura de Filtros (`failregex`, `ignoreregex`, `<HOST>` vs `<ADDR>`) e Prevenção de **ReDoS** e *Log Injection*|Os arquivos em `/etc/fail2ban/filter.d/` usam expressões regulares Python (`failregex` e `ignoreregex`) com tags pré-definidas como **`<HOST>`** (casa IPv4, IPv6 ou hostname se `usedns` permitir) e **`<ADDR>`** (casa estritamente endereços IPv4 ou IPv6 numéricos) para extrair o endereço do atacante de cada linha de log.|Como o conteúdo das linhas de log frequentemente inclui strings enviadas pela rede pelo próprio atacante (ex.: a URL requisitada no Nginx, o `User-Agent` ou o nome de usuário inválido no SSH), **escrever um `failregex` frouxo com `.*` guloso permite dois ataques graves contra o próprio Fail2ban: ReDoS (*Regular Expression Denial of Service* por backtracking catastrófico) e *Arbitrary IP Banning via Log Injection***!|Se uma regra de servidor web for escrita como `^<HOST> .* "GET .* HTTP/1\.[01]" 401$` ou `Failed login for .* from <HOST>`, um atacante pode enviar como nome de usuário a string `"admin from 8.8.8.8"`, fazendo o `.*` engolir o texto e casar o IP forjado `8.8.8.8` no lugar do IP real! Por isso, **sempre ancore a regex no início (`^`) e no fim (`$`)**, use classes restritas sem espaços (`\S+` ou `[^"]+`) em vez de `.*`, prefira **`<ADDR>`** e mantenha **`usedns = no`** na jail.|```ini
+# /etc/fail2ban/filter.d/corp-api-auth.local — Filtro ancorado e resistente a ReDoS/Log Injection
+[Definition]
+prefiret = ^<F-MLFID>\s*corp-api\[\d+\]:</F-MLFID>\s+
+failregex = ^AUTH_FAILURE client_ip="<ADDR>" user="[^"]{1,64}" reason="invalid_credentials"$
+ignoreregex =
+```|Para estender o `failregex` de um filtro padrão sem sobrescrever as regras originais da distribuição, utilize a interpolação documentada em `jail.conf(5)`: **`failregex = %(known/failregex)s`** seguida da sua nova linha indentada.|Nunca habilite `usedns = yes` em produção: fazer resolução DNS reversa/direta sobre hostnames em logs permite que um atacante controle um registro DNS apontando para o IP de um parceiro ou gateway e force o Fail2ban a banir a vítima.|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client, fail2ban-testes-performance-fail2ban-regex-benchmark-logs, fail2ban-protecao-proxies-reversos-nginx-http-auth-limit-req-xff
+
+===NOTE===
+0664|fail2ban-testes-performance-fail2ban-regex-benchmark-logs|Fail2ban: Validação e Benchmark de Expressões Regulares com **`fail2ban-regex`** antes do Deploy em Produção|O utilitário de linha de comando **`fail2ban-regex`** testa qualquer arquivo de filtro (ou expressão regular direta) contra um arquivo de log real ou contra o `systemd-journal`, reportando quantas linhas casaram, quais IPs foram extraídos, quantas linhas falharam e **quanto tempo em milissegundos cada regex levou para executar**.|Subir um filtro customizado para produção sem testá-lo primeiro com `fail2ban-regex` pode resultar em uma jail cega (`0 matched` por causa de uma diferença no formato de data `datepattern`) ou em alto consumo de CPU no daemon Python.|Passar **`--print-all-matched`** (ou `--print-all-missed`) permite auditar linha por linha se a regex casa exclusivamente com os eventos de falha de autenticação e ignora linhas de login bem-sucedido.|```bash
+# Testar e medir o tempo de execucao do filtro customizado contra um arquivo de log real antes de ativar a jail
+fail2ban-regex --print-all-matched \
+  /var/log/corp-api/auth.log \
+  /etc/fail2ban/filter.d/corp-api-auth.local
+```|Se o `fail2ban-regex` reportar `0 matched` mas a regex do corpo estiver correta, verifique a linha `Date template hits`: o Fail2ban exige reconhecer o carimbo de tempo no início da linha antes de aplicar o `failregex` ao restante da mensagem.|Adicione a execução do `fail2ban-regex` contra amostras de logs de ataque e logs benignos no pipeline de CI do repositório de infraestrutura (Ansible/Puppet) da empresa.|fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos, fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip, coraza-testes-automatizados-ftw-go-ftw-regressao-regras-waf
+
+===NOTE===
+0665|fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive|Fail2ban: Escalabilidade de Firewall com Sets **`nftables` / `ipset`**, *Exponential Backoff* (`bantime.increment`) e Jail **`recidive`**|Em servidores sob ataque distribuído que bloqueiam dezenas de milhares de IPs maliciosos, usar a ação antiga que insere uma regra linear `iptables -I f2b-sshd 1 -s <IP> -j REJECT` por IP degrada a performance de rede do kernel Linux (`O(N)` por pacote); a solução moderna é usar conjuntos hash **`nftables` (`nftables-multiport` / `nftables-allports`)** ou **`iptables-ipset`** (`O(1)` constante).|Além disso, atacantes sofisticados configuram botnets em *low-and-slow* que pausam os ataques por 1 hora após o primeiro banimento e voltam imediatamente após o `unban`: para derrotá-los, o Fail2ban (>= 0.11) oferece **Banimento Incremental Exponencial (`bantime.increment = true`)** e a jail especial **`[recidive]`**.|Com `bantime.increment = true`, o Fail2ban consulta o histórico do IP no banco SQLite (`dbpurgeage` estendido para ex.: `7d` ou `30d`) e multiplica automaticamente o tempo de banimento a cada reincidência (`10m -> 20m -> 40m -> 80m -> ...` ou `bantime.multipliers = 1 5 30 60 300 720 1440 2880`), enquanto a jail **`recidive`** monitora o próprio `/var/log/fail2ban.log` e bloqueia em **todas as portas (`banaction_allports`)** por 1 semana qualquer IP que seja banido repetidas vezes em jails diferentes.|```ini
+# /etc/fail2ban/jail.d/20-exponential-backoff-and-recidive.local
+[DEFAULT]
+bantime.increment = true
+bantime.rndtime = 8m
+bantime.factor = 2
+bantime.maxtime = 5w
+
+[recidive]
+enabled = true
+logpath = /var/log/fail2ban.log
+banaction = %(banaction_allports)s
+bantime = 1w
+findtime = 1d
+maxretry = 4
+```|A diretiva **`bantime.rndtime = 8m`** adiciona um jitter aleatório ao tempo de desbloqueio de cada IP, impedindo que botnets sincronizadas descubram o segundo exato em que o banimento expira.|Inspecione o conjunto hash criado no kernel com `sudo nft list set inet f2b-table addr-set-sshd` para verificar os elementos e seus timeouts de expiração.|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client, fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip, fail2ban-operacao-administrativa-ban-unban-manual-dbpurgeage
+
+===NOTE===
+0666|fail2ban-protecao-proxies-reversos-nginx-http-auth-limit-req-xff|Fail2ban: Proteção de Proxies Reversos **Nginx / Envoy** (`nginx-http-auth`, `nginx-limit-req`, `nginx-botsearch`) e Cuidados com `X-Forwarded-For`|Quando o Fail2ban protege servidores web **Nginx**, **Apache** ou **Envoy**, ele pode atuar em sinergia direta com o módulo `ngx_http_limit_req_module` do Nginx (`jail [nginx-limit-req]`): o Nginx aplica *rate limiting* leve em memória (`HTTP 429/503`) e grava `limiting requests, excess: ...` no `error.log`; se o mesmo IP insistir ultrapassando o limite repetidas vezes, o Fail2ban lê o `error.log` e corta a conexão diretamente na camada 3/4 (`nftables`) antes mesmo do handshake TLS!|Porém, existe uma armadilha clássica quando o servidor Nginx está atrás de um balanceador de carga (Cloudflare, AWS ALB, HAProxy): se o Nginx não estiver configurado com **`set_real_ip_from <CIDR_DO_LB>;`** e **`real_ip_header X-Forwarded-For;`**, o IP gravado em `$remote_addr` será o IP do próprio balanceador de carga — e banir o IP do balanceador derrubará o site para 100% dos clientes!|Inversamente, nunca extraia o IP de um cabeçalho `X-Forwarded-For` no filtro do Fail2ban se o servidor web estiver exposto diretamente à internet sem `set_real_ip_from` restrito aos IPs dos proxies confiáveis, pois qualquer atacante falsificaria `X-Forwarded-For: 1.2.3.4`.|```nginx
+# Configuracao obrigatoria no Nginx atras de Load Balancer confiavel antes de ativar jails do Fail2ban
+set_real_ip_from 10.10.0.0/16;
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+```|Se o tráfego passa por uma CDN pública (como Cloudflare ou AWS WAF) onde o pacote TCP na placa de rede vem dos IPs da CDN, bloquear no `nftables` local não surtirá efeito (e não deve bloquear a CDN); nesse cenário, configure a **Action** do Fail2ban (`action.d/cloudflare-apiv4.conf`) para banir o IP do cliente diretamente na API da borda da CDN.|Teste o `nginx-limit-req` em homologação e confirme com `fail2ban-client status nginx-limit-req` que apenas o IP real do cliente ofensor é capturado.|fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos, coraza-integracao-proxies-caddy-envoy-nginx-traefik-haproxy-spoa, crsv4-integracao-coraza-modsecurity-logs-json-siem
+
+===NOTE===
+0667|fail2ban-agrupamento-sessoes-tags-f-mlfid-f-id-no-failure|Fail2ban: Correlação Multi-Linha com Tags de Sessão (**`<F-MLFID>`**, **`<F-ID>`**, **`<F-NOFAIL>`**) para Daemons que Logam IP e Falha em Linhas Separadas|Muitos daemons corporativos (como Postfix SMTP, Dovecot, OpenVPN ou aplicações Java/Go) **não** imprimem o endereço IP do cliente e o erro de autenticação na mesma linha de log: na Linha 1 o daemon registra `[conn-9812] Conexão recebida de 198.51.100.77` e na Linha 2 registra `[conn-9812] Falha de senha para o usuário admin` (sem repetir o IP!).|Filtros simples linha a linha falhariam em extrair o IP na Linha 2; para resolver isso, o motor moderno do Fail2ban introduziu as tags de correlação de sessão **`<F-MLFID>...</F-MLFID>`** (*Multi-Line Failure ID*, como o PID ou ID de conexão) combinadas com **`<F-NOFAIL>`**!|Na `prefregex` ou `failregex`, a primeira expressão com `<F-MLFID>` e `<F-NOFAIL>` captura e memoriza em memória a associação `conn-9812 -> 198.51.100.77` sem contar como falha ainda, e quando a linha de erro real chega com o mesmo `<F-MLFID>`, o Fail2ban recupera automaticamente o `<ADDR>` memorizado e contabiliza a falha!|```ini
+# /etc/fail2ban/filter.d/custom-multiline-vpn.local — Correlacao de ID de sessao entre multiplas linhas
+[Definition]
+prefregex = ^\s*vpn-gw\[(?P<mlfid>\d+)\]: <F-CONTENT>.+</F-CONTENT>$
+cmnfailre = ^CONNECT client_ip="<ADDR>"<F-NOFAIL>$
+            ^AUTH_FAILED reason="bad_token"$
+failregex = %(cmnfailre)s
+```|Quando a conexão encerra, você pode usar a tag `<F-MLFFORGET>` na linha de desconexão do log para que o Fail2ban libere imediatamente a memória daquele identificador de sessão `<F-MLFID>`.|Valide filtros multi-linha com `fail2ban-regex` sobre um trecho de log contendo conexões intercaladas de múltiplos clientes simultâneos.|fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos, fail2ban-testes-performance-fail2ban-regex-benchmark-logs, suricata-formato-eve-json-tipos-eventos-correlacao-flow-id
+
+===NOTE===
+0668|fail2ban-acoes-customizadas-webhooks-thehive-abuseipdb-observabilidade|Fail2ban: Desenvolvimento de **Actions (`action.d/`)** Customizadas, Integração com Webhooks SOC/TheHive e Métricas Prometheus|Em `/etc/fail2ban/action.d/`, cada arquivo de ação define os comandos executados no início da jail (`actionstart`), no encerramento (`actionstop`), na verificação de integridade (`actioncheck`), no banimento de um IP (`actionban`) e na remoção do banimento (`actionunban`).|Uma jail pode executar **múltiplas ações simultaneamente**: por exemplo, bloquear o IP imediatamente no `nftables` local na primeira ação e, na segunda ação, enviar um payload JSON estruturado via webhook para o **SIEM / TheHive** (ou reportar a botnet para o **AbuseIPDB**).|Ao escrever um comando `actionban` customizado que invoca um script externo passando tags extraídas do log, **jamais interpole tags de texto livre como `<matches>` diretamente em uma linha de shell sem escape**, pois o log contém dados não-confiáveis do atacante; passe apenas **`<ip>`** (que é estritamente validado pelo Fail2ban como IP numérico).|```ini
+# /etc/fail2ban/action.d/soc-webhook-notify.local — Notificar o SOC usando apenas tags estritamente validadas (<ip>, <name>, <failures>)
+[Definition]
+actionban = curl -sS -m 3 -X POST "https://soar.soc.internal.corp/hooks/fail2ban" \
+            -H "Content-Type: application/json" \
+            -d '{"jail": "<name>", "banned_ip": "<ip>", "failures": <failures>}' >/dev/null 2>&1 || true
+actionunban =
+```|Sempre adicione um timeout curto (`curl -m 3 ... || true`) em ações de notificação externa para que uma lentidão na rede ou no webhook jamais bloqueie a fila de processamento das ações de firewall do Fail2ban.|Simule um banimento de teste com `sudo fail2ban-client set sshd banip 198.51.100.250` e verifique o recebimento do evento no receptor do SOC.|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client, fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive, thehive-ingestao-alertas-thehive4py-siem-phishing-deduplicacao
+
+===NOTE===
+0669|fail2ban-operacao-administrativa-ban-unban-manual-dbpurgeage|Fail2ban: Operação de Resposta a Incidentes via `fail2ban-client` (`set <jail> banip`, `unbanip`, `unban --all` e Auditoria SQLite)|Durante a operação diária do SOC ou atendimento a chamados de suporte, o **`fail2ban-client`** permite consultar instantaneamente em quais jails um determinado endereço IP está bloqueado, desbloquear um usuário legítimo que errou a senha ou injetar uma lista de IPs de ameaça manualmente.|Se um administrador legítimo errar a chave SSH repetidas vezes a partir de uma rede externa, o comando **`sudo fail2ban-client unban <IP>`** remove o endereço IP de **todas** as jails onde ele estiver banido simultaneamente, atualizando tanto o conjunto `nftables`/`ipset` no kernel quanto o banco SQLite.|Para inspeção forense histórica de quais IPs foram banidos nas últimas semanas e quantas vezes reincidiram, o banco `/var/lib/fail2ban/fail2ban.sqlite3` armazena as tabelas `jails`, `logs` e **`bips`** (controlada pelo tempo de retenção `dbpurgeage`).|```bash
+# Listar apenas a lista limpa de IPs banidos na jail sshd, banir um IP manualmente e desbloquear um IP especifico
+sudo fail2ban-client get sshd banip
+sudo fail2ban-client set sshd banip 203.0.113.88
+sudo fail2ban-client set sshd unbanip 203.0.113.88
+```|Para evitar perder o histórico de reincidentes da jail `recidive` e do `bantime.increment` após um `systemctl restart fail2ban`, ajuste **`dbpurgeage = 30d`** (o padrão original de fábrica em muitas instalações é apenas `1d` / `86400s` em `/etc/fail2ban/fail2ban.local`).|Consulte `sudo fail2ban-client get dbpurgeage` para confirmar que o tempo de retenção do banco SQLite é superior ao `bantime.maxtime` configurado.|fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client, fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive, thehive-orquestracao-cortex-responders-contencao-ativa-edr-firewall
+
+===NOTE===
+0670|fail2ban-limites-arquiteturais-defesa-em-profundidade-ssh-mfa-wireguard|Fail2ban: Limites Arquiteturais (*Rate Limiting* vs Autenticação Forte), *IPv6 Subnet Banning* e Defesa em Profundidade|Como destaca o próprio `README.md` oficial do Fail2ban (*"Though Fail2Ban is able to reduce the rate of incorrect authentication attempts, it cannot eliminate the risk presented by weak authentication"*), o Fail2ban é uma camada de contenção de taxa e higiene de perímetro, **nunca um substituto para autenticação forte**.|Contra uma botnet distribuída com 50.000 IPs residenciais onde cada IP testa apenas 2 senhas (abaixo de `maxretry = 5`), ou em redes **IPv6** onde um único atacante possui um bloco `/64` inteiro (`2^64` endereços IPv6 individuais), banir um `/128` IPv6 por vez é insuficiente se o serviço aceitar senhas fracas.|Para redes IPv6, configure a agregação de prefixos (banindo o bloco `/64` em vez do `/128` individual nas ações de firewall quando aplicável) e combine o Fail2ban com: **(1) `PasswordAuthentication no`** no `sshd_config` (aceitando apenas chaves Ed25519 ou certificados SSH emitidos por CA + FIDO2 `sk-ssh-ed25519@openssh.com`), **(2) MFA obrigatório** em portais web e **(3) Zero-Trust / VPN (`WireGuard` / `OpenZiti`)** ocultando portas de gerência da internet pública.|```ini
+# /etc/ssh/sshd_config.d/10-crypto-auth-only.conf — Hardening do OpenSSH em conjunto com a jail do Fail2ban
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+MaxAuthTries 3
+```|Após desativar `PasswordAuthentication no` no `sshd`, configure a jail `[sshd]` do Fail2ban com **`mode = aggressive`** para que o Fail2ban bloqueie imediatamente scanners que falham na negociação de chave pública (`Connection closed by authenticating user ... [preauth]`) ou sondam banners SSH sem autenticar.|Verifique com `sudo sshd -T | grep -E "passwordauthentication|pubkeyauthentication|permitrootlogin"` a aplicação da política de autenticação forte.|fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip, sudo-arquitetura-plugins-sudoers-visudo-menor-privilegio, openziti-arquitetura-zero-trust-network-overlay-dark-services

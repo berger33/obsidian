@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs AppArmor & SELinux), DFIR/Threat Intelligence (TheHive/Cortex/OpenCTI/Timesketch/Volatility 3/CAPEv2/Wireshark/MISP/Velociraptor/auditd), criptografia moderna, postura multi-cloud e de host (Lynis/USBGuard/CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e auditoria/identidade Active Directory & Zero-Trust (Bettercap/Responder/Impacket/NetExec/BloodHound CE/Paralus/OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), SAST/DAST, WAF/NSM, segurança em runtime (eBPF/LSMs AppArmor & SELinux/Bubblewrap), DFIR/Threat Intelligence & Engenharia Reversa (TheHive/Cortex/OpenCTI/Timesketch/Volatility 3/CAPEv2/Wireshark/Ghidra/Radare2/Frida/MISP/Velociraptor/auditd), criptografia moderna & PKI/TLS (`testssl.sh`/Certbot ACME/Hashcat/`age`), postura multi-cloud, containers e de host (Clair v4/Fail2ban/Sudo/Lynis/USBGuard/CSPM/ASPM), segurança da cadeia de suprimentos de software (in-toto/GUAC/Sigstore Rekor & Fulcio/SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos e auditoria/identidade Active Directory & Zero-Trust (Bettercap/Responder/Impacket/NetExec/BloodHound CE/Paralus/OpenZiti/OAuth2/OIDC/BeyondCorp/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **600 / 2.000 (30,00%)**
-- Gate automatizado: **600/600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 6)
-- Revisão factual humana: **0/600**
-- Revisão factual por IA: **600/600**
-- Contabilizadas como válidas: **600/600**
-- Revisor das 600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–6 (600 notas, IDs 1–600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **700 / 2.000 (35,00%)**
+- Gate automatizado: **700/700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 7)
+- Revisão factual humana: **0/700**
+- Revisão factual por IA: **700/700**
+- Contabilizadas como válidas: **700/700**
+- Revisor das 700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–7 (700 notas, IDs 1–700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-06.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-06.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-07.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-07.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md)
 
-Existem 600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.400 restantes.
+Existem 700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.300 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -812,6 +812,138 @@ Existem 600 notas materiais listadas abaixo; não há IDs reservados, placeholde
 599. [NetExec (`nxcdb`): Consulta Estruturada do Banco de Dados de Auditoria (`hosts`, `creds`, `admin`, `shares`) e Reutilização por ID (`-id`)](../../domains/software-0009/software/seguranca/netexec-gerenciamento-banco-nxcdb-credenciais-hosts-exportacao.md)
 600. [Detecção do NetExec pelo **Blue Team** (Correlação de Eventos Windows `4624`/`4625`/`5140`/`5145`/`4697`, Zeek e Hardening de Tiering AD)](../../domains/software-0009/software/seguranca/netexec-deteccao-blue-team-telemetria-windows-zeek-suricata-hardening.md)
 
+## Tranche 7 — `testssl.sh`, EFF Certbot (ACME), Hashcat, NSA Ghidra, Radare2 (`r2`), Frida, Fail2ban, Sudo (`sudo` & `sudo_logsrvd`), Bubblewrap (`bwrap`) e Project Quay Clair v4 (`ClairCore`) (100 notas; revisão factual por IA registrada)
+
+### testssl.sh — Auditoria de Criptografia TLS/SSL, Protocolos, Cifras PFS, STARTTLS, Simulação de Clientes e Vulnerabilidades
+
+601. [`testssl.sh`: Arquitetura de Auditoria de Servidores TLS/SSL via Sockets TCP Nativo e Binários OpenSSL Estáticos](../../domains/software-0009/software/seguranca/testssl-arquitetura-auditoria-tls-sockets-bash-openssl-estatico.md)
+602. [`testssl.sh`: Verificação de Versões de Protocolo (`-p` — SSLv2/SSLv3/TLS 1.0/1.1/1.2/1.3, QUIC/HTTP3 e ALPN)](../../domains/software-0009/software/seguranca/testssl-auditoria-protocolos-tls12-tls13-quic-alpn-npn.md)
+603. [`testssl.sh`: Auditoria de Categorias de Cifras (`-s` / `-E`), **Forward Secrecy** (`-f`), Curvas Elípticas e Híbridas Pós-Quânticas (**ML-KEM**)](../../domains/software-0009/software/seguranca/testssl-categorias-cifras-forward-secrecy-curvas-elipticas-mlkem.md)
+604. [`testssl.sh`: Auditoria de Certificados X.509 (`-S`), Cadeia de Confiança, **OCSP Stapling**, *Certificate Transparency* e Registros **DNS CAA**](../../domains/software-0009/software/seguranca/testssl-inspecao-certificados-x509-cadeia-ocsp-stapling-ct-caa.md)
+605. [`testssl.sh`: Varredura de Vulnerabilidades Criptográficas TLS (`-U` — Heartbleed, ROBOT,Ticketbleed, CCS, DROWN, POODLE, Sweet32, FREAK, Logjam e CRIME/BREACH)](../../domains/software-0009/software/seguranca/testssl-vulnerabilidades-criptograficas-heartbleed-robot-drown-poodle-logjam.md)
+606. [`testssl.sh`: Auditoria de Criptografia Oportunista e Obrigatória via **`STARTTLS`** (`-t smtp,imap,pop3,ftp,ldap,postgres,mysql,xmpp`)](../../domains/software-0009/software/seguranca/testssl-auditoria-starttls-smtp-imap-pop3-ldap-postgres-xmpp.md)
+607. [`testssl.sh`: Inspeção de Cabeçalhos de Segurança HTTP (`-h` — HSTS, CSP, X-Frame-Options, Cookies `Secure`/`HttpOnly` e Banners de Servidor)](../../domains/software-0009/software/seguranca/testssl-cabecalhos-seguranca-http-hsts-hpkp-cookies-banners.md)
+608. [`testssl.sh`: Simulação de Handshake de Clientes (`-c` / `--client-simulation`) e Cálculo de **Rating Qualys SSL Labs** (`--rating`)](../../domains/software-0009/software/seguranca/testssl-simulacao-clientes-tls-compatibilidade-navegadores-java-openssl.md)
+609. [`testssl.sh`: Varredura em Massa (`--file` / `-iL`, Entrada Nmap `-oG`), Execução Paralela (`--parallel`) e Relatórios Estruturados (`--jsonfile`, `--csvfile`, `--htmlfile`)](../../domains/software-0009/software/seguranca/testssl-varredura-massa-file-nmap-gnmap-parallel-json-html-csv.md)
+610. [`testssl.sh`: Teste de VirtualHosts (`--ip` / `--SNI`), Autenticação Mútua **mTLS** (`--mtls`), Modo Discreto (`--sneaky`) e Gate de CI/CD](../../domains/software-0009/software/seguranca/testssl-evasao-ids-sneaky-sni-vhost-mtls-client-certs-cicd.md)
+
+### EFF Certbot & Protocolo ACME (RFC 8555) — Emissão/Renovação Automatizada X.509, Desafios HTTP-01/DNS-01, Hooks e ARI
+
+611. [EFF Certbot & Protocolo **ACME (RFC 8555)**: Arquitetura de Conta, Separação entre *Authenticators* e *Installers* e Estrutura `/etc/letsencrypt/`](../../domains/software-0009/software/seguranca/certbot-arquitetura-protocolo-acme-rfc8555-plugins-autenticadores.md)
+612. [Certbot: Validação de Domínio **`HTTP-01`** (`--webroot`, `--standalone`, `--nginx`, `--apache`) e Operação sem Interrupção de Serviço](../../domains/software-0009/software/seguranca/certbot-validacao-http01-webroot-standalone-nginx-apache-seguranca.md)
+613. [Certbot: Validação **`DNS-01`** para Certificados *Wildcard* e Isolamento de Credenciais DNS com **Delegação `CNAME` (`acme-dns`)**](../../domains/software-0009/software/seguranca/certbot-validacao-dns01-wildcard-delegacao-cname-acme-dns.md)
+614. [Certbot: Automação de Renovação (`certbot renew`), `systemd` Timers e Diferença entre `--pre-hook`, `--post-hook` e **`--deploy-hook`**](../../domains/software-0009/software/seguranca/certbot-renovacao-automatica-systemd-timers-hooks-pre-post-deploy.md)
+615. [Certbot: Criptografia de Chave Pública (**ECDSA `secp256r1` / `secp384r1`** vs RSA), `--reuse-key` e `--must-staple`](../../domains/software-0009/software/seguranca/certbot-chaves-ecdsa-p256-p384-rsa-ocsp-must-staple-reuse-key.md)
+616. [Certbot: Suporte a **ARI (*ACME Renewal Information*)**, Resposta a Incidentes de Comprometimento de Chave e `certbot revoke`](../../domains/software-0009/software/seguranca/certbot-acme-renewal-information-ari-revogacao-comprometimento-chave.md)
+617. [Certbot: Uso com CAs Corporativas e Comerciais via **`--server`** e **EAB (*External Account Binding*)** (`--eab-kid` / `--eab-hmac-key`)](../../domains/software-0009/software/seguranca/certbot-integracao-cas-privadas-eab-external-account-binding-server.md)
+618. [Governança de Emissão ACME: Registros **DNS CAA (`issue`, `issuewild`, `iodef`, `accounturi`)** (RFC 8659 / RFC 8657) e *Certificate Transparency*](../../domains/software-0009/software/seguranca/certbot-governanca-dns-caa-rfc8659-ct-logs-monitoramento-expiracao.md)
+619. [Certbot: Perfis de Configuração TLS gerados para Nginx/Apache (`options-ssl-nginx.conf`), *Session Tickets* e **Mozilla SSL Configuration Generator**](../../domains/software-0009/software/seguranca/certbot-hardening-nginx-apache-ssl-config-perfis-intermediate-modern.md)
+620. [Certbot: Execução Isolada em Containers Docker (`certbot/certbot`), Volumes Persistentes e Operação *Non-Root* (`--config-dir`, `--work-dir`, `--logs-dir`)](../../domains/software-0009/software/seguranca/certbot-execucao-containers-docker-volumes-permissoes-rootless.md)
+
+### Hashcat — Auditoria de Resistência de Senhas e Hashes em GPU, Modos de Ataque, Motor de Regras In-Kernel, Máscaras e Hashcat Brain
+
+621. [Hashcat: Arquitetura de Auditoria de Senhas em GPU (Backends CUDA/HIP/Metal/OpenCL), *In-Kernel Rule Engine* e Perfis de Carga (`-w`)](../../domains/software-0009/software/seguranca/hashcat-arquitetura-gpu-opencl-cuda-hip-metal-in-kernel-rules.md)
+622. [Hashcat: Os Modos de Ataque (`-a 0` Wordlist, `-a 1` Combinator, `-a 3` Mask/Brute-Force, `-a 6`/`-a 7` Hybrid e `-a 9` Association)](../../domains/software-0009/software/seguranca/hashcat-modos-ataque-dicionario-combinator-mask-hybrid-pcfg.md)
+623. [Hashcat: Linguagem de Regras de Mutação (`-r`, `-j`, `-k`), *Multi-Rules* e Estatísticas de Eficiência (`--debug-mode`)](../../domains/software-0009/software/seguranca/hashcat-motor-regras-in-kernel-funcoes-mutacao-depuracao-regras.md)
+624. [Hashcat: Ataques de Máscara (`-a 3`), *Custom Charsets* (`-1` a `-4`), Arquivos `.hcmask` e Ordenação por **Cadeias de Markov**](../../domains/software-0009/software/seguranca/hashcat-ataques-mascara-charsets-customizados-hcchr-markov-increment.md)
+625. [Hashcat: Modos de Hash para Auditoria de Active Directory (`-m 1000` NTLM, `-m 3000` LM, `-m 5600` NetNTLMv2, `-m 13100`/`19700` Kerberoast, `-m 18200` AS-REP e `-m 2100` DCC2)](../../domains/software-0009/software/seguranca/hashcat-auditoria-active-directory-ntds-kerberoasting-asrep-dcc2.md)
+626. [Hashcat: Operação Avançada — **Hashcat Brain** (`--brain-server` / `--brain-client`), Sessões (`--session` / `--restore`) e **Encrypted Plains**](../../domains/software-0009/software/seguranca/hashcat-hashcat-brain-sessoes-distribuicao-potfile-encrypted-plains.md)
+627. [Hashcat v7+: **Assimilation Bridge** para Criação de Novos Modos de Hash em **Python, Rust ou C** sem Escrever Kernels GPU](../../domains/software-0009/software/seguranca/hashcat-extensibilidade-assimilation-bridge-plugins-python-rust-c.md)
+628. [Hashcat: Geração Gramatical com **PCFG (*Probabilistic Context-Free Grammar*)** e Modo **`--slow-candidates` (`-S`)**](../../domains/software-0009/software/seguranca/hashcat-ataques-pcfg-probabilistic-context-free-grammar-slow-candidates.md)
+629. [Hashcat: Mapeamento de Layout de Teclado (`--keyboard-layout-mapping`), `--hex-salt` e Leitura Transparente de Wordlists Comprimidas (`.gz`, `.xz`, `.zst`)](../../domains/software-0009/software/seguranca/hashcat-mapeamento-teclado-hex-salt-compressao-arquivos-fde.md)
+630. [Defesa Contra Quebra Offline em GPU: Engenharia de Armazenamento de Senhas com **Argon2id (RFC 9106)**, `bcrypt`/`scrypt`, *Pepper* em HSM/KMS e *Passphrases*](../../domains/software-0009/software/seguranca/hashcat-defesa-engenharia-armazenamento-senhas-argon2id-bcrypt-scrypt-passphrases.md)
+
+### NSA Ghidra — Engenharia Reversa de Software (SRE), Descompilador, SLEIGH/P-Code, analyzeHeadless, PyGhidra e BSim
+
+631. [NSA Ghidra: Arquitetura de Engenharia Reversa de Software (SRE), Linguagem **SLEIGH**, Representação Intermediária **P-Code** e Descompilador](../../domains/software-0009/software/seguranca/ghidra-arquitetura-sre-descompilador-sleigh-pcode-projetos.md)
+632. [Ghidra: Análise de Fluxo de Dados (*Data-Flow / Taint Analysis*) sobre **P-Code** (`Varnode`, `PcodeOp`, *HighFunction* e *SSA Form*)](../../domains/software-0009/software/seguranca/ghidra-representacao-intermediaria-pcode-analise-fluxo-dados-varnodes.md)
+633. [Ghidra: Automação em Linha de Comando e Pipelines CI/DFIR com **`analyzeHeadless`** (`-import`, `-preScript`, `-postScript` e `-readOnly`)](../../domains/software-0009/software/seguranca/ghidra-automacao-cli-analyzeheadless-importacao-scripts-lote.md)
+634. [Ghidra: Desenvolvimento de Scripts em **Python 3 Nativo (`PyGhidra`)** e Uso da **`FlatProgramAPI`**](../../domains/software-0009/software/seguranca/ghidra-scripting-pyghidra-cpython3-flatprogramapi-automacao.md)
+635. [Ghidra: Reconstrução de Estruturas C (`Data Type Manager`), Classes C++ (`RTTI` / `vtable`), *Parse C Source* e Símbolos **PDB / DWARF**](../../domains/software-0009/software/seguranca/ghidra-reconstrucao-tipos-structs-classes-cpp-rtti-vtables-pdb-dwarf.md)
+636. [Ghidra: Reconhecimento de Bibliotecas Estáticas com **FunctionID (`fidb`)** e Busca Vetorial de Similaridade Comportamental com **BSim**](../../domains/software-0009/software/seguranca/ghidra-identificacao-funcoes-estaticas-functionid-fidb-bsim.md)
+637. [Ghidra: Engenharia Reversa de **Firmware Embarcado / Bare-Metal** (Descoberta de *Base Address*, *Memory Map* MMIO e Arquivos CMSIS **SVD**)](../../domains/software-0009/software/seguranca/ghidra-engenharia-reversa-firmware-bare-metal-memory-map-svd.md)
+638. [Ghidra: Emulação Segura de Código com **`EmulatorHelper`** (Execução de P-Code para Desofuscação de Strings sem Executar o Malware)](../../domains/software-0009/software/seguranca/ghidra-emulacao-pcode-emulatorhelper-desofuscacao-strings-malware.md)
+639. [Ghidra: Engenharia Reversa Colaborativa com **GhidraServer** e Análise de Patches (*Patch Diffing*) com **Version Tracking (`VT`)**](../../domains/software-0009/software/seguranca/ghidra-colaboracao-ghidraserver-version-tracking-patch-diffing.md)
+640. [Ghidra: **Ghidra Debugger** — Depuração Dinâmica Híbrida (`gdb`, `lldb`, Windows `dbgeng`) e *Time-Travel / Trace Recording*](../../domains/software-0009/software/seguranca/ghidra-depurador-dinamico-debugger-gdb-lldb-dbgeng-trace-time-travel.md)
+
+### Radare2 (r2) — Framework de Análise Binária, rabin2, radiff2, rasm2, Grafo de Fluxo de Controle, Emulação ESIL e r2pipe
+
+641. [Radare2 (`r2`): Arquitetura Unix-First de Engenharia Reversa, Comandos Hierárquicos, Filtro Interno `~` e Iterador `@`](../../domains/software-0009/software/seguranca/radare2-arquitetura-framework-engenharia-reversa-cli-core-plugins.md)
+642. [Radare2 (`rabin2`): Triagem Estática de Executáveis, Auditoria de Mitigações de Compilador (**NX**, **Canary**, **PIE**, **RELRO**) e Extração de Símbolos/Strings](../../domains/software-0009/software/seguranca/radare2-triagem-binarios-rabin2-mitigacoes-nx-canary-pie-relro-strings.md)
+643. [Radare2 (`r2`): Análise de Código (`aaa`), Grafos de Fluxo de Controle (`agf` / `agfj`), Referências Cruzadas (`axt` / `axf`) e Descompilação (`pdg`)](../../domains/software-0009/software/seguranca/radare2-analise-fluxo-controle-aaa-grafos-cfg-xrefs-decompiler-pdg.md)
+644. [Radare2: Emulação Segura com **ESIL (*Evaluable Strings Intermediate Language*)** (`aei`, `aeim`, `aes`, `aeso` e `emu.str=true`)](../../domains/software-0009/software/seguranca/radare2-emulacao-esil-desofuscacao-calculo-estado-sem-execucao.md)
+645. [Radare2 (`radiff2` & Zignatures `z`): *Patch Diffing* de Binários (`-g`, `-AC`) e Reconhecimento de Funções com **Zignatures**](../../domains/software-0009/software/seguranca/radare2-comparacao-binarios-patch-diffing-radiff2-assinaturas-zignatures.md)
+646. [Radare2 (`rafind2` & `rahash2`): Caça de Padrões Binários/ROP Gadgets e Cálculo de **Entropia por Blocos** para Detecção de *Packers* e Chaves](../../domains/software-0009/software/seguranca/radare2-busca-padroes-rafind2-rahash2-entropia-secoes-empacotamento.md)
+647. [Radare2 (`rasm2` & `rax2`): Montagem/Desmontagem Multi-Arquitetura de **Shellcodes** e Conversão de Representações Numéricas/Binárias](../../domains/software-0009/software/seguranca/radare2-montador-desmontador-rasm2-rax2-analise-shellcode.md)
+648. [Radare2 (`r2pipe` & QuickJS `-j`): Automação Programática de Engenharia Reversa em Python e JavaScript Nativo](../../domains/software-0009/software/seguranca/radare2-automacao-scripting-r2pipe-python-javascript-qjs.md)
+649. [Radare2: Depuração Reversível (*Time-Travel Checkpoints* `dts+`/`dtsc`/`dtsr`), Perfis de Execução **`rarun2`** e Integração **`r2frida`**](../../domains/software-0009/software/seguranca/radare2-depuracao-reversivel-checkpoints-dts-rarun2-gdb-frida.md)
+650. [Radare2: Geração de Regras YARA Baseadas em Opcodes (`r2yara` / `pcy`), Exportação **SARIF** (`r2sarif`) e Gestão de Projetos](../../domains/software-0009/software/seguranca/radare2-integracao-yara-r2yara-r2sarif-projetos-auditoria.md)
+
+### Frida — Instrumentação Dinâmica de Binários e Apps Mobile (Gum, Interceptor, Stalker, Java/ObjC Bridges, Gadget e CModule)
+
+651. [Frida: Arquitetura de Instrumentação Dinâmica (`frida-core`, `frida-gum`, Runtimes **QuickJS/V8**) e Modos *Injected*, *Embedded (`frida-gadget`)* e *Preloaded*](../../domains/software-0009/software/seguranca/frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos.md)
+652. [Frida: Hooking de Funções Nativas C/C++/Rust/Go com **`Interceptor.attach`**, `Interceptor.replace`, `NativePointer` e `NativeFunction`](../../domains/software-0009/software/seguranca/frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer.md)
+653. [Frida: Rastreamento Dinâmico de Instruções e Cobertura com **`Stalker`** (*Dynamic Binary Translation*) e Alta Performance com **`CModule`**](../../domains/software-0009/software/seguranca/frida-rastreamento-instrucoes-stalker-code-tracing-coverage-cmodule.md)
+654. [Frida: Auditoria de Segurança Mobile (**OWASP MASVS**) — Pontes **`Java.perform`** (Android ART/Dalvik) e **`ObjC.classes`** (iOS/macOS Objective-C)](../../domains/software-0009/software/seguranca/frida-instrumentacao-mobile-android-java-perform-ios-objc-ssl-pinning.md)
+655. [Frida: Varredura de Memória em Tempo Real (`Memory.scan`, `Process.enumerateRanges`), **`MemoryAccessMonitor`** e **`ApiResolver`**](../../domains/software-0009/software/seguranca/frida-inspecao-memoria-memory-scan-memoryaccessmonitor-apiresolver.md)
+656. [Ferramentas CLI do Frida: Rastreamento Instantâneo com **`frida-trace`** (`-i`, `-I`, `-a`, `-j`, `-m`) e **`frida-discover`**](../../domains/software-0009/software/seguranca/frida-cli-frida-trace-frida-discover-autogenerated-handlers.md)
+657. [Frida: Comunicação Bidirecional Host-Agente (`send`/`recv`) e Exposição de Funções Internas como **API RPC (`rpc.exports`)** em Python](../../domains/software-0009/software/seguranca/frida-comunicacao-bidirecional-rpc-exports-send-recv-python-host.md)
+658. [Frida: Instrumentação sem Root/Jailbreak com **`frida-gadget`** e Modos de Operação (`listen`, `connect`, `script`, `script-directory`)](../../domains/software-0009/software/seguranca/frida-empacotamento-frida-gadget-configuracao-sem-root-jailbreak.md)
+659. [Frida: Extração Dinâmica de Payloads Desempacotados em Memória (DEX Android, Módulos PE/ELF e Strings Decifradas)](../../domains/software-0009/software/seguranca/frida-desempacotamento-memoria-malware-dex-pe-elf-dumping.md)
+660. [Frida: Subsistema **`Cloak`** e Engenharia de Detecção Anti-Instrumentação vs Bypass em Aplicações Críticas](../../domains/software-0009/software/seguranca/frida-furtividade-cloak-anti-frida-deteccao-defesa-runtimes.md)
+
+### Fail2ban — Prevenção de Intrusão Baseada em Logs, Jails, Filtros Seguros contra ReDoS, Actions nftables/ipset e Backoff
+
+661. [Fail2ban: Arquitetura do Daemon, Ordem Estrita de Precedência (`*.conf` vs `*.local`) e Operação via **`fail2ban-client`**](../../domains/software-0009/software/seguranca/fail2ban-arquitetura-daemon-precedencia-conf-local-sqlite-client.md)
+662. [Fail2ban: Anatomia de uma **Jail** (`findtime`, `maxretry`, `bantime`, `ignoreip`, `ignoreself` e `backend = systemd`)](../../domains/software-0009/software/seguranca/fail2ban-configuracao-jails-bantime-findtime-maxretry-ignoreip.md)
+663. [Fail2ban: Escrita Segura de Filtros (`failregex`, `ignoreregex`, `<HOST>` vs `<ADDR>`) e Prevenção de **ReDoS** e *Log Injection*](../../domains/software-0009/software/seguranca/fail2ban-desenvolvimento-filtros-failregex-ignoreregex-prevencao-redos.md)
+664. [Fail2ban: Validação e Benchmark de Expressões Regulares com **`fail2ban-regex`** antes do Deploy em Produção](../../domains/software-0009/software/seguranca/fail2ban-testes-performance-fail2ban-regex-benchmark-logs.md)
+665. [Fail2ban: Escalabilidade de Firewall com Sets **`nftables` / `ipset`**, *Exponential Backoff* (`bantime.increment`) e Jail **`recidive`**](../../domains/software-0009/software/seguranca/fail2ban-acoes-bloqueio-nftables-ipset-banimento-incremental-recidive.md)
+666. [Fail2ban: Proteção de Proxies Reversos **Nginx / Envoy** (`nginx-http-auth`, `nginx-limit-req`, `nginx-botsearch`) e Cuidados com `X-Forwarded-For`](../../domains/software-0009/software/seguranca/fail2ban-protecao-proxies-reversos-nginx-http-auth-limit-req-xff.md)
+667. [Fail2ban: Correlação Multi-Linha com Tags de Sessão (**`<F-MLFID>`**, **`<F-ID>`**, **`<F-NOFAIL>`**) para Daemons que Logam IP e Falha em Linhas Separadas](../../domains/software-0009/software/seguranca/fail2ban-agrupamento-sessoes-tags-f-mlfid-f-id-no-failure.md)
+668. [Fail2ban: Desenvolvimento de **Actions (`action.d/`)** Customizadas, Integração com Webhooks SOC/TheHive e Métricas Prometheus](../../domains/software-0009/software/seguranca/fail2ban-acoes-customizadas-webhooks-thehive-abuseipdb-observabilidade.md)
+669. [Fail2ban: Operação de Resposta a Incidentes via `fail2ban-client` (`set <jail> banip`, `unbanip`, `unban --all` e Auditoria SQLite)](../../domains/software-0009/software/seguranca/fail2ban-operacao-administrativa-ban-unban-manual-dbpurgeage.md)
+670. [Fail2ban: Limites Arquiteturais (*Rate Limiting* vs Autenticação Forte), *IPv6 Subnet Banning* e Defesa em Profundidade](../../domains/software-0009/software/seguranca/fail2ban-limites-arquiteturais-defesa-em-profundidade-ssh-mfa-wireguard.md)
+
+### Sudo (sudo & sudo_logsrvd) — Delegação de Privilégios no Linux/Unix, sudoers, SHA-256 Digest Pinning, NOEXEC, sudoedit e I/O Logging
+
+671. [Sudo (`sudo`): Arquitetura Modular de Plugins (`sudo.conf`, `sudoers.so`), Validação Sintática com **`visudo -c`** e Menor Privilégio](../../domains/software-0009/software/seguranca/sudo-arquitetura-plugins-sudoers-visudo-menor-privilegio.md)
+672. [Sudoers: Gramática de Especificação de Comandos, Aliases (`User_Alias`, `Runas_Alias`, `Host_Alias`, `Cmnd_Alias`) e a Regra **"Last Match Wins"**](../../domains/software-0009/software/seguranca/sudo-gramatica-regras-sudoers-aliases-ordem-precedencia-ultima-regra.md)
+673. [Sudoers: Pinagem Criptográfica de Binários e Scripts com **SHA-224 / SHA-256 / SHA-384 / SHA-512 Digest** no `/etc/sudoers`](../../domains/software-0009/software/seguranca/sudo-integridade-binarios-sha256-digest-pinning-scripts-administrativos.md)
+674. [Sudoers: Prevenção de Escalação de Privilégio (**GTFOBins**) — Uso da Tag **`NOEXEC:`**, **`sudoedit` (`sudo -e`)** e Perigos do Curinga `*`](../../domains/software-0009/software/seguranca/sudo-prevencao-gtfobins-noexec-sudoedit-restricao-argumentos-curingas.md)
+675. [Sudoers: Hardening de `Defaults` — **`env_reset`**, **`secure_path`**, **`use_pty`**, `timestamp_type=tty` e `passwd_tries`](../../domains/software-0009/software/seguranca/sudo-higienizacao-ambiente-env-reset-secure-path-use-pty-timestamp.md)
+676. [Sudo: Gravação Forense Completa de Sessões de Terminal (**I/O Logging** `log_input`, `log_output`, `log_subcmds`) e Reprodução com **`sudoreplay`**](../../domains/software-0009/software/seguranca/sudo-auditoria-io-logging-log-input-log-output-sudoreplay.md)
+677. [Sudo (`sudo_logsrvd`): Transmissão Centralizada em Tempo Real de Logs de Eventos e I/O via TLS Mútuo (**mTLS**) contra Adulteração Local](../../domains/software-0009/software/seguranca/sudo-centralizacao-logs-sudo-logsrvd-tls-mtls-imutabilidade.md)
+678. [Sudo 1.9+: Extensão de Políticas e Auditoria com **`sudo_python.so`** (Aprovação *Just-In-Time*, Checagem de Chamados no TheHive/Jira e Contexto)](../../domains/software-0009/software/seguranca/sudo-plugins-python-aprovacao-just-in-time-politicas-customizadas.md)
+679. [Sudoers: Confinamento de Comandos Delegados com SELinux (`ROLE=` / `TYPE=`), AppArmor (`APPARMOR_PROFILE=`) e `RUNCHROOT=` / `RUNCWD=`](../../domains/software-0009/software/seguranca/sudo-restricoes-chroot-runchroot-runcwd-selinux-role-type-apparmor.md)
+680. [Auditoria da Superfície de Ataque do Sudo (Lições de `CVE-2021-3156` *Baron Samedit* e `CVE-2023-22809`), `nosuid` e Alternativas Mínimas](../../domains/software-0009/software/seguranca/sudo-auditoria-superficie-ataque-cve-2021-3156-cve-2023-22809-alternativas.md)
+
+### Bubblewrap (bwrap) — Sandboxing Linux sem Privilégios, User/Mount/PID/Net Namespaces, PR_SET_NO_NEW_PRIVS, TIOCSTI e Seccomp
+
+681. [Bubblewrap (`bwrap`): Arquitetura de Sandboxing sem Privilégios no Linux, **User Namespaces (`CLONE_NEWUSER`)** e **`PR_SET_NO_NEW_PRIVS`**](../../domains/software-0009/software/seguranca/bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces.md)
+682. [Bubblewrap (`bwrap`): Construção Zero-Trust do Sistema de Arquivos (`--ro-bind`, `--bind`, `--tmpfs`, `--proc`, `--dev`, `--dir` e `--file`)](../../domains/software-0009/software/seguranca/bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev.md)
+683. [Bubblewrap (`bwrap`): Isolamento de Namespaces (`--unshare-all`, `--unshare-net`, `--unshare-pid`), *Reaping* de Zumbis (**PID 1**) e `--disable-userns`](../../domains/software-0009/software/seguranca/bubblewrap-isolamento-namespaces-unshare-all-pid1-rede-loopback.md)
+684. [Bubblewrap (`bwrap`): Proteção contra Injeção de Comandos no Terminal (**`CVE-2017-5226` / `TIOCSTI`** via **`--new-session`**) e **`--die-with-parent`**](../../domains/software-0009/software/seguranca/bubblewrap-isolamento-terminal-new-session-tiocsti-die-with-parent.md)
+685. [Bubblewrap (`bwrap`): Restrição de Syscalls do Kernel via **`--seccomp FD`** (`--add-seccomp-fd`) e Remoção de Capabilities (`--cap-drop ALL`)](../../domains/software-0009/software/seguranca/bubblewrap-filtros-syscalls-seccomp-bpf-file-descriptors-cap-drop.md)
+686. [Bubblewrap (`bwrap`): Higienização de Variáveis de Ambiente (`--clearenv`, `--setenv`, `--unsetenv`), `--chdir` e Controle de `argv[0]`](../../domains/software-0009/software/seguranca/bubblewrap-higienizacao-variaveis-ambiente-clearenv-setenv-unsetenv.md)
+687. [Bubblewrap (`bwrap`): Prevenção de Escape de Sandbox via Sockets do Host (**D-Bus**, **X11**, Docker Socket, `ssh-agent`) e Uso do **`xdg-dbus-proxy`**](../../domains/software-0009/software/seguranca/bubblewrap-prevencao-escape-sockets-dbus-x11-wayland-xdg-dbus-proxy.md)
+688. [Bubblewrap (`bwrap`): Sincronização e Observabilidade Programática (`--info-fd`, `--json-status-fd`, `--block-fd`, `--sync-fd` e `--args FD`)](../../domains/software-0009/software/seguranca/bubblewrap-monitoramento-ciclo-vida-info-fd-json-status-fd-block-fd.md)
+689. [Bubblewrap (`bwrap`): Injeção Efêmera de Configurações e Segredos em Memória via Descritores de Arquivo (`--ro-bind-data FD DEST`, `--bind-data` e `--perms`)](../../domains/software-0009/software/seguranca/bubblewrap-injecao-arquivos-memoria-file-bind-data-ro-bind-data.md)
+690. [Bubblewrap (`bwrap`) + `systemd-run`: Defesa contra Negação de Serviço (Fork Bombs / Exaustão de RAM) com **cgroups v2** e `AppArmor` para `bwrap`](../../domains/software-0009/software/seguranca/bubblewrap-confinamento-workers-conversao-arquivos-limites-cgroups-systemd.md)
+
+### Project Quay Clair v4 & ClairCore — Análise Estática de Vulnerabilidades em Imagens de Containers OCI/Docker, Indexer, Matcher e Notifier
+
+691. [Project Quay **Clair v4 & `ClairCore`**: Arquitetura de Análise Estática de Imagens OCI/Docker (`Indexer`, `Matcher` e `Notifier`)](../../domains/software-0009/software/seguranca/clair-arquitetura-analise-estatica-containers-claircore-indexer-matcher-notifier.md)
+692. [Clair v4 (`Indexer` & `ClairCore`): Indexação Endereçada por Conteúdo de Manifestos OCI, Deduplicação de Camadas e `IndexReport`](../../domains/software-0009/software/seguranca/clair-fluxo-indexacao-content-addressable-manifest-layers-indexreport.md)
+693. [ClairCore: Matriz de Scanners de Pacotes de Sistema Operacional (`dpkg`, `rpm`, `apk`) e Linguagens (`gobin`, `python`, `java`, `nodejs`, `ruby`, `rust`)](../../domains/software-0009/software/seguranca/clair-scanners-pacotes-os-dpkg-rpm-apk-linguagens-gobin-python-java.md)
+694. [Clair v4 (`Matcher`): Atualizadores Contínuos de Feeds de Segurança (OVAL, **OSV**, Red Hat VEX/CSAF, Debian/Ubuntu/Alpine SecDB e NVD CVSS Enrichment)](../../domains/software-0009/software/seguranca/clair-motor-matching-updaters-fontes-ovals-osv-cvss-enrichment.md)
+695. [Clair v4 (`Notifier`): Detecção Proativa de **Novos CVEs** em Imagens Já Implantadas e Entrega Confiável via **Webhooks / AMQP / STOMP**](../../domains/software-0009/software/seguranca/clair-servico-notificacao-notifier-webhooks-novos-cves-imagens-antigas.md)
+696. [Clair v4 (`clairctl`): Operação via Linha de Comando (`clairctl report`, `export-updaters` / `import-updaters`) para CI/CD e Ambientes *Air-Gapped*](../../domains/software-0009/software/seguranca/clair-cli-clairctl-client-submissao-manifestos-exportacao-offline.md)
+697. [Clair v4: Modos de Implantação (`combo` vs Microsserviços `indexer`/`matcher`/`notifier`), Dimensionamento de PostgreSQL e Coordenação via `clair-lock`](../../domains/software-0009/software/seguranca/clair-implantacao-combo-vs-microservicos-postgresql-escalabilidade.md)
+698. [Clair v4: Hardening da API — Autenticação **JWT com Pre-Shared Key (`auth.psk`)**, TLS Mútuo e Isolamento da Porta de Introspecção](../../domains/software-0009/software/seguranca/clair-autenticacao-seguranca-api-psk-jwt-tls-introspeccao.md)
+699. [Clair v4: Normalização de Severidade (`Unknown`, `Negligible`, `Low`, `Medium`, `High`, `Critical`), Enriquecimento CVSS e Priorização](../../domains/software-0009/software/seguranca/clair-enriquecimento-cvss-severidade-normalizada-priorizacao-remediacao.md)
+700. [Clair v4: Integração Nativa com **Project Quay**, Políticas de **Kubernetes Admission Control** e Redução de Superfície com Imagens Mínimas](../../domains/software-0009/software/seguranca/clair-integracao-project-quay-harbor-admission-controllers-vex.md)
+
 ## Critérios e próximo passo
 
-As 600 notas 1–600 das tranches 1–6 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 600/2.000 notas válidas, restando 1.400 notas materiais.
+As 700 notas 1–700 das tranches 1–7 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 700/2.000 notas válidas, restando 1.300 notas materiais.

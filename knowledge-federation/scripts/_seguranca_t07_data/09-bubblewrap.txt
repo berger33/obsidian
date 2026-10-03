@@ -1,0 +1,160 @@
+TOPIC: Bubblewrap (bwrap) — Sandboxing Linux sem Privilégios, User/Mount/PID/Net Namespaces, PR_SET_NO_NEW_PRIVS, TIOCSTI e Seccomp
+SOURCES: https://raw.githubusercontent.com/containers/bubblewrap/main/README.md | https://raw.githubusercontent.com/containers/bubblewrap/main/bwrap.xml | https://github.com/containers/bubblewrap
+
+===NOTE===
+0681|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces|Bubblewrap (`bwrap`): Arquitetura de Sandboxing sem Privilégios no Linux, **User Namespaces (`CLONE_NEWUSER`)** e **`PR_SET_NO_NEW_PRIVS`**|**Bubblewrap (`bwrap`)** (`containers/bubblewrap`, LGPLv2+, usado como motor de isolamento do Flatpak, `rpm-ostree` e `libgnome-desktop`) é o utilitário de baixo nível para construção de sandboxes de processos no Linux projetado para ser executado por **usuários comuns sem privilégios**.|Conforme destaca o `README.md` oficial do Bubblewrap, runtimes de infraestrutura como o Docker tradicional não podem ser delegados diretamente a usuários não-confiáveis porque permitem escalar para `root` no host; já o `bwrap` utiliza **User Namespaces não-privilegiados (`CLONE_NEWUSER`)** e ativa obrigatoriamente o bit **`PR_SET_NO_NEW_PRIVS`** no kernel.|Ao iniciar, o `bwrap` cria um novo **Mount Namespace (`CLONE_NEWNS`)** cuja raiz (`/`) é um sistema de arquivos **`tmpfs` completamente vazio e invisível a partir do host**, que é destruído automaticamente pelo kernel assim que o último processo do sandbox termina; cabe aos argumentos da linha de comando do `bwrap` montar explicitamente apenas os diretórios necessários.|```bash
+# Executar um comando dentro de um sandbox Bubblewrap com todos os namespaces isolados e /usr montado somente-leitura
+bwrap \
+  --unshare-all \
+  --ro-bind /usr /usr \
+  --symlink usr/lib /lib \
+  --symlink usr/lib64 /lib64 \
+  --symlink usr/bin /bin \
+  --proc /proc \
+  --dev /dev \
+  --tmpfs /tmp \
+  --new-session \
+  --die-with-parent \
+  /usr/bin/id
+```|O `bwrap` moderno removeu o modo `setuid` legado e exige `PR_SET_NO_NEW_PRIVS`, garantindo que nenhum binário `setuid` dentro do sandbox possa conceder privilégios adicionais no host.|Execute o comando acima como usuário comum e verifique que `ls /home` dentro do sandbox não existe (pois `/home` nunca foi montado no `tmpfs` raiz).|bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev, bubblewrap-isolamento-namespaces-unshare-all-pid1-rede-loopback, sudo-auditoria-superficie-ataque-cve-2021-3156-cve-2023-22809-alternativas
+
+===NOTE===
+0682|bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev|Bubblewrap (`bwrap`): Construção Zero-Trust do Sistema de Arquivos (`--ro-bind`, `--bind`, `--tmpfs`, `--proc`, `--dev`, `--dir` e `--file`)|Diferente de abordagens de *blocklist* (que herdam o sistema de arquivos inteiro do host e tentam esconder apenas `/etc/shadow` ou `~/.ssh`), o `bwrap` parte de uma raiz `/` **100% vazia**: qualquer diretório do host que você não passar explicitamente em `--ro-bind` ou `--bind` simplesmente não existe dentro do sandbox.|Para confinar conversores de arquivos perigosos (como Ghostscript, ImageMagick, `ffmpeg`, LibreOffice headless, parsers de PDF ou descompactadores que processam uploads de usuários na web), você monta `/usr`, `/lib` e `/etc/ld.so.cache` em **somente-leitura (`--ro-bind`)**, cria um `/tmp` efêmero em memória (`--tmpfs /tmp`) e monta em escrita (`--bind`) exclusivamente o diretório de trabalho daquele job específico.|Conforme documentado no `README.md` e em `bwrap.xml`, todas as montagens `--bind` e `--ro-bind` têm a flag **`nodev` aplicada por padrão** (impedindo acesso a nós de dispositivos de bloco/caractere em diretórios normais), enquanto **`--dev /dev`** cria um `/dev` mínimo seguro contendo apenas `/dev/null`, `/dev/zero`, `/dev/full`, `/dev/random`, `/dev/urandom` e `/dev/tty`.|```bash
+# Confinar a conversao de um PDF enviado por usuario externo usando Ghostscript em um filesystem estritamente restrito
+bwrap \
+  --unshare-all \
+  --ro-bind /usr /usr \
+  --ro-bind /lib /lib \
+  --ro-bind /lib64 /lib64 \
+  --ro-bind /etc/ld.so.cache /etc/ld.so.cache \
+  --proc /proc \
+  --dev /dev \
+  --tmpfs /tmp \
+  --ro-bind /var/spool/uploads/job_991/input.pdf /tmp/input.pdf \
+  --bind /var/spool/uploads/job_991/out /tmp/out \
+  --chdir /tmp \
+  --new-session --die-with-parent \
+  /usr/bin/gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -sOutputFile=/tmp/out/page-%d.png /tmp/input.pdf
+```|Nunca use `--dev-bind /dev /dev` (que expõe todos os dispositivos reais do host como `/dev/sda`, `/dev/mem` ou `/dev/dri`) a menos que o processo precise estritamente de aceleração de GPU específica (caso em que se usa `--dev /dev` seguido de `--dev-bind /dev/dri /dev/dri`).|Teste tentar ler `/etc/passwd` ou `/var/spool/uploads/` fora de `job_991` de dentro do sandbox acima e confirme que os arquivos não existem no namespace de montagem.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-isolamento-namespaces-unshare-all-pid1-rede-loopback, apparmor-anatomia-perfil-permissoes-arquivos-rede-capabilities-rlimit
+
+===NOTE===
+0683|bubblewrap-isolamento-namespaces-unshare-all-pid1-rede-loopback|Bubblewrap (`bwrap`): Isolamento de Namespaces (`--unshare-all`, `--unshare-net`, `--unshare-pid`), *Reaping* de Zumbis (**PID 1**) e `--disable-userns`|A flag **`--unshare-all`** do `bwrap` ativa simultaneamente o isolamento de todos os namespaces de kernel disponíveis: `--unshare-user-try`, `--unshare-ipc`, `--unshare-pid`, `--unshare-net`, `--unshare-uts` e `--unshare-cgroup-try`.|Dois desses isolamentos merecem destaque arquitetural: **(1) `--unshare-net`** cria uma pilha de rede completamente desconectada do mundo externo (contendo apenas a interface de loopback `lo` isolada), garantindo que um parser de PDF/imagem ou script de build malicioso **jamais consiga abrir conexões para a internet, para a LAN interna ou para o endpoint de metadados da nuvem (`169.254.169.254`)**; e **(2) `--unshare-pid`** oculta todos os outros processos do host e faz o próprio `bwrap` rodar um **processo `PID 1` mínimo** dentro do sandbox para adotar e recolher (*reap*) processos filhos órfãos/zumbis.|Além disso, conforme documentado em `bwrap.xml`, a flag **`--disable-userns`** (combinada com `--unshare-user`) impede que o processo dentro do sandbox crie *novos* user namespaces aninhados ou chame `mount`/`pivot_root` novamente para tentar rearranjar sua árvore de diretórios!|```bash
+# Isolar todos os namespaces (incluindo rede offline --unshare-net) e bloquear criacao de userns aninhados (--disable-userns)
+bwrap \
+  --unshare-all \
+  --disable-userns \
+  --hostname sandbox-worker \
+  --ro-bind /usr /usr \
+  --symlink usr/lib /lib \
+  --symlink usr/lib64 /lib64 \
+  --proc /proc \
+  --dev /dev \
+  --new-session --die-with-parent \
+  /usr/bin/ip addr show
+```|Se um processo específico dentro do sandbox precisar de acesso à rede mas você ainda quiser todos os demais namespaces isolados, passe **`--unshare-all --share-net`** (como a última flag vence no `bwrap`, `--share-net` reabilita apenas o namespace de rede mantendo `user`, `pid`, `ipc`, `uts` e `cgroup` isolados).|Verifique na saída do comando acima que a única interface de rede existente dentro do sandbox é `1: lo: <LOOPBACK,UP,LOWER_UP>` e que `ps aux` dentro do sandbox mostra apenas o `PID 1` (`bwrap`) e o `PID 2` (seu comando).|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-isolamento-terminal-new-session-tiocsti-die-with-parent, bubblewrap-filtros-syscalls-seccomp-bpf-file-descriptors-cap-drop
+
+===NOTE===
+0684|bubblewrap-isolamento-terminal-new-session-tiocsti-die-with-parent|Bubblewrap (`bwrap`): Proteção contra Injeção de Comandos no Terminal (**`CVE-2017-5226` / `TIOCSTI`** via **`--new-session`**) e **`--die-with-parent`**|A seção *Limitations* do `README.md` oficial do Bubblewrap destaca uma vulnerabilidade crítica que ocorre quando se executa um processo não-confiável a partir de um terminal interativo sem isolar a sessão de controle do terminal: a injeção **`ioctl(fd, TIOCSTI, &char)` (`CVE-2017-5226`)**.|Em sistemas Linux onde o `ioctl` `TIOCSTI` (*Terminal I/O Control Simulate Terminal Input*) ainda é permitido, se um processo dentro do sandbox herdar o descritor de arquivo do terminal controlador da sua sessão shell externa, ele pode chamar `ioctl(0, TIOCSTI, "rm -rf ~\n")`: esses caracteres são empurrados para a fila de entrada do terminal do host e serão executados pelo seu shell assim que o `bwrap` terminar!|Para bloquear completamente o `CVE-2017-5226`, passe **sempre** a flag **`--new-session`** (que chama `setsid(2)` desvinculando o processo do terminal controlador da sessão pai) e combine-a com **`--die-with-parent`** (que usa `prctl(PR_SET_PDEATHSIG, SIGKILL)` no kernel para matar instantaneamente todos os processos do sandbox caso o processo pai que chamou o `bwrap` morra).|```bash
+# Padrao obrigatorio para execucao segura: --new-session (contra TIOCSTI CVE-2017-5226) + --die-with-parent
+bwrap \
+  --unshare-all \
+  --ro-bind /usr /usr \
+  --symlink usr/lib /lib \
+  --symlink usr/lib64 /lib64 \
+  --proc /proc --dev /dev \
+  --new-session \
+  --die-with-parent \
+  /usr/bin/python3 -c "import fcntl, termios; fcntl.ioctl(0, termios.TIOCSTI, b'id\n')"
+```|Ao usar `--new-session`, o controle de trabalho do shell (`Ctrl+Z` / `SIGTSTP`) não é encaminhado pelo terminal controlador; em alternativa (ou em adição), filtre o syscall `ioctl` com argumento `TIOCSTI` usando um filtro **Seccomp BPF (`--seccomp FD`)** (e em kernels Linux 6.2+, configure `sysctl dev.tty.legacy_tiocsti=0`).|Execute o teste acima e confirme que a chamada `fcntl.ioctl(0, termios.TIOCSTI, ...)` falha imediatamente com `PermissionError: [Errno 1] Operation not permitted` (`EPERM`).|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-filtros-syscalls-seccomp-bpf-file-descriptors-cap-drop, sudo-higienizacao-ambiente-env-reset-secure-path-use-pty-timestamp
+
+===NOTE===
+0685|bubblewrap-filtros-syscalls-seccomp-bpf-file-descriptors-cap-drop|Bubblewrap (`bwrap`): Restrição de Syscalls do Kernel via **`--seccomp FD`** (`--add-seccomp-fd`) e Remoção de Capabilities (`--cap-drop ALL`)|Como todos os processos dentro de um sandbox ainda compartilham o mesmo kernel Linux do host, reduzir a superfície de chamadas de sistema (syscalls) expostas ao processo confinado é essencial; o `bwrap` aplica programas **Seccomp-BPF** compilados através das flags **`--seccomp <FD>`** e **`--add-seccomp-fd <FD>`**, além de gerenciar *Linux Capabilities* no user namespace com **`--cap-drop ALL`** / `--cap-add`.|Syscalls exóticos ou legados do kernel Linux (como `keyctl`, `add_key`, `request_key`, `ptrace`, `userfaultfd`, `perf_event_open`, `bpf`, `io_uring_setup`, `kexec_load`, `acct`, `lookup_dcookie`) são historicamente responsáveis pela maioria das vulnerabilidades de escalação de privilégio de kernel.|O programa pai compila a política Seccomp (usando `libseccomp` em C, Python `seccomp` ou gerando o bytecode BPF com `bpfc` / `flatpak`), abre um descritor de arquivo contendo o bytecode BPF e passa o número do descritor para `bwrap --seccomp 3 3< filtro.bpf`, que o carrega no kernel imediatamente antes do `execve` final.|```python
+# Gerar um filtro Seccomp-BPF binario com libseccomp bloqueando syscalls perigosos para uso com bwrap --seccomp
+import subprocess, os
+
+# Exemplo: invocar bwrap garantindo queda de todas as capabilities no namespace (--cap-drop ALL)
+cmd = [
+    "bwrap", "--unshare-all", "--cap-drop", "ALL",
+    "--ro-bind", "/usr", "/usr", "--symlink", "usr/lib", "/lib",
+    "--symlink", "usr/lib64", "/lib64", "--proc", "/proc", "--dev", "/dev",
+    "--new-session", "--die-with-parent", "/usr/bin/id"
+]
+subprocess.run(cmd, check=True)
+```|Conforme alerta o `README.md` oficial do Bubblewrap, se o aplicativo confinado dentro do `bwrap` for um navegador web (como Chromium ou Firefox) que cria seus próprios sub-sandboxes internos via `seccomp`, o seu filtro `--seccomp` externo não deve bloquear a própria syscall `seccomp` / `prctl`, para permitir que o navegador aplique camadas ainda mais restritivas aos seus processos de renderização.|Verifique em `/proc/<PID>/status` do processo dentro do sandbox os campos `Seccomp: 2` (modo filtro BPF ativo) e `CapEff: 0000000000000000`.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-isolamento-terminal-new-session-tiocsti-die-with-parent, kubearmor-arquitetura-lsm-ebpf-enforcement-inline-containers-nodos
+
+===NOTE===
+0686|bubblewrap-higienizacao-variaveis-ambiente-clearenv-setenv-unsetenv|Bubblewrap (`bwrap`): Higienização de Variáveis de Ambiente (`--clearenv`, `--setenv`, `--unsetenv`), `--chdir` e Controle de `argv[0]`|Por padrão, um processo iniciado pelo `bwrap` herda todas as variáveis de ambiente do processo pai no host — o que pode vazar tokens de sessão da nuvem (`AWS_SECRET_ACCESS_KEY`, `GITHUB_TOKEN`, `KUBECONFIG`, `SSH_AUTH_SOCK`, `DBUS_SESSION_BUS_ADDRESS`) para dentro do código não-confiável; a flag **`--clearenv`** zera 100% do ambiente herdado!|Após limpar todas as variáveis com `--clearenv`, você define explicitamente apenas as variáveis estritamente necessárias com **`--setenv VAR VALOR`** (ex.: `--setenv PATH /usr/bin:/bin`, `--setenv HOME /tmp`, `--setenv LANG C.UTF-8`).|A ordem das flags na linha de comando do `bwrap` importa: sempre coloque **`--clearenv` antes** das flags `--setenv`, pois o `bwrap` processa as alterações de ambiente sequencialmente da esquerda para a direita.|```bash
+# Limpar todas as variaveis de ambiente do host (--clearenv) para evitar vazamento de tokens AWS/GitHub/SSH para o sandbox
+bwrap \
+  --unshare-all \
+  --clearenv \
+  --setenv PATH "/usr/bin:/bin" \
+  --setenv HOME "/tmp" \
+  --setenv LANG "C.UTF-8" \
+  --ro-bind /usr /usr \
+  --symlink usr/lib /lib \
+  --symlink usr/lib64 /lib64 \
+  --proc /proc --dev /dev --tmpfs /tmp \
+  --chdir /tmp \
+  --new-session --die-with-parent \
+  /usr/bin/env
+```|Mesmo que você não monte o diretório `/run/user/1000` dentro do sandbox, esquecer de usar `--clearenv` expõe os valores literais de variáveis de ambiente contendo chaves de API que estavam exportadas no shell ou no worker que chamou o `bwrap`.|Execute o comando acima em um terminal onde você tenha exportado `SECRET_TOKEN=teste` e confirme que `/usr/bin/env` dentro do sandbox imprime exclusivamente `PATH`, `HOME` e `LANG`.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev, sudo-higienizacao-ambiente-env-reset-secure-path-use-pty-timestamp
+
+===NOTE===
+0687|bubblewrap-prevencao-escape-sockets-dbus-x11-wayland-xdg-dbus-proxy|Bubblewrap (`bwrap`): Prevenção de Escape de Sandbox via Sockets do Host (**D-Bus**, **X11**, Docker Socket, `ssh-agent`) e Uso do **`xdg-dbus-proxy`**|Como enfatiza a seção *Limitations* do `README.md` oficial do Bubblewrap: *"Everything mounted into the sandbox can potentially be used to escalate privileges. For example, if you bind a D-Bus socket into the sandbox, it can be used to execute commands via systemd."*|**Jamais monte diretamente dentro de um sandbox `bwrap` o socket do barramento de sessão D-Bus (`/run/user/$UID/bus`), o socket do sistema D-Bus (`/run/dbus/system_bus_socket`), o socket do X11 (`/tmp/.X11-unix/X0`), o `SSH_AUTH_SOCK` ou `/var/run/docker.sock`**!|Qualquer processo com acesso irrestrito ao D-Bus de sessão pode invocar `org.freedesktop.systemd1.Manager.StartTransientUnit` (executando qualquer comando fora do sandbox!) ou ler senhas do `org.freedesktop.secrets`; e qualquer processo com acesso ao socket **X11** pode capturar todas as teclas digitadas em todas as janelas da área de trabalho (`xinput`) ou injetar eventos de teclado em um terminal aberto fora do sandbox. Se um aplicativo desktop confinado precisar de D-Bus ou interface gráfica, use **Wayland** (que isola janelas por cliente) e filtre o D-Bus com o daemon **`xdg-dbus-proxy`** (`flatpak/xdg-dbus-proxy`).|```bash
+# Verificar de dentro de um sandbox que nem o socket D-Bus nem o socket X11 do host estao acessiveis
+bwrap \
+  --unshare-all --clearenv \
+  --setenv PATH "/usr/bin:/bin" \
+  --ro-bind /usr /usr --symlink usr/bin /bin --symlink usr/lib64 /lib64 \
+  --proc /proc --dev /dev --tmpfs /tmp --tmpfs /run \
+  --new-session --die-with-parent \
+  /usr/bin/ls -la /run /tmp
+```|Ao confinar ferramentas de linha de comando ou agentes de IA/automação locais no computador do desenvolvedor, nunca monte `~/.ssh`, `~/.aws`, `~/.kube`, `~/.gnupg` ou `~/.config` sem filtro: monte apenas a pasta do repositório de projeto específico onde o agente deve trabalhar.|Audite scripts de wrapper `bwrap` procurando por `--bind /run/user` ou `--bind /tmp/.X11-unix` e substitua-os por isolamento total ou `xdg-dbus-proxy`.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev, apparmor-perfis-containers-docker-kubernetes-securitycontext
+
+===NOTE===
+0688|bubblewrap-monitoramento-ciclo-vida-info-fd-json-status-fd-block-fd|Bubblewrap (`bwrap`): Sincronização e Observabilidade Programática (`--info-fd`, `--json-status-fd`, `--block-fd`, `--sync-fd` e `--args FD`)|Quando o `bwrap` é integrado dentro de um serviço maior (como um executor de jobs de CI, um motor de avaliação de código ou o próprio Flatpak), o orquestrador precisa saber o `PID` real do sandbox no host, sincronizar a configuração de rede/cgroups antes do processo iniciar e receber o código de saída exato em JSON.|As flags de descritores de arquivo de controle do `bwrap` (`bwrap.xml`) resolvem isso sem condições de corrida: **`--info-fd <FD>`** e **`--json-status-fd <FD>`** escrevem um documento JSON contendo o `child-pid` (e ao final o `exit-code`), **`--block-fd <FD>`** faz o `bwrap` pausar após criar os namespaces mas antes de iniciar o comando até que o orquestrador feche o FD, e **`--args <FD>`** lê argumentos separados por byte nulo (`\0`) de um descritor de arquivo.|Usar **`--args <FD>`** evita expor linhas de comando gigantescas com centenas de `--ro-bind` na tabela pública de processos (`ps aux` / `/proc/<pid>/cmdline`) do host.|```python
+import json, os, subprocess
+
+# Ler o PID real e o exit-code final do processo confinado via --json-status-fd em Python
+r_fd, w_fd = os.pipe()
+proc = subprocess.Popen(
+    [
+        "bwrap", "--unshare-all", "--ro-bind", "/usr", "/usr",
+        "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
+        "--proc", "/proc", "--dev", "/dev", "--new-session", "--die-with-parent",
+        "--json-status-fd", str(w_fd), "/usr/bin/true"
+    ],
+    pass_fds=(w_fd,)
+)
+os.close(w_fd)
+with os.fdopen(r_fd) as f:
+    for line in f:
+        print("Evento JSON bwrap:", json.loads(line))
+proc.wait()
+```|Sempre feche a ponta de escrita do pipe (`os.close(w_fd)`) no processo pai imediatamente após o `subprocess.Popen(..., pass_fds=(w_fd,))`, para que a leitura em `r_fd` detecte `EOF` assim que o `bwrap` encerrar.|Execute o script Python acima e confirme o recebimento dos dois objetos JSON: o primeiro com `{"child-pid": ...}` e o segundo com `{"exit-code": 0}`.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-isolamento-namespaces-unshare-all-pid1-rede-loopback, bubblewrap-confinamento-workers-conversao-arquivos-limites-cgroups-systemd
+
+===NOTE===
+0689|bubblewrap-injecao-arquivos-memoria-file-bind-data-ro-bind-data|Bubblewrap (`bwrap`): Injeção Efêmera de Configurações e Segredos em Memória via Descritores de Arquivo (`--ro-bind-data FD DEST`, `--bind-data` e `--perms`)|Muitas vezes o processo confinado dentro do sandbox precisa ler um arquivo `/etc/resolv.conf` customizado, um `/etc/passwd` sintético mínimo ou um arquivo de configuração gerado dinamicamente para aquela execução, **sem que o orquestrador queira gravar arquivos temporários no disco físico do host**.|As opções **`--ro-bind-data <FD> <DEST>`**, **`--bind-data <FD> <DEST>`** e **`--file <FD> <DEST>`** (combinadas com **`--perms <OCTAL>`**, ex.: `--perms 0400`) leem o conteúdo de um descritor de arquivo aberto pelo orquestrador (como um `memfd_create` ou pipe anônimo em memória) e o expõem como um arquivo somente-leitura no caminho `<DEST>` dentro do `tmpfs` do sandbox!|Assim que o sandbox termina, o `tmpfs` desaparece da memória RAM sem jamais ter tocado o sistema de arquivos do host.|```bash
+# Injetar um /etc/passwd sintetico minimo em somente-leitura (--ro-bind-data) a partir de um file descriptor
+exec 4<<< "sandbox:x:1000:1000:Sandbox User:/tmp:/sbin/nologin"
+bwrap \
+  --unshare-all --uid 1000 --gid 1000 \
+  --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/lib64 /lib64 \
+  --proc /proc --dev /dev --tmpfs /tmp --dir /etc \
+  --perms 0444 --ro-bind-data 4 /etc/passwd \
+  --new-session --die-with-parent \
+  /usr/bin/id
+exec 4<&-
+```|A flag **`--perms <OCTAL>`** afeta apenas a próxima operação `--file`, `--bind-data`, `--ro-bind-data` ou `--dir` imediatamente subsequente na linha de comando, voltando ao padrão nas operações seguintes.|Verifique na saída do comando acima que o binário `/usr/bin/id` resolve `uid=1000(sandbox) gid=1000` lendo o `/etc/passwd` injetado via FD `4`.|bubblewrap-construcao-filesystem-ro-bind-tmpfs-dev-proc-nodev, bubblewrap-monitoramento-ciclo-vida-info-fd-json-status-fd-block-fd, paralus-acesso-just-in-time-kubeconfig-efemero-serviceaccount-revogacao
+
+===NOTE===
+0690|bubblewrap-confinamento-workers-conversao-arquivos-limites-cgroups-systemd|Bubblewrap (`bwrap`) + `systemd-run`: Defesa contra Negação de Serviço (Fork Bombs / Exaustão de RAM) com **cgroups v2** e `AppArmor` para `bwrap`|Como alerta explicitamente a seção *System security* do `README.md` oficial do Bubblewrap: embora o `bwrap` impeça escalação de privilégio, um processo malicioso dentro do sandbox ainda pode tentar realizar ataques de **Negação de Serviço (DoS)** contra o host (como uma *fork bomb*, alocação de toda a memória RAM ou saturação de CPU) se não houver limites de recursos (**cgroups v2**) aplicados.|Enquanto o `bwrap` cuida do isolamento de namespaces, sistema de arquivos e syscalls, o controle de cotas de recursos físicos (`MemoryMax`, `TasksMax`, `CPUQuota`, `IOWeight`) deve ser aplicado envolvendo a chamada do `bwrap` em um escopo transitório de **cgroups v2** via **`systemd-run --user --scope`** (ou `setrlimit` / slice do serviço).|Além disso, no Ubuntu 24.04+ e Debian modernos (onde `kernel.apparmor_restrict_unprivileged_userns = 1` restringe a criação de user namespaces não-privilegiados a binários que possuam um perfil AppArmor com a permissão `userns,`), o pacote oficial do `bubblewrap` já inclui o perfil `/etc/apparmor.d/bwrap` autorizando `userns`.|```bash
+# Executar o sandbox Bubblewrap dentro de um escopo cgroups v2 estrito (maximo 256 MiB de RAM e 32 processos/threads)
+systemd-run --user --scope \
+  -p MemoryMax=256M -p MemorySwapMax=0 \
+  -p TasksMax=32 -p CPUQuota=50% \
+  bwrap --unshare-all --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/lib64 /lib64 \
+    --proc /proc --dev /dev --tmpfs /tmp --new-session --die-with-parent \
+    /usr/bin/sha256sum /usr/bin/bwrap
+```|Sempre defina **`TasksMax=32`** (ou outro teto baixo compatível com o worker) e **`MemorySwapMax=0`** no escopo cgroups v2 que envolve o `bwrap` ao processar entradas de usuários externos: isso neutraliza instantaneamente qualquer *fork bomb* ou bomba de descompressão (*zip/pdf bomb*) sem afetar o restante do servidor.|Verifique com `systemctl --user status` durante a execução que o escopo transitório aplica os limites `Tasks:` e `Memory:` do cgroup v2.|bubblewrap-arquitetura-sandboxing-unprivileged-user-namespaces, bubblewrap-filtros-syscalls-seccomp-bpf-file-descriptors-cap-drop, apparmor-perfis-containers-docker-kubernetes-securitycontext
