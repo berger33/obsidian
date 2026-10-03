@@ -1,24 +1,24 @@
 # Lote `software-seguranca-2000-0003` — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM
 
-Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), segurança da cadeia de suprimentos de software (SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos, DAST e motores de autorização fina (ReBAC/ABAC/PBAC).
+Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`), focado em segurança de aplicações (AppSec), WAF/NSM, criptografia moderna, postura multi-cloud (CSPM/ASPM), segurança da cadeia de suprimentos de software (SBOM/VEX/SCA/SLSA/Scorecard), varredura de segredos, DAST e identidade/autorização (OAuth2/OIDC/ReBAC/ABAC/PBAC).
 
 ## Resumo do estado atual
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **100 / 2.000 (5,00%)**
-- Gate automatizado: **100/100 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 1)
-- Revisão factual humana: **0/100**
-- Revisão factual por IA: **100/100**
-- Contabilizadas como válidas: **100/100**
-- Revisor das 100 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (100 notas, IDs 1–100) foi conferida factualmente por IA e aprovada sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **200 / 2.000 (10,00%)**
+- Gate automatizado: **200/200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 2)
+- Revisão factual humana: **0/200**
+- Revisão factual por IA: **200/200**
+- Contabilizadas como válidas: **200/200**
+- Revisor das 200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–2 (200 notas, IDs 1–200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-01.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-01.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-02.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-02.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md)
 
-Existem 100 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.900 restantes.
+Existem 200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1.800 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -152,6 +152,138 @@ Existem 100 notas materiais listadas abaixo; não há IDs reservados, placeholde
 99. [OpenSSF Scorecard GitHub Action (`ossf/scorecard-action`): publicação de alertas SARIF no GitHub Code Scanning e Badge oficial](../../domains/software-0009/software/seguranca/scorecard-github-action-sarif-code-scanning-badge-monitoramento-continuo.md)
 100. [OpenSSF Scorecard em Escala: *Probes* estruturadas (V5), API REST (`api.scorecard.dev`) e dataset público no BigQuery](../../domains/software-0009/software/seguranca/scorecard-probes-structured-results-bigquery-api-rest-avaliacao-escala.md)
 
+## Tranche 2 — OWASP Coraza WAF, OWASP Core Rule Set (CRS v4), Ory Hydra, Ory Kratos, Authelia, FiloSottile `age`, OWASP DefectDojo, Prowler, osquery e OISF Suricata (100 notas; revisão factual por IA registrada)
+
+### OWASP Coraza WAF (motor de Web Application Firewall em Go, 5 fases de transação HTTP, linguagem SecLang, `SecRuleEngine`, `SecRequestBodyAccess`, `SecAuditLogFormat JSON` e proxy-wasm)
+
+101. [OWASP Coraza WAF: arquitetura do Web Application Firewall em Go compatível com `SecLang` e OWASP CRS v4](../../domains/software-0009/software/seguranca/coraza-arquitetura-owasp-waf-go-seclang-compatibilidade-crs-v4.md)
+102. [Coraza Ciclo de Vida de Transação (`tx`): as 5 fases de avaliação (`Request Headers`, `Request Body`, `Response Headers`, `Response Body`, `Logging`)](../../domains/software-0009/software/seguranca/coraza-ciclo-vida-transacao-cinco-fases-processamento-http.md)
+103. [Coraza Diretivas Essenciais `SecLang`: `SecRuleEngine`, `SecRequestBodyAccess`, `SecResponseBodyAccess` e limites de memória](../../domains/software-0009/software/seguranca/coraza-diretivas-seclang-secruleengine-request-response-body-access.md)
+104. [Coraza Audit Logging (`SecAuditEngine`, `SecAuditLogParts` e `SecAuditLogFormat`): saída estruturada em `JSON`, `OCSF` e `Native`](../../domains/software-0009/software/seguranca/coraza-audit-logging-secauditengine-parts-abcfhz-formatos-json-ocsf.md)
+105. [Coraza em Proxies Cloud-Native: `coraza-proxy-wasm` (Envoy / Istio), `coraza-caddy`, Traefik e HAProxy SPOA](../../domains/software-0009/software/seguranca/coraza-integracoes-cloud-native-proxy-wasm-envoy-istio-caddy-traefik.md)
+106. [Coraza Otimização de Performance e Build Tags: memoização de regex/Aho-Corasick, `WAF.Close()`, `SecRxPreFilter` e `no_regex_multiline`](../../domains/software-0009/software/seguranca/coraza-build-tags-otimizacao-memoization-multiphase-rx-prefilter.md)
+107. [Coraza em Modo `FIPS 140-3` (`GODEBUG=fips140=on`): detecção em tempo de execução e restrição automática de `t:md5` e `t:sha1`](../../domains/software-0009/software/seguranca/coraza-modo-fips-140-3-restricao-transformacoes-md5-sha1.md)
+108. [Coraza Body Processors (`JSON`, `XML`, `URLENCODED`, `MULTIPART`): parsing estruturado de payloads de APIs modernas na Fase 1 e Fase 2](../../domains/software-0009/software/seguranca/coraza-body-processors-json-xml-urlencoded-multipart-inspecao.md)
+109. [Coraza SDK de Extensibilidade (`plugins`): registro de Operadores (`RegisterOperator`), Ações, Transformações e Audit Loggers customizados em Go](../../domains/software-0009/software/seguranca/coraza-extensibilidade-plugins-operators-actions-audit-loggers-go.md)
+110. [Coraza Testes de Regressão de WAF (`go-ftw` e Coraza Playground): validação automatizada de regras SecLang em CI/CD](../../domains/software-0009/software/seguranca/coraza-testes-regressao-regras-ftw-go-ftw-playground-ci-cd.md)
+
+### OWASP Core Rule Set — CRS v4 (conjunto de regras genéricas de detecção para WAFs, *Anomaly Scoring*, `blocking_paranoia_level` vs `detection_paranoia_level`, exclusões e `crs-toolchain`)
+
+111. [OWASP CRS (Core Rule Set v4): arquitetura do conjunto de regras de detecção genérica para ModSecurity e Coraza](../../domains/software-0009/software/seguranca/owaspcrs-arquitetura-core-rule-set-v4-protecao-owasp-top-ten.md)
+112. [OWASP CRS Anomaly Scoring Mode: detecção colaborativa (`setvar`) e bloqueio adiado em `949` (Inbound) e `959` (Outbound)](../../domains/software-0009/software/seguranca/owaspcrs-anomaly-scoring-mode-collaborative-detection-delayed-blocking.md)
+113. [OWASP CRS Limiares de Anomalia e Severidades (`CRITICAL=5`, `ERROR=4`, `WARNING=3`, `NOTICE=2`): por que a meta de produção é Threshold `5`](../../domains/software-0009/software/seguranca/owaspcrs-thresholds-severidades-critical-error-warning-notice-calibragem.md)
+114. [OWASP CRS Níveis de Paranoia (`PL1` a `PL4`): uso combinado de `tx.blocking_paranoia_level` e `tx.detection_paranoia_level`](../../domains/software-0009/software/seguranca/owaspcrs-paranoia-levels-pl1-a-pl4-blocking-vs-detection-paranoia-level.md)
+115. [OWASP CRS Taxonomia Numerada de Regras (`901–999`): organização modular de `REQUEST-911..949` e `RESPONSE-950..959`](../../domains/software-0009/software/seguranca/owaspcrs-taxonomia-arquivos-regras-request-911-a-949-response-950-a-959.md)
+116. [OWASP CRS Tuning de Falsos Positivos: `ctl:ruleRemoveTargetById` em tempo de execução (`BEFORE-CRS`) vs `SecRuleUpdateTargetById` (`AFTER-CRS`)](../../domains/software-0009/software/seguranca/owaspcrs-tratamento-falsos-positivos-ctl-ruleremovetargetbyid-before-after.md)
+117. [OWASP CRS Rule Exclusion Packages e CRS v4 Plugins: perfis oficiais de exclusão para WordPress, Nextcloud, Drupal e cPanel](../../domains/software-0009/software/seguranca/owaspcrs-exclusion-packages-pre-construidos-wordpress-nextcloud-dokuwiki.md)
+118. [OWASP CRS Políticas de Protocolo HTTP (`900200–900250` e `REQUEST-911`/`920`): restrição de métodos HTTP, `Content-Type` e versões TLS/HTTP](../../domains/software-0009/software/seguranca/owaspcrs-validacao-protocolo-http-911-920-metodos-content-type-charset.md)
+119. [OWASP CRS Inspeção de Resposta Outbound (`RESPONSE-950` a `959`): bloqueio de vazamento de erros SQL, stack traces e web shells](../../domains/software-0009/software/seguranca/owaspcrs-inspecao-outbound-response-950-a-959-prevencao-vazamento-dados.md)
+120. [OWASP CRS Sampling Mode (`tx.sampling_percentage`, Regra `900400`) e `coreruleset-cli`: rollout gradual por amostragem de tráfego](../../domains/software-0009/software/seguranca/owaspcrs-sampling-percentage-rollout-gradual-crs-setup-900400.md)
+
+### Ory Hydra (servidor OAuth 2.0 e OpenID Connect Certified headless em Go, arquitetura *Login & Consent Flow* em 6 passos, `prompt=none`, revogação/introspecção RFC 7662 e rotação JWKS)
+
+121. [Ory Hydra: arquitetura do servidor OAuth 2.0 e OpenID Connect Certificado (*OpenID Certified*) desacoplado de banco de usuários](../../domains/software-0009/software/seguranca/oryhydra-arquitetura-oauth2-openid-connect-certified-headless-server.md)
+122. [Ory Hydra Login & Consent Flow: orquestração via `login_challenge`, `consent_challenge` e `skip` com sua própria UI](../../domains/software-0009/software/seguranca/oryhydra-fluxo-login-consent-challenge-verifier-delegacao-ui.md)
+123. [Ory Hydra Gerenciamento de OAuth 2.0 Clients: `token_endpoint_auth_method`, obrigatoriedade de `PKCE` e escopos granulares](../../domains/software-0009/software/seguranca/oryhydra-gerenciamento-oauth2-clients-pkce-auth-methods-scopes.md)
+124. [Ory Hydra Estratégias de Access Token (`opaque` vs `jwt`) e Token Introspection (`RFC 7662`)](../../domains/software-0009/software/seguranca/oryhydra-estrategias-access-token-opaque-vs-jwt-token-introspection-rfc7662.md)
+125. [Ory Hydra Autenticação Machine-to-Machine (`M2M`): `client_credentials` (`RFC 6749`) e `jwt-bearer` (`RFC 7523`)](../../domains/software-0009/software/seguranca/oryhydra-client-credentials-rfc6749-rfc7523-jwt-bearer-m2m.md)
+126. [Ory Hydra Gerenciamento e Rotação de Chaves Criptográficas (`JWKS`): conjuntos `hydra.openid.id-token` e `hydra.jwt.access-token`](../../domains/software-0009/software/seguranca/oryhydra-jwks-gerenciamento-chaves-assimetricas-rotacao-zero-downtime.md)
+127. [Ory Hydra Logout Federado OpenID Connect: `RP-Initiated`, `Front-Channel Logout 1.0` e `Back-Channel Logout 1.0`](../../domains/software-0009/software/seguranca/oryhydra-oidc-frontchannel-backchannel-logout-revogacao-sessao.md)
+128. [Ory Hydra Segurança de `Refresh Tokens`: rotação automática a cada uso e invalidação de toda a família em caso de *Replay*](../../domains/software-0009/software/seguranca/oryhydra-deteccao-reuso-refresh-token-rotacao-mitigacao-roubo.md)
+129. [Ory Hydra em Produção: `hydra migrate sql`, limpeza de tokens expirados com `hydra janitor` e escalabilidade stateless](../../domains/software-0009/software/seguranca/oryhydra-operacao-producao-postgres-cockroachdb-migrate-janitor.md)
+130. [Ory Hydra + Ory Kratos: arquitetura combinada de Identidade (`Kratos`) e Provedor OAuth2/OIDC (`Hydra`) como substituto de Auth0/Okta](../../domains/software-0009/software/seguranca/oryhydra-integracao-ory-kratos-arquitetura-idp-completo-drop-in.md)
+
+### Ory Kratos (sistema cloud-native e headless de gerenciamento de identidades e usuários, JSON Schemas de `traits`, Self-Service Flows `Browser`/`API`, Passkeys/WebAuthn, MFA e Webhooks)
+
+131. [Ory Kratos: arquitetura API-first de gerenciamento de identidades, credenciais e fluxos de autoatendimento (*Self-Service*)](../../domains/software-0009/software/seguranca/orykratos-arquitetura-api-first-identity-user-management-cloud-native.md)
+132. [Ory Kratos Modelo de Identidade e `JSON Schema`: validação de `traits`, `credentials`, `metadata_public` e `metadata_admin`](../../domains/software-0009/software/seguranca/orykratos-modelo-identidade-json-schema-traits-metadata-public-admin.md)
+133. [Ory Kratos Self-Service Flows (`login`, `registration`, `recovery`, `verification`, `settings`): arquitetura *Headless UI Nodes* para Browser e API](../../domains/software-0009/software/seguranca/orykratos-fluxos-self-service-browser-vs-api-ui-nodes-csrf.md)
+134. [Ory Kratos Gerenciamento de Sessões (`/sessions/whoami`): validação por Cookie (`ory_kratos_session`), `X-Session-Token` e conversão para JWT](../../domains/software-0009/software/seguranca/orykratos-sessoes-whoami-cookies-session-token-caching-tokenizer.md)
+135. [Ory Kratos Multi-Factor Authentication (`AAL1` vs `AAL2`): `Passkeys`, `WebAuthn` (FIDO2), `TOTP` e `lookup_secret` (códigos de backup)](../../domains/software-0009/software/seguranca/orykratos-mfa-aal1-aal2-webauthn-passkeys-totp-lookup-secrets.md)
+136. [Ory Kratos Segurança de Credenciais `password`: hashing `Argon2id` (ou `bcrypt`), política de similaridade e checagem *Have I Been Pwned* (`k-Anonymity`)](../../domains/software-0009/software/seguranca/orykratos-seguranca-senhas-argon2id-haveibeenpwned-k-anonymity.md)
+137. [Ory Kratos Fluxos de `Recovery` e `Verification`: códigos OTP (`code`) vs `link`, `courier` SMTP/HTTP e prevenção de enumeração de contas](../../domains/software-0009/software/seguranca/orykratos-recovery-verification-one-time-codes-link-anti-enumeration.md)
+138. [Ory Kratos Actions & Webhooks (`before` / `after` hooks): interceptação e enriquecimento de fluxos com templates `Jsonnet`](../../domains/software-0009/software/seguranca/orykratos-webhooks-actions-before-after-hooks-jsonnet-sincronizacao.md)
+139. [Ory Kratos Social Sign-In e Federação OIDC: mapeamento de claims de provedores externos (`Google`, `GitHub`, `Microsoft`, `GitLab`) via `Jsonnet`](../../domains/software-0009/software/seguranca/orykratos-social-sign-in-oidc-federation-jsonnet-data-mapping.md)
+140. [Ory Kratos Migração de Identidades sem Reset de Senha (`POST /admin/identities`): importação de hashes `bcrypt`, `argon2`, `pbkdf2` e `scrypt`](../../domains/software-0009/software/seguranca/orykratos-importacao-migracao-identidades-hashes-bcrypt-argon2-pbkdf2.md)
+
+### Authelia (portal open-source de Single Sign-On e 2FA/WebAuthn acoplado a Reverse Proxies, motor de Access Control em 7 dimensões de especificidade, `bypass`/`one_factor`/`two_factor` e OIDC)
+
+141. [Authelia: arquitetura do servidor open-source de autenticação, 2FA, controle de acesso (`ForwardAuth`) e provedor OpenID Connect 1.0](../../domains/software-0009/software/seguranca/authelia-arquitetura-portal-autenticacao-autorizacao-forwardauth-oidc.md)
+142. [Authelia `access_control`: políticas `deny`, `bypass`, `one_factor` e `two_factor` e avaliação sequencial *first-match*](../../domains/software-0009/software/seguranca/authelia-access-control-policies-deny-bypass-one-factor-two-factor.md)
+143. [Authelia Critérios Granulares de Regra: `domain`, `domain_regex`, `resources`, `subject` (`AND`/`OR`), `methods` e `query`](../../domains/software-0009/software/seguranca/authelia-criterios-regras-domain-regex-resources-subject-methods-query.md)
+144. [Authelia `authelia access-control check-policy`: validação determinística de regras de autorização na linha de comando e CI/CD](../../domains/software-0009/software/seguranca/authelia-teste-politicas-cli-access-control-check-policy-ci.md)
+145. [Authelia Backends de Autenticação (`authentication_backend`): integração com `LDAP` (Active Directory / OpenLDAP / FreeIPA) e `file` (`Argon2id`)](../../domains/software-0009/software/seguranca/authelia-backends-autenticacao-ldap-active-directory-file-argon2id.md)
+146. [Authelia Segundo Fator (`2FA`): configuração de `WebAuthn` (FIDO2 / YubiKey / Passkeys), `TOTP` e notificações `Duo Push`](../../domains/software-0009/software/seguranca/authelia-mfa-webauthn-passkeys-totp-duo-push-configuracao.md)
+147. [Authelia Sessões e Persistência de Produção: `session.redis` (HA Sentinel/Cluster) e `storage.postgres` com `encryption_key`](../../domains/software-0009/software/seguranca/authelia-session-redis-sentinel-cluster-storage-postgres-encryption-key.md)
+148. [Authelia `regulation`: proteção integrada contra ataques de força bruta com `max_retries`, `find_time` e `ban_time`](../../domains/software-0009/software/seguranca/authelia-regulation-protecao-forca-bruta-max-retries-find-time-ban-time.md)
+149. [Authelia como Provedor OpenID Connect 1.0 (`identity_providers.oidc`): proteção de aplicações nativas OIDC (Grafana, Argo CD, GitLab)](../../domains/software-0009/software/seguranca/authelia-openid-connect-provider-clients-authorization-policies-pkce.md)
+150. [Authelia Gestão Segura de Segredos (`_FILE` e Templates): injeção de credenciais via arquivos Kubernetes Secrets sem expor texto claro](../../domains/software-0009/software/seguranca/authelia-gestao-segredos-variaveis-ambiente-file-filters-templates-k8s.md)
+
+### FiloSottile `age` (ferramenta, formato `age-encryption.org/v1` e biblioteca Go `filippo.io/age` para criptografia moderna de arquivos com `X25519`, `ChaCha20-Poly1305` `STREAM`, chaves SSH, `scrypt` e plugins)
+
+151. [FiloSottile `age`: arquitetura da ferramenta e formato moderno de criptografia de arquivos (`X25519`, `ChaCha20-Poly1305` e `STREAM`)](../../domains/software-0009/software/seguranca/agecrypt-arquitetura-filosottile-age-criptografia-arquivos-x25519-chacha20.md)
+152. [`age` Gerenciamento de Chaves (`age-keygen`) e Múltiplos Destinatários (`-r` e `-R recipients.txt`)](../../domains/software-0009/software/seguranca/agecrypt-chaves-nativas-age-keygen-bech32-multiplos-destinatarios-recipients-file.md)
+153. [`age` Criptografia para Chaves SSH Existentes (`ssh-ed25519` e `ssh-rsa`): envio seguro usando `~/.ssh/id_ed25519.pub` ou `github.com/<user>.keys`](../../domains/software-0009/software/seguranca/agecrypt-criptografia-chaves-ssh-ed25519-rsa-github-keys.md)
+154. [`age` Criptografia por Passphrase (`-p` / `--passphrase` com `scrypt`) e Identidades Protegidas por Senha](../../domains/software-0009/software/seguranca/agecrypt-passphrase-scrypt-protecao-chaves-identidade-em-repouso.md)
+155. [`age` ASCII Armor (`-a` / `--armor`): codificação PEM canônica estrita (`AGE ENCRYPTED FILE`) e proteção de TTY](../../domains/software-0009/software/seguranca/agecrypt-ascii-armor-pem-strict-base64-protecao-tty.md)
+156. [`age` Criptografia Simétrica para Arquivo de Identidade (`age --encrypt -i key.txt`): backups sem gerenciar chave pública separada](../../domains/software-0009/software/seguranca/agecrypt-criptografia-simetrica-com-arquivo-identidade-encrypt-i.md)
+157. [`age` Sistema de Plugins (`age-plugin-*` e `-j`): chaves em hardware com `age-plugin-yubikey`, Secure Enclave e TPM](../../domains/software-0009/software/seguranca/agecrypt-plugins-hardware-yubikey-fido2-kms-arquitetura-extensivel.md)
+158. [`age` Criptografia Pós-Quântica Híbrida e Verificação de Binários com `Sigsum`: proteção contra *Harvest Now, Decrypt Later*](../../domains/software-0009/software/seguranca/agecrypt-suporte-pos-quantico-pq-ml-kem-x25519-especificacao-c2sp.md)
+159. [`age` como Biblioteca Nativa em Go (`filippo.io/age`): `age.Encrypt`, `age.Decrypt` e `armor` em aplicações sem processos externos](../../domains/software-0009/software/seguranca/agecrypt-biblioteca-go-filippo-io-age-encrypt-decrypt-streams.md)
+160. [`age` em Pipelines GitOps e Dotfiles: integração com `SOPS` (`SOPS_AGE_KEY_FILE`), `Flux CD`, `Argo CD`, `passage` e `chezmoi`](../../domains/software-0009/software/seguranca/agecrypt-integracao-gitops-sops-flux-argocd-chezmoi-pass.md)
+
+### OWASP DefectDojo (plataforma open-source de ASPM e gestão unificada de vulnerabilidades com 500+ parsers, hierarquia `Product Type` -> `Product` -> `Engagement` -> `Test` -> `Finding`, `reimport-scan` e deduplicação)
+
+161. [OWASP DefectDojo: arquitetura da plataforma open-source de ASPM e gestão unificada de vulnerabilidades com 500+ parsers](../../domains/software-0009/software/seguranca/defectdojo-arquitetura-owasp-aspm-vulnerability-management-500-parsers.md)
+162. [DefectDojo Modelo de Dados Hierárquico: `Product Type` -> `Product` -> `Engagement` -> `Test` -> `Finding` e `Endpoint`](../../domains/software-0009/software/seguranca/defectdojo-modelo-hierarquico-product-type-product-engagement-test-finding.md)
+163. [DefectDojo `import-scan` vs `reimport-scan`: automação de pipelines CI/CD com fechamento automático de vulnerabilidades corrigidas](../../domains/software-0009/software/seguranca/defectdojo-api-v2-import-scan-vs-reimport-scan-ciclo-vida-ci-cd.md)
+164. [DefectDojo Algoritmos de Deduplicação (`HASH_CODE`, `UNIQUE_ID_FROM_TOOL`, `LEGACY`): eliminação de duplicatas intra-scanner e cross-scanner](../../domains/software-0009/software/seguranca/defectdojo-deduplicacao-algoritmos-hash-code-unique-id-from-tool.md)
+165. [DefectDojo Fluxo de Triagem e `Risk Acceptance`: estados `Active`, `Verified`, `False Positive`, `Out of Scope` e Aceite Formal de Risco](../../domains/software-0009/software/seguranca/defectdojo-triagem-findings-verified-false-positive-out-of-scope-risk-acceptance.md)
+166. [DefectDojo SLA Engine (`SLA Configuration`): prazos de remediação por severidade (`Critical`, `High`, `Medium`, `Low`) e alertas de violação](../../domains/software-0009/software/seguranca/defectdojo-sla-configuration-enforcement-severidade-notificacoes-atraso.md)
+167. [DefectDojo Integração Bidirecional com Jira: criação automática de Issues, sincronização de comentários e fechamento por resolução](../../domains/software-0009/software/seguranca/defectdojo-integracao-bidirecional-jira-sincronizacao-status-comentarios.md)
+168. [DefectDojo Arquitetura de Produção: papéis dos componentes `nginx`, `uwsgi` (Django), `celeryworker`, `celerybeat`, `postgres` e `redis`/`valkey`](../../domains/software-0009/software/seguranca/defectdojo-arquitetura-servicos-nginx-uwsgi-celery-beat-worker-postgres-redis.md)
+169. [DefectDojo Ingestão Universal: uso nativo de relatórios `SARIF` e criação de parsers customizados para ferramentas internas](../../domains/software-0009/software/seguranca/defectdojo-universal-parser-sarif-conectores-customizados-ingestao.md)
+170. [DefectDojo Governança de Acesso (`RBAC`, `Product Type Members` e `SSO` OIDC/SAML/LDAP): isolamento de visibilidade por equipe](../../domains/software-0009/software/seguranca/defectdojo-rbac-product-members-groups-sso-oidc-saml-governanca.md)
+
+### Prowler (plataforma open-source de Cloud Security Posture Management — CSPM multi-cloud para AWS, Azure, GCP, Kubernetes, M365 e GitHub, *Attack Paths* com Cartography/Neo4j, `Mutelist` e saída OCSF)
+
+171. [Prowler: arquitetura da plataforma open-source de segurança e conformidade multi-cloud (`AWS`, `Azure`, `GCP`, `Kubernetes`, `M365`, `GitHub`)](../../domains/software-0009/software/seguranca/prowler-arquitetura-open-cloud-security-platform-cspm-multi-cloud.md)
+172. [Prowler Frameworks de Conformidade (`--compliance`) e `Prowler ThreatScore`: auditoria automatizada `CIS`, `NIST`, `PCI-DSS`, `SOC2`, `ISO 27001` e `MITRE ATT&CK`](../../domains/software-0009/software/seguranca/prowler-compliance-frameworks-cis-nist-pci-dss-soc2-iso27001-nis2-ens.md)
+173. [Prowler `Attack Paths`: análise de caminhos de ataque combinando inventário `Cartography` com achados do Prowler em `Neo4j` ou `Amazon Neptune`](../../domains/software-0009/software/seguranca/prowler-attack-paths-cartography-neo4j-amazon-neptune-grafos.md)
+174. [Prowler Filtragem Granular de Execução: `--checks`, `--services`, `--severity`, `--category` e `--region` / `--excluded-checks`](../../domains/software-0009/software/seguranca/prowler-selecao-granular-checks-services-severities-categories-regions.md)
+175. [Prowler `Mutelist` (`-w` / `--mutelist-file`): gerenciamento declarativo de exceções por conta, região, check, recurso e tags](../../domains/software-0009/software/seguranca/prowler-mutelist-yaml-supressao-excecoes-accounts-regions-resources-tags.md)
+176. [Prowler para Kubernetes (`prowler kubernetes`): auditoria CIS Kubernetes Benchmark, RBAC, Pod Security e NetworkPolicies](../../domains/software-0009/software/seguranca/prowler-auditoria-kubernetes-clusters-kubeconfig-in-cluster-rbac-pss.md)
+177. [Prowler SaaS, IaC e Containers (`github`, `m365`, `googleworkspace`, `okta`, `iac`, `image`): postura unificada além da IaaS](../../domains/software-0009/software/seguranca/prowler-saas-github-m365-googleworkspace-okta-iac-containers.md)
+178. [Prowler Formatos de Saída (`json-ocsf`, `json-asff`, `html`, `csv`) e Integração Nativa com `AWS Security Hub` e `S3`](../../domains/software-0009/software/seguranca/prowler-formatos-saida-ocsf-asff-security-hub-s3-defectdojo.md)
+179. [Prowler Varreduras Multi-Conta em Escala: `AWS AssumeRole` (`-R`), `AWS Organizations` (`-O`), Subscrições Azure e Projetos GCP](../../domains/software-0009/software/seguranca/prowler-multi-account-aws-organizations-assume-role-azure-subscriptions-gcp.md)
+180. [Prowler Extensibilidade: criação de Checks Customizados (`--checks-folder`), `Check Metadata Guidelines` e servidor `Prowler MCP`](../../domains/software-0009/software/seguranca/prowler-custom-checks-python-metadata-guidelines-prowler-mcp-ai.md)
+
+### osquery (instrumentação e monitoramento de sistema operacional orientado a SQL para Linux, macOS e Windows, `osqueryi` vs `osqueryd`, logs diferenciais via RocksDB, `Query Packs`, `FIM` e `Watchdog`)
+
+181. [osquery: arquitetura do framework que expõe o sistema operacional (`Linux`, `macOS`, `Windows`) como um banco relacional SQL](../../domains/software-0009/software/seguranca/osquery-arquitetura-sistema-operacional-banco-relacional-sql-sqlite.md)
+182. [osquery `osqueryi` vs `osqueryd`: exploração interativa ad-hoc versus monitoramento contínuo agendado por daemon](../../domains/software-0009/software/seguranca/osquery-osqueryi-vs-osqueryd-shell-interativo-daemon-agendamento.md)
+183. [osquery Logs Diferenciais (`added` / `removed` via RocksDB) vs `snapshot: true`: como o `osqueryd` detecta mudanças de estado sem inundar o SIEM](../../domains/software-0009/software/seguranca/osquery-differential-logs-added-removed-vs-snapshot-queries-rocksdb.md)
+184. [osquery `Query Packs`: agrupamento modular de queries de detecção com filtros `platform`, `version`, `shard` e `discovery`](../../domains/software-0009/software/seguranca/osquery-query-packs-organizacao-modular-discovery-queries-platform-version.md)
+185. [osquery Evented Tables e File Integrity Monitoring (`FIM`): captura em tempo real via `auditd`/`ebpf`/`inotify`/`EndpointSecurity`](../../domains/software-0009/software/seguranca/osquery-evented-tables-file-integrity-monitoring-fim-process-socket-events.md)
+186. [osquery Resource Watchdog e Auto-Denylist: garantia de que o agente nunca degrade a CPU ou a memória do host de produção](../../domains/software-0009/software/seguranca/osquery-watchdog-protecao-recursos-cpu-memoria-denylist-queries.md)
+187. [osquery para Segurança de Containers e Servidores Linux: tabelas `docker_containers`, `docker_images`, `process_namespaces` e `iptables`](../../domains/software-0009/software/seguranca/osquery-auditoria-containers-docker-namespaces-systemd-linux-secops.md)
+188. [osquery Gerenciamento Centralizado de Frota (`TLS Enrollment`, `Fleet`, `osctrl` e `Zentral`): distribuição remota de configuração e Live Queries](../../domains/software-0009/software/seguranca/osquery-gerenciamento-frota-tls-enrollment-fleet-osctrl-zentral.md)
+189. [osquery + `YARA` (`yara` e `yara_events`): busca de assinaturas de malware sob demanda e acoplada ao File Integrity Monitoring](../../domains/software-0009/software/seguranca/osquery-integracao-yara-tabelas-yara-yara-events-varredura-memoria-arquivos.md)
+190. [osquery Extensions (`Thrift` API) e Logger Plugins (`filesystem`, `syslog`, `aws_kinesis`, `aws_firehose`, `kafka_producer`)](../../domains/software-0009/software/seguranca/osquery-extensoes-thrift-sdk-go-python-logger-plugins-aws-kinesis-kafka.md)
+
+### OISF Suricata (motor multi-threaded de alta performance para `IDS`, `IPS` inline e `Network Security Monitoring — NSM`, telemetria unificada `eve.json`, `suricata-update`, *Sticky Buffers*, `JA3`/`JA4` e `file-store`)
+
+191. [OISF Suricata: arquitetura multi-thread de alta performance para `IDS`, `IPS` e `Network Security Monitoring (NSM)`](../../domains/software-0009/software/seguranca/suricata-arquitetura-oisf-network-ids-ips-nsm-multithreaded.md)
+192. [Suricata `EVE JSON` (`eve.json`): telemetria unificada de alertas, fluxos (`flow`), `dns`, `http`, `tls`, `ssh`, `smb` e `fileinfo`](../../domains/software-0009/software/seguranca/suricata-eve-json-log-unificado-alert-flow-dns-http-tls-fileinfo.md)
+193. [Suricata Gerenciamento de Regras (`suricata-update`): atualização automatizada do *Emerging Threats Open (ET Open)* e tuning via `enable.conf`/`disable.conf`/`modify.conf`](../../domains/software-0009/software/seguranca/suricata-gerenciamento-regras-suricata-update-et-open-fontes.md)
+194. [Suricata Linguagem de Regras e *Sticky Buffers*: escrita de assinaturas de camada 7 (`http.uri`, `http.user_agent`, `dns.query`, `tls.sni`)](../../domains/software-0009/software/seguranca/suricata-anatomia-regras-assinaturas-sticky-buffers-http-dns-tls.md)
+195. [Suricata Inspeção de Tráfego Criptografado TLS: fingerprinting de clientes/servidores (`JA3`, `JA3S`, `JA4`), `tls.sni` e certificados X.509](../../domains/software-0009/software/seguranca/suricata-inspecao-tls-fingerprinting-ja3-ja4-sni-certificados-c2.md)
+196. [Suricata em Modo IPS Inline (`AF_PACKET` Layer 2 Bridge e `NFQUEUE`): bloqueio ativo de ataques com ações `drop` e `reject`](../../domains/software-0009/software/seguranca/suricata-modo-ips-inline-af-packet-nfqueue-acao-drop-reject.md)
+197. [Suricata File Extraction e Hashing (`file-store` v2 e `fileinfo`): cálculo de SHA-256 em tempo real e captura forense de arquivos trafegados](../../domains/software-0009/software/seguranca/suricata-file-extraction-file-store-sha256-deteccao-malware-rede.md)
+198. [Suricata Performance Multi-Gigabit (`runmode: workers`, `AF_PACKET`, `eBPF` Bypass e `Hyperscan`): eliminação de perda de pacotes (`kernel_drops`)](../../domains/software-0009/software/seguranca/suricata-tuning-performance-runmodes-workers-af-packet-ebpf-hyperscan.md)
+199. [Suricata Análise Forense de `PCAP` (`-r`) e Automação via Unix Socket (`suricatasc`): processamento em lote de capturas de tráfego](../../domains/software-0009/software/seguranca/suricata-analise-offline-pcap-replay-regressao-ci-unix-socket.md)
+200. [Suricata `Datasets`, `Thresholds`, `Suppress` e `Flowbits`: correlação de estado entre pacotes, listas dinâmicas e controle de ruído](../../domains/software-0009/software/seguranca/suricata-datasets-thresholding-suppress-rate-filter-correlacao-ioc.md)
+
 ## Critérios e próximo passo
 
-As 100 notas 1–100 da tranche 1 têm revisão factual por IA registrada no relatório vinculado. O lote continua incompleto: são 100/2.000 notas válidas, restando 1.900 notas materiais.
+As 200 notas 1–200 das tranches 1–2 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 200/2.000 notas válidas, restando 1.800 notas materiais.

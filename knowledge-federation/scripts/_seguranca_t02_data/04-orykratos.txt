@@ -1,0 +1,141 @@
+0131|orykratos-arquitetura-api-first-identity-user-management-cloud-native|Ory Kratos: arquitetura API-first de gerenciamento de identidades, credenciais e fluxos de autoatendimento (*Self-Service*)|O **Ory Kratos** (`ory/kratos`, escrito em Go e licenciado sob Apache 2.0) é um sistema **API-first** e cloud-native de gerenciamento de identidades e usuários que centraliza os fluxos mais críticos de segurança de contas — **Login**, **Registration**, **Account Recovery**, **Email/Phone Verification**, **Settings/Profile Management** e **Multi-Factor Authentication (MFA)** — expondo-os por APIs HTTP para qualquer frontend.|Reimplementar do zero em cada projeto fluxos de redefinição de senha, proteção contra enumeração de contas, rotação de sessão, TOTP e WebAuthn/Passkeys é uma das maiores fontes de vulnerabilidades de autenticação.|Assim como o Hydra, o Ory Kratos separa estritamente a **API Pública (`:4433`)** — consumida diretamente pelo navegador ou aplicativo mobile em fluxos *Self-Service* — da **API Administrativa (`:4434`)** — usada exclusivamente pelo backend para provisionar identidades (`/admin/identities`), gerenciar schemas e auditar estados.|```bash
+# Verificando a prontidão do Ory Kratos e listando os JSON Schemas de identidade configurados:
+curl -sS http://localhost:4433/health/ready
+curl -sS http://localhost:4433/schemas | jq .
+```|Nunca exponha a porta administrativa (`:4434`) do Ory Kratos para fora da rede privada do cluster, pois os endpoints `/admin/*` permitem criar, bloquear e alterar identidades sem autenticação de usuário final.|Execute `kratos version` e consulte `http://localhost:4433/health/alive`.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0132|orykratos-modelo-identidade-json-schema-traits-metadata-public-admin|Ory Kratos Modelo de Identidade e `JSON Schema`: validação de `traits`, `credentials`, `metadata_public` e `metadata_admin`|Conforme documentado na visão geral oficial *What is an identity in Ory?* (`ory.com/docs/kratos/manage-identities/overview`), toda **Identity** no Kratos é validada contra um **JSON Schema (`schema_id`)** customizável e estruturada em: **`id`** (UUID imutável), **`state`** (`active` ou `inactive`), **`traits`** (atributos mutáveis pelo usuário, como `email` e `name`), **`credentials`** (`password`, `oidc`, `totp`, `webauthn`, `passkey`), **`metadata_public`** e **`metadata_admin`**.|Bancos de usuários rígidos com colunas fixas (`first_name`, `phone`) obrigam migrações SQL a cada campo novo ou misturam dados editáveis pelo próprio usuário com atributos internos de permissão/plano.|No Kratos, você nunca armazena dados sensíveis de controle de acesso dentro de `traits` (pois o próprio usuário pode editar seus `traits` no fluxo de *Settings*)! Atributos visíveis no `/sessions/whoami` mas somente-leitura para o usuário ficam em **`metadata_public`**, e dados internos restritos ao backend ficam em **`metadata_admin`** (visíveis apenas na Admin API `:4434`).|```json
+{
+  "$id": "https://schemas.example.com/customer.v1.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer Identity",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "ory.sh/kratos": {
+            "credentials": { "password": { "identifier": true }, "webauthn": { "identifier": true } },
+            "verification": { "via": "email" },
+            "recovery": { "via": "email" }
+          }
+        }
+      },
+      "required": ["email"],
+      "additionalProperties": false
+    }
+  }
+}
+```|Use sempre `"additionalProperties": false` dentro do bloco `traits` do seu JSON Schema de identidade para impedir que usuários injetem campos arbitrários não previstos durante o cadastro ou edição de perfil.|Valide seu arquivo de schema executando `kratos validate identity-schema ./customer.schema.json` ou via endpoint `/schemas`.|https://www.ory.com/docs/kratos/manage-identities/overview;https://raw.githubusercontent.com/ory/kratos/master/README.md;https://github.com/ory/kratos
+0133|orykratos-fluxos-self-service-browser-vs-api-ui-nodes-csrf|Ory Kratos Self-Service Flows (`login`, `registration`, `recovery`, `verification`, `settings`): arquitetura *Headless UI Nodes* para Browser e API|O Ory Kratos implementa seus cinco fluxos de autoatendimento (**`login`**, **`registration`**, **`recovery`**, **`verification`** e **`settings`**) de forma 100% *headless*: quando o frontend inicia um fluxo (`/self-service/login/browser` para web com proteção CSRF por cookie ou `/self-service/login/api` para clientes nativos mobile), o Kratos retorna uma máquina de estados JSON contendo **`ui.nodes`** (os campos de formulário, botões, tokens CSRF e mensagens de erro/validação).|Mudar o método de autenticação (por exemplo, habilitar Passkeys, um novo provedor social OIDC ou exigir um campo novo no JSON Schema) atualiza automaticamente o array `ui.nodes` retornado pela API, permitindo que o frontend renderize os novos campos dinamicamente sem quebrar contratos.|Nos fluxos `/browser`, o Kratos emite e valida rigorosamente cookies `csrf_token` (`SameSite`, `HttpOnly`, `Secure`) e previne ataques de *Session Fixation* e *Open Redirect* validando qualquer parâmetro `return_to` contra a allowlist `selfservice.allowed_return_urls`.|```bash
+# Iniciando um fluxo de login para cliente nativo/API e inspecionando os ui.nodes gerados pelo Kratos:
+curl -sS -H "Accept: application/json" \
+  "http://localhost:4433/self-service/login/api" | jq '{id: .id, action: .ui.action, nodes: [.ui.nodes[].attributes.name]}'
+```|Para acelerar o desenvolvimento sem construir as telas do zero, você pode usar o **Ory Elements** (componentes UI para React/Next.js/Prebuilt UI) ou o `kratos-selfservice-ui-node` oficial.|Verifique que passar uma URL externa não listada em `allowed_return_urls` para `?return_to=...` é bloqueado pelo Kratos.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0134|orykratos-sessoes-whoami-cookies-session-token-caching-tokenizer|Ory Kratos Gerenciamento de Sessões (`/sessions/whoami`): validação por Cookie (`ory_kratos_session`), `X-Session-Token` e conversão para JWT|Para autenticar requisições nas suas aplicações e APIs, o endpoint **`GET /sessions/whoami`** do Ory Kratos valida o cookie de sessão HTTP (`ory_kratos_session` para aplicações web no mesmo domínio raiz) ou o cabeçalho `X-Session-Token` / `Authorization: Bearer <session_token>` (para clientes mobile/nativos), retornando o objeto `Session` completo com `identity`, `authenticator_assurance_level` (`aal1` ou `aal2`) e `authentication_methods`.|Se os seus microsserviços internos preferirem receber um token JWT assinado com claims específicas em vez de consultar o objeto JSON completo do Kratos, o recurso **`tokenize_as`** do `/sessions/whoami` resolve isso nativamente.|Ao chamar `GET /sessions/whoami?tokenize_as=internal_jwt_template`, o próprio Kratos aplica um template Jsonnet aos dados da sessão, assina um JWT com o conjunto de chaves configurado em `session.whoami.tokenizer.templates` e o devolve no campo `tokenized` da resposta!|```bash
+# Verificando a sessão ativa a partir do cookie ou token e inspecionando o nível de garantia (AAL):
+curl -sS -H "X-Session-Token: ${KRATOS_SESSION_TOKEN}" \
+  "http://localhost:4433/sessions/whoami" | jq '{active, aal: .authenticator_assurance_level, identity_id: .identity.id, email: .identity.traits.email}'
+```|Configure `session.lifespan` e `session.earliest_possible_extend` para renovar sessões ativas de forma controlada, e use `DELETE /admin/identities/{id}/sessions` para encerrar remotamente todas as sessões de um usuário.|Invoque `/sessions/whoami` com um token válido e confirme `"active": true`.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0135|orykratos-mfa-aal1-aal2-webauthn-passkeys-totp-lookup-secrets|Ory Kratos Multi-Factor Authentication (`AAL1` vs `AAL2`): `Passkeys`, `WebAuthn` (FIDO2), `TOTP` e `lookup_secret` (códigos de backup)|O Ory Kratos modela a força da autenticação usando **Authenticator Assurance Levels (`aal1` para fator único e `aal2` para múltiplos fatores)**, suportando nativamente **Passkeys / WebAuthn (FIDO2)** (chaves de segurança YubiKey, TouchID, FaceID, Windows Hello), **TOTP (`RFC 6238`)** (Google Authenticator, Authy, 1Password) e **Lookup Secrets** (códigos de recuperação de uso único).|Exigir 2FA apenas no momento do login inicial sem verificar o nível `authenticator_assurance_level` da sessão em rotas críticas permite que uma sessão `aal1` acesse operações sensíveis se o segundo fator foi configurado como opcional.|No `kratos.yml`, você pode definir `selfservice.flows.settings.required_aal: highest_available` (exigindo que um usuário que cadastrou 2FA apresente `aal2` antes de alterar sua senha ou e-mail) e verificar `session.authenticator_assurance_level == "aal2"` no seu middleware de backend antes de autorizar transferências ou exclusões.|```yaml
+selfservice:
+  methods:
+    passkey:
+      enabled: true
+      config:
+        rp:
+          display_name: "Portal Corporativo"
+          id: "example.com"
+          origins:
+            - "https://app.example.com"
+    totp:
+      enabled: true
+      config:
+        issuer: "ExampleCorp"
+    lookup_secret:
+      enabled: true
+```|Habilite sempre o método **`lookup_secret`** junto com `totp` ou `webauthn` para que o usuário possa gerar códigos de backup de emergência caso perca seu dispositivo autenticador.|Verifique no JSON de `/sessions/whoami` a transição de `"authenticator_assurance_level": "aal1"` para `"aal2"` após completar o desafio de segundo fator.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0136|orykratos-seguranca-senhas-argon2id-haveibeenpwned-k-anonymity|Ory Kratos Segurança de Credenciais `password`: hashing `Argon2id` (ou `bcrypt`), política de similaridade e checagem *Have I Been Pwned* (`k-Anonymity`)|No método `password` do Ory Kratos, as senhas são armazenadas com hashing **Argon2id** (ou `bcrypt`) calibrado para o hardware do servidor e validadas no momento do cadastro/alteração contra: 1) comprimento mínimo e entropia; 2) distância de edição em relação aos identificadores do usuário (impedindo usar o próprio e-mail/nome como senha); e 3) a API de senhas vazadas do **Have I Been Pwned (HIBP)** via modelo de **k-Anonymity**.|Regras antigas de complexidade ("1 letra maiúscula, 1 número e 1 símbolo") aceitam senhas como `Senha@123`, que já aparecem milhões de vezes em listas públicas de vazamentos (*credential stuffing*).|Com a proteção HIBP por *k-Anonymity* ativa no Kratos (`max_breaches: 0`), a senha em texto claro ou seu hash completo **nunca sai do seu servidor**: o Kratos calcula o hash SHA-1 da senha, envia apenas os **5 primeiros caracteres hexadecimais** para a API Pwned Passwords e verifica localmente em memória se o sufixo consta na lista retornada!|```yaml
+selfservice:
+  methods:
+    password:
+      enabled: true
+      config:
+        haveibeenpwned_enabled: true
+        max_breaches: 0
+        min_password_length: 12
+        identifier_similarity_check_enabled: true
+hashers:
+  algorithm: argon2
+  argon2:
+    memory: 128MB
+    iterations: 2
+    parallelism: 4
+```|Em ambientes totalmente desconectados da internet (*air-gapped*), você pode apontar `haveibeenpwned_host` para um espelho interno ou desativar a checagem externa mantendo `min_password_length: 12` e `identifier_similarity_check_enabled: true`.|Tente cadastrar um usuário de teste com a senha `Password123!` e confirme que o Kratos rejeita a senha por constar em vazamentos conhecidos.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0137|orykratos-recovery-verification-one-time-codes-link-anti-enumeration|Ory Kratos Fluxos de `Recovery` e `Verification`: códigos OTP (`code`) vs `link`, `courier` SMTP/HTTP e prevenção de enumeração de contas|Para recuperação de conta e verificação de endereço de e-mail/telefone, o Ory Kratos suporta duas estratégias (`use: code` ou `use: link`), despachando as mensagens de forma assíncrona pelo subsistema **`courier`** (`kratos courier watch`, via SMTP ou HTTP canalizado para provedores de e-mail/SMS).|Dois problemas frequentes quebram fluxos de recuperação baseados em links mágicos (`use: link`): 1) scanners corporativos de antivírus de e-mail (como Microsoft Defender Safe Links) fazem `GET` automático no link e consomem o token antes do usuário clicar; e 2) o usuário abre o e-mail no celular mas estava tentando fazer login no navegador do desktop.|Por isso, o Kratos recomenda a estratégia **`use: code`** (código numérico de uso único com TTL curto e limite estrito de tentativas): ela é imune a *prefetching* de scanners de e-mail e permite que o usuário leia o código no celular e digite no computador, além de nunca revelar na resposta da API se um e-mail existe ou não na base (*Account Enumeration Protection*)!|```yaml
+selfservice:
+  flows:
+    recovery:
+      enabled: true
+      use: code
+      lifespan: 15m
+    verification:
+      enabled: true
+      use: code
+      lifespan: 15m
+courier:
+  smtp:
+    connection_uri: smtps://smtp-user:secret@mail.internal:465/
+```|Em produção, execute pelo menos uma instância do worker `kratos courier watch` (ou habilite o courier em background) para processar a fila de e-mails/SMS gravada no banco pelo Kratos.|Teste solicitar recuperação para um e-mail cadastrado e para um e-mail inexistente e verifique que a resposta HTTP e a mensagem de UI são idênticas.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0138|orykratos-webhooks-actions-before-after-hooks-jsonnet-sincronizacao|Ory Kratos Actions & Webhooks (`before` / `after` hooks): interceptação e enriquecimento de fluxos com templates `Jsonnet`|O sistema de **Hooks (`before` e `after`)** do Ory Kratos permite disparar **Webhooks HTTP** (síncronos bloqueantes ou assíncronos não-bloqueantes) antes ou depois de `login`, `registration`, `recovery`, `verification` e `settings`, utilizando templates **Jsonnet** para formatar o payload enviado e até modificar os atributos da identidade a partir da resposta do webhook (`can_interrupt: true` / `parse: true`).|Frequentemente a aplicação precisa consultar um sistema antifraude/allowlist antes de permitir um novo cadastro (hook síncrono bloqueante) ou criar um registro correspondente no Stripe/CRM assim que o cadastro conclui (hook pós-registro).|Quando `response.parse: true` está habilitado em um webhook `after` de `registration`, o serviço externo pode retornar um JSON atualizado com `metadata_public` (por exemplo o `stripe_customer_id` ou `tenant_id` recém-criado), e o próprio Kratos persiste esses metadados na identidade dentro da mesma transação de fluxo!|```yaml
+selfservice:
+  flows:
+    registration:
+      after:
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://billing-service.internal/webhooks/kratos-user-created
+              method: POST
+              body: file:///etc/config/kratos/user-created.jsonnet
+              can_interrupt: false
+              response:
+                ignore: false
+                parse: true
+```|Para notificações de analytics ou marketing onde uma falha no serviço externo não deve impedir o usuário de fazer login, configure `response.ignore: true` e `can_interrupt: false` para execução assíncrona.|Verifique nos logs do Kratos e na tabela `courier_messages`/métricas o código de resposta dos webhooks disparados.|https://raw.githubusercontent.com/ory/kratos/master/README.md;https://www.ory.com/docs/kratos/manage-identities/overview;https://github.com/ory/kratos
+0139|orykratos-social-sign-in-oidc-federation-jsonnet-data-mapping|Ory Kratos Social Sign-In e Federação OIDC: mapeamento de claims de provedores externos (`Google`, `GitHub`, `Microsoft`, `GitLab`) via `Jsonnet`|No método **`oidc`** do Ory Kratos, você integra provedores externos de OpenID Connect e OAuth2 (Google, GitHub, Apple, Microsoft Entra ID, GitLab, Discord ou qualquer IdP corporativo OIDC) usando um script **`mapper_url` em Jsonnet** para transformar as claims retornadas pelo provedor externo nos `traits` e `metadata_public` do seu JSON Schema de identidade.|Cada provedor social devolve dados em formatos ligeiramente diferentes; usar um mapeador Jsonnet declarativo evita escrever código backend customizado para cada botão "Entrar com GitHub/Google".|Dentro do arquivo `.jsonnet`, a variável `std.extVar('claims')` expõe as claims validadas do `id_token` / `userinfo` do provedor (incluindo `email`, `email_verified`, `given_name`, `hd`), permitindo preencher `traits` de forma segura.|```jsonnet
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      [if 'email' in claims && claims.email_verified then 'email' else null]: claims.email,
+      name: {
+        first: if 'given_name' in claims then claims.given_name else '',
+        last: if 'family_name' in claims then claims.family_name else '',
+      },
+    },
+  },
+}
+```|Observe a verificação crítica `claims.email_verified` no exemplo Jsonnet acima: **nunca** mapeie automaticamente um e-mail de um provedor OIDC externo como verificado se `claims.email_verified` for `false`, para evitar ataques de *Account Takeover* por pré-vinculação de e-mail não verificado!|Teste o fluxo de login OIDC e inspecione os `traits` e a entrada `credentials.oidc` da identidade criada em `GET /admin/identities/{id}`.|https://www.ory.com/docs/kratos/manage-identities/overview;https://raw.githubusercontent.com/ory/kratos/master/README.md;https://github.com/ory/kratos
+0140|orykratos-importacao-migracao-identidades-hashes-bcrypt-argon2-pbkdf2|Ory Kratos Migração de Identidades sem Reset de Senha (`POST /admin/identities`): importação de hashes `bcrypt`, `argon2`, `pbkdf2` e `scrypt`|A API Administrativa do Ory Kratos (`POST /admin/identities` e importação em lote `PATCH /admin/identities`) permite migrar usuários de sistemas legados ou de outros provedores (Auth0, Okta, Firebase, Django, Devise) **importando diretamente o hash de senha existente (`hashed_password`)** nos formatos PHPass/Modular Crypt Format (`$2a$`/`$2b$` bcrypt, `$argon2id$`, `$pbkdf2-...$`, `$scrypt$`, Firebase Scrypt).|Forçar 1 milhão de usuários a redefinirem suas senhas no dia da migração de provedor de identidade derruba a conversão e sobrecarrega o suporte técnico.|Ao importar a identidade com `credentials.password.config.hashed_password` no formato original suportado, o usuário faz login normalmente com sua senha atual; e, quando o Kratos valida um hash legado (ex.: `pbkdf2` ou `bcrypt` antigo) durante o login, ele pode re-hashear transparentemente a senha para **Argon2id** atualizado no banco!|```bash
+# Importando uma identidade na Admin API (:4434) do Ory Kratos preservando seu hash bcrypt existente:
+curl -sS -X POST "http://localhost:4434/admin/identities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_id": "default",
+    "state": "active",
+    "traits": {
+      "email": "maria.silva@example.com"
+    },
+    "credentials": {
+      "password": {
+        "config": {
+          "hashed_password": "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW"
+        }
+      }
+    }
+  }'
+```|Para importar milhares de identidades rapidamente durante uma janela de migração, utilize o endpoint em lote `PATCH /admin/identities` enviando até centenas de objetos por chamada.|Verifique a identidade importada com `kratos get identity <id>` e teste autenticar com a senha correspondente ao hash importado.|https://www.ory.com/docs/kratos/manage-identities/overview;https://raw.githubusercontent.com/ory/kratos/master/README.md;https://github.com/ory/kratos
