@@ -4,19 +4,19 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — DevOps, GitOps, IaC, observabilidade e runtimes cloud-native
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **200 / 2.000 (10,00%)**
-- Gate automatizado: **200/200 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 2)
-- Revisão factual humana: **0/200**
-- Revisão factual por IA: **200/200**
-- Contabilizadas como válidas: **200/200**
-- Revisor das 200 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–2 (200 notas, IDs 1–200) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **300 / 2.000 (15,00%)**
+- Gate automatizado: **300/300 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 3)
+- Revisão factual humana: **0/300**
+- Revisão factual por IA: **300/300**
+- Contabilizadas como válidas: **300/300**
+- Revisor das 300 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–3 (300 notas, IDs 1–300) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-devops-2000-0002.md`](../reports/note-quality-software-devops-2000-0002.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-02.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-02.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-devops-2000-0002-tranche-03.md`](../reports/batch-reconciliation-software-devops-2000-0002-tranche-03.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-devops-2000-0002-tranche-01.md), [`tranche 2`](../reports/ai-review-software-devops-2000-0002-tranche-02.md), [`tranche 3`](../reports/ai-review-software-devops-2000-0002-tranche-03.md)
 - Navegação: [`MOC-DevOps-Software-0008.md`](../../00-home-vault/MOCs/MOC-DevOps-Software-0008.md)
 
-> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 200 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1800 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste segundo lote de escala, não a quantidade já criada. Existem 300 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 1700 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — OpenTelemetry Collector, Argo CD, Helm, OpenTofu, Ansible, Flux v2, Kustomize, containerd, Jaeger e Tekton Pipelines (100 notas; revisão factual por IA registrada)
 
@@ -282,6 +282,138 @@
 199. [Catálogo oficial de exemplos no repositório e guia de contribuição](../../domains/software-0008/software/devops/skaffold-examples-catalog-and-contribution-guide.md)
 200. [Processo de divulgação de segurança (SECURITY.md), avisos no GitHub e canais da comunidade](../../domains/software-0008/software/devops/skaffold-security-disclosures-and-community-channels.md)
 
+## Tranche 3 — cert-manager, ExternalDNS, Kyverno, OPA Gatekeeper, Falco, KEDA, Karpenter, Envoy Proxy, CoreDNS e etcd (100 notas; revisão factual por IA registrada)
+
+### cert-manager — certificados X.509 e emissores nativos como recursos do Kubernetes
+
+201. [Certificados e emissores de certificados como recursos nativos do Kubernetes](../../domains/software-0008/software/devops/certmanager-x509-certificates-and-issuers-resources.md)
+202. [Fontes de emissão suportadas: Let's Encrypt (ACME), HashiCorp Vault, CyberArk e emissão local](../../domains/software-0008/software/devops/certmanager-acme-vault-cyberark-and-in-cluster-sources.md)
+203. [Renovação automática antes da expiração para reduzir indisponibilidades e trabalho manual](../../domains/software-0008/software/devops/certmanager-automated-renewal-before-expiry.md)
+204. [Guias oficiais para emissão automática de TLS em Ingress (nginx-ingress) e primeiro certificado](../../domains/software-0008/software/devops/certmanager-nginx-ingress-and-getting-started-guides.md)
+205. [Requisitos de build em Linux e macOS e convenções de código para contribuidores](../../domains/software-0008/software/devops/certmanager-linux-macos-development-and-coding-conventions.md)
+206. [Ausência de garantia de compatibilidade como módulo Go em pkg/ versus estabilidade de APIs Kubernetes](../../domains/software-0008/software/devops/certmanager-go-module-no-compatibility-guarantee.md)
+207. [Transição do caminho de importação Go na versão 1.8: jetstack para cert-manager](../../domains/software-0008/software/devops/certmanager-go-import-path-v1-8-transition.md)
+208. [Fluxo de troubleshooting oficial e canais #cert-manager e #cert-manager-dev no Slack](../../domains/software-0008/software/devops/certmanager-troubleshooting-and-slack-channels.md)
+209. [Relato de vulnerabilidades em SECURITY.md, grupo cert-manager-dev e reuniões públicas](../../domains/software-0008/software/devops/certmanager-security-reporting-and-community-governance.md)
+210. [Origem histórica do projeto: evolução a partir do kube-lego e do kube-cert-manager](../../domains/software-0008/software/devops/certmanager-history-kube-lego-and-kube-cert-manager.md)
+
+### ExternalDNS — sincronização agnóstica de Services e Ingresses do Kubernetes com provedores DNS
+
+211. [Sincronização declarativa e agnóstica de recursos Kubernetes com provedores DNS](../../domains/software-0008/software/devops/externaldns-provider-agnostic-kubernetes-dns-sync.md)
+212. [Isolamento seguro de zonas não vazias com --domain-filter e --txt-owner-id](../../domains/software-0008/software/devops/externaldns-domain-filter-and-txt-owner-id-safety.md)
+213. [Validação prévia com --dry-run e --once e configuração por variáveis EXTERNAL_DNS_*](../../domains/software-0008/software/devops/externaldns-dry-run-once-and-environment-variables.md)
+214. [Anotações external-dns.kubernetes.io/hostname e external-dns.kubernetes.io/ttl em Services](../../domains/software-0008/software/devops/externaldns-hostname-and-ttl-service-annotations.md)
+215. [Registros DNS apontando para ClusterIP com internal-hostname e --publish-internal-services](../../domains/software-0008/software/devops/externaldns-internal-hostname-and-publish-internal-services.md)
+216. [Políticas de ciclo de vida de registros: --policy=sync versus --policy=upsert-only](../../domains/software-0008/software/devops/externaldns-policy-sync-versus-upsert-only.md)
+217. [Uso obrigatório de --txt-prefix com registros CNAME e risco de perda de propriedade](../../domains/software-0008/software/devops/externaldns-txt-prefix-cname-conflict-prevention.md)
+218. [Precedência da lista externalIPs em clusters bare-metal atrás de NAT ou com MetalLB](../../domains/software-0008/software/devops/externaldns-external-ips-bare-metal-nat-metallb.md)
+219. [Arquitetura de provedores via Webhook (PR 3063) e fim de novos provedores in-tree](../../domains/software-0008/software/devops/externaldns-webhook-provider-architecture-pr3063.md)
+220. [Verificação prática de resolução com dig +short e escopo de namespaces no FAQ](../../domains/software-0008/software/devops/externaldns-verification-with-dig-and-faq-namespaces.md)
+
+### Kyverno — motor de políticas nativo para Kubernetes, admissão, mutação, geração e segurança da cadeia de suprimentos
+
+221. [Motor de políticas nativo para Kubernetes sem exigir linguagem de programação nova](../../domains/software-0008/software/devops/kyverno-kubernetes-native-policy-engine-overview.md)
+222. [As cinco ações do Kyverno: validar, mutar, gerar, limpar recursos e verificar assinaturas de imagens](../../domains/software-0008/software/devops/kyverno-validate-mutate-generate-cleanup-and-image-verify.md)
+223. [Limites formais (Non-Goals): vulnerabilidades do API Server e manutenção ativa de políticas](../../domains/software-0008/software/devops/kyverno-non-goals-api-server-flaws-and-explicit-policies.md)
+224. [Complementaridade do Kyverno com o RBAC do Kubernetes e com Validating/MutatingAdmissionPolicies](../../domains/software-0008/software/devops/kyverno-complementarity-with-rbac-and-native-admission-policies.md)
+225. [Ecossistema de projetos companheiros: Chainsaw, Policy Reporter, Kyverno JSON e Kyverno Envoy Plugin](../../domains/software-0008/software/devops/kyverno-companion-projects-chainsaw-reporter-json-envoy.md)
+226. [Casos de uso de Segurança e Conformidade: Pod Security Standards, contextos de segurança e CIS Benchmarks](../../domains/software-0008/software/devops/kyverno-security-compliance-pod-security-and-cis.md)
+227. [Excelência operacional e guardrails para desenvolvedores: auto-labeling, NetworkPolicies e probes](../../domains/software-0008/software/devops/kyverno-operational-excellence-and-developer-guardrails.md)
+228. [Otimização de custos no cluster: quotas, labels de alocação, tipos de instância e limpeza de recursos](../../domains/software-0008/software/devops/kyverno-cost-optimization-quotas-labels-and-cleanup.md)
+229. [Biblioteca oficial de políticas prontas para produção e Kyverno Playground](../../domains/software-0008/software/devops/kyverno-policy-library-and-interactive-playground.md)
+230. [SBOM em formato CycloneDX (ghcr.io/kyverno/sbom), SLSA 3 e política de uso de IA em contribuições](../../domains/software-0008/software/devops/kyverno-cyclonedx-sbom-slsa3-and-ai-usage-policy.md)
+
+### OPA Gatekeeper — controle de admissão e auditoria no Kubernetes com Constraint Framework e Rego
+
+231. [Diferenças arquiteturais do Gatekeeper em relação ao OPA clássico com sidecar kube-mgmt](../../domains/software-0008/software/devops/gatekeeper-evolution-beyond-opa-kube-mgmt-sidecar.md)
+232. [Uso do OPA Constraint Framework para validação na admissão, auditoria e mutação](../../domains/software-0008/software/devops/gatekeeper-opa-constraint-framework-and-targets.md)
+233. [Estrutura do ConstraintTemplate (`templates.gatekeeper.sh/v1`): esquema openAPIV3Schema e código Rego](../../domains/software-0008/software/devops/gatekeeper-constrainttemplate-openapi-schema-and-rego.md)
+234. [Instanciação declarativa de Constraints (`constraints.gatekeeper.sh/v1beta1`) e inspeção com kubectl get constraints](../../domains/software-0008/software/devops/gatekeeper-constraint-instantiation-and-listing.md)
+235. [Os sete seletores do campo match e suporte a globs baseados em prefixo](../../domains/software-0008/software/devops/gatekeeper-match-field-selectors-and-glob-support.md)
+236. [Armadilha de escopo: match vazio (inclusivo para tudo) e impacto sobre recursos Cluster-scoped](../../domains/software-0008/software/devops/gatekeeper-empty-matcher-and-cluster-scoped-gotcha.md)
+237. [Validação de tipos de spec.parameters pelo API Server e objeto input.review no Rego](../../domains/software-0008/software/devops/gatekeeper-parameters-validation-and-input-review.md)
+238. [Modos de ação em violações (`enforcementAction`): deny, dryrun e warn](../../domains/software-0008/software/devops/gatekeeper-enforcement-action-deny-dryrun-warn.md)
+239. [Biblioteca oficial Gatekeeper Policy Library e suporte a dados externos](../../domains/software-0008/software/devops/gatekeeper-policy-library-and-external-data.md)
+240. [Governança sob o Código de Conduta da CNCF, processo de segurança e versão do motor OPA](../../domains/software-0008/software/devops/gatekeeper-cncf-governance-security-and-opa-version.md)
+
+### Falco — segurança em tempo de execução (runtime security) no kernel Linux e detecção de ameaças na CNCF
+
+241. [Detecção de comportamento anormal em tempo real no kernel Linux graduada na CNCF](../../domains/software-0008/software/devops/falco-cloud-native-linux-runtime-security-overview.md)
+242. [Observação de syscalls no kernel enriquecida com metadados de container runtime e Kubernetes](../../domains/software-0008/software/devops/falco-syscall-monitoring-and-kubernetes-metadata-enrichment.md)
+243. [Arquitetura modular da organização falcosecurity: libs, rules, plugins, falcoctl e charts](../../domains/software-0008/software/devops/falco-five-core-repositories-modular-ecosystem.md)
+244. [Extensão além de syscalls com falcosecurity/plugins e gerenciamento via falcoctl](../../domains/software-0008/software/devops/falco-plugins-beyond-syscalls-and-falcoctl-management.md)
+245. [Recomendações oficiais antes do deploy em produção: compatibilidade, metas, performance e SIEM](../../domains/software-0008/software/devops/falco-production-deployment-checklist-and-setup.md)
+246. [Ambiente de demonstração com Docker Compose: Falco, Falcosidekick, Falcosidekick-UI e Redis](../../domains/software-0008/software/devops/falco-demo-environment-falcosidekick-ui-and-redis.md)
+247. [Compilação a partir do código-fonte com CMake, driver Modern BPF (`BUILD_FALCO_MODERN_BPF`) e testes](../../domains/software-0008/software/devops/falco-cmake-modern-bpf-build-and-unit-tests.md)
+248. [Auditorias independentes em ./audits/ e relato de vulnerabilidades em falco e libs](../../domains/software-0008/software/devops/falco-security-audits-and-vulnerability-reporting.md)
+249. [Motivação arquitetural do uso de C++ no motor do Falco e nas bibliotecas de captura](../../domains/software-0008/software/devops/falco-cpp-architecture-and-performance-rationale.md)
+250. [Comunidade no Slack #falco, lista cncf-falco-dev e governança em falcosecurity/evolution](../../domains/software-0008/software/devops/falco-community-channels-and-evolution-governance.md)
+
+### KEDA — escalonamento automático orientado a eventos (inclusive até zero) para cargas no Kubernetes
+
+251. [Escalonamento automático fino orientado a eventos — inclusive para e a partir de zero — graduado na CNCF](../../domains/software-0008/software/devops/keda-event-driven-autoscaling-and-scale-to-zero.md)
+252. [Integração nativa com o Horizontal Pod Autoscaler na nuvem ou na borda sem dependências externas](../../domains/software-0008/software/devops/keda-hpa-native-integration-cloud-and-edge.md)
+253. [Exemplos oficiais de QuickStart: RabbitMQ, Azure Functions, Kafka e ScaledJob](../../domains/software-0008/software/devops/keda-quickstarts-rabbitmq-azure-kafka-and-scaledjob.md)
+254. [Métodos oficiais de implantação do KEDA: Helm, Operator Hub e manifestos YAML](../../domains/software-0008/software/devops/keda-deployment-methods-helm-operatorhub-and-yaml.md)
+255. [Construção sobre o Operator SDK, dev containers e variáveis GOPROXY e GOSUMDB](../../domains/software-0008/software/devops/keda-operator-sdk-build-and-goproxy-gosumdb.md)
+256. [Execução local do operador fora do cluster, geração de certificados em /certs e --zap-log-level](../../domains/software-0008/software/devops/keda-local-operator-outside-cluster-and-certs.md)
+257. [Publicação de imagens customizadas (IMAGE_REGISTRY e IMAGE_REPO) e verificação dos pods do KEDA](../../domains/software-0008/software/devops/keda-custom-images-publish-and-pod-log-verification.md)
+258. [Pontos de entrada em Go: cmd/operator/main.go e cmd/adapter/main.go](../../domains/software-0008/software/devops/keda-architecture-entrypoints-operator-and-metrics-adapter.md)
+259. [Workflows de build principal e testes end-to-end noturnos (TESTING.md)](../../domains/software-0008/software/devops/keda-ci-workflows-and-testing-strategy.md)
+260. [Governança em kedacore/governance, política de suporte em keda.sh/support e ROADMAP.md](../../domains/software-0008/software/devops/keda-governance-support-policy-and-roadmap.md)
+
+### Karpenter — provisionamento e consolidação de nós Kubernetes orientados a pods não agendáveis
+
+261. [Ciclo de quatro etapas do Karpenter: Watching, Evaluating, Provisioning e Removing](../../domains/software-0008/software/devops/karpenter-four-step-node-lifecycle-optimization.md)
+262. [Avaliação conjunta das cinco restrições de agendamento de pods pelo Karpenter](../../domains/software-0008/software/devops/karpenter-evaluating-five-pod-scheduling-constraints.md)
+263. [Provisionamento sem grupos de nós (Groupless Autoscaling) e consolidação de cargas](../../domains/software-0008/software/devops/karpenter-groupless-provisioning-versus-cluster-autoscaler.md)
+264. [Arquitetura multi-cloud e as 16 implementações de provedores de nuvem e infraestrutura](../../domains/software-0008/software/devops/karpenter-multi-cloud-provider-implementations.md)
+265. [Distinção entre implementações oficiais e comunitárias em provedores como OCI e UpCloud](../../domains/software-0008/software/devops/karpenter-oci-and-upcloud-dual-provider-variants.md)
+266. [Extensão do Karpenter para ambientes híbridos e on-premises com Cluster API e Proxmox](../../domains/software-0008/software/devops/karpenter-cluster-api-and-proxmox-hybrid-providers.md)
+267. [Automação de atualizações de nós do cluster sem indisponibilidade (Zero Downtime Updates)](../../domains/software-0008/software/devops/karpenter-zero-downtime-node-updates-and-drift.md)
+268. [Canais de suporte e design no Slack do Kubernetes: #karpenter versus #karpenter-dev](../../domains/software-0008/software/devops/karpenter-slack-channels-users-versus-developers.md)
+269. [Calendário de reuniões do Working Group (quintas) e Issue Triage (segundas) em dois repositórios](../../domains/software-0008/software/devops/karpenter-working-group-and-issue-triage-meetings.md)
+270. [Guia de contribuição, issues para iniciantes e Código de Conduta do Kubernetes](../../domains/software-0008/software/devops/karpenter-contributing-guide-and-code-of-conduct.md)
+
+### Envoy Proxy — proxy de borda, intermediário e de serviço em C++ moderno para arquiteturas cloud-native
+
+271. [Definição do Envoy como proxy cloud-native de alta performance para borda, meio e malha de serviços](../../domains/software-0008/software/devops/envoy-cloud-native-edge-middle-service-proxy.md)
+272. [Pilares arquiteturais documentados no README: threading model, hot restart, stats e universal data plane API](../../domains/software-0008/software/devops/envoy-core-architecture-threading-hot-restart-stats-xds.md)
+273. [Repositórios relacionados: data-plane-api, envoy-perf e envoy-filter-example](../../domains/software-0008/software/devops/envoy-related-repositories-dataplane-api-perf-and-filters.md)
+274. [Cinco listas de comunicação oficial e política de resposta no Slack versus envoy-users](../../domains/software-0008/software/devops/envoy-mailing-lists-and-slack-best-effort-policy.md)
+275. [Desenvolvimento em C++ moderno, quick start de build/teste via Docker (ci/) e toolchain de suporte](../../domains/software-0008/software/devops/envoy-modern-cpp-contributing-and-docker-ci-quickstart.md)
+276. [Reuniões comunitárias duas vezes por mês e regra de cancelamento em 24h sem pauta confirmada](../../domains/software-0008/software/devops/envoy-community-meeting-agenda-cancellation-rule.md)
+277. [Auditorias de segurança independentes: Cure53 (2018) e Ada Logics sobre fuzzing (2021)](../../domains/software-0008/software/devops/envoy-third-party-security-audits-cure53-and-adalogics.md)
+278. [Canal preferencial de relato de vulnerabilidades via GitHub Security Advisory e SECURITY.md](../../domains/software-0008/software/devops/envoy-vulnerability-reporting-and-security-release-process.md)
+279. [Integração contínua com OSS-Fuzz e exclusão da arquitetura ppc64le da política de segurança](../../domains/software-0008/software/devops/envoy-oss-fuzzing-and-ppc64le-security-policy-exclusion.md)
+280. [Processo formal de lançamento e governança de versões em RELEASES.md](../../domains/software-0008/software/devops/envoy-release-process-and-lifecycle-governance.md)
+
+### CoreDNS — servidor e encaminhador DNS em Go baseado em cadeia de plugins graduado na CNCF
+
+281. [Servidor e encaminhador DNS em Go baseado em cadeia de plugins graduado na CNCF](../../domains/software-0008/software/devops/coredns-plugin-chained-dns-server-cncf-graduated.md)
+282. [Protocolos de transporte DNS suportados: UDP/TCP, DoT (RFC 7858), DoH (RFC 8484), DoH3, DoQ (RFC 9250) e gRPC](../../domains/software-0008/software/devops/coredns-transport-protocols-dot-doh-doh3-doq-grpc.md)
+283. [Plugins de autoridade e transferência de zonas: file, auto, secondary (AXFR), dnssec, transfer e loadbalance](../../domains/software-0008/software/devops/coredns-zone-serving-dnssec-axfr-and-loadbalance.md)
+284. [Plugins de backend e integração cloud-native: kubernetes, etcd (substituindo SkyDNS), route53, forward e cache](../../domains/software-0008/software/devops/coredns-kubernetes-etcd-route53-and-forward-backends.md)
+285. [Plugins de observabilidade, diagnóstico e manipulação: prometheus, log, errors, pprof, rewrite, template, any e dns64](../../domains/software-0008/software/devops/coredns-observability-security-and-query-manipulation-plugins.md)
+286. [Compilação a partir do código-fonte (Go 1.26.0+), variável COREDNS_PLUGINS e build via Docker](../../domains/software-0008/software/devops/coredns-source-and-docker-compilation-coredns-plugins-env.md)
+287. [Logging operacional estruturado em JSON com -log-format=json e campos time, level, msg e plugin](../../domains/software-0008/software/devops/coredns-json-logging-format-and-structured-fields.md)
+288. [Comportamento padrão sem Corefile (plugins whoami e log na porta 53) e substituição com -dns.port](../../domains/software-0008/software/devops/coredns-default-whoami-behavior-and-dns-port-override.md)
+289. [Diretiva import com globs e expansão de variáveis {$VARIABLE} como token único no Corefile](../../domains/software-0008/software/devops/coredns-corefile-import-globs-and-env-var-single-token.md)
+290. [Verificação contínua com CodeQL, Go Tests, CircleCI e OpenSSF Best Practices](../../domains/software-0008/software/devops/coredns-security-scorecard-and-codeql-verification.md)
+
+### etcd — banco de chave-valor distribuído e consistente via consenso Raft para sistemas críticos
+
+291. [Banco chave-valor distribuído baseado em Raft e os quatro pilares: Simple, Secure, Fast e Reliable](../../domains/software-0008/software/devops/etcd-distributed-raft-key-value-store-pillars.md)
+292. [Uso em produção pelo Kubernetes e garantia de confiabilidade com testes de robustez (tests/robustness)](../../domains/software-0008/software/devops/etcd-kubernetes-state-store-and-robustness-testing.md)
+293. [Os sete pacotes Go v3 fundamentais do etcd e instalação do cliente go.etcd.io/etcd/client/v3](../../domains/software-0008/software/devops/etcd-v3-go-packages-and-client-library.md)
+294. [Portas TCP oficiais registradas na IANA: 2379 para clientes e 2380 para comunicação entre pares](../../domains/software-0008/software/devops/etcd-official-iana-tcp-ports-2379-and-2380.md)
+295. [Cluster local de 3 membros (infra1, infra2, infra3), grpc-proxy e nó learner com goreman e Procfile](../../domains/software-0008/software/devops/etcd-local-multi-member-cluster-goreman-procfile-and-learner.md)
+296. [Guias operacionais essenciais: clustering multi-máquina, configuração, segurança TLS e tuning](../../domains/software-0008/software/devops/etcd-operational-guides-clustering-security-and-tuning.md)
+297. [Binários pré-compilados multi-plataforma (macOS, Linux, Windows e Docker) e cliente etcdctl](../../domains/software-0008/software/devops/etcd-prebuilt-releases-and-etcdctl-cli.md)
+298. [Cultura de manutenção em OWNERS e responsabilidades em community-membership.md](../../domains/software-0008/software/devops/etcd-maintainers-culture-and-community-membership.md)
+299. [Reuniões semanais às quintas-feiras (11:00 AM PT) alternando comunidade e triagem de issues](../../domains/software-0008/software/devops/etcd-weekly-thursday-meetings-and-issue-triage.md)
+300. [Verificação contínua no repositório: workflows de testes, Codecov, CodeQL e OpenSSF Scorecard](../../domains/software-0008/software/devops/etcd-ci-verification-codeql-coverage-and-scorecard.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 200 notas 1–200 das tranches 1–2 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 200/2.000 notas válidas, restando 1800 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As 300 notas 1–300 das tranches 1–3 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 300/2.000 notas válidas, restando 1700 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
