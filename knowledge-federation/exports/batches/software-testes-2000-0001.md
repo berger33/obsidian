@@ -4,21 +4,21 @@
 - Última atualização: 2026-10-03
 - Escopo: engenharia de software — testes e qualidade
 - Tamanho-alvo solicitado: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1257 / 2.000 (62,85%)**
-- Gate automatizado: **1257/1257 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
+- Notas efetivamente redigidas até agora: **1358 / 2.000 (67,90%)**
+- Gate automatizado: **1358/1358 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 19)
 - Correção editorial tranche 11: removida prosa genérica repetida nos 100 itens; conteúdo específico comparado novamente, sem alteração das aprovações humanas nem das afirmações por nota. Detalhes na reconciliação.
-- Revisão factual humana: **9/1257**
-- Revisão factual por IA: **1248/1257**
-- Contabilizadas como válidas: **1257/1257**
+- Revisão factual humana: **9/1358**
+- Revisão factual por IA: **1349/1358**
+- Contabilizadas como válidas: **1358/1358**
 - Revisor das nove notas aprovadas humanamente: `usuario-da-sessao` (confirmação explícita; nome nominal não informado)
-- Revisor das 1248 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–18 (1248 notas, IDs 10–1257) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Revisor das 1349 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranche 1 (9 notas) preserva aprovação humana; tranches 2–19 (1349 notas, IDs 10–1358) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - Auditoria reproduzível do gate e links: [`note-quality-software-testes-2000-0001.md`](../reports/note-quality-software-testes-2000-0001.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-18.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-18.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
-- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-testes-2000-0001-tranche-19.md`](../reports/batch-reconciliation-software-testes-2000-0001-tranche-19.md); consulte a [tranche 12](../reports/batch-reconciliation-software-testes-2000-0001-tranche-12.md) e a [tranche 11](../reports/batch-reconciliation-software-testes-2000-0001-tranche-11.md).
+- Relatórios factuais por IA: [`tranches 2–3`](../reports/ai-review-software-testes-2000-0001.md), [`tranche 4`](../reports/ai-review-software-testes-2000-0001-tranche-04.md), [`tranche 5`](../reports/ai-review-software-testes-2000-0001-tranche-05.md), [`tranche 6`](../reports/ai-review-software-testes-2000-0001-tranche-06.md), [`tranche 7`](../reports/ai-review-software-testes-2000-0001-tranche-07.md), [`tranche 8`](../reports/ai-review-software-testes-2000-0001-tranche-08.md), [`tranche 9`](../reports/ai-review-software-testes-2000-0001-tranche-09.md) e [`tranche 10`](../reports/ai-review-software-testes-2000-0001-tranche-10.md), [`tranche 11`](../reports/ai-review-software-testes-2000-0001-tranche-11.md) e [`tranche 12`](../reports/ai-review-software-testes-2000-0001-tranche-12.md), [`tranche 13`](../reports/ai-review-software-testes-2000-0001-tranche-13.md), [`tranche 14`](../reports/ai-review-software-testes-2000-0001-tranche-14.md), [`tranche 15`](../reports/ai-review-software-testes-2000-0001-tranche-15.md), [`tranche 16`](../reports/ai-review-software-testes-2000-0001-tranche-16.md), [`tranche 17`](../reports/ai-review-software-testes-2000-0001-tranche-17.md), [`tranche 18`](../reports/ai-review-software-testes-2000-0001-tranche-18.md), [`tranche 19`](../reports/ai-review-software-testes-2000-0001-tranche-19.md)
 - Navegação: [`MOC-Testes-Software-0007.md`](../../00-home-vault/MOCs/MOC-Testes-Software-0007.md)
 
-> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1257 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 743 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
+> **Contagem literal:** 2.000 é a meta deste lote, não a quantidade já criada. Existem 1358 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 642 restantes. A contagem válida só avança com conteúdo substantivo, fontes específicas, gate aprovado e revisão factual humana ou por IA registrada separadamente.
 
 ## Tranche 1 — fundamentos e técnicas (9 notas; aprovada pelo usuário)
 
@@ -1593,6 +1593,139 @@
 1256. [Allure: publicar o relatório no pipeline](../../domains/software-0007/software/testes/allure-ci-publication.md)
 1257. [Allure: reconhecer limites do relatório](../../domains/software-0007/software/testes/allure-limits-and-practices.md)
 
+## Tranche 19 — frameworks de sistema, virtualização de serviços, nuvem local, infraestrutura e análise de arquitetura (101 notas; revisão factual por IA registrada)
+
+### Catch2 — casos de teste, seções, asserções, geradores e relatórios em C++
+
+1258. [Catch2: estruturar casos de teste](../../domains/software-0007/software/testes/catch2-test-case-basics.md)
+1259. [Catch2: escolher entre asserção fatal e não fatal](../../domains/software-0007/software/testes/catch2-assertions.md)
+1260. [Catch2: compartilhar preparação com seções](../../domains/software-0007/software/testes/catch2-sections.md)
+1261. [Catch2: usar fixtures para estado compartilhado](../../domains/software-0007/software/testes/catch2-test-fixtures.md)
+1262. [Catch2: gerar dados de entrada](../../domains/software-0007/software/testes/catch2-generators.md)
+1263. [Catch2: usar correspondências expressivas](../../domains/software-0007/software/testes/catch2-matchers.md)
+1264. [Catch2: comparar números de ponto flutuante](../../domains/software-0007/software/testes/catch2-floating-point.md)
+1265. [Catch2: escolher e combinar relatórios](../../domains/software-0007/software/testes/catch2-reporters.md)
+1266. [Catch2: selecionar e repetir execuções](../../domains/software-0007/software/testes/catch2-command-line.md)
+1267. [Catch2: integrar ao build e reconhecer limites](../../domains/software-0007/software/testes/catch2-integration-limits.md)
+
+### TestCafe — fixtures, seletores, ações, asserções e papéis no navegador
+
+1268. [TestCafe: organizar fixtures e casos](../../domains/software-0007/software/testes/testcafe-fixtures-and-tests.md)
+1269. [TestCafe: localizar elementos com seletores](../../domains/software-0007/software/testes/testcafe-selectors.md)
+1270. [TestCafe: verificar valores com espera integrada](../../domains/software-0007/software/testes/testcafe-assertions.md)
+1271. [TestCafe: encadear ações no controlador](../../domains/software-0007/software/testes/testcafe-actions.md)
+1272. [TestCafe: reaproveitar autenticação com papéis](../../domains/software-0007/software/testes/testcafe-roles.md)
+1273. [TestCafe: executar código no contexto da página](../../domains/software-0007/software/testes/testcafe-client-functions.md)
+1274. [TestCafe: controlar requisições com ganchos](../../domains/software-0007/software/testes/testcafe-request-hooks.md)
+1275. [TestCafe: distribuir execução e escolher navegadores](../../domains/software-0007/software/testes/testcafe-parallelism-and-browsers.md)
+1276. [TestCafe: depurar falhas e registrar evidências](../../domains/software-0007/software/testes/testcafe-debugging-and-artifacts.md)
+1277. [TestCafe: reconhecer limites e boas práticas](../../domains/software-0007/software/testes/testcafe-limits-and-practices.md)
+
+### Mountebank — impostores, stubs, predicados, proxies e comportamento
+
+1278. [Mountebank: criar serviços virtuais com impostores](../../domains/software-0007/software/testes/mountebank-imposters.md)
+1279. [Mountebank: compor stubs com respostas](../../domains/software-0007/software/testes/mountebank-stubs.md)
+1280. [Mountebank: decidir a correspondência com predicados](../../domains/software-0007/software/testes/mountebank-predicates.md)
+1281. [Mountebank: gravar e reproduzir com proxies](../../domains/software-0007/software/testes/mountebank-proxies.md)
+1282. [Mountebank: ajustar respostas com comportamentos](../../domains/software-0007/software/testes/mountebank-behaviors.md)
+1283. [Mountebank: calcular respostas com injeção](../../domains/software-0007/software/testes/mountebank-injection.md)
+1284. [Mountebank: inspecionar requisições recebidas](../../domains/software-0007/software/testes/mountebank-recorded-requests.md)
+1285. [Mountebank: manter impostores em arquivo](../../domains/software-0007/software/testes/mountebank-file-based-setup.md)
+1286. [Mountebank: integrar ao pipeline](../../domains/software-0007/software/testes/mountebank-ci-integration.md)
+1287. [Mountebank: reconhecer limites](../../domains/software-0007/software/testes/mountebank-limits-and-practices.md)
+
+### LocalStack — emulação de serviços de nuvem, ganchos de inicialização e testes
+
+1288. [LocalStack: emular serviços de nuvem localmente](../../domains/software-0007/software/testes/localstack-service-emulation.md)
+1289. [LocalStack: preparar recursos com ganchos de inicialização](../../domains/software-0007/software/testes/localstack-init-hooks.md)
+1290. [LocalStack: diagnosticar ganchos que não executam](../../domains/software-0007/software/testes/localstack-init-troubleshooting.md)
+1291. [LocalStack: executar com composição de contêineres](../../domains/software-0007/software/testes/localstack-docker-compose.md)
+1292. [LocalStack: escolher entre estado limpo e persistente](../../domains/software-0007/software/testes/localstack-persistence.md)
+1293. [LocalStack: subir o ambiente dentro do teste](../../domains/software-0007/software/testes/localstack-testcontainers.md)
+1294. [LocalStack: usar configuração de infraestrutura como preparação](../../domains/software-0007/software/testes/localstack-terraform-hooks.md)
+1295. [LocalStack: operar com ferramentas de linha de comando](../../domains/software-0007/software/testes/localstack-aws-cli-and-tools.md)
+1296. [LocalStack: usar na esteira de integração](../../domains/software-0007/software/testes/localstack-ci-integration.md)
+1297. [LocalStack: reconhecer limites da emulação](../../domains/software-0007/software/testes/localstack-limits-and-practices.md)
+
+### Terratest — testes de infraestrutura, destruição, repetição e estágios
+
+1298. [Terratest: estruturar um teste de infraestrutura](../../domains/software-0007/software/testes/terratest-basic-test.md)
+1299. [Terratest: garantir a destruição dos recursos](../../domains/software-0007/software/testes/terratest-destroy.md)
+1300. [Terratest: dividir o teste em estágios](../../domains/software-0007/software/testes/terratest-stages.md)
+1301. [Terratest: tratar erros transitórios com repetição](../../domains/software-0007/software/testes/terratest-retries.md)
+1302. [Terratest: gerar nomes únicos para recursos](../../domains/software-0007/software/testes/terratest-unique-resources.md)
+1303. [Terratest: verificar o estado real após aplicar](../../domains/software-0007/software/testes/terratest-verify-state.md)
+1304. [Terratest: verificar o serviço implantado](../../domains/software-0007/software/testes/terratest-http-checks.md)
+1305. [Terratest: paralelizar com controle de custo](../../domains/software-0007/software/testes/terratest-parallelism-and-cost.md)
+1306. [Terratest: rodar na esteira com credenciais controladas](../../domains/software-0007/software/testes/terratest-ci-integration.md)
+1307. [Terratest: reconhecer limites e boas práticas](../../domains/software-0007/software/testes/terratest-limits-and-practices.md)
+
+### Checkov — políticas como código, supressões, linha de base e esteira
+
+1308. [Checkov: escolher a estrutura de infraestrutura analisada](../../domains/software-0007/software/testes/checkov-frameworks.md)
+1309. [Checkov: selecionar e excluir verificações](../../domains/software-0007/software/testes/checkov-running-checks.md)
+1310. [Checkov: registrar supressões com justificativa](../../domains/software-0007/software/testes/checkov-suppressions.md)
+1311. [Checkov: separar passivo antigo de achados novos](../../domains/software-0007/software/testes/checkov-baseline.md)
+1312. [Checkov: detectar segredos em arquivos de infraestrutura](../../domains/software-0007/software/testes/checkov-secrets.md)
+1313. [Checkov: escrever políticas próprias](../../domains/software-0007/software/testes/checkov-custom-policies.md)
+1314. [Checkov: publicar o resultado na esteira](../../domains/software-0007/software/testes/checkov-output-and-ci.md)
+1315. [Checkov: análise de configuração declarada](../../domains/software-0007/software/testes/checkov-terraform-checks.md)
+1316. [Checkov: análise de manifestos de orquestração](../../domains/software-0007/software/testes/checkov-kubernetes-checks.md)
+1317. [Checkov: reconhecer limites da análise](../../domains/software-0007/software/testes/checkov-limits-and-practices.md)
+
+### BackstopJS — regressão visual, cenários, seletores e aprovação de imagens
+
+1318. [BackstopJS: comparar capturas contra referências](../../domains/software-0007/software/testes/backstopjs-workflow.md)
+1319. [BackstopJS: descrever cenários](../../domains/software-0007/software/testes/backstopjs-scenarios.md)
+1320. [BackstopJS: limitar a captura a elementos](../../domains/software-0007/software/testes/backstopjs-selectors.md)
+1321. [BackstopJS: controlar o momento da captura](../../domains/software-0007/software/testes/backstopjs-readiness.md)
+1322. [BackstopJS: ajustar a tolerância de diferença](../../domains/software-0007/software/testes/backstopjs-mismatch-threshold.md)
+1323. [BackstopJS: isolar conteúdo dinâmico](../../domains/software-0007/software/testes/backstopjs-hiding-dynamic-content.md)
+1324. [BackstopJS: cobrir tamanhos de tela](../../domains/software-0007/software/testes/backstopjs-viewports.md)
+1325. [BackstopJS: revisar o relatório e aprovar mudanças](../../domains/software-0007/software/testes/backstopjs-reports-and-approval.md)
+1326. [BackstopJS: executar na esteira](../../domains/software-0007/software/testes/backstopjs-ci-integration.md)
+1327. [BackstopJS: reconhecer limites da comparação visual](../../domains/software-0007/software/testes/backstopjs-limits-and-practices.md)
+
+### ReportPortal — lançamentos, itens, atributos, histórico e análise
+
+1328. [ReportPortal: organizar lançamentos e itens](../../domains/software-0007/software/testes/reportportal-launches-and-items.md)
+1329. [ReportPortal: classificar com atributos](../../domains/software-0007/software/testes/reportportal-attributes.md)
+1330. [ReportPortal: controlar o processamento com atributos de sistema](../../domains/software-0007/software/testes/reportportal-system-attributes.md)
+1331. [ReportPortal: classificar causas com análise automática](../../domains/software-0007/software/testes/reportportal-defect-classification.md)
+1332. [ReportPortal: manter histórico por identificador de caso](../../domains/software-0007/software/testes/reportportal-history-and-uniqueness.md)
+1333. [ReportPortal: registrar evidências no item](../../domains/software-0007/software/testes/reportportal-attachments-and-logs.md)
+1334. [ReportPortal: integrar com o framework de testes](../../domains/software-0007/software/testes/reportportal-framework-integration.md)
+1335. [ReportPortal: separar modos de execução e projetos](../../domains/software-0007/software/testes/reportportal-modes-and-projects.md)
+1336. [ReportPortal: acompanhar com filtros e painéis](../../domains/software-0007/software/testes/reportportal-dashboards-and-filters.md)
+1337. [ReportPortal: reconhecer limites da plataforma](../../domains/software-0007/software/testes/reportportal-limits-and-practices.md)
+
+### ArchUnit — regras de arquitetura, camadas, ciclos e congelamento de violações
+
+1338. [ArchUnit: importar o código e declarar regras](../../domains/software-0007/software/testes/archunit-import-and-rules.md)
+1339. [ArchUnit: verificar arquitetura em camadas](../../domains/software-0007/software/testes/archunit-layered-architecture.md)
+1340. [ArchUnit: detectar dependências cíclicas](../../domains/software-0007/software/testes/archunit-slices-and-cycles.md)
+1341. [ArchUnit: controlar dependências entre classes e pacotes](../../domains/software-0007/software/testes/archunit-dependency-rules.md)
+1342. [ArchUnit: aplicar convenções de codificação](../../domains/software-0007/software/testes/archunit-coding-rules.md)
+1343. [ArchUnit: congelar violações existentes](../../domains/software-0007/software/testes/archunit-freezing.md)
+1344. [ArchUnit: verificar arquitetura em cebola e diagramas](../../domains/software-0007/software/testes/archunit-onion-and-diagrams.md)
+1345. [ArchUnit: organizar as verificações na suíte](../../domains/software-0007/software/testes/archunit-test-organization.md)
+1346. [ArchUnit: tratar falhas na esteira](../../domains/software-0007/software/testes/archunit-ci-failures.md)
+1347. [ArchUnit: reconhecer limites](../../domains/software-0007/software/testes/archunit-limits-and-practices.md)
+
+### Insta — snapshots, revisão, snapshots embutidos e redação em Rust
+
+1348. [Insta: comparar saída com instantâneo](../../domains/software-0007/software/testes/insta-snapshot-basics.md)
+1349. [Insta: revisar e aceitar instantâneos](../../domains/software-0007/software/testes/insta-review-workflow.md)
+1350. [Insta: organizar arquivos de instantâneo](../../domains/software-0007/software/testes/insta-snapshot-files.md)
+1351. [Insta: manter valores no próprio código](../../domains/software-0007/software/testes/insta-inline-snapshots.md)
+1352. [Insta: controlar a atualização por variáveis de ambiente](../../domains/software-0007/software/testes/insta-update-modes.md)
+1353. [Insta: estabilizar valores voláteis](../../domains/software-0007/software/testes/insta-redactions.md)
+1354. [Insta: escolher o formato do instantâneo](../../domains/software-0007/software/testes/insta-format-and-serialization.md)
+1355. [Insta: lidar com asserções múltiplas no mesmo caso](../../domains/software-0007/software/testes/insta-snapshot-assertions.md)
+1356. [Insta: registrar contexto útil na referência](../../domains/software-0007/software/testes/insta-snapshot-context.md)
+1357. [Insta: usar na esteira e reconhecer limites](../../domains/software-0007/software/testes/insta-ci-and-limits.md)
+1358. [Insta: decidir quando usar instantâneo](../../domains/software-0007/software/testes/insta-vs-other-assertions.md)
+
 ## Critérios e próximo passo
 
-Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1248 notas 10–1257 das tranches 2–18 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1257/2.000 notas válidas, restando 743 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.
+Cada tranche é auditada antes de ser adicionada ao lote de escala. A aprovação automática verifica estrutura, conteúdo mínimo, fontes HTTPS específicas e links; não certifica a verdade das afirmações. O protocolo atualizado aceita revisão factual humana ou por IA, registradas separadamente. As nove notas da tranche 1 preservam aprovação humana; as 1349 notas 10–1358 das tranches 2–19 têm revisão factual por IA registrada nos relatórios vinculados. O lote continua incompleto: são 1358/2.000 notas válidas, restando 642 notas materiais. Continuar em tranches de conteúdo real, sem contar placeholders, IDs ou progresso parcial como conclusão; cada nota deve ter fontes conferidas e relatório de revisão factual.

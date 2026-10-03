@@ -1,6 +1,6 @@
 # MOC — Testes de Software (lote 0007)
 
-Índice das 1257 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1257 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1248 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
+Índice das 1358 notas substantivas redigidas até agora no lote `software-testes-2000-0001`, cuja meta é 2.000. As 1358 passaram pelo gate automatizado e têm revisão factual registrada: nove aprovadas pelo usuário e 1349 aprovadas por IA, sem converter estas últimas em aprovações humanas. Este mapa é navegação, não validação factual.
 
 ## Fundamentos, processo e testware
 - [[test-objectives-context]] — selecionar objetivos conforme work product, riscos e contexto.
@@ -1598,6 +1598,139 @@
 1256. [[allure-ci-publication]] — O gerador produz página estática que pode ser publicada como artefato do trabalho ou em serviço de hospedagem de relatórios.
 1257. [[allure-limits-and-practices]] — O relatório apresenta o que a execução registrou, sem julgar a qualidade das verificações nem substituir a análise das causas.
 
+## Tranche 19 — frameworks de sistema, virtualização de serviços, nuvem local, infraestrutura e análise de arquitetura
+
+### Catch2 — casos de teste, seções, asserções, geradores e relatórios em C++
+
+1258. [[catch2-test-case-basics]] — Casos de teste são declarados com macros que os registram automaticamente e recebem nome livre e etiquetas entre colchetes.
+1259. [[catch2-assertions]] — A biblioteca oferece macros que interrompem o caso ao falhar e macros que registram a falha e continuam a execução.
+1260. [[catch2-sections]] — Seções descrevem caminhos dentro do mesmo caso, e cada seção é executada com o estado inicial restaurado.
+1261. [[catch2-test-fixtures]] — Fixtures são classes com preparação e limpeza opcionais, usadas quando seções não bastam para o estado comum.
+1262. [[catch2-generators]] — Geradores percorrem valores em sequência dentro do caso, e geradores no mesmo escopo produzem o produto cartesiano das entradas.
+1263. [[catch2-matchers]] — Matchers compõem verificações sobre propriedades de valores, incluindo conteúdo, faixa, comparação aproximada e predicados próprios.
+1264. [[catch2-floating-point]] — O framework fornece comparação com tolerância relativa ou absoluta para valores de ponto flutuante e classes aproximadas.
+1265. [[catch2-reporters]] — A execução aceita múltiplos relatórios simultâneos, com saída legível para pessoas e formatos estruturados para integração.
+1266. [[catch2-command-line]] — A linha de comando permite filtrar por nome e etiqueta, listar casos, embaralhar a ordem e repetir a execução fixando a semente.
+1267. [[catch2-integration-limits]] — A biblioteca se integra a sistemas de construção, permite descobrir casos para registro automático e cobre verificação unitária e de componentes.
+
+### TestCafe — fixtures, seletores, ações, asserções e papéis no navegador
+
+1268. [[testcafe-fixtures-and-tests]] — Cada arquivo declara uma fixture com a página inicial e agrupa casos de teste que compartilham configuração e ganchos.
+1269. [[testcafe-selectors]] — Seletores consultam o DOM de forma assíncrona e aceitam filtros por texto, atributo, índice e relação entre elementos.
+1270. [[testcafe-assertions]] — As asserções aguardam a condição até o limite configurado antes de falhar, cobrindo igualdade, conteúdo, expressão regular e negações.
+1271. [[testcafe-actions]] — Ações do controlador cobrem clique, digitação, teclas, arrasto, navegação e requisição, e podem ser encadeadas quando não retornam valor.
+1272. [[testcafe-roles]] — Papéis definem uma sequência de entrada uma única vez e podem ser ativados em vários casos, reutilizando a sessão autenticada.
+1273. [[testcafe-client-functions]] — Funções de cliente permitem ler e alterar estado do navegador, como armazenamento local, endereço e APIs expostas pela página.
+1274. [[testcafe-request-hooks]] — Ganchos de requisição permitem observar, simular e substituir chamadas de rede, incluindo atrasos e códigos de erro.
+1275. [[testcafe-parallelism-and-browsers]] — A execução aceita múltiplos navegadores, inclusive remotos, e distribui casos em processos paralelos com controle de concorrência.
+1276. [[testcafe-debugging-and-artifacts]] — A ferramenta oferece modo de depuração com pausa no navegador, captura de tela em falhas e relatórios configuráveis.
+1277. [[testcafe-limits-and-practices]] — A ferramenta executa testes de interface sem driver externo, injetando o controlador na página durante a execução.
+
+### Mountebank — impostores, stubs, predicados, proxies e comportamento
+
+1278. [[mountebank-imposters]] — Um impostor é um serviço virtual que escuta em uma porta e fala um protocolo, definido por porta, protocolo e lista de stubs.
+1279. [[mountebank-stubs]] — Cada stub reúne predicados opcionais e uma lista de respostas, e a primeira resposta é devolvida a cada correspondência.
+1280. [[mountebank-predicates]] — Predicados comparam método, caminho, cabeçalhos, consulta e corpo com operadores de igualdade, padrão, existência e negação.
+1281. [[mountebank-proxies]] — Uma resposta em modo proxy encaminha a requisição ao serviço real e pode registrar a resposta para reprodução posterior.
+1282. [[mountebank-behaviors]] — Comportamentos modificam a resposta, adicionando atraso, substituindo conteúdo por dados da requisição e repetindo respostas sem avançar a sequência.
+1283. [[mountebank-injection]] — A injeção executa função em JavaScript para decidir o predicado ou montar a resposta, com acesso à requisição recebida.
+1284. [[mountebank-recorded-requests]] — Com o registro ativado, o impostor guarda as requisições recebidas e as disponibiliza para consulta posterior.
+1285. [[mountebank-file-based-setup]] — A configuração pode ser descrita em arquivo carregado na inicialização, permitindo versionar os serviços virtuais com o projeto.
+1286. [[mountebank-ci-integration]] — O serviço pode subir como processo ou contêiner na esteira, e os impostores são criados por configuração antes dos testes.
+1287. [[mountebank-limits-and-practices]] — Simular serviços permite verificar o cliente contra respostas controladas, mas não valida o contrato real nem o comportamento do provedor.
+
+### LocalStack — emulação de serviços de nuvem, ganchos de inicialização e testes
+
+1288. [[localstack-service-emulation]] — O LocalStack expõe uma porta de entrada que atende chamadas de diversos serviços de nuvem em ambiente local, com credenciais fictícias.
+1289. [[localstack-init-hooks]] — Scripts em diretórios de fases distintas são executados na subida, quando o serviço fica pronto e no encerramento do contêiner.
+1290. [[localstack-init-troubleshooting]] — A ausência de execução costuma vir de caminho incorreto, permissão de arquivo, ordem alfabética ou serviço indisponível no momento do script.
+1291. [[localstack-docker-compose]] — A composição declara o serviço, a porta de entrada, as variáveis de ambiente e os volumes que trazem os ganchos e o estado persistente.
+1292. [[localstack-persistence]] — A pasta montada preserva recursos entre reinícios quando a persistência está ativa, em oposição ao estado descartável.
+1293. [[localstack-testcontainers]] — A biblioteca de contêineres de teste permite iniciar o serviço emulado durante a execução dos testes, com ciclo de vida controlado pela suíte.
+1294. [[localstack-terraform-hooks]] — Arquivos de infraestrutura podem servir de gancho de inicialização por meio de extensão, criando recursos automaticamente na subida.
+1295. [[localstack-aws-cli-and-tools]] — Um invólucro da ferramenta de linha de comando da nuvem aponta automaticamente para o ambiente emulado, simplificando a preparação.
+1296. [[localstack-ci-integration]] — O serviço pode ser iniciado como contêiner no trabalho de integração, com os ganchos preparando os recursos antes da suíte.
+1297. [[localstack-limits-and-practices]] — A emulação cobre um subconjunto de serviços e comportamentos, e diferenças sutis de permissão, limites e integração podem não aparecer.
+
+### Terratest — testes de infraestrutura, destruição, repetição e estágios
+
+1298. [[terratest-basic-test]] — O teste é escrito na linguagem de programação do projeto e usa os módulos da biblioteca para inicializar, aplicar e consultar os recursos declarados.
+1299. [[terratest-destroy]] — A destruição dos recursos é agendada no início do teste para executar ao final, inclusive quando verificações falham no meio.
+1300. [[terratest-stages]] — A biblioteca de estágios permite separar aplicação, verificação e destruição em blocos que podem ser executados isoladamente por variáveis de ambiente.
+1301. [[terratest-retries]] — Funções de repetição reexecutam operações que dependem de propagação assíncrona, com número de tentativas e intervalo configuráveis.
+1302. [[terratest-unique-resources]] — A biblioteca oferece geração de identificadores aleatórios usados para nomear recursos de forma que execuções concorrentes não colidam.
+1303. [[terratest-verify-state]] — Depois da aplicação, os auxiliares consultam o provedor para confirmar que o recurso existe e apresenta as propriedades esperadas, em vez de confiar apenas na saída declarada.
+1304. [[terratest-http-checks]] — Auxiliares de rede repetem requisições até obter o código esperado e o conteúdo previsto, validando o serviço do ponto de vista do usuário.
+1305. [[terratest-parallelism-and-cost]] — Os casos podem ser marcados para execução paralela, e a escolha de regiões e tipos de recurso afeta diretamente o custo da suíte.
+1306. [[terratest-ci-integration]] — A execução na esteira exige credenciais com permissões mínimas, região definida e limites de tempo e de recursos.
+1307. [[terratest-limits-and-practices]] — Testes de infraestrutura são lentos, custam recursos reais e dependem do provedor, complementando a análise estática e os testes de unidade da configuração.
+
+### Checkov — políticas como código, supressões, linha de base e esteira
+
+1308. [[checkov-frameworks]] — A ferramenta identifica o tipo de configuração pelo conteúdo e oferece verificações específicas para cada estrutura suportada.
+1309. [[checkov-running-checks]] — A execução aceita lista de verificações a rodar, lista de exclusão e filtro por padrão de identificador.
+1310. [[checkov-suppressions]] — Uma anotação no próprio arquivo registra a aceitação do risco, com identificador da verificação e motivo declarado.
+1311. [[checkov-baseline]] — A criação de linha de base registra os achados existentes em arquivo, e as execuções seguintes comparam contra esse registro.
+1312. [[checkov-secrets]] — O verificador de segredos procura credenciais e chaves por padrões, palavras-chave e análise de entropia em arquivos e blocos de configuração.
+1313. [[checkov-custom-policies]] — Políticas próprias podem ser escritas em linguagem de programação ou em formato declarativo e mantidas junto ao projeto.
+1314. [[checkov-output-and-ci]] — A execução gera saída legível e formatos estruturados, e a esteira pode falhar por política ou apenas reportar.
+1315. [[checkov-terraform-checks]] — As verificações de configuração declarada avaliam atributos de recursos, como exposição pública, criptografia, registros e políticas de acesso.
+1316. [[checkov-kubernetes-checks]] — As verificações de manifestos cobrem segurança de contêineres, limites de recurso, privilégios, redes e controles de escalonamento.
+1317. [[checkov-limits-and-practices]] — A análise verifica configuração declarada e não substitui teste de comportamento, verificação de permissões efetivas nem avaliação de risco de negócio.
+
+### BackstopJS — regressão visual, cenários, seletores e aprovação de imagens
+
+1318. [[backstopjs-workflow]] — O fluxo gera capturas de referência, produz novas capturas na execução de teste e compara pixel a pixel contra a referência aprovada.
+1319. [[backstopjs-scenarios]] — Cada cenário declara rótulo, endereço e opções que definem o estado da página no momento da captura.
+1320. [[backstopjs-selectors]] — O cenário pode capturar o documento inteiro, a área visível ou um conjunto de seletores, isolando regiões específicas da página.
+1321. [[backstopjs-readiness]] — O cenário pode esperar por seletor presente, evento registrado no console, tempo fixo ou interação prévia antes de capturar.
+1322. [[backstopjs-mismatch-threshold]] — O limite define a porcentagem de pixels diferentes aceita antes de o cenário ser marcado como falho, e a exigência de mesmas dimensões pode ser ativada.
+1323. [[backstopjs-hiding-dynamic-content]] — O cenário pode ocultar ou remover seletores antes da captura, eliminando do quadro relógios, avisos e dados que mudam a cada acesso.
+1324. [[backstopjs-viewports]] — A configuração declara tamanhos de tela com rótulo e dimensões, aplicados a todos os cenários ou sobrescritos por cenário.
+1325. [[backstopjs-reports-and-approval]] — O relatório apresenta comparação lado a lado com destaque da diferença, e o comando de aprovação promove as capturas recentes a novas referências.
+1326. [[backstopjs-ci-integration]] — A ferramenta roda em ambiente automatizado, com contêiner ou instalação de dependências, e publica relatório estático como artefato.
+1327. [[backstopjs-limits-and-practices]] — A verificação mede diferença de pixels, não julga se a mudança é aceitável, e depende de ambiente estável para ser confiável.
+
+### ReportPortal — lançamentos, itens, atributos, histórico e análise
+
+1328. [[reportportal-launches-and-items]] — Cada execução é registrada como lançamento, e os resultados são itens hierárquicos de suíte, teste, cenário e passo sob esse lançamento.
+1329. [[reportportal-attributes]] — Atributos são pares de chave e valor anexados ao lançamento ou ao item e usados em filtros, colunas e agrupamentos.
+1330. [[reportportal-system-attributes]] — Atributos de sistema alteram o comportamento da plataforma, disparando análise imediata, tratando itens ignorados ou marcando reversões.
+1331. [[reportportal-defect-classification]] — A plataforma agrupa falhas por semelhança de mensagem e rastro, permitindo atribuir tipo de defeito e investigar por grupo.
+1332. [[reportportal-history-and-uniqueness]] — A plataforma liga execuções históricas do mesmo caso por identificador derivado da localização no código e dos parâmetros, que pode ser definido explicitamente.
+1333. [[reportportal-attachments-and-logs]] — Logs e anexos podem ser enviados para o item ou passo correspondente, ficando disponíveis junto do resultado da execução.
+1334. [[reportportal-framework-integration]] — Cada framework possui agente que envia os resultados automaticamente, configurado por arquivo de projeto e identificação do lançamento.
+1335. [[reportportal-modes-and-projects]] — Um lançamento pode rodar em modo de depuração, visível apenas para o autor, ou no modo padrão do projeto, e a plataforma separa dados por projeto.
+1336. [[reportportal-dashboards-and-filters]] — A plataforma permite filtrar execuções e itens por período, nome, atributos e estado, além de montar colunas personalizadas e visões salvas.
+1337. [[reportportal-limits-and-practices]] — A plataforma agrega e organiza resultados, mas não executa testes nem garante que o conteúdo reportado reflita o comportamento real.
+
+### ArchUnit — regras de arquitetura, camadas, ciclos e congelamento de violações
+
+1338. [[archunit-import-and-rules]] — A biblioteca importa as classes compiladas para uma estrutura consultável e expressa regras verificáveis com integração ao framework de testes.
+1339. [[archunit-layered-architecture]] — Regras de camadas definem grupos por padrão de pacote e restringem quais camadas podem acessar quais outras.
+1340. [[archunit-slices-and-cycles]] — Regras de fatias dividem os pacotes segundo um padrão com grupos de captura e verificam se as fatias resultantes estão livres de ciclos.
+1341. [[archunit-dependency-rules]] — Regras expressam proibições e permissões de dependência por pacote, nome de classe, anotação ou camada da aplicação.
+1342. [[archunit-coding-rules]] — Regras de codificação verificam nomes, anotações, modificadores, exceções declaradas e uso de recursos proibidos.
+1343. [[archunit-freezing]] — O congelamento registra as violações atuais em armazenamento próprio e passa a reportar apenas violações novas a cada execução.
+1344. [[archunit-onion-and-diagrams]] — A biblioteca oferece regra pronta para o estilo em camadas concêntricas e verificação de aderência a diagrama de componentes.
+1345. [[archunit-test-organization]] — As regras podem ser agrupadas por tema em classes próprias e executadas junto da suíte normal do projeto.
+1346. [[archunit-ci-failures]] — A falha da verificação interrompe a construção e traz a lista das violações com as classes envolvidas.
+1347. [[archunit-limits-and-practices]] — A análise cobre estrutura de classes e dependências no bytecode, sem avaliar qualidade de desenho, desempenho nem coerência semântica das fronteiras.
+
+### Insta — snapshots, revisão, snapshots embutidos e redação em Rust
+
+1348. [[insta-snapshot-basics]] — A macro captura a representação do valor e compara com o arquivo de referência, gravando o novo resultado quando não existe referência.
+1349. [[insta-review-workflow]] — A ferramenta de linha de comando apresenta as diferenças em modo interativo, permitindo aceitar, rejeitar ou adiar cada proposta.
+1350. [[insta-snapshot-files]] — As referências ficam em diretório ao lado do arquivo de teste, com nome derivado do módulo e do nome informado ou inferido do caso.
+1351. [[insta-inline-snapshots]] — Instantâneos embutidos guardam a referência como texto no arquivo de teste, marcado por sinal próprio, e a ferramenta atualiza o trecho ao aceitar.
+1352. [[insta-update-modes]] — O modo de atualização define se novas referências são gravadas, se a execução apenas compara ou se valores são sobrescritos sem proposta prévia.
+1353. [[insta-redactions]] — Redações substituem valores dinâmicos por marcador fixo ou por valor calculado por função, mantendo a referência estável entre execuções.
+1354. [[insta-format-and-serialization]] — A biblioteca compara valores formatados e oferece representações específicas para estruturas serializáveis em formatos legíveis.
+1355. [[insta-snapshot-assertions]] — Quando o caso produz mais de uma referência, a ferramenta pode coletar todas as propostas em uma única execução de revisão.
+1356. [[insta-snapshot-context]] — A configuração de contexto permite anexar informações como descrição e parâmetro à referência e controlar o que aparece no cabeçalho.
+1357. [[insta-ci-and-limits]] — A suíte roda na esteira em modo estrito, e a ferramenta de revisão é opcional, mantendo a verificação independente de passos manuais.
+1358. [[insta-vs-other-assertions]] — Instantâneos servem a saídas formatadas e estáveis, enquanto asserções específicas comunicam melhor a intenção de regras de negócio.
+
 ## Estado editorial
 
-O gate automatizado foi aprovado por 1257/1257 notas e as 1257 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1248 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1257 notas substantivas; 743 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-18.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md) e [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
+O gate automatizado foi aprovado por 1358/1358 notas e as 1358 contam como válidas pelo protocolo atualizado: nove têm aprovação humana histórica e 1349 têm revisão factual por IA registrada separadamente. O lote de 2.000 continua `in_progress` (1358 notas substantivas; 642 ainda não produzidas). Consulte o [manifesto](../../exports/batches/software-testes-2000-0001.md), a [auditoria de qualidade](../../exports/reports/note-quality-software-testes-2000-0001.md) e a [reconciliação mais recente do manifesto/fila](../../exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-19.md). Os relatórios factuais por IA são [tranches 2–3](../../exports/reports/ai-review-software-testes-2000-0001.md), [4](../../exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](../../exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](../../exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](../../exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](../../exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](../../exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](../../exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](../../exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](../../exports/reports/ai-review-software-testes-2000-0001-tranche-12.md), [13](../../exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](../../exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](../../exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](../../exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](../../exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](../../exports/reports/ai-review-software-testes-2000-0001-tranche-18.md) e [19](../../exports/reports/ai-review-software-testes-2000-0001-tranche-19.md). Consulte também o [registro de revisão humana e IA](../../exports/reports/human-review-queue.md).
