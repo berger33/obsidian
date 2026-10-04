@@ -11,13 +11,13 @@ updated: 2026-10-04
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1800 notas substantivas (Tranches 1–18, IDs `1–1800`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1900 notas substantivas (Tranches 1–19, IDs `1–1900`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1800 / 2.000 notas válidas (90,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1800**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1800 / 1800** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md))
+- Progresso atual: **1900 / 2.000 notas válidas (95,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1900**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1900 / 1900** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [Tranche 19](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-19.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -2395,3 +2395,135 @@ Mapa de conteúdo das **1800 notas substantivas (Tranches 1–18, IDs `1–1800`
 - [[cfn-guard-consultar-estruturas-aninhadas]] — AWS CloudFormation Guard: Consultar estruturas aninhadas
 - [[cfn-guard-usar-guard-como-gate-de-template]] — AWS CloudFormation Guard: Usar Guard como gate de template
 - [[cfn-guard-versionar-regras-e-aprovacoes]] — AWS CloudFormation Guard: Versionar regras e aprovações
+
+## Tranche 19 (IDs 1801–1900)
+
+### SPIFFE/SPIRE
+
+- [[spiffe-spire-identidade-de-workload-em-vez-de-segredo-estatico]] — SPIFFE/SPIRE: Identidade de workload em vez de segredo estático
+- [[spiffe-spire-nomear-e-isolar-trust-domains]] — SPIFFE/SPIRE: Nomear e isolar trust domains
+- [[spiffe-spire-separar-servidor-spire-e-agent]] — SPIFFE/SPIRE: Separar servidor SPIRE e agent
+- [[spiffe-spire-atestacao-de-no-antes-da-emissao]] — SPIFFE/SPIRE: Atestação de nó antes da emissão
+- [[spiffe-spire-atestar-workload-por-seletores]] — SPIFFE/SPIRE: Atestar workload por seletores
+- [[spiffe-spire-restringir-registration-entries]] — SPIFFE/SPIRE: Restringir registration entries
+- [[spiffe-spire-escolher-formato-de-svid]] — SPIFFE/SPIRE: Escolher formato de SVID
+- [[spiffe-spire-distribuir-trust-bundles-com-rotacao]] — SPIFFE/SPIRE: Distribuir trust bundles com rotação
+- [[spiffe-spire-federar-trust-domains]] — SPIFFE/SPIRE: Federar trust domains
+- [[spiffe-spire-operar-spire-com-configuracao-versionada]] — SPIFFE/SPIRE: Operar SPIRE com configuração versionada
+
+### HashiCorp Vault
+
+- [[vault-credenciais-dinamicas-com-lease]] — HashiCorp Vault: Credenciais dinâmicas com lease
+- [[vault-renovar-lease-antes-do-vencimento]] — HashiCorp Vault: Renovar lease antes do vencimento
+- [[vault-revogar-lease-e-credencial-associada]] — HashiCorp Vault: Revogar lease e credencial associada
+- [[vault-autenticar-workload-kubernetes]] — HashiCorp Vault: Autenticar workload Kubernetes
+- [[vault-limitar-role-a-service-account-e-namespace]] — HashiCorp Vault: Limitar role a service account e namespace
+- [[vault-revisar-audience-de-service-account-token]] — HashiCorp Vault: Revisar audience de service account token
+- [[vault-aplicar-policy-de-menor-privilegio]] — HashiCorp Vault: Aplicar policy de menor privilégio
+- [[vault-separar-token-ttl-de-lease-ttl]] — HashiCorp Vault: Separar token TTL de lease TTL
+- [[vault-rotacionar-service-account-sem-indisponibilidade]] — HashiCorp Vault: Rotacionar service account sem indisponibilidade
+- [[vault-auditar-cliente-e-ciclo-de-credencial]] — HashiCorp Vault: Auditar cliente e ciclo de credencial
+
+### OpenBao
+
+- [[openbao-autorizar-operacoes-por-path]] — OpenBao: Autorizar operações por path
+- [[openbao-aplicar-menor-privilegio-nas-capabilities]] — OpenBao: Aplicar menor privilégio nas capabilities
+- [[openbao-entender-policy-deny-e-composicao]] — OpenBao: Entender policy deny e composição
+- [[openbao-vincular-policy-a-autenticacao]] — OpenBao: Vincular policy a autenticação
+- [[openbao-testar-mudancas-de-policy-como-codigo]] — OpenBao: Testar mudanças de policy como código
+- [[openbao-compreender-estado-sealed]] — OpenBao: Compreender estado sealed
+- [[openbao-proteger-unseal-shares]] — OpenBao: Proteger unseal shares
+- [[openbao-avaliar-auto-unseal]] — OpenBao: Avaliar auto-unseal
+- [[openbao-planejar-recuperacao-sem-divulgar-shares]] — OpenBao: Planejar recuperação sem divulgar shares
+- [[openbao-monitorar-selagem-e-alteracoes-de-politica]] — OpenBao: Monitorar selagem e alterações de política
+
+### Mozilla SOPS
+
+- [[sops-cifrar-valores-folha-do-documento]] — Mozilla SOPS: Cifrar valores folha do documento
+- [[sops-selecionar-recipients-de-kms]] — Mozilla SOPS: Selecionar recipients de KMS
+- [[sops-usar-age-recipient-com-cuidado]] — Mozilla SOPS: Usar age recipient com cuidado
+- [[sops-delimitar-regras-por-nome-de-arquivo]] — Mozilla SOPS: Delimitar regras por nome de arquivo
+- [[sops-controlar-campos-criptografados]] — Mozilla SOPS: Controlar campos criptografados
+- [[sops-validar-integridade-com-mac]] — Mozilla SOPS: Validar integridade com MAC
+- [[sops-rotacionar-recipients-sem-trocar-conteudo]] — Mozilla SOPS: Rotacionar recipients sem trocar conteúdo
+- [[sops-descriptografar-em-ci-sem-persistir-plaintext]] — Mozilla SOPS: Descriptografar em CI sem persistir plaintext
+- [[sops-gerenciar-key-groups-e-threshold]] — Mozilla SOPS: Gerenciar key groups e threshold
+- [[sops-tratar-exposicao-no-historico-git]] — Mozilla SOPS: Tratar exposição no histórico Git
+
+### cert-manager
+
+- [[cert-manager-declarar-certificate-e-secretname]] — cert-manager: Declarar Certificate e secretName
+- [[cert-manager-escolher-issuer-ou-clusterissuer]] — cert-manager: Escolher Issuer ou ClusterIssuer
+- [[cert-manager-usar-referencia-explicita-de-issuer]] — cert-manager: Usar referência explícita de issuer
+- [[cert-manager-entender-status-e-condicoes-de-emissao]] — cert-manager: Entender status e condições de emissão
+- [[cert-manager-escolher-desafio-acme-http-01-ou-dns-01]] — cert-manager: Escolher desafio ACME HTTP-01 ou DNS-01
+- [[cert-manager-configurar-renovacao-antecipada]] — cert-manager: Configurar renovação antecipada
+- [[cert-manager-proteger-secret-da-chave-privada]] — cert-manager: Proteger Secret da chave privada
+- [[cert-manager-selecionar-solver-pelo-dominio]] — cert-manager: Selecionar solver pelo domínio
+- [[cert-manager-investigar-falhas-sem-expor-credenciais]] — cert-manager: Investigar falhas sem expor credenciais
+- [[cert-manager-confirmar-consumo-do-certificado-renovado]] — cert-manager: Confirmar consumo do certificado renovado
+
+### Kubernetes Pod Security Admission
+
+- [[pod-security-admission-distinguir-niveis-de-pod-security]] — Kubernetes Pod Security Admission: Distinguir níveis de Pod Security
+- [[pod-security-admission-aplicar-labels-de-namespace-por-modo]] — Kubernetes Pod Security Admission: Aplicar labels de namespace por modo
+- [[pod-security-admission-fixar-versao-do-padrao]] — Kubernetes Pod Security Admission: Fixar versão do padrão
+- [[pod-security-admission-migrar-de-warn-para-enforce]] — Kubernetes Pod Security Admission: Migrar de warn para enforce
+- [[pod-security-admission-entender-escopo-das-verificacoes]] — Kubernetes Pod Security Admission: Entender escopo das verificações
+- [[pod-security-admission-excecoes-de-usuarios-namespaces-e-runtime-classes]] — Kubernetes Pod Security Admission: Exceções de usuários, namespaces e runtime classes
+- [[pod-security-admission-hardening-do-securitycontext]] — Kubernetes Pod Security Admission: Hardening do securityContext
+- [[pod-security-admission-revisar-mutacoes-de-admission]] — Kubernetes Pod Security Admission: Revisar mutações de admission
+- [[pod-security-admission-observar-audit-events]] — Kubernetes Pod Security Admission: Observar audit events
+- [[pod-security-admission-coordenar-upgrade-do-cluster-e-politicas]] — Kubernetes Pod Security Admission: Coordenar upgrade do cluster e políticas
+
+### Kubernetes NetworkPolicy
+
+- [[kubernetes-networkpolicy-selecionar-pods-protegidos]] — Kubernetes NetworkPolicy: Selecionar pods protegidos
+- [[kubernetes-networkpolicy-entender-isolamento-ingress]] — Kubernetes NetworkPolicy: Entender isolamento ingress
+- [[kubernetes-networkpolicy-entender-isolamento-egress]] — Kubernetes NetworkPolicy: Entender isolamento egress
+- [[kubernetes-networkpolicy-combinar-policies-de-forma-aditiva]] — Kubernetes NetworkPolicy: Combinar policies de forma aditiva
+- [[kubernetes-networkpolicy-combinar-podselector-e-namespaceselector]] — Kubernetes NetworkPolicy: Combinar podSelector e namespaceSelector
+- [[kubernetes-networkpolicy-restringir-portas-e-protocolos]] — Kubernetes NetworkPolicy: Restringir portas e protocolos
+- [[kubernetes-networkpolicy-confirmar-suporte-do-cni]] — Kubernetes NetworkPolicy: Confirmar suporte do CNI
+- [[kubernetes-networkpolicy-planejar-politica-default-deny-por-namespace]] — Kubernetes NetworkPolicy: Planejar política default-deny por namespace
+- [[kubernetes-networkpolicy-tratar-enderecos-ip-e-mudancas-de-servico]] — Kubernetes NetworkPolicy: Tratar endereços IP e mudanças de serviço
+- [[kubernetes-networkpolicy-validar-trafego-com-testes-de-integracao]] — Kubernetes NetworkPolicy: Validar tráfego com testes de integração
+
+### OPA Gatekeeper
+
+- [[gatekeeper-definir-constrainttemplate]] — OPA Gatekeeper: Definir ConstraintTemplate
+- [[gatekeeper-instanciar-constraint-com-escopo-claro]] — OPA Gatekeeper: Instanciar Constraint com escopo claro
+- [[gatekeeper-usar-admission-para-prevenir-violacoes]] — OPA Gatekeeper: Usar admission para prevenir violações
+- [[gatekeeper-iniciar-com-enforcementaction-dryrun]] — OPA Gatekeeper: Iniciar com enforcementAction dryrun
+- [[gatekeeper-auditar-recursos-ja-existentes]] — OPA Gatekeeper: Auditar recursos já existentes
+- [[gatekeeper-testar-policies-com-gator]] — OPA Gatekeeper: Testar policies com gator
+- [[gatekeeper-tratar-parametros-como-contrato]] — OPA Gatekeeper: Tratar parâmetros como contrato
+- [[gatekeeper-controlar-match-exclusions-e-namespaces]] — OPA Gatekeeper: Controlar match, exclusions e namespaces
+- [[gatekeeper-interpretar-violation-e-source]] — OPA Gatekeeper: Interpretar violation e source
+- [[gatekeeper-versionar-templates-e-rollout]] — OPA Gatekeeper: Versionar templates e rollout
+
+### External Secrets Operator
+
+- [[external-secrets-separar-secretstore-e-clustersecretstore]] — External Secrets Operator: Separar SecretStore e ClusterSecretStore
+- [[external-secrets-mapear-segredo-remoto-para-externalsecret]] — External Secrets Operator: Mapear segredo remoto para ExternalSecret
+- [[external-secrets-autenticar-provider-com-identidade-minima]] — External Secrets Operator: Autenticar provider com identidade mínima
+- [[external-secrets-definir-escopo-de-clustersecretstore]] — External Secrets Operator: Definir escopo de ClusterSecretStore
+- [[external-secrets-escolher-refreshinterval-e-estrategia]] — External Secrets Operator: Escolher refreshInterval e estratégia
+- [[external-secrets-tratar-criacao-e-delecao-do-secret-alvo]] — External Secrets Operator: Tratar criação e deleção do Secret alvo
+- [[external-secrets-usar-datafrom-com-escopo-restrito]] — External Secrets Operator: Usar dataFrom com escopo restrito
+- [[external-secrets-gerar-secret-com-template]] — External Secrets Operator: Gerar Secret com template
+- [[external-secrets-diagnosticar-condicoes-sem-expor-valor]] — External Secrets Operator: Diagnosticar condições sem expor valor
+- [[external-secrets-planejar-rotacao-e-revogacao-no-backend]] — External Secrets Operator: Planejar rotação e revogação no backend
+
+### Cilium Network Policies
+
+- [[cilium-network-policy-selecionar-endpoints-por-identidade]] — Cilium Network Policies: Selecionar endpoints por identidade
+- [[cilium-network-policy-entender-transicao-para-default-deny]] — Cilium Network Policies: Entender transição para default-deny
+- [[cilium-network-policy-permitir-trafego-l3-por-labels]] — Cilium Network Policies: Permitir tráfego L3 por labels
+- [[cilium-network-policy-restringir-destinos-por-cidr]] — Cilium Network Policies: Restringir destinos por CIDR
+- [[cilium-network-policy-usar-entities-com-semantica-conhecida]] — Cilium Network Policies: Usar entities com semântica conhecida
+- [[cilium-network-policy-combinar-politica-l3-e-l4]] — Cilium Network Policies: Combinar política L3 e L4
+- [[cilium-network-policy-aplicar-controles-l7-com-proxy]] — Cilium Network Policies: Aplicar controles L7 com proxy
+- [[cilium-network-policy-usar-dns-policy-com-allowlist]] — Cilium Network Policies: Usar DNS policy com allowlist
+- [[cilium-network-policy-observar-policy-verdicts-e-hubble]] — Cilium Network Policies: Observar policy verdicts e Hubble
+- [[cilium-network-policy-implantar-mudanca-incrementalmente]] — Cilium Network Policies: Implantar mudança incrementalmente

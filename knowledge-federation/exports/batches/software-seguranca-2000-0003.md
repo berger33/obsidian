@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1800 / 2.000 (90,00%)**
-- Gate automatizado: **1800/1800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
-- Revisão factual humana: **0/1800**
-- Revisão factual por IA: **1800/1800**
-- Contabilizadas como válidas: **1800/1800**
-- Revisor das 1800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–18 (1800 notas, IDs 1–1800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1900 / 2.000 (95,00%)**
+- Gate automatizado: **1900/1900 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 19)
+- Revisão factual humana: **0/1900**
+- Revisão factual por IA: **1900/1900**
+- Contabilizadas como válidas: **1900/1900**
+- Revisor das 1900 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–19 (1900 notas, IDs 1–1900) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-18.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-18.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-19.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-19.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [`tranche 19`](../reports/ai-review-software-seguranca-2000-0003-tranche-19.md)
 
-Existem 1800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 200 restantes.
+Existem 1900 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 100 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2395,3 +2395,135 @@ Existem 1800 notas materiais listadas abaixo; não há IDs reservados, placehold
 1798. [AWS CloudFormation Guard: Consultar estruturas aninhadas](../../domains/software-0009/software/seguranca/cfn-guard-consultar-estruturas-aninhadas.md)
 1799. [AWS CloudFormation Guard: Usar Guard como gate de template](../../domains/software-0009/software/seguranca/cfn-guard-usar-guard-como-gate-de-template.md)
 1800. [AWS CloudFormation Guard: Versionar regras e aprovações](../../domains/software-0009/software/seguranca/cfn-guard-versionar-regras-e-aprovacoes.md)
+
+## Tranche 19 — SPIFFE/SPIRE, HashiCorp Vault, OpenBao, Mozilla SOPS, cert-manager, Kubernetes Pod Security Admission, Kubernetes NetworkPolicy, OPA Gatekeeper, External Secrets Operator, Cilium Network Policies (100 notas substantivas; revisão factual por IA registrada)
+
+### SPIFFE/SPIRE — framework e implementação para identidades criptográficas portáveis de workloads em sistemas distribuídos
+
+1801. [SPIFFE/SPIRE: Identidade de workload em vez de segredo estático](../../domains/software-0009/software/seguranca/spiffe-spire-identidade-de-workload-em-vez-de-segredo-estatico.md)
+1802. [SPIFFE/SPIRE: Nomear e isolar trust domains](../../domains/software-0009/software/seguranca/spiffe-spire-nomear-e-isolar-trust-domains.md)
+1803. [SPIFFE/SPIRE: Separar servidor SPIRE e agent](../../domains/software-0009/software/seguranca/spiffe-spire-separar-servidor-spire-e-agent.md)
+1804. [SPIFFE/SPIRE: Atestação de nó antes da emissão](../../domains/software-0009/software/seguranca/spiffe-spire-atestacao-de-no-antes-da-emissao.md)
+1805. [SPIFFE/SPIRE: Atestar workload por seletores](../../domains/software-0009/software/seguranca/spiffe-spire-atestar-workload-por-seletores.md)
+1806. [SPIFFE/SPIRE: Restringir registration entries](../../domains/software-0009/software/seguranca/spiffe-spire-restringir-registration-entries.md)
+1807. [SPIFFE/SPIRE: Escolher formato de SVID](../../domains/software-0009/software/seguranca/spiffe-spire-escolher-formato-de-svid.md)
+1808. [SPIFFE/SPIRE: Distribuir trust bundles com rotação](../../domains/software-0009/software/seguranca/spiffe-spire-distribuir-trust-bundles-com-rotacao.md)
+1809. [SPIFFE/SPIRE: Federar trust domains](../../domains/software-0009/software/seguranca/spiffe-spire-federar-trust-domains.md)
+1810. [SPIFFE/SPIRE: Operar SPIRE com configuração versionada](../../domains/software-0009/software/seguranca/spiffe-spire-operar-spire-com-configuracao-versionada.md)
+
+### HashiCorp Vault — gerenciador de segredos que emite credenciais, controla acesso por políticas e oferece autenticação para aplicações
+
+1811. [HashiCorp Vault: Credenciais dinâmicas com lease](../../domains/software-0009/software/seguranca/vault-credenciais-dinamicas-com-lease.md)
+1812. [HashiCorp Vault: Renovar lease antes do vencimento](../../domains/software-0009/software/seguranca/vault-renovar-lease-antes-do-vencimento.md)
+1813. [HashiCorp Vault: Revogar lease e credencial associada](../../domains/software-0009/software/seguranca/vault-revogar-lease-e-credencial-associada.md)
+1814. [HashiCorp Vault: Autenticar workload Kubernetes](../../domains/software-0009/software/seguranca/vault-autenticar-workload-kubernetes.md)
+1815. [HashiCorp Vault: Limitar role a service account e namespace](../../domains/software-0009/software/seguranca/vault-limitar-role-a-service-account-e-namespace.md)
+1816. [HashiCorp Vault: Revisar audience de service account token](../../domains/software-0009/software/seguranca/vault-revisar-audience-de-service-account-token.md)
+1817. [HashiCorp Vault: Aplicar policy de menor privilégio](../../domains/software-0009/software/seguranca/vault-aplicar-policy-de-menor-privilegio.md)
+1818. [HashiCorp Vault: Separar token TTL de lease TTL](../../domains/software-0009/software/seguranca/vault-separar-token-ttl-de-lease-ttl.md)
+1819. [HashiCorp Vault: Rotacionar service account sem indisponibilidade](../../domains/software-0009/software/seguranca/vault-rotacionar-service-account-sem-indisponibilidade.md)
+1820. [HashiCorp Vault: Auditar cliente e ciclo de credencial](../../domains/software-0009/software/seguranca/vault-auditar-cliente-e-ciclo-de-credencial.md)
+
+### OpenBao — plataforma de gerenciamento de segredos de código aberto com políticas de acesso e mecanismo de selagem
+
+1821. [OpenBao: Autorizar operações por path](../../domains/software-0009/software/seguranca/openbao-autorizar-operacoes-por-path.md)
+1822. [OpenBao: Aplicar menor privilégio nas capabilities](../../domains/software-0009/software/seguranca/openbao-aplicar-menor-privilegio-nas-capabilities.md)
+1823. [OpenBao: Entender policy deny e composição](../../domains/software-0009/software/seguranca/openbao-entender-policy-deny-e-composicao.md)
+1824. [OpenBao: Vincular policy a autenticação](../../domains/software-0009/software/seguranca/openbao-vincular-policy-a-autenticacao.md)
+1825. [OpenBao: Testar mudanças de policy como código](../../domains/software-0009/software/seguranca/openbao-testar-mudancas-de-policy-como-codigo.md)
+1826. [OpenBao: Compreender estado sealed](../../domains/software-0009/software/seguranca/openbao-compreender-estado-sealed.md)
+1827. [OpenBao: Proteger unseal shares](../../domains/software-0009/software/seguranca/openbao-proteger-unseal-shares.md)
+1828. [OpenBao: Avaliar auto-unseal](../../domains/software-0009/software/seguranca/openbao-avaliar-auto-unseal.md)
+1829. [OpenBao: Planejar recuperação sem divulgar shares](../../domains/software-0009/software/seguranca/openbao-planejar-recuperacao-sem-divulgar-shares.md)
+1830. [OpenBao: Monitorar selagem e alterações de política](../../domains/software-0009/software/seguranca/openbao-monitorar-selagem-e-alteracoes-de-politica.md)
+
+### Mozilla SOPS — editor de arquivos cifrados que protege valores selecionados usando chaves de dados e sistemas de gerenciamento de chaves
+
+1831. [Mozilla SOPS: Cifrar valores folha do documento](../../domains/software-0009/software/seguranca/sops-cifrar-valores-folha-do-documento.md)
+1832. [Mozilla SOPS: Selecionar recipients de KMS](../../domains/software-0009/software/seguranca/sops-selecionar-recipients-de-kms.md)
+1833. [Mozilla SOPS: Usar age recipient com cuidado](../../domains/software-0009/software/seguranca/sops-usar-age-recipient-com-cuidado.md)
+1834. [Mozilla SOPS: Delimitar regras por nome de arquivo](../../domains/software-0009/software/seguranca/sops-delimitar-regras-por-nome-de-arquivo.md)
+1835. [Mozilla SOPS: Controlar campos criptografados](../../domains/software-0009/software/seguranca/sops-controlar-campos-criptografados.md)
+1836. [Mozilla SOPS: Validar integridade com MAC](../../domains/software-0009/software/seguranca/sops-validar-integridade-com-mac.md)
+1837. [Mozilla SOPS: Rotacionar recipients sem trocar conteúdo](../../domains/software-0009/software/seguranca/sops-rotacionar-recipients-sem-trocar-conteudo.md)
+1838. [Mozilla SOPS: Descriptografar em CI sem persistir plaintext](../../domains/software-0009/software/seguranca/sops-descriptografar-em-ci-sem-persistir-plaintext.md)
+1839. [Mozilla SOPS: Gerenciar key groups e threshold](../../domains/software-0009/software/seguranca/sops-gerenciar-key-groups-e-threshold.md)
+1840. [Mozilla SOPS: Tratar exposição no histórico Git](../../domains/software-0009/software/seguranca/sops-tratar-exposicao-no-historico-git.md)
+
+### cert-manager — controlador Kubernetes que emite, acompanha e renova certificados por meio de recursos Certificate e Issuer
+
+1841. [cert-manager: Declarar Certificate e secretName](../../domains/software-0009/software/seguranca/cert-manager-declarar-certificate-e-secretname.md)
+1842. [cert-manager: Escolher Issuer ou ClusterIssuer](../../domains/software-0009/software/seguranca/cert-manager-escolher-issuer-ou-clusterissuer.md)
+1843. [cert-manager: Usar referência explícita de issuer](../../domains/software-0009/software/seguranca/cert-manager-usar-referencia-explicita-de-issuer.md)
+1844. [cert-manager: Entender status e condições de emissão](../../domains/software-0009/software/seguranca/cert-manager-entender-status-e-condicoes-de-emissao.md)
+1845. [cert-manager: Escolher desafio ACME HTTP-01 ou DNS-01](../../domains/software-0009/software/seguranca/cert-manager-escolher-desafio-acme-http-01-ou-dns-01.md)
+1846. [cert-manager: Configurar renovação antecipada](../../domains/software-0009/software/seguranca/cert-manager-configurar-renovacao-antecipada.md)
+1847. [cert-manager: Proteger Secret da chave privada](../../domains/software-0009/software/seguranca/cert-manager-proteger-secret-da-chave-privada.md)
+1848. [cert-manager: Selecionar solver pelo domínio](../../domains/software-0009/software/seguranca/cert-manager-selecionar-solver-pelo-dominio.md)
+1849. [cert-manager: Investigar falhas sem expor credenciais](../../domains/software-0009/software/seguranca/cert-manager-investigar-falhas-sem-expor-credenciais.md)
+1850. [cert-manager: Confirmar consumo do certificado renovado](../../domains/software-0009/software/seguranca/cert-manager-confirmar-consumo-do-certificado-renovado.md)
+
+### Kubernetes Pod Security Admission — admission controller nativo que aplica Pod Security Standards por namespace nos níveis privileged, baseline e restricted
+
+1851. [Kubernetes Pod Security Admission: Distinguir níveis de Pod Security](../../domains/software-0009/software/seguranca/pod-security-admission-distinguir-niveis-de-pod-security.md)
+1852. [Kubernetes Pod Security Admission: Aplicar labels de namespace por modo](../../domains/software-0009/software/seguranca/pod-security-admission-aplicar-labels-de-namespace-por-modo.md)
+1853. [Kubernetes Pod Security Admission: Fixar versão do padrão](../../domains/software-0009/software/seguranca/pod-security-admission-fixar-versao-do-padrao.md)
+1854. [Kubernetes Pod Security Admission: Migrar de warn para enforce](../../domains/software-0009/software/seguranca/pod-security-admission-migrar-de-warn-para-enforce.md)
+1855. [Kubernetes Pod Security Admission: Entender escopo das verificações](../../domains/software-0009/software/seguranca/pod-security-admission-entender-escopo-das-verificacoes.md)
+1856. [Kubernetes Pod Security Admission: Exceções de usuários, namespaces e runtime classes](../../domains/software-0009/software/seguranca/pod-security-admission-excecoes-de-usuarios-namespaces-e-runtime-classes.md)
+1857. [Kubernetes Pod Security Admission: Hardening do securityContext](../../domains/software-0009/software/seguranca/pod-security-admission-hardening-do-securitycontext.md)
+1858. [Kubernetes Pod Security Admission: Revisar mutações de admission](../../domains/software-0009/software/seguranca/pod-security-admission-revisar-mutacoes-de-admission.md)
+1859. [Kubernetes Pod Security Admission: Observar audit events](../../domains/software-0009/software/seguranca/pod-security-admission-observar-audit-events.md)
+1860. [Kubernetes Pod Security Admission: Coordenar upgrade do cluster e políticas](../../domains/software-0009/software/seguranca/pod-security-admission-coordenar-upgrade-do-cluster-e-politicas.md)
+
+### Kubernetes NetworkPolicy — API declarativa de política de rede L3/L4 para selecionar pods e restringir tráfego ingress e egress
+
+1861. [Kubernetes NetworkPolicy: Selecionar pods protegidos](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-selecionar-pods-protegidos.md)
+1862. [Kubernetes NetworkPolicy: Entender isolamento ingress](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-entender-isolamento-ingress.md)
+1863. [Kubernetes NetworkPolicy: Entender isolamento egress](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-entender-isolamento-egress.md)
+1864. [Kubernetes NetworkPolicy: Combinar policies de forma aditiva](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-combinar-policies-de-forma-aditiva.md)
+1865. [Kubernetes NetworkPolicy: Combinar podSelector e namespaceSelector](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-combinar-podselector-e-namespaceselector.md)
+1866. [Kubernetes NetworkPolicy: Restringir portas e protocolos](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-restringir-portas-e-protocolos.md)
+1867. [Kubernetes NetworkPolicy: Confirmar suporte do CNI](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-confirmar-suporte-do-cni.md)
+1868. [Kubernetes NetworkPolicy: Planejar política default-deny por namespace](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-planejar-politica-default-deny-por-namespace.md)
+1869. [Kubernetes NetworkPolicy: Tratar endereços IP e mudanças de serviço](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-tratar-enderecos-ip-e-mudancas-de-servico.md)
+1870. [Kubernetes NetworkPolicy: Validar tráfego com testes de integração](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-validar-trafego-com-testes-de-integracao.md)
+
+### OPA Gatekeeper — policy controller Kubernetes baseado em OPA que valida recursos com ConstraintTemplates e Constraints
+
+1871. [OPA Gatekeeper: Definir ConstraintTemplate](../../domains/software-0009/software/seguranca/gatekeeper-definir-constrainttemplate.md)
+1872. [OPA Gatekeeper: Instanciar Constraint com escopo claro](../../domains/software-0009/software/seguranca/gatekeeper-instanciar-constraint-com-escopo-claro.md)
+1873. [OPA Gatekeeper: Usar admission para prevenir violações](../../domains/software-0009/software/seguranca/gatekeeper-usar-admission-para-prevenir-violacoes.md)
+1874. [OPA Gatekeeper: Iniciar com enforcementAction dryrun](../../domains/software-0009/software/seguranca/gatekeeper-iniciar-com-enforcementaction-dryrun.md)
+1875. [OPA Gatekeeper: Auditar recursos já existentes](../../domains/software-0009/software/seguranca/gatekeeper-auditar-recursos-ja-existentes.md)
+1876. [OPA Gatekeeper: Testar policies com gator](../../domains/software-0009/software/seguranca/gatekeeper-testar-policies-com-gator.md)
+1877. [OPA Gatekeeper: Tratar parâmetros como contrato](../../domains/software-0009/software/seguranca/gatekeeper-tratar-parametros-como-contrato.md)
+1878. [OPA Gatekeeper: Controlar match, exclusions e namespaces](../../domains/software-0009/software/seguranca/gatekeeper-controlar-match-exclusions-e-namespaces.md)
+1879. [OPA Gatekeeper: Interpretar violation e source](../../domains/software-0009/software/seguranca/gatekeeper-interpretar-violation-e-source.md)
+1880. [OPA Gatekeeper: Versionar templates e rollout](../../domains/software-0009/software/seguranca/gatekeeper-versionar-templates-e-rollout.md)
+
+### External Secrets Operator — operador Kubernetes que sincroniza valores de provedores externos para Kubernetes Secrets por recursos declarativos
+
+1881. [External Secrets Operator: Separar SecretStore e ClusterSecretStore](../../domains/software-0009/software/seguranca/external-secrets-separar-secretstore-e-clustersecretstore.md)
+1882. [External Secrets Operator: Mapear segredo remoto para ExternalSecret](../../domains/software-0009/software/seguranca/external-secrets-mapear-segredo-remoto-para-externalsecret.md)
+1883. [External Secrets Operator: Autenticar provider com identidade mínima](../../domains/software-0009/software/seguranca/external-secrets-autenticar-provider-com-identidade-minima.md)
+1884. [External Secrets Operator: Definir escopo de ClusterSecretStore](../../domains/software-0009/software/seguranca/external-secrets-definir-escopo-de-clustersecretstore.md)
+1885. [External Secrets Operator: Escolher refreshInterval e estratégia](../../domains/software-0009/software/seguranca/external-secrets-escolher-refreshinterval-e-estrategia.md)
+1886. [External Secrets Operator: Tratar criação e deleção do Secret alvo](../../domains/software-0009/software/seguranca/external-secrets-tratar-criacao-e-delecao-do-secret-alvo.md)
+1887. [External Secrets Operator: Usar dataFrom com escopo restrito](../../domains/software-0009/software/seguranca/external-secrets-usar-datafrom-com-escopo-restrito.md)
+1888. [External Secrets Operator: Gerar Secret com template](../../domains/software-0009/software/seguranca/external-secrets-gerar-secret-com-template.md)
+1889. [External Secrets Operator: Diagnosticar condições sem expor valor](../../domains/software-0009/software/seguranca/external-secrets-diagnosticar-condicoes-sem-expor-valor.md)
+1890. [External Secrets Operator: Planejar rotação e revogação no backend](../../domains/software-0009/software/seguranca/external-secrets-planejar-rotacao-e-revogacao-no-backend.md)
+
+### Cilium Network Policies — sistema de política de rede Cilium para controlar tráfego de endpoints Kubernetes em L3, L4 e L7
+
+1891. [Cilium Network Policies: Selecionar endpoints por identidade](../../domains/software-0009/software/seguranca/cilium-network-policy-selecionar-endpoints-por-identidade.md)
+1892. [Cilium Network Policies: Entender transição para default-deny](../../domains/software-0009/software/seguranca/cilium-network-policy-entender-transicao-para-default-deny.md)
+1893. [Cilium Network Policies: Permitir tráfego L3 por labels](../../domains/software-0009/software/seguranca/cilium-network-policy-permitir-trafego-l3-por-labels.md)
+1894. [Cilium Network Policies: Restringir destinos por CIDR](../../domains/software-0009/software/seguranca/cilium-network-policy-restringir-destinos-por-cidr.md)
+1895. [Cilium Network Policies: Usar entities com semântica conhecida](../../domains/software-0009/software/seguranca/cilium-network-policy-usar-entities-com-semantica-conhecida.md)
+1896. [Cilium Network Policies: Combinar política L3 e L4](../../domains/software-0009/software/seguranca/cilium-network-policy-combinar-politica-l3-e-l4.md)
+1897. [Cilium Network Policies: Aplicar controles L7 com proxy](../../domains/software-0009/software/seguranca/cilium-network-policy-aplicar-controles-l7-com-proxy.md)
+1898. [Cilium Network Policies: Usar DNS policy com allowlist](../../domains/software-0009/software/seguranca/cilium-network-policy-usar-dns-policy-com-allowlist.md)
+1899. [Cilium Network Policies: Observar policy verdicts e Hubble](../../domains/software-0009/software/seguranca/cilium-network-policy-observar-policy-verdicts-e-hubble.md)
+1900. [Cilium Network Policies: Implantar mudança incrementalmente](../../domains/software-0009/software/seguranca/cilium-network-policy-implantar-mudanca-incrementalmente.md)
