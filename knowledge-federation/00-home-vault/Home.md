@@ -15,11 +15,12 @@ Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint histórico cont�
 - [[MOC-Cache-HTTP]] — 8 notas sobre semântica e operação de cache HTTP, aprovadas em revisão factual humana.
 - [[MOC-Testes-Software-0007]] — 2000 notas do primeiro lote de escala (meta de 2.000 concluída); nove têm aprovação humana histórica e 1991 revisões factuais por IA.
 - [[MOC-DevOps-Software-0008]] — 2000 notas do segundo lote de escala `software-devops-2000-0002` (meta de 2.000 concluída, `complete`); 2000 revisões factuais por IA.
-- [[MOC-Seguranca-Software-0009]] — 1900 notas do terceiro lote de escala `software-seguranca-2000-0003` (meta: 2.000, status `in_progress`); 1900 revisões factuais por IA.
-- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 5891 aprovações por IA, identificadas separadamente.
+- [[MOC-Seguranca-Software-0009]] — 2000 notas do terceiro lote de escala `software-seguranca-2000-0003` (meta: 2.000, status `complete`); 2000 revisões factuais por IA.
+- [[MOC-Criacao-IA-Software-0010]] — lote 4 `software-criacao-ia-2000-0004` aberto em 0/2.000; 20 tranches planejadas para engenharia e criação de programas, apps e jogos com IA; nenhuma nota material ainda.
+- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 5991 aprovações por IA, identificadas separadamente.
 - [[legacy-remediation-queue|Fila de remediação legada]] — inventário dos problemas nas 100 notas antigas.
 - [[PLANO-CONTINUO-1M|Plano contínuo para a meta de 1 milhão]] — execução, estados e bloqueios.
-- [[note-quality-audit|Auditoria de qualidade]] — 5940 notas válidas pelo protocolo atual (49 humanas + 5891 IA) e 100 notas legadas com falhas.
+- [[note-quality-audit|Auditoria de qualidade]] — 6040 notas válidas pelo protocolo atual (49 humanas + 5991 IA) e 100 notas legadas com falhas.
 
 ## Mapas Globais
 

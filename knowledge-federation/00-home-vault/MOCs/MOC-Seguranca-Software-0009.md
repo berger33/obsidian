@@ -11,13 +11,13 @@ updated: 2026-10-04
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1900 notas substantivas (Tranches 1–19, IDs `1–1900`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **2000 notas substantivas (Tranches 1–20, IDs `1–2000`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1900 / 2.000 notas válidas (95,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1900**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1900 / 1900** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [Tranche 19](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-19.md))
+- Progresso atual: **2000 / 2.000 notas válidas (100,00%)** (`status: complete`)
+- Revisão factual humana: **0 / 2000**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **2000 / 2000** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [Tranche 19](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-19.md), [Tranche 20](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-20.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -2527,3 +2527,135 @@ Mapa de conteúdo das **1900 notas substantivas (Tranches 1–19, IDs `1–1900`
 - [[cilium-network-policy-usar-dns-policy-com-allowlist]] — Cilium Network Policies: Usar DNS policy com allowlist
 - [[cilium-network-policy-observar-policy-verdicts-e-hubble]] — Cilium Network Policies: Observar policy verdicts e Hubble
 - [[cilium-network-policy-implantar-mudanca-incrementalmente]] — Cilium Network Policies: Implantar mudança incrementalmente
+
+## Tranche 20 (IDs 1901–2000)
+
+### SLSA
+
+- [[slsa-entender-niveis-de-garantia-de-build]] — SLSA: Entender níveis de garantia de build
+- [[slsa-gerar-provenance-ligada-ao-artefato]] — SLSA: Gerar provenance ligada ao artefato
+- [[slsa-descrever-build-definition]] — SLSA: Descrever build definition
+- [[slsa-validar-origem-e-identidade-do-builder]] — SLSA: Validar origem e identidade do builder
+- [[slsa-separar-presenca-de-assinatura-de-nivel-slsa]] — SLSA: Separar presença de assinatura de nível SLSA
+- [[slsa-endurecer-plataforma-de-build]] — SLSA: Endurecer plataforma de build
+- [[slsa-manter-proveniencia-completa-de-materiais]] — SLSA: Manter proveniência completa de materiais
+- [[slsa-interpretar-nivel-sem-declarar-software-seguro]] — SLSA: Interpretar nível sem declarar software seguro
+- [[slsa-verificar-provenance-na-implantacao]] — SLSA: Verificar provenance na implantação
+- [[slsa-tratar-mudanca-de-pipeline-como-mudanca-de-confianca]] — SLSA: Tratar mudança de pipeline como mudança de confiança
+
+### The Update Framework (TUF)
+
+- [[tuf-separar-papeis-root-targets-snapshot-e-timestamp]] — The Update Framework (TUF): Separar papéis Root, Targets, Snapshot e Timestamp
+- [[tuf-usar-limiar-de-assinatura-na-raiz]] — The Update Framework (TUF): Usar limiar de assinatura na raiz
+- [[tuf-impedir-rollback-por-versao-monotonica]] — The Update Framework (TUF): Impedir rollback por versão monotônica
+- [[tuf-detectar-freeze-com-expiracao]] — The Update Framework (TUF): Detectar freeze com expiração
+- [[tuf-verificar-hashes-de-targets]] — The Update Framework (TUF): Verificar hashes de targets
+- [[tuf-usar-snapshot-para-consistencia]] — The Update Framework (TUF): Usar Snapshot para consistência
+- [[tuf-delegar-targets-por-escopo]] — The Update Framework (TUF): Delegar Targets por escopo
+- [[tuf-rotacionar-chave-root-com-cuidado]] — The Update Framework (TUF): Rotacionar chave Root com cuidado
+- [[tuf-confiar-em-mirrors-sem-ceder-verificacao]] — The Update Framework (TUF): Confiar em mirrors sem ceder verificação
+- [[tuf-bootstrap-seguro-do-primeiro-root]] — The Update Framework (TUF): Bootstrap seguro do primeiro Root
+
+### OpenVEX
+
+- [[openvex-modelar-statement-de-vulnerabilidade]] — OpenVEX: Modelar statement de vulnerabilidade
+- [[openvex-escolher-status-com-escopo]] — OpenVEX: Escolher status com escopo
+- [[openvex-justificar-not-affected-com-evidencia]] — OpenVEX: Justificar not_affected com evidência
+- [[openvex-distinguir-fixed-de-not-affected]] — OpenVEX: Distinguir fixed de not_affected
+- [[openvex-usar-under-investigation-sem-encerrar-triagem]] — OpenVEX: Usar under_investigation sem encerrar triagem
+- [[openvex-referenciar-produto-com-identificador-consistente]] — OpenVEX: Referenciar produto com identificador consistente
+- [[openvex-incluir-impacto-e-funcao-do-componente]] — OpenVEX: Incluir impacto e função do componente
+- [[openvex-atualizar-vex-junto-do-ciclo-de-release]] — OpenVEX: Atualizar VEX junto do ciclo de release
+- [[openvex-distribuir-openvex-com-sbom]] — OpenVEX: Distribuir OpenVEX com SBOM
+- [[openvex-revisar-autoria-e-trilha-da-declaracao]] — OpenVEX: Revisar autoria e trilha da declaração
+
+### CycloneDX Generator (cdxgen)
+
+- [[cdxgen-gerar-bom-de-repositorio]] — CycloneDX Generator (cdxgen): Gerar BOM de repositório
+- [[cdxgen-gerar-bom-de-imagem-container]] — CycloneDX Generator (cdxgen): Gerar BOM de imagem container
+- [[cdxgen-cobrir-ecossistemas-declarados]] — CycloneDX Generator (cdxgen): Cobrir ecossistemas declarados
+- [[cdxgen-analisar-monorepo-por-diretorio]] — CycloneDX Generator (cdxgen): Analisar monorepo por diretório
+- [[cdxgen-controlar-escopo-e-exclusoes]] — CycloneDX Generator (cdxgen): Controlar escopo e exclusões
+- [[cdxgen-escolher-formato-e-versao-cyclonedx]] — CycloneDX Generator (cdxgen): Escolher formato e versão CycloneDX
+- [[cdxgen-gerar-bom-no-pipeline-reproduzivel]] — CycloneDX Generator (cdxgen): Gerar BOM no pipeline reproduzível
+- [[cdxgen-encadear-geracao-validacao-e-scan]] — CycloneDX Generator (cdxgen): Encadear geração, validação e scan
+- [[cdxgen-comparar-bom-antes-e-depois-do-release]] — CycloneDX Generator (cdxgen): Comparar BOM antes e depois do release
+- [[cdxgen-interpretar-ausencia-de-componente-com-cautela]] — CycloneDX Generator (cdxgen): Interpretar ausência de componente com cautela
+
+### GitHub Artifact Attestations
+
+- [[github-artifact-attestations-atestar-artifact-gerado-por-workflow]] — GitHub Artifact Attestations: Atestar artifact gerado por workflow
+- [[github-artifact-attestations-usar-digest-como-subject-de-imagem]] — GitHub Artifact Attestations: Usar digest como subject de imagem
+- [[github-artifact-attestations-limitar-permissoes-do-workflow-produtor]] — GitHub Artifact Attestations: Limitar permissões do workflow produtor
+- [[github-artifact-attestations-verificar-repository-e-workflow-de-origem]] — GitHub Artifact Attestations: Verificar repository e workflow de origem
+- [[github-artifact-attestations-inspecionar-tipo-de-predicate]] — GitHub Artifact Attestations: Inspecionar tipo de predicate
+- [[github-artifact-attestations-verificar-attestation-em-ambiente-consumidor]] — GitHub Artifact Attestations: Verificar attestation em ambiente consumidor
+- [[github-artifact-attestations-separar-verificacao-de-artifact-e-identidade]] — GitHub Artifact Attestations: Separar verificação de artifact e identidade
+- [[github-artifact-attestations-acompanhar-acesso-publico-e-retencao]] — GitHub Artifact Attestations: Acompanhar acesso público e retenção
+- [[github-artifact-attestations-consumir-attestations-de-images-oci]] — GitHub Artifact Attestations: Consumir attestations de images OCI
+- [[github-artifact-attestations-definir-politica-de-aceitacao-de-provenance]] — GitHub Artifact Attestations: Definir política de aceitação de provenance
+
+### Docker Scout
+
+- [[docker-scout-analisar-imagem-por-digest]] — Docker Scout: Analisar imagem por digest
+- [[docker-scout-inspecionar-sbom-e-pacotes-detectados]] — Docker Scout: Inspecionar SBOM e pacotes detectados
+- [[docker-scout-priorizar-vulnerabilidades-no-contexto]] — Docker Scout: Priorizar vulnerabilidades no contexto
+- [[docker-scout-comparar-imagem-candidata-com-baseline]] — Docker Scout: Comparar imagem candidata com baseline
+- [[docker-scout-aplicar-recommendations-de-atualizacao]] — Docker Scout: Aplicar recommendations de atualização
+- [[docker-scout-aplicar-policy-ao-gate-de-build]] — Docker Scout: Aplicar policy ao gate de build
+- [[docker-scout-distinguir-severity-e-fixability]] — Docker Scout: Distinguir severity e fixability
+- [[docker-scout-usar-vex-para-comunicar-nao-afetado]] — Docker Scout: Usar VEX para comunicar não afetado
+- [[docker-scout-controlar-credenciais-ao-analisar-registry]] — Docker Scout: Controlar credenciais ao analisar registry
+- [[docker-scout-verificar-resultado-com-artifact-final]] — Docker Scout: Verificar resultado com artifact final
+
+### Chainguard Images e Wolfi
+
+- [[chainguard-wolfi-distinguir-wolfi-de-distribuicao-tradicional]] — Chainguard Images e Wolfi: Distinguir Wolfi de distribuição tradicional
+- [[chainguard-wolfi-escolher-imagem-pelo-papel-da-aplicacao]] — Chainguard Images e Wolfi: Escolher imagem pelo papel da aplicação
+- [[chainguard-wolfi-inspecionar-sbom-da-imagem]] — Chainguard Images e Wolfi: Inspecionar SBOM da imagem
+- [[chainguard-wolfi-verificar-provenance-da-imagem]] — Chainguard Images e Wolfi: Verificar provenance da imagem
+- [[chainguard-wolfi-preferir-digest-para-deploy]] — Chainguard Images e Wolfi: Preferir digest para deploy
+- [[chainguard-wolfi-planejar-atualizacao-frequente]] — Chainguard Images e Wolfi: Planejar atualização frequente
+- [[chainguard-wolfi-migrar-aplicando-compatibilidade]] — Chainguard Images e Wolfi: Migrar aplicando compatibilidade
+- [[chainguard-wolfi-separar-imagem-de-build-e-runtime]] — Chainguard Images e Wolfi: Separar imagem de build e runtime
+- [[chainguard-wolfi-usar-variante-de-debug-sem-expor-producao]] — Chainguard Images e Wolfi: Usar variante de debug sem expor produção
+- [[chainguard-wolfi-evitar-confiar-em-marca-como-garantia]] — Chainguard Images e Wolfi: Evitar confiar em marca como garantia
+
+### RustSec cargo-audit
+
+- [[cargo-audit-auditar-cargo-lock-do-workspace]] — RustSec cargo-audit: Auditar Cargo.lock do workspace
+- [[cargo-audit-atualizar-advisory-database]] — RustSec cargo-audit: Atualizar advisory database
+- [[cargo-audit-interpretar-advisory-por-crate-e-versao]] — RustSec cargo-audit: Interpretar advisory por crate e versão
+- [[cargo-audit-corrigir-dependencia-transitiva]] — RustSec cargo-audit: Corrigir dependência transitiva
+- [[cargo-audit-governar-ignores-em-audit-toml]] — RustSec cargo-audit: Governar ignores em audit.toml
+- [[cargo-audit-separar-falha-de-ferramenta-de-finding]] — RustSec cargo-audit: Separar falha de ferramenta de finding
+- [[cargo-audit-executar-auditoria-em-ci]] — RustSec cargo-audit: Executar auditoria em CI
+- [[cargo-audit-considerar-advisories-de-manutencao]] — RustSec cargo-audit: Considerar advisories de manutenção
+- [[cargo-audit-fixar-toolchain-e-comando-de-auditoria]] — RustSec cargo-audit: Fixar toolchain e comando de auditoria
+- [[cargo-audit-tratar-saida-como-evidencia-limitada]] — RustSec cargo-audit: Tratar saída como evidência limitada
+
+### OpenSSF Best Practices Badge
+
+- [[openssf-badge-entender-escopo-da-autoavaliacao]] — OpenSSF Best Practices Badge: Entender escopo da autoavaliação
+- [[openssf-badge-mapear-criterios-a-evidencias]] — OpenSSF Best Practices Badge: Mapear critérios a evidências
+- [[openssf-badge-usar-nivel-adequado-ao-projeto]] — OpenSSF Best Practices Badge: Usar nível adequado ao projeto
+- [[openssf-badge-documentar-reporte-de-vulnerabilidades]] — OpenSSF Best Practices Badge: Documentar reporte de vulnerabilidades
+- [[openssf-badge-evidenciar-testes-automatizados]] — OpenSSF Best Practices Badge: Evidenciar testes automatizados
+- [[openssf-badge-manter-releases-e-comunicacao]] — OpenSSF Best Practices Badge: Manter releases e comunicação
+- [[openssf-badge-revisar-criterio-apos-mudanca-organizacional]] — OpenSSF Best Practices Badge: Revisar critério após mudança organizacional
+- [[openssf-badge-separar-badge-de-auditoria-independente]] — OpenSSF Best Practices Badge: Separar badge de auditoria independente
+- [[openssf-badge-priorizar-gaps-uteis-em-vez-de-pontuacao]] — OpenSSF Best Practices Badge: Priorizar gaps úteis em vez de pontuação
+- [[openssf-badge-declarar-badge-com-transparencia]] — OpenSSF Best Practices Badge: Declarar badge com transparência
+
+### Reproducible Builds
+
+- [[reproducible-builds-controlar-timestamps-com-source-date-epoch]] — Reproducible Builds: Controlar timestamps com SOURCE_DATE_EPOCH
+- [[reproducible-builds-fixar-toolchain-e-dependencias]] — Reproducible Builds: Fixar toolchain e dependências
+- [[reproducible-builds-remover-caminhos-absolutos-e-hostnames]] — Reproducible Builds: Remover caminhos absolutos e hostnames
+- [[reproducible-builds-normalizar-locale-e-timezone]] — Reproducible Builds: Normalizar locale e timezone
+- [[reproducible-builds-ordenar-entradas-e-arquivos-de-archive]] — Reproducible Builds: Ordenar entradas e arquivos de archive
+- [[reproducible-builds-executar-builds-independentes]] — Reproducible Builds: Executar builds independentes
+- [[reproducible-builds-comparar-artefatos-com-diff-util]] — Reproducible Builds: Comparar artefatos com diff útil
+- [[reproducible-builds-reproduzir-imagens-de-container]] — Reproducible Builds: Reproduzir imagens de container
+- [[reproducible-builds-investigar-fontes-de-aleatoriedade]] — Reproducible Builds: Investigar fontes de aleatoriedade
+- [[reproducible-builds-usar-reprodutibilidade-sem-alegar-seguranca]] — Reproducible Builds: Usar reprodutibilidade sem alegar segurança

@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1900 / 2.000 (95,00%)**
-- Gate automatizado: **1900/1900 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 19)
-- Revisão factual humana: **0/1900**
-- Revisão factual por IA: **1900/1900**
-- Contabilizadas como válidas: **1900/1900**
-- Revisor das 1900 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–19 (1900 notas, IDs 1–1900) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **2000 / 2.000 (100,00%)**
+- Gate automatizado: **2000/2000 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 20)
+- Revisão factual humana: **0/2000**
+- Revisão factual por IA: **2000/2000**
+- Contabilizadas como válidas: **2000/2000**
+- Revisor das 2000 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `complete`; tranches 1–20 (2000 notas, IDs 1–2000) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-19.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-19.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [`tranche 19`](../reports/ai-review-software-seguranca-2000-0003-tranche-19.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-20.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-20.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [`tranche 19`](../reports/ai-review-software-seguranca-2000-0003-tranche-19.md), [`tranche 20`](../reports/ai-review-software-seguranca-2000-0003-tranche-20.md)
 
-Existem 1900 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 100 restantes.
+Existem 2000 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 0 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2527,3 +2527,135 @@ Existem 1900 notas materiais listadas abaixo; não há IDs reservados, placehold
 1898. [Cilium Network Policies: Usar DNS policy com allowlist](../../domains/software-0009/software/seguranca/cilium-network-policy-usar-dns-policy-com-allowlist.md)
 1899. [Cilium Network Policies: Observar policy verdicts e Hubble](../../domains/software-0009/software/seguranca/cilium-network-policy-observar-policy-verdicts-e-hubble.md)
 1900. [Cilium Network Policies: Implantar mudança incrementalmente](../../domains/software-0009/software/seguranca/cilium-network-policy-implantar-mudanca-incrementalmente.md)
+
+## Tranche 20 — SLSA, The Update Framework (TUF), OpenVEX, CycloneDX Generator (cdxgen), GitHub Artifact Attestations, Docker Scout, Chainguard Images e Wolfi, RustSec cargo-audit, OpenSSF Best Practices Badge, Reproducible Builds (100 notas substantivas; revisão factual por IA registrada)
+
+### SLSA — framework para descrever níveis de garantia da supply chain de software e a proveniência de builds
+
+1901. [SLSA: Entender níveis de garantia de build](../../domains/software-0009/software/seguranca/slsa-entender-niveis-de-garantia-de-build.md)
+1902. [SLSA: Gerar provenance ligada ao artefato](../../domains/software-0009/software/seguranca/slsa-gerar-provenance-ligada-ao-artefato.md)
+1903. [SLSA: Descrever build definition](../../domains/software-0009/software/seguranca/slsa-descrever-build-definition.md)
+1904. [SLSA: Validar origem e identidade do builder](../../domains/software-0009/software/seguranca/slsa-validar-origem-e-identidade-do-builder.md)
+1905. [SLSA: Separar presença de assinatura de nível SLSA](../../domains/software-0009/software/seguranca/slsa-separar-presenca-de-assinatura-de-nivel-slsa.md)
+1906. [SLSA: Endurecer plataforma de build](../../domains/software-0009/software/seguranca/slsa-endurecer-plataforma-de-build.md)
+1907. [SLSA: Manter proveniência completa de materiais](../../domains/software-0009/software/seguranca/slsa-manter-proveniencia-completa-de-materiais.md)
+1908. [SLSA: Interpretar nível sem declarar software seguro](../../domains/software-0009/software/seguranca/slsa-interpretar-nivel-sem-declarar-software-seguro.md)
+1909. [SLSA: Verificar provenance na implantação](../../domains/software-0009/software/seguranca/slsa-verificar-provenance-na-implantacao.md)
+1910. [SLSA: Tratar mudança de pipeline como mudança de confiança](../../domains/software-0009/software/seguranca/slsa-tratar-mudanca-de-pipeline-como-mudanca-de-confianca.md)
+
+### The Update Framework (TUF) — framework de metadados assinados para distribuir atualizações resistentes a rollback, freeze e comprometimento de chaves
+
+1911. [The Update Framework (TUF): Separar papéis Root, Targets, Snapshot e Timestamp](../../domains/software-0009/software/seguranca/tuf-separar-papeis-root-targets-snapshot-e-timestamp.md)
+1912. [The Update Framework (TUF): Usar limiar de assinatura na raiz](../../domains/software-0009/software/seguranca/tuf-usar-limiar-de-assinatura-na-raiz.md)
+1913. [The Update Framework (TUF): Impedir rollback por versão monotônica](../../domains/software-0009/software/seguranca/tuf-impedir-rollback-por-versao-monotonica.md)
+1914. [The Update Framework (TUF): Detectar freeze com expiração](../../domains/software-0009/software/seguranca/tuf-detectar-freeze-com-expiracao.md)
+1915. [The Update Framework (TUF): Verificar hashes de targets](../../domains/software-0009/software/seguranca/tuf-verificar-hashes-de-targets.md)
+1916. [The Update Framework (TUF): Usar Snapshot para consistência](../../domains/software-0009/software/seguranca/tuf-usar-snapshot-para-consistencia.md)
+1917. [The Update Framework (TUF): Delegar Targets por escopo](../../domains/software-0009/software/seguranca/tuf-delegar-targets-por-escopo.md)
+1918. [The Update Framework (TUF): Rotacionar chave Root com cuidado](../../domains/software-0009/software/seguranca/tuf-rotacionar-chave-root-com-cuidado.md)
+1919. [The Update Framework (TUF): Confiar em mirrors sem ceder verificação](../../domains/software-0009/software/seguranca/tuf-confiar-em-mirrors-sem-ceder-verificacao.md)
+1920. [The Update Framework (TUF): Bootstrap seguro do primeiro Root](../../domains/software-0009/software/seguranca/tuf-bootstrap-seguro-do-primeiro-root.md)
+
+### OpenVEX — formato aberto e compacto para comunicar status de vulnerabilidades em produtos e componentes
+
+1921. [OpenVEX: Modelar statement de vulnerabilidade](../../domains/software-0009/software/seguranca/openvex-modelar-statement-de-vulnerabilidade.md)
+1922. [OpenVEX: Escolher status com escopo](../../domains/software-0009/software/seguranca/openvex-escolher-status-com-escopo.md)
+1923. [OpenVEX: Justificar not_affected com evidência](../../domains/software-0009/software/seguranca/openvex-justificar-not-affected-com-evidencia.md)
+1924. [OpenVEX: Distinguir fixed de not_affected](../../domains/software-0009/software/seguranca/openvex-distinguir-fixed-de-not-affected.md)
+1925. [OpenVEX: Usar under_investigation sem encerrar triagem](../../domains/software-0009/software/seguranca/openvex-usar-under-investigation-sem-encerrar-triagem.md)
+1926. [OpenVEX: Referenciar produto com identificador consistente](../../domains/software-0009/software/seguranca/openvex-referenciar-produto-com-identificador-consistente.md)
+1927. [OpenVEX: Incluir impacto e função do componente](../../domains/software-0009/software/seguranca/openvex-incluir-impacto-e-funcao-do-componente.md)
+1928. [OpenVEX: Atualizar VEX junto do ciclo de release](../../domains/software-0009/software/seguranca/openvex-atualizar-vex-junto-do-ciclo-de-release.md)
+1929. [OpenVEX: Distribuir OpenVEX com SBOM](../../domains/software-0009/software/seguranca/openvex-distribuir-openvex-com-sbom.md)
+1930. [OpenVEX: Revisar autoria e trilha da declaração](../../domains/software-0009/software/seguranca/openvex-revisar-autoria-e-trilha-da-declaracao.md)
+
+### CycloneDX Generator (cdxgen) — gerador de Software Bill of Materials do ecossistema CycloneDX para código, dependências, imagens e outros alvos
+
+1931. [CycloneDX Generator (cdxgen): Gerar BOM de repositório](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-de-repositorio.md)
+1932. [CycloneDX Generator (cdxgen): Gerar BOM de imagem container](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-de-imagem-container.md)
+1933. [CycloneDX Generator (cdxgen): Cobrir ecossistemas declarados](../../domains/software-0009/software/seguranca/cdxgen-cobrir-ecossistemas-declarados.md)
+1934. [CycloneDX Generator (cdxgen): Analisar monorepo por diretório](../../domains/software-0009/software/seguranca/cdxgen-analisar-monorepo-por-diretorio.md)
+1935. [CycloneDX Generator (cdxgen): Controlar escopo e exclusões](../../domains/software-0009/software/seguranca/cdxgen-controlar-escopo-e-exclusoes.md)
+1936. [CycloneDX Generator (cdxgen): Escolher formato e versão CycloneDX](../../domains/software-0009/software/seguranca/cdxgen-escolher-formato-e-versao-cyclonedx.md)
+1937. [CycloneDX Generator (cdxgen): Gerar BOM no pipeline reproduzível](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-no-pipeline-reproduzivel.md)
+1938. [CycloneDX Generator (cdxgen): Encadear geração, validação e scan](../../domains/software-0009/software/seguranca/cdxgen-encadear-geracao-validacao-e-scan.md)
+1939. [CycloneDX Generator (cdxgen): Comparar BOM antes e depois do release](../../domains/software-0009/software/seguranca/cdxgen-comparar-bom-antes-e-depois-do-release.md)
+1940. [CycloneDX Generator (cdxgen): Interpretar ausência de componente com cautela](../../domains/software-0009/software/seguranca/cdxgen-interpretar-ausencia-de-componente-com-cautela.md)
+
+### GitHub Artifact Attestations — recurso do GitHub para gerar e verificar attestations de build e identidade de origem para artefatos e imagens
+
+1941. [GitHub Artifact Attestations: Atestar artifact gerado por workflow](../../domains/software-0009/software/seguranca/github-artifact-attestations-atestar-artifact-gerado-por-workflow.md)
+1942. [GitHub Artifact Attestations: Usar digest como subject de imagem](../../domains/software-0009/software/seguranca/github-artifact-attestations-usar-digest-como-subject-de-imagem.md)
+1943. [GitHub Artifact Attestations: Limitar permissões do workflow produtor](../../domains/software-0009/software/seguranca/github-artifact-attestations-limitar-permissoes-do-workflow-produtor.md)
+1944. [GitHub Artifact Attestations: Verificar repository e workflow de origem](../../domains/software-0009/software/seguranca/github-artifact-attestations-verificar-repository-e-workflow-de-origem.md)
+1945. [GitHub Artifact Attestations: Inspecionar tipo de predicate](../../domains/software-0009/software/seguranca/github-artifact-attestations-inspecionar-tipo-de-predicate.md)
+1946. [GitHub Artifact Attestations: Verificar attestation em ambiente consumidor](../../domains/software-0009/software/seguranca/github-artifact-attestations-verificar-attestation-em-ambiente-consumidor.md)
+1947. [GitHub Artifact Attestations: Separar verificação de artifact e identidade](../../domains/software-0009/software/seguranca/github-artifact-attestations-separar-verificacao-de-artifact-e-identidade.md)
+1948. [GitHub Artifact Attestations: Acompanhar acesso público e retenção](../../domains/software-0009/software/seguranca/github-artifact-attestations-acompanhar-acesso-publico-e-retencao.md)
+1949. [GitHub Artifact Attestations: Consumir attestations de images OCI](../../domains/software-0009/software/seguranca/github-artifact-attestations-consumir-attestations-de-images-oci.md)
+1950. [GitHub Artifact Attestations: Definir política de aceitação de provenance](../../domains/software-0009/software/seguranca/github-artifact-attestations-definir-politica-de-aceitacao-de-provenance.md)
+
+### Docker Scout — serviço de análise de imagens e SBOMs Docker que identifica vulnerabilidades e oferece recomendações de políticas
+
+1951. [Docker Scout: Analisar imagem por digest](../../domains/software-0009/software/seguranca/docker-scout-analisar-imagem-por-digest.md)
+1952. [Docker Scout: Inspecionar SBOM e pacotes detectados](../../domains/software-0009/software/seguranca/docker-scout-inspecionar-sbom-e-pacotes-detectados.md)
+1953. [Docker Scout: Priorizar vulnerabilidades no contexto](../../domains/software-0009/software/seguranca/docker-scout-priorizar-vulnerabilidades-no-contexto.md)
+1954. [Docker Scout: Comparar imagem candidata com baseline](../../domains/software-0009/software/seguranca/docker-scout-comparar-imagem-candidata-com-baseline.md)
+1955. [Docker Scout: Aplicar recommendations de atualização](../../domains/software-0009/software/seguranca/docker-scout-aplicar-recommendations-de-atualizacao.md)
+1956. [Docker Scout: Aplicar policy ao gate de build](../../domains/software-0009/software/seguranca/docker-scout-aplicar-policy-ao-gate-de-build.md)
+1957. [Docker Scout: Distinguir severity e fixability](../../domains/software-0009/software/seguranca/docker-scout-distinguir-severity-e-fixability.md)
+1958. [Docker Scout: Usar VEX para comunicar não afetado](../../domains/software-0009/software/seguranca/docker-scout-usar-vex-para-comunicar-nao-afetado.md)
+1959. [Docker Scout: Controlar credenciais ao analisar registry](../../domains/software-0009/software/seguranca/docker-scout-controlar-credenciais-ao-analisar-registry.md)
+1960. [Docker Scout: Verificar resultado com artifact final](../../domains/software-0009/software/seguranca/docker-scout-verificar-resultado-com-artifact-final.md)
+
+### Chainguard Images e Wolfi — ecossistema de imagens de container mínimas baseadas em Wolfi, com metadados de pacote e evidências de build
+
+1961. [Chainguard Images e Wolfi: Distinguir Wolfi de distribuição tradicional](../../domains/software-0009/software/seguranca/chainguard-wolfi-distinguir-wolfi-de-distribuicao-tradicional.md)
+1962. [Chainguard Images e Wolfi: Escolher imagem pelo papel da aplicação](../../domains/software-0009/software/seguranca/chainguard-wolfi-escolher-imagem-pelo-papel-da-aplicacao.md)
+1963. [Chainguard Images e Wolfi: Inspecionar SBOM da imagem](../../domains/software-0009/software/seguranca/chainguard-wolfi-inspecionar-sbom-da-imagem.md)
+1964. [Chainguard Images e Wolfi: Verificar provenance da imagem](../../domains/software-0009/software/seguranca/chainguard-wolfi-verificar-provenance-da-imagem.md)
+1965. [Chainguard Images e Wolfi: Preferir digest para deploy](../../domains/software-0009/software/seguranca/chainguard-wolfi-preferir-digest-para-deploy.md)
+1966. [Chainguard Images e Wolfi: Planejar atualização frequente](../../domains/software-0009/software/seguranca/chainguard-wolfi-planejar-atualizacao-frequente.md)
+1967. [Chainguard Images e Wolfi: Migrar aplicando compatibilidade](../../domains/software-0009/software/seguranca/chainguard-wolfi-migrar-aplicando-compatibilidade.md)
+1968. [Chainguard Images e Wolfi: Separar imagem de build e runtime](../../domains/software-0009/software/seguranca/chainguard-wolfi-separar-imagem-de-build-e-runtime.md)
+1969. [Chainguard Images e Wolfi: Usar variante de debug sem expor produção](../../domains/software-0009/software/seguranca/chainguard-wolfi-usar-variante-de-debug-sem-expor-producao.md)
+1970. [Chainguard Images e Wolfi: Evitar confiar em marca como garantia](../../domains/software-0009/software/seguranca/chainguard-wolfi-evitar-confiar-em-marca-como-garantia.md)
+
+### RustSec cargo-audit — ferramenta RustSec que compara dependências bloqueadas em Cargo.lock com a base de advisories de Rust
+
+1971. [RustSec cargo-audit: Auditar Cargo.lock do workspace](../../domains/software-0009/software/seguranca/cargo-audit-auditar-cargo-lock-do-workspace.md)
+1972. [RustSec cargo-audit: Atualizar advisory database](../../domains/software-0009/software/seguranca/cargo-audit-atualizar-advisory-database.md)
+1973. [RustSec cargo-audit: Interpretar advisory por crate e versão](../../domains/software-0009/software/seguranca/cargo-audit-interpretar-advisory-por-crate-e-versao.md)
+1974. [RustSec cargo-audit: Corrigir dependência transitiva](../../domains/software-0009/software/seguranca/cargo-audit-corrigir-dependencia-transitiva.md)
+1975. [RustSec cargo-audit: Governar ignores em audit.toml](../../domains/software-0009/software/seguranca/cargo-audit-governar-ignores-em-audit-toml.md)
+1976. [RustSec cargo-audit: Separar falha de ferramenta de finding](../../domains/software-0009/software/seguranca/cargo-audit-separar-falha-de-ferramenta-de-finding.md)
+1977. [RustSec cargo-audit: Executar auditoria em CI](../../domains/software-0009/software/seguranca/cargo-audit-executar-auditoria-em-ci.md)
+1978. [RustSec cargo-audit: Considerar advisories de manutenção](../../domains/software-0009/software/seguranca/cargo-audit-considerar-advisories-de-manutencao.md)
+1979. [RustSec cargo-audit: Fixar toolchain e comando de auditoria](../../domains/software-0009/software/seguranca/cargo-audit-fixar-toolchain-e-comando-de-auditoria.md)
+1980. [RustSec cargo-audit: Tratar saída como evidência limitada](../../domains/software-0009/software/seguranca/cargo-audit-tratar-saida-como-evidencia-limitada.md)
+
+### OpenSSF Best Practices Badge — programa de autoavaliação pública de práticas para projetos FLOSS com critérios organizados por níveis
+
+1981. [OpenSSF Best Practices Badge: Entender escopo da autoavaliação](../../domains/software-0009/software/seguranca/openssf-badge-entender-escopo-da-autoavaliacao.md)
+1982. [OpenSSF Best Practices Badge: Mapear critérios a evidências](../../domains/software-0009/software/seguranca/openssf-badge-mapear-criterios-a-evidencias.md)
+1983. [OpenSSF Best Practices Badge: Usar nível adequado ao projeto](../../domains/software-0009/software/seguranca/openssf-badge-usar-nivel-adequado-ao-projeto.md)
+1984. [OpenSSF Best Practices Badge: Documentar reporte de vulnerabilidades](../../domains/software-0009/software/seguranca/openssf-badge-documentar-reporte-de-vulnerabilidades.md)
+1985. [OpenSSF Best Practices Badge: Evidenciar testes automatizados](../../domains/software-0009/software/seguranca/openssf-badge-evidenciar-testes-automatizados.md)
+1986. [OpenSSF Best Practices Badge: Manter releases e comunicação](../../domains/software-0009/software/seguranca/openssf-badge-manter-releases-e-comunicacao.md)
+1987. [OpenSSF Best Practices Badge: Revisar critério após mudança organizacional](../../domains/software-0009/software/seguranca/openssf-badge-revisar-criterio-apos-mudanca-organizacional.md)
+1988. [OpenSSF Best Practices Badge: Separar badge de auditoria independente](../../domains/software-0009/software/seguranca/openssf-badge-separar-badge-de-auditoria-independente.md)
+1989. [OpenSSF Best Practices Badge: Priorizar gaps úteis em vez de pontuação](../../domains/software-0009/software/seguranca/openssf-badge-priorizar-gaps-uteis-em-vez-de-pontuacao.md)
+1990. [OpenSSF Best Practices Badge: Declarar badge com transparência](../../domains/software-0009/software/seguranca/openssf-badge-declarar-badge-com-transparencia.md)
+
+### Reproducible Builds — prática de produzir bit-a-bit o mesmo artefato a partir do mesmo código-fonte e instruções de build
+
+1991. [Reproducible Builds: Controlar timestamps com SOURCE_DATE_EPOCH](../../domains/software-0009/software/seguranca/reproducible-builds-controlar-timestamps-com-source-date-epoch.md)
+1992. [Reproducible Builds: Fixar toolchain e dependências](../../domains/software-0009/software/seguranca/reproducible-builds-fixar-toolchain-e-dependencias.md)
+1993. [Reproducible Builds: Remover caminhos absolutos e hostnames](../../domains/software-0009/software/seguranca/reproducible-builds-remover-caminhos-absolutos-e-hostnames.md)
+1994. [Reproducible Builds: Normalizar locale e timezone](../../domains/software-0009/software/seguranca/reproducible-builds-normalizar-locale-e-timezone.md)
+1995. [Reproducible Builds: Ordenar entradas e arquivos de archive](../../domains/software-0009/software/seguranca/reproducible-builds-ordenar-entradas-e-arquivos-de-archive.md)
+1996. [Reproducible Builds: Executar builds independentes](../../domains/software-0009/software/seguranca/reproducible-builds-executar-builds-independentes.md)
+1997. [Reproducible Builds: Comparar artefatos com diff útil](../../domains/software-0009/software/seguranca/reproducible-builds-comparar-artefatos-com-diff-util.md)
+1998. [Reproducible Builds: Reproduzir imagens de container](../../domains/software-0009/software/seguranca/reproducible-builds-reproduzir-imagens-de-container.md)
+1999. [Reproducible Builds: Investigar fontes de aleatoriedade](../../domains/software-0009/software/seguranca/reproducible-builds-investigar-fontes-de-aleatoriedade.md)
+2000. [Reproducible Builds: Usar reprodutibilidade sem alegar segurança](../../domains/software-0009/software/seguranca/reproducible-builds-usar-reprodutibilidade-sem-alegar-seguranca.md)
