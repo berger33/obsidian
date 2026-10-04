@@ -27,20 +27,20 @@ Copie o bloco abaixo e cole como primeira mensagem da nova sessão:
 ```text
 Continue a execução do plano de 1.000.000 de notas válidas do repositório berger33/obsidian.
 
-CONTEXTO JÁ VERIFICADO (na main, não recalcular do zero):
+CONTEXTO JÁ VERIFICADO (estado editorial atual em 2026-10-04):
 - Meta ativa: 500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas.
-- Estado: 5.640 / 1.000.000 (0,5640%) válidas; 2/500 lotes completos; 5.740 arquivos Markdown ativos (5.640 válidas + 100 legadas com pendências, mantidas fora da contagem).
-- Lote 1 `software-testes-2000-0001`: 2.000/2.000 (complete) — 9 humanas + 1.991 revisões por IA; em domains/software-0007/software/testes/.
-- Lote 2 `software-devops-2000-0002`: 2.000/2.000 (complete) — 2.000 por IA; em domains/software-0008/software/devops/.
-- Lote 3 `software-seguranca-2000-0003`: 1.600/2.000 (80,00%) — tranches 1–16, todas por IA; em domains/software-0009/software/seguranca/; faltam 400 notas (tranches 17–20, IDs 1601–2000).
-- Protocolo de contagem: a nota só vale com frontmatter rastreável, ≥100 palavras, seções de explicação/exemplo/limites/como verificar, duas fontes HTTPS específicas, wikilinks resolvidos, sem marcadores de template, e revisão factual registrada — humana (`revisao_humana: aprovada` + `revisor`) ou por IA (`revisao_ia: aprovada` + `revisor_ia` + `data_revisao_ia` + `relatorio_revisao_ia`). Revisão por IA nunca preenche nem altera campos humanos.
-- Artefatos por tranche: `exports/batches/<lote>.md` (manifesto), `exports/reports/ai-review-<lote>-tranche-NN.md`, `exports/reports/batch-reconciliation-<lote>-tranche-NN.md`, `exports/reports/note-quality-<lote>.md`, `exports/reports/human-review-queue.md`, `00-home-vault/MOCs/MOC-<Tema>-Software-00NN.md`, `STATUS-CONSOLIDACAO-1M.md`, `PLANO-CONTINUO-1M.md`, `README.md`, `00-home-vault/Home.md` e `00-home-vault/Indice-Global.md`.
+- Estado: 6140 / 1.000.000 (0,6140%) válidas; 3/500 lotes completos; 6240 arquivos Markdown ativos (6140 válidas + 100 legadas com pendências, mantidas fora da contagem).
+- Lotes 1–3: `software-testes-2000-0001`, `software-devops-2000-0002` e `software-seguranca-2000-0003`, todos 2.000/2.000 (`complete`).
+- Lote 4 `software-criacao-ia-2000-0004`: 100/2.000 (5,00%), com tranche 1 concluída (100 notas, IDs 1–100), 100 aprovadas pelo gate e 100 com revisão factual por IA; nenhuma aprovação humana nova; 19 tranches planejadas.
+- Escopo do lote 4: engenharia/criação de programas, aplicativos e jogos com IA; IA de gameplay, produção de vídeo/animação e documentação/tutorial. Não abrir lote 5 automaticamente.
+- Contagem exige frontmatter rastreável, ≥100 palavras, seções de explicação/exemplo/limites/verificação, duas fontes HTTPS específicas, wikilinks resolvidos, sem marcadores de template, gate aprovado e revisão factual registrada. Revisão por IA nunca altera nem amplia as 49 aprovações humanas históricas.
+- Relatórios do lote 4 tranche 1: `exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md`, `exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md` e `exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md`.
+- Artefatos por tranche: manifesto, relatório factual IA, auditoria/gate, reconciliação, fila de revisão, MOC e resumos globais.
 
 TAREFA IMEDIATA:
-1. Fechar o lote 3: produzir as tranches 17, 18, 19 e 20 (IDs 1601–2000), 100 notas substantivas por tranche em knowledge-federation/domains/software-0009/software/seguranca/, com uma tranche por commit e push no fim de cada uma.
-2. Após cada tranche, rodar gate + auditorias, reconciliar manifesto/MOC/relatórios/índices e atualizar a contagem global (numerador e denominador).
-3. Ao chegar a 2.000/2.000, marcar o lote 3 como `complete` e abrir o lote 4 `software-<tema>-2000-0004` em domains/software-0010/, com MOC, manifesto e relatórios próprios, mantendo a cadência de 20 tranches × 100 notas.
-4. Nunca contar IDs reservados, placeholders, catálogo virtual do ledger, links ou arquivos vazios como progresso. Nunca alegar conclusão da meta de 1.000.000 antes do fim.
+1. Se o usuário pedir para avançar novamente, produzir a próxima tranche de 100 notas do lote 4 em `knowledge-federation/domains/software-0010/software/criacao-ia/`, depois de selecionar tópicos e fontes primárias específicas.
+2. Antes de atualizar contagens, rodar gate, revisão factual, auditoria de links e reconciliação; só contar notas substantivas aprovadas.
+3. Não atribuir IDs às notas futuras, não abrir lote 5 automaticamente e publicar a tranche concluída na branch da sessão.
 
 VERIFICAÇÃO OBRIGATÓRIA ANTES DE CADA PUSH:
 python3 -m unittest discover -s knowledge-federation/tests -v
