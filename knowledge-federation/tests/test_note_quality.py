@@ -73,6 +73,13 @@ class NoteQualityTests(unittest.TestCase):
         key = "a repeated sentence explains meaningful behavior and an observable result across scenarios"
         self.assertEqual(repeated, {key: [450, 451]})
 
+    def test_prose_audit_does_not_split_frontmatter_on_dashes_inside_urls(self) -> None:
+        source = "https://example.org/reference---overview/with/a/long/descriptive/source/path/that/contains/many/words"
+        first = f'''---\nfontes: ["{source}"]\n---\n# First\n\n## Fontes\n- [Reference]({source})\n'''
+        second = f'''---\nfontes: ["{source}"]\n---\n# Second\n\n## Fontes\n- [Reference]({source})\n'''
+        repeated = repeated_substantive_sentences([(452, first), (453, second)])
+        self.assertEqual(repeated, {})
+
     def test_template_seed_is_not_mistaken_for_a_valid_note(self) -> None:
         seed = """---
 id: software.test.000001

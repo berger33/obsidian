@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1600 / 2.000 (80,00%)**
-- Gate automatizado: **1600/1600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
-- Revisão factual humana: **0/1600**
-- Revisão factual por IA: **1600/1600**
-- Contabilizadas como válidas: **1600/1600**
-- Revisor das 1600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–16 (1600 notas, IDs 1–1600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **2000 / 2.000 (100,00%)**
+- Gate automatizado: **2000/2000 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 20)
+- Revisão factual humana: **0/2000**
+- Revisão factual por IA: **2000/2000**
+- Contabilizadas como válidas: **2000/2000**
+- Revisor das 2000 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `complete`; tranches 1–20 (2000 notas, IDs 1–2000) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-16.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-16.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-20.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-20.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [`tranche 19`](../reports/ai-review-software-seguranca-2000-0003-tranche-19.md), [`tranche 20`](../reports/ai-review-software-seguranca-2000-0003-tranche-20.md)
 
-Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 400 restantes.
+Existem 2000 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 0 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2131,3 +2131,531 @@ Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placehold
 1598. [Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**](../../domains/software-0009/software/seguranca/govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain.md)
 1599. [Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**](../../domains/software-0009/software/seguranca/govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate.md)
 1600. [Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**](../../domains/software-0009/software/seguranca/govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign.md)
+
+## Tranche 17 — Trivy, Syft, Grype, Sigstore Cosign, Open Policy Agent (OPA), Kyverno, Falco, Checkov, kube-bench, OWASP ASVS (100 notas substantivas; revisão factual por IA registrada)
+
+### Trivy — scanner de vulnerabilidades, segredos, configurações e licenças para imagens, sistemas de arquivos e infraestrutura como código
+
+1601. [Trivy: Varredura de vulnerabilidades de imagem por digest](../../domains/software-0009/software/seguranca/trivy-varredura-de-vulnerabilidades-de-imagem-por-digest.md)
+1602. [Trivy: Escolha explícita de scanners](../../domains/software-0009/software/seguranca/trivy-escolha-explicita-de-scanners.md)
+1603. [Trivy: Misconfiguração em Terraform e Kubernetes](../../domains/software-0009/software/seguranca/trivy-misconfiguracao-em-terraform-e-kubernetes.md)
+1604. [Trivy: Segredos na configuração da imagem](../../domains/software-0009/software/seguranca/trivy-segredos-na-configuracao-da-imagem.md)
+1605. [Trivy: Análise do sistema de arquivos do repositório](../../domains/software-0009/software/seguranca/trivy-analise-do-sistema-de-arquivos-do-repositorio.md)
+1606. [Trivy: Scanner de licenças e inventário](../../domains/software-0009/software/seguranca/trivy-scanner-de-licencas-e-inventario.md)
+1607. [Trivy: Relatórios JSON e SARIF em CI](../../domains/software-0009/software/seguranca/trivy-relatorios-json-e-sarif-em-ci.md)
+1608. [Trivy: Exceções de vulnerabilidade com justificativa](../../domains/software-0009/software/seguranca/trivy-excecoes-de-vulnerabilidade-com-justificativa.md)
+1609. [Trivy: Atualização e cache das bases de dados](../../domains/software-0009/software/seguranca/trivy-atualizacao-e-cache-das-bases-de-dados.md)
+1610. [Trivy: Priorização de remediação pela classe do achado](../../domains/software-0009/software/seguranca/trivy-priorizacao-de-remediacao-pela-classe-do-achado.md)
+
+### Syft — gerador de SBOM que cataloga pacotes de imagens, diretórios, arquivos de imagem e outros alvos suportados
+
+1611. [Syft: Escolha de origem entre imagem, diretório e arquivo](../../domains/software-0009/software/seguranca/syft-escolha-de-origem-entre-imagem-diretorio-e-arquivo.md)
+1612. [Syft: Catalogadores de pacotes declarados e instalados](../../domains/software-0009/software/seguranca/syft-catalogadores-de-pacotes-declarados-e-instalados.md)
+1613. [Syft: Seleção restrita de catalogadores](../../domains/software-0009/software/seguranca/syft-selecao-restrita-de-catalogadores.md)
+1614. [Syft: Exportação de SBOM CycloneDX e SPDX](../../domains/software-0009/software/seguranca/syft-exportacao-de-sbom-cyclonedx-e-spdx.md)
+1615. [Syft: Identificadores Package URL e correspondência](../../domains/software-0009/software/seguranca/syft-identificadores-package-url-e-correspondencia.md)
+1616. [Syft: Proveniência e metadados da origem](../../domains/software-0009/software/seguranca/syft-proveniencia-e-metadados-da-origem.md)
+1617. [Syft: Identificação de distribuição do sistema operacional](../../domains/software-0009/software/seguranca/syft-identificacao-de-distribuicao-do-sistema-operacional.md)
+1618. [Syft: Pacotes descobertos em binários](../../domains/software-0009/software/seguranca/syft-pacotes-descobertos-em-binarios.md)
+1619. [Syft: Reprodutibilidade do SBOM no pipeline](../../domains/software-0009/software/seguranca/syft-reprodutibilidade-do-sbom-no-pipeline.md)
+1620. [Syft: Comparação entre inventário de fonte e artefato](../../domains/software-0009/software/seguranca/syft-comparacao-entre-inventario-de-fonte-e-artefato.md)
+
+### Grype — scanner de vulnerabilidades para imagens, sistemas de arquivos e SBOMs, incluindo pacotes de sistema operacional e linguagens
+
+1621. [Grype: Scan direto de imagem de container](../../domains/software-0009/software/seguranca/grype-scan-direto-de-imagem-de-container.md)
+1622. [Grype: Análise de SBOM Syft](../../domains/software-0009/software/seguranca/grype-analise-de-sbom-syft.md)
+1623. [Grype: Scan de sistema de arquivos](../../domains/software-0009/software/seguranca/grype-scan-de-sistema-de-arquivos.md)
+1624. [Grype: Correspondência de ecossistemas e versões](../../domains/software-0009/software/seguranca/grype-correspondencia-de-ecossistemas-e-versoes.md)
+1625. [Grype: Atualização e estado da base local](../../domains/software-0009/software/seguranca/grype-atualizacao-e-estado-da-base-local.md)
+1626. [Grype: Triagem por severidade e contexto](../../domains/software-0009/software/seguranca/grype-triagem-por-severidade-e-contexto.md)
+1627. [Grype: Uso de OpenVEX para explicitar status](../../domains/software-0009/software/seguranca/grype-uso-de-openvex-para-explicitar-status.md)
+1628. [Grype: Filtros e exceções com rastreabilidade](../../domains/software-0009/software/seguranca/grype-filtros-e-excecoes-com-rastreabilidade.md)
+1629. [Grype: Saídas JSON e SARIF](../../domains/software-0009/software/seguranca/grype-saidas-json-e-sarif.md)
+1630. [Grype: Diferenciar finding de explorabilidade](../../domains/software-0009/software/seguranca/grype-diferenciar-finding-de-explorabilidade.md)
+
+### Sigstore Cosign — ferramenta de assinatura, verificação e atestação de artefatos OCI e blobs com suporte a chaves e identidade OIDC
+
+1631. [Sigstore Cosign: Assinatura de imagem por digest](../../domains/software-0009/software/seguranca/cosign-assinatura-de-imagem-por-digest.md)
+1632. [Sigstore Cosign: Assinatura keyless com OIDC](../../domains/software-0009/software/seguranca/cosign-assinatura-keyless-com-oidc.md)
+1633. [Sigstore Cosign: Verificação por identidade e issuer](../../domains/software-0009/software/seguranca/cosign-verificacao-por-identidade-e-issuer.md)
+1634. [Sigstore Cosign: Verificação de claim de digest](../../domains/software-0009/software/seguranca/cosign-verificacao-de-claim-de-digest.md)
+1635. [Sigstore Cosign: Armazenamento de assinatura como OCI referrer](../../domains/software-0009/software/seguranca/cosign-armazenamento-de-assinatura-como-oci-referrer.md)
+1636. [Sigstore Cosign: Atestação de metadados de build](../../domains/software-0009/software/seguranca/cosign-atestacao-de-metadados-de-build.md)
+1637. [Sigstore Cosign: Verificação de atestação por política](../../domains/software-0009/software/seguranca/cosign-verificacao-de-atestacao-por-politica.md)
+1638. [Sigstore Cosign: Chaves locais e KMS](../../domains/software-0009/software/seguranca/cosign-chaves-locais-e-kms.md)
+1639. [Sigstore Cosign: Assinatura de blobs e bundles](../../domains/software-0009/software/seguranca/cosign-assinatura-de-blobs-e-bundles.md)
+1640. [Sigstore Cosign: Política de confiança no deploy](../../domains/software-0009/software/seguranca/cosign-politica-de-confianca-no-deploy.md)
+
+### Open Policy Agent (OPA) — motor de políticas que avalia dados estruturados com Rego e pode ser integrado a serviços e pipelines
+
+1641. [Open Policy Agent (OPA): Modelagem da decisão em Rego](../../domains/software-0009/software/seguranca/opa-modelagem-da-decisao-em-rego.md)
+1642. [Open Policy Agent (OPA): Separação entre input e data](../../domains/software-0009/software/seguranca/opa-separacao-entre-input-e-data.md)
+1643. [Open Policy Agent (OPA): Consulta local com `opa eval`](../../domains/software-0009/software/seguranca/opa-consulta-local-com-opa-eval.md)
+1644. [Open Policy Agent (OPA): Testes unitários `opa test`](../../domains/software-0009/software/seguranca/opa-testes-unitarios-opa-test.md)
+1645. [Open Policy Agent (OPA): Formato e lint de módulos Rego](../../domains/software-0009/software/seguranca/opa-formato-e-lint-de-modulos-rego.md)
+1646. [Open Policy Agent (OPA): Bundles versionados de políticas](../../domains/software-0009/software/seguranca/opa-bundles-versionados-de-politicas.md)
+1647. [Open Policy Agent (OPA): Integração via API de decisão](../../domains/software-0009/software/seguranca/opa-integracao-via-api-de-decisao.md)
+1648. [Open Policy Agent (OPA): Trilha de decisão e logs](../../domains/software-0009/software/seguranca/opa-trilha-de-decisao-e-logs.md)
+1649. [Open Policy Agent (OPA): Compilação de política para WebAssembly](../../domains/software-0009/software/seguranca/opa-compilacao-de-politica-para-webassembly.md)
+1650. [Open Policy Agent (OPA): Cobertura de regras e cenários negativos](../../domains/software-0009/software/seguranca/opa-cobertura-de-regras-e-cenarios-negativos.md)
+
+### Kyverno — motor de políticas Kubernetes que valida, modifica, gera e verifica configurações e imagens em recursos
+
+1651. [Kyverno: Validação de recursos no admission](../../domains/software-0009/software/seguranca/kyverno-validacao-de-recursos-no-admission.md)
+1652. [Kyverno: Mutação de defaults seguros](../../domains/software-0009/software/seguranca/kyverno-mutacao-de-defaults-seguros.md)
+1653. [Kyverno: Geração de recursos auxiliares](../../domains/software-0009/software/seguranca/kyverno-geracao-de-recursos-auxiliares.md)
+1654. [Kyverno: Verificação de imagens assinadas](../../domains/software-0009/software/seguranca/kyverno-verificacao-de-imagens-assinadas.md)
+1655. [Kyverno: Ação de validação Audit versus Enforce](../../domains/software-0009/software/seguranca/kyverno-acao-de-validacao-audit-versus-enforce.md)
+1656. [Kyverno: Políticas em CEL e migração](../../domains/software-0009/software/seguranca/kyverno-politicas-em-cel-e-migracao.md)
+1657. [Kyverno: Escopo por recurso e namespace](../../domains/software-0009/software/seguranca/kyverno-escopo-por-recurso-e-namespace.md)
+1658. [Kyverno: Relatórios de violações e política](../../domains/software-0009/software/seguranca/kyverno-relatorios-de-violacoes-e-politica.md)
+1659. [Kyverno: Exceções de política governadas](../../domains/software-0009/software/seguranca/kyverno-excecoes-de-politica-governadas.md)
+1660. [Kyverno: Teste local de políticas antes do cluster](../../domains/software-0009/software/seguranca/kyverno-teste-local-de-politicas-antes-do-cluster.md)
+
+### Falco — motor de detecção em runtime que avalia streams de eventos contra regras de comportamento anômalo
+
+1661. [Falco: Fonte de eventos syscall](../../domains/software-0009/software/seguranca/falco-fonte-de-eventos-syscall.md)
+1662. [Falco: Fontes de eventos via plugins](../../domains/software-0009/software/seguranca/falco-fontes-de-eventos-via-plugins.md)
+1663. [Falco: Condição e saída da regra](../../domains/software-0009/software/seguranca/falco-condicao-e-saida-da-regra.md)
+1664. [Falco: Macros e listas reutilizáveis](../../domains/software-0009/software/seguranca/falco-macros-e-listas-reutilizaveis.md)
+1665. [Falco: Maturidade e seleção das regras](../../domains/software-0009/software/seguranca/falco-maturidade-e-selecao-das-regras.md)
+1666. [Falco: Saída estruturada e encaminhamento](../../domains/software-0009/software/seguranca/falco-saida-estruturada-e-encaminhamento.md)
+1667. [Falco: Contexto de container e namespace](../../domains/software-0009/software/seguranca/falco-contexto-de-container-e-namespace.md)
+1668. [Falco: Exceções e redução de ruído](../../domains/software-0009/software/seguranca/falco-excecoes-e-reducao-de-ruido.md)
+1669. [Falco: Privilégio de coleta e superfície do agente](../../domains/software-0009/software/seguranca/falco-privilegio-de-coleta-e-superficie-do-agente.md)
+1670. [Falco: Validação de alerta antes do rollout](../../domains/software-0009/software/seguranca/falco-validacao-de-alerta-antes-do-rollout.md)
+
+### Checkov — analisador de configuração para infraestrutura como código e artefatos cloud-native com checks embutidos e personalizados
+
+1671. [Checkov: Análise de Terraform no repositório](../../domains/software-0009/software/seguranca/checkov-analise-de-terraform-no-repositorio.md)
+1672. [Checkov: Análise de plano Terraform](../../domains/software-0009/software/seguranca/checkov-analise-de-plano-terraform.md)
+1673. [Checkov: Checks para Kubernetes e Helm](../../domains/software-0009/software/seguranca/checkov-checks-para-kubernetes-e-helm.md)
+1674. [Checkov: Análise de Dockerfile e imagens](../../domains/software-0009/software/seguranca/checkov-analise-de-dockerfile-e-imagens.md)
+1675. [Checkov: Supressão inline de finding](../../domains/software-0009/software/seguranca/checkov-supressao-inline-de-finding.md)
+1676. [Checkov: Políticas customizadas](../../domains/software-0009/software/seguranca/checkov-politicas-customizadas.md)
+1677. [Checkov: Formato JSON e SARIF](../../domains/software-0009/software/seguranca/checkov-formato-json-e-sarif.md)
+1678. [Checkov: Baseline de findings existentes](../../domains/software-0009/software/seguranca/checkov-baseline-de-findings-existentes.md)
+1679. [Checkov: Seleção por diretório e framework](../../domains/software-0009/software/seguranca/checkov-selecao-por-diretorio-e-framework.md)
+1680. [Checkov: Gates de CI por política](../../domains/software-0009/software/seguranca/checkov-gates-de-ci-por-politica.md)
+
+### kube-bench — ferramenta que audita a configuração de nós e componentes Kubernetes segundo checks de benchmarks CIS
+
+1681. [kube-bench: Alinhar versão do benchmark](../../domains/software-0009/software/seguranca/kube-bench-alinhar-versao-do-benchmark.md)
+1682. [kube-bench: Separar checks por papel do nó](../../domains/software-0009/software/seguranca/kube-bench-separar-checks-por-papel-do-no.md)
+1683. [kube-bench: Estrutura dos controles YAML](../../domains/software-0009/software/seguranca/kube-bench-estrutura-dos-controles-yaml.md)
+1684. [kube-bench: Interpretação de audit e test_items](../../domains/software-0009/software/seguranca/kube-bench-interpretacao-de-audit-e-test-items.md)
+1685. [kube-bench: Execução seletiva por IDs](../../domains/software-0009/software/seguranca/kube-bench-execucao-seletiva-por-ids.md)
+1686. [kube-bench: Diferença entre fail e warning](../../domains/software-0009/software/seguranca/kube-bench-diferenca-entre-fail-e-warning.md)
+1687. [kube-bench: Saídas JSON e JUnit](../../domains/software-0009/software/seguranca/kube-bench-saidas-json-e-junit.md)
+1688. [kube-bench: Remediações como plano de mudança](../../domains/software-0009/software/seguranca/kube-bench-remediacoes-como-plano-de-mudanca.md)
+1689. [kube-bench: Acesso e ambiente de execução](../../domains/software-0009/software/seguranca/kube-bench-acesso-e-ambiente-de-execucao.md)
+1690. [kube-bench: Exceções para plataforma gerenciada](../../domains/software-0009/software/seguranca/kube-bench-excecoes-para-plataforma-gerenciada.md)
+
+### OWASP ASVS — padrão aberto de requisitos para verificar controles técnicos de segurança em aplicações web
+
+1691. [OWASP ASVS: Fixar versão do ASVS no contrato](../../domains/software-0009/software/seguranca/asvs-fixar-versao-do-asvs-no-contrato.md)
+1692. [OWASP ASVS: Escolher nível de verificação](../../domains/software-0009/software/seguranca/asvs-escolher-nivel-de-verificacao.md)
+1693. [OWASP ASVS: Mapear requisitos a user stories](../../domains/software-0009/software/seguranca/asvs-mapear-requisitos-a-user-stories.md)
+1694. [OWASP ASVS: Validação de entrada e codificação de saída](../../domains/software-0009/software/seguranca/asvs-validacao-de-entrada-e-codificacao-de-saida.md)
+1695. [OWASP ASVS: Requisitos de autenticação](../../domains/software-0009/software/seguranca/asvs-requisitos-de-autenticacao.md)
+1696. [OWASP ASVS: Autorização e controle de acesso](../../domains/software-0009/software/seguranca/asvs-autorizacao-e-controle-de-acesso.md)
+1697. [OWASP ASVS: Proteção de dados e criptografia](../../domains/software-0009/software/seguranca/asvs-protecao-de-dados-e-criptografia.md)
+1698. [OWASP ASVS: Evidência de testes automatizados e manuais](../../domains/software-0009/software/seguranca/asvs-evidencia-de-testes-automatizados-e-manuais.md)
+1699. [OWASP ASVS: Rastreio de requisito não aplicável](../../domains/software-0009/software/seguranca/asvs-rastreio-de-requisito-nao-aplicavel.md)
+1700. [OWASP ASVS: Uso do padrão em aquisição de software](../../domains/software-0009/software/seguranca/asvs-uso-do-padrao-em-aquisicao-de-software.md)
+
+## Tranche 18 — Semgrep, SonarQube Server, Snyk CLI, Kubescape, KubeLinter, Cilium Tetragon, Renovate, GitHub Dependabot, CycloneDX CLI, AWS CloudFormation Guard (100 notas substantivas; revisão factual por IA registrada)
+
+### Semgrep — analisador estático com regras YAML para detectar padrões de segurança, desempenho e correção em código-fonte
+
+1701. [Semgrep: Estrutura de uma regra YAML](../../domains/software-0009/software/seguranca/semgrep-estrutura-de-uma-regra-yaml.md)
+1702. [Semgrep: Metavariáveis em padrões de código](../../domains/software-0009/software/seguranca/semgrep-metavariaveis-em-padroes-de-codigo.md)
+1703. [Semgrep: Combinar padrões com contexto](../../domains/software-0009/software/seguranca/semgrep-combinar-padroes-com-contexto.md)
+1704. [Semgrep: Análise de taint com fontes e sinks](../../domains/software-0009/software/seguranca/semgrep-analise-de-taint-com-fontes-e-sinks.md)
+1705. [Semgrep: Sanitizadores em regras de taint](../../domains/software-0009/software/seguranca/semgrep-sanitizadores-em-regras-de-taint.md)
+1706. [Semgrep: Seleção de rulesets por projeto](../../domains/software-0009/software/seguranca/semgrep-selecao-de-rulesets-por-projeto.md)
+1707. [Semgrep: Escaneamento em pull request](../../domains/software-0009/software/seguranca/semgrep-escaneamento-em-pull-request.md)
+1708. [Semgrep: Exclusões de arquivos do scan](../../domains/software-0009/software/seguranca/semgrep-exclusoes-de-arquivos-do-scan.md)
+1709. [Semgrep: Supressão rastreável de finding](../../domains/software-0009/software/seguranca/semgrep-supressao-rastreavel-de-finding.md)
+1710. [Semgrep: Testes de regressão para regras](../../domains/software-0009/software/seguranca/semgrep-testes-de-regressao-para-regras.md)
+
+### SonarQube Server — plataforma de análise de código integrada a scanners, perfis de qualidade e quality gates para equipes de desenvolvimento
+
+1711. [SonarQube Server: Fluxo entre scanner e servidor](../../domains/software-0009/software/seguranca/sonarqube-fluxo-entre-scanner-e-servidor.md)
+1712. [SonarQube Server: Escopo de fontes e testes](../../domains/software-0009/software/seguranca/sonarqube-escopo-de-fontes-e-testes.md)
+1713. [SonarQube Server: Perfis de qualidade aplicados](../../domains/software-0009/software/seguranca/sonarqube-perfis-de-qualidade-aplicados.md)
+1714. [SonarQube Server: Quality gate como critério de integração](../../domains/software-0009/software/seguranca/sonarqube-quality-gate-como-criterio-de-integracao.md)
+1715. [SonarQube Server: Definição de código novo](../../domains/software-0009/software/seguranca/sonarqube-definicao-de-codigo-novo.md)
+1716. [SonarQube Server: Análise de taint e APIs internas](../../domains/software-0009/software/seguranca/sonarqube-analise-de-taint-e-apis-internas.md)
+1717. [SonarQube Server: Exclusões por caminho](../../domains/software-0009/software/seguranca/sonarqube-exclusoes-por-caminho.md)
+1718. [SonarQube Server: Cobertura de testes como dado separado](../../domains/software-0009/software/seguranca/sonarqube-cobertura-de-testes-como-dado-separado.md)
+1719. [SonarQube Server: Revisão e resolução de issues](../../domains/software-0009/software/seguranca/sonarqube-revisao-e-resolucao-de-issues.md)
+1720. [SonarQube Server: Build scanner reproduzível em CI](../../domains/software-0009/software/seguranca/sonarqube-build-scanner-reproduzivel-em-ci.md)
+
+### Snyk CLI — interface de linha de comando para análise de dependências, código, imagens de containers, IaC e segredos
+
+1721. [Snyk CLI: Preparar autenticação e ambiente](../../domains/software-0009/software/seguranca/snyk-preparar-autenticacao-e-ambiente.md)
+1722. [Snyk CLI: Análise de dependências com snyk test](../../domains/software-0009/software/seguranca/snyk-analise-de-dependencias-com-snyk-test.md)
+1723. [Snyk CLI: Análise SAST com snyk code test](../../domains/software-0009/software/seguranca/snyk-analise-sast-com-snyk-code-test.md)
+1724. [Snyk CLI: Varredura de infraestrutura como código](../../domains/software-0009/software/seguranca/snyk-varredura-de-infraestrutura-como-codigo.md)
+1725. [Snyk CLI: Inspeção de imagens de container](../../domains/software-0009/software/seguranca/snyk-inspecao-de-imagens-de-container.md)
+1726. [Snyk CLI: Busca de segredos em arquivos](../../domains/software-0009/software/seguranca/snyk-busca-de-segredos-em-arquivos.md)
+1727. [Snyk CLI: Monitoramento de projeto](../../domains/software-0009/software/seguranca/snyk-monitoramento-de-projeto.md)
+1728. [Snyk CLI: Exclusão controlada de diretórios](../../domains/software-0009/software/seguranca/snyk-exclusao-controlada-de-diretorios.md)
+1729. [Snyk CLI: Integrar resultados ao pipeline](../../domains/software-0009/software/seguranca/snyk-integrar-resultados-ao-pipeline.md)
+1730. [Snyk CLI: Aplicar correções com revisão](../../domains/software-0009/software/seguranca/snyk-aplicar-correcoes-com-revisao.md)
+
+### Kubescape — scanner de segurança Kubernetes que avalia clusters, manifests e charts contra frameworks e controles publicados
+
+1731. [Kubescape: Selecionar framework explicitamente](../../domains/software-0009/software/seguranca/kubescape-selecionar-framework-explicitamente.md)
+1732. [Kubescape: Executar scan de um control](../../domains/software-0009/software/seguranca/kubescape-executar-scan-de-um-control.md)
+1733. [Kubescape: Analisar manifests locais antes do deploy](../../domains/software-0009/software/seguranca/kubescape-analisar-manifests-locais-antes-do-deploy.md)
+1734. [Kubescape: Examinar cluster com kubeconfig definido](../../domains/software-0009/software/seguranca/kubescape-examinar-cluster-com-kubeconfig-definido.md)
+1735. [Kubescape: Escanear charts e templates renderizados](../../domains/software-0009/software/seguranca/kubescape-escanear-charts-e-templates-renderizados.md)
+1736. [Kubescape: Definir limiar de conformidade no CI](../../domains/software-0009/software/seguranca/kubescape-definir-limiar-de-conformidade-no-ci.md)
+1737. [Kubescape: Governar exceções de findings](../../domains/software-0009/software/seguranca/kubescape-governar-excecoes-de-findings.md)
+1738. [Kubescape: Interpretar remediação assistida](../../domains/software-0009/software/seguranca/kubescape-interpretar-remediacao-assistida.md)
+1739. [Kubescape: Conhecer requisitos do host scanner](../../domains/software-0009/software/seguranca/kubescape-conhecer-requisitos-do-host-scanner.md)
+1740. [Kubescape: Publicar resultados JUnit em CI](../../domains/software-0009/software/seguranca/kubescape-publicar-resultados-junit-em-ci.md)
+
+### KubeLinter — analisador estático para YAML Kubernetes, charts Helm e manifests Kustomize com checks padrão e configuráveis
+
+1741. [KubeLinter: Começar pelos checks padrões](../../domains/software-0009/software/seguranca/kube-linter-comecar-pelos-checks-padroes.md)
+1742. [KubeLinter: Precedência do arquivo de configuração](../../domains/software-0009/software/seguranca/kube-linter-precedencia-do-arquivo-de-configuracao.md)
+1743. [KubeLinter: Selecionar checks por inclusão e exclusão](../../domains/software-0009/software/seguranca/kube-linter-selecionar-checks-por-inclusao-e-exclusao.md)
+1744. [KubeLinter: Criar checks customizados a partir de templates](../../domains/software-0009/software/seguranca/kube-linter-criar-checks-customizados-a-partir-de-templates.md)
+1745. [KubeLinter: Ignorar paths com escopo limitado](../../domains/software-0009/software/seguranca/kube-linter-ignorar-paths-com-escopo-limitado.md)
+1746. [KubeLinter: Avaliar charts Helm](../../domains/software-0009/software/seguranca/kube-linter-avaliar-charts-helm.md)
+1747. [KubeLinter: Inspecionar lista de checks instalados](../../domains/software-0009/software/seguranca/kube-linter-inspecionar-lista-de-checks-instalados.md)
+1748. [KubeLinter: Usar resultado como pre-merge gate](../../domains/software-0009/software/seguranca/kube-linter-usar-resultado-como-pre-merge-gate.md)
+1749. [KubeLinter: Interpretar objeto e orientação de correção](../../domains/software-0009/software/seguranca/kube-linter-interpretar-objeto-e-orientacao-de-correcao.md)
+1750. [KubeLinter: Distinguir lint de avaliação de runtime](../../domains/software-0009/software/seguranca/kube-linter-distinguir-lint-de-avaliacao-de-runtime.md)
+
+### Cilium Tetragon — sistema eBPF de observabilidade e enforcement de segurança em runtime para processos, arquivos e rede
+
+1751. [Cilium Tetragon: Escolher hook point da policy](../../domains/software-0009/software/seguranca/tetragon-escolher-hook-point-da-policy.md)
+1752. [Cilium Tetragon: Filtrar eventos no kernel](../../domains/software-0009/software/seguranca/tetragon-filtrar-eventos-no-kernel.md)
+1753. [Cilium Tetragon: Executar primeiro em modo monitor](../../domains/software-0009/software/seguranca/tetragon-executar-primeiro-em-modo-monitor.md)
+1754. [Cilium Tetragon: Usar enforcement somente com evidência](../../domains/software-0009/software/seguranca/tetragon-usar-enforcement-somente-com-evidencia.md)
+1755. [Cilium Tetragon: Entender modo monitor_only](../../domains/software-0009/software/seguranca/tetragon-entender-modo-monitor-only.md)
+1756. [Cilium Tetragon: Separar domínios de carregamento](../../domains/software-0009/software/seguranca/tetragon-separar-dominios-de-carregamento.md)
+1757. [Cilium Tetragon: Limitar policy por namespace e labels](../../domains/software-0009/software/seguranca/tetragon-limitar-policy-por-namespace-e-labels.md)
+1758. [Cilium Tetragon: Monitorar acesso a arquivos sensíveis](../../domains/software-0009/software/seguranca/tetragon-monitorar-acesso-a-arquivos-sensiveis.md)
+1759. [Cilium Tetragon: Avaliar conexão de rede por processo](../../domains/software-0009/software/seguranca/tetragon-avaliar-conexao-de-rede-por-processo.md)
+1760. [Cilium Tetragon: Versionar policies e testar compatibilidade](../../domains/software-0009/software/seguranca/tetragon-versionar-policies-e-testar-compatibilidade.md)
+
+### Renovate — bot de atualização de dependências que cria branches e pull requests configuráveis para repositórios de software
+
+1761. [Renovate: Versionar configuração de Renovate](../../domains/software-0009/software/seguranca/renovate-versionar-configuracao-de-renovate.md)
+1762. [Renovate: Selecionar managers e manifests](../../domains/software-0009/software/seguranca/renovate-selecionar-managers-e-manifests.md)
+1763. [Renovate: Agendar verificações de atualização](../../domains/software-0009/software/seguranca/renovate-agendar-verificacoes-de-atualizacao.md)
+1764. [Renovate: Agrupar updates por regra](../../domains/software-0009/software/seguranca/renovate-agrupar-updates-por-regra.md)
+1765. [Renovate: Limitar automerge por tipo de update](../../domains/software-0009/software/seguranca/renovate-limitar-automerge-por-tipo-de-update.md)
+1766. [Renovate: Exigir aprovação para major updates](../../domains/software-0009/software/seguranca/renovate-exigir-aprovacao-para-major-updates.md)
+1767. [Renovate: Controlar forma de merge](../../domains/software-0009/software/seguranca/renovate-controlar-forma-de-merge.md)
+1768. [Renovate: Usar dashboard para backlog de dependências](../../domains/software-0009/software/seguranca/renovate-usar-dashboard-para-backlog-de-dependencias.md)
+1769. [Renovate: Atualizar lockfiles com teste](../../domains/software-0009/software/seguranca/renovate-atualizar-lockfiles-com-teste.md)
+1770. [Renovate: Separar alertas de vulnerabilidade de rotina](../../domains/software-0009/software/seguranca/renovate-separar-alertas-de-vulnerabilidade-de-rotina.md)
+
+### GitHub Dependabot — serviço do GitHub que informa vulnerabilidades em dependências e pode propor atualizações via pull request
+
+1771. [GitHub Dependabot: Distinguir alertas de updates agendados](../../domains/software-0009/software/seguranca/dependabot-distinguir-alertas-de-updates-agendados.md)
+1772. [GitHub Dependabot: Estruturar dependabot.yml](../../domains/software-0009/software/seguranca/dependabot-estruturar-dependabot-yml.md)
+1773. [GitHub Dependabot: Escolher package ecosystem correto](../../domains/software-0009/software/seguranca/dependabot-escolher-package-ecosystem-correto.md)
+1774. [GitHub Dependabot: Configurar frequência de version updates](../../domains/software-0009/software/seguranca/dependabot-configurar-frequencia-de-version-updates.md)
+1775. [GitHub Dependabot: Limitar pull requests em aberto](../../domains/software-0009/software/seguranca/dependabot-limitar-pull-requests-em-aberto.md)
+1776. [GitHub Dependabot: Ignorar versões com escopo](../../domains/software-0009/software/seguranca/dependabot-ignorar-versoes-com-escopo.md)
+1777. [GitHub Dependabot: Autenticar acesso a registries privados](../../domains/software-0009/software/seguranca/dependabot-autenticar-acesso-a-registries-privados.md)
+1778. [GitHub Dependabot: Atualizar dependências de GitHub Actions](../../domains/software-0009/software/seguranca/dependabot-atualizar-dependencias-de-github-actions.md)
+1779. [GitHub Dependabot: Testar security update pull request](../../domains/software-0009/software/seguranca/dependabot-testar-security-update-pull-request.md)
+1780. [GitHub Dependabot: Priorizar triagem de alerta](../../domains/software-0009/software/seguranca/dependabot-priorizar-triagem-de-alerta.md)
+
+### CycloneDX CLI — ferramenta de linha de comando para validar, analisar, mesclar, comparar, converter e assinar documentos BOM
+
+1781. [CycloneDX CLI: Validar contra schema escolhido](../../domains/software-0009/software/seguranca/cyclonedx-cli-validar-contra-schema-escolhido.md)
+1782. [CycloneDX CLI: Converter formato de BOM](../../domains/software-0009/software/seguranca/cyclonedx-cli-converter-formato-de-bom.md)
+1783. [CycloneDX CLI: Inspecionar múltiplas versões de componentes](../../domains/software-0009/software/seguranca/cyclonedx-cli-inspecionar-multiplas-versoes-de-componentes.md)
+1784. [CycloneDX CLI: Comparar BOMs entre releases](../../domains/software-0009/software/seguranca/cyclonedx-cli-comparar-boms-entre-releases.md)
+1785. [CycloneDX CLI: Mesclar inventários com proveniência](../../domains/software-0009/software/seguranca/cyclonedx-cli-mesclar-inventarios-com-proveniencia.md)
+1786. [CycloneDX CLI: Adicionar informações a um BOM](../../domains/software-0009/software/seguranca/cyclonedx-cli-adicionar-informacoes-a-um-bom.md)
+1787. [CycloneDX CLI: Assinar e verificar documentos](../../domains/software-0009/software/seguranca/cyclonedx-cli-assinar-e-verificar-documentos.md)
+1788. [CycloneDX CLI: Escolher versão de saída conscientemente](../../domains/software-0009/software/seguranca/cyclonedx-cli-escolher-versao-de-saida-conscientemente.md)
+1789. [CycloneDX CLI: Integrar validação ao CI](../../domains/software-0009/software/seguranca/cyclonedx-cli-integrar-validacao-ao-ci.md)
+1790. [CycloneDX CLI: Interpretar BOM como inventário, não scan](../../domains/software-0009/software/seguranca/cyclonedx-cli-interpretar-bom-como-inventario-nao-scan.md)
+
+### AWS CloudFormation Guard — ferramenta policy-as-code para validar dados JSON ou YAML com regras declarativas antes da implantação
+
+1791. [AWS CloudFormation Guard: Modelar uma clause booleana](../../domains/software-0009/software/seguranca/cfn-guard-modelar-uma-clause-booleana.md)
+1792. [AWS CloudFormation Guard: Reutilizar named-rule blocks](../../domains/software-0009/software/seguranca/cfn-guard-reutilizar-named-rule-blocks.md)
+1793. [AWS CloudFormation Guard: Testar regras antes da validação](../../domains/software-0009/software/seguranca/cfn-guard-testar-regras-antes-da-validacao.md)
+1794. [AWS CloudFormation Guard: Validar arquivo de entrada com rules file](../../domains/software-0009/software/seguranca/cfn-guard-validar-arquivo-de-entrada-com-rules-file.md)
+1795. [AWS CloudFormation Guard: Aplicar múltiplas regras e arquivos](../../domains/software-0009/software/seguranca/cfn-guard-aplicar-multiplas-regras-e-arquivos.md)
+1796. [AWS CloudFormation Guard: Injetar parâmetros de contexto](../../domains/software-0009/software/seguranca/cfn-guard-injetar-parametros-de-contexto.md)
+1797. [AWS CloudFormation Guard: Fornecer mensagens de violação úteis](../../domains/software-0009/software/seguranca/cfn-guard-fornecer-mensagens-de-violacao-uteis.md)
+1798. [AWS CloudFormation Guard: Consultar estruturas aninhadas](../../domains/software-0009/software/seguranca/cfn-guard-consultar-estruturas-aninhadas.md)
+1799. [AWS CloudFormation Guard: Usar Guard como gate de template](../../domains/software-0009/software/seguranca/cfn-guard-usar-guard-como-gate-de-template.md)
+1800. [AWS CloudFormation Guard: Versionar regras e aprovações](../../domains/software-0009/software/seguranca/cfn-guard-versionar-regras-e-aprovacoes.md)
+
+## Tranche 19 — SPIFFE/SPIRE, HashiCorp Vault, OpenBao, Mozilla SOPS, cert-manager, Kubernetes Pod Security Admission, Kubernetes NetworkPolicy, OPA Gatekeeper, External Secrets Operator, Cilium Network Policies (100 notas substantivas; revisão factual por IA registrada)
+
+### SPIFFE/SPIRE — framework e implementação para identidades criptográficas portáveis de workloads em sistemas distribuídos
+
+1801. [SPIFFE/SPIRE: Identidade de workload em vez de segredo estático](../../domains/software-0009/software/seguranca/spiffe-spire-identidade-de-workload-em-vez-de-segredo-estatico.md)
+1802. [SPIFFE/SPIRE: Nomear e isolar trust domains](../../domains/software-0009/software/seguranca/spiffe-spire-nomear-e-isolar-trust-domains.md)
+1803. [SPIFFE/SPIRE: Separar servidor SPIRE e agent](../../domains/software-0009/software/seguranca/spiffe-spire-separar-servidor-spire-e-agent.md)
+1804. [SPIFFE/SPIRE: Atestação de nó antes da emissão](../../domains/software-0009/software/seguranca/spiffe-spire-atestacao-de-no-antes-da-emissao.md)
+1805. [SPIFFE/SPIRE: Atestar workload por seletores](../../domains/software-0009/software/seguranca/spiffe-spire-atestar-workload-por-seletores.md)
+1806. [SPIFFE/SPIRE: Restringir registration entries](../../domains/software-0009/software/seguranca/spiffe-spire-restringir-registration-entries.md)
+1807. [SPIFFE/SPIRE: Escolher formato de SVID](../../domains/software-0009/software/seguranca/spiffe-spire-escolher-formato-de-svid.md)
+1808. [SPIFFE/SPIRE: Distribuir trust bundles com rotação](../../domains/software-0009/software/seguranca/spiffe-spire-distribuir-trust-bundles-com-rotacao.md)
+1809. [SPIFFE/SPIRE: Federar trust domains](../../domains/software-0009/software/seguranca/spiffe-spire-federar-trust-domains.md)
+1810. [SPIFFE/SPIRE: Operar SPIRE com configuração versionada](../../domains/software-0009/software/seguranca/spiffe-spire-operar-spire-com-configuracao-versionada.md)
+
+### HashiCorp Vault — gerenciador de segredos que emite credenciais, controla acesso por políticas e oferece autenticação para aplicações
+
+1811. [HashiCorp Vault: Credenciais dinâmicas com lease](../../domains/software-0009/software/seguranca/vault-credenciais-dinamicas-com-lease.md)
+1812. [HashiCorp Vault: Renovar lease antes do vencimento](../../domains/software-0009/software/seguranca/vault-renovar-lease-antes-do-vencimento.md)
+1813. [HashiCorp Vault: Revogar lease e credencial associada](../../domains/software-0009/software/seguranca/vault-revogar-lease-e-credencial-associada.md)
+1814. [HashiCorp Vault: Autenticar workload Kubernetes](../../domains/software-0009/software/seguranca/vault-autenticar-workload-kubernetes.md)
+1815. [HashiCorp Vault: Limitar role a service account e namespace](../../domains/software-0009/software/seguranca/vault-limitar-role-a-service-account-e-namespace.md)
+1816. [HashiCorp Vault: Revisar audience de service account token](../../domains/software-0009/software/seguranca/vault-revisar-audience-de-service-account-token.md)
+1817. [HashiCorp Vault: Aplicar policy de menor privilégio](../../domains/software-0009/software/seguranca/vault-aplicar-policy-de-menor-privilegio.md)
+1818. [HashiCorp Vault: Separar token TTL de lease TTL](../../domains/software-0009/software/seguranca/vault-separar-token-ttl-de-lease-ttl.md)
+1819. [HashiCorp Vault: Rotacionar service account sem indisponibilidade](../../domains/software-0009/software/seguranca/vault-rotacionar-service-account-sem-indisponibilidade.md)
+1820. [HashiCorp Vault: Auditar cliente e ciclo de credencial](../../domains/software-0009/software/seguranca/vault-auditar-cliente-e-ciclo-de-credencial.md)
+
+### OpenBao — plataforma de gerenciamento de segredos de código aberto com políticas de acesso e mecanismo de selagem
+
+1821. [OpenBao: Autorizar operações por path](../../domains/software-0009/software/seguranca/openbao-autorizar-operacoes-por-path.md)
+1822. [OpenBao: Aplicar menor privilégio nas capabilities](../../domains/software-0009/software/seguranca/openbao-aplicar-menor-privilegio-nas-capabilities.md)
+1823. [OpenBao: Entender policy deny e composição](../../domains/software-0009/software/seguranca/openbao-entender-policy-deny-e-composicao.md)
+1824. [OpenBao: Vincular policy a autenticação](../../domains/software-0009/software/seguranca/openbao-vincular-policy-a-autenticacao.md)
+1825. [OpenBao: Testar mudanças de policy como código](../../domains/software-0009/software/seguranca/openbao-testar-mudancas-de-policy-como-codigo.md)
+1826. [OpenBao: Compreender estado sealed](../../domains/software-0009/software/seguranca/openbao-compreender-estado-sealed.md)
+1827. [OpenBao: Proteger unseal shares](../../domains/software-0009/software/seguranca/openbao-proteger-unseal-shares.md)
+1828. [OpenBao: Avaliar auto-unseal](../../domains/software-0009/software/seguranca/openbao-avaliar-auto-unseal.md)
+1829. [OpenBao: Planejar recuperação sem divulgar shares](../../domains/software-0009/software/seguranca/openbao-planejar-recuperacao-sem-divulgar-shares.md)
+1830. [OpenBao: Monitorar selagem e alterações de política](../../domains/software-0009/software/seguranca/openbao-monitorar-selagem-e-alteracoes-de-politica.md)
+
+### Mozilla SOPS — editor de arquivos cifrados que protege valores selecionados usando chaves de dados e sistemas de gerenciamento de chaves
+
+1831. [Mozilla SOPS: Cifrar valores folha do documento](../../domains/software-0009/software/seguranca/sops-cifrar-valores-folha-do-documento.md)
+1832. [Mozilla SOPS: Selecionar recipients de KMS](../../domains/software-0009/software/seguranca/sops-selecionar-recipients-de-kms.md)
+1833. [Mozilla SOPS: Usar age recipient com cuidado](../../domains/software-0009/software/seguranca/sops-usar-age-recipient-com-cuidado.md)
+1834. [Mozilla SOPS: Delimitar regras por nome de arquivo](../../domains/software-0009/software/seguranca/sops-delimitar-regras-por-nome-de-arquivo.md)
+1835. [Mozilla SOPS: Controlar campos criptografados](../../domains/software-0009/software/seguranca/sops-controlar-campos-criptografados.md)
+1836. [Mozilla SOPS: Validar integridade com MAC](../../domains/software-0009/software/seguranca/sops-validar-integridade-com-mac.md)
+1837. [Mozilla SOPS: Rotacionar recipients sem trocar conteúdo](../../domains/software-0009/software/seguranca/sops-rotacionar-recipients-sem-trocar-conteudo.md)
+1838. [Mozilla SOPS: Descriptografar em CI sem persistir plaintext](../../domains/software-0009/software/seguranca/sops-descriptografar-em-ci-sem-persistir-plaintext.md)
+1839. [Mozilla SOPS: Gerenciar key groups e threshold](../../domains/software-0009/software/seguranca/sops-gerenciar-key-groups-e-threshold.md)
+1840. [Mozilla SOPS: Tratar exposição no histórico Git](../../domains/software-0009/software/seguranca/sops-tratar-exposicao-no-historico-git.md)
+
+### cert-manager — controlador Kubernetes que emite, acompanha e renova certificados por meio de recursos Certificate e Issuer
+
+1841. [cert-manager: Declarar Certificate e secretName](../../domains/software-0009/software/seguranca/cert-manager-declarar-certificate-e-secretname.md)
+1842. [cert-manager: Escolher Issuer ou ClusterIssuer](../../domains/software-0009/software/seguranca/cert-manager-escolher-issuer-ou-clusterissuer.md)
+1843. [cert-manager: Usar referência explícita de issuer](../../domains/software-0009/software/seguranca/cert-manager-usar-referencia-explicita-de-issuer.md)
+1844. [cert-manager: Entender status e condições de emissão](../../domains/software-0009/software/seguranca/cert-manager-entender-status-e-condicoes-de-emissao.md)
+1845. [cert-manager: Escolher desafio ACME HTTP-01 ou DNS-01](../../domains/software-0009/software/seguranca/cert-manager-escolher-desafio-acme-http-01-ou-dns-01.md)
+1846. [cert-manager: Configurar renovação antecipada](../../domains/software-0009/software/seguranca/cert-manager-configurar-renovacao-antecipada.md)
+1847. [cert-manager: Proteger Secret da chave privada](../../domains/software-0009/software/seguranca/cert-manager-proteger-secret-da-chave-privada.md)
+1848. [cert-manager: Selecionar solver pelo domínio](../../domains/software-0009/software/seguranca/cert-manager-selecionar-solver-pelo-dominio.md)
+1849. [cert-manager: Investigar falhas sem expor credenciais](../../domains/software-0009/software/seguranca/cert-manager-investigar-falhas-sem-expor-credenciais.md)
+1850. [cert-manager: Confirmar consumo do certificado renovado](../../domains/software-0009/software/seguranca/cert-manager-confirmar-consumo-do-certificado-renovado.md)
+
+### Kubernetes Pod Security Admission — admission controller nativo que aplica Pod Security Standards por namespace nos níveis privileged, baseline e restricted
+
+1851. [Kubernetes Pod Security Admission: Distinguir níveis de Pod Security](../../domains/software-0009/software/seguranca/pod-security-admission-distinguir-niveis-de-pod-security.md)
+1852. [Kubernetes Pod Security Admission: Aplicar labels de namespace por modo](../../domains/software-0009/software/seguranca/pod-security-admission-aplicar-labels-de-namespace-por-modo.md)
+1853. [Kubernetes Pod Security Admission: Fixar versão do padrão](../../domains/software-0009/software/seguranca/pod-security-admission-fixar-versao-do-padrao.md)
+1854. [Kubernetes Pod Security Admission: Migrar de warn para enforce](../../domains/software-0009/software/seguranca/pod-security-admission-migrar-de-warn-para-enforce.md)
+1855. [Kubernetes Pod Security Admission: Entender escopo das verificações](../../domains/software-0009/software/seguranca/pod-security-admission-entender-escopo-das-verificacoes.md)
+1856. [Kubernetes Pod Security Admission: Exceções de usuários, namespaces e runtime classes](../../domains/software-0009/software/seguranca/pod-security-admission-excecoes-de-usuarios-namespaces-e-runtime-classes.md)
+1857. [Kubernetes Pod Security Admission: Hardening do securityContext](../../domains/software-0009/software/seguranca/pod-security-admission-hardening-do-securitycontext.md)
+1858. [Kubernetes Pod Security Admission: Revisar mutações de admission](../../domains/software-0009/software/seguranca/pod-security-admission-revisar-mutacoes-de-admission.md)
+1859. [Kubernetes Pod Security Admission: Observar audit events](../../domains/software-0009/software/seguranca/pod-security-admission-observar-audit-events.md)
+1860. [Kubernetes Pod Security Admission: Coordenar upgrade do cluster e políticas](../../domains/software-0009/software/seguranca/pod-security-admission-coordenar-upgrade-do-cluster-e-politicas.md)
+
+### Kubernetes NetworkPolicy — API declarativa de política de rede L3/L4 para selecionar pods e restringir tráfego ingress e egress
+
+1861. [Kubernetes NetworkPolicy: Selecionar pods protegidos](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-selecionar-pods-protegidos.md)
+1862. [Kubernetes NetworkPolicy: Entender isolamento ingress](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-entender-isolamento-ingress.md)
+1863. [Kubernetes NetworkPolicy: Entender isolamento egress](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-entender-isolamento-egress.md)
+1864. [Kubernetes NetworkPolicy: Combinar policies de forma aditiva](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-combinar-policies-de-forma-aditiva.md)
+1865. [Kubernetes NetworkPolicy: Combinar podSelector e namespaceSelector](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-combinar-podselector-e-namespaceselector.md)
+1866. [Kubernetes NetworkPolicy: Restringir portas e protocolos](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-restringir-portas-e-protocolos.md)
+1867. [Kubernetes NetworkPolicy: Confirmar suporte do CNI](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-confirmar-suporte-do-cni.md)
+1868. [Kubernetes NetworkPolicy: Planejar política default-deny por namespace](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-planejar-politica-default-deny-por-namespace.md)
+1869. [Kubernetes NetworkPolicy: Tratar endereços IP e mudanças de serviço](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-tratar-enderecos-ip-e-mudancas-de-servico.md)
+1870. [Kubernetes NetworkPolicy: Validar tráfego com testes de integração](../../domains/software-0009/software/seguranca/kubernetes-networkpolicy-validar-trafego-com-testes-de-integracao.md)
+
+### OPA Gatekeeper — policy controller Kubernetes baseado em OPA que valida recursos com ConstraintTemplates e Constraints
+
+1871. [OPA Gatekeeper: Definir ConstraintTemplate](../../domains/software-0009/software/seguranca/gatekeeper-definir-constrainttemplate.md)
+1872. [OPA Gatekeeper: Instanciar Constraint com escopo claro](../../domains/software-0009/software/seguranca/gatekeeper-instanciar-constraint-com-escopo-claro.md)
+1873. [OPA Gatekeeper: Usar admission para prevenir violações](../../domains/software-0009/software/seguranca/gatekeeper-usar-admission-para-prevenir-violacoes.md)
+1874. [OPA Gatekeeper: Iniciar com enforcementAction dryrun](../../domains/software-0009/software/seguranca/gatekeeper-iniciar-com-enforcementaction-dryrun.md)
+1875. [OPA Gatekeeper: Auditar recursos já existentes](../../domains/software-0009/software/seguranca/gatekeeper-auditar-recursos-ja-existentes.md)
+1876. [OPA Gatekeeper: Testar policies com gator](../../domains/software-0009/software/seguranca/gatekeeper-testar-policies-com-gator.md)
+1877. [OPA Gatekeeper: Tratar parâmetros como contrato](../../domains/software-0009/software/seguranca/gatekeeper-tratar-parametros-como-contrato.md)
+1878. [OPA Gatekeeper: Controlar match, exclusions e namespaces](../../domains/software-0009/software/seguranca/gatekeeper-controlar-match-exclusions-e-namespaces.md)
+1879. [OPA Gatekeeper: Interpretar violation e source](../../domains/software-0009/software/seguranca/gatekeeper-interpretar-violation-e-source.md)
+1880. [OPA Gatekeeper: Versionar templates e rollout](../../domains/software-0009/software/seguranca/gatekeeper-versionar-templates-e-rollout.md)
+
+### External Secrets Operator — operador Kubernetes que sincroniza valores de provedores externos para Kubernetes Secrets por recursos declarativos
+
+1881. [External Secrets Operator: Separar SecretStore e ClusterSecretStore](../../domains/software-0009/software/seguranca/external-secrets-separar-secretstore-e-clustersecretstore.md)
+1882. [External Secrets Operator: Mapear segredo remoto para ExternalSecret](../../domains/software-0009/software/seguranca/external-secrets-mapear-segredo-remoto-para-externalsecret.md)
+1883. [External Secrets Operator: Autenticar provider com identidade mínima](../../domains/software-0009/software/seguranca/external-secrets-autenticar-provider-com-identidade-minima.md)
+1884. [External Secrets Operator: Definir escopo de ClusterSecretStore](../../domains/software-0009/software/seguranca/external-secrets-definir-escopo-de-clustersecretstore.md)
+1885. [External Secrets Operator: Escolher refreshInterval e estratégia](../../domains/software-0009/software/seguranca/external-secrets-escolher-refreshinterval-e-estrategia.md)
+1886. [External Secrets Operator: Tratar criação e deleção do Secret alvo](../../domains/software-0009/software/seguranca/external-secrets-tratar-criacao-e-delecao-do-secret-alvo.md)
+1887. [External Secrets Operator: Usar dataFrom com escopo restrito](../../domains/software-0009/software/seguranca/external-secrets-usar-datafrom-com-escopo-restrito.md)
+1888. [External Secrets Operator: Gerar Secret com template](../../domains/software-0009/software/seguranca/external-secrets-gerar-secret-com-template.md)
+1889. [External Secrets Operator: Diagnosticar condições sem expor valor](../../domains/software-0009/software/seguranca/external-secrets-diagnosticar-condicoes-sem-expor-valor.md)
+1890. [External Secrets Operator: Planejar rotação e revogação no backend](../../domains/software-0009/software/seguranca/external-secrets-planejar-rotacao-e-revogacao-no-backend.md)
+
+### Cilium Network Policies — sistema de política de rede Cilium para controlar tráfego de endpoints Kubernetes em L3, L4 e L7
+
+1891. [Cilium Network Policies: Selecionar endpoints por identidade](../../domains/software-0009/software/seguranca/cilium-network-policy-selecionar-endpoints-por-identidade.md)
+1892. [Cilium Network Policies: Entender transição para default-deny](../../domains/software-0009/software/seguranca/cilium-network-policy-entender-transicao-para-default-deny.md)
+1893. [Cilium Network Policies: Permitir tráfego L3 por labels](../../domains/software-0009/software/seguranca/cilium-network-policy-permitir-trafego-l3-por-labels.md)
+1894. [Cilium Network Policies: Restringir destinos por CIDR](../../domains/software-0009/software/seguranca/cilium-network-policy-restringir-destinos-por-cidr.md)
+1895. [Cilium Network Policies: Usar entities com semântica conhecida](../../domains/software-0009/software/seguranca/cilium-network-policy-usar-entities-com-semantica-conhecida.md)
+1896. [Cilium Network Policies: Combinar política L3 e L4](../../domains/software-0009/software/seguranca/cilium-network-policy-combinar-politica-l3-e-l4.md)
+1897. [Cilium Network Policies: Aplicar controles L7 com proxy](../../domains/software-0009/software/seguranca/cilium-network-policy-aplicar-controles-l7-com-proxy.md)
+1898. [Cilium Network Policies: Usar DNS policy com allowlist](../../domains/software-0009/software/seguranca/cilium-network-policy-usar-dns-policy-com-allowlist.md)
+1899. [Cilium Network Policies: Observar policy verdicts e Hubble](../../domains/software-0009/software/seguranca/cilium-network-policy-observar-policy-verdicts-e-hubble.md)
+1900. [Cilium Network Policies: Implantar mudança incrementalmente](../../domains/software-0009/software/seguranca/cilium-network-policy-implantar-mudanca-incrementalmente.md)
+
+## Tranche 20 — SLSA, The Update Framework (TUF), OpenVEX, CycloneDX Generator (cdxgen), GitHub Artifact Attestations, Docker Scout, Chainguard Images e Wolfi, RustSec cargo-audit, OpenSSF Best Practices Badge, Reproducible Builds (100 notas substantivas; revisão factual por IA registrada)
+
+### SLSA — framework para descrever níveis de garantia da supply chain de software e a proveniência de builds
+
+1901. [SLSA: Entender níveis de garantia de build](../../domains/software-0009/software/seguranca/slsa-entender-niveis-de-garantia-de-build.md)
+1902. [SLSA: Gerar provenance ligada ao artefato](../../domains/software-0009/software/seguranca/slsa-gerar-provenance-ligada-ao-artefato.md)
+1903. [SLSA: Descrever build definition](../../domains/software-0009/software/seguranca/slsa-descrever-build-definition.md)
+1904. [SLSA: Validar origem e identidade do builder](../../domains/software-0009/software/seguranca/slsa-validar-origem-e-identidade-do-builder.md)
+1905. [SLSA: Separar presença de assinatura de nível SLSA](../../domains/software-0009/software/seguranca/slsa-separar-presenca-de-assinatura-de-nivel-slsa.md)
+1906. [SLSA: Endurecer plataforma de build](../../domains/software-0009/software/seguranca/slsa-endurecer-plataforma-de-build.md)
+1907. [SLSA: Manter proveniência completa de materiais](../../domains/software-0009/software/seguranca/slsa-manter-proveniencia-completa-de-materiais.md)
+1908. [SLSA: Interpretar nível sem declarar software seguro](../../domains/software-0009/software/seguranca/slsa-interpretar-nivel-sem-declarar-software-seguro.md)
+1909. [SLSA: Verificar provenance na implantação](../../domains/software-0009/software/seguranca/slsa-verificar-provenance-na-implantacao.md)
+1910. [SLSA: Tratar mudança de pipeline como mudança de confiança](../../domains/software-0009/software/seguranca/slsa-tratar-mudanca-de-pipeline-como-mudanca-de-confianca.md)
+
+### The Update Framework (TUF) — framework de metadados assinados para distribuir atualizações resistentes a rollback, freeze e comprometimento de chaves
+
+1911. [The Update Framework (TUF): Separar papéis Root, Targets, Snapshot e Timestamp](../../domains/software-0009/software/seguranca/tuf-separar-papeis-root-targets-snapshot-e-timestamp.md)
+1912. [The Update Framework (TUF): Usar limiar de assinatura na raiz](../../domains/software-0009/software/seguranca/tuf-usar-limiar-de-assinatura-na-raiz.md)
+1913. [The Update Framework (TUF): Impedir rollback por versão monotônica](../../domains/software-0009/software/seguranca/tuf-impedir-rollback-por-versao-monotonica.md)
+1914. [The Update Framework (TUF): Detectar freeze com expiração](../../domains/software-0009/software/seguranca/tuf-detectar-freeze-com-expiracao.md)
+1915. [The Update Framework (TUF): Verificar hashes de targets](../../domains/software-0009/software/seguranca/tuf-verificar-hashes-de-targets.md)
+1916. [The Update Framework (TUF): Usar Snapshot para consistência](../../domains/software-0009/software/seguranca/tuf-usar-snapshot-para-consistencia.md)
+1917. [The Update Framework (TUF): Delegar Targets por escopo](../../domains/software-0009/software/seguranca/tuf-delegar-targets-por-escopo.md)
+1918. [The Update Framework (TUF): Rotacionar chave Root com cuidado](../../domains/software-0009/software/seguranca/tuf-rotacionar-chave-root-com-cuidado.md)
+1919. [The Update Framework (TUF): Confiar em mirrors sem ceder verificação](../../domains/software-0009/software/seguranca/tuf-confiar-em-mirrors-sem-ceder-verificacao.md)
+1920. [The Update Framework (TUF): Bootstrap seguro do primeiro Root](../../domains/software-0009/software/seguranca/tuf-bootstrap-seguro-do-primeiro-root.md)
+
+### OpenVEX — formato aberto e compacto para comunicar status de vulnerabilidades em produtos e componentes
+
+1921. [OpenVEX: Modelar statement de vulnerabilidade](../../domains/software-0009/software/seguranca/openvex-modelar-statement-de-vulnerabilidade.md)
+1922. [OpenVEX: Escolher status com escopo](../../domains/software-0009/software/seguranca/openvex-escolher-status-com-escopo.md)
+1923. [OpenVEX: Justificar not_affected com evidência](../../domains/software-0009/software/seguranca/openvex-justificar-not-affected-com-evidencia.md)
+1924. [OpenVEX: Distinguir fixed de not_affected](../../domains/software-0009/software/seguranca/openvex-distinguir-fixed-de-not-affected.md)
+1925. [OpenVEX: Usar under_investigation sem encerrar triagem](../../domains/software-0009/software/seguranca/openvex-usar-under-investigation-sem-encerrar-triagem.md)
+1926. [OpenVEX: Referenciar produto com identificador consistente](../../domains/software-0009/software/seguranca/openvex-referenciar-produto-com-identificador-consistente.md)
+1927. [OpenVEX: Incluir impacto e função do componente](../../domains/software-0009/software/seguranca/openvex-incluir-impacto-e-funcao-do-componente.md)
+1928. [OpenVEX: Atualizar VEX junto do ciclo de release](../../domains/software-0009/software/seguranca/openvex-atualizar-vex-junto-do-ciclo-de-release.md)
+1929. [OpenVEX: Distribuir OpenVEX com SBOM](../../domains/software-0009/software/seguranca/openvex-distribuir-openvex-com-sbom.md)
+1930. [OpenVEX: Revisar autoria e trilha da declaração](../../domains/software-0009/software/seguranca/openvex-revisar-autoria-e-trilha-da-declaracao.md)
+
+### CycloneDX Generator (cdxgen) — gerador de Software Bill of Materials do ecossistema CycloneDX para código, dependências, imagens e outros alvos
+
+1931. [CycloneDX Generator (cdxgen): Gerar BOM de repositório](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-de-repositorio.md)
+1932. [CycloneDX Generator (cdxgen): Gerar BOM de imagem container](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-de-imagem-container.md)
+1933. [CycloneDX Generator (cdxgen): Cobrir ecossistemas declarados](../../domains/software-0009/software/seguranca/cdxgen-cobrir-ecossistemas-declarados.md)
+1934. [CycloneDX Generator (cdxgen): Analisar monorepo por diretório](../../domains/software-0009/software/seguranca/cdxgen-analisar-monorepo-por-diretorio.md)
+1935. [CycloneDX Generator (cdxgen): Controlar escopo e exclusões](../../domains/software-0009/software/seguranca/cdxgen-controlar-escopo-e-exclusoes.md)
+1936. [CycloneDX Generator (cdxgen): Escolher formato e versão CycloneDX](../../domains/software-0009/software/seguranca/cdxgen-escolher-formato-e-versao-cyclonedx.md)
+1937. [CycloneDX Generator (cdxgen): Gerar BOM no pipeline reproduzível](../../domains/software-0009/software/seguranca/cdxgen-gerar-bom-no-pipeline-reproduzivel.md)
+1938. [CycloneDX Generator (cdxgen): Encadear geração, validação e scan](../../domains/software-0009/software/seguranca/cdxgen-encadear-geracao-validacao-e-scan.md)
+1939. [CycloneDX Generator (cdxgen): Comparar BOM antes e depois do release](../../domains/software-0009/software/seguranca/cdxgen-comparar-bom-antes-e-depois-do-release.md)
+1940. [CycloneDX Generator (cdxgen): Interpretar ausência de componente com cautela](../../domains/software-0009/software/seguranca/cdxgen-interpretar-ausencia-de-componente-com-cautela.md)
+
+### GitHub Artifact Attestations — recurso do GitHub para gerar e verificar attestations de build e identidade de origem para artefatos e imagens
+
+1941. [GitHub Artifact Attestations: Atestar artifact gerado por workflow](../../domains/software-0009/software/seguranca/github-artifact-attestations-atestar-artifact-gerado-por-workflow.md)
+1942. [GitHub Artifact Attestations: Usar digest como subject de imagem](../../domains/software-0009/software/seguranca/github-artifact-attestations-usar-digest-como-subject-de-imagem.md)
+1943. [GitHub Artifact Attestations: Limitar permissões do workflow produtor](../../domains/software-0009/software/seguranca/github-artifact-attestations-limitar-permissoes-do-workflow-produtor.md)
+1944. [GitHub Artifact Attestations: Verificar repository e workflow de origem](../../domains/software-0009/software/seguranca/github-artifact-attestations-verificar-repository-e-workflow-de-origem.md)
+1945. [GitHub Artifact Attestations: Inspecionar tipo de predicate](../../domains/software-0009/software/seguranca/github-artifact-attestations-inspecionar-tipo-de-predicate.md)
+1946. [GitHub Artifact Attestations: Verificar attestation em ambiente consumidor](../../domains/software-0009/software/seguranca/github-artifact-attestations-verificar-attestation-em-ambiente-consumidor.md)
+1947. [GitHub Artifact Attestations: Separar verificação de artifact e identidade](../../domains/software-0009/software/seguranca/github-artifact-attestations-separar-verificacao-de-artifact-e-identidade.md)
+1948. [GitHub Artifact Attestations: Acompanhar acesso público e retenção](../../domains/software-0009/software/seguranca/github-artifact-attestations-acompanhar-acesso-publico-e-retencao.md)
+1949. [GitHub Artifact Attestations: Consumir attestations de images OCI](../../domains/software-0009/software/seguranca/github-artifact-attestations-consumir-attestations-de-images-oci.md)
+1950. [GitHub Artifact Attestations: Definir política de aceitação de provenance](../../domains/software-0009/software/seguranca/github-artifact-attestations-definir-politica-de-aceitacao-de-provenance.md)
+
+### Docker Scout — serviço de análise de imagens e SBOMs Docker que identifica vulnerabilidades e oferece recomendações de políticas
+
+1951. [Docker Scout: Analisar imagem por digest](../../domains/software-0009/software/seguranca/docker-scout-analisar-imagem-por-digest.md)
+1952. [Docker Scout: Inspecionar SBOM e pacotes detectados](../../domains/software-0009/software/seguranca/docker-scout-inspecionar-sbom-e-pacotes-detectados.md)
+1953. [Docker Scout: Priorizar vulnerabilidades no contexto](../../domains/software-0009/software/seguranca/docker-scout-priorizar-vulnerabilidades-no-contexto.md)
+1954. [Docker Scout: Comparar imagem candidata com baseline](../../domains/software-0009/software/seguranca/docker-scout-comparar-imagem-candidata-com-baseline.md)
+1955. [Docker Scout: Aplicar recommendations de atualização](../../domains/software-0009/software/seguranca/docker-scout-aplicar-recommendations-de-atualizacao.md)
+1956. [Docker Scout: Aplicar policy ao gate de build](../../domains/software-0009/software/seguranca/docker-scout-aplicar-policy-ao-gate-de-build.md)
+1957. [Docker Scout: Distinguir severity e fixability](../../domains/software-0009/software/seguranca/docker-scout-distinguir-severity-e-fixability.md)
+1958. [Docker Scout: Usar VEX para comunicar não afetado](../../domains/software-0009/software/seguranca/docker-scout-usar-vex-para-comunicar-nao-afetado.md)
+1959. [Docker Scout: Controlar credenciais ao analisar registry](../../domains/software-0009/software/seguranca/docker-scout-controlar-credenciais-ao-analisar-registry.md)
+1960. [Docker Scout: Verificar resultado com artifact final](../../domains/software-0009/software/seguranca/docker-scout-verificar-resultado-com-artifact-final.md)
+
+### Chainguard Images e Wolfi — ecossistema de imagens de container mínimas baseadas em Wolfi, com metadados de pacote e evidências de build
+
+1961. [Chainguard Images e Wolfi: Distinguir Wolfi de distribuição tradicional](../../domains/software-0009/software/seguranca/chainguard-wolfi-distinguir-wolfi-de-distribuicao-tradicional.md)
+1962. [Chainguard Images e Wolfi: Escolher imagem pelo papel da aplicação](../../domains/software-0009/software/seguranca/chainguard-wolfi-escolher-imagem-pelo-papel-da-aplicacao.md)
+1963. [Chainguard Images e Wolfi: Inspecionar SBOM da imagem](../../domains/software-0009/software/seguranca/chainguard-wolfi-inspecionar-sbom-da-imagem.md)
+1964. [Chainguard Images e Wolfi: Verificar provenance da imagem](../../domains/software-0009/software/seguranca/chainguard-wolfi-verificar-provenance-da-imagem.md)
+1965. [Chainguard Images e Wolfi: Preferir digest para deploy](../../domains/software-0009/software/seguranca/chainguard-wolfi-preferir-digest-para-deploy.md)
+1966. [Chainguard Images e Wolfi: Planejar atualização frequente](../../domains/software-0009/software/seguranca/chainguard-wolfi-planejar-atualizacao-frequente.md)
+1967. [Chainguard Images e Wolfi: Migrar aplicando compatibilidade](../../domains/software-0009/software/seguranca/chainguard-wolfi-migrar-aplicando-compatibilidade.md)
+1968. [Chainguard Images e Wolfi: Separar imagem de build e runtime](../../domains/software-0009/software/seguranca/chainguard-wolfi-separar-imagem-de-build-e-runtime.md)
+1969. [Chainguard Images e Wolfi: Usar variante de debug sem expor produção](../../domains/software-0009/software/seguranca/chainguard-wolfi-usar-variante-de-debug-sem-expor-producao.md)
+1970. [Chainguard Images e Wolfi: Evitar confiar em marca como garantia](../../domains/software-0009/software/seguranca/chainguard-wolfi-evitar-confiar-em-marca-como-garantia.md)
+
+### RustSec cargo-audit — ferramenta RustSec que compara dependências bloqueadas em Cargo.lock com a base de advisories de Rust
+
+1971. [RustSec cargo-audit: Auditar Cargo.lock do workspace](../../domains/software-0009/software/seguranca/cargo-audit-auditar-cargo-lock-do-workspace.md)
+1972. [RustSec cargo-audit: Atualizar advisory database](../../domains/software-0009/software/seguranca/cargo-audit-atualizar-advisory-database.md)
+1973. [RustSec cargo-audit: Interpretar advisory por crate e versão](../../domains/software-0009/software/seguranca/cargo-audit-interpretar-advisory-por-crate-e-versao.md)
+1974. [RustSec cargo-audit: Corrigir dependência transitiva](../../domains/software-0009/software/seguranca/cargo-audit-corrigir-dependencia-transitiva.md)
+1975. [RustSec cargo-audit: Governar ignores em audit.toml](../../domains/software-0009/software/seguranca/cargo-audit-governar-ignores-em-audit-toml.md)
+1976. [RustSec cargo-audit: Separar falha de ferramenta de finding](../../domains/software-0009/software/seguranca/cargo-audit-separar-falha-de-ferramenta-de-finding.md)
+1977. [RustSec cargo-audit: Executar auditoria em CI](../../domains/software-0009/software/seguranca/cargo-audit-executar-auditoria-em-ci.md)
+1978. [RustSec cargo-audit: Considerar advisories de manutenção](../../domains/software-0009/software/seguranca/cargo-audit-considerar-advisories-de-manutencao.md)
+1979. [RustSec cargo-audit: Fixar toolchain e comando de auditoria](../../domains/software-0009/software/seguranca/cargo-audit-fixar-toolchain-e-comando-de-auditoria.md)
+1980. [RustSec cargo-audit: Tratar saída como evidência limitada](../../domains/software-0009/software/seguranca/cargo-audit-tratar-saida-como-evidencia-limitada.md)
+
+### OpenSSF Best Practices Badge — programa de autoavaliação pública de práticas para projetos FLOSS com critérios organizados por níveis
+
+1981. [OpenSSF Best Practices Badge: Entender escopo da autoavaliação](../../domains/software-0009/software/seguranca/openssf-badge-entender-escopo-da-autoavaliacao.md)
+1982. [OpenSSF Best Practices Badge: Mapear critérios a evidências](../../domains/software-0009/software/seguranca/openssf-badge-mapear-criterios-a-evidencias.md)
+1983. [OpenSSF Best Practices Badge: Usar nível adequado ao projeto](../../domains/software-0009/software/seguranca/openssf-badge-usar-nivel-adequado-ao-projeto.md)
+1984. [OpenSSF Best Practices Badge: Documentar reporte de vulnerabilidades](../../domains/software-0009/software/seguranca/openssf-badge-documentar-reporte-de-vulnerabilidades.md)
+1985. [OpenSSF Best Practices Badge: Evidenciar testes automatizados](../../domains/software-0009/software/seguranca/openssf-badge-evidenciar-testes-automatizados.md)
+1986. [OpenSSF Best Practices Badge: Manter releases e comunicação](../../domains/software-0009/software/seguranca/openssf-badge-manter-releases-e-comunicacao.md)
+1987. [OpenSSF Best Practices Badge: Revisar critério após mudança organizacional](../../domains/software-0009/software/seguranca/openssf-badge-revisar-criterio-apos-mudanca-organizacional.md)
+1988. [OpenSSF Best Practices Badge: Separar badge de auditoria independente](../../domains/software-0009/software/seguranca/openssf-badge-separar-badge-de-auditoria-independente.md)
+1989. [OpenSSF Best Practices Badge: Priorizar gaps úteis em vez de pontuação](../../domains/software-0009/software/seguranca/openssf-badge-priorizar-gaps-uteis-em-vez-de-pontuacao.md)
+1990. [OpenSSF Best Practices Badge: Declarar badge com transparência](../../domains/software-0009/software/seguranca/openssf-badge-declarar-badge-com-transparencia.md)
+
+### Reproducible Builds — prática de produzir bit-a-bit o mesmo artefato a partir do mesmo código-fonte e instruções de build
+
+1991. [Reproducible Builds: Controlar timestamps com SOURCE_DATE_EPOCH](../../domains/software-0009/software/seguranca/reproducible-builds-controlar-timestamps-com-source-date-epoch.md)
+1992. [Reproducible Builds: Fixar toolchain e dependências](../../domains/software-0009/software/seguranca/reproducible-builds-fixar-toolchain-e-dependencias.md)
+1993. [Reproducible Builds: Remover caminhos absolutos e hostnames](../../domains/software-0009/software/seguranca/reproducible-builds-remover-caminhos-absolutos-e-hostnames.md)
+1994. [Reproducible Builds: Normalizar locale e timezone](../../domains/software-0009/software/seguranca/reproducible-builds-normalizar-locale-e-timezone.md)
+1995. [Reproducible Builds: Ordenar entradas e arquivos de archive](../../domains/software-0009/software/seguranca/reproducible-builds-ordenar-entradas-e-arquivos-de-archive.md)
+1996. [Reproducible Builds: Executar builds independentes](../../domains/software-0009/software/seguranca/reproducible-builds-executar-builds-independentes.md)
+1997. [Reproducible Builds: Comparar artefatos com diff útil](../../domains/software-0009/software/seguranca/reproducible-builds-comparar-artefatos-com-diff-util.md)
+1998. [Reproducible Builds: Reproduzir imagens de container](../../domains/software-0009/software/seguranca/reproducible-builds-reproduzir-imagens-de-container.md)
+1999. [Reproducible Builds: Investigar fontes de aleatoriedade](../../domains/software-0009/software/seguranca/reproducible-builds-investigar-fontes-de-aleatoriedade.md)
+2000. [Reproducible Builds: Usar reprodutibilidade sem alegar segurança](../../domains/software-0009/software/seguranca/reproducible-builds-usar-reprodutibilidade-sem-alegar-seguranca.md)

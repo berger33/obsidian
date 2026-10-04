@@ -8,6 +8,9 @@ from typing import Iterable
 from note_quality import normalize
 
 
+FRONTMATTER_RE = re.compile(r"\A---[ \t]*\r?\n.*?\r?\n---[ \t]*(?:\r?\n|$)", re.DOTALL)
+
+
 def repeated_substantive_sentences(
     notes: Iterable[tuple[int, str]],
 ) -> dict[str, list[int]]:
@@ -19,7 +22,8 @@ def repeated_substantive_sentences(
     """
     occurrences: dict[str, set[int]] = defaultdict(set)
     for number, content in notes:
-        body = content.split("---", 2)[-1]
+        frontmatter = FRONTMATTER_RE.match(content)
+        body = content[frontmatter.end():] if frontmatter else content
         section = ""
         for line in body.splitlines():
             heading = re.match(r"^#{1,6}\s+(.+?)\s*#*\s*$", line)

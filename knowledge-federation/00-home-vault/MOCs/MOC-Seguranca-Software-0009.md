@@ -6,18 +6,18 @@ subdominio: seguranca
 lote: software-seguranca-2000-0003
 tipo_nota: moc
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **2000 notas substantivas (Tranches 1–20, IDs `1–2000`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1600 / 2.000 notas válidas (80,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1600**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1600 / 1600** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md))
+- Progresso atual: **2000 / 2.000 notas válidas (100,00%)** (`status: complete`)
+- Revisão factual humana: **0 / 2000**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **2000 / 2000** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md), [Tranche 19](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-19.md), [Tranche 20](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-20.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -2131,3 +2131,531 @@ Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`
 - [[govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain]] — Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**
 - [[govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate]] — Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**
 - [[govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign]] — Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**
+
+## Tranche 17 (IDs 1601–1700)
+
+### Trivy
+
+- [[trivy-varredura-de-vulnerabilidades-de-imagem-por-digest]] — Trivy: Varredura de vulnerabilidades de imagem por digest
+- [[trivy-escolha-explicita-de-scanners]] — Trivy: Escolha explícita de scanners
+- [[trivy-misconfiguracao-em-terraform-e-kubernetes]] — Trivy: Misconfiguração em Terraform e Kubernetes
+- [[trivy-segredos-na-configuracao-da-imagem]] — Trivy: Segredos na configuração da imagem
+- [[trivy-analise-do-sistema-de-arquivos-do-repositorio]] — Trivy: Análise do sistema de arquivos do repositório
+- [[trivy-scanner-de-licencas-e-inventario]] — Trivy: Scanner de licenças e inventário
+- [[trivy-relatorios-json-e-sarif-em-ci]] — Trivy: Relatórios JSON e SARIF em CI
+- [[trivy-excecoes-de-vulnerabilidade-com-justificativa]] — Trivy: Exceções de vulnerabilidade com justificativa
+- [[trivy-atualizacao-e-cache-das-bases-de-dados]] — Trivy: Atualização e cache das bases de dados
+- [[trivy-priorizacao-de-remediacao-pela-classe-do-achado]] — Trivy: Priorização de remediação pela classe do achado
+
+### Syft
+
+- [[syft-escolha-de-origem-entre-imagem-diretorio-e-arquivo]] — Syft: Escolha de origem entre imagem, diretório e arquivo
+- [[syft-catalogadores-de-pacotes-declarados-e-instalados]] — Syft: Catalogadores de pacotes declarados e instalados
+- [[syft-selecao-restrita-de-catalogadores]] — Syft: Seleção restrita de catalogadores
+- [[syft-exportacao-de-sbom-cyclonedx-e-spdx]] — Syft: Exportação de SBOM CycloneDX e SPDX
+- [[syft-identificadores-package-url-e-correspondencia]] — Syft: Identificadores Package URL e correspondência
+- [[syft-proveniencia-e-metadados-da-origem]] — Syft: Proveniência e metadados da origem
+- [[syft-identificacao-de-distribuicao-do-sistema-operacional]] — Syft: Identificação de distribuição do sistema operacional
+- [[syft-pacotes-descobertos-em-binarios]] — Syft: Pacotes descobertos em binários
+- [[syft-reprodutibilidade-do-sbom-no-pipeline]] — Syft: Reprodutibilidade do SBOM no pipeline
+- [[syft-comparacao-entre-inventario-de-fonte-e-artefato]] — Syft: Comparação entre inventário de fonte e artefato
+
+### Grype
+
+- [[grype-scan-direto-de-imagem-de-container]] — Grype: Scan direto de imagem de container
+- [[grype-analise-de-sbom-syft]] — Grype: Análise de SBOM Syft
+- [[grype-scan-de-sistema-de-arquivos]] — Grype: Scan de sistema de arquivos
+- [[grype-correspondencia-de-ecossistemas-e-versoes]] — Grype: Correspondência de ecossistemas e versões
+- [[grype-atualizacao-e-estado-da-base-local]] — Grype: Atualização e estado da base local
+- [[grype-triagem-por-severidade-e-contexto]] — Grype: Triagem por severidade e contexto
+- [[grype-uso-de-openvex-para-explicitar-status]] — Grype: Uso de OpenVEX para explicitar status
+- [[grype-filtros-e-excecoes-com-rastreabilidade]] — Grype: Filtros e exceções com rastreabilidade
+- [[grype-saidas-json-e-sarif]] — Grype: Saídas JSON e SARIF
+- [[grype-diferenciar-finding-de-explorabilidade]] — Grype: Diferenciar finding de explorabilidade
+
+### Sigstore Cosign
+
+- [[cosign-assinatura-de-imagem-por-digest]] — Sigstore Cosign: Assinatura de imagem por digest
+- [[cosign-assinatura-keyless-com-oidc]] — Sigstore Cosign: Assinatura keyless com OIDC
+- [[cosign-verificacao-por-identidade-e-issuer]] — Sigstore Cosign: Verificação por identidade e issuer
+- [[cosign-verificacao-de-claim-de-digest]] — Sigstore Cosign: Verificação de claim de digest
+- [[cosign-armazenamento-de-assinatura-como-oci-referrer]] — Sigstore Cosign: Armazenamento de assinatura como OCI referrer
+- [[cosign-atestacao-de-metadados-de-build]] — Sigstore Cosign: Atestação de metadados de build
+- [[cosign-verificacao-de-atestacao-por-politica]] — Sigstore Cosign: Verificação de atestação por política
+- [[cosign-chaves-locais-e-kms]] — Sigstore Cosign: Chaves locais e KMS
+- [[cosign-assinatura-de-blobs-e-bundles]] — Sigstore Cosign: Assinatura de blobs e bundles
+- [[cosign-politica-de-confianca-no-deploy]] — Sigstore Cosign: Política de confiança no deploy
+
+### Open Policy Agent (OPA)
+
+- [[opa-modelagem-da-decisao-em-rego]] — Open Policy Agent (OPA): Modelagem da decisão em Rego
+- [[opa-separacao-entre-input-e-data]] — Open Policy Agent (OPA): Separação entre input e data
+- [[opa-consulta-local-com-opa-eval]] — Open Policy Agent (OPA): Consulta local com `opa eval`
+- [[opa-testes-unitarios-opa-test]] — Open Policy Agent (OPA): Testes unitários `opa test`
+- [[opa-formato-e-lint-de-modulos-rego]] — Open Policy Agent (OPA): Formato e lint de módulos Rego
+- [[opa-bundles-versionados-de-politicas]] — Open Policy Agent (OPA): Bundles versionados de políticas
+- [[opa-integracao-via-api-de-decisao]] — Open Policy Agent (OPA): Integração via API de decisão
+- [[opa-trilha-de-decisao-e-logs]] — Open Policy Agent (OPA): Trilha de decisão e logs
+- [[opa-compilacao-de-politica-para-webassembly]] — Open Policy Agent (OPA): Compilação de política para WebAssembly
+- [[opa-cobertura-de-regras-e-cenarios-negativos]] — Open Policy Agent (OPA): Cobertura de regras e cenários negativos
+
+### Kyverno
+
+- [[kyverno-validacao-de-recursos-no-admission]] — Kyverno: Validação de recursos no admission
+- [[kyverno-mutacao-de-defaults-seguros]] — Kyverno: Mutação de defaults seguros
+- [[kyverno-geracao-de-recursos-auxiliares]] — Kyverno: Geração de recursos auxiliares
+- [[kyverno-verificacao-de-imagens-assinadas]] — Kyverno: Verificação de imagens assinadas
+- [[kyverno-acao-de-validacao-audit-versus-enforce]] — Kyverno: Ação de validação Audit versus Enforce
+- [[kyverno-politicas-em-cel-e-migracao]] — Kyverno: Políticas em CEL e migração
+- [[kyverno-escopo-por-recurso-e-namespace]] — Kyverno: Escopo por recurso e namespace
+- [[kyverno-relatorios-de-violacoes-e-politica]] — Kyverno: Relatórios de violações e política
+- [[kyverno-excecoes-de-politica-governadas]] — Kyverno: Exceções de política governadas
+- [[kyverno-teste-local-de-politicas-antes-do-cluster]] — Kyverno: Teste local de políticas antes do cluster
+
+### Falco
+
+- [[falco-fonte-de-eventos-syscall]] — Falco: Fonte de eventos syscall
+- [[falco-fontes-de-eventos-via-plugins]] — Falco: Fontes de eventos via plugins
+- [[falco-condicao-e-saida-da-regra]] — Falco: Condição e saída da regra
+- [[falco-macros-e-listas-reutilizaveis]] — Falco: Macros e listas reutilizáveis
+- [[falco-maturidade-e-selecao-das-regras]] — Falco: Maturidade e seleção das regras
+- [[falco-saida-estruturada-e-encaminhamento]] — Falco: Saída estruturada e encaminhamento
+- [[falco-contexto-de-container-e-namespace]] — Falco: Contexto de container e namespace
+- [[falco-excecoes-e-reducao-de-ruido]] — Falco: Exceções e redução de ruído
+- [[falco-privilegio-de-coleta-e-superficie-do-agente]] — Falco: Privilégio de coleta e superfície do agente
+- [[falco-validacao-de-alerta-antes-do-rollout]] — Falco: Validação de alerta antes do rollout
+
+### Checkov
+
+- [[checkov-analise-de-terraform-no-repositorio]] — Checkov: Análise de Terraform no repositório
+- [[checkov-analise-de-plano-terraform]] — Checkov: Análise de plano Terraform
+- [[checkov-checks-para-kubernetes-e-helm]] — Checkov: Checks para Kubernetes e Helm
+- [[checkov-analise-de-dockerfile-e-imagens]] — Checkov: Análise de Dockerfile e imagens
+- [[checkov-supressao-inline-de-finding]] — Checkov: Supressão inline de finding
+- [[checkov-politicas-customizadas]] — Checkov: Políticas customizadas
+- [[checkov-formato-json-e-sarif]] — Checkov: Formato JSON e SARIF
+- [[checkov-baseline-de-findings-existentes]] — Checkov: Baseline de findings existentes
+- [[checkov-selecao-por-diretorio-e-framework]] — Checkov: Seleção por diretório e framework
+- [[checkov-gates-de-ci-por-politica]] — Checkov: Gates de CI por política
+
+### kube-bench
+
+- [[kube-bench-alinhar-versao-do-benchmark]] — kube-bench: Alinhar versão do benchmark
+- [[kube-bench-separar-checks-por-papel-do-no]] — kube-bench: Separar checks por papel do nó
+- [[kube-bench-estrutura-dos-controles-yaml]] — kube-bench: Estrutura dos controles YAML
+- [[kube-bench-interpretacao-de-audit-e-test-items]] — kube-bench: Interpretação de audit e test_items
+- [[kube-bench-execucao-seletiva-por-ids]] — kube-bench: Execução seletiva por IDs
+- [[kube-bench-diferenca-entre-fail-e-warning]] — kube-bench: Diferença entre fail e warning
+- [[kube-bench-saidas-json-e-junit]] — kube-bench: Saídas JSON e JUnit
+- [[kube-bench-remediacoes-como-plano-de-mudanca]] — kube-bench: Remediações como plano de mudança
+- [[kube-bench-acesso-e-ambiente-de-execucao]] — kube-bench: Acesso e ambiente de execução
+- [[kube-bench-excecoes-para-plataforma-gerenciada]] — kube-bench: Exceções para plataforma gerenciada
+
+### OWASP ASVS
+
+- [[asvs-fixar-versao-do-asvs-no-contrato]] — OWASP ASVS: Fixar versão do ASVS no contrato
+- [[asvs-escolher-nivel-de-verificacao]] — OWASP ASVS: Escolher nível de verificação
+- [[asvs-mapear-requisitos-a-user-stories]] — OWASP ASVS: Mapear requisitos a user stories
+- [[asvs-validacao-de-entrada-e-codificacao-de-saida]] — OWASP ASVS: Validação de entrada e codificação de saída
+- [[asvs-requisitos-de-autenticacao]] — OWASP ASVS: Requisitos de autenticação
+- [[asvs-autorizacao-e-controle-de-acesso]] — OWASP ASVS: Autorização e controle de acesso
+- [[asvs-protecao-de-dados-e-criptografia]] — OWASP ASVS: Proteção de dados e criptografia
+- [[asvs-evidencia-de-testes-automatizados-e-manuais]] — OWASP ASVS: Evidência de testes automatizados e manuais
+- [[asvs-rastreio-de-requisito-nao-aplicavel]] — OWASP ASVS: Rastreio de requisito não aplicável
+- [[asvs-uso-do-padrao-em-aquisicao-de-software]] — OWASP ASVS: Uso do padrão em aquisição de software
+
+## Tranche 18 (IDs 1701–1800)
+
+### Semgrep
+
+- [[semgrep-estrutura-de-uma-regra-yaml]] — Semgrep: Estrutura de uma regra YAML
+- [[semgrep-metavariaveis-em-padroes-de-codigo]] — Semgrep: Metavariáveis em padrões de código
+- [[semgrep-combinar-padroes-com-contexto]] — Semgrep: Combinar padrões com contexto
+- [[semgrep-analise-de-taint-com-fontes-e-sinks]] — Semgrep: Análise de taint com fontes e sinks
+- [[semgrep-sanitizadores-em-regras-de-taint]] — Semgrep: Sanitizadores em regras de taint
+- [[semgrep-selecao-de-rulesets-por-projeto]] — Semgrep: Seleção de rulesets por projeto
+- [[semgrep-escaneamento-em-pull-request]] — Semgrep: Escaneamento em pull request
+- [[semgrep-exclusoes-de-arquivos-do-scan]] — Semgrep: Exclusões de arquivos do scan
+- [[semgrep-supressao-rastreavel-de-finding]] — Semgrep: Supressão rastreável de finding
+- [[semgrep-testes-de-regressao-para-regras]] — Semgrep: Testes de regressão para regras
+
+### SonarQube Server
+
+- [[sonarqube-fluxo-entre-scanner-e-servidor]] — SonarQube Server: Fluxo entre scanner e servidor
+- [[sonarqube-escopo-de-fontes-e-testes]] — SonarQube Server: Escopo de fontes e testes
+- [[sonarqube-perfis-de-qualidade-aplicados]] — SonarQube Server: Perfis de qualidade aplicados
+- [[sonarqube-quality-gate-como-criterio-de-integracao]] — SonarQube Server: Quality gate como critério de integração
+- [[sonarqube-definicao-de-codigo-novo]] — SonarQube Server: Definição de código novo
+- [[sonarqube-analise-de-taint-e-apis-internas]] — SonarQube Server: Análise de taint e APIs internas
+- [[sonarqube-exclusoes-por-caminho]] — SonarQube Server: Exclusões por caminho
+- [[sonarqube-cobertura-de-testes-como-dado-separado]] — SonarQube Server: Cobertura de testes como dado separado
+- [[sonarqube-revisao-e-resolucao-de-issues]] — SonarQube Server: Revisão e resolução de issues
+- [[sonarqube-build-scanner-reproduzivel-em-ci]] — SonarQube Server: Build scanner reproduzível em CI
+
+### Snyk CLI
+
+- [[snyk-preparar-autenticacao-e-ambiente]] — Snyk CLI: Preparar autenticação e ambiente
+- [[snyk-analise-de-dependencias-com-snyk-test]] — Snyk CLI: Análise de dependências com snyk test
+- [[snyk-analise-sast-com-snyk-code-test]] — Snyk CLI: Análise SAST com snyk code test
+- [[snyk-varredura-de-infraestrutura-como-codigo]] — Snyk CLI: Varredura de infraestrutura como código
+- [[snyk-inspecao-de-imagens-de-container]] — Snyk CLI: Inspeção de imagens de container
+- [[snyk-busca-de-segredos-em-arquivos]] — Snyk CLI: Busca de segredos em arquivos
+- [[snyk-monitoramento-de-projeto]] — Snyk CLI: Monitoramento de projeto
+- [[snyk-exclusao-controlada-de-diretorios]] — Snyk CLI: Exclusão controlada de diretórios
+- [[snyk-integrar-resultados-ao-pipeline]] — Snyk CLI: Integrar resultados ao pipeline
+- [[snyk-aplicar-correcoes-com-revisao]] — Snyk CLI: Aplicar correções com revisão
+
+### Kubescape
+
+- [[kubescape-selecionar-framework-explicitamente]] — Kubescape: Selecionar framework explicitamente
+- [[kubescape-executar-scan-de-um-control]] — Kubescape: Executar scan de um control
+- [[kubescape-analisar-manifests-locais-antes-do-deploy]] — Kubescape: Analisar manifests locais antes do deploy
+- [[kubescape-examinar-cluster-com-kubeconfig-definido]] — Kubescape: Examinar cluster com kubeconfig definido
+- [[kubescape-escanear-charts-e-templates-renderizados]] — Kubescape: Escanear charts e templates renderizados
+- [[kubescape-definir-limiar-de-conformidade-no-ci]] — Kubescape: Definir limiar de conformidade no CI
+- [[kubescape-governar-excecoes-de-findings]] — Kubescape: Governar exceções de findings
+- [[kubescape-interpretar-remediacao-assistida]] — Kubescape: Interpretar remediação assistida
+- [[kubescape-conhecer-requisitos-do-host-scanner]] — Kubescape: Conhecer requisitos do host scanner
+- [[kubescape-publicar-resultados-junit-em-ci]] — Kubescape: Publicar resultados JUnit em CI
+
+### KubeLinter
+
+- [[kube-linter-comecar-pelos-checks-padroes]] — KubeLinter: Começar pelos checks padrões
+- [[kube-linter-precedencia-do-arquivo-de-configuracao]] — KubeLinter: Precedência do arquivo de configuração
+- [[kube-linter-selecionar-checks-por-inclusao-e-exclusao]] — KubeLinter: Selecionar checks por inclusão e exclusão
+- [[kube-linter-criar-checks-customizados-a-partir-de-templates]] — KubeLinter: Criar checks customizados a partir de templates
+- [[kube-linter-ignorar-paths-com-escopo-limitado]] — KubeLinter: Ignorar paths com escopo limitado
+- [[kube-linter-avaliar-charts-helm]] — KubeLinter: Avaliar charts Helm
+- [[kube-linter-inspecionar-lista-de-checks-instalados]] — KubeLinter: Inspecionar lista de checks instalados
+- [[kube-linter-usar-resultado-como-pre-merge-gate]] — KubeLinter: Usar resultado como pre-merge gate
+- [[kube-linter-interpretar-objeto-e-orientacao-de-correcao]] — KubeLinter: Interpretar objeto e orientação de correção
+- [[kube-linter-distinguir-lint-de-avaliacao-de-runtime]] — KubeLinter: Distinguir lint de avaliação de runtime
+
+### Cilium Tetragon
+
+- [[tetragon-escolher-hook-point-da-policy]] — Cilium Tetragon: Escolher hook point da policy
+- [[tetragon-filtrar-eventos-no-kernel]] — Cilium Tetragon: Filtrar eventos no kernel
+- [[tetragon-executar-primeiro-em-modo-monitor]] — Cilium Tetragon: Executar primeiro em modo monitor
+- [[tetragon-usar-enforcement-somente-com-evidencia]] — Cilium Tetragon: Usar enforcement somente com evidência
+- [[tetragon-entender-modo-monitor-only]] — Cilium Tetragon: Entender modo monitor_only
+- [[tetragon-separar-dominios-de-carregamento]] — Cilium Tetragon: Separar domínios de carregamento
+- [[tetragon-limitar-policy-por-namespace-e-labels]] — Cilium Tetragon: Limitar policy por namespace e labels
+- [[tetragon-monitorar-acesso-a-arquivos-sensiveis]] — Cilium Tetragon: Monitorar acesso a arquivos sensíveis
+- [[tetragon-avaliar-conexao-de-rede-por-processo]] — Cilium Tetragon: Avaliar conexão de rede por processo
+- [[tetragon-versionar-policies-e-testar-compatibilidade]] — Cilium Tetragon: Versionar policies e testar compatibilidade
+
+### Renovate
+
+- [[renovate-versionar-configuracao-de-renovate]] — Renovate: Versionar configuração de Renovate
+- [[renovate-selecionar-managers-e-manifests]] — Renovate: Selecionar managers e manifests
+- [[renovate-agendar-verificacoes-de-atualizacao]] — Renovate: Agendar verificações de atualização
+- [[renovate-agrupar-updates-por-regra]] — Renovate: Agrupar updates por regra
+- [[renovate-limitar-automerge-por-tipo-de-update]] — Renovate: Limitar automerge por tipo de update
+- [[renovate-exigir-aprovacao-para-major-updates]] — Renovate: Exigir aprovação para major updates
+- [[renovate-controlar-forma-de-merge]] — Renovate: Controlar forma de merge
+- [[renovate-usar-dashboard-para-backlog-de-dependencias]] — Renovate: Usar dashboard para backlog de dependências
+- [[renovate-atualizar-lockfiles-com-teste]] — Renovate: Atualizar lockfiles com teste
+- [[renovate-separar-alertas-de-vulnerabilidade-de-rotina]] — Renovate: Separar alertas de vulnerabilidade de rotina
+
+### GitHub Dependabot
+
+- [[dependabot-distinguir-alertas-de-updates-agendados]] — GitHub Dependabot: Distinguir alertas de updates agendados
+- [[dependabot-estruturar-dependabot-yml]] — GitHub Dependabot: Estruturar dependabot.yml
+- [[dependabot-escolher-package-ecosystem-correto]] — GitHub Dependabot: Escolher package ecosystem correto
+- [[dependabot-configurar-frequencia-de-version-updates]] — GitHub Dependabot: Configurar frequência de version updates
+- [[dependabot-limitar-pull-requests-em-aberto]] — GitHub Dependabot: Limitar pull requests em aberto
+- [[dependabot-ignorar-versoes-com-escopo]] — GitHub Dependabot: Ignorar versões com escopo
+- [[dependabot-autenticar-acesso-a-registries-privados]] — GitHub Dependabot: Autenticar acesso a registries privados
+- [[dependabot-atualizar-dependencias-de-github-actions]] — GitHub Dependabot: Atualizar dependências de GitHub Actions
+- [[dependabot-testar-security-update-pull-request]] — GitHub Dependabot: Testar security update pull request
+- [[dependabot-priorizar-triagem-de-alerta]] — GitHub Dependabot: Priorizar triagem de alerta
+
+### CycloneDX CLI
+
+- [[cyclonedx-cli-validar-contra-schema-escolhido]] — CycloneDX CLI: Validar contra schema escolhido
+- [[cyclonedx-cli-converter-formato-de-bom]] — CycloneDX CLI: Converter formato de BOM
+- [[cyclonedx-cli-inspecionar-multiplas-versoes-de-componentes]] — CycloneDX CLI: Inspecionar múltiplas versões de componentes
+- [[cyclonedx-cli-comparar-boms-entre-releases]] — CycloneDX CLI: Comparar BOMs entre releases
+- [[cyclonedx-cli-mesclar-inventarios-com-proveniencia]] — CycloneDX CLI: Mesclar inventários com proveniência
+- [[cyclonedx-cli-adicionar-informacoes-a-um-bom]] — CycloneDX CLI: Adicionar informações a um BOM
+- [[cyclonedx-cli-assinar-e-verificar-documentos]] — CycloneDX CLI: Assinar e verificar documentos
+- [[cyclonedx-cli-escolher-versao-de-saida-conscientemente]] — CycloneDX CLI: Escolher versão de saída conscientemente
+- [[cyclonedx-cli-integrar-validacao-ao-ci]] — CycloneDX CLI: Integrar validação ao CI
+- [[cyclonedx-cli-interpretar-bom-como-inventario-nao-scan]] — CycloneDX CLI: Interpretar BOM como inventário, não scan
+
+### AWS CloudFormation Guard
+
+- [[cfn-guard-modelar-uma-clause-booleana]] — AWS CloudFormation Guard: Modelar uma clause booleana
+- [[cfn-guard-reutilizar-named-rule-blocks]] — AWS CloudFormation Guard: Reutilizar named-rule blocks
+- [[cfn-guard-testar-regras-antes-da-validacao]] — AWS CloudFormation Guard: Testar regras antes da validação
+- [[cfn-guard-validar-arquivo-de-entrada-com-rules-file]] — AWS CloudFormation Guard: Validar arquivo de entrada com rules file
+- [[cfn-guard-aplicar-multiplas-regras-e-arquivos]] — AWS CloudFormation Guard: Aplicar múltiplas regras e arquivos
+- [[cfn-guard-injetar-parametros-de-contexto]] — AWS CloudFormation Guard: Injetar parâmetros de contexto
+- [[cfn-guard-fornecer-mensagens-de-violacao-uteis]] — AWS CloudFormation Guard: Fornecer mensagens de violação úteis
+- [[cfn-guard-consultar-estruturas-aninhadas]] — AWS CloudFormation Guard: Consultar estruturas aninhadas
+- [[cfn-guard-usar-guard-como-gate-de-template]] — AWS CloudFormation Guard: Usar Guard como gate de template
+- [[cfn-guard-versionar-regras-e-aprovacoes]] — AWS CloudFormation Guard: Versionar regras e aprovações
+
+## Tranche 19 (IDs 1801–1900)
+
+### SPIFFE/SPIRE
+
+- [[spiffe-spire-identidade-de-workload-em-vez-de-segredo-estatico]] — SPIFFE/SPIRE: Identidade de workload em vez de segredo estático
+- [[spiffe-spire-nomear-e-isolar-trust-domains]] — SPIFFE/SPIRE: Nomear e isolar trust domains
+- [[spiffe-spire-separar-servidor-spire-e-agent]] — SPIFFE/SPIRE: Separar servidor SPIRE e agent
+- [[spiffe-spire-atestacao-de-no-antes-da-emissao]] — SPIFFE/SPIRE: Atestação de nó antes da emissão
+- [[spiffe-spire-atestar-workload-por-seletores]] — SPIFFE/SPIRE: Atestar workload por seletores
+- [[spiffe-spire-restringir-registration-entries]] — SPIFFE/SPIRE: Restringir registration entries
+- [[spiffe-spire-escolher-formato-de-svid]] — SPIFFE/SPIRE: Escolher formato de SVID
+- [[spiffe-spire-distribuir-trust-bundles-com-rotacao]] — SPIFFE/SPIRE: Distribuir trust bundles com rotação
+- [[spiffe-spire-federar-trust-domains]] — SPIFFE/SPIRE: Federar trust domains
+- [[spiffe-spire-operar-spire-com-configuracao-versionada]] — SPIFFE/SPIRE: Operar SPIRE com configuração versionada
+
+### HashiCorp Vault
+
+- [[vault-credenciais-dinamicas-com-lease]] — HashiCorp Vault: Credenciais dinâmicas com lease
+- [[vault-renovar-lease-antes-do-vencimento]] — HashiCorp Vault: Renovar lease antes do vencimento
+- [[vault-revogar-lease-e-credencial-associada]] — HashiCorp Vault: Revogar lease e credencial associada
+- [[vault-autenticar-workload-kubernetes]] — HashiCorp Vault: Autenticar workload Kubernetes
+- [[vault-limitar-role-a-service-account-e-namespace]] — HashiCorp Vault: Limitar role a service account e namespace
+- [[vault-revisar-audience-de-service-account-token]] — HashiCorp Vault: Revisar audience de service account token
+- [[vault-aplicar-policy-de-menor-privilegio]] — HashiCorp Vault: Aplicar policy de menor privilégio
+- [[vault-separar-token-ttl-de-lease-ttl]] — HashiCorp Vault: Separar token TTL de lease TTL
+- [[vault-rotacionar-service-account-sem-indisponibilidade]] — HashiCorp Vault: Rotacionar service account sem indisponibilidade
+- [[vault-auditar-cliente-e-ciclo-de-credencial]] — HashiCorp Vault: Auditar cliente e ciclo de credencial
+
+### OpenBao
+
+- [[openbao-autorizar-operacoes-por-path]] — OpenBao: Autorizar operações por path
+- [[openbao-aplicar-menor-privilegio-nas-capabilities]] — OpenBao: Aplicar menor privilégio nas capabilities
+- [[openbao-entender-policy-deny-e-composicao]] — OpenBao: Entender policy deny e composição
+- [[openbao-vincular-policy-a-autenticacao]] — OpenBao: Vincular policy a autenticação
+- [[openbao-testar-mudancas-de-policy-como-codigo]] — OpenBao: Testar mudanças de policy como código
+- [[openbao-compreender-estado-sealed]] — OpenBao: Compreender estado sealed
+- [[openbao-proteger-unseal-shares]] — OpenBao: Proteger unseal shares
+- [[openbao-avaliar-auto-unseal]] — OpenBao: Avaliar auto-unseal
+- [[openbao-planejar-recuperacao-sem-divulgar-shares]] — OpenBao: Planejar recuperação sem divulgar shares
+- [[openbao-monitorar-selagem-e-alteracoes-de-politica]] — OpenBao: Monitorar selagem e alterações de política
+
+### Mozilla SOPS
+
+- [[sops-cifrar-valores-folha-do-documento]] — Mozilla SOPS: Cifrar valores folha do documento
+- [[sops-selecionar-recipients-de-kms]] — Mozilla SOPS: Selecionar recipients de KMS
+- [[sops-usar-age-recipient-com-cuidado]] — Mozilla SOPS: Usar age recipient com cuidado
+- [[sops-delimitar-regras-por-nome-de-arquivo]] — Mozilla SOPS: Delimitar regras por nome de arquivo
+- [[sops-controlar-campos-criptografados]] — Mozilla SOPS: Controlar campos criptografados
+- [[sops-validar-integridade-com-mac]] — Mozilla SOPS: Validar integridade com MAC
+- [[sops-rotacionar-recipients-sem-trocar-conteudo]] — Mozilla SOPS: Rotacionar recipients sem trocar conteúdo
+- [[sops-descriptografar-em-ci-sem-persistir-plaintext]] — Mozilla SOPS: Descriptografar em CI sem persistir plaintext
+- [[sops-gerenciar-key-groups-e-threshold]] — Mozilla SOPS: Gerenciar key groups e threshold
+- [[sops-tratar-exposicao-no-historico-git]] — Mozilla SOPS: Tratar exposição no histórico Git
+
+### cert-manager
+
+- [[cert-manager-declarar-certificate-e-secretname]] — cert-manager: Declarar Certificate e secretName
+- [[cert-manager-escolher-issuer-ou-clusterissuer]] — cert-manager: Escolher Issuer ou ClusterIssuer
+- [[cert-manager-usar-referencia-explicita-de-issuer]] — cert-manager: Usar referência explícita de issuer
+- [[cert-manager-entender-status-e-condicoes-de-emissao]] — cert-manager: Entender status e condições de emissão
+- [[cert-manager-escolher-desafio-acme-http-01-ou-dns-01]] — cert-manager: Escolher desafio ACME HTTP-01 ou DNS-01
+- [[cert-manager-configurar-renovacao-antecipada]] — cert-manager: Configurar renovação antecipada
+- [[cert-manager-proteger-secret-da-chave-privada]] — cert-manager: Proteger Secret da chave privada
+- [[cert-manager-selecionar-solver-pelo-dominio]] — cert-manager: Selecionar solver pelo domínio
+- [[cert-manager-investigar-falhas-sem-expor-credenciais]] — cert-manager: Investigar falhas sem expor credenciais
+- [[cert-manager-confirmar-consumo-do-certificado-renovado]] — cert-manager: Confirmar consumo do certificado renovado
+
+### Kubernetes Pod Security Admission
+
+- [[pod-security-admission-distinguir-niveis-de-pod-security]] — Kubernetes Pod Security Admission: Distinguir níveis de Pod Security
+- [[pod-security-admission-aplicar-labels-de-namespace-por-modo]] — Kubernetes Pod Security Admission: Aplicar labels de namespace por modo
+- [[pod-security-admission-fixar-versao-do-padrao]] — Kubernetes Pod Security Admission: Fixar versão do padrão
+- [[pod-security-admission-migrar-de-warn-para-enforce]] — Kubernetes Pod Security Admission: Migrar de warn para enforce
+- [[pod-security-admission-entender-escopo-das-verificacoes]] — Kubernetes Pod Security Admission: Entender escopo das verificações
+- [[pod-security-admission-excecoes-de-usuarios-namespaces-e-runtime-classes]] — Kubernetes Pod Security Admission: Exceções de usuários, namespaces e runtime classes
+- [[pod-security-admission-hardening-do-securitycontext]] — Kubernetes Pod Security Admission: Hardening do securityContext
+- [[pod-security-admission-revisar-mutacoes-de-admission]] — Kubernetes Pod Security Admission: Revisar mutações de admission
+- [[pod-security-admission-observar-audit-events]] — Kubernetes Pod Security Admission: Observar audit events
+- [[pod-security-admission-coordenar-upgrade-do-cluster-e-politicas]] — Kubernetes Pod Security Admission: Coordenar upgrade do cluster e políticas
+
+### Kubernetes NetworkPolicy
+
+- [[kubernetes-networkpolicy-selecionar-pods-protegidos]] — Kubernetes NetworkPolicy: Selecionar pods protegidos
+- [[kubernetes-networkpolicy-entender-isolamento-ingress]] — Kubernetes NetworkPolicy: Entender isolamento ingress
+- [[kubernetes-networkpolicy-entender-isolamento-egress]] — Kubernetes NetworkPolicy: Entender isolamento egress
+- [[kubernetes-networkpolicy-combinar-policies-de-forma-aditiva]] — Kubernetes NetworkPolicy: Combinar policies de forma aditiva
+- [[kubernetes-networkpolicy-combinar-podselector-e-namespaceselector]] — Kubernetes NetworkPolicy: Combinar podSelector e namespaceSelector
+- [[kubernetes-networkpolicy-restringir-portas-e-protocolos]] — Kubernetes NetworkPolicy: Restringir portas e protocolos
+- [[kubernetes-networkpolicy-confirmar-suporte-do-cni]] — Kubernetes NetworkPolicy: Confirmar suporte do CNI
+- [[kubernetes-networkpolicy-planejar-politica-default-deny-por-namespace]] — Kubernetes NetworkPolicy: Planejar política default-deny por namespace
+- [[kubernetes-networkpolicy-tratar-enderecos-ip-e-mudancas-de-servico]] — Kubernetes NetworkPolicy: Tratar endereços IP e mudanças de serviço
+- [[kubernetes-networkpolicy-validar-trafego-com-testes-de-integracao]] — Kubernetes NetworkPolicy: Validar tráfego com testes de integração
+
+### OPA Gatekeeper
+
+- [[gatekeeper-definir-constrainttemplate]] — OPA Gatekeeper: Definir ConstraintTemplate
+- [[gatekeeper-instanciar-constraint-com-escopo-claro]] — OPA Gatekeeper: Instanciar Constraint com escopo claro
+- [[gatekeeper-usar-admission-para-prevenir-violacoes]] — OPA Gatekeeper: Usar admission para prevenir violações
+- [[gatekeeper-iniciar-com-enforcementaction-dryrun]] — OPA Gatekeeper: Iniciar com enforcementAction dryrun
+- [[gatekeeper-auditar-recursos-ja-existentes]] — OPA Gatekeeper: Auditar recursos já existentes
+- [[gatekeeper-testar-policies-com-gator]] — OPA Gatekeeper: Testar policies com gator
+- [[gatekeeper-tratar-parametros-como-contrato]] — OPA Gatekeeper: Tratar parâmetros como contrato
+- [[gatekeeper-controlar-match-exclusions-e-namespaces]] — OPA Gatekeeper: Controlar match, exclusions e namespaces
+- [[gatekeeper-interpretar-violation-e-source]] — OPA Gatekeeper: Interpretar violation e source
+- [[gatekeeper-versionar-templates-e-rollout]] — OPA Gatekeeper: Versionar templates e rollout
+
+### External Secrets Operator
+
+- [[external-secrets-separar-secretstore-e-clustersecretstore]] — External Secrets Operator: Separar SecretStore e ClusterSecretStore
+- [[external-secrets-mapear-segredo-remoto-para-externalsecret]] — External Secrets Operator: Mapear segredo remoto para ExternalSecret
+- [[external-secrets-autenticar-provider-com-identidade-minima]] — External Secrets Operator: Autenticar provider com identidade mínima
+- [[external-secrets-definir-escopo-de-clustersecretstore]] — External Secrets Operator: Definir escopo de ClusterSecretStore
+- [[external-secrets-escolher-refreshinterval-e-estrategia]] — External Secrets Operator: Escolher refreshInterval e estratégia
+- [[external-secrets-tratar-criacao-e-delecao-do-secret-alvo]] — External Secrets Operator: Tratar criação e deleção do Secret alvo
+- [[external-secrets-usar-datafrom-com-escopo-restrito]] — External Secrets Operator: Usar dataFrom com escopo restrito
+- [[external-secrets-gerar-secret-com-template]] — External Secrets Operator: Gerar Secret com template
+- [[external-secrets-diagnosticar-condicoes-sem-expor-valor]] — External Secrets Operator: Diagnosticar condições sem expor valor
+- [[external-secrets-planejar-rotacao-e-revogacao-no-backend]] — External Secrets Operator: Planejar rotação e revogação no backend
+
+### Cilium Network Policies
+
+- [[cilium-network-policy-selecionar-endpoints-por-identidade]] — Cilium Network Policies: Selecionar endpoints por identidade
+- [[cilium-network-policy-entender-transicao-para-default-deny]] — Cilium Network Policies: Entender transição para default-deny
+- [[cilium-network-policy-permitir-trafego-l3-por-labels]] — Cilium Network Policies: Permitir tráfego L3 por labels
+- [[cilium-network-policy-restringir-destinos-por-cidr]] — Cilium Network Policies: Restringir destinos por CIDR
+- [[cilium-network-policy-usar-entities-com-semantica-conhecida]] — Cilium Network Policies: Usar entities com semântica conhecida
+- [[cilium-network-policy-combinar-politica-l3-e-l4]] — Cilium Network Policies: Combinar política L3 e L4
+- [[cilium-network-policy-aplicar-controles-l7-com-proxy]] — Cilium Network Policies: Aplicar controles L7 com proxy
+- [[cilium-network-policy-usar-dns-policy-com-allowlist]] — Cilium Network Policies: Usar DNS policy com allowlist
+- [[cilium-network-policy-observar-policy-verdicts-e-hubble]] — Cilium Network Policies: Observar policy verdicts e Hubble
+- [[cilium-network-policy-implantar-mudanca-incrementalmente]] — Cilium Network Policies: Implantar mudança incrementalmente
+
+## Tranche 20 (IDs 1901–2000)
+
+### SLSA
+
+- [[slsa-entender-niveis-de-garantia-de-build]] — SLSA: Entender níveis de garantia de build
+- [[slsa-gerar-provenance-ligada-ao-artefato]] — SLSA: Gerar provenance ligada ao artefato
+- [[slsa-descrever-build-definition]] — SLSA: Descrever build definition
+- [[slsa-validar-origem-e-identidade-do-builder]] — SLSA: Validar origem e identidade do builder
+- [[slsa-separar-presenca-de-assinatura-de-nivel-slsa]] — SLSA: Separar presença de assinatura de nível SLSA
+- [[slsa-endurecer-plataforma-de-build]] — SLSA: Endurecer plataforma de build
+- [[slsa-manter-proveniencia-completa-de-materiais]] — SLSA: Manter proveniência completa de materiais
+- [[slsa-interpretar-nivel-sem-declarar-software-seguro]] — SLSA: Interpretar nível sem declarar software seguro
+- [[slsa-verificar-provenance-na-implantacao]] — SLSA: Verificar provenance na implantação
+- [[slsa-tratar-mudanca-de-pipeline-como-mudanca-de-confianca]] — SLSA: Tratar mudança de pipeline como mudança de confiança
+
+### The Update Framework (TUF)
+
+- [[tuf-separar-papeis-root-targets-snapshot-e-timestamp]] — The Update Framework (TUF): Separar papéis Root, Targets, Snapshot e Timestamp
+- [[tuf-usar-limiar-de-assinatura-na-raiz]] — The Update Framework (TUF): Usar limiar de assinatura na raiz
+- [[tuf-impedir-rollback-por-versao-monotonica]] — The Update Framework (TUF): Impedir rollback por versão monotônica
+- [[tuf-detectar-freeze-com-expiracao]] — The Update Framework (TUF): Detectar freeze com expiração
+- [[tuf-verificar-hashes-de-targets]] — The Update Framework (TUF): Verificar hashes de targets
+- [[tuf-usar-snapshot-para-consistencia]] — The Update Framework (TUF): Usar Snapshot para consistência
+- [[tuf-delegar-targets-por-escopo]] — The Update Framework (TUF): Delegar Targets por escopo
+- [[tuf-rotacionar-chave-root-com-cuidado]] — The Update Framework (TUF): Rotacionar chave Root com cuidado
+- [[tuf-confiar-em-mirrors-sem-ceder-verificacao]] — The Update Framework (TUF): Confiar em mirrors sem ceder verificação
+- [[tuf-bootstrap-seguro-do-primeiro-root]] — The Update Framework (TUF): Bootstrap seguro do primeiro Root
+
+### OpenVEX
+
+- [[openvex-modelar-statement-de-vulnerabilidade]] — OpenVEX: Modelar statement de vulnerabilidade
+- [[openvex-escolher-status-com-escopo]] — OpenVEX: Escolher status com escopo
+- [[openvex-justificar-not-affected-com-evidencia]] — OpenVEX: Justificar not_affected com evidência
+- [[openvex-distinguir-fixed-de-not-affected]] — OpenVEX: Distinguir fixed de not_affected
+- [[openvex-usar-under-investigation-sem-encerrar-triagem]] — OpenVEX: Usar under_investigation sem encerrar triagem
+- [[openvex-referenciar-produto-com-identificador-consistente]] — OpenVEX: Referenciar produto com identificador consistente
+- [[openvex-incluir-impacto-e-funcao-do-componente]] — OpenVEX: Incluir impacto e função do componente
+- [[openvex-atualizar-vex-junto-do-ciclo-de-release]] — OpenVEX: Atualizar VEX junto do ciclo de release
+- [[openvex-distribuir-openvex-com-sbom]] — OpenVEX: Distribuir OpenVEX com SBOM
+- [[openvex-revisar-autoria-e-trilha-da-declaracao]] — OpenVEX: Revisar autoria e trilha da declaração
+
+### CycloneDX Generator (cdxgen)
+
+- [[cdxgen-gerar-bom-de-repositorio]] — CycloneDX Generator (cdxgen): Gerar BOM de repositório
+- [[cdxgen-gerar-bom-de-imagem-container]] — CycloneDX Generator (cdxgen): Gerar BOM de imagem container
+- [[cdxgen-cobrir-ecossistemas-declarados]] — CycloneDX Generator (cdxgen): Cobrir ecossistemas declarados
+- [[cdxgen-analisar-monorepo-por-diretorio]] — CycloneDX Generator (cdxgen): Analisar monorepo por diretório
+- [[cdxgen-controlar-escopo-e-exclusoes]] — CycloneDX Generator (cdxgen): Controlar escopo e exclusões
+- [[cdxgen-escolher-formato-e-versao-cyclonedx]] — CycloneDX Generator (cdxgen): Escolher formato e versão CycloneDX
+- [[cdxgen-gerar-bom-no-pipeline-reproduzivel]] — CycloneDX Generator (cdxgen): Gerar BOM no pipeline reproduzível
+- [[cdxgen-encadear-geracao-validacao-e-scan]] — CycloneDX Generator (cdxgen): Encadear geração, validação e scan
+- [[cdxgen-comparar-bom-antes-e-depois-do-release]] — CycloneDX Generator (cdxgen): Comparar BOM antes e depois do release
+- [[cdxgen-interpretar-ausencia-de-componente-com-cautela]] — CycloneDX Generator (cdxgen): Interpretar ausência de componente com cautela
+
+### GitHub Artifact Attestations
+
+- [[github-artifact-attestations-atestar-artifact-gerado-por-workflow]] — GitHub Artifact Attestations: Atestar artifact gerado por workflow
+- [[github-artifact-attestations-usar-digest-como-subject-de-imagem]] — GitHub Artifact Attestations: Usar digest como subject de imagem
+- [[github-artifact-attestations-limitar-permissoes-do-workflow-produtor]] — GitHub Artifact Attestations: Limitar permissões do workflow produtor
+- [[github-artifact-attestations-verificar-repository-e-workflow-de-origem]] — GitHub Artifact Attestations: Verificar repository e workflow de origem
+- [[github-artifact-attestations-inspecionar-tipo-de-predicate]] — GitHub Artifact Attestations: Inspecionar tipo de predicate
+- [[github-artifact-attestations-verificar-attestation-em-ambiente-consumidor]] — GitHub Artifact Attestations: Verificar attestation em ambiente consumidor
+- [[github-artifact-attestations-separar-verificacao-de-artifact-e-identidade]] — GitHub Artifact Attestations: Separar verificação de artifact e identidade
+- [[github-artifact-attestations-acompanhar-acesso-publico-e-retencao]] — GitHub Artifact Attestations: Acompanhar acesso público e retenção
+- [[github-artifact-attestations-consumir-attestations-de-images-oci]] — GitHub Artifact Attestations: Consumir attestations de images OCI
+- [[github-artifact-attestations-definir-politica-de-aceitacao-de-provenance]] — GitHub Artifact Attestations: Definir política de aceitação de provenance
+
+### Docker Scout
+
+- [[docker-scout-analisar-imagem-por-digest]] — Docker Scout: Analisar imagem por digest
+- [[docker-scout-inspecionar-sbom-e-pacotes-detectados]] — Docker Scout: Inspecionar SBOM e pacotes detectados
+- [[docker-scout-priorizar-vulnerabilidades-no-contexto]] — Docker Scout: Priorizar vulnerabilidades no contexto
+- [[docker-scout-comparar-imagem-candidata-com-baseline]] — Docker Scout: Comparar imagem candidata com baseline
+- [[docker-scout-aplicar-recommendations-de-atualizacao]] — Docker Scout: Aplicar recommendations de atualização
+- [[docker-scout-aplicar-policy-ao-gate-de-build]] — Docker Scout: Aplicar policy ao gate de build
+- [[docker-scout-distinguir-severity-e-fixability]] — Docker Scout: Distinguir severity e fixability
+- [[docker-scout-usar-vex-para-comunicar-nao-afetado]] — Docker Scout: Usar VEX para comunicar não afetado
+- [[docker-scout-controlar-credenciais-ao-analisar-registry]] — Docker Scout: Controlar credenciais ao analisar registry
+- [[docker-scout-verificar-resultado-com-artifact-final]] — Docker Scout: Verificar resultado com artifact final
+
+### Chainguard Images e Wolfi
+
+- [[chainguard-wolfi-distinguir-wolfi-de-distribuicao-tradicional]] — Chainguard Images e Wolfi: Distinguir Wolfi de distribuição tradicional
+- [[chainguard-wolfi-escolher-imagem-pelo-papel-da-aplicacao]] — Chainguard Images e Wolfi: Escolher imagem pelo papel da aplicação
+- [[chainguard-wolfi-inspecionar-sbom-da-imagem]] — Chainguard Images e Wolfi: Inspecionar SBOM da imagem
+- [[chainguard-wolfi-verificar-provenance-da-imagem]] — Chainguard Images e Wolfi: Verificar provenance da imagem
+- [[chainguard-wolfi-preferir-digest-para-deploy]] — Chainguard Images e Wolfi: Preferir digest para deploy
+- [[chainguard-wolfi-planejar-atualizacao-frequente]] — Chainguard Images e Wolfi: Planejar atualização frequente
+- [[chainguard-wolfi-migrar-aplicando-compatibilidade]] — Chainguard Images e Wolfi: Migrar aplicando compatibilidade
+- [[chainguard-wolfi-separar-imagem-de-build-e-runtime]] — Chainguard Images e Wolfi: Separar imagem de build e runtime
+- [[chainguard-wolfi-usar-variante-de-debug-sem-expor-producao]] — Chainguard Images e Wolfi: Usar variante de debug sem expor produção
+- [[chainguard-wolfi-evitar-confiar-em-marca-como-garantia]] — Chainguard Images e Wolfi: Evitar confiar em marca como garantia
+
+### RustSec cargo-audit
+
+- [[cargo-audit-auditar-cargo-lock-do-workspace]] — RustSec cargo-audit: Auditar Cargo.lock do workspace
+- [[cargo-audit-atualizar-advisory-database]] — RustSec cargo-audit: Atualizar advisory database
+- [[cargo-audit-interpretar-advisory-por-crate-e-versao]] — RustSec cargo-audit: Interpretar advisory por crate e versão
+- [[cargo-audit-corrigir-dependencia-transitiva]] — RustSec cargo-audit: Corrigir dependência transitiva
+- [[cargo-audit-governar-ignores-em-audit-toml]] — RustSec cargo-audit: Governar ignores em audit.toml
+- [[cargo-audit-separar-falha-de-ferramenta-de-finding]] — RustSec cargo-audit: Separar falha de ferramenta de finding
+- [[cargo-audit-executar-auditoria-em-ci]] — RustSec cargo-audit: Executar auditoria em CI
+- [[cargo-audit-considerar-advisories-de-manutencao]] — RustSec cargo-audit: Considerar advisories de manutenção
+- [[cargo-audit-fixar-toolchain-e-comando-de-auditoria]] — RustSec cargo-audit: Fixar toolchain e comando de auditoria
+- [[cargo-audit-tratar-saida-como-evidencia-limitada]] — RustSec cargo-audit: Tratar saída como evidência limitada
+
+### OpenSSF Best Practices Badge
+
+- [[openssf-badge-entender-escopo-da-autoavaliacao]] — OpenSSF Best Practices Badge: Entender escopo da autoavaliação
+- [[openssf-badge-mapear-criterios-a-evidencias]] — OpenSSF Best Practices Badge: Mapear critérios a evidências
+- [[openssf-badge-usar-nivel-adequado-ao-projeto]] — OpenSSF Best Practices Badge: Usar nível adequado ao projeto
+- [[openssf-badge-documentar-reporte-de-vulnerabilidades]] — OpenSSF Best Practices Badge: Documentar reporte de vulnerabilidades
+- [[openssf-badge-evidenciar-testes-automatizados]] — OpenSSF Best Practices Badge: Evidenciar testes automatizados
+- [[openssf-badge-manter-releases-e-comunicacao]] — OpenSSF Best Practices Badge: Manter releases e comunicação
+- [[openssf-badge-revisar-criterio-apos-mudanca-organizacional]] — OpenSSF Best Practices Badge: Revisar critério após mudança organizacional
+- [[openssf-badge-separar-badge-de-auditoria-independente]] — OpenSSF Best Practices Badge: Separar badge de auditoria independente
+- [[openssf-badge-priorizar-gaps-uteis-em-vez-de-pontuacao]] — OpenSSF Best Practices Badge: Priorizar gaps úteis em vez de pontuação
+- [[openssf-badge-declarar-badge-com-transparencia]] — OpenSSF Best Practices Badge: Declarar badge com transparência
+
+### Reproducible Builds
+
+- [[reproducible-builds-controlar-timestamps-com-source-date-epoch]] — Reproducible Builds: Controlar timestamps com SOURCE_DATE_EPOCH
+- [[reproducible-builds-fixar-toolchain-e-dependencias]] — Reproducible Builds: Fixar toolchain e dependências
+- [[reproducible-builds-remover-caminhos-absolutos-e-hostnames]] — Reproducible Builds: Remover caminhos absolutos e hostnames
+- [[reproducible-builds-normalizar-locale-e-timezone]] — Reproducible Builds: Normalizar locale e timezone
+- [[reproducible-builds-ordenar-entradas-e-arquivos-de-archive]] — Reproducible Builds: Ordenar entradas e arquivos de archive
+- [[reproducible-builds-executar-builds-independentes]] — Reproducible Builds: Executar builds independentes
+- [[reproducible-builds-comparar-artefatos-com-diff-util]] — Reproducible Builds: Comparar artefatos com diff útil
+- [[reproducible-builds-reproduzir-imagens-de-container]] — Reproducible Builds: Reproduzir imagens de container
+- [[reproducible-builds-investigar-fontes-de-aleatoriedade]] — Reproducible Builds: Investigar fontes de aleatoriedade
+- [[reproducible-builds-usar-reprodutibilidade-sem-alegar-seguranca]] — Reproducible Builds: Usar reprodutibilidade sem alegar segurança
