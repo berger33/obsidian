@@ -1,0 +1,260 @@
+{
+  "group_title": "Yarn Berry `yarn npm audit` — escopo por workspace, dependências transitivas, saída NDJSON e exclusões explicáveis",
+  "fact_check": "Conferi a documentação oficial de `yarn npm audit` e `.yarnrc.yml`; validei defaults de workspace, alcance recursivo, severidade, JSON, ignores e ausência de remediação automática descrita na página.",
+  "sources": [
+    {
+      "label": "Yarn — `yarn npm audit`",
+      "url": "https://yarnpkg.com/cli/npm/audit",
+      "description": "auditoria de advisories, escopo default, `--all`, `--recursive`, `--environment`, JSON NDJSON, severidade, exclusões e ignorados"
+    },
+    {
+      "label": "Yarn — Settings (`.yarnrc.yml`)",
+      "url": "https://yarnpkg.com/configuration/yarnrc",
+      "description": "configuração de `npmAuditRegistry`, `npmAuditExcludePackages` e `npmAuditIgnoreAdvisories` em `.yarnrc.yml`"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "yarn-npm-audit-escopo-direto-workspace-default",
+      "title": "`yarn npm audit`: escopo padrão limitado ao workspace ativo",
+      "summary": "A documentação do Yarn Berry informa que, por padrão, a auditoria verifica dependências diretas do workspace ativo, não todo monorepo transitivo.",
+      "why": "Um comando aparentemente único pode deixar outros workspaces ou dependências indiretas fora do relatório, criando cobertura diferente da equipe que lê o resultado.",
+      "how": "Declare se a policy cobre apenas o workspace atual, todos os workspaces ou a árvore transitiva, e execute as flags apropriadas no CI.",
+      "example": "Em um monorepo, faça um job por workspace sensível ou use `--all --recursive` para consolidar dependências diretas e transitivas de todos eles.",
+      "limits": "A saída reflete advisories do registry e pode incluir achados irrelevantes para o caminho de código usado pela aplicação.",
+      "verify": "Compare o conjunto de workspaces e a árvore resolvida com o relatório e confira as flags que aparecem no comando do pipeline.",
+      "code": "yarn npm audit",
+      "review": "Conferi na documentação oficial o escopo default e as opções `--all` e `--recursive`; deixei explícito que o padrão não cobre todo o monorepo."
+    },
+    {
+      "slug": "yarn-npm-audit-all-workspaces-monorepo",
+      "title": "`yarn npm audit --all`: ampliar a auditoria aos workspaces do monorepo",
+      "summary": "A opção `--all` solicita a auditoria das dependências de todos os workspaces em vez de somente o workspace ativo.",
+      "why": "Bibliotecas internas, aplicativos e ferramentas de build podem compartilhar dependências vulneráveis mesmo que apenas um workspace seja executado localmente.",
+      "how": "Inclua `--all` em uma execução de CI do monorepo e preserve qual projeto introduz cada achado para direcionar a correção ao owner certo.",
+      "example": "Um job noturno pode executar a auditoria global e gerar relatório separado por workspace, facilitando encontrar dependências mantidas por equipes distintas.",
+      "limits": "`--all` não implica necessariamente varrer dependências transitivas; para isso a documentação aponta a opção `--recursive`.",
+      "verify": "Rode auditoria em um monorepo de teste com advisories distintos por workspace e confirme que todos aparecem com o escopo selecionado.",
+      "code": "yarn npm audit --all",
+      "review": "Conferi na página oficial que `--all` inclui workspaces; diferenciei essa opção do escopo transitivo controlado por `--recursive`."
+    },
+    {
+      "slug": "yarn-npm-audit-recursive-transitivas-cadeia",
+      "title": "`yarn npm audit --recursive`: incluir dependências transitivas no relatório",
+      "summary": "A opção `--recursive` amplia a busca a dependências diretas e transitivas do grafo instalado, em vez da visão direta padrão.",
+      "why": "Um pacote vulnerável pode ser introduzido por vários níveis de dependências e não aparecer no `package.json` do aplicativo.",
+      "how": "Use a saída completa para identificar a cadeia e complemente-a com `yarn why` para localizar o pacote pai responsável pela versão selecionada.",
+      "example": "Em uma revisão de release, execute `yarn npm audit --recursive --json` e associe cada advisory ao caminho transitivo e ao workspace de origem.",
+      "limits": "O relatório informa advisories conhecidos, mas não prova que aplicação executa a função atingida; paths podem mudar após resolução.",
+      "verify": "Compare a lista de advisories com a árvore de `yarn why`, confira versão e lockfile e rode novamente após atualizar a dependência pai.",
+      "code": "yarn npm audit --recursive --json",
+      "review": "Conferi na documentação oficial a semântica de `--recursive` e a recomendação de usar `yarn why`; a nota limita a conclusão a advisories conhecidos."
+    },
+    {
+      "slug": "yarn-npm-audit-environment-production-devdeps",
+      "title": "`--environment production`: focar dependências de runtime sem apagar contexto de build",
+      "summary": "A opção `--environment production` limita a auditoria às dependências de produção e exclui `devDependencies` da vista solicitada.",
+      "why": "Separar runtime ajuda priorizar risco em artefatos distribuídos, porém ferramentas usadas na CI podem executar código e continuar relevantes para segurança.",
+      "how": "Rotule o resultado como visão de produção e mantenha outra execução abrangendo todas as dependências para prevenir que riscos de build desapareçam.",
+      "example": "Gere uma auditoria `production` para release e um relatório completo na integração contínua, com owners distintos para runtime e cadeia de build.",
+      "limits": "A opção altera o escopo, não a severidade nem a existência do advisory; dependências excluídas não ficam corrigidas por serem dev-only.",
+      "verify": "Compare ambos os relatórios e confira que o lockfile completo segue sendo analisado em algum estágio do pipeline.",
+      "code": "yarn npm audit --environment production",
+      "review": "Conferi a opção de ambiente e o exemplo oficial que exclui devDependencies; enfatizei a necessidade de manter a auditoria abrangente."
+    },
+    {
+      "slug": "yarn-npm-audit-severity-filtro-relatorio-exit",
+      "title": "`--severity` no Yarn: filtrar severidades exibidas e interpretar exit status",
+      "summary": "O Yarn permite selecionar severidade mínima para a tabela de auditoria, mas mantém código de saída não zero quando encontra relatório para o escopo selecionado.",
+      "why": "Um filtro de apresentação não deve ser interpretado como remoção de achados menores da árvore ou como autorização para ignorá-los sem política.",
+      "how": "Execute uma vista humana com o threshold escolhido e, em uma chamada separada, preserve `--json` para obter o fluxo NDJSON bruto; documente que qualquer report no escopo selecionado mantém exit code não zero.",
+      "example": "Um job pode imprimir `high` e acima para leitura rápida e executar uma segunda chamada `--json` para anexar o fluxo completo ao backlog de segurança.",
+      "limits": "O comportamento depende do escopo de workspace escolhido; filtro por severidade não altera a base de advisories nem corrige dependências.",
+      "verify": "Use um fixture com achados de severidades distintas e confira tabela, JSON e exit status com as flags da versão instalada.",
+      "code": "yarn npm audit --severity high",
+      "review": "Conferi na página oficial valores de severidade, filtro de tabela e regra de exit code; deixei claro que o filtro não corrige o grafo."
+    },
+    {
+      "slug": "yarn-npm-audit-json-ndjson-registry-payload",
+      "title": "Saída JSON/NDJSON no `yarn npm audit`: automação sem perder o relatório bruto",
+      "summary": "Com `--json`, Yarn produz um fluxo NDJSON e passa a saída do registry de forma estruturada, permitindo parsing e armazenamento por execução.",
+      "why": "Automação baseada em texto de terminal costuma quebrar com mudança de versão; dados estruturados facilitam correlação com dependências e tickets.",
+      "how": "Armazene cada linha com commit, lockfile e versão do Yarn, valide parser e preserve stdout e exit status independentemente.",
+      "example": "Um job pode encaminhar o fluxo NDJSON a um coletor de findings sem transformar ausência de registros num sucesso quando a consulta falha.",
+      "limits": "A documentação informa que a resposta é recebida do registry; esquema e conteúdo podem variar, e JSON não determina se o alerta afeta o código.",
+      "verify": "Teste parsing com relatório positivo, relatório vazio e erro de registry, mantendo evidência de qual caso ocorreu.",
+      "code": "yarn npm audit --json",
+      "review": "Conferi o formato NDJSON e a passagem do JSON do registry descritos pelo Yarn; recomendei testes de parser para estados diferentes."
+    },
+    {
+      "slug": "yarn-npm-audit-exclude-packages-false-positive-policy",
+      "title": "`--exclude` no Yarn: reduzir ruído com escopo de pacote documentado",
+      "summary": "A opção `--exclude` pode retirar pacotes selecionados do relatório e também pode ser configurada como `npmAuditExcludePackages`.",
+      "why": "Exclusões ajudam em falsos positivos ou ambientes específicos, mas sem justificativa podem ocultar dependências que voltam a ser alcançáveis.",
+      "how": "Prefira padrões estreitos, registre a razão, mantenha owner e revise a lista quando dependências, workspaces ou ambientes mudarem.",
+      "example": "Ao excluir pacote de uma vista específica, anexe evidência de que ele não participa daquele ambiente e mantenha uma auditoria integral em outro job.",
+      "limits": "Excluir um pacote apenas altera a auditoria; não remove a dependência do lockfile nem impede que o código seja incluído em outra configuração.",
+      "verify": "Compare resultados com e sem `--exclude`, valide o padrão de pacote e confirme que o inventário completo ainda está visível.",
+      "code": "yarn npm audit --exclude pacote-interno",
+      "review": "Conferi a opção oficial `--exclude` e configuração `npmAuditExcludePackages`; tratei a exclusão como filtro, não como remediação."
+    },
+    {
+      "slug": "yarn-npm-audit-ignore-advisory-id-governanca",
+      "title": "`--ignore` no Yarn: suprimir advisory específico com revisão recorrente",
+      "summary": "Yarn permite ignorar IDs de advisories por linha de comando ou configuração persistente, além de excluir pacotes inteiros da auditoria.",
+      "why": "Uma exceção por ID tende a ser mais estreita que ignorar pacote, mas ainda precisa de motivo e retorno para não virar supressão invisível.",
+      "how": "Use somente o identificador confirmado no relatório, registre a análise de aplicabilidade e reavalie a exceção quando a árvore ou advisory mudar.",
+      "example": "Abra um pull request que adicione um ID à configuração e inclua dono, escopo, racional técnico e data prevista para remoção.",
+      "limits": "A documentação não transforma o ignore em correção; pacotes relacionados podem continuar vulneráveis em outros advisories ou versões.",
+      "verify": "Compare auditoria com e sem ignore, confirme o ID e rode uma checagem de configuração para detectar exceções sem owner.",
+      "code": "yarn npm audit --ignore 1234567",
+      "review": "Conferi a opção e configuração de ignorar advisory documentadas no Yarn; ressaltei que o ID é supressão e precisa de governança."
+    },
+    {
+      "slug": "yarn-why-triagem-pacote-transitivo-origem",
+      "title": "`yarn why` depois do audit: localizar quem introduziu uma dependência transitiva",
+      "summary": "A documentação recomenda consultar a árvore bruta do relatório ou usar `yarn why pacote` para identificar quem depende do pacote vulnerável.",
+      "why": "Uma atualização direta do pacote alertado pode não ser suficiente quando outro componente fixa a versão; a cadeia identifica o owner correto da mudança.",
+      "how": "Use o advisory para identificar pacote e faixa, consulte dependência reversa e atualize o pai ou a política de resolução com testes adequados.",
+      "example": "Um maintainer pode anexar `yarn why` ao ticket para mostrar qual workspace e qual dependência pai introduziram o pacote no lockfile.",
+      "limits": "A árvore é uma fotografia da resolução atual; mudanças em ranges e workspaces podem alterar o caminho depois do merge.",
+      "verify": "Compare a resposta de `yarn why` com o lockfile e repita a consulta depois da atualização proposta.",
+      "code": "yarn why pacote",
+      "review": "Conferi na documentação oficial a recomendação de `yarn why` para localizar dependências; a nota o usa como triagem, não como scanner."
+    },
+    {
+      "slug": "yarn-audit-registry-relevancia-caminhos-execucao",
+      "title": "Relevância de advisories no Yarn: cruzar registry, versão e caminho de execução",
+      "summary": "O Yarn observa que relatórios extraídos do npm registry podem ou não ser relevantes para o programa porque nem toda vulnerabilidade afeta todos os caminhos de código.",
+      "why": "A equipe precisa distinguir presença de versão vulnerável de exposição real, mantendo tratamento sério sem inflar achados como exploração confirmada.",
+      "how": "Confirme a faixa advisory, pacote selecionado, dependência reversa e uso da funcionalidade; registre decisão de risco mesmo quando não houver chamada observável.",
+      "example": "Para um achado em utilitário de parsing, rastreie chamadas no produto, superfície de entrada e modo de compilação antes de decidir prioridade e atualização.",
+      "limits": "Ausência de chamada em teste não prova ausência em produção; código opcional e configurações alternativas podem ativar caminhos não exercitados.",
+      "verify": "Combine o relatório do Yarn com revisão do grafo, testes e análise de execução e mantenha evidência da versão exata usada.",
+      "review": "Conferi a ressalva explícita do Yarn de que advisories podem não afetar todos os caminhos; descrevi critérios de triagem sem descartar o alerta."
+    }
+  ],
+  "coverage_review": "A única recomendação direta de `yarn audit` encontrada está numa nota de processo de segurança do Backstage; ela instrui auditar, sem explicar escopo do Yarn Berry ou flags. As notas de Dependency-Check citam `yarn.lock` como formato de entrada. Li os dois contextos: nenhum cobre `--all`, `--recursive`, NDJSON, filtros ou configuração de ignores.",
+  "source_overrides": {
+    "yarn-npm-audit-escopo-direto-workspace-default": [
+      {
+        "label": "Yarn — `yarn npm audit` details",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "escopo default no workspace ativo e expansão por `--all`/`--recursive`"
+      },
+      {
+        "label": "Yarn — Workspaces",
+        "url": "https://yarnpkg.com/features/workspaces",
+        "description": "modelo e enumeração de workspaces em monorepos"
+      }
+    ],
+    "yarn-npm-audit-all-workspaces-monorepo": [
+      {
+        "label": "Yarn — opção `--all`",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "alcance da auditoria a todos os workspaces"
+      },
+      {
+        "label": "Yarn — Workspaces",
+        "url": "https://yarnpkg.com/features/workspaces",
+        "description": "estrutura de workspaces e execução no monorepo"
+      }
+    ],
+    "yarn-npm-audit-recursive-transitivas-cadeia": [
+      {
+        "label": "Yarn — opção `--recursive`",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "inclusão de dependências transitivas no audit"
+      },
+      {
+        "label": "Yarn — `yarn why`",
+        "url": "https://yarnpkg.com/cli/why",
+        "description": "inspeção de quem depende de um pacote no grafo instalado"
+      }
+    ],
+    "yarn-npm-audit-environment-production-devdeps": [
+      {
+        "label": "Yarn — opção `--environment`",
+        "url": "https://yarnpkg.com/cli/npm/audit#examples",
+        "description": "seleção do ambiente production e exclusão de devDependencies"
+      },
+      {
+        "label": "Yarn — `yarn npm audit` options",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "opções documentadas para delimitar o escopo do audit"
+      }
+    ],
+    "yarn-npm-audit-severity-filtro-relatorio-exit": [
+      {
+        "label": "Yarn — `--severity` e exit status",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "filtro de tabela por severidade e código de saída quando há report"
+      },
+      {
+        "label": "Yarn — opções do audit",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "valores e sintaxe da opção `--severity`"
+      }
+    ],
+    "yarn-npm-audit-json-ndjson-registry-payload": [
+      {
+        "label": "Yarn — `--json` NDJSON",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "formato NDJSON documentado para automação"
+      },
+      {
+        "label": "Yarn — detalhes do registry",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "resposta emitida pelo registry e comportamento de exit status"
+      }
+    ],
+    "yarn-npm-audit-exclude-packages-false-positive-policy": [
+      {
+        "label": "Yarn — opção `--exclude`",
+        "url": "https://yarnpkg.com/cli/npm/audit#options",
+        "description": "exclusão de padrões de pacote de um audit"
+      },
+      {
+        "label": "Yarn — `npmAuditExcludePackages`",
+        "url": "https://yarnpkg.com/configuration/yarnrc#npmAuditExcludePackages",
+        "description": "configuração persistente de pacotes excluídos"
+      }
+    ],
+    "yarn-npm-audit-ignore-advisory-id-governanca": [
+      {
+        "label": "Yarn — opção `--ignore`",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "ignorados por ID de advisory e diferença em relação a excluir pacotes"
+      },
+      {
+        "label": "Yarn — `npmAuditIgnoreAdvisories`",
+        "url": "https://yarnpkg.com/configuration/yarnrc#npmAuditIgnoreAdvisories",
+        "description": "allowlist persistente de IDs de advisory"
+      }
+    ],
+    "yarn-why-triagem-pacote-transitivo-origem": [
+      {
+        "label": "Yarn — `yarn why`",
+        "url": "https://yarnpkg.com/cli/why",
+        "description": "dependências reversas que explicam a presença de um pacote"
+      },
+      {
+        "label": "Yarn — relatório transitivo do audit",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "recomendação de usar `yarn why` ou relatório JSON para localizar a cadeia"
+      }
+    ],
+    "yarn-audit-registry-relevancia-caminhos-execucao": [
+      {
+        "label": "Yarn — relevância de advisories",
+        "url": "https://yarnpkg.com/cli/npm/audit#details",
+        "description": "ressalva oficial de que findings do registry podem não afetar todos os caminhos"
+      },
+      {
+        "label": "Yarn — execução do audit",
+        "url": "https://yarnpkg.com/cli/npm/audit#usage",
+        "description": "comando e finalidade da consulta de advisories"
+      }
+    ]
+  }
+}

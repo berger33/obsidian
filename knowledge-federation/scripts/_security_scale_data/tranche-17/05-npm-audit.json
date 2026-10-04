@@ -1,0 +1,261 @@
+{
+  "group_title": "npm CLI `npm audit` — Bulk Advisory API, remediação sem quebra, relatórios JSON e verificação de assinatura/proveniência",
+  "fact_check": "Conferi as páginas oficiais `npm audit`, package-lock, configuração, proveniência e metavulnerabilidades; comparei a descrição de fallback do manual v11 com o changelog/PR do CLI que removeu a chamada legada e a API bulk atual, anotando a divergência documental.",
+  "sources": [
+    {
+      "label": "npm CLI v11 — `npm audit`",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit",
+      "description": "documentação versionada do CLI v11 sobre auditoria, lockfile, payload Bulk/Quick, remediação, JSON e assinaturas; divergências atuais são cross-checkadas contra o histórico do CLI"
+    },
+    {
+      "label": "npm CLI v11 — configuração `audit-level`",
+      "url": "https://docs.npmjs.com/cli/v11/using-npm/config#audit-level",
+      "description": "limiar configurável que determina quando `npm audit` retorna código diferente de zero"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "npm-audit-descricao-dependencias-registry-privacidade",
+      "title": "`npm audit`: envio da descrição de dependências ao registry configurado",
+      "summary": "`npm audit` envia ao registry padrão uma descrição das dependências configuradas no projeto e solicita um relatório de vulnerabilidades conhecidas.",
+      "why": "O dado enviado e o registry escolhido são relevantes em workspaces com nomes privados ou políticas de saída de rede, além do resultado de segurança.",
+      "how": "Avalie a política do registry, o conteúdo do lockfile e o fluxo de autenticação antes de integrar a chamada em ambientes com dependências internas.",
+      "example": "Em CI corporativa, configure um registry aprovado e registre quais manifestos e lockfiles o job entrega, sem imprimir credenciais ou nomes sensíveis nos logs.",
+      "limits": "A consulta cobre advisories conhecidos pelo serviço consultado; o resultado não detecta toda dependência maliciosa nem vulnerabilidade ainda sem advisory.",
+      "verify": "Inspecione a configuração de registry do job e compare o conjunto de pacotes resolvidos com o lockfile versionado antes de compartilhar o relatório.",
+      "code": "npm audit",
+      "review": "Conferi a descrição oficial de que o comando submete informação de dependências ao registry padrão; a nota trata privacidade como decisão operacional do projeto."
+    },
+    {
+      "slug": "npm-audit-lockfile-reprodutibilidade-package-lock",
+      "title": "`package-lock.json` como entrada do `npm audit`: consistência e reprodutibilidade",
+      "summary": "Por padrão, npm requer `package-lock.json` ou `npm-shrinkwrap.json` para executar a auditoria e alerta que reconstruir o grafo pode alterar resultados entre execuções.",
+      "why": "Vincular a análise ao mesmo grafo resolvido pelo build reduz discrepâncias entre auditoria local, CI e dependências efetivamente empacotadas.",
+      "how": "Versione o lockfile da aplicação, audite o commit exato e trate `--no-package-lock` como modo que reconstrói a árvore e precisa de justificativa.",
+      "example": "No pull request, execute auditoria após a instalação determinística e publique o hash do lockfile usado ao lado da saída JSON.",
+      "limits": "O lockfile descreve resolução, não prova que o pacote implantado seja idêntico; verifique também a cadeia de build e o artefato resultante.",
+      "verify": "Compare o hash do lockfile antes e depois da tarefa e confirme que a CI não usa lockfile diferente do commit que será mesclado.",
+      "code": "npm audit --json",
+      "review": "Conferi no manual oficial o requisito padrão de lockfile e o risco de resultados variáveis ao ignorá-lo; a nota liga o arquivo ao commit auditado."
+    },
+    {
+      "slug": "npm-audit-bulk-advisory-endpoint-pacotes-versoes",
+      "title": "Bulk Advisory Endpoint do npm: enviar nomes e versões resolvidas",
+      "summary": "Desde npm 7, o CLI usa o Bulk Advisory endpoint para enviar nomes e versões do grafo; a implementação atual não recorre ao endpoint Quick legado quando Bulk falha, embora a página versionada v11 ainda descreva esse fallback.",
+      "why": "Saber o que o cliente envia ajuda a analisar privacidade, resposta de registry e diferenças entre ferramentas que usam endpoints de auditoria distintos.",
+      "how": "O cliente envia nomes e versões resolvidas ao endpoint bulk do registry configurado e calcula vulnerabilidades/metavulnerabilidades; desde a remoção do fallback legado, uma falha da consulta deve ser tratada como erro de serviço, não como fallback garantido.",
+      "example": "Ao depurar resultados diferentes de dois clients, compare versões do npm, registry e lockfile antes de atribuir divergência à base de vulnerabilidades.",
+      "limits": "A página v11 do manual ainda descreve o Quick Audit fallback, mas o changelog/PR oficial registra sua remoção; trate o comportamento como dependente da versão do CLI e confirme o binário executado na CI.",
+      "verify": "Registre a versão de npm e registry, teste uma resposta bulk válida e uma falha de consulta em ambiente isolado e compare a execução com o histórico oficial de remoção do fallback.",
+      "code": "npm audit --json",
+      "review": "Confrontei a página v11, o changelog/PR oficial que removeu o fallback legado e a documentação atual da API bulk; corrigi a divergência documental e não afirmei Quick fallback como comportamento atual."
+    },
+    {
+      "slug": "npm-audit-audit-level-limiar-nao-filtro-relatorio",
+      "title": "`--audit-level` no npm: limiar do exit code, não filtro dos achados",
+      "summary": "A opção `--audit-level` define a severidade mínima que causa falha do comando, mas o manual afirma que ela não filtra o conteúdo do relatório.",
+      "why": "Confundir a política de saída com uma filtragem pode deixar times sem saber quais achados menores continuam presentes e precisam de triagem.",
+      "how": "Escolha o limiar como regra de bloqueio e processe o relatório completo separadamente; documente quando alertas abaixo do threshold serão tratados.",
+      "example": "Uma CI pode falhar a partir de `high`, enquanto ainda anexa o JSON integral para que severidades menores não desapareçam da fila de segurança.",
+      "limits": "Um exit code zero sob limiar elevado não significa que o projeto esteja livre de advisories; significa apenas que não houve achado acima do threshold.",
+      "verify": "Introduza resultados de severidades diferentes em uma fixture e confirme que a saída mantém os itens enquanto o código de saída segue o limiar.",
+      "code": "npm audit --audit-level=high",
+      "review": "Conferi no manual e na configuração oficial que `audit-level` muda o threshold de falha, não a lista de achados."
+    },
+    {
+      "slug": "npm-audit-fix-semver-force-risco-major",
+      "title": "`npm audit fix` e `--force`: diferenciar atualização compatível de mudança major",
+      "summary": "`npm audit fix` tenta aplicar remediações no grafo; quando a correção exige sair das faixas declaradas, `--force` pode permitir atualizações SemVer major.",
+      "why": "Uma correção de advisory pode alterar APIs e comportamento de runtime, por isso não deve ser aprovada apenas porque reduz o número de alertas.",
+      "how": "Gere um dry-run, examine manifestos e lockfile e teste a atualização em branch; reserve `--force` para mudanças major avaliadas explicitamente.",
+      "example": "Use primeiro `npm audit fix --dry-run --json --force` para inspecionar a proposta que sai das faixas declaradas; depois avalie separadamente a compatibilidade e só aplique a mudança major aprovada.",
+      "limits": "O próprio manual destaca que o comando executa uma instalação completa e que algumas vulnerabilidades exigem intervenção manual.",
+      "verify": "Revise o diff e a versão de cada pacote, rode testes e repita `npm audit`; compare também a compatibilidade da API usada pelo produto.",
+      "code": "npm audit fix --dry-run --json --force",
+      "review": "Conferi no manual v11 o comportamento de `npm audit fix`, `--dry-run` e `--force`; destaquei o risco de mudanças fora das faixas declaradas."
+    },
+    {
+      "slug": "npm-audit-omit-producao-devdependencies-escopo",
+      "title": "Separar dependências de produção e desenvolvimento no `npm audit`",
+      "summary": "Opções como `--omit=dev` podem restringir o que é considerado no payload de auditoria, enquanto o lockfile ainda mantém dependências omitidas no grafo.",
+      "why": "A leitura de runtime ajuda a priorizar exposição de produção, mas dependências de build e desenvolvimento também podem executar em pipelines ou afetar releases.",
+      "how": "Gere relatórios distintos para dependências de produção e para o conjunto completo, explicando qual vista aciona bloqueio e qual alimenta backlog.",
+      "example": "Um pipeline pode publicar a visão `--omit=dev` para o artefato e outra auditoria completa para a cadeia de desenvolvimento.",
+      "limits": "Omitir uma classe não prova que ela seja inofensiva; scripts de instalação e ferramentas de CI podem executar antes da aplicação entrar em produção.",
+      "verify": "Compare os dois relatórios, confira os tipos de dependência omitidos e confirme que o inventário completo continua arquivado.",
+      "code": "npm audit --omit=dev",
+      "review": "Conferi a documentação oficial de `omit` e seu efeito sobre o payload, sem afirmar que dependências de desenvolvimento não têm risco."
+    },
+    {
+      "slug": "npm-audit-json-sarif-automacao-relatorio",
+      "title": "`npm audit --json`: preservar dados estruturados para triagem automatizada",
+      "summary": "O formato JSON entrega detalhes programáveis do relatório e permite que ferramentas de CI correlacionem advisories com versões e dependências.",
+      "why": "Texto formatado para terminal é frágil para parsing; manter saída estruturada ajuda a criar histórico e integrar achados sem perder identificadores.",
+      "how": "Armazene JSON associado ao commit, sanitize campos que possam conter dados internos e valide o formato contra a versão do npm usada.",
+      "example": "Um job pode anexar `npm audit --json` como artefato e extrair ID, severidade e caminho de dependência para criar ticket com contexto.",
+      "limits": "O esquema e detalhes de saída podem variar entre versões; JSON não determina aplicabilidade nem deve ser tratado como substituto da análise humana.",
+      "verify": "Rode o mesmo comando em uma fixture com achado conhecido, valide parsing e confirme que o pipeline preserva o código de saída original.",
+      "code": "npm audit --json",
+      "review": "Conferi o suporte oficial a JSON e os exemplos de relatório; a nota recomenda versionar a interpretação do esquema junto ao CLI."
+    },
+    {
+      "slug": "npm-audit-metavulnerabilidades-cadeia-transitiva",
+      "title": "Metavulnerabilidades no npm: quando uma dependência pai só resolve para versão vulnerável",
+      "summary": "O npm calcula metavulnerabilidades quando a faixa aceita por um pacote intermediário só pode instalar versões vulneráveis de uma dependência inferior.",
+      "why": "O pacote diretamente citado pelo advisory pode não aparecer no manifest raiz, então o caminho transitivo é essencial para encontrar o dono da atualização.",
+      "how": "Leia a cadeia do relatório e descubra qual dependência pai limita a correção; atualize o pai ou aplique uma intervenção testada na resolução.",
+      "example": "Use `npm ls pacote` para encontrar quem introduz a versão vulnerável e abra uma atualização no pacote superior antes de forçar override amplo.",
+      "limits": "A presença transitiva não prova que a funcionalidade vulnerável seja chamada, e correções podem exigir atualização coordenada de vários pais.",
+      "verify": "Compare a árvore instalada antes e depois, confirme a faixa corrigida no advisory e execute testes que cubram a integração alterada.",
+      "code": "npm audit",
+      "review": "Conferi a seção oficial sobre cálculo de metavulnerabilidades e cache; descrevi a cadeia transitiva como motivo da remediação, não como prova de reachability."
+    },
+    {
+      "slug": "npm-audit-signatures-provenance-attestations-distincao",
+      "title": "`npm audit signatures`: verificação separada de assinatura e proveniência do registry",
+      "summary": "O comando `npm audit signatures` verifica assinaturas de registry e proveniência de pacotes baixados em registries compatíveis; não é a mesma consulta de advisories.",
+      "why": "Vulnerabilidade conhecida e integridade/proveniência são perguntas diferentes, exigindo controles separados no ciclo de consumo de pacotes.",
+      "how": "Execute verificação de assinatura após instalação, atualize o CLI para suporte atual de attestations e arquive o bundle quando a investigação exigir evidência.",
+      "example": "Em uma release, rode `npm audit signatures` sobre as dependências instaladas e trate falha criptográfica como evento separado de CVE.",
+      "limits": "A verificação depende de registry que publique chaves e attestations conforme as convenções suportadas; não garante que o código assinado seja benigno.",
+      "verify": "Confira o resultado por pacote, a identidade da chave e a evidência Sigstore retornada em JSON quando habilitada.",
+      "code": "npm audit signatures --json --include-attestations",
+      "review": "Conferi no manual oficial a semântica específica de `audit signatures`, suporte a registry e bundles de proveniência; distingui autenticidade de ausência de bugs."
+    },
+    {
+      "slug": "npm-audit-exit-code-ci-severidade-politica",
+      "title": "Códigos de saída do `npm audit`: transformar achados em política CI explícita",
+      "summary": "Por padrão, o npm retorna código diferente de zero quando encontra vulnerabilidades; o limiar pode ser alterado por `audit-level`.",
+      "why": "A CI precisa comunicar claramente se falhou por vulnerabilidade, falha de rede ou erro de configuração, sem converter indisponibilidade de registry em sucesso silencioso.",
+      "how": "Preserve exit codes, publique relatório em qualquer resultado e combine threshold com monitoramento de erro de serviço para manter o gate observável.",
+      "example": "O job pode executar auditoria, armazenar JSON e marcar o build como falho se o nível configurado for atingido ou se a consulta não puder ser concluída.",
+      "limits": "Um único código não oferece triagem completa; scripts que ignoram falhas ou substituem o status podem ocultar resultados reais.",
+      "verify": "Teste cenários limpo, vulnerável e registry indisponível e confirme que cada caso produz status e mensagem distintos no pipeline.",
+      "review": "Conferi no manual o comportamento padrão de exit code e configuração de nível; acrescentei tratamento operacional sem atribuir códigos não documentados.",
+      "code": "npm audit --audit-level=high"
+    }
+  ],
+  "coverage_review": "Examinei os matches de conteúdo de `npm audit` em toda a coleção, incluindo as notas de OWASP Dependency-Check sobre lockfiles/analisador Node e a nota OSV-Scanner que apenas alerta sobre `npm audit fix --force`. Esses arquivos cobrem descoberta multi-ecossistema ou citam o risco de breaking change; não descrevem payload/endpoints do npm CLI, limiar, metavulnerabilidade, JSON, assinaturas ou fluxo de remediation em detalhe.",
+  "source_overrides": {
+    "npm-audit-descricao-dependencias-registry-privacidade": [
+      {
+        "label": "npm CLI v11 — `npm audit`",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#description",
+        "description": "descrição do envio dos dados de dependências ao registry padrão"
+      },
+      {
+        "label": "npm CLI v11 — configuração `registry`",
+        "url": "https://docs.npmjs.com/cli/v11/using-npm/config#registry",
+        "description": "seleção do registry padrão e configuração de autenticação/escopo"
+      }
+    ],
+    "npm-audit-lockfile-reprodutibilidade-package-lock": [
+      {
+        "label": "npm CLI v11 — `npm audit` e package-lock",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#package-lock",
+        "description": "requisito padrão de lockfile e modo `--no-package-lock`"
+      },
+      {
+        "label": "npm CLI v11 — package-lock.json",
+        "url": "https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json",
+        "description": "papel do lockfile, árvore resolvida e instalação reprodutível"
+      }
+    ],
+    "npm-audit-bulk-advisory-endpoint-pacotes-versoes": [
+      {
+        "label": "npm CLI v11 — Bulk Advisory endpoint",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#bulk-advisory-endpoint",
+        "description": "payload de nomes/versões, endpoint bulk e comportamento descrito na documentação versionada"
+      },
+      {
+        "label": "npm CLI — remoção do fallback de audit",
+        "url": "https://github.com/npm/cli/pull/7911",
+        "description": "PR oficial que removeu o fallback para o endpoint Quick legado"
+      }
+    ],
+    "npm-audit-audit-level-limiar-nao-filtro-relatorio": [
+      {
+        "label": "npm CLI v11 — `npm audit`",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#description",
+        "description": "limiar de falha e distinção explícita entre threshold e conteúdo do relatório"
+      },
+      {
+        "label": "npm CLI v11 — configuração `audit-level`",
+        "url": "https://docs.npmjs.com/cli/v11/using-npm/config#audit-level",
+        "description": "nível mínimo que altera o exit status"
+      }
+    ],
+    "npm-audit-fix-semver-force-risco-major": [
+      {
+        "label": "npm CLI v11 — `npm audit fix`",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#description",
+        "description": "remediação, `--dry-run` e efeitos de `--force` sobre as faixas SemVer"
+      },
+      {
+        "label": "npm CLI v11 — configuração `force`",
+        "url": "https://docs.npmjs.com/cli/v11/using-npm/config#force",
+        "description": "efeito e alcance da flag `--force` em operações npm"
+      }
+    ],
+    "npm-audit-omit-producao-devdependencies-escopo": [
+      {
+        "label": "npm CLI v11 — `npm audit` Bulk Advisory",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#bulk-advisory-endpoint",
+        "description": "efeito de `--omit` sobre o payload de pacotes enviado ao endpoint"
+      },
+      {
+        "label": "npm CLI v11 — configuração `omit`",
+        "url": "https://docs.npmjs.com/cli/v11/using-npm/config#omit",
+        "description": "classes de dependências omitidas e efeito na árvore/payload"
+      }
+    ],
+    "npm-audit-json-sarif-automacao-relatorio": [
+      {
+        "label": "npm CLI v11 — `npm audit` JSON",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#description",
+        "description": "saída estruturada e códigos de saída documentados do comando"
+      },
+      {
+        "label": "npm CLI — implementação do comando audit",
+        "url": "https://github.com/npm/cli/blob/latest/lib/commands/audit.js",
+        "description": "parser JSON, saída de relatório e propagação de status no CLI atual"
+      }
+    ],
+    "npm-audit-metavulnerabilidades-cadeia-transitiva": [
+      {
+        "label": "npm CLI v11 — metavulnerabilities",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#calculating-meta-vulnerabilities-and-remediations",
+        "description": "cálculo de dependências vulneráveis por dependência transitiva vulnerável"
+      },
+      {
+        "label": "npm CLI — `@npmcli/metavuln-calculator`",
+        "url": "https://github.com/npm/metavuln-calculator",
+        "description": "cálculo das metavulnerabilidades e remediações usadas pelo npm"
+      }
+    ],
+    "npm-audit-signatures-provenance-attestations-distincao": [
+      {
+        "label": "npm CLI v11 — Audit Signatures",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#audit-signatures",
+        "description": "verificação de assinaturas do registry e proveniência Sigstore"
+      },
+      {
+        "label": "npm — Generating provenance statements",
+        "url": "https://docs.npmjs.com/generating-provenance-statements",
+        "description": "attestations de proveniência e limites do que demonstram"
+      }
+    ],
+    "npm-audit-exit-code-ci-severidade-politica": [
+      {
+        "label": "npm CLI v11 — `npm audit`",
+        "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit#description",
+        "description": "exit status padrão, erro de consulta e relatório de vulnerabilidades"
+      },
+      {
+        "label": "npm CLI v11 — configuração `audit-level`",
+        "url": "https://docs.npmjs.com/cli/v11/using-npm/config#audit-level",
+        "description": "threshold configurável para falha da auditoria"
+      }
+    ]
+  }
+}

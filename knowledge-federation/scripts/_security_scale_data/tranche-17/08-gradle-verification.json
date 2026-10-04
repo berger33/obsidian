@@ -1,0 +1,259 @@
+{
+  "group_title": "Gradle dependency verification — checksums, assinaturas, `verification-metadata.xml`, bootstrap e compatibilidade com locking",
+  "fact_check": "Conferi a documentação oficial atual de Dependency Verification e Dependency Locking; validei a diferença entre checksum/assinatura, geração inicial de metadata, falha em artefatos desconhecidos e função distinta do lockfile.",
+  "sources": [
+    {
+      "label": "Gradle — Dependency Verification",
+      "url": "https://docs.gradle.org/current/userguide/dependency_verification.html",
+      "description": "verificação de checksums e assinaturas, arquivo `verification-metadata.xml`, modos, geração inicial e revisão do material confiável"
+    },
+    {
+      "label": "Gradle — Dependency Locking",
+      "url": "https://docs.gradle.org/current/userguide/dependency_locking.html",
+      "description": "persistência das versões selecionadas e reprodutibilidade da resolução, propósito separado da verificação de integridade dos artefatos"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "gradle-dependency-verification-integridade-nao-vulnerabilidade",
+      "title": "Gradle Dependency Verification: verificar integridade de artefatos, não ausência de vulnerabilidades",
+      "summary": "Dependency Verification compara artefatos baixados com checksums e/ou assinaturas aceitos, protegendo contra conteúdo diferente do esperado durante resolução.",
+      "why": "Um pacote íntegro ainda pode conter falha conhecida ou código malicioso publicado legitimamente; integridade e avaliação de segurança são controles diferentes.",
+      "how": "Ative verificação no build, mantenha metadata revisável e combine-a com scanner de advisories, revisão de dependências e proveniência de release.",
+      "example": "Um pipeline pode falhar se um JAR mudar em relação ao checksum versionado e ainda executar scanner separado para advisories do mesmo grafo.",
+      "limits": "A verificação não avalia semântica, vulnerabilidades ou intenção do código assinado; confiança na metadata inicial é parte do modelo de segurança.",
+      "verify": "Edite um artefato de teste após registrar sua soma e confirme que Gradle recusa o conteúdo alterado; rode ferramenta de advisory separadamente.",
+      "code": "./gradlew build",
+      "review": "Conferi na documentação oficial que Dependency Verification valida checksums/assinaturas dos artefatos e não trata seu conteúdo como livre de vulnerabilidade."
+    },
+    {
+      "slug": "gradle-verification-metadata-bootstrap-review-manual",
+      "title": "`verification-metadata.xml`: geração inicial é bootstrap, não estabelecimento automático de confiança",
+      "summary": "Gradle pode gerar verification metadata durante uma execução, mas os valores coletados refletem o que foi resolvido naquele ambiente e precisam de revisão.",
+      "why": "Aceitar cegamente hashes obtidos de um download inesperado pode fixar bytes comprometidos como referência confiável.",
+      "how": "Gere metadata em ambiente controlado, confirme origem e versões esperadas e revise checksums ou chaves antes de ativar enforcement em CI.",
+      "example": "Após executar `./gradlew --write-verification-metadata sha256 help`, inspecione cada coordenada adicionada e compare com uma fonte independente aprovada.",
+      "limits": "Um hash prova igualdade com bytes conhecidos, não que a fonte inicial era autêntica; bootstrap online não deve ser confundido com revisão de fornecedor.",
+      "verify": "Revise diff completo de `gradle/verification-metadata.xml`, compare coordenadas com lockfile e repita a resolução em máquina limpa.",
+      "code": "./gradlew --write-verification-metadata sha256 help",
+      "review": "Conferi a seção oficial de configuração inicial e o comando de geração; destaquei que metadata precisa ser revisada antes de virar trust anchor."
+    },
+    {
+      "slug": "gradle-checksum-versus-pgp-signature-verification",
+      "title": "Checksums e assinaturas PGP no Gradle: propriedades diferentes de verificação",
+      "summary": "Gradle permite registrar checksums para igualdade de bytes e assinaturas para validar uma relação criptográfica com chaves públicas confiadas.",
+      "why": "Um checksum pode detectar mudança em um artefato conhecido, enquanto assinatura acrescenta evidência ligada à chave; nenhuma propriedade, isoladamente, prova qualidade do código.",
+      "how": "Escolha estratégia compatível com o fornecedor, registre fingerprints e metadados necessários e confirme a origem da chave por processo independente.",
+      "example": "Para um artefato que publica assinatura verificável, confira a chave aprovada e mantenha tanto coordenada quanto policy versionadas no repositório.",
+      "limits": "Chaves podem ser rotacionadas ou comprometidas; checksums copiados da mesma origem que o artefato não fornecem validação independente da origem.",
+      "verify": "Altere bytes de um fixture, teste falha de checksum e assinatura e valide que uma chave não autorizada não é aceita.",
+      "code": "./gradlew --write-verification-metadata sha256,pgp help",
+      "review": "Conferi as modalidades de checksum e PGP descritas pelo Gradle; diferenciei detecção de alteração de autenticidade por chave confiada."
+    },
+    {
+      "slug": "gradle-verification-metadata-unknown-artifact-fail-closed",
+      "title": "Tratar artefato sem entrada de verificação como mudança que exige revisão",
+      "summary": "Uma execução em modo de verificação pode falhar quando encontra artefato não declarado na metadata, evitando aceitar silenciosamente novos bytes.",
+      "why": "Novas dependências e variantes surgem ao mudar plugins, plataformas ou resolução; fazer o build parar torna a expansão de confiança visível no diff.",
+      "how": "Adicione entradas somente depois de confirmar versão, origem e checksum/assinatura; evite atualizar o arquivo de forma automática sem revisão.",
+      "example": "Um pull request que atualiza Gradle plugin pode receber falha de verificação e deve incluir a metadata necessária após revisão do artefato novo.",
+      "limits": "Falha por item ausente não informa se a dependência é vulnerável; ela indica que a policy de integridade ainda não cobre aquele artefato.",
+      "verify": "Introduza uma dependência controlada sem entrada, confirme a falha e valide que a entrada aprovada elimina apenas esse erro.",
+      "code": "./gradlew build",
+      "review": "Conferi os modos de verificação e o tratamento de componentes sem metadata na documentação do Gradle; a nota separa falta de confiança de vulnerabilidade."
+    },
+    {
+      "slug": "gradle-verification-metadata-trust-keys-export-review",
+      "title": "Importar e confiar em chaves para verificação de assinaturas Gradle",
+      "summary": "O arquivo de metadata pode armazenar chaves usadas na validação de assinatura, por isso identidade, origem e escopo de cada chave precisam de revisão.",
+      "why": "Uma chave incluída apenas porque uma execução a encontrou pode transformar uma assinatura desconhecida em conteúdo aceito pelo build.",
+      "how": "Confirme fingerprints por canal independente, limite a associação ao componente esperado e trate rotação como mudança de policy com revisão explícita.",
+      "example": "Antes de adicionar uma chave nova, obtenha fingerprint do fornecedor por documentação autenticada ou processo interno e compare-a com a informação da metadata.",
+      "limits": "Assinatura válida comprova posse da chave associada ao pacote, não reputação do mantenedor nem segurança do conteúdo assinado.",
+      "verify": "Revise a entrada de chave no XML, compare fingerprint com registro confiável e execute build com chave incorreta em fixture isolada.",
+      "review": "Conferi que o Gradle guarda dados de assinatura e chaves confiadas na verification metadata; a orientação de bootstrap ressalta revisão independente da chave."
+    },
+    {
+      "slug": "gradle-verification-metadata-shared-project-scope",
+      "title": "Centralizar `verification-metadata.xml` no repositório para builds reproduzíveis",
+      "summary": "A documentação do Gradle coloca metadata de verificação em `gradle/verification-metadata.xml`, permitindo que builds do projeto compartilhem policy versionada.",
+      "why": "Configuração local invisível permite que dois desenvolvedores aceitem artefatos diferentes e torna difícil auditar a expansão do conjunto confiável.",
+      "how": "Inclua o arquivo no controle de versão, aplique o mesmo modo de verificação em CI e evite exceções globais que enfraqueçam a policy sem evidência.",
+      "example": "Uma alteração de dependência deve atualizar metadata no mesmo pull request e apresentar diffs de coordenadas e hashes aos revisores.",
+      "limits": "Arquivos compartilhados só oferecem consistência se todos os builds relevantes realmente carregam a configuração e usam versões Gradle compatíveis.",
+      "verify": "Clone o repositório em workspace limpo, execute build e confirme que a resolução não depende de metadata pessoal em `~/.gradle`.",
+      "code": "git diff -- gradle/verification-metadata.xml",
+      "review": "Conferi o caminho e armazenamento de metadata descritos no manual; recomendei versionamento e não atribuí enforcement a builds que não o ativam."
+    },
+    {
+      "slug": "gradle-verification-metadata-plugins-build-dependencies",
+      "title": "Cobertura do Gradle Dependency Verification para plugins e configurações resolvidas",
+      "summary": "A verificação é aplicada quando Gradle resolve dependências cobertas pela configuração do build; plugins e dependências de build devem ser incluídos na validação real.",
+      "why": "Uma equipe pode verificar bibliotecas de aplicação e esquecer componentes usados para executar a própria compilação, que também influenciam o artefato final.",
+      "how": "Revise os resolvers envolvidos, execute cenários que carregam plugins e configurações relevantes e confira se metadata contém os componentes observados.",
+      "example": "Um CI deve usar o wrapper e o build real do produto, incluindo plugins e tarefas de geração, para confirmar cobertura da cadeia de build.",
+      "limits": "Escopo e comportamento variam por modo e configuração; builds incluídos usam a metadata do build consumidor, então a presença do arquivo não prova cobertura de toda resolução sem executar os cenários reais.",
+      "verify": "Compare relatório de componentes resolvidos em build de aplicação e build de plugins, e introduza artefato conhecido para testar enforcement.",
+      "code": "./gradlew help",
+      "review": "Conferi a documentação oficial de Dependency Verification, inclusive plugins/build logic e o escopo de builds incluídos; mantive a cobertura como algo a confirmar na execução real."
+    },
+    {
+      "slug": "gradle-dependency-locking-version-selection-diferenca-integridade",
+      "title": "Dependency Locking e Dependency Verification no Gradle: versão fixa versus bytes verificados",
+      "summary": "Dependency Locking registra versões selecionadas para preservar resolução, enquanto Dependency Verification confere integridade dos artefatos obtidos.",
+      "why": "Um lockfile pode fixar coordenada e versão sem impedir que o conteúdo servido para essa coordenada mude; são camadas complementares.",
+      "how": "Ative locking para reprodutibilidade de seleção e mantenha verification metadata para confiança em bytes e assinaturas, revisando ambos no mesmo fluxo de upgrade.",
+      "example": "Atualizar uma dependência deve mostrar versão nova no lock e checksums correspondentes na metadata, ambos associados ao commit e à CI.",
+      "limits": "Nenhum dos mecanismos detecta por si só vulnerabilidades conhecidas nem garante que uma versão fixa tenha sido revisada manualmente.",
+      "verify": "Inspecione lock state e XML separadamente, altere um artefato mantendo coordenada fixa e confirme que verificação detecta diferença.",
+      "code": "./gradlew dependencies",
+      "review": "Conferi os guias oficiais para distinguir locking da verificação de bytes; a nota usa ambos como controles complementares com propósitos separados."
+    },
+    {
+      "slug": "gradle-verification-refresh-upgrade-artefactos",
+      "title": "Atualizar metadata de verificação em upgrades sem aceitar mudanças em massa",
+      "summary": "Uma mudança de versão pode exigir entradas novas de verificação, mas aceitar todos os artefatos observados numa única execução amplia confiança sem inspeção granular.",
+      "why": "Upgrades frequentes tornam tentador regenerar metadata inteira; isso pode esconder mudanças inesperadas em plugins ou transitivas junto às versões esperadas.",
+      "how": "Separe mudanças por componente, gere sugestões em ambiente reproduzível, compare hashes e mantenha uma lista explícita de itens não resolvidos.",
+      "example": "Atualize uma biblioteca em pull request dedicado, confirme versão publicada e altere somente as coordenadas relacionadas ao upgrade no XML.",
+      "limits": "Gradle não decide se alteração de checksum é legítima; a equipe precisa obter evidência da origem e considerar reprodutibilidade do artefato.",
+      "verify": "Compare o diff de metadata com o diff de lock, teste build com cache vazio e investigue qualquer entrada não relacionada ao componente atualizado.",
+      "code": "./gradlew --write-verification-metadata sha256 help",
+      "review": "Conferi o fluxo de escrita de metadata na documentação oficial; recomendei revisar alterações de trust material em vez de aceitar regeneração ampla."
+    },
+    {
+      "slug": "gradle-verification-complemento-scanners-sbom",
+      "title": "Incluir Dependency Verification em uma cadeia de controles de supply chain Gradle",
+      "summary": "A verificação de artefatos protege uma propriedade de integridade e deve ser combinada com controles de versão, advisories, SBOM e revisão de mudanças.",
+      "why": "Um pacote pode ter assinatura válida e ainda conter vulnerabilidade; um alerta de CVE também não prova que o arquivo baixado corresponde ao esperado.",
+      "how": "Associe metadata, lock state, scanner de advisories, provenance de build e evidência de release a um mesmo commit e conjunto de dependências.",
+      "example": "Um pipeline pode falhar em checksum inesperado, publicar SBOM e executar scanner de CVEs antes de assinar o artefato produzido.",
+      "limits": "Combinar ferramentas não garante cobertura completa; cada fonte, base e etapa precisa de versão, escopo e política próprios.",
+      "verify": "Teste cada controle com uma fixture apropriada e confirme que relatório e falha podem ser correlacionados ao artefato implantado.",
+      "review": "Conferi a finalidade delimitada de verification e locking no Gradle; apresentei scanner/SBOM como controles adicionais, não como features nativas do mecanismo."
+    }
+  ],
+  "coverage_review": "A busca por Gradle dependency verification/checksums encontrou seis contextos. Li as notas Gradle de testes (suites JVM e paralelismo) e as notas OWASP Dependency-Check sobre plugins/escopo, NVD e banco/cache; as primeiras tratam de testes, as últimas de SCA/advisories, nenhuma de `verification-metadata.xml`, checksums e assinaturas nativas do Gradle. A matéria proposta protege propriedade distinta.",
+  "source_overrides": {
+    "gradle-dependency-verification-integridade-nao-vulnerabilidade": [
+      {
+        "label": "Gradle — Dependency Verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html",
+        "description": "checksums/assinaturas e limites da verificação de integridade dos artefatos"
+      },
+      {
+        "label": "OWASP Dependency-Check — Maven/Gradle SCA",
+        "url": "https://dependency-check.github.io/DependencyCheck/",
+        "description": "scanner de advisories como controle separado de integridade de artefatos"
+      }
+    ],
+    "gradle-verification-metadata-bootstrap-review-manual": [
+      {
+        "label": "Gradle — bootstrap de verification metadata",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification",
+        "description": "geração inicial com `--write-verification-metadata` e revisão do resultado"
+      },
+      {
+        "label": "Gradle — Command-Line Interface",
+        "url": "https://docs.gradle.org/current/userguide/command_line_interface.html",
+        "description": "uso de flags globais do wrapper durante a geração de metadata"
+      }
+    ],
+    "gradle-checksum-versus-pgp-signature-verification": [
+      {
+        "label": "Gradle — checksum verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:verification-metadata",
+        "description": "checksums armazenados em metadata e validação de bytes"
+      },
+      {
+        "label": "Gradle — signature verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:signature-verification",
+        "description": "assinaturas PGP, chaves e trust metadata"
+      }
+    ],
+    "gradle-verification-metadata-unknown-artifact-fail-closed": [
+      {
+        "label": "Gradle — artifacts sem metadata",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:verification-metadata",
+        "description": "falhas para componentes sem checksum/assinatura declarados"
+      },
+      {
+        "label": "Gradle — Dependency Verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:enabling-dependency-verification",
+        "description": "ativação do modo de verificação e efeito sobre a resolução"
+      }
+    ],
+    "gradle-verification-metadata-trust-keys-export-review": [
+      {
+        "label": "Gradle — trust keys e assinatura",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:signature-verification",
+        "description": "chaves confiadas e verificação de assinatura de artefatos"
+      },
+      {
+        "label": "Gradle — bootstrapping trusted keys",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification",
+        "description": "revisão de chaves obtidas durante bootstrap"
+      }
+    ],
+    "gradle-verification-metadata-shared-project-scope": [
+      {
+        "label": "Gradle — metadata compartilhada",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:verification-metadata",
+        "description": "localização/versionamento de `verification-metadata.xml` e escopo do build"
+      },
+      {
+        "label": "Gradle — Multi-Project Builds",
+        "url": "https://docs.gradle.org/current/userguide/multi_project_builds.html",
+        "description": "estrutura de root project e subprojects que compartilham configuração"
+      }
+    ],
+    "gradle-verification-metadata-plugins-build-dependencies": [
+      {
+        "label": "Gradle — plugins e dependências de build",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:dependency-verification-scope",
+        "description": "resoluções verificadas, plugins e build logic"
+      },
+      {
+        "label": "Gradle — Included Builds",
+        "url": "https://docs.gradle.org/current/userguide/composite_builds.html",
+        "description": "escopo próprio de included builds em relação ao build consumidor"
+      }
+    ],
+    "gradle-dependency-locking-version-selection-diferenca-integridade": [
+      {
+        "label": "Gradle — Dependency Locking",
+        "url": "https://docs.gradle.org/current/userguide/dependency_locking.html",
+        "description": "fixação das versões selecionadas no grafo de dependências"
+      },
+      {
+        "label": "Gradle — Dependency Verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html",
+        "description": "checagem separada de integridade de checksums/assinaturas"
+      }
+    ],
+    "gradle-verification-refresh-upgrade-artefactos": [
+      {
+        "label": "Gradle — atualizar verification metadata",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification",
+        "description": "regeneração controlada e revisão de metadata ao alterar dependências"
+      },
+      {
+        "label": "Gradle — Dependency Locking",
+        "url": "https://docs.gradle.org/current/userguide/dependency_locking.html",
+        "description": "comparação de upgrades de versão com lock state"
+      }
+    ],
+    "gradle-verification-complemento-scanners-sbom": [
+      {
+        "label": "Gradle — Dependency Verification",
+        "url": "https://docs.gradle.org/current/userguide/dependency_verification.html",
+        "description": "escopo de integridade e limites do material de confiança"
+      },
+      {
+        "label": "OWASP Dependency-Check — Gradle",
+        "url": "https://dependency-check.github.io/DependencyCheck/dependency-check-gradle/index.html",
+        "description": "análise separada de dependências contra fontes de vulnerabilidade"
+      }
+    ]
+  }
+}

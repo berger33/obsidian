@@ -1,6 +1,6 @@
 # Auditoria Global Rápida
 
-Atualizado em: 2026-10-04T02:38:22
+Atualizado em: 2026-10-04T16:35:19
 
 > **Escopo:** o `registry/knowledge.sqlite` está sem registros físicos ou virtuais nesta execução. Esses zeros descrevem somente o banco local, não a presença de conteúdo nos arquivos; use a [auditoria de qualidade por arquivos](note-quality-audit.md) para a contagem editorial.
 

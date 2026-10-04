@@ -1,0 +1,259 @@
+{
+  "group_title": "pnpm `audit` — advisories GHSA, escopo por ambiente, correções por overrides, idade mínima e assinaturas de registry",
+  "fact_check": "Conferi a página atual do `pnpm audit` e a configuração oficial de resolução de dependências; validei as mudanças registradas para v11/v12, opções por ambiente, correção e signatures.",
+  "sources": [
+    {
+      "label": "pnpm — `pnpm audit`",
+      "url": "https://pnpm.io/cli/audit",
+      "description": "consulta Bulk Advisory desde v11, filtros, GHSA, JSON, correções, ignores, `minimumReleaseAge` e `audit signatures`"
+    },
+    {
+      "label": "pnpm — Dependency Resolution Settings",
+      "url": "https://pnpm.io/settings/dependency-resolution",
+      "description": "configuração de overrides, registries, janela `minimumReleaseAge` e exclusões permitidas para atualização de segurança"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "pnpm-audit-bulk-advisory-ghsa-pnpm-v11",
+      "title": "`pnpm audit` v11+: Bulk Advisory e uso de IDs GHSA",
+      "summary": "A documentação atual informa que, desde pnpm 11, `pnpm audit` consulta o endpoint Bulk Advisory e filtra advisories por identificador GHSA.",
+      "why": "Pipelines que migraram de versões antigas podem ainda armazenar CVEs na configuração, produzindo exceções que não correspondem ao formato esperado pelo client atual.",
+      "how": "Confira a versão do pnpm e substitua identificadores legados conforme o resultado atual, mantendo a URL do advisory e a justificativa junto ao ignore.",
+      "example": "Após atualizar o package manager, execute auditoria em branch e compare `More info` e a lista `audit.ignore` antes de aceitar mudanças de IDs.",
+      "limits": "A ausência de CVE no payload do endpoint descrito não significa que o advisory não tenha CVE em outras bases; IDs dependem da interface consultada.",
+      "verify": "Teste um advisory controlado, confirme o GHSA exibido no relatório e compare com o identificador versionado em `pnpm-workspace.yaml`.",
+      "review": "Conferi na documentação atual do pnpm a migração desde v11 ao Bulk Advisory e a seleção por GHSA, sem generalizar a regra a outros scanners."
+    },
+    {
+      "slug": "pnpm-audit-prod-dev-optional-dependencies-escopo",
+      "title": "Delimitar `pnpm audit` por produção, desenvolvimento e dependências opcionais",
+      "summary": "`--prod` e `--dev` permitem consultar subconjuntos; `--no-optional` exclui dependências opcionais da auditoria solicitada.",
+      "why": "Uma vista por runtime auxilia priorização, enquanto ferramentas de build ou dependências opcionais podem continuar relevantes para a cadeia de entrega.",
+      "how": "Gere a vista de produção e uma visão completa em jobs distintos, rotule escopo no artefato e não elimine dependências de desenvolvimento do inventário total.",
+      "example": "Uma política pode usar `pnpm audit --prod` para exposição de produção e executar o comando sem filtro para verificar ferramentas e dependências de desenvolvimento.",
+      "limits": "Filtrar escopo não altera o advisory e não demonstra que uma dependência omitida seja inofensiva; build scripts também podem ser executados na CI.",
+      "verify": "Compare relatórios com e sem filtros, registre as classes excluídas e confira que o lockfile e SBOM incluem todo o conjunto resolvido.",
+      "code": "pnpm audit --prod",
+      "review": "Conferi as opções de escopo na documentação oficial de pnpm audit; a nota separa priorização de produção do inventário completo."
+    },
+    {
+      "slug": "pnpm-audit-json-patched-versions-null",
+      "title": "`pnpm audit --json`: diferenciar advisories corrigíveis de sem versão corrigida",
+      "summary": "O formato JSON expõe `patched_versions`; quando seu valor é `null`, a documentação indica que não há resolução publicada para aquele advisory.",
+      "why": "A equipe não deve prometer atualização automática quando o ecossistema ainda não oferece versão corrigida, e precisa manter mitigação provisória visível.",
+      "how": "Parseie o campo sem converter null em lista vazia, crie estado de triagem separado e reavalie a dependência quando o mantenedor publicar correção.",
+      "example": "Um dashboard pode rotular casos com `patched_versions: null` como sem versão corrigida conhecida e encaminhar o risco a owner da aplicação.",
+      "limits": "A informação reflete o feed consultado no instante da execução; uma versão corrigida pode surgir depois ou depender de atualização de intervalo.",
+      "verify": "Valide o parser com JSON real do CLI, preserve a distinção entre null e array de versões e registre data da consulta.",
+      "code": "pnpm audit --json",
+      "review": "Conferi na página oficial o significado documentado de `patched_versions: null`; a nota evita tratar isso como exceção permanente."
+    },
+    {
+      "slug": "pnpm-audit-fix-overrides-workspace-yaml",
+      "title": "`pnpm audit --fix`: remediar com `overrides` no arquivo de workspace",
+      "summary": "A opção `--fix` pode adicionar overrides em `pnpm-workspace.yaml` para forçar uma versão não vulnerável de uma dependência afetada.",
+      "why": "Um override alcança dependências transitivas, mas pode impor versão não prevista pelo consumidor e precisa de teste de compatibilidade.",
+      "how": "Revise o pacote pai, a faixa corrigida e o escopo da regra; prefira um pull request isolado e teste toda configuração que consome o override.",
+      "example": "Depois da auditoria, gere a sugestão, examine a alteração em `pnpm-workspace.yaml` e confirme que apenas o pacote vulnerável recebe a substituição necessária.",
+      "limits": "A ferramenta não garante compatibilidade semântica do override; uma atualização forçada pode ocultar dependência de API incompatível.",
+      "verify": "Rode testes e `pnpm why` após a correção, confira a versão efetivamente instalada e repita auditoria para confirmar a remoção do advisory.",
+      "code": "pnpm audit --fix",
+      "review": "Conferi na documentação oficial o efeito do `--fix` sobre `pnpm-workspace.yaml` e overrides; a nota exige revisão e testes de compatibilidade."
+    },
+    {
+      "slug": "pnpm-audit-fix-update-lockfile-interativo",
+      "title": "`pnpm audit --fix=update` e modo interativo: escolher a forma da remediação",
+      "summary": "A partir de pnpm 11, `--fix=update` atualiza o lockfile em vez de gravar overrides; `--interactive` permite escolher advisories associados ao fix.",
+      "why": "A equipe pode preferir atualizar a resolução explícita em vez de manter regras de override, mas cada mudança tem impacto distinto no grafo.",
+      "how": "Selecione a modalidade deliberadamente, revise diffs do lockfile e preserve o registro de quais vulnerabilidades foram escolhidas ou adiadas.",
+      "example": "Em branch de manutenção, use modo interativo para selecionar correções aceitas e gere diff legível de `pnpm-lock.yaml` antes de submeter revisão.",
+      "limits": "A opção interativa só é válida com `--fix`; atualização do lockfile pode exigir que o pacote pai amplie sua faixa e não resolver todo advisory.",
+      "verify": "Confira a versão de pnpm que introduziu as opções, examine versões selecionadas e rode auditoria e testes após a modificação.",
+      "code": "pnpm audit --fix=update --interactive",
+      "review": "Conferi na página atual os marcos v11 para `--fix=update` e `--interactive`; descrevi separadamente override e atualização do lockfile."
+    },
+    {
+      "slug": "pnpm-audit-ignore-ghsa-governanca-prune",
+      "title": "`audit.ignore` no pnpm: allowlist GHSA com justificativa e limpeza de entradas antigas",
+      "summary": "A configuração `audit.ignore` aceita IDs GHSA e `audit.ignorePrune` pode remover entradas que não aparecem mais no relatório quando a correção roda.",
+      "why": "Exceções sem rastreamento perdem relevância quando dependências mudam; podar ou revisar entradas antigas reduz ruído e permissões persistentes.",
+      "how": "Exija owner, motivo e prazo em cada exceção, use `ignorePrune` conscientemente e confira o resumo que distingue advisories ignorados de uma auditoria limpa.",
+      "example": "No CI, valide a lista `audit.ignore` contra o registro de risco interno e abra revisão quando um ID sair do relatório ou mudar de faixa.",
+      "limits": "Uma exceção suprime o reporte do advisory configurado; não neutraliza a falha técnica nem substitui mitigação ou versão corrigida.",
+      "verify": "Compare saída normal e saída com ignores, confirme que todos os IDs são GHSA válidos e revise entradas removidas pelo prune.",
+      "code": "pnpm audit --json",
+      "review": "Conferi a configuração `audit.ignore`, `audit.ignorePrune` e o comportamento de resumo do pnpm 12.4+ documentado na página oficial."
+    },
+    {
+      "slug": "pnpm-audit-level-impressao-severidade-policy",
+      "title": "`--audit-level` no pnpm: controlar severidade exibida sem perder dados brutos",
+      "summary": "A opção `--audit-level` imprime advisories a partir da severidade selecionada; a configuração equivalente pode ficar no bloco `audit` do workspace.",
+      "why": "Filtros de apresentação podem reduzir ruído, porém um relatório filtrado não deve substituir arquivo bruto usado para a fila de risco.",
+      "how": "Defina o nível para visualização ou policy, armazene também JSON sem filtros quando necessário e documente a diferença entre exibição e bloqueio da pipeline.",
+      "example": "Uma revisão executa saída legível com `--audit-level high` e anexa JSON completo para que achados menores não desapareçam do histórico.",
+      "limits": "A documentação descreve quais linhas são impressas; comportamento de saída e defaults devem ser confirmados para a versão do pnpm fixada.",
+      "verify": "Execute com níveis diferentes sobre o mesmo lockfile, compare relatórios e observe o status de saída em uma fixture conhecida.",
+      "code": "pnpm audit --audit-level high",
+      "review": "Conferi o default e a semântica documentada de nível no CLI; recomendei preservar JSON bruto para evitar interpretar filtro como ausência de achados."
+    },
+    {
+      "slug": "pnpm-audit-registry-errors-nao-mascarar-falha",
+      "title": "`--ignore-registry-errors`: não confundir indisponibilidade do serviço com resultado limpo",
+      "summary": "A opção `--ignore-registry-errors` pode fazer o processo retornar zero quando o registry responde com status não 200, separando falha do serviço de achados.",
+      "why": "Mascarar indisponibilidade como sucesso pode deixar uma janela sem auditoria sem que a equipe perceba; observabilidade de falhas precisa continuar explícita.",
+      "how": "Use essa opção somente em fluxos que registram erro de consulta por outro canal, e mantenha uma métrica ou estado de auditoria inconclusa.",
+      "example": "Se o job não puder falhar a release por outage, publique o status `audit inconclusiva`, abra alerta operacional e agende nova tentativa em vez de marcar `clean`.",
+      "limits": "Código de saída zero nessa opção não significa que o registry consultado confirmou ausência de vulnerabilidades.",
+      "verify": "Simule erro HTTP, confira status do comando e verifique que o pipeline mostra auditoria inconclusiva sem suprimir a falha de serviço.",
+      "review": "Conferi a semântica oficial da opção `--ignore-registry-errors`; a nota enfatiza que sucesso operacional não é resultado limpo de segurança."
+    },
+    {
+      "slug": "pnpm-audit-signatures-registry-ecdsa-chaves",
+      "title": "`pnpm audit signatures`: verificar assinaturas ECDSA do registry instalado",
+      "summary": "O comando separado `pnpm audit signatures` compara assinaturas ECDSA de pacotes instalados com chaves públicas publicadas pelos registries configurados.",
+      "why": "Auditar advisories não valida que bytes baixados correspondem a uma assinatura do registry; integridade de distribuição requer checagem separada.",
+      "how": "Execute após instalação, observe registries sem chaves publicadas e trate pacote sem assinatura ou assinatura inválida conforme política do registry.",
+      "example": "Uma pipeline pode guardar saída JSON da verificação de assinatura ao lado do lockfile, SBOM e digest do artefato construído.",
+      "limits": "Registries sem convenção de chaves podem ser ignorados; uma assinatura válida identifica integridade segundo chave, mas não prova que o pacote seja benigno.",
+      "verify": "Confirme quais registries foram verificados, revise resultados por pacote e verifique a chave publicada no endpoint documentado pelo registry.",
+      "code": "pnpm audit signatures --json",
+      "review": "Conferi na página oficial o algoritmo e comportamento de `audit signatures`, incluindo registries que não publicam chaves e código de saída."
+    },
+    {
+      "slug": "pnpm-audit-minimum-release-age-correcoes-seguranca",
+      "title": "`minimumReleaseAge` e correções no pnpm: equilibrar atraso contra janela de ataque",
+      "summary": "Desde pnpm 11, `minimumReleaseAge` tem default documentado de 1.440 minutos (antes, zero); a janela pode atrasar releases, e `audit --fix` documenta uma exceção para a versão mínima corrigida.",
+      "why": "A janela reduz exposição a publicação recém-comprometida, mas pode atrasar uma correção urgente de vulnerabilidade se a policy não tratar exceções com cuidado.",
+      "how": "Defina o período com base no processo de resposta e revise as entradas automáticas em `minimumReleaseAgeExclude` quando a auditoria propõe uma versão de correção.",
+      "example": "Após um advisory de alta prioridade, revise o override e a exclusão temporal produzidos pela correção para confirmar que só a versão mínima necessária é liberada.",
+      "limits": "O default mudou no pnpm 11 e deve ser conferido na versão fixada; idade de release não verifica integridade ou qualidade, e um pacote malicioso pode permanecer publicado além da janela.",
+      "verify": "Confira settings do workspace e diff de exclusões, instale em ambiente de teste e registre a aprovação explícita para a exceção de idade.",
+      "code": "pnpm audit --fix",
+      "review": "Conferi nas páginas atuais o default de 1.440 minutos desde pnpm 11, a configuração de exclusões e a interação de `audit --fix`; tratei a exceção como policy a revisar."
+    }
+  ],
+  "coverage_review": "A busca no corpo de todas as notas por `pnpm audit` não encontrou cobertura direta. Li as notas de Dependency-Check e OSV-Scanner que citam `pnpm-lock.yaml`: elas descrevem extração de inventário/varredura ou detecção de Node, não semântica do comando pnpm, Bulk Advisory/GHSA, `audit.ignore`, overrides, janela mínima ou signatures.",
+  "source_overrides": {
+    "pnpm-audit-bulk-advisory-ghsa-pnpm-v11": [
+      {
+        "label": "pnpm — `pnpm audit`",
+        "url": "https://pnpm.io/cli/audit",
+        "description": "endpoint Bulk Advisory usado desde v11 e IDs GHSA exibidos pelo CLI"
+      },
+      {
+        "label": "pnpm — documentação versionada de `pnpm audit`",
+        "url": "https://github.com/pnpm/pnpm/blob/main/pnpm/docs/cli/audit.md",
+        "description": "fonte versionada pelo projeto para o comportamento Bulk Advisory e os identificadores GHSA do CLI"
+      }
+    ],
+    "pnpm-audit-prod-dev-optional-dependencies-escopo": [
+      {
+        "label": "pnpm — `pnpm audit`",
+        "url": "https://pnpm.io/cli/audit#--prod--p",
+        "description": "flags `--prod`, `--dev` e `--no-optional` para delimitar o audit"
+      },
+      {
+        "label": "pnpm — `--no-optional`",
+        "url": "https://pnpm.io/cli/audit#--no-optional",
+        "description": "opção para excluir explicitamente `optionalDependencies` da auditoria"
+      }
+    ],
+    "pnpm-audit-json-patched-versions-null": [
+      {
+        "label": "pnpm — `pnpm audit` JSON",
+        "url": "https://pnpm.io/cli/audit#--json",
+        "description": "campos JSON do relatório, incluindo `patched_versions` nulo"
+      },
+      {
+        "label": "pnpm — `pnpm audit` remediação",
+        "url": "https://pnpm.io/cli/audit#--fix",
+        "description": "semântica de versão corrigida e resultado do fluxo de fix"
+      }
+    ],
+    "pnpm-audit-fix-overrides-workspace-yaml": [
+      {
+        "label": "pnpm — `pnpm audit --fix`",
+        "url": "https://pnpm.io/cli/audit#--fix",
+        "description": "criação de overrides para corrigir advisories"
+      },
+      {
+        "label": "pnpm — overrides",
+        "url": "https://pnpm.io/settings/dependency-resolution#overrides",
+        "description": "escopo e semântica de overrides em `pnpm-workspace.yaml`"
+      }
+    ],
+    "pnpm-audit-fix-update-lockfile-interativo": [
+      {
+        "label": "pnpm — `pnpm audit --fix=update`",
+        "url": "https://pnpm.io/cli/audit#--fix",
+        "description": "modo de atualização do lockfile e interatividade a partir de v11"
+      },
+      {
+        "label": "pnpm — `pnpm audit --interactive`",
+        "url": "https://pnpm.io/cli/audit#--interactive--i",
+        "description": "seleção interativa de advisories durante remediação"
+      }
+    ],
+    "pnpm-audit-ignore-ghsa-governanca-prune": [
+      {
+        "label": "pnpm — `audit.ignore`",
+        "url": "https://pnpm.io/cli/audit#auditignore",
+        "description": "IDs GHSA permitidos e comportamento da allowlist"
+      },
+      {
+        "label": "pnpm — `audit.ignorePrune`",
+        "url": "https://pnpm.io/cli/audit#auditignoreprune",
+        "description": "remoção de ignores que não aparecem mais no relatório"
+      }
+    ],
+    "pnpm-audit-level-impressao-severidade-policy": [
+      {
+        "label": "pnpm — `--audit-level`",
+        "url": "https://pnpm.io/cli/audit#--audit-level-severity",
+        "description": "filtro de severidade que controla quais linhas são impressas"
+      },
+      {
+        "label": "pnpm — `pnpm audit --json`",
+        "url": "https://pnpm.io/cli/audit#--json",
+        "description": "formato bruto estruturado para preservar achados além da vista filtrada"
+      }
+    ],
+    "pnpm-audit-registry-errors-nao-mascarar-falha": [
+      {
+        "label": "pnpm — `--ignore-registry-errors`",
+        "url": "https://pnpm.io/cli/audit#--ignore-registry-errors",
+        "description": "efeito de erros do registry sobre o status de saída"
+      },
+      {
+        "label": "pnpm — registries configurados",
+        "url": "https://pnpm.io/settings/dependency-resolution#registries",
+        "description": "seleção e configuração dos registries dos quais dependem consultas de advisory"
+      }
+    ],
+    "pnpm-audit-signatures-registry-ecdsa-chaves": [
+      {
+        "label": "pnpm — `audit signatures`",
+        "url": "https://pnpm.io/cli/audit#signatures",
+        "description": "verificação ECDSA de pacotes instalados e chaves publicadas"
+      },
+      {
+        "label": "pnpm — Registry Settings",
+        "url": "https://pnpm.io/settings/dependency-resolution#registries",
+        "description": "registries configurados que fornecem metadata/chaves de pacote"
+      }
+    ],
+    "pnpm-audit-minimum-release-age-correcoes-seguranca": [
+      {
+        "label": "pnpm — `audit --fix` e release-age",
+        "url": "https://pnpm.io/cli/audit#--fix",
+        "description": "exceção necessária para instalar a versão mínima que corrige o advisory"
+      },
+      {
+        "label": "pnpm — `minimumReleaseAge`",
+        "url": "https://pnpm.io/settings/dependency-resolution#minimumreleaseage",
+        "description": "default por versão, janela e exclusões temporais"
+      }
+    ]
+  }
+}

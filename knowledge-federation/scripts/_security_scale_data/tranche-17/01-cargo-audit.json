@@ -1,0 +1,261 @@
+{
+  "group_title": "RustSec `cargo-audit` — consulta do `Cargo.lock` à base de advisories, auditoria de binários, exceções e uso seguro em CI",
+  "fact_check": "Conferi o README e a configuração oficiais do `cargo-audit`, o RustSec Advisory Database e as referências primárias específicas de cada nota; validei o ID real do exemplo, o requisito da feature `fix`, os limites de auditoria de binários e a action `rustsec/audit-check`.",
+  "sources": [
+    {
+      "label": "RustSec `cargo-audit` — README oficial",
+      "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+      "description": "instalação, leitura do Cargo.lock, modo `--file`, `audit fix`, `audit bin`, advisories ignorados e aviso sobre projetos não confiáveis"
+    },
+    {
+      "label": "RustSec Advisory Database — advisories",
+      "url": "https://rustsec.org/advisories/",
+      "description": "índice oficial de avisos de segurança publicados para crates Rust e identificadores RUSTSEC"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "cargo-audit-fluxo-cargo-lock-rustsec-advisory-db",
+      "title": "`cargo-audit`: fluxo entre `Cargo.lock`, RustSec Advisory Database e achados por versão",
+      "summary": "`cargo audit` compara as versões resolvidas em `Cargo.lock` com advisories publicados para crates Rust e apresenta a dependência relacionada ao achado.",
+      "why": "O resultado transforma uma lista de versões transitivas em itens triáveis, com identificador do advisory e orientação de versão corrigida quando a base fornece esse dado.",
+      "how": "O comando lê o grafo já resolvido em vez de inferir a aplicação inteira; isso torna importante versionar o lockfile usado pelo build e executar a auditoria sobre o mesmo estado.",
+      "example": "Em um workspace Rust confiável, rode a auditoria na raiz, guarde a saída da execução e associe cada advisory a uma issue de atualização ou a uma exceção revisada.",
+      "code": "cargo audit",
+      "limits": "A presença de uma crate vulnerável no lockfile não prova que a função afetada seja alcançável; o comando não substitui análise de uso nem revisão da correção.",
+      "verify": "Compare o identificador RUSTSEC e a faixa de versões do relatório com o advisory primário, depois confirme qual crate pai introduziu a versão resolvida.",
+      "review": "Conferi no README que o comando audita Cargo.lock contra RustSec; conferi no índice a natureza dos advisories e tratei a saída como triagem, não prova de exploração."
+    },
+    {
+      "slug": "cargo-audit-identificadores-rustsec-faixas-versoes-triagem",
+      "title": "Triagem de achados `RUSTSEC-*`: identificador, faixa afetada e versão de correção",
+      "summary": "Um resultado de `cargo-audit` associa a crate vulnerável a um aviso RustSec identificável, permitindo abrir o registro primário antes de planejar uma atualização.",
+      "why": "Nomes parecidos ou uma versão antiga não bastam para decidir impacto; a faixa afetada e as versões corrigidas devem ser lidas no advisory específico.",
+      "how": "Use o identificador do relatório para consultar descrição, versões afetadas, mitigação e notas do mantenedor; registre o lockfile e o caminho transitivo observados na mesma revisão.",
+      "example": "Quando o relatório mostrar um ID RUSTSEC, use exatamente esse identificador para abrir o advisory e cotejar a faixa afetada; não invente um número para ilustrar o caso.",
+      "limits": "Os advisories podem mudar e a recomendação depende da versão disponível no ecossistema; cópias locais antigas da base podem atrasar a descoberta de correções recentes.",
+      "verify": "Abra o registro pelo ID impresso, confira as faixas de versão e compare com `cargo tree -i crate` para identificar quem fixa a dependência vulnerável.",
+      "code": "cargo audit",
+      "review": "Conferi que o README apresenta IDs de advisory e versões/soluções no relatório; confrontei esse uso com o índice RustSec e removi o identificador fictício do exemplo."
+    },
+    {
+      "slug": "cargo-audit-lockfile-ausente-risco-cargo-update-projeto-nao-confiavel",
+      "title": "`cargo-audit` e projeto sem `Cargo.lock`: por que evitar comandos Cargo em código não confiável",
+      "summary": "O README do `cargo-audit` alerta que, sem lockfile, o comando pode executar `cargo update --workspace` para gerar um, e que ferramentas Cargo podem executar código do projeto.",
+      "why": "Um scanner aparentemente passivo pode acionar resolução ou etapas do ecossistema de build; executar isso dentro de um checkout hostil amplia a superfície de risco do próprio analista.",
+      "how": "Para triagem de um repositório desconhecido, use a opção de arquivo sobre um lockfile obtido como dado e execute fora do diretório do projeto, sem carregar sua configuração local.",
+      "example": "Baixe e inspecione o `Cargo.lock` como artefato, copie-o para uma área isolada e rode `cargo audit --file /tmp/review/Cargo.lock` sem invocar Cargo na árvore examinada.",
+      "limits": "O modo por arquivo não audita código-fonte nem torna seguro abrir qualquer artefato; preserve isolamento, confira o caminho e não execute scripts ou builds do projeto suspeito.",
+      "verify": "Teste a rotina em um checkout descartável sem lockfile e observe que o pipeline bloqueia comandos no diretório original; registre hash e origem do lockfile separado.",
+      "code": "cargo audit --file /tmp/review/Cargo.lock",
+      "review": "Conferi o aviso explícito do README de 30-09-2026 sobre projetos não confiáveis, geração de lockfile e opção `--file`; a recomendação da nota segue esse limite."
+    },
+    {
+      "slug": "cargo-audit-opcao-file-lockfile-externo-reproducibilidade",
+      "title": "`cargo audit --file`: auditar um `Cargo.lock` externo sem entrar no workspace",
+      "summary": "A opção `--file` permite apontar para um lockfile específico, útil para auditar uma cópia de revisão sem fazer o comando operar no checkout examinado.",
+      "why": "Separar o arquivo de entrada reduz a chance de confundir lockfile, manifestos e configuração do diretório atual, além de preservar o artefato que fundamenta a decisão.",
+      "how": "Aponte explicitamente para a cópia do lockfile, guarde sua origem e hash e execute em um diretório controlado; isso não desativa toda configuração externa do ambiente.",
+      "example": "Em uma pipeline isolada, materialize o `Cargo.lock` aprovado em uma pasta de artefatos e invoque `cargo audit --file artifacts/Cargo.lock` antes de publicar o binário.",
+      "limits": "O relatório descreve apenas o grafo codificado naquele lockfile; dependências opcionais, features, alvos e artefatos embarcados podem exigir análise adicional.",
+      "verify": "Confirme que o argumento aponta para o arquivo esperado e compare seu SHA-256 com o artefato anexado ao commit que será construído.",
+      "code": "cargo audit --file artifacts/Cargo.lock",
+      "review": "Verifiquei no README oficial a sintaxe e o propósito de `--file` para evitar geração de lockfile no projeto; explicitei que não neutraliza todas as configurações do ambiente."
+    },
+    {
+      "slug": "cargo-audit-ignorar-advisory-justificativa-expiracao",
+      "title": "Ignorar um advisory em `cargo-audit`: exceção rastreável, justificativa e reavaliação",
+      "summary": "`--ignore` e a configuração `audit.toml` permitem silenciar um advisory específico, mas a exceção deve explicar por que o achado não se aplica ao produto.",
+      "why": "Ignorar por conveniência pode esconder uma correção futura ou uma mudança de feature; a justificativa torna explícito o pressuposto técnico para quem revisará o código depois.",
+      "how": "Priorize atualização; se indisponível, documente o caminho de código não usado, versão analisada, responsável e data de revisão, e mantenha a exceção pequena e verificável.",
+      "example": "Em vez de suprimir a categoria inteira, registre somente o ID confirmado no relatório e anexe evidência de que a API afetada não é chamada nesta configuração.",
+      "limits": "A exceção não corrige a crate, não demonstra ausência de risco em builds alternativos e pode ficar obsoleta quando features ou dependências mudarem.",
+      "verify": "Faça um teste de CI que falhe quando a exceção desaparecer ou ficar sem justificativa, e reavalie o advisory após atualização de versão ou configuração.",
+      "code": "cargo audit --ignore RUSTSEC-2017-0001",
+      "review": "Conferi que o README recomenda primeiro atualizar e documenta `--ignore` e `audit.toml`; preservei a exceção como decisão restrita, não como remediação."
+    },
+    {
+      "slug": "cargo-audit-config-audittoml-controle-versao-excecoes",
+      "title": "`audit.toml` versionado: governança das exceções locais do `cargo-audit`",
+      "summary": "O arquivo de configuração do `cargo-audit` pode registrar IDs ignorados, deixando a decisão revisável junto ao código e ao lockfile do projeto.",
+      "why": "Uma exceção só é reproduzível quando todos os desenvolvedores e o CI conhecem o mesmo escopo; flags locais invisíveis produzem auditorias divergentes.",
+      "how": "Mantenha a configuração mínima, explique cada ID com referência a evidência e revise diferenças no pull request; não converta o arquivo em allowlist ampla de advisories.",
+      "example": "Um revisor pode comparar a lista de IDs ignorados entre duas revisões e exigir que cada entrada nova venha acompanhada de análise de aplicabilidade e prazo de retorno.",
+      "limits": "A configuração compartilhada não valida por si mesma o raciocínio humano, e uma justificativa antiga pode deixar de ser verdadeira com mudanças no código.",
+      "verify": "Execute o mesmo comando local e na CI com a configuração versionada, confira a versão da ferramenta e examine o diff de `audit.toml` em cada pull request.",
+      "code": "git diff -- Cargo.lock audit.toml",
+      "review": "Conferi no README o suporte do `--ignore` via `audit.toml`; recomendei versionar e revisar a exceção sem atribuir ao formato uma validação automática inexistente."
+    },
+    {
+      "slug": "cargo-audit-bin-inventario-dependencias-binario-rust",
+      "title": "`cargo audit bin`: leitura de dependências em binários Rust distribuídos",
+      "summary": "O subcomando `cargo audit bin` aceita caminhos de executáveis para procurar metadados de dependências Rust e relacioná-los à base de advisories.",
+      "why": "A verificação pós-build ajuda quando o lockfile não acompanha o artefato entregue, por exemplo em inventários de releases ou investigações de imagens já publicadas.",
+      "how": "Passe os binários selecionados ao subcomando e trate cada achado como um inventário aproximado cuja qualidade depende de como o executável foi produzido.",
+      "example": "Em um job de release, percorra os executáveis empacotados e grave a saída de `cargo audit bin` junto ao digest de cada artefato analisado.",
+      "limits": "Para binários sem metadados de `cargo auditable`, a ferramenta recupera apenas parte do grafo por mensagens de panic, pode perder dependências e não encontra código C embarcado.",
+      "verify": "Compare um binário produzido com `cargo auditable` a um build convencional e registre separadamente cobertura de inventário e advisories encontrados.",
+      "code": "cargo audit bin ./target/release/app",
+      "review": "Conferi no README o uso de `cargo audit bin`, o benefício de `cargo auditable` e as limitações de extração heurística em binários comuns."
+    },
+    {
+      "slug": "cargo-auditable-metadados-embed-binario-limites",
+      "title": "`cargo auditable`: metadados embutidos e limites da auditoria de binários Rust",
+      "summary": "Quando o programa é compilado com `cargo auditable`, `cargo audit bin` pode obter do executável as informações necessárias para uma auditoria mais completa.",
+      "why": "O inventário no artefato aproxima a verificação daquilo que realmente foi publicado, reduzindo dependência de um lockfile externo possivelmente diferente.",
+      "how": "Integre a instrumentação na cadeia de build, preserve proveniência do executável e associe o relatório ao digest; valide se a compilação de produção recebeu o recurso.",
+      "example": "Uma esteira pode gerar `app`, calcular seu digest, executar `cargo audit bin app` e arquivar os resultados junto ao manifesto da release.",
+      "limits": "A presença de metadados não corrige código vulnerável nem garante que todos os componentes fora do ecossistema Rust estejam representados no inventário.",
+      "verify": "Confira a documentação de build do artefato, compare a árvore embutida com o lockfile de release e repita a auditoria sobre o mesmo digest distribuído.",
+      "code": "cargo audit bin ./dist/app",
+      "review": "Conferi no README oficial a ressalva de auditoria plenamente precisa para executáveis compilados com `cargo auditable` e não ampliei essa garantia a código C."
+    },
+    {
+      "slug": "cargo-audit-fix-dry-run-remediacao-experimental",
+      "title": "`cargo audit fix --dry-run`: avaliar remediação antes de alterar dependências",
+      "summary": "A funcionalidade experimental `cargo audit fix` precisa ser habilitada na instalação pela feature `fix`; ela pode alterar requisitos em `Cargo.toml`, e `--dry-run` mostra uma prévia.",
+      "why": "Atualizações automáticas podem alterar resolução, compatibilidade e comportamento; revisar a proposta antes de tocar manifestos evita transformar um advisory em regressão não analisada.",
+      "how": "Para experimentar, instale `cargo-audit` com `--features=fix`, rode a prévia em branch descartável, compare a mudança com compatibilidade e testes e aplique qualquer atualização como alteração revisada de dependências.",
+      "example": "Gere uma prévia de correção, salve a saída no ticket e só depois decida se a versão sugerida é compatível com o contrato do serviço.",
+      "limits": "A ferramenta é descrita como experimental e pode não encontrar atualização compatível; um `dry-run` não prova que a correção compila ou resolve o risco.",
+      "verify": "Revise o diff de `Cargo.toml` e `Cargo.lock`, execute testes e rode novamente `cargo audit` após aplicar uma atualização aprovada.",
+      "code": "cargo install cargo-audit --locked --features=fix\ncargo audit fix --dry-run",
+      "review": "Conferi no README oficial que `cargo audit fix` é experimental, requer instalar com a feature `fix`, altera `Cargo.toml` e oferece `--dry-run`; a nota exige validação posterior do build."
+    },
+    {
+      "slug": "cargo-audit-ci-audit-check-agendamento-falha",
+      "title": "`cargo-audit` em CI: política de falha, atualização da base e trilha do relatório",
+      "summary": "O projeto recomenda integrar a auditoria em automação, inclusive por meio da action oficial `rustsec/audit-check`, para verificar mudanças e executar auditorias agendadas.",
+      "why": "Uma execução apenas local perde cobertura quando lockfiles mudam em branches ou quando novos advisories surgem depois do merge.",
+      "how": "Defina a versão do scanner, a política de falha, artefatos de saída e processo de exceção; programe também uma verificação recorrente para detectar avisos recém-publicados.",
+      "example": "No pull request, audite o lockfile alterado e anexe os IDs encontrados; em execução periódica, crie tarefas de remediação para advisories ainda não resolvidos.",
+      "limits": "Uma action não decide aplicabilidade nem elimina falsos positivos, e uma saída verde só significa que aquela base e aquele lockfile não produziram bloqueios.",
+      "verify": "Confirme que a action roda no mesmo lockfile usado pelo build, que falha conforme a política documentada e que o relatório pode ser ligado ao commit auditado.",
+      "code": "cargo audit",
+      "review": "Conferi no README a recomendação de usar a action `rustsec/audit-check` para mudanças e agendamentos; descrevi a CI como controle de detecção, não como prova de segurança."
+    }
+  ],
+  "coverage_review": "Varri o texto de todas as 5.740 notas Markdown ativas em `domains/` por `cargo audit`, `cargo-audit`, RustSec e RUSTSEC; li o match de OSV-Scanner V2, que descreve OSV.dev/RustSec como fonte de advisories, mas não o CLI cargo-audit, `--file`, ignores, `audit bin` ou a CI. A nova cobertura aprofunda um scanner específico, sem repetir a arquitetura genérica de matching.",
+  "source_overrides": {
+    "cargo-audit-fluxo-cargo-lock-rustsec-advisory-db": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "entrada `Cargo.lock`, relatórios de advisories e comportamento do comando"
+      },
+      {
+        "label": "RustSec Advisory Database — repositório oficial",
+        "url": "https://github.com/RustSec/advisory-db",
+        "description": "estrutura e manutenção dos registros primários de advisories RUSTSEC"
+      }
+    ],
+    "cargo-audit-identificadores-rustsec-faixas-versoes-triagem": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "IDs de advisories e apresentação de versões afetadas/corrigidas no relatório"
+      },
+      {
+        "label": "RustSec Advisory Database — repositório oficial",
+        "url": "https://github.com/RustSec/advisory-db",
+        "description": "registros primários com identificadores e faixas afetadas"
+      }
+    ],
+    "cargo-audit-lockfile-ausente-risco-cargo-update-projeto-nao-confiavel": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "aviso para projetos não confiáveis, ausência de lockfile e opção `--file`"
+      },
+      {
+        "label": "Cargo Reference — Build Scripts",
+        "url": "https://doc.rust-lang.org/cargo/reference/build-scripts.html",
+        "description": "código de build executado pelo ecossistema Cargo e implicações ao trabalhar com fontes não confiáveis"
+      }
+    ],
+    "cargo-audit-opcao-file-lockfile-externo-reproducibilidade": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "sintaxe de `--file` para apontar a um lockfile específico"
+      },
+      {
+        "label": "Cargo Reference — Configuration",
+        "url": "https://doc.rust-lang.org/cargo/reference/config.html",
+        "description": "fontes de configuração de Cargo e separação entre arquivo de entrada e configuração de ambiente"
+      }
+    ],
+    "cargo-audit-ignorar-advisory-justificativa-expiracao": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "opções `--ignore` e `audit.toml` para advisories específicos"
+      },
+      {
+        "label": "RustSec Advisory Database — Advisory RUSTSEC-2017-0001",
+        "url": "https://rustsec.org/advisories/RUSTSEC-2017-0001.html",
+        "description": "exemplo publicado e verificável de um ID RUSTSEC real usado na linha de comando"
+      }
+    ],
+    "cargo-audit-config-audittoml-controle-versao-excecoes": [
+      {
+        "label": "RustSec `cargo-audit` — exemplo oficial de `audit.toml`",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/audit.toml.example",
+        "description": "formato de configuração de ignores e campos suportados pelo cargo-audit"
+      },
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "precedência de atualização e suporte a ignores pela configuração local"
+      }
+    ],
+    "cargo-audit-bin-inventario-dependencias-binario-rust": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "subcomando `cargo audit bin` e limites ao inspecionar binários convencionais"
+      },
+      {
+        "label": "`cargo-auditable` — projeto oficial",
+        "url": "https://github.com/rust-secure-code/cargo-auditable",
+        "description": "metadados de dependências embutidos em executáveis Rust para auditoria pós-build"
+      }
+    ],
+    "cargo-auditable-metadados-embed-binario-limites": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "relação entre `cargo audit bin`, metadados e precisão do inventário"
+      },
+      {
+        "label": "`cargo-auditable` — projeto oficial",
+        "url": "https://github.com/rust-secure-code/cargo-auditable",
+        "description": "integração de build que incorpora informações de dependências em binários Rust"
+      }
+    ],
+    "cargo-audit-fix-dry-run-remediacao-experimental": [
+      {
+        "label": "RustSec `cargo-audit` — subcomando experimental `fix`",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md#cargo-audit-fix-subcommand",
+        "description": "feature de instalação, mutações de manifest e prévia `--dry-run`"
+      },
+      {
+        "label": "Cargo Registry — `cargo-audit`",
+        "url": "https://crates.io/crates/cargo-audit",
+        "description": "pacote e opções de instalação do CLI RustSec usado para habilitar a feature experimental"
+      }
+    ],
+    "cargo-audit-ci-audit-check-agendamento-falha": [
+      {
+        "label": "RustSec `cargo-audit` — README oficial",
+        "url": "https://github.com/RustSec/rustsec/blob/main/cargo-audit/README.md",
+        "description": "recomendação de integração da auditoria e semântica dos achados"
+      },
+      {
+        "label": "RustSec `audit-check` — GitHub Action oficial",
+        "url": "https://github.com/rustsec/audit-check",
+        "description": "ação GitHub que executa cargo-audit em pull requests e por agendamento"
+      }
+    ]
+  }
+}

@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1600 / 2.000 (80,00%)**
-- Gate automatizado: **1600/1600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
-- Revisão factual humana: **0/1600**
-- Revisão factual por IA: **1600/1600**
-- Contabilizadas como válidas: **1600/1600**
-- Revisor das 1600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–16 (1600 notas, IDs 1–1600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1700 / 2.000 (85,00%)**
+- Gate automatizado: **1700/1700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
+- Revisão factual humana: **0/1700**
+- Revisão factual por IA: **1700/1700**
+- Contabilizadas como válidas: **1700/1700**
+- Revisor das 1700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–17 (1700 notas, IDs 1–1700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-16.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-16.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-17.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-17.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md)
 
-Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 400 restantes.
+Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 300 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2131,3 +2131,165 @@ Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placehold
 1598. [Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**](../../domains/software-0009/software/seguranca/govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain.md)
 1599. [Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**](../../domains/software-0009/software/seguranca/govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate.md)
 1600. [Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**](../../domains/software-0009/software/seguranca/govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign.md)
+
+## Tranche 17 — RustSec `cargo-audit`, `cargo-deny`, Mozilla `cargo-vet`, `cargo-geiger`, npm CLI `npm audit`, pnpm `audit`, Yarn Berry `yarn npm audit`, Gradle dependency verification, Apache Maven Enforcer Plugin, Renovate `vulnerabilityAlerts` (100 notas; revisão factual por IA registrada)
+
+### RustSec `cargo-audit` — consulta do `Cargo.lock` à base de advisories, auditoria de binários, exceções e uso seguro em CI
+
+**Conferência factual:** Conferi o README e a configuração oficiais do `cargo-audit`, o RustSec Advisory Database e as referências primárias específicas de cada nota; validei o ID real do exemplo, o requisito da feature `fix`, os limites de auditoria de binários e a action `rustsec/audit-check`.
+**Cobertura anterior:** Varri o texto de todas as 5.740 notas Markdown ativas em `domains/` por `cargo audit`, `cargo-audit`, RustSec e RUSTSEC; li o match de OSV-Scanner V2, que descreve OSV.dev/RustSec como fonte de advisories, mas não o CLI cargo-audit, `--file`, ignores, `audit bin` ou a CI. A nova cobertura aprofunda um scanner específico, sem repetir a arquitetura genérica de matching.
+
+1601. [`cargo-audit`: fluxo entre `Cargo.lock`, RustSec Advisory Database e achados por versão](../../domains/software-0009/software/seguranca/cargo-audit-fluxo-cargo-lock-rustsec-advisory-db.md)
+1602. [Triagem de achados `RUSTSEC-*`: identificador, faixa afetada e versão de correção](../../domains/software-0009/software/seguranca/cargo-audit-identificadores-rustsec-faixas-versoes-triagem.md)
+1603. [`cargo-audit` e projeto sem `Cargo.lock`: por que evitar comandos Cargo em código não confiável](../../domains/software-0009/software/seguranca/cargo-audit-lockfile-ausente-risco-cargo-update-projeto-nao-confiavel.md)
+1604. [`cargo audit --file`: auditar um `Cargo.lock` externo sem entrar no workspace](../../domains/software-0009/software/seguranca/cargo-audit-opcao-file-lockfile-externo-reproducibilidade.md)
+1605. [Ignorar um advisory em `cargo-audit`: exceção rastreável, justificativa e reavaliação](../../domains/software-0009/software/seguranca/cargo-audit-ignorar-advisory-justificativa-expiracao.md)
+1606. [`audit.toml` versionado: governança das exceções locais do `cargo-audit`](../../domains/software-0009/software/seguranca/cargo-audit-config-audittoml-controle-versao-excecoes.md)
+1607. [`cargo audit bin`: leitura de dependências em binários Rust distribuídos](../../domains/software-0009/software/seguranca/cargo-audit-bin-inventario-dependencias-binario-rust.md)
+1608. [`cargo auditable`: metadados embutidos e limites da auditoria de binários Rust](../../domains/software-0009/software/seguranca/cargo-auditable-metadados-embed-binario-limites.md)
+1609. [`cargo audit fix --dry-run`: avaliar remediação antes de alterar dependências](../../domains/software-0009/software/seguranca/cargo-audit-fix-dry-run-remediacao-experimental.md)
+1610. [`cargo-audit` em CI: política de falha, atualização da base e trilha do relatório](../../domains/software-0009/software/seguranca/cargo-audit-ci-audit-check-agendamento-falha.md)
+
+### `cargo-deny` — checks de advisories, licenças SPDX, dependências banidas, versões duplicadas e fontes de crates
+
+**Conferência factual:** Conferi a introdução oficial e as referências de configuração do `cargo-deny`; validei escopo de `check`, regras de advisories, licenças, bans e fontes, sem confundir policy lint com análise de código.
+**Cobertura anterior:** A busca no corpo de todas as 5.740 notas em `domains/` por `cargo deny` e `cargo-deny` não encontrou documentação existente desse utilitário. As notas de SCA/Dependency-Check tratam de descoberta de vulnerabilidades, não das policies de advisories, licenças SPDX, bans, fontes e grafo do cargo-deny.
+
+1611. [`cargo-deny`: checks declarativos sobre o grafo de dependências Cargo](../../domains/software-0009/software/seguranca/cargo-deny-checks-grafo-dependencias-rust-configuracao.md)
+1612. [`cargo-deny check advisories`: fonte RustSec, cache local e atualidade dos dados](../../domains/software-0009/software/seguranca/cargo-deny-advisory-db-rustsec-atualizacao-offline.md)
+1613. [Exceções em `[advisories]`: ID, motivo, escopo e expiração](../../domains/software-0009/software/seguranca/cargo-deny-ignores-advisory-expiry-reason-escopo.md)
+1614. [Separar vulnerabilidade, crate `yanked`, descontinuidade e advisory de soundness](../../domains/software-0009/software/seguranca/cargo-deny-yanked-unmaintained-unsound-advisories.md)
+1615. [Política de licenças em `cargo-deny`: expressões SPDX e exceções explícitas](../../domains/software-0009/software/seguranca/cargo-deny-licencas-spdx-allowlist-exceptions.md)
+1616. [Clarificações de licença no `cargo-deny`: expressão, arquivo e hash](../../domains/software-0009/software/seguranca/cargo-deny-license-clarifications-hash-confidence.md)
+1617. [`[bans]` no `cargo-deny`: dependências proibidas e versões múltiplas](../../domains/software-0009/software/seguranca/cargo-deny-bans-versoes-duplicadas-dependencias-proibidas.md)
+1618. [`[sources]` no `cargo-deny`: limitar registries e dependências Git](../../domains/software-0009/software/seguranca/cargo-deny-sources-registries-git-allowlist.md)
+1619. [Alvos e features na policy do `cargo-deny`: auditar o grafo que realmente será compilado](../../domains/software-0009/software/seguranca/cargo-deny-target-features-grafo-resolucao-reprodutivel.md)
+1620. [Executar `cargo-deny` em CI: configuração como código e feedback de pull request](../../domains/software-0009/software/seguranca/cargo-deny-github-action-ci-review-policy.md)
+
+### Mozilla `cargo-vet` — auditoria humana diferencial de crates, critérios de segurança, imports confiáveis e exemptions
+
+**Conferência factual:** Conferi, nota a nota, as páginas oficiais `How it Works`, Setup, Commands, Audit Criteria, Built-in Criteria, First-Party Code, Imports, Configuration, Performing Audits, Recording Audits e Audit Entries; validei escopo default, critérios, imports não transitivos e semântica de exemptions/violations.
+**Cobertura anterior:** A busca textual em todas as 5.740 notas Markdown de `domains/` por `cargo vet` e `cargo-vet` não encontrou conteúdo existente sobre o fluxo de auditoria diferencial de crates, imports confiáveis, criteria ou exemptions. A tranche acrescenta essa camada de revisão de supply chain, não outra consulta de CVEs.
+
+1621. [`cargo-vet`: registrar auditorias de código Rust de terceiros junto ao projeto](../../domains/software-0009/software/seguranca/cargo-vet-modelo-auditoria-terceiros-criterios-rust.md)
+1622. [`cargo vet init`: inicializar supply chain sem confundir exemptions com auditorias](../../domains/software-0009/software/seguranca/cargo-vet-init-supply-chain-exemptions-iniciais.md)
+1623. [`cargo vet check`: detectar código de terceiro novo no grafo de build](../../domains/software-0009/software/seguranca/cargo-vet-check-novas-dependencias-gate-ci.md)
+1624. [Critérios do `cargo-vet`: definir o que uma auditoria precisa demonstrar](../../domains/software-0009/software/seguranca/cargo-vet-criteria-safe-to-run-safe-to-deploy.md)
+1625. [Auditoria diferencial no `cargo-vet`: revisar a diferença entre versões de uma crate](../../domains/software-0009/software/seguranca/cargo-vet-differential-audit-diff-versao-crate.md)
+1626. [Imports de auditorias no `cargo-vet`: confiar em organizações de forma explícita](../../domains/software-0009/software/seguranca/cargo-vet-imports-organizacoes-trust-explicito.md)
+1627. [`cargo vet suggest`: priorizar backlog de auditorias com mudanças menores](../../domains/software-0009/software/seguranca/cargo-vet-suggest-priorizar-backlog-auditoria.md)
+1628. [`cargo vet certify`: registrar uma auditoria ligada à versão revisada](../../domains/software-0009/software/seguranca/cargo-vet-certify-record-audit-trilha-versao.md)
+1629. [`cargo vet record-violation`: registrar que uma versão contradiz uma auditoria](../../domains/software-0009/software/seguranca/cargo-vet-record-violation-integridade-audits.md)
+1630. [Exemptions no `cargo-vet`: backlog explícito, não selo de segurança](../../domains/software-0009/software/seguranca/cargo-vet-exemptions-backlog-diferencial-seguranca.md)
+
+### `cargo-geiger` — estatística de blocos `unsafe` no crate e nas dependências Rust, interpretação e limites de cobertura
+
+**Conferência factual:** Conferi o README publicado no Docs.rs para `cargo-geiger` e o Rustonomicon sobre safe/unsafe; validei finalidade estatística, comando básico e a ressalva explícita de que contagem não é julgamento de segurança.
+**Cobertura anterior:** A busca em todos os corpos por `cargo geiger`, `cargo-geiger` e `geiger` não encontrou nota dedicada. Li também as duas notas Kani no domínio de testes que discutem blocos unsafe: elas modelam/verificam UB por harness, ao passo que cargo-geiger oferece estatística de uso como entrada de auditoria. São controles complementares, não a mesma técnica.
+
+1631. [`cargo-geiger`: medir presença de `unsafe` sem converter contagem em nota de segurança](../../domains/software-0009/software/seguranca/cargo-geiger-proposito-estatisticas-unsafe-rust.md)
+1632. [Executar `cargo geiger` na raiz do workspace e delimitar o grafo analisado](../../domains/software-0009/software/seguranca/cargo-geiger-execucao-workspace-grafo-dependencias.md)
+1633. [Transformar os pontos `unsafe` do `cargo-geiger` em uma fila de revisão de invariantes](../../domains/software-0009/software/seguranca/cargo-geiger-blocos-unsafe-review-invariantes.md)
+1634. [Interpretar `unsafe` no contexto: FFI, abstrações de baixo nível e encapsulamento seguro](../../domains/software-0009/software/seguranca/cargo-geiger-uso-unsafe-necessario-encapsulamento.md)
+1635. [Usar baseline de `cargo-geiger` para acompanhar mudanças sem premiar dívida antiga](../../domains/software-0009/software/seguranca/cargo-geiger-baseline-historico-delta-unsafe.md)
+1636. [Instalar `cargo-geiger` com Cargo lockado e escolher a biblioteca OpenSSL](../../domains/software-0009/software/seguranca/cargo-geiger-install-locked-openssl-vendored.md)
+1637. [Comparar relatórios `cargo-geiger` com toolchain, features e grafo fixos](../../domains/software-0009/software/seguranca/cargo-geiger-comparacao-crates-normalizada-toolchain.md)
+1638. [Arquivar saída do `cargo-geiger` como evidência de revisão, não como certificado](../../domains/software-0009/software/seguranca/cargo-geiger-relatorio-dados-entrada-auditoria-humana.md)
+1639. [Combinar `cargo-geiger` com auditoria de advisories e testes de comportamento inseguro](../../domains/software-0009/software/seguranca/cargo-geiger-complementar-cargo-audit-clippy-miri.md)
+1640. [Evitar gate binário por contagem bruta de `unsafe` sem contexto de risco](../../domains/software-0009/software/seguranca/cargo-geiger-politica-nao-bloquear-por-contagem-bruta.md)
+
+### npm CLI `npm audit` — Bulk Advisory API, remediação sem quebra, relatórios JSON e verificação de assinatura/proveniência
+
+**Conferência factual:** Conferi as páginas oficiais `npm audit`, package-lock, configuração, proveniência e metavulnerabilidades; comparei a descrição de fallback do manual v11 com o changelog/PR do CLI que removeu a chamada legada e a API bulk atual, anotando a divergência documental.
+**Cobertura anterior:** Examinei os matches de conteúdo de `npm audit` em toda a coleção, incluindo as notas de OWASP Dependency-Check sobre lockfiles/analisador Node e a nota OSV-Scanner que apenas alerta sobre `npm audit fix --force`. Esses arquivos cobrem descoberta multi-ecossistema ou citam o risco de breaking change; não descrevem payload/endpoints do npm CLI, limiar, metavulnerabilidade, JSON, assinaturas ou fluxo de remediation em detalhe.
+
+1641. [`npm audit`: envio da descrição de dependências ao registry configurado](../../domains/software-0009/software/seguranca/npm-audit-descricao-dependencias-registry-privacidade.md)
+1642. [`package-lock.json` como entrada do `npm audit`: consistência e reprodutibilidade](../../domains/software-0009/software/seguranca/npm-audit-lockfile-reprodutibilidade-package-lock.md)
+1643. [Bulk Advisory Endpoint do npm: enviar nomes e versões resolvidas](../../domains/software-0009/software/seguranca/npm-audit-bulk-advisory-endpoint-pacotes-versoes.md)
+1644. [`--audit-level` no npm: limiar do exit code, não filtro dos achados](../../domains/software-0009/software/seguranca/npm-audit-audit-level-limiar-nao-filtro-relatorio.md)
+1645. [`npm audit fix` e `--force`: diferenciar atualização compatível de mudança major](../../domains/software-0009/software/seguranca/npm-audit-fix-semver-force-risco-major.md)
+1646. [Separar dependências de produção e desenvolvimento no `npm audit`](../../domains/software-0009/software/seguranca/npm-audit-omit-producao-devdependencies-escopo.md)
+1647. [`npm audit --json`: preservar dados estruturados para triagem automatizada](../../domains/software-0009/software/seguranca/npm-audit-json-sarif-automacao-relatorio.md)
+1648. [Metavulnerabilidades no npm: quando uma dependência pai só resolve para versão vulnerável](../../domains/software-0009/software/seguranca/npm-audit-metavulnerabilidades-cadeia-transitiva.md)
+1649. [`npm audit signatures`: verificação separada de assinatura e proveniência do registry](../../domains/software-0009/software/seguranca/npm-audit-signatures-provenance-attestations-distincao.md)
+1650. [Códigos de saída do `npm audit`: transformar achados em política CI explícita](../../domains/software-0009/software/seguranca/npm-audit-exit-code-ci-severidade-politica.md)
+
+### pnpm `audit` — advisories GHSA, escopo por ambiente, correções por overrides, idade mínima e assinaturas de registry
+
+**Conferência factual:** Conferi a página atual do `pnpm audit` e a configuração oficial de resolução de dependências; validei as mudanças registradas para v11/v12, opções por ambiente, correção e signatures.
+**Cobertura anterior:** A busca no corpo de todas as notas por `pnpm audit` não encontrou cobertura direta. Li as notas de Dependency-Check e OSV-Scanner que citam `pnpm-lock.yaml`: elas descrevem extração de inventário/varredura ou detecção de Node, não semântica do comando pnpm, Bulk Advisory/GHSA, `audit.ignore`, overrides, janela mínima ou signatures.
+
+1651. [`pnpm audit` v11+: Bulk Advisory e uso de IDs GHSA](../../domains/software-0009/software/seguranca/pnpm-audit-bulk-advisory-ghsa-pnpm-v11.md)
+1652. [Delimitar `pnpm audit` por produção, desenvolvimento e dependências opcionais](../../domains/software-0009/software/seguranca/pnpm-audit-prod-dev-optional-dependencies-escopo.md)
+1653. [`pnpm audit --json`: diferenciar advisories corrigíveis de sem versão corrigida](../../domains/software-0009/software/seguranca/pnpm-audit-json-patched-versions-null.md)
+1654. [`pnpm audit --fix`: remediar com `overrides` no arquivo de workspace](../../domains/software-0009/software/seguranca/pnpm-audit-fix-overrides-workspace-yaml.md)
+1655. [`pnpm audit --fix=update` e modo interativo: escolher a forma da remediação](../../domains/software-0009/software/seguranca/pnpm-audit-fix-update-lockfile-interativo.md)
+1656. [`audit.ignore` no pnpm: allowlist GHSA com justificativa e limpeza de entradas antigas](../../domains/software-0009/software/seguranca/pnpm-audit-ignore-ghsa-governanca-prune.md)
+1657. [`--audit-level` no pnpm: controlar severidade exibida sem perder dados brutos](../../domains/software-0009/software/seguranca/pnpm-audit-level-impressao-severidade-policy.md)
+1658. [`--ignore-registry-errors`: não confundir indisponibilidade do serviço com resultado limpo](../../domains/software-0009/software/seguranca/pnpm-audit-registry-errors-nao-mascarar-falha.md)
+1659. [`pnpm audit signatures`: verificar assinaturas ECDSA do registry instalado](../../domains/software-0009/software/seguranca/pnpm-audit-signatures-registry-ecdsa-chaves.md)
+1660. [`minimumReleaseAge` e correções no pnpm: equilibrar atraso contra janela de ataque](../../domains/software-0009/software/seguranca/pnpm-audit-minimum-release-age-correcoes-seguranca.md)
+
+### Yarn Berry `yarn npm audit` — escopo por workspace, dependências transitivas, saída NDJSON e exclusões explicáveis
+
+**Conferência factual:** Conferi a documentação oficial de `yarn npm audit` e `.yarnrc.yml`; validei defaults de workspace, alcance recursivo, severidade, JSON, ignores e ausência de remediação automática descrita na página.
+**Cobertura anterior:** A única recomendação direta de `yarn audit` encontrada está numa nota de processo de segurança do Backstage; ela instrui auditar, sem explicar escopo do Yarn Berry ou flags. As notas de Dependency-Check citam `yarn.lock` como formato de entrada. Li os dois contextos: nenhum cobre `--all`, `--recursive`, NDJSON, filtros ou configuração de ignores.
+
+1661. [`yarn npm audit`: escopo padrão limitado ao workspace ativo](../../domains/software-0009/software/seguranca/yarn-npm-audit-escopo-direto-workspace-default.md)
+1662. [`yarn npm audit --all`: ampliar a auditoria aos workspaces do monorepo](../../domains/software-0009/software/seguranca/yarn-npm-audit-all-workspaces-monorepo.md)
+1663. [`yarn npm audit --recursive`: incluir dependências transitivas no relatório](../../domains/software-0009/software/seguranca/yarn-npm-audit-recursive-transitivas-cadeia.md)
+1664. [`--environment production`: focar dependências de runtime sem apagar contexto de build](../../domains/software-0009/software/seguranca/yarn-npm-audit-environment-production-devdeps.md)
+1665. [`--severity` no Yarn: filtrar severidades exibidas e interpretar exit status](../../domains/software-0009/software/seguranca/yarn-npm-audit-severity-filtro-relatorio-exit.md)
+1666. [Saída JSON/NDJSON no `yarn npm audit`: automação sem perder o relatório bruto](../../domains/software-0009/software/seguranca/yarn-npm-audit-json-ndjson-registry-payload.md)
+1667. [`--exclude` no Yarn: reduzir ruído com escopo de pacote documentado](../../domains/software-0009/software/seguranca/yarn-npm-audit-exclude-packages-false-positive-policy.md)
+1668. [`--ignore` no Yarn: suprimir advisory específico com revisão recorrente](../../domains/software-0009/software/seguranca/yarn-npm-audit-ignore-advisory-id-governanca.md)
+1669. [`yarn why` depois do audit: localizar quem introduziu uma dependência transitiva](../../domains/software-0009/software/seguranca/yarn-why-triagem-pacote-transitivo-origem.md)
+1670. [Relevância de advisories no Yarn: cruzar registry, versão e caminho de execução](../../domains/software-0009/software/seguranca/yarn-audit-registry-relevancia-caminhos-execucao.md)
+
+### Gradle dependency verification — checksums, assinaturas, `verification-metadata.xml`, bootstrap e compatibilidade com locking
+
+**Conferência factual:** Conferi a documentação oficial atual de Dependency Verification e Dependency Locking; validei a diferença entre checksum/assinatura, geração inicial de metadata, falha em artefatos desconhecidos e função distinta do lockfile.
+**Cobertura anterior:** A busca por Gradle dependency verification/checksums encontrou seis contextos. Li as notas Gradle de testes (suites JVM e paralelismo) e as notas OWASP Dependency-Check sobre plugins/escopo, NVD e banco/cache; as primeiras tratam de testes, as últimas de SCA/advisories, nenhuma de `verification-metadata.xml`, checksums e assinaturas nativas do Gradle. A matéria proposta protege propriedade distinta.
+
+1671. [Gradle Dependency Verification: verificar integridade de artefatos, não ausência de vulnerabilidades](../../domains/software-0009/software/seguranca/gradle-dependency-verification-integridade-nao-vulnerabilidade.md)
+1672. [`verification-metadata.xml`: geração inicial é bootstrap, não estabelecimento automático de confiança](../../domains/software-0009/software/seguranca/gradle-verification-metadata-bootstrap-review-manual.md)
+1673. [Checksums e assinaturas PGP no Gradle: propriedades diferentes de verificação](../../domains/software-0009/software/seguranca/gradle-checksum-versus-pgp-signature-verification.md)
+1674. [Tratar artefato sem entrada de verificação como mudança que exige revisão](../../domains/software-0009/software/seguranca/gradle-verification-metadata-unknown-artifact-fail-closed.md)
+1675. [Importar e confiar em chaves para verificação de assinaturas Gradle](../../domains/software-0009/software/seguranca/gradle-verification-metadata-trust-keys-export-review.md)
+1676. [Centralizar `verification-metadata.xml` no repositório para builds reproduzíveis](../../domains/software-0009/software/seguranca/gradle-verification-metadata-shared-project-scope.md)
+1677. [Cobertura do Gradle Dependency Verification para plugins e configurações resolvidas](../../domains/software-0009/software/seguranca/gradle-verification-metadata-plugins-build-dependencies.md)
+1678. [Dependency Locking e Dependency Verification no Gradle: versão fixa versus bytes verificados](../../domains/software-0009/software/seguranca/gradle-dependency-locking-version-selection-diferenca-integridade.md)
+1679. [Atualizar metadata de verificação em upgrades sem aceitar mudanças em massa](../../domains/software-0009/software/seguranca/gradle-verification-refresh-upgrade-artefactos.md)
+1680. [Incluir Dependency Verification em uma cadeia de controles de supply chain Gradle](../../domains/software-0009/software/seguranca/gradle-verification-complemento-scanners-sbom.md)
+
+### Apache Maven Enforcer Plugin — execução de regras no build, convergência, versões dinâmicas, dependências proibidas e escopo
+
+**Conferência factual:** Conferi o guia de uso, o goal `enforcer:enforce` e as páginas oficiais de cada regra citada; validei o default correto de `fail=true`, transitivity em `bannedDependencies`, versão Java/Maven, herança POM e distinção para scanner de advisories.
+**Cobertura anterior:** A varredura do corpo de todas as 5.740 notas por Maven Enforcer, `dependencyConvergence`, `banDynamicVersions`, `bannedDependencies` e regras equivalentes não encontrou conteúdo sobre o plugin. Li a nota existente dos plugins Maven/Gradle OWASP Dependency-Check: ela configura varredura de CVEs e não aplica as regras de build do Enforcer, portanto o escopo é distinto.
+
+1681. [`maven-enforcer-plugin`: aplicar requisitos de build com regras declaradas](../../domains/software-0009/software/seguranca/maven-enforcer-enforce-pipeline-rules-build.md)
+1682. [`fail` no Maven Enforcer: falhar por padrão e tratar warn-only com intenção](../../domains/software-0009/software/seguranca/maven-enforcer-fail-default-true-policy.md)
+1683. [`dependencyConvergence`: detectar versões transitivas divergentes no grafo Maven](../../domains/software-0009/software/seguranca/maven-enforcer-dependency-convergence-transitive-conflicts.md)
+1684. [Banir versões Maven dinâmicas para builds reprodutíveis](../../domains/software-0009/software/seguranca/maven-enforcer-ban-dynamic-versions-reproducibilidade.md)
+1685. [`bannedDependencies`: recusar coordenadas Maven com escopo e exceções explícitos](../../domains/software-0009/software/seguranca/maven-enforcer-banned-dependencies-exclusions.md)
+1686. [Exigir versões de Java e Maven compatíveis com o build](../../domains/software-0009/software/seguranca/maven-enforcer-require-java-maven-version-build-environment.md)
+1687. [Exigir propriedades e campos de versão no Maven POM](../../domains/software-0009/software/seguranca/maven-enforcer-require-property-dependency-management.md)
+1688. [Centralizar regras Enforcer em parent POM sem perder escopo por módulo](../../domains/software-0009/software/seguranca/maven-enforcer-configuracao-em-parent-versus-modulos.md)
+1689. [Fixar a versão do Maven Enforcer Plugin e revisar mudanças de regras](../../domains/software-0009/software/seguranca/maven-enforcer-version-rule-plugin-pin-maintenance.md)
+1690. [Maven Enforcer e scanners de CVE: policy de build não equivale a análise de advisories](../../domains/software-0009/software/seguranca/maven-enforcer-policy-gate-nao-substitui-scanner-advisory.md)
+
+### Renovate `vulnerabilityAlerts` — triagem de alertas GitHub, Dependency Graph, configuração de PRs e limites de OSV experimental
+
+**Conferência factual:** Conferi a configuração oficial do Renovate, os presets, validação e plataforma local/GitHub; confrontei `vulnerabilityAlerts` com os pré-requisitos e limites oficiais do Dependabot, e confirmei que `osvVulnerabilityAlerts` é experimental, direto e limitado a datasources mapeadas.
+**Cobertura anterior:** Encontrei e li três referências relacionadas: duas notas Scorecard citam Renovate/Dependabot como ferramentas avaliadas para atualização ou fixação de dependências, e uma nota Steampipe consulta alertas Dependabot via GitHub. Elas não ensinam o bloco Renovate `vulnerabilityAlerts`, os pré-requisitos Dependency Graph/Dependabot, opções de PR, nem o estado experimental de OSV; as novas notas detalham a integração sem duplicar a menção geral.
+
+1691. [`vulnerabilityAlerts` do Renovate depende do Dependency Graph e Dependabot alerts no GitHub](../../domains/software-0009/software/seguranca/renovate-vulnerabilityalerts-github-dependabot-prerequisites.md)
+1692. [Personalizar pull requests de correção de vulnerabilidade no Renovate](../../domains/software-0009/software/seguranca/renovate-vulnerabilityalerts-config-pr-settings.md)
+1693. [Separar alertas de vulnerabilidade e fluxo regular de atualização do Renovate](../../domains/software-0009/software/seguranca/renovate-vulnerabilityalerts-nao-substitui-dependency-updates.md)
+1694. [`osvVulnerabilityAlerts` no Renovate: recurso marcado experimental e sujeito a validação](../../domains/software-0009/software/seguranca/renovate-osv-vulnerability-alerts-experimental-escopo.md)
+1695. [Aplicar presets de segurança Renovate com configuração herdada revisável](../../domains/software-0009/software/seguranca/renovate-security-presets-inherit-config-review.md)
+1696. [Permissões e execução self-hosted para alertas de vulnerabilidade Renovate](../../domains/software-0009/software/seguranca/renovate-vulnerabilityalerts-github-permissions-self-hosted.md)
+1697. [Tratar alertas como fila de triagem: owner, prazo, versão corrigida e evidência de merge](../../domains/software-0009/software/seguranca/renovate-alertas-dependabot-sla-triage-evidencia.md)
+1698. [Validar configuração Renovate antes de ativar regras de segurança](../../domains/software-0009/software/seguranca/renovate-config-validation-preview-dry-run.md)
+1699. [Correlacionar alertas Renovate com identificadores GHSA/CVE e advisory original](../../domains/software-0009/software/seguranca/renovate-alerta-ghsa-osv-identificadores-mapeamento.md)
+1700. [PR de vulnerabilidade sem patch disponível: registrar mitigação em vez de assumir correção](../../domains/software-0009/software/seguranca/renovate-vulnerabilityalerts-limitacoes-alertas-sem-patch.md)

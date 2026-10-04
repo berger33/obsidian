@@ -1,0 +1,261 @@
+{
+  "group_title": "Mozilla `cargo-vet` — auditoria humana diferencial de crates, critérios de segurança, imports confiáveis e exemptions",
+  "fact_check": "Conferi, nota a nota, as páginas oficiais `How it Works`, Setup, Commands, Audit Criteria, Built-in Criteria, First-Party Code, Imports, Configuration, Performing Audits, Recording Audits e Audit Entries; validei escopo default, critérios, imports não transitivos e semântica de exemptions/violations.",
+  "sources": [
+    {
+      "label": "Cargo Vet — How it Works",
+      "url": "https://mozilla.github.io/cargo-vet/how-it-works.html",
+      "description": "fluxo de auditoria diferencial, imports de organizações confiáveis, armazenamento no repositório e revisão de novas dependências"
+    },
+    {
+      "label": "Cargo Vet — Commands",
+      "url": "https://mozilla.github.io/cargo-vet/commands.html",
+      "description": "semântica dos comandos `check`, `suggest`, `inspect`, `diff`, `certify`, `import`, `trust`, `add-exemption` e `record-violation`"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "cargo-vet-modelo-auditoria-terceiros-criterios-rust",
+      "title": "`cargo-vet`: registrar auditorias de código Rust de terceiros junto ao projeto",
+      "summary": "Por padrão, `cargo-vet` exige auditorias para dependências crates.io no grafo Cargo; crates raiz, path, Git e registries customizados são tratadas como confiáveis, salvo configuração explícita.",
+      "why": "O scanner de advisories encontra vulnerabilidades conhecidas, enquanto a auditoria de supply chain busca evidência de revisão do código novo ou alterado.",
+      "how": "O projeto armazena registros sob `supply-chain/` e associa critérios ao grafo; revise também `audit-as-crates-io` quando código first-party ou uma origem não padrão precisar de enforcement.",
+      "example": "Após adicionar uma dependência nova, rode `cargo vet` na mesma branch e resolva a falta de auditoria antes de integrar o pacote.",
+      "limits": "Uma auditoria registrada é julgamento de revisão, não prova matemática de ausência de backdoor; o escopo padrão não audita automaticamente código first-party, path, Git ou registries customizados.",
+      "verify": "Revise os arquivos de política e de auditoria no commit, confirme qual critério cobre a crate e observe se o comando reprova uma mudança não certificada.",
+      "code": "cargo vet",
+      "review": "Conferi em `How it Works` a finalidade de auditoria diferencial e em First-Party Code os limites padrão do grafo: crates.io são auditadas, enquanto origens raiz/path/Git/customizadas exigem configuração quando devem ser tratadas como third-party."
+    },
+    {
+      "slug": "cargo-vet-init-supply-chain-exemptions-iniciais",
+      "title": "`cargo vet init`: inicializar supply chain sem confundir exemptions com auditorias",
+      "summary": "O comando `cargo vet init` cria metadados de política e pode colocar dependências existentes em uma lista inicial de exemptions para facilitar adoção gradual.",
+      "why": "Um bootstrap que passa imediatamente não significa que todas as crates antigas foram auditadas; documentar o backlog impede que exceções sejam tratadas como certificados.",
+      "how": "Versione `config.toml` e `audits.toml` em `supply-chain/`, reduza exemptions com auditorias reais ao longo do tempo e revise alterações da lista.",
+      "example": "Depois de `cargo vet init`, use o relatório para escolher uma dependência prioritária e substitua a exemption correspondente por uma auditoria explícita.",
+      "limits": "O estado inicial pode ser permissivo em relação ao passado e precisa de governança para não se tornar uma aprovação permanente sem revisão.",
+      "verify": "Procure dependências sem registro de auditoria, conte exemptions por versão e confirme que pull requests novos acionam `cargo vet check`.",
+      "code": "cargo vet init",
+      "review": "Conferi na documentação de setup e `How it Works` que a inicialização cria exemptions para o conjunto existente; a nota não as descreve como auditorias concluídas."
+    },
+    {
+      "slug": "cargo-vet-check-novas-dependencias-gate-ci",
+      "title": "`cargo vet check`: detectar código de terceiro novo no grafo de build",
+      "summary": "O comando padrão `cargo vet` verifica o grafo atualizado e aponta quando código de terceiro não está coberto por auditorias aceitas.",
+      "why": "Uma dependência transitiva pode mudar mesmo sem edição direta do manifest; rodar o check sobre o lockfile evita aprovar silenciosamente novos bytes de terceiros.",
+      "how": "Execute a checagem em CI após atualizar o grafo, analise as sugestões e associe o resultado ao commit e à versão das ferramentas.",
+      "example": "Um pipeline pode comparar a branch do pull request, falhar quando o check exigir auditoria e anexar as sugestões para resolução pelo responsável.",
+      "limits": "A checagem confirma cobertura segundo os registros e a política configurados; ela não executa uma auditoria de código em nome da equipe.",
+      "verify": "Introduza uma crate de teste sem auditoria e verifique que o CI aponta o pacote e oferece caminho de correção, sem aprovar por default.",
+      "code": "cargo vet check",
+      "review": "Conferi na documentação oficial que `check` é o comando padrão e recusa mudanças sem auditoria confiável; a nota separa gate de execução da revisão."
+    },
+    {
+      "slug": "cargo-vet-criteria-safe-to-run-safe-to-deploy",
+      "title": "Critérios do `cargo-vet`: definir o que uma auditoria precisa demonstrar",
+      "summary": "`cargo-vet` inclui os critérios `safe-to-run` e `safe-to-deploy` e permite critérios customizados e políticas por subárvore para descrever o nível de confiança exigido.",
+      "why": "Revisar uma crate para uso durante build pode exigir controles distintos de incluí-la no binário distribuído; critérios explícitos evitam aprovações ambíguas.",
+      "how": "Nomeie critérios com significado documentado, associe-os às áreas responsáveis e faça auditores registrar qual pergunta de segurança foi efetivamente examinada.",
+      "example": "Compare os critérios embutidos `safe-to-run` e `safe-to-deploy` ao separar uma ferramenta de teste de uma crate entregue no produto; a relação de implicação e os requisitos devem ficar documentados na policy.",
+      "limits": "Critérios customizados só são úteis se revisores entendem o vocabulário; mudar a definição sem reavaliar auditorias antigas altera o alcance da confiança.",
+      "verify": "Leia a configuração de critérios e políticas, confira cada registro importado ou local e confirme que o check aponta o critério que falta.",
+      "code": "cargo vet check",
+      "review": "Conferi os critérios embutidos, customizados e as políticas por dependência nas páginas oficiais; a nota nomeia `safe-to-run`/`safe-to-deploy` e não atribui defaults além dos documentados."
+    },
+    {
+      "slug": "cargo-vet-differential-audit-diff-versao-crate",
+      "title": "Auditoria diferencial no `cargo-vet`: revisar a diferença entre versões de uma crate",
+      "summary": "Quando já existe uma auditoria para outra versão, o cargo-vet pode calcular a diferença relevante e guiar a revisão do código que mudou.",
+      "why": "Revisar apenas o delta reduz esforço sem tratar uma atualização como idêntica à versão previamente auditada.",
+      "how": "Use `inspect` e `diff` para obter fontes e comparar a versão nova com a base registrada, mantendo evidência do que foi examinado.",
+      "example": "Ao atualizar uma crate, revise o diff sugerido, identifique arquivos de código e mudanças de build e registre uma nova auditoria para a versão resolvida.",
+      "limits": "A diferença só é tão confiável quanto a base e a seleção de arquivos; uma auditoria anterior não cobre automaticamente mudanças posteriores.",
+      "verify": "Confirme no registro qual versão antiga serviu de base, abra o diff gerado e compare seu resultado com o pacote efetivamente selecionado no lockfile.",
+      "code": "cargo vet diff",
+      "review": "Conferi em `How it Works` o cálculo de diffs relativos entre versões e nos comandos `diff`/`inspect`; explicitei que a versão nova ainda precisa de revisão."
+    },
+    {
+      "slug": "cargo-vet-imports-organizacoes-trust-explicito",
+      "title": "Imports de auditorias no `cargo-vet`: confiar em organizações de forma explícita",
+      "summary": "O cargo-vet pode importar auditorias mantidas por outras organizações, mas a configuração precisa adicionar explicitamente a fonte ao conjunto de confiança.",
+      "why": "Compartilhar revisões reduz trabalho repetido; a confiança explícita evita depender de um índice central que poderia substituir os arquivos auditados.",
+      "how": "Revise a policy da organização importada, a origem dos arquivos, o mapeamento dos critérios e a origem HTTPS antes de adicionar a entrada em `config.toml`.",
+      "example": "Uma equipe pode importar auditorias de um projeto upstream conhecido e manter no pull request o URL do arquivo, versão e revisão de política.",
+      "limits": "Imports não são transitivos: importar um projeto não importa automaticamente as fontes que ele próprio confia. A equipe delega julgamento às fontes diretas e ainda precisa avaliar seus critérios.",
+      "verify": "Confira de onde cada arquivo importado é baixado, quem controla o repositório e se a importação aparece explicitamente na configuração versionada.",
+      "code": "cargo vet import",
+      "review": "Conferi a documentação oficial de imports por URL e trust explícito; confirmei que a relação não é transitiva e que critérios externos podem exigir mapeamento para a policy local."
+    },
+    {
+      "slug": "cargo-vet-suggest-priorizar-backlog-auditoria",
+      "title": "`cargo vet suggest`: priorizar backlog de auditorias com mudanças menores",
+      "summary": "O comando `suggest` recomenda dependências para revisão e agrupa o trabalho por critério, incluindo diferenças que podem ser mais curtas de inspecionar.",
+      "why": "Um inventário grande pode paralisar a adoção; sugestões ordenadas ajudam a iniciar por revisões de menor custo sem afirmar que sejam as mais críticas.",
+      "how": "Use a sugestão como fila de trabalho, combine-a com criticidade do produto e exposição da crate e acompanhe quais registros eliminam exemptions.",
+      "example": "Uma equipe pode reservar uma janela semanal para auditar itens sugeridos, registrar o resultado em `supply-chain/` e atualizar a fila no pull request.",
+      "limits": "A ordenação por tamanho de diff não é uma avaliação automática de risco ou severidade; prioridades do produto podem exigir outra ordem.",
+      "verify": "Compare as sugestões após uma atualização do grafo, abra a diferença indicada e confirme que a ação proposta não é apenas adicionar exemption.",
+      "code": "cargo vet suggest",
+      "review": "Conferi nos comandos oficiais o propósito de `suggest` e a organização por critérios e tamanho de revisão; distingui esforço estimado de prioridade de risco."
+    },
+    {
+      "slug": "cargo-vet-certify-record-audit-trilha-versao",
+      "title": "`cargo vet certify`: registrar uma auditoria ligada à versão revisada",
+      "summary": "Depois da inspeção, `certify` registra que uma versão foi auditada sob determinado critério e mantém o resultado junto à política do projeto.",
+      "why": "A trilha local permite revisar quem introduziu a decisão e que versão do código foi coberta quando dependências são atualizadas novamente.",
+      "how": "Confirme a crate, versão, critério e conteúdo efetivamente lido antes de certificar; use revisão por pares para mudanças nos arquivos da supply chain.",
+      "example": "Após revisar uma crate, gere a certificação na branch dedicada e peça aprovação do code owner antes de integrar o novo registro.",
+      "limits": "O registro não contém automaticamente a qualidade do raciocínio nem prova que a pessoa leu todo código relevante.",
+      "verify": "Abra `audits.toml` no diff, confira identificador e critério e confirme que a versão registrada corresponde ao grafo que passou em CI.",
+      "code": "cargo vet certify",
+      "review": "Conferi na referência de comandos o papel de `certify` como marcação de pacote auditado; destaquei a necessidade de revisão do registro e da versão."
+    },
+    {
+      "slug": "cargo-vet-record-violation-integridade-audits",
+      "title": "`cargo vet record-violation`: registrar que uma versão contradiz uma auditoria",
+      "summary": "O comando `record-violation` declara versões de crate que violam critérios alegados por auditorias ou exemptions existentes.",
+      "why": "Quando uma falha é descoberta depois, a base local pode precisar impedir que um registro antigo continue legitimando conteúdo incompatível.",
+      "how": "Documente evidência, versão e critério contradito, avalie os registros que dependem dessa confiança e incorpore o evento em uma mudança revisada.",
+      "example": "Se uma investigação demonstra que uma versão específica viola o critério de uma auditoria, registre a violação e revise consumidores que ainda usam aquela versão.",
+      "limits": "Registrar uma violação não corrige a crate nem atualiza automaticamente todos os sistemas consumidores de auditorias compartilhadas.",
+      "verify": "Rode o check com a violação registrada, confirme que certificados conflitantes deixam de satisfazer a policy e mantenha referência à investigação original.",
+      "code": "cargo vet record-violation",
+      "review": "Conferi na documentação oficial que violações funcionam como restrições de integridade e podem contradizer auditorias; evitei afirmar que qualquer violação bloqueia toda dependência."
+    },
+    {
+      "slug": "cargo-vet-exemptions-backlog-diferencial-seguranca",
+      "title": "Exemptions no `cargo-vet`: backlog explícito, não selo de segurança",
+      "summary": "Exemptions podem permitir começar sem auditar todo o grafo legado, mas representam código ainda não coberto por uma auditoria aceita.",
+      "why": "Se a lista cresce sem responsável, a exceção temporária vira um atalho permanente e reduz a capacidade de notar novas mudanças na cadeia.",
+      "how": "Trate exemptions como backlog: atribua responsável, defina prioridade e substitua cada entrada por auditoria diferencial ou evidência compartilhada confiável.",
+      "example": "Gere um relatório periódico de exemptions, escolha uma crate por risco e remova a exceção somente após registrar o critério revisado.",
+      "limits": "A remoção automática de exemptions para fazer o check passar não demonstra que houve análise; a própria documentação recomenda evitar esse atalho.",
+      "verify": "Compare o tamanho da lista antes e depois, revise entradas novas e confirme que o check não passa apenas porque exceções foram ampliadas.",
+      "code": "cargo vet check",
+      "review": "Conferi `How it Works` e os comandos sobre exemptions e `regenerate`; a nota deixa claro que passar por uma exemption não equivale a revisão factual."
+    }
+  ],
+  "coverage_review": "A busca textual em todas as 5.740 notas Markdown de `domains/` por `cargo vet` e `cargo-vet` não encontrou conteúdo existente sobre o fluxo de auditoria diferencial de crates, imports confiáveis, criteria ou exemptions. A tranche acrescenta essa camada de revisão de supply chain, não outra consulta de CVEs.",
+  "source_overrides": {
+    "cargo-vet-modelo-auditoria-terceiros-criterios-rust": [
+      {
+        "label": "Cargo Vet — How it Works",
+        "url": "https://mozilla.github.io/cargo-vet/how-it-works.html",
+        "description": "modelo de auditoria diferencial, confiança e fluxo de verificação"
+      },
+      {
+        "label": "Cargo Vet — First-Party Code",
+        "url": "https://mozilla.github.io/cargo-vet/first-party-code.html",
+        "description": "fronteira default de crates.io e configuração de código first-party/path/Git"
+      }
+    ],
+    "cargo-vet-init-supply-chain-exemptions-iniciais": [
+      {
+        "label": "Cargo Vet — Setup",
+        "url": "https://mozilla.github.io/cargo-vet/setup.html",
+        "description": "efeito de `cargo vet init` sobre `supply-chain/`, `config.toml` e exemptions"
+      },
+      {
+        "label": "Cargo Vet — Commands: init",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-init",
+        "description": "comando de inicialização e opções suportadas"
+      }
+    ],
+    "cargo-vet-check-novas-dependencias-gate-ci": [
+      {
+        "label": "Cargo Vet — Commands: check",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-check",
+        "description": "comportamento do comando padrão e falhas por auditoria ausente"
+      },
+      {
+        "label": "Cargo Vet — How it Works",
+        "url": "https://mozilla.github.io/cargo-vet/how-it-works.html",
+        "description": "como o grafo de dependências é comparado com audits/imports/policy"
+      }
+    ],
+    "cargo-vet-criteria-safe-to-run-safe-to-deploy": [
+      {
+        "label": "Cargo Vet — Audit Criteria",
+        "url": "https://mozilla.github.io/cargo-vet/audit-criteria.html",
+        "description": "critérios embutidos e criação de critérios customizados"
+      },
+      {
+        "label": "Cargo Vet — Built-in Criteria",
+        "url": "https://mozilla.github.io/cargo-vet/built-in-criteria.html",
+        "description": "semântica e relação de `safe-to-run` e `safe-to-deploy`"
+      }
+    ],
+    "cargo-vet-differential-audit-diff-versao-crate": [
+      {
+        "label": "Cargo Vet — Performing Audits",
+        "url": "https://mozilla.github.io/cargo-vet/performing-audits.html",
+        "description": "escolha de diff diferencial, inspeção de versões e sugestão de menor esforço"
+      },
+      {
+        "label": "Cargo Vet — Commands: diff/inspect",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-diff",
+        "description": "sintaxe e saída dos subcomandos de inspeção/diff"
+      }
+    ],
+    "cargo-vet-imports-organizacoes-trust-explicito": [
+      {
+        "label": "Cargo Vet — Importing Audits",
+        "url": "https://mozilla.github.io/cargo-vet/importing-audits.html",
+        "description": "imports diretos, trust explícito, fontes HTTPS e ausência de transitividade"
+      },
+      {
+        "label": "Cargo Vet — Configuration",
+        "url": "https://mozilla.github.io/cargo-vet/config.html",
+        "description": "mapeamento de critérios e estrutura de `imports` local"
+      }
+    ],
+    "cargo-vet-suggest-priorizar-backlog-auditoria": [
+      {
+        "label": "Cargo Vet — Commands: suggest",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-suggest",
+        "description": "sugestões de auditoria e agrupamento por critério"
+      },
+      {
+        "label": "Cargo Vet — Performing Audits",
+        "url": "https://mozilla.github.io/cargo-vet/performing-audits.html",
+        "description": "ordenação pelo esforço estimado em linhas e trade-off de exemptions"
+      }
+    ],
+    "cargo-vet-certify-record-audit-trilha-versao": [
+      {
+        "label": "Cargo Vet — Commands: certify",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-certify",
+        "description": "registro de auditoria de versão ou delta"
+      },
+      {
+        "label": "Cargo Vet — Recording Audits",
+        "url": "https://mozilla.github.io/cargo-vet/recording-audits.html",
+        "description": "campos de auditoria, autoria, versão e critério gravados"
+      }
+    ],
+    "cargo-vet-record-violation-integridade-audits": [
+      {
+        "label": "Cargo Vet — Commands: record-violation",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-record-violation",
+        "description": "declaração de versões que violam critérios"
+      },
+      {
+        "label": "Cargo Vet — Audit Entries",
+        "url": "https://mozilla.github.io/cargo-vet/audit-entries.html",
+        "description": "semântica de `violation` e conflito com exemptions"
+      }
+    ],
+    "cargo-vet-exemptions-backlog-diferencial-seguranca": [
+      {
+        "label": "Cargo Vet — Commands: add-exemption/regenerate",
+        "url": "https://mozilla.github.io/cargo-vet/commands.html#cargo-vet-add-exemption",
+        "description": "comandos para registrar/excluir exemptions"
+      },
+      {
+        "label": "Cargo Vet — Setup",
+        "url": "https://mozilla.github.io/cargo-vet/setup.html",
+        "description": "significado da aprovação inicial baseada em exemptions e orientação para reduzi-las"
+      }
+    ]
+  }
+}

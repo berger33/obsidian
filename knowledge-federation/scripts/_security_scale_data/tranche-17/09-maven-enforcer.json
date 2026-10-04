@@ -1,0 +1,260 @@
+{
+  "group_title": "Apache Maven Enforcer Plugin — execução de regras no build, convergência, versões dinâmicas, dependências proibidas e escopo",
+  "fact_check": "Conferi o guia de uso, o goal `enforcer:enforce` e as páginas oficiais de cada regra citada; validei o default correto de `fail=true`, transitivity em `bannedDependencies`, versão Java/Maven, herança POM e distinção para scanner de advisories.",
+  "sources": [
+    {
+      "label": "Maven Enforcer Plugin — Usage",
+      "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/usage.html",
+      "description": "configuração e execução de `enforcer:enforce`, regras em POM, herança e comportamento de falha"
+    },
+    {
+      "label": "Maven Enforcer Plugin — Rules",
+      "url": "https://maven.apache.org/enforcer/enforcer-rules/index.html",
+      "description": "catálogo oficial de regras, incluindo dependency convergence, ban dynamic versions e ban dependencies"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "maven-enforcer-enforce-pipeline-rules-build",
+      "title": "`maven-enforcer-plugin`: aplicar requisitos de build com regras declaradas",
+      "summary": "O Maven Enforcer executa verificações configuradas durante o build e pode impedir que projetos violem requisitos técnicos estabelecidos no POM.",
+      "why": "Regras locais e explícitas tornam convenções de versões, dependências e ambiente executáveis em vez de depender de memória do maintainer.",
+      "how": "Configure plugin e regras na estrutura Maven apropriada, rode `enforcer:enforce` em CI e revise falhas como mudanças de contrato do build.",
+      "example": "Um parent POM pode centralizar regras compartilhadas e as builds de módulos podem executá-las antes de empacotar artefatos.",
+      "limits": "Enforcer verifica condições configuradas; não é um scanner de CVEs nem substitui testes funcionais ou revisão de código.",
+      "verify": "Confirme a versão do plugin, as regras realmente ativadas e que uma configuração deliberadamente inválida falha na CI.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi o objetivo oficial do plugin e o goal de execução; a nota limita o mecanismo a regras configuradas pelo projeto."
+    },
+    {
+      "slug": "maven-enforcer-fail-default-true-policy",
+      "title": "`fail` no Maven Enforcer: falhar por padrão e tratar warn-only com intenção",
+      "summary": "A configuração documenta `fail` como verdadeiro por padrão, fazendo uma regra reprovada encerrar o goal com falha, salvo política diferente.",
+      "why": "Um perfil permissivo pode deixar mensagens visíveis sem bloquear integração; owners precisam saber se uma regra é aviso ou gate de fato.",
+      "how": "Mantenha falha ativa para requisitos obrigatórios e use modo de aviso somente como migração temporária com prazo e acompanhamento.",
+      "example": "Durante adoção gradual, execute relatório de violações em modo não bloqueante e converta a regra em gate após corrigir os módulos existentes.",
+      "limits": "Um goal bem-sucedido não informa regras que não foram configuradas nem garante que o perfil esperado foi ativado naquele build.",
+      "verify": "Inspecione configuração efetiva com Maven, force uma violação de teste e confira o status do job e o log gerado.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi no guia de uso e no goal `enforcer:enforce` que `fail` é verdadeiro por padrão; a nota exige verificar a configuração efetiva, sem assumir que toda regra está habilitada."
+    },
+    {
+      "slug": "maven-enforcer-dependency-convergence-transitive-conflicts",
+      "title": "`dependencyConvergence`: detectar versões transitivas divergentes no grafo Maven",
+      "summary": "A regra dependency convergence sinaliza quando caminhos diferentes no grafo resolvem versões divergentes da mesma dependência.",
+      "why": "Conflitos podem tornar o classpath sensível à ordem de resolução e levar a comportamento que varia entre módulos ou ambientes.",
+      "how": "Inspecione a árvore, alinhe versões por dependency management ou atualize pais responsáveis e documente exceções inevitáveis.",
+      "example": "Se dois módulos puxam versões diferentes de uma biblioteca, a regra falha e orienta a convergência para versão compatível revisada.",
+      "limits": "Divergência não significa automaticamente vulnerabilidade nem incompatibilidade observável; convergir para uma versão não validada também pode introduzir regressões.",
+      "verify": "Rode `mvn dependency:tree`, identifique os caminhos duplicados e execute testes após alinhar a versão selecionada.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi a regra oficial dependency convergence e a finalidade de evitar versões divergentes; tratei-a como higiene de resolução, não scanner de segurança."
+    },
+    {
+      "slug": "maven-enforcer-ban-dynamic-versions-reproducibilidade",
+      "title": "Banir versões Maven dinâmicas para builds reprodutíveis",
+      "summary": "A regra ban dynamic versions pode rejeitar ranges e seletores mutáveis que deixam a mesma configuração resolver versões diferentes ao longo do tempo.",
+      "why": "Resolução flutuante enfraquece auditoria e reproduzibilidade, pois o artefato construído pode variar sem mudança do POM versionado.",
+      "how": "Prefira versões explícitas ou mecanismo controlado de lock e revise atualizações como diffs; trate snapshots e ranges conforme política do repositório.",
+      "example": "Habilite a regra no parent POM e use atualização automatizada revisada em pull requests para manter versões sem ranges silenciosos.",
+      "limits": "Fixar versão não garante que artefato seja íntegro ou sem vulnerabilidades; snapshots podem ter políticas de uso distintas por ambiente.",
+      "verify": "Inspecione o effective POM, inclua uma versão dinâmica de teste e confirme que o Enforcer identifica a configuração.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi a regra oficial `banDynamicVersions`; descrevi a motivação de resolução mutável sem atribuir ao plugin proteção criptográfica."
+    },
+    {
+      "slug": "maven-enforcer-banned-dependencies-exclusions",
+      "title": "`bannedDependencies`: recusar coordenadas Maven com escopo e exceções explícitos",
+      "summary": "A regra banned dependencies permite proibir dependências selecionadas por coordenadas, padrões e opções de escopo configuradas no POM.",
+      "why": "Uma dependência pode ser bloqueada por política interna, substituição de biblioteca ou risco conhecido, inclusive quando chega de forma transitiva.",
+      "how": "Defina coordenadas e transitivity deliberadamente, liste exceções pequenas e investigue caminho de entrada antes de excluir um artefato pai.",
+      "example": "Bloqueie uma coordenada depreciada e, quando necessário, permita um módulo específico com justificativa em vez de whitelistar todo o grupo.",
+      "limits": "A regra compara coordenadas e configuração, não a identidade criptográfica do pacote nem a presença de uma vulnerabilidade.",
+      "verify": "Rode `dependency:tree`, confirme se a dependência direta ou transitiva é capturada e teste se exceções têm o escopo esperado.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi no catálogo oficial a regra de dependências banidas e opções de transitivity/escopo; a nota evita sugerir bloqueio por nome como prova de CVE."
+    },
+    {
+      "slug": "maven-enforcer-require-java-maven-version-build-environment",
+      "title": "Exigir versões de Java e Maven compatíveis com o build",
+      "summary": "Regras Enforcer podem impor versões mínimas ou intervalos para Maven e JDK usados na construção do projeto.",
+      "why": "Diferenças locais de toolchain podem alterar compilação, plugins e resolução, dificultando reproduzir o artefato validado pela CI.",
+      "how": "Declare limites que correspondam ao runtime suportado, use Maven Wrapper e fixe imagem de CI para complementar as verificações no POM.",
+      "example": "Um build pode recusar JDK fora do intervalo aprovado e direcionar desenvolvedores ao wrapper e ao container de compilação oficial.",
+      "limits": "Verificar a versão declarada do runtime não prova que o JDK instalado é íntegro nem garante igualdade de todo ambiente.",
+      "verify": "Teste a regra com versões abaixo e dentro do intervalo e compare a saída com `mvn -version` no job de release.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi o catálogo de regras Enforcer para requisitos de versão e o fluxo de uso; limitei a conclusão a compatibilidade de ambiente declarado."
+    },
+    {
+      "slug": "maven-enforcer-require-property-dependency-management",
+      "title": "Exigir propriedades e campos de versão no Maven POM",
+      "summary": "O catálogo do Enforcer inclui regras para exigir propriedades, versões de plugins ou metadados específicos antes de executar o build.",
+      "why": "Campos ausentes podem levar a defaults implícitos e diferenças entre módulos, reduzindo visibilidade de configurações necessárias à release.",
+      "how": "Escolha requisitos que correspondam ao contrato real, mantenha a regra no parent POM e forneça mensagem de erro que indique a propriedade faltante.",
+      "example": "Uma regra pode exigir que uma propriedade de versão de biblioteca esteja definida, evitando que um módulo use valor local não revisado.",
+      "limits": "Exigir que uma propriedade exista não valida automaticamente se seu valor é correto ou se atende a política de segurança.",
+      "verify": "Remova a propriedade numa fixture, rode Enforcer e confira se o erro identifica o campo sem mascarar outras falhas.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi o catálogo oficial de regras de propriedades e versões; ressaltei que a regra valida presença/configuração, não a qualidade do valor."
+    },
+    {
+      "slug": "maven-enforcer-configuracao-em-parent-versus-modulos",
+      "title": "Centralizar regras Enforcer em parent POM sem perder escopo por módulo",
+      "summary": "Configurar regras em parent POM ajuda a aplicar política compartilhada, mas a efetiva herança e execução devem ser verificadas nos módulos do reactor.",
+      "why": "Um módulo que não herda ou não ativa o plugin pode ficar fora do controle apesar da configuração visível na raiz.",
+      "how": "Revise POM efetivo, perfis ativos e execução de cada módulo, mantendo regras específicas somente onde o contrato realmente difere.",
+      "example": "No monorepo Maven, rode goal no reactor inteiro e inspecione logs por módulo para confirmar que todos executaram o mesmo conjunto de regras.",
+      "limits": "Configuração central não garante enforcement se builds usam POM diferente, perfil desativado ou invocação parcial sem lifecycle adequado.",
+      "verify": "Use `help:effective-pom`, execute a regra por reactor e inclua módulo de teste com violação para demonstrar cobertura.",
+      "code": "mvn enforcer:enforce",
+      "review": "Conferi o modelo de uso de regras em POM do guia oficial; recomendei validar herança efetiva em vez de inferir cobertura pela existência de parent."
+    },
+    {
+      "slug": "maven-enforcer-version-rule-plugin-pin-maintenance",
+      "title": "Fixar a versão do Maven Enforcer Plugin e revisar mudanças de regras",
+      "summary": "Como parte do build, o plugin e a versão de suas regras devem estar declarados de forma estável para evitar mudanças silenciosas de comportamento.",
+      "why": "Um plugin não fixado pode introduzir novas regras, defaults ou compatibilidade diferente entre estações, alterando o resultado do gate.",
+      "how": "Declare versão explícita no gerenciamento de plugins, atualize por pull request e consulte documentação correspondente à versão escolhida.",
+      "example": "Uma atualização do plugin pode gerar job dedicado que compara logs e resolve warnings antes de ampliar a versão em todo o reactor.",
+      "limits": "Versão fixa melhora previsibilidade, mas não valida a integridade do JAR nem impede que uma versão contenha defeito ou vulnerabilidade.",
+      "verify": "Compare `mvn help:effective-pom` em máquinas limpas, confira resolução do plugin e rode a matriz de builds suportados após upgrade.",
+      "code": "mvn help:effective-pom",
+      "review": "A recomendação de pinning é prática de reprodutibilidade baseada no uso de plugin Maven; diferenciei pinning de verificação criptográfica."
+    },
+    {
+      "slug": "maven-enforcer-policy-gate-nao-substitui-scanner-advisory",
+      "title": "Maven Enforcer e scanners de CVE: policy de build não equivale a análise de advisories",
+      "summary": "O Enforcer pode aplicar regras sobre coordenadas, versões e ambiente, mas um conjunto de regras não consulta automaticamente todas as bases de vulnerabilidades.",
+      "why": "Uma compilação verde sob convergence e versão fixa não prova ausência de CVEs ou que dependências transitivas estão atualizadas.",
+      "how": "Mantenha scanner de dependências separado, correlacione grafo e lock state e use Enforcer para requisitos que ele expressa de forma confiável.",
+      "example": "Um pipeline pode falhar por versão dinâmica no Enforcer e, em estágio próprio, publicar advisories do scanner com seus identificadores e severidades.",
+      "limits": "A cobertura do scanner depende de dados, formatos e plugins adicionais; o Enforcer sozinho só aplica suas regras declaradas.",
+      "verify": "Crie um teste com dependência conhecida que não viole regra de convergence e confirme que apenas o scanner de advisory a sinaliza.",
+      "review": "Conferi o escopo oficial do Maven Enforcer e dos exemplos de regras; a nota separa lint de configuração de consulta a bases de CVE."
+    }
+  ],
+  "coverage_review": "A varredura do corpo de todas as 5.740 notas por Maven Enforcer, `dependencyConvergence`, `banDynamicVersions`, `bannedDependencies` e regras equivalentes não encontrou conteúdo sobre o plugin. Li a nota existente dos plugins Maven/Gradle OWASP Dependency-Check: ela configura varredura de CVEs e não aplica as regras de build do Enforcer, portanto o escopo é distinto.",
+  "source_overrides": {
+    "maven-enforcer-enforce-pipeline-rules-build": [
+      {
+        "label": "Maven Enforcer — Usage",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/usage.html#the-enforcer-enforce-mojo",
+        "description": "configuração declarativa das regras e finalidade do goal `enforce`"
+      },
+      {
+        "label": "Maven Enforcer — `enforcer:enforce` goal",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/enforce-mojo.html",
+        "description": "escopo de execução por módulo e fase de lifecycle"
+      }
+    ],
+    "maven-enforcer-fail-default-true-policy": [
+      {
+        "label": "Maven Enforcer — Usage: `fail`",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/usage.html#the-enforcer-enforce-mojo",
+        "description": "valor padrão e efeito de `fail=false`/nível WARN"
+      },
+      {
+        "label": "Maven Enforcer — parâmetro `fail`",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/enforce-mojo.html#fail",
+        "description": "default e user property do parâmetro que controla a falha do goal"
+      }
+    ],
+    "maven-enforcer-dependency-convergence-transitive-conflicts": [
+      {
+        "label": "Maven Enforcer — Dependency Convergence",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html",
+        "description": "detecção de versões divergentes da mesma dependência no grafo"
+      },
+      {
+        "label": "Maven Dependency Plugin — dependency:tree",
+        "url": "https://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html",
+        "description": "inspeção dos caminhos e versões resolvidos no classpath"
+      }
+    ],
+    "maven-enforcer-ban-dynamic-versions-reproducibilidade": [
+      {
+        "label": "Maven Enforcer — Ban Dynamic Versions",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/banDynamicVersions.html",
+        "description": "rejeição de ranges e seletores Maven dinâmicos"
+      },
+      {
+        "label": "Maven Enforcer — Usage",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/usage.html",
+        "description": "ativação de regras no POM e execução no lifecycle"
+      }
+    ],
+    "maven-enforcer-banned-dependencies-exclusions": [
+      {
+        "label": "Maven Enforcer — Banned Dependencies",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/bannedDependencies.html",
+        "description": "coordenadas, padrões, includes/excludes e searchTransitive"
+      },
+      {
+        "label": "Maven Dependency Plugin — dependency:tree",
+        "url": "https://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html",
+        "description": "localização da origem direta ou transitiva de uma coordenada"
+      }
+    ],
+    "maven-enforcer-require-java-maven-version-build-environment": [
+      {
+        "label": "Maven Enforcer — Require Java Version",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/requireJavaVersion.html",
+        "description": "regras de intervalo e normalização de versão JDK"
+      },
+      {
+        "label": "Maven Enforcer — Require Maven Version",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/requireMavenVersion.html",
+        "description": "regras de versão Maven usadas pelo mesmo build"
+      }
+    ],
+    "maven-enforcer-require-property-dependency-management": [
+      {
+        "label": "Maven Enforcer — Require Property",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/requireProperty.html",
+        "description": "presença de propriedades e validação opcional por regex"
+      },
+      {
+        "label": "Maven Enforcer — Require Plugin Versions",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/requirePluginVersions.html",
+        "description": "versões explícitas de plugins no POM ou pluginManagement"
+      }
+    ],
+    "maven-enforcer-configuracao-em-parent-versus-modulos": [
+      {
+        "label": "Maven Enforcer — Usage",
+        "url": "https://maven.apache.org/enforcer/maven-enforcer-plugin/usage.html",
+        "description": "regras do plugin declaradas em POM e execução por módulo"
+      },
+      {
+        "label": "Apache Maven — POM Inheritance",
+        "url": "https://maven.apache.org/pom.html#Inheritance",
+        "description": "herança entre parent POM e módulos e limites de configuração efetiva"
+      }
+    ],
+    "maven-enforcer-version-rule-plugin-pin-maintenance": [
+      {
+        "label": "Maven Enforcer — Require Plugin Versions",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/requirePluginVersions.html",
+        "description": "regra para exigir versões de plugins e defaults associados"
+      },
+      {
+        "label": "Apache Maven — Configuring Plugins",
+        "url": "https://maven.apache.org/guides/mini/guide-configuring-plugins.html",
+        "description": "declaração e versionamento de plugins Maven no build"
+      }
+    ],
+    "maven-enforcer-policy-gate-nao-substitui-scanner-advisory": [
+      {
+        "label": "Maven Enforcer — catálogo de regras",
+        "url": "https://maven.apache.org/enforcer/enforcer-rules/index.html",
+        "description": "escopo de regras de build como versions, convergence e bans"
+      },
+      {
+        "label": "OWASP Dependency-Check — Maven",
+        "url": "https://dependency-check.github.io/DependencyCheck/dependency-check-maven/index.html",
+        "description": "scanner SCA que analisa dependências contra dados de vulnerabilidades"
+      }
+    ]
+  }
+}

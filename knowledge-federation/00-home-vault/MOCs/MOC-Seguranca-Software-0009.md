@@ -6,19 +6,20 @@ subdominio: seguranca
 lote: software-seguranca-2000-0003
 tipo_nota: moc
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1700 notas substantivas (Tranches 1–17, IDs `1–1700`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1600 / 2.000 notas válidas (80,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1600**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1600 / 1600** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md))
+- Progresso atual: **1700 / 2.000 notas válidas (85,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1700**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1700 / 1700** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
+- Reconciliação mais recente: [`batch-reconciliation-software-seguranca-2000-0003-tranche-17.md`](../../exports/reports/batch-reconciliation-software-seguranca-2000-0003-tranche-17.md)
 
 ## Tranche 1 (IDs 1–100)
 
@@ -2131,3 +2132,135 @@ Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`
 - [[govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain]] — Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**
 - [[govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate]] — Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**
 - [[govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign]] — Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**
+
+## Tranche 17 (IDs 1601–1700)
+
+### RustSec `cargo-audit` — consulta do `Cargo.lock` à base de advisories, auditoria de binários, exceções e uso seguro em CI
+
+- [[cargo-audit-fluxo-cargo-lock-rustsec-advisory-db]] — `cargo-audit`: fluxo entre `Cargo.lock`, RustSec Advisory Database e achados por versão
+- [[cargo-audit-identificadores-rustsec-faixas-versoes-triagem]] — Triagem de achados `RUSTSEC-*`: identificador, faixa afetada e versão de correção
+- [[cargo-audit-lockfile-ausente-risco-cargo-update-projeto-nao-confiavel]] — `cargo-audit` e projeto sem `Cargo.lock`: por que evitar comandos Cargo em código não confiável
+- [[cargo-audit-opcao-file-lockfile-externo-reproducibilidade]] — `cargo audit --file`: auditar um `Cargo.lock` externo sem entrar no workspace
+- [[cargo-audit-ignorar-advisory-justificativa-expiracao]] — Ignorar um advisory em `cargo-audit`: exceção rastreável, justificativa e reavaliação
+- [[cargo-audit-config-audittoml-controle-versao-excecoes]] — `audit.toml` versionado: governança das exceções locais do `cargo-audit`
+- [[cargo-audit-bin-inventario-dependencias-binario-rust]] — `cargo audit bin`: leitura de dependências em binários Rust distribuídos
+- [[cargo-auditable-metadados-embed-binario-limites]] — `cargo auditable`: metadados embutidos e limites da auditoria de binários Rust
+- [[cargo-audit-fix-dry-run-remediacao-experimental]] — `cargo audit fix --dry-run`: avaliar remediação antes de alterar dependências
+- [[cargo-audit-ci-audit-check-agendamento-falha]] — `cargo-audit` em CI: política de falha, atualização da base e trilha do relatório
+
+### `cargo-deny` — checks de advisories, licenças SPDX, dependências banidas, versões duplicadas e fontes de crates
+
+- [[cargo-deny-checks-grafo-dependencias-rust-configuracao]] — `cargo-deny`: checks declarativos sobre o grafo de dependências Cargo
+- [[cargo-deny-advisory-db-rustsec-atualizacao-offline]] — `cargo-deny check advisories`: fonte RustSec, cache local e atualidade dos dados
+- [[cargo-deny-ignores-advisory-expiry-reason-escopo]] — Exceções em `[advisories]`: ID, motivo, escopo e expiração
+- [[cargo-deny-yanked-unmaintained-unsound-advisories]] — Separar vulnerabilidade, crate `yanked`, descontinuidade e advisory de soundness
+- [[cargo-deny-licencas-spdx-allowlist-exceptions]] — Política de licenças em `cargo-deny`: expressões SPDX e exceções explícitas
+- [[cargo-deny-license-clarifications-hash-confidence]] — Clarificações de licença no `cargo-deny`: expressão, arquivo e hash
+- [[cargo-deny-bans-versoes-duplicadas-dependencias-proibidas]] — `[bans]` no `cargo-deny`: dependências proibidas e versões múltiplas
+- [[cargo-deny-sources-registries-git-allowlist]] — `[sources]` no `cargo-deny`: limitar registries e dependências Git
+- [[cargo-deny-target-features-grafo-resolucao-reprodutivel]] — Alvos e features na policy do `cargo-deny`: auditar o grafo que realmente será compilado
+- [[cargo-deny-github-action-ci-review-policy]] — Executar `cargo-deny` em CI: configuração como código e feedback de pull request
+
+### Mozilla `cargo-vet` — auditoria humana diferencial de crates, critérios de segurança, imports confiáveis e exemptions
+
+- [[cargo-vet-modelo-auditoria-terceiros-criterios-rust]] — `cargo-vet`: registrar auditorias de código Rust de terceiros junto ao projeto
+- [[cargo-vet-init-supply-chain-exemptions-iniciais]] — `cargo vet init`: inicializar supply chain sem confundir exemptions com auditorias
+- [[cargo-vet-check-novas-dependencias-gate-ci]] — `cargo vet check`: detectar código de terceiro novo no grafo de build
+- [[cargo-vet-criteria-safe-to-run-safe-to-deploy]] — Critérios do `cargo-vet`: definir o que uma auditoria precisa demonstrar
+- [[cargo-vet-differential-audit-diff-versao-crate]] — Auditoria diferencial no `cargo-vet`: revisar a diferença entre versões de uma crate
+- [[cargo-vet-imports-organizacoes-trust-explicito]] — Imports de auditorias no `cargo-vet`: confiar em organizações de forma explícita
+- [[cargo-vet-suggest-priorizar-backlog-auditoria]] — `cargo vet suggest`: priorizar backlog de auditorias com mudanças menores
+- [[cargo-vet-certify-record-audit-trilha-versao]] — `cargo vet certify`: registrar uma auditoria ligada à versão revisada
+- [[cargo-vet-record-violation-integridade-audits]] — `cargo vet record-violation`: registrar que uma versão contradiz uma auditoria
+- [[cargo-vet-exemptions-backlog-diferencial-seguranca]] — Exemptions no `cargo-vet`: backlog explícito, não selo de segurança
+
+### `cargo-geiger` — estatística de blocos `unsafe` no crate e nas dependências Rust, interpretação e limites de cobertura
+
+- [[cargo-geiger-proposito-estatisticas-unsafe-rust]] — `cargo-geiger`: medir presença de `unsafe` sem converter contagem em nota de segurança
+- [[cargo-geiger-execucao-workspace-grafo-dependencias]] — Executar `cargo geiger` na raiz do workspace e delimitar o grafo analisado
+- [[cargo-geiger-blocos-unsafe-review-invariantes]] — Transformar os pontos `unsafe` do `cargo-geiger` em uma fila de revisão de invariantes
+- [[cargo-geiger-uso-unsafe-necessario-encapsulamento]] — Interpretar `unsafe` no contexto: FFI, abstrações de baixo nível e encapsulamento seguro
+- [[cargo-geiger-baseline-historico-delta-unsafe]] — Usar baseline de `cargo-geiger` para acompanhar mudanças sem premiar dívida antiga
+- [[cargo-geiger-install-locked-openssl-vendored]] — Instalar `cargo-geiger` com Cargo lockado e escolher a biblioteca OpenSSL
+- [[cargo-geiger-comparacao-crates-normalizada-toolchain]] — Comparar relatórios `cargo-geiger` com toolchain, features e grafo fixos
+- [[cargo-geiger-relatorio-dados-entrada-auditoria-humana]] — Arquivar saída do `cargo-geiger` como evidência de revisão, não como certificado
+- [[cargo-geiger-complementar-cargo-audit-clippy-miri]] — Combinar `cargo-geiger` com auditoria de advisories e testes de comportamento inseguro
+- [[cargo-geiger-politica-nao-bloquear-por-contagem-bruta]] — Evitar gate binário por contagem bruta de `unsafe` sem contexto de risco
+
+### npm CLI `npm audit` — Bulk Advisory API, remediação sem quebra, relatórios JSON e verificação de assinatura/proveniência
+
+- [[npm-audit-descricao-dependencias-registry-privacidade]] — `npm audit`: envio da descrição de dependências ao registry configurado
+- [[npm-audit-lockfile-reprodutibilidade-package-lock]] — `package-lock.json` como entrada do `npm audit`: consistência e reprodutibilidade
+- [[npm-audit-bulk-advisory-endpoint-pacotes-versoes]] — Bulk Advisory Endpoint do npm: enviar nomes e versões resolvidas
+- [[npm-audit-audit-level-limiar-nao-filtro-relatorio]] — `--audit-level` no npm: limiar do exit code, não filtro dos achados
+- [[npm-audit-fix-semver-force-risco-major]] — `npm audit fix` e `--force`: diferenciar atualização compatível de mudança major
+- [[npm-audit-omit-producao-devdependencies-escopo]] — Separar dependências de produção e desenvolvimento no `npm audit`
+- [[npm-audit-json-sarif-automacao-relatorio]] — `npm audit --json`: preservar dados estruturados para triagem automatizada
+- [[npm-audit-metavulnerabilidades-cadeia-transitiva]] — Metavulnerabilidades no npm: quando uma dependência pai só resolve para versão vulnerável
+- [[npm-audit-signatures-provenance-attestations-distincao]] — `npm audit signatures`: verificação separada de assinatura e proveniência do registry
+- [[npm-audit-exit-code-ci-severidade-politica]] — Códigos de saída do `npm audit`: transformar achados em política CI explícita
+
+### pnpm `audit` — advisories GHSA, escopo por ambiente, correções por overrides, idade mínima e assinaturas de registry
+
+- [[pnpm-audit-bulk-advisory-ghsa-pnpm-v11]] — `pnpm audit` v11+: Bulk Advisory e uso de IDs GHSA
+- [[pnpm-audit-prod-dev-optional-dependencies-escopo]] — Delimitar `pnpm audit` por produção, desenvolvimento e dependências opcionais
+- [[pnpm-audit-json-patched-versions-null]] — `pnpm audit --json`: diferenciar advisories corrigíveis de sem versão corrigida
+- [[pnpm-audit-fix-overrides-workspace-yaml]] — `pnpm audit --fix`: remediar com `overrides` no arquivo de workspace
+- [[pnpm-audit-fix-update-lockfile-interativo]] — `pnpm audit --fix=update` e modo interativo: escolher a forma da remediação
+- [[pnpm-audit-ignore-ghsa-governanca-prune]] — `audit.ignore` no pnpm: allowlist GHSA com justificativa e limpeza de entradas antigas
+- [[pnpm-audit-level-impressao-severidade-policy]] — `--audit-level` no pnpm: controlar severidade exibida sem perder dados brutos
+- [[pnpm-audit-registry-errors-nao-mascarar-falha]] — `--ignore-registry-errors`: não confundir indisponibilidade do serviço com resultado limpo
+- [[pnpm-audit-signatures-registry-ecdsa-chaves]] — `pnpm audit signatures`: verificar assinaturas ECDSA do registry instalado
+- [[pnpm-audit-minimum-release-age-correcoes-seguranca]] — `minimumReleaseAge` e correções no pnpm: equilibrar atraso contra janela de ataque
+
+### Yarn Berry `yarn npm audit` — escopo por workspace, dependências transitivas, saída NDJSON e exclusões explicáveis
+
+- [[yarn-npm-audit-escopo-direto-workspace-default]] — `yarn npm audit`: escopo padrão limitado ao workspace ativo
+- [[yarn-npm-audit-all-workspaces-monorepo]] — `yarn npm audit --all`: ampliar a auditoria aos workspaces do monorepo
+- [[yarn-npm-audit-recursive-transitivas-cadeia]] — `yarn npm audit --recursive`: incluir dependências transitivas no relatório
+- [[yarn-npm-audit-environment-production-devdeps]] — `--environment production`: focar dependências de runtime sem apagar contexto de build
+- [[yarn-npm-audit-severity-filtro-relatorio-exit]] — `--severity` no Yarn: filtrar severidades exibidas e interpretar exit status
+- [[yarn-npm-audit-json-ndjson-registry-payload]] — Saída JSON/NDJSON no `yarn npm audit`: automação sem perder o relatório bruto
+- [[yarn-npm-audit-exclude-packages-false-positive-policy]] — `--exclude` no Yarn: reduzir ruído com escopo de pacote documentado
+- [[yarn-npm-audit-ignore-advisory-id-governanca]] — `--ignore` no Yarn: suprimir advisory específico com revisão recorrente
+- [[yarn-why-triagem-pacote-transitivo-origem]] — `yarn why` depois do audit: localizar quem introduziu uma dependência transitiva
+- [[yarn-audit-registry-relevancia-caminhos-execucao]] — Relevância de advisories no Yarn: cruzar registry, versão e caminho de execução
+
+### Gradle dependency verification — checksums, assinaturas, `verification-metadata.xml`, bootstrap e compatibilidade com locking
+
+- [[gradle-dependency-verification-integridade-nao-vulnerabilidade]] — Gradle Dependency Verification: verificar integridade de artefatos, não ausência de vulnerabilidades
+- [[gradle-verification-metadata-bootstrap-review-manual]] — `verification-metadata.xml`: geração inicial é bootstrap, não estabelecimento automático de confiança
+- [[gradle-checksum-versus-pgp-signature-verification]] — Checksums e assinaturas PGP no Gradle: propriedades diferentes de verificação
+- [[gradle-verification-metadata-unknown-artifact-fail-closed]] — Tratar artefato sem entrada de verificação como mudança que exige revisão
+- [[gradle-verification-metadata-trust-keys-export-review]] — Importar e confiar em chaves para verificação de assinaturas Gradle
+- [[gradle-verification-metadata-shared-project-scope]] — Centralizar `verification-metadata.xml` no repositório para builds reproduzíveis
+- [[gradle-verification-metadata-plugins-build-dependencies]] — Cobertura do Gradle Dependency Verification para plugins e configurações resolvidas
+- [[gradle-dependency-locking-version-selection-diferenca-integridade]] — Dependency Locking e Dependency Verification no Gradle: versão fixa versus bytes verificados
+- [[gradle-verification-refresh-upgrade-artefactos]] — Atualizar metadata de verificação em upgrades sem aceitar mudanças em massa
+- [[gradle-verification-complemento-scanners-sbom]] — Incluir Dependency Verification em uma cadeia de controles de supply chain Gradle
+
+### Apache Maven Enforcer Plugin — execução de regras no build, convergência, versões dinâmicas, dependências proibidas e escopo
+
+- [[maven-enforcer-enforce-pipeline-rules-build]] — `maven-enforcer-plugin`: aplicar requisitos de build com regras declaradas
+- [[maven-enforcer-fail-default-true-policy]] — `fail` no Maven Enforcer: falhar por padrão e tratar warn-only com intenção
+- [[maven-enforcer-dependency-convergence-transitive-conflicts]] — `dependencyConvergence`: detectar versões transitivas divergentes no grafo Maven
+- [[maven-enforcer-ban-dynamic-versions-reproducibilidade]] — Banir versões Maven dinâmicas para builds reprodutíveis
+- [[maven-enforcer-banned-dependencies-exclusions]] — `bannedDependencies`: recusar coordenadas Maven com escopo e exceções explícitos
+- [[maven-enforcer-require-java-maven-version-build-environment]] — Exigir versões de Java e Maven compatíveis com o build
+- [[maven-enforcer-require-property-dependency-management]] — Exigir propriedades e campos de versão no Maven POM
+- [[maven-enforcer-configuracao-em-parent-versus-modulos]] — Centralizar regras Enforcer em parent POM sem perder escopo por módulo
+- [[maven-enforcer-version-rule-plugin-pin-maintenance]] — Fixar a versão do Maven Enforcer Plugin e revisar mudanças de regras
+- [[maven-enforcer-policy-gate-nao-substitui-scanner-advisory]] — Maven Enforcer e scanners de CVE: policy de build não equivale a análise de advisories
+
+### Renovate `vulnerabilityAlerts` — triagem de alertas GitHub, Dependency Graph, configuração de PRs e limites de OSV experimental
+
+- [[renovate-vulnerabilityalerts-github-dependabot-prerequisites]] — `vulnerabilityAlerts` do Renovate depende do Dependency Graph e Dependabot alerts no GitHub
+- [[renovate-vulnerabilityalerts-config-pr-settings]] — Personalizar pull requests de correção de vulnerabilidade no Renovate
+- [[renovate-vulnerabilityalerts-nao-substitui-dependency-updates]] — Separar alertas de vulnerabilidade e fluxo regular de atualização do Renovate
+- [[renovate-osv-vulnerability-alerts-experimental-escopo]] — `osvVulnerabilityAlerts` no Renovate: recurso marcado experimental e sujeito a validação
+- [[renovate-security-presets-inherit-config-review]] — Aplicar presets de segurança Renovate com configuração herdada revisável
+- [[renovate-vulnerabilityalerts-github-permissions-self-hosted]] — Permissões e execução self-hosted para alertas de vulnerabilidade Renovate
+- [[renovate-alertas-dependabot-sla-triage-evidencia]] — Tratar alertas como fila de triagem: owner, prazo, versão corrigida e evidência de merge
+- [[renovate-config-validation-preview-dry-run]] — Validar configuração Renovate antes de ativar regras de segurança
+- [[renovate-alerta-ghsa-osv-identificadores-mapeamento]] — Correlacionar alertas Renovate com identificadores GHSA/CVE e advisory original
+- [[renovate-vulnerabilityalerts-limitacoes-alertas-sem-patch]] — PR de vulnerabilidade sem patch disponível: registrar mitigação em vez de assumir correção

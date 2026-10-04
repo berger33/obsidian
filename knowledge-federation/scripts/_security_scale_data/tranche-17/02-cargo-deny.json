@@ -1,0 +1,261 @@
+{
+  "group_title": "`cargo-deny` — checks de advisories, licenças SPDX, dependências banidas, versões duplicadas e fontes de crates",
+  "fact_check": "Conferi a introdução oficial e as referências de configuração do `cargo-deny`; validei escopo de `check`, regras de advisories, licenças, bans e fontes, sem confundir policy lint com análise de código.",
+  "sources": [
+    {
+      "label": "`cargo-deny` — livro oficial",
+      "url": "https://embarkstudios.github.io/cargo-deny/",
+      "description": "visão geral, inicialização, execução de `cargo deny check` e classes de checks sobre o grafo Cargo"
+    },
+    {
+      "label": "`cargo-deny` — configuração de advisories",
+      "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html",
+      "description": "base RustSec, tratamento de advisories, crates não mantidas, versões yanked, ignorados e atualização dos dados"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "cargo-deny-checks-grafo-dependencias-rust-configuracao",
+      "title": "`cargo-deny`: checks declarativos sobre o grafo de dependências Cargo",
+      "summary": "`cargo-deny` aplica políticas configuráveis ao grafo de dependências Rust e agrupa verificações de advisories, licenças, bans e origens.",
+      "why": "Uma revisão única do lockfile pode deixar passar licenças incompatíveis, fontes inesperadas ou versões duplicadas; regras explícitas tornam esses requisitos revisáveis no repositório.",
+      "how": "Inicialize a configuração, escolha o conjunto de checks adequado e rode o comando na mesma resolução usada pelo build; trate o resultado como lint de política do grafo.",
+      "example": "Uma equipe pode manter `deny.toml` com políticas aprovadas e executar `cargo deny check` em cada pull request que altera manifests ou `Cargo.lock`.",
+      "limits": "O comando não examina semântica de código, não decide se uma licença é juridicamente aceitável e depende de base de advisories atualizada.",
+      "verify": "Revise cada seção de configuração, confirme que CI executa os checks escolhidos e introduza uma dependência controlada para validar que a regra falha como esperado.",
+      "code": "cargo deny check",
+      "review": "Conferi na introdução oficial que `cargo-deny` lint o grafo e oferece classes distintas de checks; limitei a nota a essas políticas declarativas."
+    },
+    {
+      "slug": "cargo-deny-advisory-db-rustsec-atualizacao-offline",
+      "title": "`cargo-deny check advisories`: fonte RustSec, cache local e atualidade dos dados",
+      "summary": "O check de advisories usa a RustSec Advisory Database por padrão e pode ser configurado para buscar outros endereços de base e armazená-los localmente.",
+      "why": "Uma auditoria offline pode ser reproduzível, mas deixa de refletir avisos publicados depois da última sincronização; a idade dos dados precisa aparecer no processo.",
+      "how": "Defina URLs e diretório de cache somente quando necessário, documente a janela sem rede e trate `maximum-db-staleness` como limite de operação offline.",
+      "example": "Em uma rede isolada, sincronize a base por canal aprovado, registre a data de atualização e execute a análise em modo offline sem declarar os dados como atuais indefinidamente.",
+      "limits": "A configuração de idade máxima é relevante quando a busca é desativada; uma base antiga pode omitir advisories recentes e não deve ser interpretada como resultado limpo atual.",
+      "verify": "Registre a revisão da base usada no job e compare seu timestamp com o limite de frescor definido na política local.",
+      "code": "cargo deny check advisories --disable-fetch",
+      "review": "Conferi na referência oficial a base RustSec padrão, configuração `db-urls`/`db-path` e a ressalva de staleness em execução sem fetch."
+    },
+    {
+      "slug": "cargo-deny-ignores-advisory-expiry-reason-escopo",
+      "title": "Exceções em `[advisories]`: ID, motivo, escopo e expiração",
+      "summary": "A configuração de advisories permite ignorar um identificador específico, registrar uma razão e restringir o efeito da exceção a crates selecionadas.",
+      "why": "Supressões sem prazo acumulam dívida invisível; `expiry` e `ignore-expiry` ajudam a transformar uma decisão temporária em item de revisão periódica.",
+      "how": "Prefira corrigir a dependência; se houver exceção, registre ID, crate afetada, justificativa verificável e expiração, e revise o diff quando o advisory mudar.",
+      "example": "Um pull request que adiciona uma exceção deve incluir evidência da análise de reachability e uma data de retorno, não apenas o status de CI desejado.",
+      "limits": "Uma razão em TOML não comprova que o código vulnerável seja inalcançável; a configuração pode ficar desatualizada quando o grafo ou features mudam.",
+      "verify": "Execute o check com uma versão afetada e depois com a corrigida, confirme o escopo da exceção e teste que uma nova dependência não herda a permissão.",
+      "code": "cargo deny check advisories",
+      "review": "Conferi os campos `ignore`, `expiry` e `allow` da configuração oficial; ressaltei que exceção é policy local e não prova de ausência de impacto."
+    },
+    {
+      "slug": "cargo-deny-yanked-unmaintained-unsound-advisories",
+      "title": "Separar vulnerabilidade, crate `yanked`, descontinuidade e advisory de soundness",
+      "summary": "O check de advisories distingue avisos de segurança de crates yanked, não mantidas ou marcadas como unsound, permitindo política diferenciada por categoria.",
+      "why": "Esses sinais representam riscos distintos: uma versão removida, ausência de manutenção e problema de soundness exigem triagem e remediação diferentes.",
+      "how": "Defina comportamento explícito para cada grupo em `[advisories]`, revise defaults da versão instalada e evite reduzir tudo a um único nível genérico de severidade.",
+      "example": "Uma equipe pode bloquear advisories de vulnerabilidade, alertar sobre crate yanked e priorizar crates não mantidas que sejam dependências diretas.",
+      "limits": "As opções e defaults evoluem por versão do `cargo-deny`; uma categoria pode ser marcada sem demonstrar que o produto exercita o caminho relacionado.",
+      "verify": "Consulte a referência correspondente à versão fixada, inspecione o ID do advisory e teste a policy com fixtures seguras ou lockfiles de exemplo.",
+      "code": "cargo deny check advisories",
+      "review": "Conferi na referência os campos `yanked`, `unmaintained` e `unsound` e os escopos disponíveis; evitei misturá-los a uma alegação de exploração."
+    },
+    {
+      "slug": "cargo-deny-licencas-spdx-allowlist-exceptions",
+      "title": "Política de licenças em `cargo-deny`: expressões SPDX e exceções explícitas",
+      "summary": "O check de licenças compara expressões identificadas para crates com uma allowlist baseada em identificadores SPDX e exceções por pacote.",
+      "why": "Uma dependência pode ser tecnicamente segura e ainda violar requisitos de distribuição; a regra torna a revisão de licenciamento parte verificável do grafo.",
+      "how": "Escolha uma lista permitida com a área responsável, use exceções por crate para desvios aprovados e trate expressões compostas e cláusulas `WITH` com precisão.",
+      "example": "Em `deny.toml`, permita apenas identificadores aprovados e abra uma exceção nomeada para uma crate cuja expressão tenha sido avaliada pelo jurídico.",
+      "limits": "A ferramenta identifica e compara metadados de licença, não oferece aconselhamento jurídico e pode exigir clarificação quando o texto da licença é ambíguo.",
+      "verify": "Compare a licença declarada e os arquivos LICENSE da dependência com a decisão registrada; verifique que uma crate não permitida realmente faz o check falhar.",
+      "code": "cargo deny check licenses",
+      "review": "Conferi na configuração oficial que licenças usam identificadores SPDX, allowlist e exceções; a nota separa lint automatizado de julgamento jurídico."
+    },
+    {
+      "slug": "cargo-deny-license-clarifications-hash-confidence",
+      "title": "Clarificações de licença no `cargo-deny`: expressão, arquivo e hash",
+      "summary": "Quando a licença não é detectada com confiança suficiente, a configuração pode declarar uma expressão SPDX e amarrá-la ao hash de um arquivo de licença.",
+      "why": "Uma clarificação manual não deve sobreviver silenciosamente a uma troca do texto legal; associar a decisão ao arquivo torna alterações relevantes detectáveis.",
+      "how": "Use-a apenas após revisão humana da licença, limite a crate e versão adequadas e atualize a clarificação quando o arquivo de referência mudar.",
+      "example": "Ao reconhecer manualmente uma licença não identificada, registre `expression` e o caminho/hash indicado pelo check, e peça revisão legal antes de aceitar o resultado.",
+      "limits": "Hash estável prova igualdade de bytes do arquivo consultado, não validade jurídica nem correspondência perfeita entre código e licença declarada.",
+      "verify": "Edite o arquivo de licença em um teste controlado e confirme que a clarificação deixa de corresponder; depois valide a nova decisão separadamente.",
+      "code": "cargo deny check licenses",
+      "review": "Conferi o suporte oficial a `licenses.clarify`, expressão SPDX, caminhos e hashes; descrevi o hash como vínculo de bytes, não como parecer legal."
+    },
+    {
+      "slug": "cargo-deny-bans-versoes-duplicadas-dependencias-proibidas",
+      "title": "`[bans]` no `cargo-deny`: dependências proibidas e versões múltiplas",
+      "summary": "O check de bans pode bloquear crates selecionadas e sinalizar múltiplas versões da mesma dependência presentes no grafo resolvido.",
+      "why": "Versões duplicadas aumentam superfície e custo de atualização; uma crate banida pode representar uma implementação incompatível com a política técnica do projeto.",
+      "how": "Configure padrões específicos, explique substituições preferidas e ajuste exceções apenas para conflitos transitivos compreendidos, evitando banir pelo nome sem mapear consumidores.",
+      "example": "Um repositório pode rejeitar uma biblioteca depreciada e alertar quando uma dependência transitiva introduz uma segunda versão, abrindo tarefa para convergência.",
+      "limits": "Duplicidade não significa automaticamente vulnerabilidade; resolver versões pode exigir coordenação upstream e uma regra agressiva pode bloquear builds válidos.",
+      "verify": "Inspecione a cadeia afetada com a árvore Cargo, aplique a regra em CI e confirme que exceções listam exatamente pacote e versão pretendidos.",
+      "code": "cargo deny check bans",
+      "review": "Conferi na documentação oficial do projeto que o cargo-deny oferece bans e detecção de versões duplicadas; mantive a distinção entre higiene e vulnerabilidade."
+    },
+    {
+      "slug": "cargo-deny-sources-registries-git-allowlist",
+      "title": "`[sources]` no `cargo-deny`: limitar registries e dependências Git",
+      "summary": "O check de fontes permite definir se registries e repositórios Git desconhecidos são aceitos, restringindo origens do grafo Cargo a locais aprovados.",
+      "why": "Uma crate com nome legítimo ainda pode vir de um registry ou URL inesperado; origem explícita ajuda a reduzir confusão e dependências não revisadas.",
+      "how": "Mantenha uma lista deliberada de fontes permitidas, registre por que cada registry é necessário e trate dependências Git por revisão imutável quando a política exigir.",
+      "example": "No pull request, introduza uma origem fictícia em um manifest de teste e confirme que a checagem bloqueia o download fora do registry permitido.",
+      "limits": "A allowlist não autentica por si só o conteúdo de uma origem autorizada nem elimina comprometimento de credenciais ou conta do mantenedor.",
+      "verify": "Revise os campos de `[sources]`, compare cada origem da resolução com a lista aprovada e rode o check após mudanças de registry.",
+      "code": "cargo deny check sources",
+      "review": "Conferi que o cargo-deny oferece controle de fontes de crates e configuração por checks; a nota evita atribuir à allowlist proteção criptográfica do artefato."
+    },
+    {
+      "slug": "cargo-deny-target-features-grafo-resolucao-reprodutivel",
+      "title": "Alvos e features na policy do `cargo-deny`: auditar o grafo que realmente será compilado",
+      "summary": "A configuração de grafo pode definir alvos e features considerados, afetando quais dependências transitivas entram nas verificações de policy.",
+      "why": "Uma auditoria feita apenas para o alvo padrão pode omitir crates ativadas em outra plataforma ou por uma feature usada em produção.",
+      "how": "Espelhe a matriz de compilação do produto na configuração do check, identifique combinações relevantes e mantenha configurações específicas documentadas quando o conjunto divergir.",
+      "example": "Se a aplicação publica Linux e macOS, execute verificações sobre os dois alvos suportados e compare o inventário resolvido antes de aprovar uma exceção.",
+      "limits": "Ativar todas as features pode produzir combinações que o produto nunca usa; auditar uma matriz reduzida pode deixar caminhos de build sem cobertura.",
+      "verify": "Inspecione as opções de grafo da versão fixada e confirme em CI que cada alvo de release aparece em uma execução do check.",
+      "code": "cargo deny check",
+      "review": "Conferi a configuração oficial do grafo e a possibilidade de selecionar alvos; a nota recomenda alinhar a policy à matriz real, sem prometer cobertura automática."
+    },
+    {
+      "slug": "cargo-deny-github-action-ci-review-policy",
+      "title": "Executar `cargo-deny` em CI: configuração como código e feedback de pull request",
+      "summary": "A documentação do projeto mostra `cargo deny check` como comando principal e apresenta uma action de CI para executar as regras em pushes e pull requests.",
+      "why": "Executar as mesmas regras a cada mudança reduz diferenças entre laptops e integração contínua e mostra o impacto de atualizar dependências antes do merge.",
+      "how": "Fixe versões da ferramenta e da action, faça upload do relatório e permita que exceções sejam revisadas como diffs comuns do arquivo de policy.",
+      "example": "Um workflow pode executar `cargo deny check` após checkout e falhar a verificação quando uma alteração introduz licença, source ou advisory não aceito.",
+      "limits": "A action aplica a configuração presente no repositório; se a policy estiver incompleta ou desatualizada, a automação apenas repetirá a lacuna.",
+      "verify": "Teste deliberadamente uma dependência recusada em branch temporária e confirme status não verde, relatório legível e caminho documentado de remediação.",
+      "code": "cargo deny check",
+      "review": "Conferi no guia oficial o exemplo de action em push/pull_request e o comando base; a nota atribui o resultado à configuração versionada."
+    }
+  ],
+  "coverage_review": "A busca no corpo de todas as 5.740 notas em `domains/` por `cargo deny` e `cargo-deny` não encontrou documentação existente desse utilitário. As notas de SCA/Dependency-Check tratam de descoberta de vulnerabilidades, não das policies de advisories, licenças SPDX, bans, fontes e grafo do cargo-deny.",
+  "source_overrides": {
+    "cargo-deny-checks-grafo-dependencias-rust-configuracao": [
+      {
+        "label": "`cargo-deny` — Quickstart e classes de checks",
+        "url": "https://embarkstudios.github.io/cargo-deny/",
+        "description": "comando `cargo deny check` e escopo geral das políticas de grafo"
+      },
+      {
+        "label": "`cargo-deny` — Checks",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/index.html",
+        "description": "índice oficial das verificações de advisories, licenças, bans e fontes"
+      }
+    ],
+    "cargo-deny-advisory-db-rustsec-atualizacao-offline": [
+      {
+        "label": "`cargo-deny` — configuração de advisories",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html",
+        "description": "base padrão, fetch, cache, fontes de DB e limite de staleness"
+      },
+      {
+        "label": "`cargo-deny` — CLI",
+        "url": "https://embarkstudios.github.io/cargo-deny/cli/",
+        "description": "opções do comando para controlar execução/fetch e rodar checks"
+      }
+    ],
+    "cargo-deny-ignores-advisory-expiry-reason-escopo": [
+      {
+        "label": "`cargo-deny` — configuração de advisories",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html",
+        "description": "IDs ignorados, razões, expiração e escopo por crate/versão"
+      },
+      {
+        "label": "`cargo-deny` — Advisories",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/",
+        "description": "comportamento do check de advisories no grafo Cargo"
+      }
+    ],
+    "cargo-deny-yanked-unmaintained-unsound-advisories": [
+      {
+        "label": "`cargo-deny` — configuração de advisories",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html",
+        "description": "policies distintas para vulnerabilidades, yanked, unmaintained e unsound"
+      },
+      {
+        "label": "`cargo-deny` — Advisories",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/advisories/",
+        "description": "categorias de findings emitidas pelo check de advisories"
+      }
+    ],
+    "cargo-deny-licencas-spdx-allowlist-exceptions": [
+      {
+        "label": "`cargo-deny` — configuração de licenças",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html",
+        "description": "identificadores SPDX, allowlist e exceções por crate"
+      },
+      {
+        "label": "SPDX — License List",
+        "url": "https://spdx.org/licenses/",
+        "description": "identificadores padronizados usados para expressões de licenças"
+      }
+    ],
+    "cargo-deny-license-clarifications-hash-confidence": [
+      {
+        "label": "`cargo-deny` — configuração de licenças",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html",
+        "description": "clarifications, expressões, limiar de confiança e hash de arquivos"
+      },
+      {
+        "label": "SPDX — License List",
+        "url": "https://spdx.org/licenses/",
+        "description": "expressões e identificadores SPDX declarados na clarificação"
+      }
+    ],
+    "cargo-deny-bans-versoes-duplicadas-dependencias-proibidas": [
+      {
+        "label": "`cargo-deny` — configuração de bans",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html",
+        "description": "crates banidas, versões múltiplas, padrões e exceções"
+      },
+      {
+        "label": "Cargo Reference — `cargo tree`",
+        "url": "https://doc.rust-lang.org/cargo/commands/cargo-tree.html",
+        "description": "inspeção dos caminhos diretos e transitivos do grafo de dependências"
+      }
+    ],
+    "cargo-deny-sources-registries-git-allowlist": [
+      {
+        "label": "`cargo-deny` — configuração de fontes",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/sources/cfg.html",
+        "description": "registries, Git, fontes permitidas e política para origens desconhecidas"
+      },
+      {
+        "label": "Cargo Reference — Registries",
+        "url": "https://doc.rust-lang.org/cargo/reference/registries.html",
+        "description": "origens de registries e configuração de fontes no ecossistema Cargo"
+      }
+    ],
+    "cargo-deny-target-features-grafo-resolucao-reprodutivel": [
+      {
+        "label": "`cargo-deny` — configuração global do grafo",
+        "url": "https://embarkstudios.github.io/cargo-deny/checks/cfg.html",
+        "description": "targets, features e opções que determinam quais crates entram nos checks"
+      },
+      {
+        "label": "Cargo Reference — Features",
+        "url": "https://doc.rust-lang.org/cargo/reference/features.html",
+        "description": "resolução de features e dependências condicionais no build Cargo"
+      }
+    ],
+    "cargo-deny-github-action-ci-review-policy": [
+      {
+        "label": "`cargo-deny` — GitHub Action oficial",
+        "url": "https://github.com/EmbarkStudios/cargo-deny-action",
+        "description": "inputs, comandos, matriz de checks e comportamento de falha da action"
+      },
+      {
+        "label": "`cargo-deny` — documentação oficial",
+        "url": "https://embarkstudios.github.io/cargo-deny/",
+        "description": "execução de `cargo deny check` sobre a configuração do projeto"
+      }
+    ]
+  }
+}

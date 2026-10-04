@@ -1,0 +1,159 @@
+{
+  "group_title": "`cargo-geiger` — estatística de blocos `unsafe` no crate e nas dependências Rust, interpretação e limites de cobertura",
+  "fact_check": "Conferi o README publicado no Docs.rs para `cargo-geiger` e o Rustonomicon sobre safe/unsafe; validei finalidade estatística, comando básico e a ressalva explícita de que contagem não é julgamento de segurança.",
+  "sources": [
+    {
+      "label": "`cargo-geiger` — README publicado no Docs.rs",
+      "url": "https://docs.rs/crate/cargo-geiger/latest/source/README.md",
+      "description": "uso do plugin Cargo, estatísticas de `unsafe`, instalação, intenção de auditoria e limitações reconhecidas pelo projeto"
+    },
+    {
+      "label": "The Rustonomicon — Meet Safe and Unsafe",
+      "url": "https://doc.rust-lang.org/nomicon/meet-safe-and-unsafe.html",
+      "description": "distinção entre Safe Rust e Unsafe Rust, responsabilidades de invariantes e possíveis usos de operações unsafe"
+    }
+  ],
+  "notes": [
+    {
+      "slug": "cargo-geiger-proposito-estatisticas-unsafe-rust",
+      "title": "`cargo-geiger`: medir presença de `unsafe` sem converter contagem em nota de segurança",
+      "summary": "`cargo-geiger` lista estatísticas relacionadas ao uso de Rust `unsafe` em um crate e nas dependências selecionadas pelo projeto Cargo.",
+      "why": "Uma medida simples ajuda equipes a localizar áreas que merecem leitura de invariantes, mas não classifica automaticamente uma crate como segura ou insegura.",
+      "how": "Execute a ferramenta na pasta com `Cargo.toml`, registre versão e configuração e use as contagens como entrada para uma auditoria qualitativa.",
+      "example": "Em uma revisão de arquitetura, compare os resultados do binário principal e de uma biblioteca central, anotando quais componentes concentram abstrações `unsafe`.",
+      "limits": "A documentação do projeto diz explicitamente que o relatório não deve aconselhar diretamente se o código é inseguro; uso de `unsafe` pode ser necessário e encapsulado.",
+      "verify": "Leia a finalidade declarada no README, abra as áreas apontadas no código e documente invariantes, limites de buffer e contratos de ponteiros relevantes.",
+      "code": "cargo geiger",
+      "review": "Conferi no README do Docs.rs a finalidade estatística e a ressalva explícita de não avaliar segurança final; confirmei no Rustonomicon a distinção safe/unsafe."
+    },
+    {
+      "slug": "cargo-geiger-execucao-workspace-grafo-dependencias",
+      "title": "Executar `cargo geiger` na raiz do workspace e delimitar o grafo analisado",
+      "summary": "O README orienta executar `cargo geiger` no diretório do `Cargo.toml` que se deseja analisar, para produzir estatísticas do crate e de suas dependências.",
+      "why": "A pasta de execução e a resolução do workspace determinam quais pacotes aparecem; uma leitura incompleta pode levar a comparar conjuntos diferentes.",
+      "how": "Escolha explicitamente o manifest de produção, mantenha Cargo.lock e opções de build sob revisão e registre se a análise cobre workspace inteiro ou um componente.",
+      "example": "Em um monorepo, rode a análise para os manifests de cada binário publicado e salve uma saída separada para evitar misturar dependências de ferramentas de teste.",
+      "limits": "Uma execução local não garante que todos os targets ou features foram incluídos; valide o grafo real de release antes de usar a métrica como inventário.",
+      "verify": "Confira o diretório atual, o manifest selecionado e a lista de crates mostrada; compare com o grafo obtido por Cargo na configuração de produção.",
+      "code": "cd path/to/crate && cargo geiger",
+      "review": "Conferi no README publicado e no repositório oficial `geiger-rs/cargo-geiger` a execução como subcomando Cargo; a nota recomenda delimitar workspace/targets para comparações equivalentes."
+    },
+    {
+      "slug": "cargo-geiger-blocos-unsafe-review-invariantes",
+      "title": "Transformar os pontos `unsafe` do `cargo-geiger` em uma fila de revisão de invariantes",
+      "summary": "Uma ocorrência de `unsafe` indica que parte das garantias de segurança precisa ser sustentada por contratos que o compilador não comprova integralmente.",
+      "why": "A pergunta útil não é quantos blocos existem isoladamente, mas quais invariantes tornam cada operação válida e se chamadores podem preservá-los.",
+      "how": "Use a contagem para localizar módulos, leia comentários de safety, siga caminhos de entrada e revise ownership, alinhamento, aliasing e limites aplicáveis.",
+      "example": "Para um wrapper de FFI, registre pré-condições de ponteiros, duração dos buffers e regras de aliasing antes de aprovar a abstração pública.",
+      "limits": "O contador não entende semântica de invariantes e não mede a qualidade dos testes; um único bloco mal especificado pode ser mais importante que dezenas triviais.",
+      "verify": "Associe cada região prioritária a revisão de código, teste de propriedade ou sanitizador apropriado e confirme que o comentário de safety explica a obrigação do chamador.",
+      "code": "cargo geiger",
+      "review": "Conferi no Rustonomicon que Unsafe Rust exige atenção às propriedades presumidas pelo sistema de tipos; tratei o Geiger apenas como localização estatística."
+    },
+    {
+      "slug": "cargo-geiger-uso-unsafe-necessario-encapsulamento",
+      "title": "Interpretar `unsafe` no contexto: FFI, abstrações de baixo nível e encapsulamento seguro",
+      "summary": "Rust permite `unsafe` para interagir com FFI, detalhes de baixo nível e operações que o sistema de tipos não consegue expressar sozinho.",
+      "why": "Classificar todo uso como defeito incentiva remoções apressadas e pode prejudicar abstrações corretas; a avaliação deve recair sobre contrato, isolamento e chamadas seguras.",
+      "how": "Procure uma API segura que encapsula as operações perigosas, teste fronteiras e confira se cada caminho público mantém invariantes para todos os inputs permitidos.",
+      "example": "Ao revisar bindings C, documente como ownership e lifetimes são traduzidos entre linguagens e mantenha chamadas inseguras em uma camada pequena.",
+      "limits": "A existência de justificativa de performance ou FFI não prova correção; uma abstração aparentemente segura pode expor comportamento indefinido por contrato incompleto.",
+      "verify": "Leia o módulo ao redor do bloco e os usos públicos, avalie inputs inválidos e consulte as garantias aplicáveis do Rustonomicon para aquela operação.",
+      "review": "Conferi no Rustonomicon os motivos legítimos para Unsafe Rust e a responsabilidade de revisar interações; evitei equiparar uso necessário a uso seguro."
+    },
+    {
+      "slug": "cargo-geiger-baseline-historico-delta-unsafe",
+      "title": "Usar baseline de `cargo-geiger` para acompanhar mudanças sem premiar dívida antiga",
+      "summary": "A comparação de resultados ao longo do tempo pode revelar aumento de `unsafe`, desde que o baseline seja tratado como referência e não como aprovação.",
+      "why": "Projetos maduros podem ter muitos usos legados; bloquear qualquer contagem absoluta pode ocultar novas áreas em vez de orientar sua revisão incremental.",
+      "how": "Armazene relatórios por commit, compare mesma versão da ferramenta e mesmo grafo e investigue cada aumento associado a nova dependência ou módulo.",
+      "example": "Uma pipeline pode anexar estatísticas da branch ao pull request e exigir justificativa quando a mudança introduzir novos pontos `unsafe`.",
+      "limits": "Mudança de compilador, feature ou resolução pode alterar o resultado sem mudança direta de código; o delta não mede severidade nem qualidade de encapsulamento.",
+      "verify": "Reexecute o baseline com toolchain e lockfile comparáveis e explique diferenças de grafo antes de atribuir aumento ao código alterado.",
+      "review": "A recomendação de baseline é uma prática derivada da finalidade estatística; confrontei-a com o aviso oficial de que a ferramenta não dá veredito de segurança."
+    },
+    {
+      "slug": "cargo-geiger-install-locked-openssl-vendored",
+      "title": "Instalar `cargo-geiger` com Cargo lockado e escolher a biblioteca OpenSSL",
+      "summary": "O README do `cargo-geiger` oferece uma instalação com `cargo install --locked` e uma alternativa com OpenSSL compilado estaticamente usando a feature `vendored-openssl`.",
+      "why": "Fixar as dependências de instalação reduz variação no ambiente da ferramenta; a opção vendored ajuda em runners sem uma instalação de OpenSSL compatível, com custo de build próprio.",
+      "how": "Escolha entre usar uma biblioteca OpenSSL de sistema ou compilar a versão vendored, registre a versão do cargo-geiger e valide a instalação no mesmo tipo de runner da CI.",
+      "example": "Em um runner padronizado, instale o plugin com `cargo install --locked cargo-geiger`; se não houver OpenSSL de sistema compatível, use `cargo install --locked cargo-geiger --features vendored-openssl`.",
+      "limits": "A feature vendored aumenta o trabalho de compilação e não torna o relatório mais correto; versões de Rust, plataforma e requisitos criptográficos continuam sendo decisões separadas.",
+      "verify": "Confira a versão instalada com `cargo geiger --version`, valide a disponibilidade do executável no PATH e repita a instalação num runner limpo para detectar dependências implícitas.",
+      "review": "Conferi as duas linhas oficiais de instalação no README do Docs.rs: OpenSSL do sistema e feature vendored; mantive a recomendação de versionar a ferramenta como prática de reprodutibilidade.",
+      "code": "cargo install --locked cargo-geiger --features vendored-openssl"
+    },
+    {
+      "slug": "cargo-geiger-comparacao-crates-normalizada-toolchain",
+      "title": "Comparar relatórios `cargo-geiger` com toolchain, features e grafo fixos",
+      "summary": "Uma diferença nas contagens só é interpretável se os dois relatórios usarem versões comparáveis da ferramenta, configuração Cargo e conjunto de dependências.",
+      "why": "Mudanças em targets, features ou lockfile podem deslocar as estatísticas sem qualquer refatoração do código examinado.",
+      "how": "Registre a versão do `cargo-geiger`, Rust toolchain, commit, manifest, target e opções de build junto ao relatório, para que a comparação seja reprodutível.",
+      "example": "Ao avaliar uma atualização, gere o relatório anterior e posterior com o mesmo container de CI e diffs do `Cargo.lock` explicitamente associados.",
+      "limits": "Mesmo resultados perfeitamente reproduzíveis continuam sendo contagens e não indicam por si só se uma mudança reduziu risco real.",
+      "verify": "Reexecute ambos os commits em ambiente equivalente, compare o grafo e faça triagem das regiões cujo uso de `unsafe` mudou.",
+      "review": "Conferi a integração do Geiger com Cargo descrita no README e apliquei a ressalva de que métricas exigem contexto comparável."
+    },
+    {
+      "slug": "cargo-geiger-relatorio-dados-entrada-auditoria-humana",
+      "title": "Arquivar saída do `cargo-geiger` como evidência de revisão, não como certificado",
+      "summary": "O resultado pode compor um pacote de evidências junto do commit, dependências e observações da equipe que examinou as áreas de maior interesse.",
+      "why": "Guardar contexto permite que revisores posteriores saibam que versão foi medida e quais pontos foram realmente avaliados, sem interpretar a métrica como garantia.",
+      "how": "Anexe saída legível, commit auditado, toolchain e links para decisões; se usar formato de máquina suportado pela versão, valide o esquema antes de automação.",
+      "example": "Uma release pode arquivar o resumo das estatísticas e a lista de módulos revisados na mesma trilha do SBOM e das evidências de build.",
+      "limits": "O próprio relatório não substitui revisão humana de código, assinatura do artefato nem verificação de vulnerabilidades conhecidas nas dependências.",
+      "verify": "Confirme que o relatório é do commit final, que o comando e versão estão registrados e que achados relevantes apontam para revisão concreta.",
+      "review": "Conferi a finalidade de input para auditoria declarada pelo projeto e evitei afirmar formato de saída específico além do documentado."
+    },
+    {
+      "slug": "cargo-geiger-complementar-cargo-audit-clippy-miri",
+      "title": "Combinar `cargo-geiger` com auditoria de advisories e testes de comportamento inseguro",
+      "summary": "O Geiger mede uso de `unsafe`; `cargo-audit` procura advisories conhecidos, enquanto revisão de invariantes e ferramentas de teste investigam dimensões diferentes.",
+      "why": "Nenhuma métrica isolada cobre inventário, vulnerabilidade publicada, comportamento indefinido e qualidade da API; controles independentes diminuem pontos cegos.",
+      "how": "Use cada resultado para uma pergunta específica, mantenha lockfile auditado e escolha testes de fronteira adequados à biblioteca, em vez de fundir tudo num único score.",
+      "example": "Uma biblioteca de parsing pode combinar Geiger para localizar `unsafe`, `cargo audit` para dependências e testes de fuzzing sobre a API pública.",
+      "limits": "Compor ferramentas não garante que bugs sejam encontrados; resultado verde em cada etapa depende de escopo, versão e cobertura de cada controle.",
+      "verify": "Leia os relatórios separadamente e confirme que cada exigência de segurança tem responsável, artefato e critério verificável.",
+      "review": "Conferi o escopo declarado do Geiger e do RustSec; a comparação descreve controles complementares sem alegar integração nativa inexistente."
+    },
+    {
+      "slug": "cargo-geiger-politica-nao-bloquear-por-contagem-bruta",
+      "title": "Evitar gate binário por contagem bruta de `unsafe` sem contexto de risco",
+      "summary": "Um limite numérico universal para operações `unsafe` ignora tamanho do projeto, padrões de encapsulamento e criticidade das invariantes revisadas.",
+      "why": "Gates cegos podem incentivar reescritas cosméticas ou suprimir relatório, em vez de ajudar a equipe a examinar mudanças que afetam memória e FFI.",
+      "how": "Prefira diff consciente, revisão de novos blocos e justificativas locais; use métricas agregadas como sinal para tendência e priorização, não aprovação automática.",
+      "example": "Uma policy pode exigir revisão de um aumento no módulo central de parsing e permitir crescimento em bindings gerados com justificativa e owner específico.",
+      "limits": "Uma métrica contextual ainda depende de configuração correta e pode não capturar mudanças sem alteração de contagem, como mudança de invariantes.",
+      "verify": "Teste a policy com mudanças de exemplo e confira que novos usos recebem revisão útil sem que uma queda numérica seja tratada como certificação.",
+      "review": "Conferi o aviso do README de que cargo-geiger não determina se o código é inseguro; derivei a recomendação de não usar contagem isolada."
+    }
+  ],
+  "coverage_review": "A busca em todos os corpos por `cargo geiger`, `cargo-geiger` e `geiger` não encontrou nota dedicada. Li também as duas notas Kani no domínio de testes que discutem blocos unsafe: elas modelam/verificam UB por harness, ao passo que cargo-geiger oferece estatística de uso como entrada de auditoria. São controles complementares, não a mesma técnica.",
+  "source_overrides": {
+    "cargo-geiger-execucao-workspace-grafo-dependencias": [
+      {
+        "label": "`cargo-geiger` — repositório oficial",
+        "url": "https://github.com/geiger-rs/cargo-geiger",
+        "description": "comando do plugin Cargo e execução sobre o manifest/workspace selecionado"
+      },
+      {
+        "label": "Cargo Reference — Workspaces",
+        "url": "https://doc.rust-lang.org/cargo/reference/workspaces.html",
+        "description": "membros e fronteiras do workspace que determinam o grafo selecionado"
+      }
+    ],
+    "cargo-geiger-install-locked-openssl-vendored": [
+      {
+        "label": "`cargo-geiger` — repositório oficial",
+        "url": "https://github.com/geiger-rs/cargo-geiger",
+        "description": "README oficial com a instalação `--locked` e a feature `vendored-openssl`"
+      },
+      {
+        "label": "Cargo Reference — `cargo install`",
+        "url": "https://doc.rust-lang.org/cargo/commands/cargo-install.html",
+        "description": "sintaxe e semântica de `--locked` e `--features` durante instalação de um pacote Cargo"
+      }
+    ]
+  }
+}
