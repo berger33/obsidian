@@ -1,0 +1,236 @@
+{
+  "group": "llama.cpp server: contexto, cache de KV, slots paralelos, endpoints e saída estruturada",
+  "check": "Revisão do README oficial da ferramenta server e do README de grammars (github.com/ggml-org/llama.cpp, master), lidos na íntegra em 2026-10-04; defaults citados pertencem a essa documentação, que muda entre releases — conferir o --help da build usada.",
+  "notes": [
+    {
+      "slug": "llamacpp-contexto-e-batch-na-carga",
+      "title": "llama.cpp server: tamanho de contexto e batch de prompt são duas alavancas separadas",
+      "one": "O contexto do servidor (-c, default 0 = o valor do modelo) dimensiona a janela viva por slot; o batch (-b 2048 default, com -ub 512 de microbatch) dimensiona o processamento de prompt — configurar um não configura o outro.",
+      "why": "O erro de capacity planning em llama.cpp é ler -c como 'performance': contexto grande paga KV em RAM por slot sempre, enquanto o throughput de prompt depende de -b/-ub e do hardware. Times que sobem -c para 'aceitar arquivos maiores' veem latência piorar e culpam o modelo, quando o dial do throughput era o batch.",
+      "how": "Para prompts longos, o caminho é -b/-ub (o processamento é particionado em microbatches de -ub; -b grande ajuda quando a placa aguenta o VRAM do gráfico) — a doc do server registra os defaults 2048/512 e as interações com Flash Attention (nota separada). O -c define quanto contexto total existe por slot; com múltiplos slots (-np), ele se divide — e o custo real é KV por token. A decisão correta: medir o prompt típico do produto, dar folga (a cache de sistema + histórico), e não 'o máximo do modelo'.",
+      "example": "Um chat de documentos com prompts de ~6k tokens e resposta de 1k: -c 8192 por slot com -np 4 (contexto por slot conforme o modo de divisão), -b 4096/-ub 1024 num 4090 — o TTFT cai pelo batch, o VRAM de KV não explode por capricho.",
+      "limits": "Valores de -c acima do trained do modelo dependem de YaRN/context-shift, não de mágica — a doc separa as flags de extensão. -b acima do que o VRAM do gráfico aguenta degrada (ou OOM). E o contexto do servidor é um orçamento por slot: N slots paralelos dividem a janela total configurada conforme o modo, então 'contexto de trabalho por usuário' é a conta que importa, não o -c bruto.",
+      "verify": "Rode com --slots ligado e leia o estado por slot (janela usada) durante o load real — a verificação é a medição, não a flag. Compare TTFT de um prompt fixo em -b 512/2048/8192 na sua GPU: a curva é a decisão de -b. Force um prompt maior que -c e observe o comportamento de recusa/shift documentado na build.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "a tabela de opções com os defaults de -c, -b e -ub e as interações documentadas"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o vizinho de config que também come tokens do mesmo orçamento de contexto"
+        }
+      ],
+      "review": "Os defaults citados (-c 0 = tamanho do modelo; -b 2048; -ub 512) foram conferidos na tabela de opções do README da ferramenta; a contabilidade de KV por slot é o modelo documentado do mesmo texto."
+    },
+    {
+      "slug": "llamacpp-flash-attention-quantizacao-kv",
+      "title": "llama.cpp server: Flash Attention abre a porta da quantização de KV",
+      "one": "O -fa (flash attention) tem default 'auto' e é pré-requisito recomendado para quantizar K e V (-ctk/-ctv, default f16) — o par que compra contexto maior pelo preço de precisão.",
+      "why": "A memória de KV é o gargalo de contexto em serving local: 128k de contexto em f16 é RAM que não existe em GPU de dev. Quantizar KV a 8 bits (q8_0) corta isso quase pela metade — mas a doc condiciona: os formatos de KV quantizada pedem Flash Attention ativa (-fa on), e 'auto' pode decidir por você de um jeito que o seu plano de VRAM não esperava.",
+      "how": "Para o caso 'contexto preciso caber': '-fa on -ctk q8_0 -ctv q8_0' (a doc lista q8_0 e afins como opções para as duas chaves). q8_0 é o ponto de partida conservador (a literatura de formatos llama.cpp o trata como quase-lossless para KV); q4_* entram quando o budget aperta, com avaliação própria de qualidade. Confirme no log de startup o estado decidido pelo 'auto' em -fa — a flag aceita booleano, e o explícito evita surpresas entre builds.",
+      "example": "Um servidor de 24 GB com 7B que não passava de 16k de contexto com -np 2: '-fa on -ctk q8_0 -ctv q8_0 -c 65536' fecha o plano, e a avaliação de regressão é um mini-suite de recall de documento longo, não perplexidade genérica.",
+      "limits": "Quantização de KV é lossy de um jeito que importa para retrieved-context: 'quase-lossless' no papel não dispensa o teste no seu caso de uso. O suporte de -fa/quant-KV é backend-dependente (a doc registra restrições; nem todo build/CUDA/hip tem tudo). E as duas chaves são independentes: só -ctk sem -ctv dá economia parcial com assimetria de comportamento — use por decisão medida.",
+      "verify": "Compare o pico de VRAM reportado no log com -ctk/-ctv off vs. q8_0 no mesmo -c: o delta é o número do plano. Rode o suite de qualidade (extrativa + recap de contexto longo) com/sem quantização e registre o delta de acerto. No build de produção, grepe a linha de config de FA no log — 'auto' resolvido como 'on' é o que você quer ver.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "a seção de memória/KV com -fa auto, defaults f16 e a recomendação de -fa on com KV quantizada"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o contraste de orçamento: constraints comem contexto/ciclo por outro caminho"
+        }
+      ],
+      "review": "A tríple (-fa default auto; -ctk/-ctv default f16 com q8_0 etc. listados; -fa on recomendado com KV quantizada) foi conferida literalmente no README do server."
+    },
+    {
+      "slug": "llamacpp-slots-paralelos-np-cb",
+      "title": "llama.cpp server: -np multiplica o contexto e -cb faz o cache caber em cada slot",
+      "one": "Serving paralelo é -np slots (com divisão de contexto por slot) e, com cache compartilhado entre requests, -cb (continuous batching) é o ajuste do orçamento de prompt por passo.",
+      "why": "Um servidor local mono-request desperdiça GPU ociosa entre tokens; -np resolve throughput por concorrência, mas cada slot carrega seu próprio KV — o erro é manter o -c de single-user e descobrir que 4 slots × 32k não cabem. E sem continuous batching, prompts longos dominam cada step de decode; com -cb ligado (default on na doc), o processamento é dividido entre slots no mesmo batch.",
+      "how": "O README documenta -np (com -1 = auto-dimensionado pelo contexto disponível no modo de cache) e as opções de slot; --slots on expõe o endpoint/visualização dos slots (GET /slots) para verificar o estado por sessão. A prática de plan: definir contexto-alvo por usuário, multiplicar por -np, caber no VRAM de KV (com a nota de -c acima do trained pedindo técnicas extras), e medir p99 de decode com a carga real de concorrência, não com um curl solitário.",
+      "example": "Um API interna com 8 usuários de chat: -np 8, -c ajustado para 8k/slot, --slots on para o painel de 'quem está gerando'; a capacidade vira gráfico em vez de achismo.",
+      "limits": "Slots não são isolados no modelo: KV por slot é memória por slot, e a cota de -c dividida muda o teto de conversa, não só o desempenho. --props (propriedades por request) e --slots não vêm ligados por default (a doc: slots off, props off) — quem conta com eles no observability ativa cedo. E concorrência acima do VRAM é swap/OOM, não 'fila educada': o admission control é do proxy.",
+      "verify": "GET /slots com --slots on durante carga: confirme N ativos e a janela por slot — o estado documentado vira mensurável. Compare throughput total em -np 1 vs. 4 vs. 8 com o mesmo -c total: a curva satura onde o seu VRAM diz. Teste o refusal: N+1 clientes simultâneos além da cota — o comportamento esperado é recusa/latência, não crash.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "as flags de paralelismo (-np, -cb, --slots, --props) e defaults documentados"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o texto vizinho sobre o que mais compete pelo orçamento do passo"
+        }
+      ],
+      "review": "As flags e defaults (-np -1 auto, -cb on por padrão, --slots/--props desligados por default) foram conferidos na tabela e nas seções de API do README do server."
+    },
+    {
+      "slug": "llamacpp-cache-prompt-ram-e-reuse",
+      "title": "llama.cpp server: cache de prompt tem três camadas — o mesmo estado, três knobs",
+      "one": "A cache de KV do prompt vive em --cache-prompt (on por default), o cache entre sessões ociosas em --cache-ram (8192 MiB default), e o reaproveitamento parcial de prefixo divergente em --cache-reuse N — knobs que se somam e se engolem entre si.",
+      "why": "Latência de prompt processing é a métrica que o usuário sente como 'o app pensa'; e as três chaves atacam o mesmo problema em camadas diferentes — cache-prompt elimina requantizar o turno anterior da mesma sessão, cache-ram guarda prefixos de sessões ociosas na RAM, e cache-reuse aceita divergência no início da conversa (shiftando o KV para o sufixo). Errar a combinação é pagar os três custos de novo.",
+      "how": "Padrões do README: --cache-prompt on significa avaliar só o sufixo não-visto do prompt (a reutilização é de prefixo exato, e o log informa quando não casou). --cache-ram com valor em MiB define o teto do cache ocioso (0/-1 desliga) e --cache-idle-slots depende dele. --cache-reuse N habilita o caminho de shift de KV para o maior sufixo compatível quando o prefixo divergiu (com o custo de recomputar a janela de alinhamento). Comece pelo padrão, mude uma chave por vez e meça TTFT.",
+      "example": "Um chat de suporte com 12-turnos: cache-prompt padrão serve (mesma sessão, prefixo crescente); o cache-ram sobe para 16384 para sessões de janela que abrem e fecham; cache-reuse fica desligado até alguém medir o ganho — e o ganho não veio no perfil deles.",
+      "limits": "Cache de prefixo tem semântica de string exata: um byte antes do system prompt muda tudo e o cache perde — 'por que não cacheou?' é quase sempre timestamp/random no início. --cache-ram é budget, não afeta o cache-prompt da sessão viva. E cache-reuse tem o preço do KV-shift (reprocessar N tokens de alinhamento): com prompts curtos o saldo pode ser negativo — a doc posiciona como caso de prefixo longo divergente.",
+      "verify": "No log do server, a linha de cache de prompt informa tokens avaliados vs. total por request — ler isso é a verificação do hit. Dois requests idênticos: o segundo deve ter TTFT visivelmente menor (mesmo slot). Desligue --cache-ram (0) e ligue --cache-idle-slots: a segunda exige a primeira, e a recusa de startup é o teste da dependência documentada.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "as três chaves de cache com defaults (8192 MiB, on/off, dependência idle-slots) e a nota de sufixo"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o contexto de custo por token que o cache paga para não repetir"
+        }
+      ],
+      "review": "Defaults e interações (--cache-ram 8192 MiB, 0/-1 desliga, --cache-idle-slots requerendo-o, --cache-prompt on com avaliação de sufixo não visto, --cache-reuse N como shift de sufixo) foram conferidos no README da ferramenta."
+    },
+    {
+      "slug": "llamacpp-endpoints-completion-vs-openai",
+      "title": "llama.cpp server: /completion é API própria, /v1/completions é a de OpenAI",
+      "one": "O server expõe os dois sabores de endpoint — o nativo (/completion, /embeddings etc.) e o compatível OpenAI (/v1/...) — com campos e semantics diferentes; e o /health responde 503 'Loading model' enquanto o modelo entra.",
+      "why": "Clientes copiados de exemplos OpenAI apontando para /completions (sem o /v1) recebem a API nativa com campos que parecem familiares e não são; orquestradores de k8s que não tratam o 503 de load fazem restart-loop de um pod perfeitamente saudável. A doc enumera os dois conjuntos explicitamente e marca a escolha: para compatibilidade, use os da família /v1.",
+      "how": "Nativo: /completion aceita prompt bruto + sampling no mesmo corpo (e é o que os exemplos históricos do server usam). OpenAI-compat: /v1/chat/completions, /v1/completions, /v1/embeddings etc. com os shapes esperados — o caminho para Plugs que só falam OpenAI. /health retorna 200 com 'ok' quando pronto e 503 'Loading model' durante o load (a doc documenta o estado), e /props (se --props on) permite ajustar properties por POST. Streaming: os dois sabores têm variantes SSE — confira a flag de stream por endpoint na doc, não por memória.",
+      "example": "Um LangChain genérico recebe base URL .../v1 e model qualquer: os dois primeiros timeouts 'inexplicáveis' eram /completions nativo recebendo bodies OpenAI-shaped — o fix foi o /v1 na configuração, zero código.",
+      "limits": "A compatibilidade OpenAI é subset declarada, não OpenAI inteira: fields exóticos do SDK podem ser ignorados silenciosamente (a doc lista o que mapeia). /health 503 durante load é um estado, não um bug — o readiness probe tem que aceitá-lo. E a API nativa é volúvel entre releases (a doc da ferramenta é a fonte de verdade da sua build), enquanto a /v1 tende a ser a mais estável — mais uma razão para preferi-la em produção.",
+      "verify": "Um teste de fumaça por endpoint com curl contra o build seu: os dois shapes, status esperados, e o diff de campos que o SDK usa. Readiness: probe com 503→200 (o padrão k8s) contra um load de modelo grande. Uma request de chat com field desconhecido na /v1: confirme o comportamento (ignore vs. 400) e registre na decisão de SDK.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "a listagem de endpoints com os exemplos por sabor (nativo e OpenAI) e o estado de /health"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "documenta como a saída estruturada chega nos dois sabores (grammar vs response_format)"
+        }
+      ],
+      "review": "Os dois conjuntos de endpoints com seus exemplos, a nota de /health (503 'Loading model') e os campos de grammar/response_format por sabor foram conferidos nos dois READMEs."
+    },
+    {
+      "slug": "llamacpp-servidor-sem-auth-na-rede",
+      "title": "llama.cpp server: não é um servidor de produção exposto — e as três chaves que aproximam",
+      "one": "O server traz --api-key (lista CSV, com /health sempre aberta), --timeout (default 3600 s) e --model-log-* etc. como os controles de superfície: a postura da doc é de ferramenta local, não de edge.",
+      "why": "A tentação de 'subir o llama-server na porta 8080 do VPS' é o vetor clássico de RCE-por-prompt e mineração — o server aceita prompts com código, tem /completion irrestrito e, por default, nenhuma auth. As três flags reduzem a superfície mas não a eliminam; o desenho correto mantém o servidor atrás de proxy/rede privada.",
+      "how": "Se a rede exige: --api-key com a lista de chaves válidas (a doc nota explicitamente que /health fica de fora da proteção, para não quebrar health checks — e que a proteção cobre os demais endpoints). --timeout define o teto por request (3600 default na doc) — em exposição pública, baixe-o (3600 s de geração por requisição é um DoS com desconto). --props off (default) mantém o mutation de propriedades no startup; ligá-lo abre POST /props — decisão de rede, não de conveniência. O par completo: bind a 127.0.0.1 por default (a doc registra o comportamento), um nginx/reverse-proxy com auth à frente, e nada de -np gigante para 'segurar os visitantes'.",
+      "example": "Um piloto interno: llama-server em 127.0.0.1:8080, caddy com basic-auth + rate-limit na frente, --timeout 120 e --api-key para os dois clientes conhecidos; /health liberado pro uptime monitor — exatamente o desenho que a postura de 'ferramenta local' da doc sugere como único caminho seguro.",
+      "limits": "API key sem TLS é key em plaintext — a flag não é TLS story, é auth de camada de aplicação. Prompt injection no modelo continua sendo a superfície real mesmo atrás de tudo (o modelo executa o que você mandar gerar, e os endpoints expostos variam por build — confira o README da sua versão, não esta nota). Rate limiting, quotas e billing não existem aqui: são do proxy. E o 503 de /health 'Loading model' com monitor ingênuo pode matar o pod em restart-loop — o health tem que tolerar o load.",
+      "verify": "Um scan de portas externo na máquina de teste: /health visível e o resto 401 sem key é o estado esperado da config acima. Rode uma request > timeout e confirme o encerramento com o código esperado (a doc cobre o flag). Teste o POST /props com --props off: deve recusar — e o test é o que prova que o default protege.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "as flags de api-key (com a nota do /health), timeout e props com seus defaults"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o lado de constrained decoding do mesmo binário — exposição abre também o grammar endpoint"
+        }
+      ],
+      "review": "As flags conferidas: --api-key com lista separada por vírgula e exceção do /health, --timeout 3600 default, --props desligado por default com POST /props quando ligado. A recomendação de proxy/TLS é prática operacional declarada como tal, não claim da fonte."
+    },
+    {
+      "slug": "gbnf-sintaxe-e-root",
+      "title": "GBNF: a sintaxe que construi constrangimento de tokens, e o que 'root' significa",
+      "one": "Uma grammar GBNF é regras 'nome ::= sequência' (nomes minúsculos com traço) sobre terminais de texto e tokens especiais; a regra 'root' define exatamente qual string é aceita como saída inteira.",
+      "why": "Constrained decoding não é 'dica ao modelo' — é mask de logits: cada token do passo é aceito só se um próximo estado da grammar existir. Isso torna a gramática um contrato de parser: se root não casa com a forma completa da saída, o modelo pode gerar uma string válida por partes e inválida no todo — ou travar no fim do contexto sem fechar a regra.",
+      "how": "Os blocos da doc: repetição (*, +, ?, {m}, {m,n}), ranges ([a-z], [^...] para negação), alternância com |, e a escape <[token_id]> para forçar um único token do vocabulário (o caso 'e.g. \\n como token único'). # começa comentário de linha. 'root ::= ws \"{\" ...' etc: a saída tem que cobrir root inteira — whitespace explícito na grammar, senão o modelo 'não pode' emiti-lo. No server, a grammar entra pelo campo grammar (sabor nativo) — e a doc do server documenta o caminho, mantendo o arquivo fora do prompt.",
+      "example": "Uma resposta 'apenas número inteiro positivo': 'root ::= [1-9][0-9]*' — o modelo não consegue emitir texto, espaço ou zero-líder, porque a grammar não tem caminho neles; e o caso de teste do zero-líder vira asserção no seu suite.",
+      "limits": "GBNF não é regex cheia nem contexto-free arbitrário: é uma classe com a restrição de parse em tempo de geração — e o desempenho depende de como você escreve (nota do próximo tópico). <[token]> é fragile ao tokenizer (o id não é o mesmo entre modelos; a doc cobre o conceito, a manutenção não). E root obrigatoriamente consome a saída: strings 'de fora' (preamble, markdown) não têm como escapar do constrangimento a não ser que a grammar as aceite.",
+      "verify": "Valide a grammar com as ferramentas do próprio repo (gbnf-validator/test-gbnf-validator — a seção de ferramentas do README) antes de subir para o server. Rode o teste adversarial clássico: prompt que implora por texto fora do contrato (o modelo deve ser incapaz — a máscara é dura). Uma suite de 'N amostras × conformidade por regex' é o teste de regressão de grammar.",
+      "sources": [
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "referência da sintaxe (repetições, ranges, tokens, comentários) e do conceito de root"
+        },
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "o campo grammar e o consumo no server"
+        }
+      ],
+      "review": "A sintaxe ( ::=, repetidores, ranges negados, comentários #, <[token]>) e a regra de root = saída inteira foram conferidos no README de grammars; o caminho de campo no server, no README da ferramenta."
+    },
+    {
+      "slug": "gbnf-custo-e-armadilha-de-repeticao",
+      "title": "GBNF: repetições aninhadas custam exponencialmente — e a doc dá o recheio anti-armadilha",
+      "one": "A performance de uma grammar durante a geração depende da forma: repetidores aninhados como 'x? x?' explodem o custo de parse e a correção documentada é a forma plana 'x{0,N}'.",
+      "why": "A mask de logits roda um parser incremental da grammar por token candidato por passo — o trabalho do parser é função da sua escrita, não só do tamanho da saída. A doc de grammars registra o caso (repetidores adjacentes gerando caminhos combinatórios) com o issue de referência #4218 e o reescrito linear; quem trata grammar como config barata paga isso em TPS caindo conforme o prompt cresce.",
+      "how": "Regras do README aplicadas: prefira o operador de contagem explícita 'x{0,10}' a cadeias de opcionais 'x? x? ... x?'; mantenha alternância rasa (o | profundo multiplica o backtrack do parser de Earley); e use a validação de performance da própria ferramenta do repo para medir o custo da sua grammar num texto-alvo antes de produção. Quando a saída tem seções longas (JSON com arrays profundos), o custo é do modelo E do parser — dimensione contexto e timeout com isso na conta.",
+      "example": "A grammar de 'lista CSV de até 40 campos' escrita como '(campo ,){0,40}' plana sustenta o TPS; a mesma intenção como repetidores adjacentes aninhados derruba throughput na cauda da lista — o delta medido é o argumento para code review de .gbnf.",
+      "limits": "Não há budget de parser por request configurável: grammar lenta é lenta para todos os tokens, e o 'travamento' de um servidor com poucas sessões longas de grammar pode parecer hang do modelo. O teste-gbnf-validator mede parsing de conformidade, não throughput por token do modelo — a medição de TPS é sua, com a grammar no campo grammar. E grammar grande demais compete com o contexto: a doc do JSON-schema abaixo lembra que só a saída é restringida — o texto da grammar não entra no prompt (mas o seu custo computacional sim).",
+      "verify": "Compare TPS medido do mesmo prompt com as duas grafias (plana vs. aninhada) no seu hardware: é a quantificação da regra da doc. Um corpus de saída-alvo (10 docs) parseado pelo validador com e sem timeout documenta a conformidade. Na CI, uma asserção de tempo de parse da grammar por release do modelo — a regressão de performance de grammar entra pela porta do tokenizer às vezes.",
+      "sources": [
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "a seção de performance com o exemplo x?x? → x{0,N} e referência ao issue #4218"
+        },
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "o consumo no server que transforma custo de parser em custo de serving"
+        }
+      ],
+      "review": "O caso documentado de explosão de combinatória por repetidores adjacentes com a forma plana recomendada (e o link do issue) foram conferidos na seção de performance do README de grammars."
+    },
+    {
+      "slug": "gbnf-json-schema-nao-e-prompt",
+      "title": "llama.cpp: JSON Schema vira GBNF — restringe a saída e não entra no prompt",
+      "one": "O caminho estruturado do server aceita um JSON Schema (campo json_schema no sabor nativo, response_format na API OpenAI, ou -j global) convertido em grammar — com as ressalvas documentadas de versão de spec e unsupported silencioso.",
+      "why": "A assimetria com OpenAI estruturado é o ponto cego do port: lá, o schema vai no prompt (e o modelo 'vê' a forma); aqui, o schema só restringe por máscara — o modelo nunca lê a descrição. Tudo que não está na mask (semântica de campo, enum descriptions) precisa continuar no prompt, ou o modelo satisfaz a forma com conteúdo fora da intenção. E 'campos unsupported são ignorados silenciosamente' é a segunda metade do contrato.",
+      "how": "A doc do README de grammars formaliza o recorte: 'JSON Schema draft 2020-12', com o suporte declarado sobre o subconjunto que a conversão trata; additionalProperties default false (fechar extra); pattern exige âncoras ^...$ explícitas; min/max só de inteiros na conversão; $ref aninhado/remote tem os bugs que a própria página lista. No pedido, o campo json_schema é a rota por-request; -j define um default global. Para tool calls, o texto lembra a diferença: o schema de tools sim vai no prompt (a conversa de função é prompt), o de resposta não.",
+      "example": "O extrator de fatura com 'type:object, required:[total, currency], properties:{total:{type:number}...}': a forma é garantida, mas o prompt continua explicando 'total = valor com IVA, decimal point' porque a mask sozinha não diz isso ao modelo.",
+      "limits": "Restrição dura ≠ modelo bom: o sampling obedece a grammar, mas a qualidade do preenchimento é do modelo — uma grammar perfeita com um 1B ruim dá JSON válido e errado. Conversões complexas (oneOf profundo, format:date-time semantics) caem no ignorado-silencioso — valide o que o produto precisa com teste, não por fé no convertor. E -j global aplica a todas as requests de um mesmo server — em multi-tenant, o default vira política; prefira por-request.",
+      "verify": "Um teste de conformidade por prompt real: N saídas × schema.validate(), com asserção de 100% — o contrato da mask deve dar isso. Um campo 'description' ignorado: confirme que o modelo o vê só se estiver no prompt (o diff entre com/sem é a prova da assimetria). Uma schema com $ref aninhado: teste e registre se a sua build cai no caso conhecido da doc.",
+      "sources": [
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "a seção JSON Schema: conversão, defaults, unsupported silencioso e as ressalvas específicas"
+        },
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "os campos json_schema/response_format e -j no server"
+        }
+      ],
+      "review": "O texto conferido: 'schema is not added to the prompt (except for tool schemas)', additionalProperties false por default, pattern com âncoras, min/max inteiros, a lista de draft suportado, e os campos por-request/-j do server — nos dois READMEs."
+    },
+    {
+      "slug": "llamacpp-samplers-ordem-fixa",
+      "title": "llama.cpp: o pipeline de samplers tem ordem fixa, e cada campo do pedido é um nó dele",
+      "one": "No server, os samplers pedidos por campos do request rodam numa ordem definida — penalties, dry, top_n_sigma, top_k, typ_p, top_p, min_p, xtc, temperature — não na ordem em que você os lista no JSON.",
+      "why": "Interação de parâmetros é dependente de ordem: top-k antes de temperature corta distribuição que 'esquentaria' outro conjunto; dry (repetition penalty de n-gramas por cache) antes de tudo muda o que os cortes veem. Quem porta config de outro runtime com 'os mesmos campos' obtém comportamento diferente sem erro nenhum — a ordem é a API implícita.",
+      "how": "O README do server lista a sequência do pipeline (a ordem da referência desta nota) e os campos por sampler (temperature, top_k, top_p, min_p, typical_p, penalty fields, dry_*, xtc_* etc.). Leitura operacional: configure o 'top' (top_k/top_p/min_p) sabendo que o renormaliza-mento e as interações acontecem naquela sequência; temperature por último significa que os cortes são na distribuição fria — e trocar só seu 'temperature: 0.5' não reproduz o '0.5 antes do top_p' de outro servidor. Não existe reordenação por campo no request — o que a doc expõe são os parâmetros por sampler.",
+      "example": "Dois serviços com 'top_p 0.9 + temperature 0.7': um llama.cpp, outro com ordem invertida — as amostras divergem de estilo com o mesmo seed; o time marca a diferença no contrato de qualidade do produto em vez de procurar bug no prompt.",
+      "limits": "A ordem documentada pode mudar entre releases da ferramenta — o README é a fonte da sua build, não desta nota. Campos sem valor explícito assumem defaults próprios do backend (a doc lista por sampler); em port, setar explicitamente o que importa bate menos com upgrade. E sampling com grammar ativa é outro grafo de interação (a mask vem antes de tudo que corta): o resultado é a composição dos dois sistemas, e testar um não testa o outro.",
+      "verify": "Um suite de golden-samples: mesmos seeds, mesmo prompt, N requests com configs variadas — diff de distribuição de tokens (top-1 match, entropia amostrada) contra um reference run seu. Uma request com campo de sampler desconhecido: observe o comportamento (ignore vs. 4xx) e registre — é o que a doc diz sobre extras? teste, não assuma. Na subida de versão do build, rode o suite e trate diff como review item.",
+      "sources": [
+        {
+          "label": "llama.cpp — tools/server README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+          "why": "a tabela de campos de sampling com a ordem do pipeline documentada"
+        },
+        {
+          "label": "llama.cpp — grammars README",
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md",
+          "why": "o componente que precede os samplers na mesma request"
+        }
+      ],
+      "review": "A sequência 'penalties → dry → top_n_sigma → top_k → typ_p → top_p → min_p → xtc → temperature' foi conferida na seção de sampling do README do server; a ressalva de versão é a natureza do documento, que é atrelado ao master."
+    }
+  ]
+}

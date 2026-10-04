@@ -1,0 +1,236 @@
+{
+  "group": "Web Audio API: tempo, autoplay, worklets e os nós de espacialização/análise",
+  "check": "Revisão das páginas MDN (AudioContext, AudioScheduledSourceNode, AudioParam, BaseAudioContext, AudioWorklet*, Panner/Convolver/Analyser) e da spec W3C, consultadas em 2026-10-04; claims mantidos no escopo estável da documentação.",
+  "notes": [
+    {
+      "slug": "webaudio-contexto-suspenso-gesto",
+      "title": "Web Audio: o AudioContext nasce suspenso e só um gesto humano o acorda",
+      "one": "Navegadores exigem interação do usuário para retomar um AudioContext: sem resume() chamado dentro de um gesto, nada toca — e o estado 'suspended' é a norma, não a exceção.",
+      "why": "A política de autoplay existe para impedir áudio não solicitado, e a Web Audio a respeita no nível do contexto. Times que descobrem isso em produção veem o áudio 'mudo' sem erro nenhum no console: os nós rodam o grafo, o clock avança... para o lugar nenhum. A arquitetura da resposta (fila de eventos até o gesto) precisa ser decidida no design, não no hotfix.",
+      "how": "Trate o estado do contexto como máquina de estados: 'suspended' → 'running' via resume() (promise), tipicamente disparado por um handler de click/keydown. O estado é lido em ctx.state; listeners emonstatechange ajudam a reagir quando o browser retoma sozinho (ex.: interação com outro elemento). Áudio de fundo com intenção clara pode oferecer um botão 'ativar som'; a API não oferece bypass da política — o caminho é desenhar a transição, não contorná-la.",
+      "example": "Um jogo web cria o contexto no 'pointerdown' do 'Play' (não no load da página), resolve a promise de resume() e só então scheduleia a música — o primeiro frame já sai com clock correto, sem o atraso clássico de 'um segundo mudo'.",
+      "limits": "Chamar resume() fora de gesto é permitido e pode resolver para rejected — não há 'gesto emprestado' de eventos antigos em todas as implementações. Um contexto criado e nunca retomado consome alocação? Ele existe, mas sem render até correr — não confunda 'criado' com 'audível'. A política é por browser/plataforma (iOS historicamente mais estrita que desktop); teste as duas pontas.",
+      "verify": "No device real, carregue sem interação e leia ctx.state: 'suspended' é o esperado antes do gesto, 'running' depois. Simule autoplay negado (recarregar a página e agendar som sem clique) e confirme o silêncio sem erro no console — o sinal do diagnóstico errado mais comum. Registre a transição com onstatechange num dev overlay.",
+      "sources": [
+        {
+          "label": "MDN — AudioContext: resume()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume",
+          "why": "documenta a retomada do contexto e a restrição de autoplay policy"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "define o modelo de estados do AudioContext"
+        }
+      ],
+      "review": "O ciclo suspended/running e a dependência de gesto do usuário para resume() são o conteúdo estável das páginas MDN e da seção de áudio contexts da spec; mantivemos o texto fora de detalhes de política por-browser não documentados na fonte."
+    },
+    {
+      "slug": "webaudio-fontes-oneshot-start-stop",
+      "title": "Web Audio: nós de fonte são one-shot — start() e stop() cada um uma vez só",
+      "one": "Um AudioBufferSourceNode (ou Oscillator) aceita um único start() e um único stop(); recomeçar o mesmo objeto lança InvalidStateError — a unidade reutilizável é o buffer, não o nó.",
+      "why": "A API é declarativa sobre a timeline: agendar 'esse trecho, naquele instante' e descartar. Quem trata o nó como 'objeto player' com play/pause escreve o caminho de exceção no segundo play. O padrão — criar um nó novo por disparo a partir do mesmo buffer — é o que torna o scheduling barato e determinístico.",
+      "how": "Para cada som: crie o source node, conecte, atribua buffer/params, e agende start(when) com o tempo do contexto (ctx.currentTime como base). Para encerramentos precisos, stop(when) agendado no mesmo futuro. 'Pause' não existe: é stop + lembrar o offset e reiniciar com start(when, offset). Nós de fonte descartáveis significam GC após o fim — não desconectá-los não vaza, mas segurá-los em coleções, sim.",
+      "example": "Um drum pad: um AudioBuffer por sample no carregamento; cada hit cria 'const s = ctx.createBufferSource(); s.buffer = buf; s.connect(bus); s.start(0)' — 32 pads simultâneos sem pool, sem estado, sem exceção.",
+      "limits": "O erro 'cannot call start more than once' é a regra, não um warning configurável; wrappers que 'reiniciam' fontes escondem o nó novo — escolha o padrão explícito. start() com mesmo 'when' duas vezes em nós diferentes é permitido, e a ordem espectral dos disparos depende do clock, não da ordem de chamada. Oscillator contínuo sem stop() vira fonte de CPU infinita — stop agendado é higiene.",
+      "verify": "Chame start() duas vezes no mesmo nó num teste: a exceção é o contrato. Implemente o pad com pool de nós reutilizados e com nós fresh, e o segundo deve vencer em clareza (e empatar ou ganhar em perf). Um teste Playwright que toca 50 disparos e afirma que nenhum console error apareceu cobre a regressão.",
+      "sources": [
+        {
+          "label": "MDN — AudioScheduledSourceNode: start()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioScheduledSourceNode/start",
+          "why": "documenta o erro por start duplicado e o parâmetro de agendamento"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "define o ciclo de vida one-shot dos audio source nodes"
+        }
+      ],
+      "review": "A regra de uma-chamada (InvalidStateError ao repetir start) e o modelo de agendamento por tempo de contexto foram conferidos na página MDN de start() e no texto da spec; a recomendação de nós por-disparo é o padrão derivado."
+    },
+    {
+      "slug": "webaudio-settargetattime-constante-tempo",
+      "title": "Web Audio: setTargetAtTime é o easing exponencial — a constante define 63%, não o fim",
+      "one": "setTargetAtTime alvo suaviza o parâmetro em curva exponencial: após uma timeConstant ele percorreu 63,2% da distância, após 3 constantes ~95% — e nunca atinge o alvo matematicamente.",
+      "why": "É o setter certo para 'chegar perto sem estourar' (envelope de release sem clique, ganho de fader que nunca trisca em zero com rampa linear) e o mais mal-entendido da API: quem espera 'atingir o target em T segundos' configura T e vê o parâmetro parar em 95%, e quem o usa para mute total deixa um restinho de sinal para sempre.",
+      "how": "A curva é exponencial com constante τ; a relação prática documentada pela própria página: se você quer que o parâmetro 'chegue' (para todos os efeitos práticos) em D segundos, use τ = D/3 (3τ = 95%). O startTime é em tempo de contexto (ctx.currentTime para 'agora'). Para precisão absoluta de fim (gain zero, freq exata), encadeie uma setValueAtTime depois do alvo aproximado, ou troque de setter — a rampa exponencial pura não termina.",
+      "example": "Um ducking de música sob narração: gain.setTargetAtTime(0.15, ctx.currentTime, 0.1) chega a ~15% do caminho em 0,3 s e assenta suavemente; a volta usa outra setTarget com τ maior — o 'feeling' de radio ao vivo mora nessas duas constantes.",
+      "limits": "O target nunca é atingido de fato — para zero exato, o caminho é outro setter. timeConstant ≤ 0 e startTime negativo são erros de tempo de execução de tipo próprio (a página MDN lista as exceções por parâmetro). E a interação com automações ativas substitui a fila: agendar setTarget em cima de um ramp em andamento é decisão explícita, não composição.",
+      "verify": "Renderize um buffer com OfflineAudioContext amostrando o valor do parâmetro em 1τ, 2τ, 3τ, 5τ e confira 63,2/86/95/99+% — o teste numérico da curva num caso sintético. Tente o 'fade a zero' com setTarget puro e observe o resíduo audível: é a lição. Um teste de regressão compara a τ escolhida com a duração percebida do fade na mix.",
+      "sources": [
+        {
+          "label": "MDN — AudioParam: setTargetAtTime()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime",
+          "why": "define a exponencial, o 63,2% por τ, e a relação com a rampa para alvo exato"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "a fórmula normativa das automation curves"
+        }
+      ],
+      "review": "Os valores conferidos na página MDN: a exponencial nunca atinge o target, 63,2% por timeConstant, o conselho de 'use exponentialRampToValueAtTime para acertar o alvo exato' e sua impossibilidade com valor zero — todos presentes no texto da página."
+    },
+    {
+      "slug": "webaudio-exp-ramp-zero-proibido",
+      "title": "Web Audio: exponentialRampToValueAtTime não passa por zero — nem começando nem terminando nele",
+      "one": "A rampa exponencial exige que o valor atual e o alvo sejam ambos não-zero (e de mesmo sinal); zero em qualquer ponta lança exceção — a matemática da interpolação multiplicativa não tem porta para o nada.",
+      "why": "Fade-out exponencial é a curva 'musical' padrão (o ouvido responde log), e o primeiro reflexo é 'ramp to 0' — que é justamente o caso ilegal. O segundo reflexo de alguns (ramp from 0) também é ilegal. Conhecer a dupla restrição evita a gambiarra do '0.0001' que, somada ao linearRamp, aparece em todo codebase de áudio web não revisado.",
+      "how": "Padrão correto do fade-out exponencial: um valor inicial não-zero (ex.: 0.001 como piso prático, não o 0 matemático) → ramp até lá com exponentialRamp, e setValueAtTime(0, fim) discreto para o corte — o salto audível de 0.001 em ganho é inaudível por definição. Para fades simétricos, use a mesma técnica espelhada, ou OfflineAudioContext para gerar a curva na mão. A restrição é documentada como 'throw' — capturar a exceção e não o bug é antipadrão: valide antes de agendar.",
+      "example": "Um synth polifônico que aplica 'release' com setTargetAtTime(0.0005, now, dt) seguido de stop no nó após a cauda — sem exceção, sem clique, sem mágica de -60 dB hardcoded.",
+      "limits": "A regra de mesmo sinal (não ir de positivo a negativo pela rampa) pega quem tenta crossfade direcional. O 'piso 0.0001' não é norma da API — é convenção; o corte final real depende do stop agendado do source, não do parâmetro. Em parâmetros de filtro (frequency, Q), o zero tem outro significado (freq ≥ nyquist/Nyquist-clamping) — a técnica do piso não é portátil entre AudioParams.",
+      "verify": "Um teste unitário que chama exponentialRamp para 0 e afirma a exceção — a regra como assert. Renderize o fade via OfflineAudioContext e meça o último bloco: a queda de 0.001→0 não deve produzir clique (RMS do jump < limiar). Um lint caseiro nos agendamentos (procurar expRamp com target 0) pega o reflexo no code review.",
+      "sources": [
+        {
+          "label": "MDN — AudioParam: exponentialRampToValueAtTime()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/exponentialRampToValueAtTime",
+          "why": "documenta as exceções por valor zero nos dois lados da rampa"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "a restrição de sinal das exponenciais na automação"
+        }
+      ],
+      "review": "A dupla proibição do zero (origem e destino) e o throw correspondente foram conferidos na página MDN do setter; o padrão de piso+setValue como correção é derivação prática, marcada como tal."
+    },
+    {
+      "slug": "webaudio-decodeaudiodata-ressample-completo",
+      "title": "Web Audio: decodeAudioData ressampleia para o contexto e exige o dado completo",
+      "one": "decodeAudioData transforma qualquer arquivo de áudio em AudioBuffer no sample rate do contexto — não o do arquivo — e não aceita streaming: só dados inteiros.",
+      "why": "Dois bugs de integração nascem de esperar comportamento de <audio>: (1) 'meu sample de 48k tocou rápido/lento' — o buffer veio em 44.1k porque o contexto é 44.1k; (2) feeds parciais (fetch progressivo) falham o decode porque o decodificador não trabalha em stream. Saber que o API é 'arquivo inteiro → buffer já no rate certo' define o carregador.",
+      "how": "Fluxo: fetch/arrayBuffer → ctx.decodeAudioData(wholeBuffer) → AudioBuffer (canais float linearizados, rate = sampleRate do contexto). O sample rate do contexto é escolhido na criação (AudioContext com options; em material/soa­pes, escolher rate fixo — ex.: 48000 — sincroniza com vídeo e evita re-amostragem por asset). A página cobre que o caminho primário é a promise (os callbacks legado existem, evite-os em código novo). Dados parciais: acumule até o fim do fetch; para latência zero, decodifique na carga, não no trigger.",
+      "example": "Um editor de vídeo web mantém o AudioContext em 48 kHz para bater com a timeline; todos os assets (44.1 de MP3, 32k de voice memo) chegam convertidos — o scrubbing não tem drift porque tudo já está no rate do relógio.",
+      "limits": "A ressampleagem do decode é offline-quality (não é para playback time-stretched; playbackRate faz outra coisa). Codec suportado é o que o decoder do navegador tem (um WebM estranho pode falhar sem detalhe — a promessa é 'dados válidos de áudio', a validação é do navegador). AudioBuffer é imutável: 'editar' é novo buffer. O custo de decode de arquivos grandes no main thread vira tarefa de warm-up, não de interação.",
+      "verify": "Meça sampleRate do AudioBuffer retornado vs. o do arquivo de origem (ffprobe) e confirme a igualdade com o contexto, não com o arquivo. Teste o caminho de falha: um JSON mandado para decodeAudioData rejeita a promise — e o handler deve existir. Rode o carregador com fetch chunked acumulado vs. por-chunk e confirme que o segundo falha — a restrição documentada.",
+      "sources": [
+        {
+          "label": "MDN — BaseAudioContext: decodeAudioData()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/decodeAudioData",
+          "why": "documenta o ressample para o rate do contexto e a recusa de dados incompletos"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "a definição de AudioBuffer e do papel do decode no grafo"
+        }
+      ],
+      "review": "As duas propriedades centrais — sample rate convertido ao do contexto e requisito de buffer completo — foram conferidas literalmente na página MDN; a preferência por promise sobre callbacks legado também consta ali. O conselho de rate fixo na criação é prática padrão de sincronia com vídeo."
+    },
+    {
+      "slug": "webaudio-audioworklet-modulos-processador",
+      "title": "Web Audio: AudioWorklet é módulo separado com o seu próprio global scope",
+      "one": "O processador de áudio via worklet é registrado por addModule(num arquivo JS) no audioWorklet — um scope dedicado, fora do main thread, com AudioWorkletProcessor de onde o laço process() sai.",
+      "why": "Substituir o ScriptProcessorNode (deprecated) não é copiar código: o modelo é outro — o arquivo do processador é um módulo carregado no contexto de render, onde o main thread não pode bloqueá-lo. Quem envia o closure 'que já estava pronto' da página descobre que nada é visível ali dentro: o módulo é fronteira física.",
+      "how": "Estrutura mínima: um .js exportando 'class MeuProcessador extends AudioWorkletProcessor { process(inputs, outputs, parameters) { ...; return true; } }; registerProcessor(\"meu-processador\", MeuProcessador);', carregado com await ctx.audioWorklet.addModule('/meu-processador.js'), instanciado com new AudioWorkletNode(ctx, 'meu-processador'). O laço process() roda a cada quantum (128 amostras), recebe os canais de entrada e escreve nos de saída; retornar true mantém vivo, false finaliza o node. Parâmetros AudioParam vêm no terceiro argumento, já atualizados.",
+      "example": "Um delay com feedback que precisa de jitter-zero: o main thread só muda o parâmetro de tempo (setTargetAtTime no AudioParam exposto), e o processador consome o valor por amostra no quantum — zero dependência do timing de eventos do navegador.",
+      "limits": "O scope do worklet não tem DOM nem a maior parte das APIs web; ele processa áudio. Comunicação com a página é port (nota separada) — variáveis compartilhadas não existem. O quantum é fixo (128 frames) e a latência do laço é o quantum, não o que você espera do 'tempo real do SO'. addModule resolve URLs como módulos ES (export/import funcionam), e o arquivo precisa ser CORS-correct — CDNs sem CORS quebram o carregamento com erro de módulo, não de áudio.",
+      "verify": "Um fixture mínimo que ecoa entrada em saída e roda numa suíte Playwright: se o audio render funciona e o main thread fica livre (o FPS da página não cai com o nó ativo), o modelo está correto. Return false no process: o node finaliza e para de consumir — o teste do contrato. Um módulo cross-origin sem CORS: confirme a falha de addModule documentada e a mensagem.",
+      "sources": [
+        {
+          "label": "MDN — AudioWorklet: registerProcessor()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet/registerProcessor",
+          "why": "o registro do processor class no contexto de áudio"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "define o modelo de worklet, o quantum e o contrato process()"
+        }
+      ],
+      "review": "A separação de escopo por addModule, registerProcessor com nome de string, e o ciclo do process() por quantum com retorno true/false são o conteúdo da página MDN e da seção 'AudioWorklet' da spec; os detalhes de port/CORS ficaram no nível de recomendação operacional."
+    },
+    {
+      "slug": "webaudio-worklet-port-fio-da-navalha",
+      "title": "Web Audio: o port do AudioWorkletNode é o fio da navalha entre página e render",
+      "one": "A única via de estado entre a página e um AudioWorkletProcessor é a porta de mensagens (node.port / this.port), com postMessage/onmessage — e é aí que se resolve 'como passar o áudio para o DSP'.",
+      "why": "O modelo shared-memory não existe (nem deve): o DSP roda no render thread sem GC nem lock. Passar samples por mensagem é possível e caro; a decisão de arquitetura — controle por mensagem, streaming por outro mecanismo (ex.: SharedArrayBuffer, com as regras de COOP/COEP) — precisa ser tomada cedo, porque refatorar DSP é caro. O port é o único canal garantido.",
+      "how": "No main thread: node.port.postMessage({type:'config', tempo: 0.25}); node.port.onmessage = ev => {...}. No processor: this.port.onmessage trata a fila; o que for estado por-amostra vai num objeto mutável local (this.tempo = ...) que process() lê. Mensagens são assíncronas e podem chegar em qualquer ponto entre quanta — trate como fila de comandos idempotente. Transferência de ownership (transfer list) é como se passa um ArrayBuffer grande sem cópia — no sentido main→worklet e vice-versa.",
+      "example": "Um visualizador com DSP em worklet envia o 'frame rate alvo' por port a cada config change, e recebe do worklet um resumo por quadro (RMS, peak) por postMessage — os samples nunca cruzam a fronteira; a análise que precisa dos buffers usa SharedArrayBuffer como exceção consciente.",
+      "limits": "PortMessage tem latência de estrutura (clonagem): streaming de áudio por port vira GC no render thread — o anti-padrão exato que a API desencoraja. SharedArrayBuffer resolve throughput mas impõe isolamento de contexto (cross-origin isolation) — uma decisão de deploy, não de código. E mensagens não têm ordem garantida com o processo de render — estados transitórios (fade) devem ser interpolados no processador, não esperados prontos.",
+      "verify": "Um teste de ida-e-volta: main envia N configs, worklet ecoa o hash do estado final; o resultado é determinístico apesar de timing — prova de que o design de fila funciona. Meça o custo de postMessage com buffers grandes vs. a abordagem resumo-por-quadro — o argumento anti-padrão vira número. No CI, uma verificação de crossOriginIsolated quando o produto usa SAB.",
+      "sources": [
+        {
+          "label": "MDN — AudioWorkletNode",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode",
+          "why": "descreve o port de mensagem do node e o par com o processor"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "a definição normativa do MessagePort do worklet"
+        }
+      ],
+      "review": "A existência e unicidade do port como canal (node.port com o this.port do processor) são a definição das páginas citadas; a caracterização de custo de clonagem e do padrão de fila de comandos é prática documentada da comunidade — mantida como recomendação."
+    },
+    {
+      "slug": "webaudio-panner-modelos-espaciais",
+      "title": "Web Audio: PannerNode escolhe como o som se move no espaço — pan, equal power ou HRTF",
+      "one": "O panner de posição 3D tem três modelos de panning (equalpower, HRTF, stereo) e atende por distância com um dos modelos de atenuação (inverse, linear, exponential), todos configuráveis por atributos do nó.",
+      "why": "A 'espacialização' de um jogo web ou de um áudio-imersivo é a soma dessas duas escolhas; o default (equalpower + inverse) é um compromise que soa plano em fones e exagerado em caixas. HRTF dá a direção com as limitações do modelo (CPU, artefatos de front/back); 'stereo' é o modo barato para conteúdo já mixado. É configuração de mixagem, mas feita em código — a API trata como parâmetros de física.",
+      "how": "Crie com ctx.createPanner(); defina panningModel ('HRTF' para fones com custo de CPU, 'equalpower' padrão, 'stereo' para posições pré-mixadas), distanceModel ('inverse' é fisicamente suave; 'linear' para atenuação previsível; 'exponential' para falloff rápido) e a geometria: refDistance, maxDistance, rolloffFactor, cone (coneInnerAngle etc. para diretividade da fonte). A posição da fonte é movida pelo AudioListener (ctx.listener) — a API é source-listener, não camera-trick.",
+      "example": "Um FPS web: footstep = equalpower/inverse com rolloff calibrado, tiros = HRTF (direção importa mais que CPU no momento do combate), ambient loop = stereo sem panner — três modelos no mesmo grafo, cada um no seu custo.",
+      "limits": "HRTF usa respostas medidas (a biblioteca é do projeto FHRT — a página documenta a origem) e a performance por-ouvinte é limitada: não é binauralização de sala (reverberação vem do ConvolverNode, nota separada). Cone angles afetam só a atenuação, não o timbre — 'fonte direcional' é meia-voz. E a posição de listener/panner atualizada por frame é barata em atributos, mas cada mudança pode re-renderizar o quantum — nada de ler sensor em loop apertado sem necessidade.",
+      "verify": "Um ABX test entre equalpower e HRTF no mesmo conteúdo fone-ouvinte: a diferença de localizabilidade é audível em material com transient — o teste de escolha é este, não o espectro. Meça CPU por nó (chrome://audits ou flamegraph do performance API) com 50 panners em cada modelo. Um fixture de 'fonte passa pela orelha' valida o cone e o rolloff visualmente no medidor de ganho.",
+      "sources": [
+        {
+          "label": "MDN — PannerNode",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/PannerNode",
+          "why": "lista modelos de panning, de distância e os parâmetros de geometria"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "as fórmulas de atenuação e os detalhes dos modelos"
+        }
+      ],
+      "review": "Os nomes dos modelos (equalpower/HRTF/stereo, inverse/linear/exponential), a família de parâmetros de distância/cone e o par fonte-listener conferem com a página MDN e com a subseção de panner da spec; a ressalva de custo/reverberação é mantida como prática."
+    },
+    {
+      "slug": "webaudio-convolver-resposta-ao-impulso",
+      "title": "Web Audio: ConvolverNode é a reverberação física — e o IR define canal por canal",
+      "one": "O convolver aplica a resposta-ao-impulso carregada como AudioBuffer; o layout de canais do IR decide o que é mono, estéreo ou surround, e o buffer precisa ter 1, 2 ou 4 canais.",
+      "why": "É a diferença entre 'um reverb' e 'o reverb daquela sala': a API não sintetiza espaço, ela convoluciona — o que o IR medir, o nó entrega. O erro clássico de import (IR estéreo com o normalize ligado que engole a diferença de nível entre salas, ou IR surround de 4 canais montado errado) é decisão de pipeline de assets, não de código de runtime.",
+      "how": "Carregue o WAV/ogg do IR via fetch + decodeAudioData (o ressample para o rate do contexto ocorre ali — nota decodeAudioData), atribua convolver.buffer = irBuffer e ajuste 'normalize' (default true: a convolução é renormalizada para manter o nível; para IRs com ganho autoral, desligue). Canais: 1 = mono-in/mono-out; 2 = estéreo; 4 = a fonte interpreta os dois primeiros canais como o par estéreo do dry... e as duas extras completam o surround (a página documenta o layout esperado). Dry/wet fica fora do nó — faça no grafo (gain em paralelo).",
+      "example": "Um configurador de produto 'em espaços reais': cada sala do configurador troca apenas o buffer do convolver (mesmo grafo, normalize off, levelagem autoral embutida nos IRs ensaiados); o wet/dry por sala é um crossfade no grafo.",
+      "limits": "Convolution é cara (FFT por bloco) — um convolver por grafo estende-se melhor que N por fonte; a atenuação por distância não é dele (combine com panner antes/depois, e decida o routing). IRs longos (>2 s de cauda) aumentam latência de bloco e custo por amostra. O 'normalize' booleano não substitui o headroom da mix — ganho de convolução é conteúdo, não mixagem; um IR 'quente' clipa igual com o normalize on.",
+      "verify": "Compare o mesmo IR com normalize on/off num medidor de saída: a diferença de nível é a função documentada. Um sweep mono através do convolver e a medição da resposta confirmam o layout de canais (canal 2 de um IR estéreo deve sair no out L/R como esperado). Meça o custo por cauda (IR de 0,5 s vs 3 s) para dimensionar o budget do produto.",
+      "sources": [
+        {
+          "label": "MDN — ConvolverNode",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/ConvolverNode",
+          "why": "define o papel do buffer de IR, o normalize e o mapeamento de canais"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "as regras de tamanho/canal do AudioBuffer de convolução"
+        }
+      ],
+      "review": "As restrições de canais (1, 2, 4), o significado do normalize=true (renormalização para evitar clipping) e o fato do dry/wet não existir no nó foram conferidos na página MDN e na seção correspondente da spec; o routing fica como recomendação."
+    },
+    {
+      "slug": "webaudio-analyser-janela-frequencia",
+      "title": "Web Audio: AnalyserNode dá o espectro com janela e suavização — não a FFT crua",
+      "one": "O analyser entrega os dados de frequência/tempo via FFT sobre uma janela (Blackman default) com smoothingTimeConstant — o buffer é um snapshot suavizado, não o bin de cada bloco.",
+      "why": "Visualizações 'que tremem' e 'que lagam' são os dois sintomas de ignorar os dois knobs: sem smoothing os bins saltam entre frames; com smoothing demais a barra não acompanha o transient. E a geometria (fftSize → frequencyBinCount = fftSize/2) define o custo e a resolução ao mesmo tempo — quem 'só quer uma barra bonita' escolhe sem querer os dois.",
+      "how": "Crie com ctx.createAnalyser(), conecte no caminho pós-efeitos (a leitura do que você quer ver, não do dry). Ajuste fftSize (potência de 2, de 32 a 32768; default 2048) — a resolução por bin é sampleRate/fftSize, e getByteFrequencyData preenche Uint8Array de length frequencyBinCount. smoothingTimeConstant (0..1, default 0.8) é a média exponencial temporal; 0 é instantâneo. Para forma de onda no tempo, getByteTimeDomainData no mesmo buffer duplo do lado temporal.",
+      "example": "Um equalizer de visualização reage ao kick sem tremor: fftSize 1024 (bins ~43 Hz a 44.1k), smoothing 0,6 (mais rápido que o default para o transient), e as barras acima de 1 kHz vêm de getByteFrequencyData com índice pré-computado do bin-alvo.",
+      "limits": "Os dados são 8 bits (0–255) com mapeamento por dB — não use para medição precisa (para isso o caminho é getFloatFrequencyData, que devolve dB reais no buffer float). min/maxDecibels (default -100/-30) definem a escala do byte; fora da janela tudo satura branco/preto e a 'forma' vira mentira. O analyser tem tap pass-through (não afeta o áudio, mas cada bloco de FFT custa CPU — 128 canais de análise é budget real). Não há janelas de FFT custom: o type é fixo — a especificação define o processamento interno.",
+      "verify": "Um tom puro de 440 Hz no grafo: o pico deve estar no bin round(440/binHz) — a calibração da geometria. Varie smoothingTimeConstant num loop de teste e meça o desvio-std do bin entre frames: é a curva que o knob controla. Compare getByteFrequencyData vs. getFloatFrequencyData no mesmo quadro para validar a decisão de escala.",
+      "sources": [
+        {
+          "label": "MDN — AnalyserNode",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode",
+          "why": "documenta fftSize/frequencyBinCount, os getters byte/float e os knobs de suavização/dB"
+        },
+        {
+          "label": "W3C — Web Audio API (spec)",
+          "url": "https://webaudio.github.io/web-audio-api/",
+          "why": "a definição do processamento interno de FFT e janela"
+        }
+      ],
+      "review": "A faixa de fftSize com default 2048, frequencyBinCount = fftSize/2, o mapeamento byte em dB entre min/maxDecibels e o smoothingTimeConstant default 0,8 foram conferidos na página MDN; o valor de 440 Hz é aritmética da fórmula de resolução do bin."
+    }
+  ]
+}

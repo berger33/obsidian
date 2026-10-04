@@ -5,14 +5,14 @@ Atualizado em 2026-10-04. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 ## Estado atual
 
 - Meta ativa: **500 lotes de 2.000 notas = 1.000.000 notas válidas**.
-- Notas válidas globais: **6340** (49 aprovações humanas históricas + 6291 revisões factuais por IA).
-- Progresso: **6340 / 1.000.000 (0,6340%)**; faltam **993.660** notas válidas.
+- Notas válidas globais: **6440** (49 aprovações humanas históricas + 6391 revisões factuais por IA).
+- Progresso: **6440 / 1.000.000 (0,6440%)**; faltam **993.560** notas válidas.
 - Lotes completos: **3 / 500** (`software-testes-2000-0001`, `software-devops-2000-0002` e `software-seguranca-2000-0003`).
 - Primeiro lote `software-testes-2000-0001`: **2000 / 2.000 (100%)** notas válidas (9 humanas + 1991 IA); concluído (`complete`).
 - Segundo lote `software-devops-2000-0002`: **2000 / 2.000 (100,00%)** notas válidas (2000 IA nas tranches 1–20); concluído (`complete`).
 - Terceiro lote `software-seguranca-2000-0003`: **2000 / 2.000 (100,00%)** notas válidas (2000 IA nas tranches 1–20); concluído (`complete`).
-- Quarto lote `software-criacao-ia-2000-0004`: **300 / 2.000 (15,00%)**; tranches 1–3 concluídas em `software-0010`, com 17 tranches planejadas sem IDs reservados.
-- Arquivos Markdown ativos: **6440**; 100 com pendências de qualidade, excluídos da contagem.
+- Quarto lote `software-criacao-ia-2000-0004`: **400 / 2.000 (20,00%)**; tranches 1–4 concluídas em `software-0010`, com 16 tranches planejadas sem IDs reservados.
+- Arquivos Markdown ativos: **6540**; 100 com pendências de qualidade, excluídos da contagem.
 - O checkpoint legado com 1.000.000 de registros virtuais continua fora da contagem de conteúdo válido.
 
 ## Dez passos e andamento
@@ -23,12 +23,12 @@ Atualizado em 2026-10-04. O nome `PLANO-CONTINUO-1M.md` permanece compatível co
 | 2 | Implementar registro de revisão por IA sem promovê-la a humana | **Concluído** | `note_quality.py`, `audit_note_quality.py` e `audit_batch.py` reconhecem revisor, data e relatório de IA. |
 | 3 | Preservar aprovações humanas já concedidas | **Concluído** | As 49 aprovações históricas permanecem limitadas às notas aprovadas pelo usuário. |
 | 4 | Conferir factual e registrar notas 10–2000 do primeiro lote | **Concluído (tranches 2–26)** | 1991 revisões por IA em relatórios das tranches 2–26, além das 9 aprovações humanas. |
-| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2: 2000/2000 (`complete`). Lote 3 (`software-seguranca-2000-0003`): 2000/2000 no gate (2000 IA). Global: 6440 arquivos, 6340 válidas, 100 com pendências legadas; lote 4 com 300/300 após tranche 3; veja a [reconciliação da tranche 3 do lote 4](exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md). |
+| 5 | Rodar gate, testes, auditorias e diff | **Concluído para o estado atual** | Lote 1: 2000/2000 (`complete`). Lote 2: 2000/2000 (`complete`). Lote 3 (`software-seguranca-2000-0003`): 2000/2000 no gate (2000 IA). Global: 6540 arquivos, 6440 válidas, 100 com pendências legadas; lote 4 com 400/400 após tranche 4; veja a [reconciliação da tranche 4 do lote 4](exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md). |
 | 6 | Remediar as 100 notas legadas | **Inventário concluído; remediação pendente** | Reconstruir com fontes próprias ou mantê-las fora da contagem; não corrigir cosmeticamente em massa. |
 | 7 | Completar o lote `software-testes-2000-0001` até 2.000 notas | **Concluído** | 2000/2.000 (100%); todas as 2.000 notas substantivas contam com gate aprovado, fontes verificadas e revisão factual registrada (`complete`). |
-| 8 | Abrir lotes subsequentes de 2.000 notas | **Lote 3 concluído; lote 4 em execução** | Lote 3 `software-seguranca-2000-0003` concluído (`complete`) em 2.000/2.000; lote 4 `software-criacao-ia-2000-0004` tem 300/2.000 e 17 tranches planejadas em `domains/software-0010/software/criacao-ia/`; restam 496 lotes adicionais. Não abrir lote 5 automaticamente. |
+| 8 | Abrir lotes subsequentes de 2.000 notas | **Lote 3 concluído; lote 4 em execução** | Lote 3 `software-seguranca-2000-0003` concluído (`complete`) em 2.000/2.000; lote 4 `software-criacao-ia-2000-0004` tem 400/2.000 e 16 tranches planejadas em `domains/software-0010/software/criacao-ia/`; restam 496 lotes adicionais. Não abrir lote 5 automaticamente. |
 | 9 | Consolidar contagens por tranche, lote e global | **Contínuo** | Atualizar manifestos, relatórios, fila e MOC após auditoria; distinguir gate, revisão humana e revisão por IA. |
-| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 6340 notas válidas, 3/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
+| 10 | Atingir a meta e publicar relatório final | **Em andamento; meta não atingida** | Progresso atual: 6440 notas válidas, 3/500 lotes completos. Publicar apenas ao atingir 1.000.000. |
 
 ## Regra de continuidade e contagem
 
