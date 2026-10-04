@@ -1,0 +1,97 @@
+TOPIC: ProjectDiscovery httpx — Toolkit de Probing HTTP, TLS/JARM, Tech Detection, Favicon Hash e Screenshot Headless
+SOURCES: https://raw.githubusercontent.com/projectdiscovery/httpx/main/README.md | https://docs.projectdiscovery.io/opensource/httpx/overview | https://github.com/projectdiscovery/retryablehttp-go/blob/main/README.md
+
+===NOTE===
+0351|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit|ProjectDiscovery `httpx`: Arquitetura de Probing HTTP Multi-Propósito com `retryablehttp-go`|O `httpx` da ProjectDiscovery (MIT, distinto da biblioteca cliente Python de mesmo nome) é um toolkit de *probing* HTTP rápido escrito em Go sobre a biblioteca `retryablehttp-go` para validar e enriquecer listas massivas de hosts, URLs e blocos CIDR.|Transforma listas brutas de nomes DNS ou IPs em um inventário vivo de serviços web, realizando *auto-fallback* inteligente de `https://` para `http://`, retentativas com *backoff* contra WAFs e extração simultânea de dezenas de metadados em uma única requisição.|Para cada alvo recebido via `-l hosts.txt`, `-u` ou `stdin`, o `httpx` estabelece conexões reutilizáveis com pool de goroutines configurável (`-t`), negocia TLS/HTTP2, coleta os *probes* habilitados (status code, título, tamanho, servidor, certificado TLS, hashes e tecnologias) e emite resultados filtrados em texto ou JSONL (`-json`).|```bash
+# Sondar uma lista de hosts extraindo status, tamanho, título, servidor web e tempo de resposta
+httpx -l discovered-hosts.txt \
+  -sc -cl -title -server -rt \
+  -threads 50 -silent \
+  -json -o httpx-inventory.jsonl
+```|Confundir o binário `httpx` do Python (`pip install httpx`) com o `httpx` da ProjectDiscovery em imagens Docker baseadas em Debian/Ubuntu/Kali é um erro operacional comum; invoque o caminho explícito (`pdtm` / `/root/go/bin/httpx`) ou verifique `httpx -version`.|Execute `httpx -version` e valide o schema de saída de `httpx-inventory.jsonl` com `jq -e '.url and .status_code'`.|httpxpd-deteccao-tecnologias-wappalyzer-favicon-hash-jarm-tls, httpxpd-probes-rede-ip-cname-asn-cdn-waf-vhost-ports, subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas
+
+===NOTE===
+0352|httpxpd-deteccao-tecnologias-wappalyzer-favicon-hash-jarm-tls|ProjectDiscovery `httpx`: Fingerprinting de Tecnologias (`-td`), Favicon Hash (`-favicon`), Body Hash e JARM (`-jarm`)|O `httpx` identifica a pilha tecnológica de servidores web combinando o dataset Wappalyzer (`-td` / `-tech-detect`), *fingerprints* customizados (`-cff`), hash MurmurHash3 (`mmh3`) de `/favicon.ico` (`-favicon`), hashes de corpo/cabeçalho (`-hash`) e impressões digitais TLS ativas JARM (`-jarm`).|Mesmo quando um painel administrativo ou servidor C2 remove banners `Server` e altera o título HTML, o hash `mmh3` do favicon e o fingerprint TLS `JARM` permanecem idênticos aos da aplicação original.|A flag `-td` inspeciona cabeçalhos HTTP, cookies, meta tags HTML e caminhos de scripts JavaScript contra assinaturas Wappalyzer; `-favicon` calcula o hash `mmh3` compatível com buscas Shodan (`http.favicon.hash:<valor>`); e `-jarm` envia 10 pacotes `ClientHello` TLS especificamente formatados para gerar um hash de 62 caracteres da pilha TLS do servidor.|```bash
+# Enriquecer ativos web com detecção de tecnologias, hash mmh3 de favicon, SHA-256 do body e JARM
+httpx -l live-hosts.txt \
+  -td -favicon -jarm \
+  -hash sha256 \
+  -json -o tech-fingerprints.jsonl
+```|O cálculo de `-jarm` exige 10 conexões TCP/TLS adicionais por host sondado; habilite `-jarm` apenas em subconjuntos priorizados de ativos para não multiplicar por 10 o tráfego de rede e o tempo de varredura.|Inspecione `jq -c '{url, tech, favicon, jarm}' tech-fingerprints.jsonl` e filtre ativos que compartilham o mesmo hash de favicon com `-mfc <hash>`.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, httpxpd-inspecao-certificados-tls-csp-extract-fqdn-san, httpxpd-matchers-filters-status-length-string-regex-cdn-time
+
+===NOTE===
+0353|httpxpd-probes-rede-ip-cname-asn-cdn-waf-vhost-ports|ProjectDiscovery `httpx`: Probes de Infraestrutura (`-ip`, `-cname`, `-asn`, `-cdn`), Portas (`-p`) e Virtual Hosts (`-vhost`)|O `httpx` correlaciona a camada de aplicação HTTP com a camada de infraestrutura de rede extraindo endereço IP (`-ip`), registro `CNAME` (`-cname`), número de Sistema Autônomo (`-asn`), provedor de CDN/WAF (`-cdn`), teste de Virtual Host (`-vhost`) e portas customizadas (`-p`).|Permite distinguir rapidamente quais domínios estão protegidos atrás de Cloudflare/CloudFront/Akamai (`-cdn`) e quais expõem o IP de origem da nuvem diretamente ou apontam para `CNAMEs` de terceiros.|A opção `-p` aceita listas e faixas nomeadas de portas (ex.: `-p http:80,8080,8000,https:443,8443,9443`), multiplicando os alvos pelas portas indicadas. Já `-cdn` compara o IP resolvido e cabeçalhos contra faixas conhecidas de CDNs/WAFs (via biblioteca `cdncheck`), permitindo filtrar ou excluir ativos atrás de CDN com `-mcdn` ou `-fcdn`.|```bash
+# Sondar portas web alternativas identificando IP, CNAME, ASN e provedor de CDN/WAF
+httpx -l subdomains.txt \
+  -p http:80,8080,https:443,8443 \
+  -ip -cname -asn -cdn -vhost \
+  -json -o infra-web-map.jsonl
+```|Sondar dezenas de portas (`-p`) em milhares de hosts atrás de uma mesma CDN gera bloqueio rápido do IP do scanner; use `-exclude-cdn` quando o objetivo for testar portas altas diretamente em servidores de origem.|Execute `jq -c 'select(.cdn == false) | {url, host, port, cname, asn}' infra-web-map.jsonl` para listar servidores que respondem diretamente sem camada de CDN.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, subfinder-monitoramento-continuo-diff-novos-subdominios-alertas, httpxpd-matchers-filters-status-length-string-regex-cdn-time
+
+===NOTE===
+0354|httpxpd-inspecao-certificados-tls-csp-extract-fqdn-san|ProjectDiscovery `httpx`: Inspeção de Certificados TLS (`tls-grab`), Header CSP (`-csp-probe`) e Extração de FQDNs (`-efqdn`)|Durante o handshake HTTPS, o `httpx` extrai os metadados completos do certificado X.509 do servidor (`tls`), analisa políticas `Content-Security-Policy` (`-csp-probe`) e coleta novos domínios e subdomínios presentes no corpo e nos cabeçalhos HTTP (`-efqdn` / `-extract-fqdn`).|A lista de `Subject Alternative Names` (SAN) de um certificado TLS e as diretivas `connect-src` / `script-src` do cabeçalho CSP frequentemente revelam subdomínios internos, APIs de backend e buckets de armazenamento que não constam em dicionários de DNS.|No output JSON (`-json`), o objeto `.tls` reporta `subject_cn`, `subject_an` (SANs), `issuer_cn`, `not_before`, `not_after`, `tls_version`, `cipher` e `fingerprint_hash`. Combinado com `-csp-probe` e `-efqdn`, o `httpx` alimenta recursivamente o inventário de superfície de ataque com os novos FQDNs descobertos.|```bash
+# Extrair certificados TLS, domínios da política CSP e FQDNs embutidos no corpo/headers
+httpx -l live-https.txt \
+  -csp-probe -efqdn \
+  -json -o tls-csp-discovery.jsonl
+
+# Listar certificados que expiram nos próximos 30 dias ou usam TLS legado
+jq -c '{url, tls_version: .tls.tls_version, not_after: .tls.not_after, san: .tls.subject_an}' tls-csp-discovery.jsonl
+```|Servidores mal configurados que exigem SNI estrito podem apresentar um certificado *fallback* genérico do balanceador se sondados pelo endereço IP bruto em vez do hostname; passe sempre o FQDN na entrada ou configure `-sni-name`.|Verifique que o campo `.tls.subject_an` e `.csp.domains` estão preenchidos nos registros JSONL gerados.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, httpxpd-deteccao-tecnologias-wappalyzer-favicon-hash-jarm-tls, subfinder-arquitetura-enumeracao-passiva-subdominios-fontes-curadas
+
+===NOTE===
+0355|httpxpd-captura-screenshots-headless-chrome-system-chrome-js|ProjectDiscovery `httpx`: Triagem Visual em Escala com Screenshots Headless (`-ss`, `-system-chrome` e `-jsc`)|O modo Headless do `httpx` (`-ss` / `-screenshot`) utiliza uma instância do Chromium/Chrome para renderizar cada página web descoberta, capturar *screenshots* para triagem visual rápida e opcionalmente executar código JavaScript após a navegação (`-jsc`).|Em superfícies externas com centenas de hosts respondendo `200 OK`, a inspeção visual de *screenshots* permite identificar em segundos painéis de login expostos (Grafana, Jenkins, Kibana, Argo CD), páginas de erro com *stack traces* e ambientes de homologação esquecidos.|O `httpx` salva as capturas de tela e o corpo DOM renderizado em disco (`output/screenshot/`) e gera um relatório visual navegável. As flags `-st 10s` (`-screenshot-timeout`) e `-sid 1s` (`-screenshot-idle`) controlam o tempo de espera pela renderização de SPAs, enquanto `-esb` (`-exclude-screenshot-bytes`) evita inflar o arquivo JSONL com imagens em Base64.|```bash
+# Capturar screenshots usando o Chrome local sem embutir os bytes Base64 no JSONL
+httpx -l live-web-assets.txt \
+  -ss -system-chrome \
+  -st 15s -sid 2s -esb \
+  -json -o visual-recon.jsonl
+```|Executar dezenas de abas do Headless Chrome simultaneamente consome grande quantidade de CPU e memória RAM (`/dev/shm` em containers Docker); monte `--shm-size=2g` no Docker e reduza `-threads` durante varreduras com `-ss`.|Verifique o diretório `output/screenshot/` gerado e confirme que os caminhos das imagens constam no campo `screenshot_path` do arquivo `visual-recon.jsonl`.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, katana-arquitetura-crawler-padrao-vs-headless-chrome-dast, httpxpd-armazenamento-respostas-srd-irh-csv-sqlite-dbs
+
+===NOTE===
+0356|httpxpd-matchers-filters-status-length-string-regex-cdn-time|ProjectDiscovery `httpx`: Filtragem Avançada com Matchers (`-mc`, `-ms`, `-mr`, `-mfc`) e Filters (`-fc`, `-fs`, `-fr`, `-fcdn`)|O `httpx` dispõe de um motor completo de *Matchers* e *Filters* para selecionar ou descartar respostas HTTP por código de status (`-mc`/`-fc`), comprimento (`-ml`/`-fl`), contagem de linhas/palavras (`-mlc`/`-mwc`), substring (`-ms`/`-fs`), expressão regular (`-mr`/`-fr`), hash de favicon (`-mfc`/`-ffc`), provedor CDN (`-mcdn`/`-fcdn`) e tempo de resposta (`-mrt`/`-frt`).|Permite isolar diretamente no pipeline os ativos de alto risco (ex.: páginas contendo `"Swagger UI"` ou `"GraphiQL"`, ou servidores retornando `401`/`403`/`500` fora de CDN) sem pós-processamento complexo.|Além das flags individuais, as opções `-filter-condition` e `-match-condition` aceitam expressões DSL booleanas completas sobre os atributos da resposta (como `status_code==200 && contains(body, "openapi")` ou `!cdn && status_code!=404`), avaliando múltiplos critérios simultaneamente em tempo de execução.|```bash
+# Localizar especificações OpenAPI/Swagger ou GraphQL expostas diretamente na origem
+httpx -l subdomains.txt \
+  -path /swagger/index.html,/v3/api-docs,/graphql \
+  -mc 200 \
+  -mr "Swagger UI|openapi|__schema" \
+  -json -o exposed-api-schemas.jsonl
+```|Combinar `-path` com uma lista de 50 caminhos em uma entrada de 10.000 subdomínios gera 500.000 requisições; use `-path` no `httpx` apenas para sondas cirúrgicas de poucos caminhos de alto valor e reserve wordlists grandes para o `ffuf`.|Execute o comando e confirme com `jq -r '.url' exposed-api-schemas.jsonl` que todas as URLs retornadas satisfazem tanto `-mc 200` quanto a expressão regular `-mr`.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, httpxpd-extratores-customizados-er-ep-body-preview-redirect-chain, ffuf-matchers-filters-status-size-words-lines-regex-time
+
+===NOTE===
+0357|httpxpd-extratores-customizados-er-ep-body-preview-redirect-chain|ProjectDiscovery `httpx`: Extratores Regex (`-er`, `-ep`), Body Preview (`-bp`) e Cadeia de Redirecionamento (`-fr` / `- follow-redirects`)|O `httpx` permite extrair dados específicos de cabeçalhos e corpos HTTP durante a sondagem usando expressões regulares customizadas (`-er` / `-extract-regex`) ou presets integrados (`-ep` / `-extract-preset`), além de capturar *previews* do corpo (`-bp`) e a cadeia completa de redirecionamentos (`-location`, `-fr`, `-maxr`).|Viabiliza identificar chaves de API vazadas em páginas públicas, versões de frameworks em comentários HTML, endereços de e-mail corporativos ou destinos finais de redirecionamentos SSO (`Location`) em uma única passada.|A flag `-ep url,ipv4,mail` aciona padrões pré-compilados para extrair URLs, IPs e e-mails do corpo da resposta, enquanto `-er "AIza[0-9A-Za-z-_]{35}"` extrai padrões customizados e os grava no campo `.extracts` do JSONL. Quando `-fr` (`-follow-redirects`) ou `-fhr` (`-follow-host-redirects`, que restringe redirecionamentos ao mesmo host) está ativo, `-chain` registra cada salto intermediário.|```bash
+# Seguir redirecionamentos no mesmo host (-fhr) e extrair versões ou chaves via regex customizada
+httpx -l live-hosts.txt \
+  -fhr -maxr 5 -chain \
+  -bp -er "v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+" \
+  -json -o redirects-and-extracts.jsonl
+```|Usar `-fr` (seguir redirecionamentos para qualquer domínio) em vez de `-fhr` (seguir apenas no mesmo host) pode fazer o `httpx` seguir redirecionamentos 302 para provedores de login de terceiros (Okta, Microsoft Login, Google) e classificar erroneamente a tecnologia do alvo como sendo a do IdP.|Compare a saída de `-fr` vs `-fhr` em um endpoint protegido por SSO e confirme que `-fhr` preserva o escopo no domínio original.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, httpxpd-matchers-filters-status-length-string-regex-cdn-time, katana-extracao-campos-field-extraction-custom-regex-jsonl
+
+===NOTE===
+0358|httpxpd-otimizacao-rate-limit-threads-retries-timeout-waf-bypass|ProjectDiscovery `httpx`: Controle de Concorrência (`-t`, `-rl`, `-rlm`), Retries, Timeout e Resiliência a WAF|O `httpx` ajusta finamente a pressão de rede sobre os alvos através do número de threads (`-t`, padrão 50), taxa máxima por segundo (`-rl`, padrão 150) ou por minuto (`-rlm`), número de retentativas (`-retries`), timeout (`-timeout`) e leitura máxima do corpo (`-mrs`).|Sondagens agressivas sem controle de taxa contra balanceadores corporativos acionam bloqueios de IP ou geram falsos negativos por exaustão de sockets locais (*ephemeral ports*) e timeouts de handshake TLS.|Para ambientes sensíveis, reduzir `-t 20 -rl 30 -timeout 10 -retries 2` estabiliza a coleta sem perda de pacotes. Além disso, a flag `-random-agent` (ativa por padrão) rotaciona `User-Agent`, `-http2` testa negociação HTTP/2 e `-ztls` permite alternar para a biblioteca `ztls` ao sondar servidores legados que requerem cifras TLS antigas.|```bash
+# Executar probing conservador com limite de 30 req/s, 2 retries e cabeçalho de identificação da equipe de segurança
+httpx -l internal-targets.txt \
+  -H "X-Security-Scanner: secops-easm-authorized" \
+  -t 15 -rl 30 -timeout 10 -retries 2 \
+  -sc -title -td -json -o internal-probing.jsonl
+```|Em sistemas Linux que realizam *probing* de dezenas de milhares de hosts com `-t` alto, o limite padrão de descritores de arquivos abertos (`ulimit -n 1024`) esgota rapidamente; eleve `ulimit -n 65535` antes da execução.|Monitore a execução com `-stats -si 5` para acompanhar a taxa real de requisições por segundo e o percentual de conclusão em tempo real.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, ffuf-rate-limiting-threads-delay-stop-flags-sa-sf-se-interativo, subfinder-rate-limiting-por-provedor-rls-rl-timeouts-otimizacao
+
+===NOTE===
+0359|httpxpd-armazenamento-respostas-srd-irh-csv-sqlite-dbs|ProjectDiscovery `httpx`: Arquivamento Forense de Respostas (`-srd`, `-irh`, `-irb`) e Relatórios CSV/JSONL|Para auditoria histórica e análise de *diff* entre varreduras, o `httpx` pode gravar em disco todas as requisições e respostas HTTP brutas (`-srd` / `-store-response-dir`) ou incluí-las diretamente no JSONL (`-irh` / `-include-response-header` e `-irb` / `-include-response-base64`).|Quando uma vulnerabilidade ou alteração de superfície é detectada, o analista não precisa enviar novas requisições ao alvo para inspecionar cabeçalhos de segurança (`Strict-Transport-Security`, `X-Frame-Options`, `Set-Cookie`) ou o HTML retornado no instante da coleta.|Com `-srd /var/lib/easm/http-responses`, o `httpx` cria uma estrutura organizada por domínio contendo o dump completo do par requisição/resposta e um índice `index.txt`. Já a exportação `-csv -o report.csv` (com `-csvo` para codificação) gera planilhas prontas para auditoria de conformidade de cabeçalhos TLS/HTTP.|```bash
+# Salvar cabeçalhos e corpos HTTP em diretório de evidências e exportar JSONL enriquecido
+httpx -l critical-endpoints.txt \
+  -sc -title -server -td \
+  -srd /var/lib/easm/evidence-dump \
+  -irh \
+  -json -o critical-endpoints-audit.jsonl
+```|Habilitar `-irb` (corpo completo em Base64 dentro do JSONL) em listas grandes produz arquivos JSONL de vários gigabytes; prefira `-srd` combinado com `-mrs 1048576` para limitar o tamanho máximo armazenado por resposta.|Verifique a criação dos arquivos de evidência em `/var/lib/easm/evidence-dump/` e confirme a presença do objeto de cabeçalhos no JSONL gerado com `-irh`.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, httpxpd-captura-screenshots-headless-chrome-system-chrome-js, ffuf-auditoria-relatorios-json-html-csv-od-replay-proxy-ffufrc
+
+===NOTE===
+0360|httpxpd-encadeamento-dast-subfinder-httpx-katana-nuclei|ProjectDiscovery `httpx`: Papel de Filtro e Enriquecimento Entre `subfinder`, `katana` e `nuclei`|Em arquiteturas modernas de automação de segurança (DAST/EASM), o `httpx` atua como o estágio intermediário obrigatório de filtragem e enriquecimento entre a descoberta de hosts (`subfinder`/`dnsx`) e a exploração profunda de rotas (`katana`) ou varredura de vulnerabilidades (`nuclei`).|Alimentar o `nuclei` ou o `katana` diretamente com milhares de subdomínios mortos ou sem servidor HTTP desperdiça horas de *timeouts* de conexão TCP; o `httpx` reduz a lista apenas às URLs HTTP/HTTPS vivas e identifica a tecnologia exata (`-td`) para selecionar templates pertinentes.|Ao emitir o arquivo JSONL do `httpx` (com `-tech-detect`), pipelines subsequentes podem alimentar o `nuclei` usando mapeamento automático de tecnologias (`nuclei -l httpx.jsonl -as`) ou filtrar URLs por tecnologia (ex.: extrair apenas servidores Spring Boot, GitLab ou WordPress) antes de acionar crawlers e scanners específicos.|```bash
+# Filtrar subdomínios vivos com httpx e acionar varredura automática por tecnologia no nuclei
+subfinder -d example.corp -silent -duc \
+  | httpx -silent -duc -td -sc -json -o live-httpx.jsonl
+
+jq -r '.url' live-httpx.jsonl \
+  | katana -silent -duc -d 3 -jc -o discovered-urls.txt
+```|Passar a saída padrão do `httpx` com flags visuais (`-sc -title -td` sem `-json`) diretamente via pipe para ferramentas que esperam apenas URLs puras quebrará o parser do consumidor devido aos colchetes `[200] [Title]`; ao usar pipes de texto, mantenha o `httpx` sem flags decorativas ou filtre `.url` via `jq -r`.|Valide que todas as linhas de `discovered-urls.txt` começam com `http://` ou `https://` sem colchetes de status misturados.|httpxpd-arquitetura-probing-http-retryablehttp-multipurpose-toolkit, subfinder-encadeamento-pipelines-easm-stdin-stdout-httpx-nuclei, katana-arquitetura-crawler-padrao-vs-headless-chrome-dast

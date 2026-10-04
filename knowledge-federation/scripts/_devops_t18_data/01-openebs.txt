@@ -1,0 +1,92 @@
+1701|openebs-arquitetura-container-native-storage-data-engines-control-plane|OpenEBS: arquitetura Container Native Storage (CNS) com Data Engines e Control Plane no Kubernetes|O OpenEBS (projeto CNCF Sandbox licenciado sob Apache 2.0) implementa o padrão *Container Native Storage* (CNS) fornecendo armazenamento persistente para cargas de trabalho Kubernetes por meio de motores de dados conteinerizados divididos em duas abordagens principais: **Local Storage** e **Replicated Storage**.|Aplicações distribuídas modernas (como Cassandra, MongoDB ou Kafka) já replicam dados na própria camada de aplicação e precisam apenas de desempenho bruto de disco local (`LocalPV`), enquanto bancos standalone ou sistemas legados exigem replicação síncrona no nível do volume de bloco (`Mayastor`) com failover entre nós.|A arquitetura do OpenEBS divide-se no **Control Plane** (provisionadores dinâmicos CSI, gerenciamento de snapshots/clones, expansão de volume e métricas Prometheus) e nos **Data Engines**, que por sua vez são decompostos em quatro camadas: *Volume Access Layer* (montagem Ext4/XFS ou bloco raw pelo `kubelet`/CSI), *Volume Services Layer* (Target/Nexus dedicado por volume), *Volume Data Layer* (Volume Replicas nos nós) e *Storage Layer* (dispositivos físicos NVMe/SAS/SSD).|```bash
+helm repo add openebs https://openebs.github.io/openebs
+helm repo update
+helm install openebs --namespace openebs openebs/openebs --create-namespace
+kubectl get pods -n openebs
+```|Ao instalar o chart guarda-chuva `openebs/openebs`, você pode habilitar ou desabilitar motores específicos (`lvm-localpv`, `zfs-localpv`, `mayastor`) conforme a necessidade do cluster para economizar recursos nos worker nodes.|Execute `kubectl get sc` e `kubectl get pods -n openebs` para verificar as `StorageClasses` e os controladores provisionados.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1702|openebs-volume-services-layer-target-nexus-por-volume-blast-radius|OpenEBS: modelo de um controlador (`Target`/`Nexus`) por volume para redução do raio de explosão (*Blast Radius*)|Diferentemente de storages tradicionais que concentram o I/O de centenas de volumes em um único controlador monolítico, a *Volume Services Layer* do OpenEBS instancia um controlador de armazenamento independente (*Volume Target* / *Nexus*) para cada volume replicado.|Se um controlador de armazenamento compartilhado travar ou sofrer contenção de metadados, todos os bancos de dados do cluster perdem acesso a disco ao mesmo tempo; com um controlador dedicado por volume, qualquer falha ou reconstrução (*rebuild*) fica contida a um único `PersistentVolume` e à lista fixa de nós de suas réplicas.|No modo de armazenamento replicado, a aplicação realiza leituras e escritas através do *Volume Target* (exposto como um *NVMe Target* na rede), que coordena o acesso, replica sincronamente os blocos para os endpoints de rede das *Volume Replicas* nos nós escolhidos e gerencia a reconstrução de réplicas que saíram do estado `Offline` para `Rebuilding` e `Healthy`.|```bash
+kubectl get pvc,pv
+kubectl get diskpools -n openebs
+```|Cada *Volume Replica* no OpenEBS passa por cinco estados bem definidos durante seu ciclo de vida: `Initializing`, `Healthy`, `Offline`, `Rebuilding` e `Terminating`.|Verifique o estado das réplicas e do Nexus do volume no namespace `openebs` antes e durante um teste de reinicialização de nó.|https://openebs.io/docs/concepts/architecture;https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://github.com/openebs/openebs
+1703|openebs-mayastor-replicated-storage-nvme-of-spdk-alta-performance|OpenEBS `Mayastor`: motor de armazenamento replicado corporativo baseado em NVMe-oF e SPDK|O **Mayastor** é o motor de armazenamento replicado multi-nó de classe corporativa do OpenEBS, projetado do zero sobre semântica **NVMe-oF** (*NVMe over Fabrics* / RDMA / TCP) para entregar baixa latência, snapshots, clones e alta disponibilidade em SSDs NVMe modernos.|Motores de armazenamento em espaço de kernel ou baseados em iSCSI legado introduzem trocas de contexto e overhead de CPU que impedem aproveitar os milhões de IOPS de discos NVMe PCIe Gen4/Gen5.|No Mayastor, cada nó de armazenamento gerencia *DiskPools* sobre dispositivos de bloco dedicados e executa um plano de dados de alta performance. Quando um `PersistentVolumeClaim` é criado com uma `StorageClass` Mayastor (`repl: "3"`), o CSI provisiona um Nexus NVMe-oF que replica cada gravação de forma síncrona para 3 nós distintos.|```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-mayastor-3repl
+provisioner: io.openebs.csi-mayastor
+parameters:
+  protocol: nvmf
+  repl: "3"
+  fsType: ext4
+volumeBindingMode: WaitForFirstConsumer
+```|O Mayastor exige recursos dedicados nos worker nodes (incluindo páginas de memória *HugePages* de 2 MiB habilitadas no kernel Linux, núcleos de CPU reservados para o io-engine e módulos `nvme-tcp` carregados).|Confirme a alocação de HugePages nos nós (`grep HugePages_ /proc/meminfo`) e verifique com `kubectl get dsp -n openebs` se os `DiskPools` estão `Online`.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1704|openebs-localpv-hostpath-provisionamento-dinamico-zero-config|OpenEBS `Local PV Hostpath`: substituto dinâmico zero-configuração para volumes `hostPath` nativos|O **Local PV Hostpath** (`openebs/dynamic-localpv-provisioner`) é o provisionador single-node estável do OpenEBS que cria diretórios locais sob demanda nos worker nodes como `PersistentVolumes` sem exigir configuração prévia de discos adicionais nem driver CSI complexo.|O volume `hostPath` embutido do Kubernetes não possui provisionamento dinâmico via `StorageClass` e exige privilégios administrativos no Pod, enquanto o `local` PV estático requer pré-criar manualmente cada ponto de montagem antes do agendamento.|Com a `StorageClass` `openebs-hostpath` (configurada com `volumeBindingMode: WaitForFirstConsumer`), o provisionador aguarda o scheduler escolher o nó do Pod, cria automaticamente um subdiretório isolado dentro do caminho base do nó (por padrão `/var/openebs/local`) e vincula o `PersistentVolume` com afinidade de nó (`nodeAffinity`) fixa para aquele host.|```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-local-pvc
+spec:
+  storageClassName: openebs-hostpath
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+```|Como o `Local PV Hostpath` compartilha o sistema de arquivos subjacente do host, ele não impõe cota rígida de capacidade por diretório nem oferece snapshots nativos; para cotas rígidas e snapshots locais, utilize `Local PV LVM` ou `Local PV ZFS`.|Aplique o PVC e um Pod consumidor e execute `kubectl get pv -o wide` para confirmar o provisionamento dinâmico e a regra de `nodeAffinity`.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1705|openebs-localpv-lvm-csi-snapshots-thin-provisioning-resize|OpenEBS `Local PV LVM`: provisionamento CSI de volumes lógicos LVM2 com snapshots, clones e expansão online|O **Local PV LVM** (`openebs/lvm-localpv`) é um driver CSI estável para produção que provisiona dinamicamente volumes lógicos **LVM2** (*Logical Volume Manager*) a partir de *Volume Groups* (VGs) pré-configurados nos nós Kubernetes.|Em cargas stateful de alta performance que já possuem replicação própria (como clusters PostgreSQL Patroni, TiKV ou Kafka), usar um volume LVM local oferece desempenho quase idêntico ao disco físico com suporte a *thin provisioning*, redimensionamento online, snapshots e proteção RAID do LVM2.|O agente CSI em cada nó monitora os Volume Groups LVM disponíveis (expondo topologia via CRD `LVMNode`). Quando um PVC solicita armazenamento na `StorageClass` `openebs-lvmpv`, o driver cria um Logical Volume (`lvcreate`) no nó onde o Pod foi agendado, formata-o com `ext4`/`xfs` (ou entrega como bloco bruto) e monta no container.|```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvmpv
+provisioner: local.csi.openebs.io
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  storage: "lvm"
+  volgroup: "lvmvg"
+  thinProvision: "yes"
+```|Para que os snapshots CSI (`VolumeSnapshot`) funcionem no `Local PV LVM`, o volume precisa ser criado com `thinProvision: "yes"` sobre um * thin pool* LVM2.|Execute `kubectl get lvmnodes -n openebs` e `kubectl get lvmvolumes -n openebs` para inspecionar os Volume Groups e volumes lógicos provisionados nos nós.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1706|openebs-localpv-zfs-datasets-zvols-compressao-raidz-snapshots|OpenEBS `Local PV ZFS`: provisionamento CSI de datasets e ZVOLs sobre pools ZFS com compressão e RAID-Z|O **Local PV ZFS** (`openebs/zfs-localpv`) é um driver CSI estável do OpenEBS que provisiona dinamicamente *datasets* ZFS (para `volumeMode: Filesystem`) ou *ZVOLs* (para `volumeMode: Block` ou sistemas de arquivos `ext4`/`xfs`) sobre *zpools* existentes nos nós Kubernetes.|O sistema de arquivos ZFS oferece verificação de integridade *copy-on-write* contra corrupção silenciosa (*bit rot*), compressão transparente (`lz4`/`zstd`), cache ARC em RAM, proteção RAID-Z no host e snapshots/clones instantâneos sem custo de cópia.|Na `StorageClass` (`provisioner: zfs.csi.openebs.io`), o administrador declara o nome do pool ZFS (`poolname`), propriedades nativas ZFS (`compression: "lz4"`, `dedup: "off"`, `recordsize: "128k"`, `thinprovision: "yes"`) e `fstype: "zfs"`. O controlador e o DaemonSet CSI criam o recurso `ZFSVolume` e aplicam exatamente essas propriedades no `zpool` do nó selecionado.|```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-zfspv
+provisioner: zfs.csi.openebs.io
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  poolname: "zfspv-pool"
+  fstype: "zfs"
+  compression: "lz4"
+  thinprovision: "yes"
+```|Para usar o `Local PV ZFS`, os módulos de kernel do OpenZFS (`zfs.ko`) e o utilitário `zfs` devem estar instalados nos worker nodes e o `zpool` especificado em `poolname` deve estar criado antes do provisionamento.|Execute `kubectl get zfsvolumes -n openebs` e no nó host `zfs list` para confirmar a criação do dataset ZFS com compressão `lz4`.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1707|openebs-localpv-rawfile-loopback-extent-files-desenvolvimento|OpenEBS `Local PV Rawfile`: armazenamento em bloco e arquivo baseado em sparse files locais|O subprojeto **Local PV Rawfile** (`openebs/rawfile-localpv`) é um motor CSI do OpenEBS que provisiona volumes persistentes (tanto em modo `Filesystem` quanto em modo `Block`) a partir de arquivos de imagem (*extent/sparse files*) montados via dispositivos loopback sobre qualquer diretório local do nó.|Em ambientes de desenvolvimento, CI/CD ou servidores em nuvem onde não há discos brutos livres nem partições separadas para criar um Volume Group LVM ou um zpool ZFS, o `Rawfile` oferece cotas rígidas de tamanho e suporte a `volumeMode: Block` usando apenas o disco raiz do nó.|Quando um PVC é criado, o driver CSI cria um arquivo esparso (`.img`) do tamanho solicitado no diretório configurado do nó, associa um dispositivo de bloco loopback (`/dev/loopX`) quando necessário e formata-o com o sistema de arquivos escolhido, garantindo que um Pod nunca consuma espaço além do limite declarado no PVC.|```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-rawfile-localpv
+provisioner: rawfile.csi.openebs.io
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+```|Conforme documentado na matriz oficial do OpenEBS, o `Local PV Rawfile` encontra-se em estágio Beta/Experimental voltado a desenvolvedores e avaliação, enquanto `Local PV Hostpath`, `Local PV LVM`, `Local PV ZFS` e `Mayastor` têm status estável para produção.|Crie um PVC com `volumeMode: Block` usando a classe `openebs-rawfile-localpv` e verifique o dispositivo de bloco entregue dentro do container.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1708|openebs-criterios-escolha-local-storage-vs-replicated-storage|OpenEBS: matriz de decisão arquitetural entre Local Storage (`LocalPV`) e Replicated Storage (`Mayastor`)|A documentação oficial do OpenEBS estabelece uma matriz de engenharia clara entre **Local Storage** (`Hostpath`, `LVM`, `ZFS`) e **Replicated Storage** (`Mayastor`) com base na capacidade da aplicação gerenciar ou não sua própria replicação e alta disponibilidade.|Usar armazenamento replicado por rede (3 cópias no storage) embaixo de um banco de dados que já faz 3 cópias via Raft/Paxos multiplica o consumo de escrita por 9x (*write amplification* 3x3) e adiciona latência de rede desnecessária.|A regra canônica do OpenEBS é: 1) escolha **Local Storage** quando a aplicação distribui e replica dados por conta própria (MongoDB ReplicaSet, Cassandra, Kafka, Elasticsearch, TiKV), obtendo latência próxima ao disco físico sem overhead de rede; 2) escolha **Replicated Storage (Mayastor)** para cargas stateful que exigem replicação e failover na camada de bloco (PostgreSQL/MySQL standalone, Percona, GitLab, Prometheus single-instance), permitindo que o Pod seja reagendado em outro nó caso o host falhe.|```bash
+# Listando StorageClasses locais e replicadas instaladas pelo OpenEBS:
+kubectl get storageclasses | grep openebs
+```|Em volumes **Local Storage**, o `PersistentVolume` fica fisicamente preso ao nó onde foi provisionado: se aquele nó desligar permanentemente, o Pod vinculado àquele PVC específico não poderá montar aquele mesmo volume em outro nó.|Revise os `StatefulSets` do cluster e associe `openebs-lvmpv`/`openebs-zfspv` aos clusters distribuídos e `openebs-mayastor` aos serviços single-replica.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1709|openebs-snapshots-clones-csi-volumesnapshot-copy-on-write|OpenEBS: snapshots e clones instantâneos via CSI `VolumeSnapshot` em LVM, ZFS e Mayastor|Os motores CSI do OpenEBS (`Local PV ZFS`, `Local PV LVM` com thin provisioning e `Mayastor`) implementam a API padrão `snapshot.storage.k8s.io/v1` do Kubernetes para criar snapshots pontuais (*point-in-time*) e clones graváveis de `PersistentVolumeClaims`.|Antes de executar uma migração de schema de banco de dados em produção ou para levantar um ambiente efêmero de homologação com dados reais em segundos, é essencial capturar um snapshot instantâneo e criar um PVC clone sem copiar centenas de gigabytes pela rede.|O operador define uma `VolumeSnapshotClass` apontando para o driver CSI correspondente (`zfs.csi.openebs.io`, `local.csi.openebs.io` ou `io.openebs.csi-mayastor`) e aplica um recurso `VolumeSnapshot` referenciando o PVC de origem. Para criar um clone, basta criar um novo PVC definindo `spec.dataSource` apontando para o `VolumeSnapshot` criado.|```yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: db-pre-migration-snap
+spec:
+  volumeSnapshotClassName: openebs-zfspv-snapclass
+  source:
+    persistentVolumeClaimName: db-data-pvc
+```|No `Local PV ZFS` e no `Local PV LVM`, um PVC clonado a partir de um `VolumeSnapshot` reside obrigatoriamente no mesmo worker node do snapshot original devido à natureza local do pool.|Execute `kubectl get volumesnapshot` e confirme que `READYTOUSE` atingiu `true` antes de provisionar o PVC clone.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs
+1710|openebs-backup-restore-velero-restic-kopia-protecao-desastres|OpenEBS: backup externo e recuperação de desastres de volumes locais e replicados com Velero|Tanto os motores de **Local Storage** quanto os de **Replicated Storage** do OpenEBS integram-se com o **Velero** (utilizando plugins CSI de snapshot ou backup em nível de sistema de arquivos como Restic/Kopia) para enviar cópias de segurança para Object Storage externo (S3/MinIO/GCS).|Mesmo a replicação síncrona em 3 nós (`Mayastor`) ou o RAID-Z local (`Local PV ZFS`) não protegem contra exclusão acidental de tabelas por erro humano, ransomware ou perda total da sala de servidores: backups off-cluster são indispensáveis.|Para volumes locais (`Hostpath`, `LVM`, `ZFS`) e replicados, o Velero faz snapshot dos manifestos Kubernetes e envia os blocos/arquivos do volume montado para um `BackupStorageLocation` em S3, permitindo restaurar a aplicação inteira (inclusive migrando de um motor local para outro cluster em nuvem) com `velero restore create`.|```bash
+velero backup create prod-stateful-backup \
+  --include-namespaces prod-db \
+  --default-volumes-to-fs-backup \
+  --wait
+velero backup describe prod-stateful-backup --details
+```|Para garantir consistência transacional ao fazer backup de bancos de dados via sistema de arquivos, configure *backup hooks* (`pre.hook.backup.velero.io/command`) no Pod para executar `fsfreeze` ou `CHECKPOINT`/`FLUSH TABLES WITH READ LOCK` durante o snapshot.|Execute `velero backup get` e teste a restauração do PVC em um namespace isolado de teste para validar o RPO/RTO.|https://raw.githubusercontent.com/openebs/openebs/HEAD/README.md;https://openebs.io/docs/concepts/architecture;https://github.com/openebs/openebs

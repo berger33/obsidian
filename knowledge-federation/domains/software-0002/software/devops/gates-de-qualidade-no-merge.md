@@ -8,8 +8,9 @@ confianca: alta
 ultima_verificacao: 2026-10-01
 validade: volatil
 status: candidata
-revisao_humana: pendente
-revisor: ""
+revisao_humana: aprovada
+revisor: usuario-da-sessao
+data_revisao_humana: 2026-10-02
 fontes: ["https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches", "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule", "https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks"]
 tags: [dominio/software, subdominio/devops, qualidade/candidata]
 aliases: [Quality gates, Proteção de branch e checks]

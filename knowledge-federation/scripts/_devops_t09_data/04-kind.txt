@@ -1,0 +1,179 @@
+=== NOTE: 831 | kind-clusters-kubernetes-locais-containers-docker-arquitetura | kind (Kubernetes IN Docker): execução de clusters Kubernetes locais usando containers como nós ===
+ONE_LINER: O `kind` (`kubernetes-sigs/kind`, sigla para *Kubernetes IN Docker*) é uma ferramenta certificada pela CNCF que executa clusters Kubernetes locais usando containers (`docker`, `podman` ou `nerdctl`) como "nós" inicializados com `kubeadm`.
+IMPORTANCE: O `kind` foi projetado originalmente pelo Kubernetes SIG-Testing para testar o próprio código-fonte do Kubernetes em pipelines de integração contínua sem exigir máquinas virtuais pesadas ou infraestrutura de nuvem, tornando-se rapidamente o padrão da indústria tanto para testes automatizados em CI quanto para desenvolvimento local e bootstrapping do Cluster API. O README oficial e o `Quick Start` (`kind.sigs.k8s.io`) detalham sua arquitetura.
+HOW_IT_WORKS: Conforme documenta o README oficial, o `kind` consiste em: (1) pacotes Go (`pkg/cluster`, `pkg/build`) que implementam a criação de clusters e construção de imagens; (2) a interface de linha de comando **`kind`**; e (3) imagens de container especiais (**`base-image`** e **`node-image`**, publicadas no Docker Hub como **`kindest/node`**) projetadas para rodar `systemd`, `containerd`, `kubelet` e os componentes do Kubernetes dentro de um container privilegiado. Quando o usuário executa `kind create cluster`, o `kind` detecta automaticamente o runtime instalado (`docker`, `podman` ou `nerdctl`), inicia o(s) container(s) `kindest/node` e faz o bootstrap de cada "nó" com **`kubeadm`**.
+EXAMPLE:
+```bash
+# Criar um cluster Kubernetes local com o nome padrão (kind), aguardar até 60s pela prontidão e listar os clusters
+kind create cluster --wait 60s
+kind get clusters
+kubectl cluster-info --context kind-kind
+```
+TRADE_OFFS: Conforme documentado no guia oficial `Quick Start`, ao usar `--wait` no `kind create cluster`, é obrigatório especificar a unidade de tempo (ex.: `--wait 30s` ou `--wait 5m`); além disso, o `podman` e o `nerdctl` operam em modo **rootless** por padrão, o que exige configuração adicional de delegação de cgroup v2 (`Delegate=yes` no systemd para CPU/memória/pids) no host Linux para que os containers `kindest/node` funcionem plenamente.
+VERIFY: Execute `kind get clusters` e `docker ps --filter "label=io.x-k8s.kind.cluster"` para verificar o container `kind-control-plane` em execução e o contexto `kind-kind` no `kubectl`.
+LINKS: [[kind-gerenciamento-clusters-contextos-kubeconfig-delete]] | [[kind-carregamento-imagens-locais-load-docker-image-archive]] | [[kind-configuracao-multinode-control-plane-ha-port-mappings]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 832 | kind-gerenciamento-clusters-contextos-kubeconfig-delete | kind: gerenciamento de múltiplos clusters (--name), regras de merge do KUBECONFIG e deleção idempotente ===
+ONE_LINER: O `kind` permite criar múltiplos clusters isolados na mesma máquina via `--name <nome>` (criando o contexto `kind-<nome>` no `kubectl`), segue as regras padrão de merge da variável `$KUBECONFIG` (ou isolamento via `--kubeconfig`) e oferece deleção idempotente com `kind delete cluster`.
+IMPORTANCE: Em testes de integração multi-cluster (como testar service mesh multi-cluster, replicação de banco ou migração `clusterctl move`), o desenvolvedor precisa rodar dois ou três clusters Kubernetes simultaneamente na mesma máquina e entender como o `kind` grava credenciais no arquivo `kubeconfig` e limpa recursos em scripts de CI. A seção `Interacting With Your Cluster` e `Deleting a Cluster` do `Quick Start` oficial explica essas regras.
+HOW_IT_WORKS: Quando `kind create cluster` é executado sem `--name`, o cluster recebe o nome padrão `kind` e o contexto do `kubectl` é gravado como **`kind-kind`**. Passando `--name kind-2`, cria-se um segundo cluster independente com contexto **`kind-kind-2`**. Para o armazenamento do `kubeconfig`: (1) se `$KUBECONFIG` não estiver definida, o `kind` grava em `${HOME}/.kube/config`; (2) se `$KUBECONFIG` contiver uma lista de caminhos separados por `:` (ou `;` no Windows), os arquivos são mesclados; e (3) se a flag **`--kubeconfig <arquivo>`** for passada na criação, apenas aquele arquivo específico é usado sem nenhum merge. Para destruir um cluster, `kind delete cluster [--name <nome>]` remove os containers e volumes: **por design, pedir para deletar um cluster que não existe não retorna erro**, garantindo limpeza idempotente em scripts de CI.
+EXAMPLE:
+```bash
+# Criar um cluster dedicado gravando o kubeconfig em um arquivo isolado e limpá-lo de forma idempotente
+kind create cluster --name ci-test --kubeconfig ./ci-kubeconfig.yaml
+kubectl --kubeconfig ./ci-kubeconfig.yaml get nodes
+kind delete cluster --name ci-test
+```
+TRADE_OFFS: Se você definir a variável de ambiente `KIND_EXPERIMENTAL_PROVIDER=docker`, `KIND_EXPERIMENTAL_PROVIDER=podman` ou `KIND_EXPERIMENTAL_PROVIDER=nerdctl` para desativar a auto-detecção de runtime do `kind`, certifique-se de usar a mesma variável tanto no `kind create cluster` quanto no `kind get clusters` e `kind delete cluster`, caso contrário o `kind` procurará os containers no provedor errado.
+VERIFY: Execute `kind get clusters` após `kind delete cluster --name ci-test` para confirmar que o cluster foi removido e rode `kind delete cluster --name ci-test` uma segunda vez para verificar que o código de saída continua sendo `0` (idempotência).
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-carregamento-imagens-locais-load-docker-image-archive]] | [[minikube-clusters-locais-kubernetes-perfis-controles-basicos]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 833 | kind-carregamento-imagens-locais-load-docker-image-archive | kind: carregamento direto de imagens locais para dentro do cluster (kind load docker-image e image-archive) ===
+ONE_LINER: O comando `kind load docker-image <imagem>` (e `kind load image-archive <arquivo.tar>`) copia imagens construídas na máquina host diretamente para o `containerd` interno dos nós do cluster `kind`, eliminando a necessidade de enviar imagens para um registry remoto durante o desenvolvimento.
+IMPORTANCE: Como os "nós" do `kind` são containers isolados que possuem seu próprio daemon `containerd` interno separado do daemon Docker do host, fazer apenas `docker build -t meu-app:v1 .` no host **não** torna a imagem visível para os Pods agendados dentro do `kind`. Além disso, usar a tag `:latest` causa falhas silenciosas de pull. A seção `Loading an Image Into Your Cluster` do `Quick Start` oficial explica tanto o comando `kind load` quanto a armadilha da `imagePullPolicy`.
+HOW_IT_WORKS: Após construir uma imagem localmente com `docker build -t my-custom-image:unique-tag ./my-image-dir`, o desenvolvedor executa **`kind load docker-image my-custom-image:unique-tag`** (adicionando `--name <cluster>` caso o cluster não tenha o nome padrão `kind`, ou passando múltiplas imagens na mesma linha). O `kind` exporta a imagem do Docker do host e a importa via `ctr` para dentro de todos os nós do cluster (também é possível carregar um arquivo `.tar` diretamente com **`kind load image-archive /my-image-archive.tar`**). Para inspecionar as imagens presentes dentro de um nó do `kind`, executa-se `docker exec -it <node-name> crictl images` (ex.: `kind-control-plane`).
+EXAMPLE:
+```bash
+# Construir imagem com tag explícita (não :latest), carregá-la no cluster kind e verificar com crictl images no nó
+docker build -t my-app:v1.0.0 .
+kind load docker-image my-app:v1.0.0
+docker exec -it kind-control-plane crictl images | grep my-app
+```
+TRADE_OFFS: Conforme alerta a nota oficial do `Quick Start` do `kind`, a política de pull padrão do Kubernetes é `IfNotPresent` **a menos que a tag da imagem seja `:latest` ou omitida**, caso em que a política padrão passa a ser **`Always`**; se você carregar `my-app:latest` com `kind load docker-image`, o `kubelet` ainda tentará puxar `my-app:latest` do Docker Hub pela internet e falhará com `ErrImagePull` / `ImagePullBackOff`! Portanto, **nunca use a tag `:latest`** (use uma tag específica como `:v1.0.0` ou `:dev`) e/ou defina explicitamente `imagePullPolicy: IfNotPresent` ou `imagePullPolicy: Never` no Pod.
+VERIFY: Execute `docker exec -it kind-control-plane crictl images` para confirmar que a imagem carregada com `kind load docker-image` consta no armazenamento local do nó.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-gerenciamento-clusters-contextos-kubeconfig-delete]] | [[ko-integracao-kubernetes-ko-resolve-apply-delete-uri]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 834 | kind-configuracao-multinode-control-plane-ha-port-mappings | kind: configuração declarativa de clusters multi-nós, Control Plane HA e extraPortMappings (kind.x-k8s.io/v1alpha4) ===
+ONE_LINER: Através de um arquivo de configuração (`apiVersion: kind.x-k8s.io/v1alpha4`, `kind: Cluster`) passado em `kind create cluster --config`, o `kind` provisiona topologias multi-nós (múltiplos `worker`s e múltiplos `control-plane`s em HA com load balancer) e mapeia portas para o host via `extraPortMappings`.
+IMPORTANCE: Um cluster de nó único não permite testar afinidade/anti-afinidade entre nós (`topologySpreadConstraints`), drenagem de nós (`kubectl drain`), Kubernetes Descheduler, falha de um nó de control plane em HA ou roteamento de um Ingress Controller diretamente nas portas `80`/`443` do `localhost`. A seção `Configuring Your kind Cluster` do `Quick Start` oficial documenta todas essas configurações.
+HOW_IT_WORKS: No manifesto `kind: Cluster` (`apiVersion: kind.x-k8s.io/v1alpha4`), a lista **`nodes:`** define o papel de cada container nó: (1) **Multi-node**: um item `- role: control-plane` seguido de múltiplos itens `- role: worker`; (2) **Control-plane HA**: múltiplos itens `- role: control-plane` (por exemplo, 3 control-planes e 3 workers), fazendo o `kind` iniciar automaticamente um container extra de balanceador de carga HAProxy (`<cluster>-external-load-balancer`) na frente dos control-planes; e (3) **`extraPortMappings`**: dentro de um nó, mapeia portas do container do nó (`containerPort: 80`) para a máquina host (`hostPort: 80`, `listenAddress: "0.0.0.0"`, `protocol: tcp` ou `udp`), viabilizando acesso direto a `NodePort`, DaemonSets com `hostPort` ou Ingress Controllers.
+EXAMPLE:
+```yaml
+# Arquivo kind-config.yaml criando um cluster com 1 control-plane (mapeando porta 80/443 para o host) e 2 workers
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+  - role: worker
+  - role: worker
+```
+TRADE_OFFS: Como os `extraPortMappings` são configurados na criação do container Docker do nó, você não pode adicionar novas portas mapeadas a um cluster `kind` depois que ele já foi criado sem recriar o cluster; além disso, em clusters com múltiplos nós workers, se um Ingress Controller rodar em um worker diferente daquele que tem o `extraPortMappings` (tipicamente o `control-plane`), deve-se usar seletores de nó (`nodeSelector: {"ingress-ready": "true"}`) conforme o guia de Ingress do `kind`.
+VERIFY: Crie o cluster com `kind create cluster --config kind-config.yaml`, execute `kubectl get nodes` para ver os 3 nós (`control-plane`, `worker`, `worker2`) e verifique com `docker port kind-control-plane` o mapeamento da porta `8080`.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-versoes-kubernetes-digests-sha256-feature-gates-proxy]] | [[descheduler-politicas-eviccao-rebalanceamento-pods-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 835 | kind-versoes-kubernetes-digests-sha256-feature-gates-proxy | kind: fixação de versões do Kubernetes por digest SHA-256, habilitação de Feature Gates e uso de Proxy ===
+ONE_LINER: O `kind` permite escolher a versão exata do Kubernetes fixando a imagem `kindest/node:<tag>@sha256:<digest>` (na CLI `--image` ou por nó no arquivo de config), habilitar recursos experimentais via `featureGates` e propagar `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`.
+IMPORTANCE: Em pipelines de CI que testam operadores Kubernetes, charts Helm ou CRDs contra uma matriz de versões (ex.: Kubernetes `v1.33`, `v1.34` e `v1.35`) ou que precisam validar uma `FeatureGate` alpha/beta recém-lançada no Kubernetes, o engenheiro precisa controlar a versão exata e as flags do control plane de forma reprodutível. A seção `Advanced` do `Quick Start` oficial do `kind` documenta esses recursos.
+HOW_IT_WORKS: (1) **Versão do Kubernetes**: cada release do `kind` publica na página de Releases do GitHub a lista oficial de imagens `kindest/node` com seus respectivos digests `sha256` para cada versão do Kubernetes; o usuário pode passar `--image kindest/node:v1.35.0@sha256:...` na CLI ou definir o campo `image:` em cada nó do arquivo `kind: Cluster`; (2) **Feature Gates**: declarar o mapa `featureGates: { FeatureGateName: true }` no topo do `kind: Cluster` instrui o `kind` a customizar automaticamente a configuração do `kubeadm` (`kube-apiserver`, `kube-controller-manager`, `kube-scheduler` e `kubelet`) com a feature gate ativada; e (3) **Proxy**: se `HTTP_PROXY`, `HTTPS_PROXY` ou `NO_PROXY` estiverem definidas no ambiente (maiúsculas têm precedência), o `kind` as repassa para dentro dos nós e adiciona automaticamente as sub-redes internas do cluster ao `NO_PROXY`.
+EXAMPLE:
+```yaml
+# Configuração kind habilitando Feature Gates no cluster e fixando a imagem do nó
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  MutatingAdmissionPolicy: true
+nodes:
+  - role: control-plane
+```
+TRADE_OFFS: Sempre utilize a imagem `kindest/node` correspondente à sua versão atual do binário `kind` (verificada com `kind version` e listada nas notas de release daquela versão no GitHub), pois usar uma imagem `kindest/node` construída para uma versão incompatível do `kind` pode falhar durante a execução dos passos internos do `kubeadm`.
+VERIFY: Após criar o cluster com `featureGates` configuradas, inspecione o manifesto do pod estático do `kube-apiserver` (`kubectl get pod -n kube-system kube-apiserver-kind-control-plane -o yaml | grep feature-gates`) para confirmar a ativação da flag.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-configuracao-multinode-control-plane-ha-port-mappings]] | [[kind-construcao-node-image-codigo-fonte-kubernetes-build]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 836 | kind-construcao-node-image-codigo-fonte-kubernetes-build | kind: construção de imagens de nó customizadas (kind build node-image) a partir de source, release, url ou file ===
+ONE_LINER: O comando `kind build node-image` constrói imagens `kindest/node` customizadas sobre a `base-image` do `kind`, suportando 4 modos (`--type` a partir do kind v0.24+): `source` (código-fonte local do Kubernetes), `release` (versão oficial ex.: `v1.30.0`), `url` e `file` (tarballs `kubernetes-server-linux-*.tar.gz`).
+IMPORTANCE: Contribuidores do próprio projeto Kubernetes que acabaram de alterar o código Go do `kubelet` ou do `kube-apiserver` localmente precisam testar sua alteração imediatamente em um cluster real; da mesma forma, equipes que testam builds específicos ou releases recém-publicadas precisam gerar uma `node-image` sob demanda. A seção `Building Images` do `Quick Start` oficial do `kind` documenta os quatro modos de `kind build node-image`.
+HOW_IT_WORKS: O `kind` executa clusters usando a **`node-image`** (que contém os artefatos do Kubernetes como `kubeadm`, `kubelet`, `kubectl` e imagens de control plane), a qual por sua vez é construída sobre a **`base-image`** (que instala `systemd`, `containerd` e todas as dependências de SO necessárias para o Kubernetes rodar dentro de um container). A partir do `kind v0.24+`, o comando `kind build node-image` suporta quatro tipos explícitos via `--type`: (1) `--type source /caminho/para/k8s.io/kubernetes` (compila o código-fonte local do Kubernetes usando Docker + buildx); (2) `--type release v1.30.0` (baixa os tarballs oficiais daquela versão); (3) `--type url https://dl.k8s.io/.../kubernetes-server-linux-arm64.tar.gz`; e (4) `--type file $HOME/Downloads/kubernetes-server-linux-amd64.tar.gz`.
+EXAMPLE:
+```bash
+# Construir uma node-image customizada a partir de uma release oficial ou tarball e iniciar o cluster com ela
+kind build node-image --type release v1.30.0 --image kindest/node:custom-v1.30.0
+kind create cluster --image kindest/node:custom-v1.30.0
+```
+TRADE_OFFS: Conforme adverte a seção `Settings for Docker Desktop` do `Quick Start` oficial do `kind`, se você estiver compilando o código-fonte do Kubernetes (`kind build node-image --type source`) no macOS ou Windows usando Docker Desktop, a máquina virtual do Docker precisa de **no mínimo 6 GB de RAM dedicados (sendo 8 GB recomendados)**, caso contrário a compilação do Kubernetes dentro do container falhará por falta de memória (OOM).
+VERIFY: Após executar `kind build node-image`, rode `docker images kindest/node` para confirmar a criação da imagem local e inicie um cluster de teste apontando `--image` para a tag construída.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-versoes-kubernetes-digests-sha256-feature-gates-proxy]] | [[kind-exportacao-logs-diagnostico-ci-troubleshooting]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 837 | kind-exportacao-logs-diagnostico-ci-troubleshooting | kind: exportação estruturada de logs do cluster e dos nós para diagnóstico em CI (kind export logs) ===
+ONE_LINER: O comando `kind export logs [<diretorio>] [--name <cluster>]` coleta e exporta automaticamente uma árvore completa de diagnóstico contendo informações do host Docker e, para cada nó do cluster, `journal.log`, `kubelet.log`, `inspect.json`, versão do Kubernetes e logs de todos os containers e pods.
+IMPORTANCE: Quando um teste end-to-end falha em um runner efêmero de CI (como GitHub Actions ou Prow), o cluster `kind` será destruído logo ao final do job; se o pipeline não exportar todos os logs do `kubelet`, do `systemd` (`journal.log`), do `containerd` e de todos os pods antes de encerrar o runner, torna-se impossível diagnosticar por que o teste falhou. A seção `Exporting Cluster Logs` do `Quick Start` oficial do `kind` documenta essa ferramenta nativa.
+HOW_IT_WORKS: Ao executar **`kind export logs ./ci-artifacts/kind-logs`** (ou sem argumento de caminho para exportar para um diretório temporário `/tmp/...` impresso na saída), o `kind` conecta-se ao runtime de containers e a cada container nó do cluster (`kind-control-plane`, `kind-worker`, etc.) e extrai uma árvore padronizada de arquivos: na raiz grava `docker-info.txt` (informações do host de containers) e, dentro do subdiretório de cada nó (`kind-control-plane/`), grava `containers/`, `docker.log` / `containerd`, `inspect.json`, `journal.log`, `kubelet.log`, `kubernetes-version.txt` e o diretório `pods/` com os logs de todos os pods que rodaram naquele nó.
+EXAMPLE:
+```bash
+# Exportar todos os logs do cluster kind e de seus nós para um diretório de artefatos de CI
+kind export logs ./kind-ci-logs --name kind
+ls -la ./kind-ci-logs/kind-control-plane/
+```
+TRADE_OFFS: Em pipelines de CI/CD (como GitHub Actions), o passo que executa `kind export logs ./kind-ci-logs` seguido do upload de artefatos deve sempre ser configurado com a condição `if: always()` (ou `if: failure()`), garantindo que a coleta ocorra mesmo quando o passo anterior de testes de integração falhar e antes que o job encerre ou execute `kind delete cluster`.
+VERIFY: Execute `kind export logs ./logs-teste` em um cluster local ativo e inspecione a presença de `kubelet.log`, `journal.log` e `pods/` dentro de `./logs-teste/kind-control-plane/`.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-gerenciamento-clusters-contextos-kubeconfig-delete]] | [[github-actions-artefatos-cache-dependencias-retencao]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 838 | kind-instalacao-reprodutivel-make-gimme-go-install-binarios | kind: instalação via binários de release, go install e compilação reprodutível sem Go pré-instalado (make build com gimme) ===
+ONE_LINER: O `kind` pode ser instalado baixando binários pré-compilados estáticos das releases (recomendado para CI), executando `go install sigs.k8s.io/kind@v0.33.0` com o Go mais recente, ou compilando de forma reprodutível a partir do clone Git com `make build` (que obtém a versão exata do Go via cópia embutida do `gimme`).
+IMPORTANCE: Em ambientes de integração contínua corporativos ou ao desenvolver contra o `HEAD` do Kubernetes, equipes precisam saber qual método de instalação garante estabilidade máxima em CI e como compilar o `kind` de forma 100% reprodutível mesmo em máquinas onde o compilador Go não está pré-instalado ou está em versão antiga. A seção `Installation` do `Quick Start` oficial do `kind` detalha cada método.
+HOW_IT_WORKS: Existem três métodos oficiais suportados pelos mantenedores (além de gerenciadores comunitários como `brew`, `pacman`, `choco`, `scoop` e `winget`): (1) **Release Binaries**: download direto de `https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64` (ou `arm64` / `darwin` / `windows`), fortemente recomendado para pipelines de CI; (2) **`go install sigs.k8s.io/kind@v0.33.0`**: compila e instala o binário em `$(go env GOPATH)/bin/kind`; e (3) **`make build` no clone do repositório**: não exige ter o Go instalado no host — o Makefile usa a cópia vendored do utilitário **`gimme`** (ou Docker) para baixar automaticamente a versão exata do Go especificada no arquivo `.go-version` do repositório e gerar o binário reprodutível em `./bin/kind`.
+EXAMPLE:
+```bash
+# Instalar o binário estável oficial do kind v0.33.0 em Linux (detectando automaticamente x86_64 ou aarch64)
+[ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64
+[ $(uname -m) = aarch64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-arm64
+chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
+```
+TRADE_OFFS: Conforme observa o `Quick Start` oficial, o `kind` **não exige** que o binário `kubectl` esteja instalado na máquina para criar ou deletar clusters (`kind create cluster` funciona de forma autônoma), mas o usuário precisará instalar o `kubectl` separadamente para interagir com a API do cluster criado; além disso, se `kind: command not found` ocorrer após `go install`, é necessário adicionar `$(go env GOPATH)/bin` à variável `$PATH`.
+VERIFY: Execute `kind version` para verificar a versão do binário instalado, a versão do Go utilizada na compilação e a plataforma (`linux/amd64`, `linux/arm64`, `darwin/arm64`).
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-construcao-node-image-codigo-fonte-kubernetes-build]] | [[kind-gerenciamento-clusters-contextos-kubeconfig-delete]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 839 | kind-customizacao-kubeadmconfigpatches-cni-rede-local | kind: customização avançada do cluster com kubeadmConfigPatches, desativação da CNI padrão (kindnet) e redes dual-stack ===
+ONE_LINER: Na configuração `kind.x-k8s.io/v1alpha4`, o bloco `networking` permite configurar `ipFamily` (`ipv4`, `ipv6` ou `dual`), sub-redes e desabilitar a CNI padrão (`disableDefaultCNI: true`), enquanto `kubeadmConfigPatches` aplica patches estratégicos ou JSON6902 à configuração do `kubeadm`.
+IMPORTANCE: O `kind` vem por padrão com uma CNI leve chamada `kindnet`, mas engenheiros que desenvolvem políticas de segurança e observabilidade com **Cilium**, **Tetragon** ou **Calico** precisam iniciar o cluster `kind` sem a CNI padrão para instalar o Cilium/Calico do zero, além de frequentemente precisarem testar clusters IPv6 ou Dual-Stack e ajustar flags do `kube-apiserver` (como OIDC ou audit logs).
+HOW_IT_WORKS: Dentro do manifesto `kind: Cluster` (`apiVersion: kind.x-k8s.io/v1alpha4`): (1) a seção **`networking`** permite definir `disableDefaultCNI: true` (para que o `kind` não instale o `kindnet`, deixando os nós `NotReady` até que o usuário instale sua própria CNI como Cilium ou Calico), além de `podSubnet`, `serviceSubnet`, `ipFamily: dual` (ou `ipv6`) e `kubeProxyMode: "ipvs"` ou `"none"` (para Cilium kube-proxy replacement); e (2) a lista **`kubeadmConfigPatches`** (no nível do cluster ou de um nó específico) injeta configurações `InitConfiguration`, `ClusterConfiguration` ou `KubeletConfiguration` durante o bootstrap do `kubeadm` nos containers nós.
+EXAMPLE:
+```yaml
+# Configuração kind sem CNI padrão e sem kube-proxy (pronta para instalar Cilium com kube-proxy replacement em Dual-Stack)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+  kubeProxyMode: "none"
+  ipFamily: dual
+nodes:
+  - role: control-plane
+  - role: worker
+```
+TRADE_OFFS: Quando você cria um cluster `kind` com `disableDefaultCNI: true`, os nós permanecerão em estado `NotReady` e os pods do `CoreDNS` ficarão `Pending` até que você instale manualmente um plugin CNI no cluster (ex.: `cilium install`); portanto, não use `--wait` longo esperando `Ready` no `kind create cluster` antes do passo que instala a CNI.
+VERIFY: Após criar o cluster com `ipFamily: dual` e instalar sua CNI, execute `kubectl get nodes -o jsonpath='{.items[*].status.addresses}'` para confirmar a atribuição de endereços IPv4 e IPv6 aos nós.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-configuracao-multinode-control-plane-ha-port-mappings]] | [[tetragon-ebpf-observabilidade-seguranca-runtime-enforcement]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind
+
+=== NOTE: 840 | kind-montagem-diretorios-host-extramounts-registries-locais | kind: compartilhamento de arquivos e dispositivos do host com os nós (extraMounts) e uso de registries locais ===
+ONE_LINER: Na configuração de cada nó do `kind`, a lista `extraMounts` permite montar diretórios, sockets ou arquivos do sistema operacional hospedeiro (`hostPath`) para dentro do container do nó (`containerPath`), viabilizando volumes persistentes locais, compartilhamento de certificados e integração com registries.
+IMPORTANCE: Como os Pods agendados dentro de um cluster `kind` enxergam como "host" (em volumes `hostPath`) o sistema de arquivos do container `kind-control-plane` / `kind-worker` e **não** o sistema de arquivos da máquina física do desenvolvedor, para compartilhar uma pasta de dados, certificados CA corporativos ou diretórios `/sys/kernel/debug` com os Pods é necessário mapeá-los primeiro do host físico para o container do nó.
+HOW_IT_WORKS: No arquivo `kind: Cluster` (`apiVersion: kind.x-k8s.io/v1alpha4`), cada entrada de nó em `nodes:` aceita o array **`extraMounts`**, onde cada item define `hostPath: /caminho/no/host/fisico`, `containerPath: /caminho/dentro/do/no/kind` e opções como `readOnly: true`, `selinuxRelabel` e `propagation` (`None`, `HostToContainer`, `Bidirectional`). Uma vez que o diretório está montado dentro do nó `kind`, qualquer Pod com um volume `hostPath` (ou `PersistentVolume` do `local-path-provisioner` do `kind`) apontando para aquele `containerPath` acessa diretamente os arquivos da máquina host.
+EXAMPLE:
+```yaml
+# Configuração kind montando um diretório de dados do host físico dentro do nó worker via extraMounts
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+    extraMounts:
+      - hostPath: /tmp/shared-host-data
+        containerPath: /var/local-path-provisioner/shared
+        readOnly: false
+```
+TRADE_OFFS: No macOS e no Windows (onde o Docker Desktop, Podman Machine ou Rancher Desktop roda dentro de uma máquina virtual Linux), o `hostPath` especificado em `extraMounts` precisa estar em um diretório do usuário que já seja compartilhado entre o macOS/Windows e a VM do motor de containers (como `/Users/...` ou `/tmp`), caso contrário o container do nó verá um diretório vazio.
+VERIFY: Execute `docker exec -it kind-worker ls -la /var/local-path-provisioner/shared` para confirmar que os arquivos de `/tmp/shared-host-data` do host estão visíveis dentro do nó do `kind`.
+LINKS: [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]] | [[kind-configuracao-multinode-control-plane-ha-port-mappings]] | [[minikube-addons-dashboard-gpu-mounts-container-runtimes]]
+SOURCES: https://raw.githubusercontent.com/kubernetes-sigs/kind/main/README.md | https://kind.sigs.k8s.io/docs/user/quick-start/ | https://github.com/kubernetes-sigs/kind

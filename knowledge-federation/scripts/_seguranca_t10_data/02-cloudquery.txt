@@ -1,0 +1,184 @@
+TOPIC: CloudQuery (cloudquery/cloudquery) — Framework ELT de Alta Performance em Go/Apache Arrow para Inventário de Ativos e Postura de Segurança Multi-Cloud (CSPM)
+SOURCES: https://raw.githubusercontent.com/cloudquery/cloudquery/main/README.md | https://www.cloudquery.io/docs/cli/getting-started
+
+===NOTE===
+0911|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm|**CloudQuery (`cloudquery/cloudquery`)**: Arquitetura **ELT (*Extract-Load-Transform*)** de Alta Performance baseada em **Apache Arrow** e Plugins gRPC|**CloudQuery** (`cloudquery/cloudquery`, escrito em Go) é um framework open-source de **Extração, Carga e Transformação (ELT)** projetado para construir **Inventários Unificados de Ativos em Nuvem (*Cloud Asset Inventory*)** e plataformas de **CSPM (*Cloud Security Posture Management*)** sobre o seu próprio banco de dados ou Data Warehouse.|Diferente de ferramentas que acoplam a coleta de dados a um banco proprietário fechado, a arquitetura do CloudQuery separa completamente **Plugins de Origem (*Sources*: AWS, GCP, Azure, Kubernetes, GitHub, Cloudflare, Okta, CrowdStrike)** de **Plugins de Destino (*Destinations*: PostgreSQL, DuckDB, BigQuery, Snowflake, ClickHouse, S3/Parquet, Neo4j)** usando o formato colunar em memória **Apache Arrow** sobre streams gRPC!|Durante um comando **`cloudquery sync`**, o binário CLI orquestra um escalonador concorrente em Go que extrai dezenas de milhares de recursos da nuvem com tratamento automático de *rate-limiting* e paginação, transmite os registros tipados em lotes Apache Arrow e os grava diretamente no seu destino com **100% de privacidade (seus dados nunca saem da sua infraestrutura)**!|```yaml
+# config.yml — Pipeline CloudQuery basico sincronizando recursos AWS para um banco PostgreSQL de Seguranca
+kind: source
+spec:
+  name: aws
+  path: cloudquery/aws
+  registry: cloudquery
+  version: "v27.0.0"
+  tables: ["aws_s3_buckets", "aws_iam_users", "aws_ec2_instances", "aws_ec2_security_groups"]
+  destinations: ["postgresql"]
+---
+kind:destination
+spec:
+  name: postgresql
+  path: cloudquery/postgresql
+  registry: cloudquery
+  version: "v8.0.0"
+  spec:
+    connection_string: "${CQ_PG_DSN}"
+```|Por usar o sistema de tipos estritos do **Apache Arrow**, o CloudQuery garante que um esquema extraído da AWS (`JSON`, `Timestamp`, `INET`, `CIDR`, `UUID`) seja mapeado com precisão nativa tanto para tabelas relacionais no **PostgreSQL** quanto para arquivos colunares **Parquet** em um Data Lake S3/GCS!|Execute `cloudquery sync config.yml` para validar o carregamento dos plugins e a sincronização inicial.|cloudquery-configuracao-fontes-aws-gcp-azure-k8s-selecao-tabelas, cloudquery-modos-sincronizacao-write-mode-overwrite-delete-stale-append, steampipe-comparacao-zero-etl-vs-cloudquery-elt-decisao-cspm
+
+===NOTE===
+0912|cloudquery-configuracao-fontes-aws-gcp-azure-k8s-selecao-tabelas|CloudQuery: Configuração Fina de **Fontes (`tables`, `skip_tables`, `concurrency`)** e Escalonamento Inteligente (`dfs`, `round-robin`, `shuffle`)|Um plugin de nuvem completo como o `cloudquery/aws` possui mais de **350 tabelas de nível superior e centenas de relações filhas** (cobrindo todos os serviços da AWS): tentar sincronizar `tables: ["*"]` em 50 contas AWS e 30 regiões sem filtro levaria horas e consumiria milhões de chamadas de API.|Por isso, o manifesto `kind: source` do CloudQuery permite selecionar com precisão cirúrgica e suporte a globbing quais tabelas extrair (**`tables`**) e quais tabelas caras ou irrelevantes pular (**`skip_tables`**, além de **`skip_dependent_tables: true`** quando você não precisa das sub-tabelas filhas!).|Para otimizar o throughput sem sofrer *throttling* (`ThrottlingException`) das APIs da nuvem, você ajusta a **Concorrência de Goroutines (`concurrency`, ex.: `10000`)** e a **Estratégia do Escalonador (`scheduler`)**: **`dfs`** (*depth-first search*), **`round-robin`** ou **`shuffle`** (que embaralha a ordem de coleta entre contas e serviços para distribuir uniformemente as chamadas de API pelos limites de taxa da AWS/GCP!)!|```yaml
+# aws-source.yml — Coleta focada em IAM, Rede e Armazenamento com estrategia shuffle para evitar rate-limit da AWS
+kind: source
+spec:
+  name: aws
+  path: cloudquery/aws
+  registry: cloudquery
+  version: "v27.0.0"
+  concurrency: 10000
+  scheduler: shuffle
+  tables:
+    - "aws_iam_*"
+    - "aws_s3_buckets"
+    - "aws_ec2_instances"
+    - "aws_ec2_security_groups"
+    - "aws_rds_instances"
+    - "aws_kms_keys"
+  skip_tables:
+    - "aws_iam_SimulatePrincipalPolicy"
+  destinations: ["postgresql"]
+  spec:
+    regions: ["sa-east-1", "us-east-1"]
+```|A estratégia **`scheduler: shuffle`** é especialmente recomendada ao sincronizar múltiplas contas/regiões na AWS ou GCP: em vez de martelar a API de `ec2` em todas as contas ao mesmo tempo (estourando a cota de EC2), o `shuffle` espalha as requisições entre S3, IAM, RDS, KMS e EC2 simultaneamente!|Use `cloudquery tables config.yml` para gerar a documentação local de todas as tabelas e colunas que serão sincronizadas pelo seu arquivo YAML.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-descoberta-multi-conta-aws-organizations-gcp-folders-azure, prowler-varredura-multi-conta-aws-organizations-assume-role-sts
+
+===NOTE===
+0913|cloudquery-modos-sincronizacao-write-mode-overwrite-delete-stale-append|CloudQuery: Modos de Escrita no Destino (**`overwrite-delete-stale`**, **`overwrite`** e **`append`**) e Migração Automática de Schema (`migrate_mode`)|Como o CloudQuery lida no banco de dados de destino quando um recurso da nuvem (como um Pod Kubernetes efêmero ou uma instância EC2 encerrada) **deixa de existir** entre a sincronização de ontem e a sincronização de hoje?|Isso é controlado pela propriedade **`write_mode`** no manifesto `kind: destination`: **(1) `overwrite-delete-stale` (padrão recomendado para estado atual)** — faz `UPSERT` dos recursos encontrados usando a chave primária (`_cq_id` / ARN) e, ao final do sync bem-sucedido, **remove automaticamente (`DELETE`) os registros daquela fonte cujo `_cq_sync_time` é anterior ao sync atual** (mantendo o banco um espelho exato do que está vivo agora!); **(2) `overwrite`** — faz `UPSERT` sem deletar registros antigos; e **(3) `append`** — nunca sobrescreve nem deleta linhas anteriores, inserindo uma nova versão de cada recurso a cada sync para criar um **Histórico de Auditoria Temporal (*Time-Travel Inventory*)**!|Além disso, `migrate_mode: safe` (padrão) aplica automaticamente adições de novas colunas quando você atualiza a versão de um plugin, abortando apenas se uma mudança exigir recriação destrutiva de tabela (que exigiria `migrate_mode: forced`).|```yaml
+# pg-destination.yml — Configuracao de destino PostgreSQL com remocao automatica de ativos obsoletos e lotes otimizados
+kind: destination
+spec:
+  name: postgresql
+  path: cloudquery/postgresql
+  registry: cloudquery
+  version: "v8.0.0"
+  write_mode: overwrite-delete-stale
+  migrate_mode: safe
+  spec:
+    connection_string: "${CQ_PG_DSN}"
+    batch_size: 10000
+    batch_size_bytes: 4194304
+```|Dica arquitetural poderosa: você pode declarar **dois destinos na mesma execução de `cloudquery sync`** (`destinations: ["postgresql_current", "s3_parquet_history"]`) — enviando um único fluxo de extração da nuvem simultaneamente para o **PostgreSQL em modo `overwrite-delete-stale`** (para consultas rápidas do estado atual) e para um bucket **S3 em formato Parquet em modo `append`** (para retenção forense de longo prazo a custo quase zero)!|Verifique as colunas de metadados `_cq_id`, `_cq_parent_id`, `_cq_source_name` e `_cq_sync_time` criadas automaticamente em todas as tabelas pelo CloudQuery.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-deteccao-drift-historico-temporal-snapshots-sql, cloudquery-exportacao-datalake-duckdb-parquet-s3-clickhouse-analise
+
+===NOTE===
+0914|cloudquery-descoberta-multi-conta-aws-organizations-gcp-folders-azure|CloudQuery em Escala Enterprise: Descoberta Automática de Contas via **AWS Organizations (`org`)**, **GCP Folders** e **Azure Subscriptions**|Em uma organização onde novas contas AWS ou projetos GCP são provisionados toda semana via Terraform/Control Tower, manter uma lista estática de IDs de contas no arquivo de configuração da ferramenta de segurança cria pontos cegos (*blind spots*) imediatos.|O plugin AWS do CloudQuery resolve isso nativamente através do bloco **`org:`** dentro de `spec:`: você informa a role de leitura da conta de gerenciamento/delegada da **AWS Organizations** e o nome da IAM Role padronizada presente nas contas-membro (ex.: `member_role_name: "CloudQuerySecurityAuditRole"`), podendo filtrar por **Unidades Organizacionais (`organization_units: ["ou-..."]`)** ou pular contas de sandbox (`skip_organizational_units`)!|No **GCP**, o plugin `cloudquery/gcp` descobre automaticamente todos os projetos ativos abaixo de `folder_ids` usando `folder_recursion_depth`; e no **Azure**, o plugin `cloudquery/azure` descobre todas as `subscriptions` acessíveis pela Service Principal!|```yaml
+# aws-org.yml — Descoberta automatica de todas as contas de uma AWS Organization assumindo IAM Role somente-leitura
+kind: source
+spec:
+  name: aws_organization_prod
+  path: cloudquery/aws
+  registry: cloudquery
+  version: "v27.0.0"
+  tables: ["aws_s3_buckets", "aws_iam_*", "aws_ec2_*", "aws_rds_*"]
+  destinations: ["postgresql"]
+  spec:
+    regions: ["*"]
+    org:
+      admin_account:
+        local_profile: "org-management-readonly"
+      member_role_name: "CloudQuerySecurityAuditRole"
+      member_role_session_name: "cloudquery-cspm-sync"
+```|Para máxima segurança na AWS Organizations, configure uma **Conta Membro Delegada de Segurança (*Delegated Administrator*)** para listar as contas da organização (`organizations:ListAccounts`) em vez de usar credenciais da conta Management raiz (`root management account`).|Confirme após o sync com `SELECT DISTINCT account_id FROM aws_s3_buckets;` que todas as contas ativas da organização foram inventariadas.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-configuracao-fontes-aws-gcp-azure-k8s-selecao-tabelas, steampipe-agregadores-multi-conta-connections-spc-aws-organizations
+
+===NOTE===
+0915|cloudquery-politicas-seguranca-sql-cspm-aws-gcp-azure-k8s|CloudQuery **CSPM Policies em SQL**: Execução de Views de Conformidade (**CIS, NIST, PCI DSS**) e Detecção de Exposição Pública sobre o Banco Sincronizado|Uma vez que os metadados de configuração da AWS, GCP, Azure e Kubernetes estão normalizados no **PostgreSQL** (ou BigQuery/Snowflake/DuckDB), toda verificação de segurança e conformidade vira **SQL puro de altíssima velocidade** — executando milhares de verificações em poucos segundos sobre o banco local sem fazer nenhuma chamada de rede adicional para os provedores de nuvem!|O CloudQuery fornece pacotes de **Políticas e Views SQL de CSPM** (cobrindo **AWS Foundational Security Best Practices, CIS Benchmarks para AWS/GCP/Azure/Kubernetes, PCI DSS e NIST**) que criam Views padronizadas de resultados (`framework`, `check_id`, `title`, `account_id`, `resource_id`, `status` = `'fail'` / `'pass'`).|Além das políticas de conformidade prontas, sua equipe de Engenharia de Detecção pode criar Views SQL customizadas que cruzam múltiplas tabelas em milissegundos (por exemplo: encontrar instâncias EC2 que possuem **simultaneamente** um IP público, um Security Group com porta aberta para `0.0.0.0/0` **e** uma IAM Instance Profile anexada com permissões administrativas)!|```sql
+-- Query CSPM Composta (Toxic Combination): Instancias EC2 expostas para 0.0.0.0/0 E com IAM Role anexada!
+SELECT
+  i.account_id,
+  i.region,
+  i.instance_id,
+  i.public_ip_address,
+  i.iam_instance_profile ->> 'Arn' AS instance_profile_arn,
+  sg.group_id
+FROM
+  aws_ec2_instances AS i
+  CROSS JOIN LATERAL jsonb_array_elements(i.security_groups) AS isg
+  JOIN aws_ec2_security_groups AS sg ON sg.group_id = (isg ->> 'GroupId')
+WHERE
+  i.public_ip_address IS NOT NULL
+  AND i.iam_instance_profile IS NOT NULL
+  AND sg.ip_permissions::text LIKE '%0.0.0.0/0%';
+```|Veja por que essa query de **Combinação Tóxica (*Toxic Combination*)** é o coração das plataformas modernas de CNAPP: um Security Group aberto isolado pode ser apenas uma web-server estática, e uma IAM Role isolada em sub-rede privada tem superfície menor, mas **um ativo que combina exposição pública de rede + identidade IAM privilegiada na mesma máquina é um risco crítico imediato**!|Materialize suas queries de combinações tóxicas como Views SQL e conecte-as ao Grafana ou Alertmanager para alertas contínuos.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, steampipe-powerpipe-benchmarks-conformidade-cis-nist-pci-soc2, prowler-conformidade-regulatoria-cis-pci-dss-hipaa-soc2-iso27001-ens
+
+===NOTE===
+0916|cloudquery-sincronizacao-incremental-state-backend-cursor-otimizacao|CloudQuery: **Sincronização Incremental (`backend_options`)** com Cursor de Estado para Tabelas de Grande Volume|Algumas tabelas de nuvem crescem continuamente ou possuem dezenas de milhares de registros que raramente mudam (como imagens ECR, snapshots EBS antigos, eventos ou repositórios): buscar tudo do zero em cada execução de hora em hora desperdiça tempo e cota de API.|O CloudQuery resolve isso com o suporte a **Tabelas Incrementais (*Incremental Sync*)** através da configuração **`backend_options`** no manifesto `kind: source`!|Quando você aponta `backend_options` para um plugin de destino (como o próprio banco PostgreSQL, em uma tabela dedicada de estado como `cq_state_aws`), os resolvedores incrementais do CloudQuery gravam o **cursor/timestamp da última sincronização por conta e região** e, na execução seguinte, buscam nas APIs da nuvem apenas os registros criados ou modificados após aquele cursor!|```yaml
+# aws-incremental.yml — Habilitando persistencia de estado incremental (backend_options) no proprio Postgres
+kind: source
+spec:
+  name: aws
+  path: cloudquery/aws
+  registry: cloudquery
+  version: "v27.0.0"
+  tables: ["aws_ecr_repository_images", "aws_cloudtrail_events"]
+  destinations: ["postgresql"]
+  backend_options:
+    table_name: "cq_cursor_state_aws"
+    connection: "@@plugins.postgresql.connection"
+```|Atenção importante ao combinar tabelas incrementais com `write_mode`: se você usar `write_mode: overwrite-delete-stale` em conjunto com uma tabela incremental que só busca registros novos na última hora, o CloudQuery sabe proteger os registros antigos das tabelas marcadas como incrementais, ou você pode usar `write_mode: overwrite` / `append` para tabelas de eventos históricos!|Inspecione a tabela `cq_cursor_state_aws` no PostgreSQL para verificar os cursores salvos por tabela e conta.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-modos-sincronizacao-write-mode-overwrite-delete-stale-append, cloudquery-configuracao-fontes-aws-gcp-azure-k8s-selecao-tabelas
+
+===NOTE===
+0917|cloudquery-exportacao-datalake-duckdb-parquet-s3-clickhouse-analise|CloudQuery com **DuckDB e Parquet (`cloudquery/duckdb`, `cloudquery/file`)**: Auditoria Multi-Cloud Portátil e Serverless em Segundos|Você não precisa subir um servidor PostgreSQL nem pagar um cluster Snowflake para rodar o CloudQuery em uma auditoria de segurança ou dentro de um runner efêmero de CI/CD: os plugins oficiais de destino **`cloudquery/duckdb`**, **`cloudquery/sqlite`** e **`cloudquery/file` (Parquet / CSV / JSON)** permitem sincronizar toda a postura da nuvem diretamente para um arquivo local ultrarrápido!|O **DuckDB** é um motor SQL OLAP colunar *in-process* (sem servidor, armazenado em um único arquivo `.db`) que fala a mesma família de tipos colunares do **Apache Arrow** usado internamente pelo CloudQuery.|Isso significa que você pode rodar `cloudquery sync aws-to-duckdb.yml` em um runner do GitHub Actions, gerar um arquivo `cloud_inventory.duckdb` (ou arquivos `.parquet` comprimidos com Zstandard em um bucket S3) e executar queries analíticas complexas sobre milhões de recursos em milissegundos usando o binário `duckdb`!|```yaml
+# aws-to-duckdb.yml — Sincronizar inventario de seguranca AWS diretamente para um banco colunar portatil DuckDB
+kind: destination
+spec:
+  name: duckdb
+  path: cloudquery/duckdb
+  registry: cloudquery
+  version: "v5.0.0"
+  write_mode: overwrite-delete-stale
+  spec:
+    connection_string: "/cases/cspm/aws_inventory_2026_10.duckdb"
+```|Outra vantagem forense de usar DuckDB ou arquivos `.parquet`: ao finalizar um pentest cloud ou auditoria trimestral, o arquivo `.duckdb` ou `.parquet` comprimido (frequentemente com apenas alguns megabytes) pode ser arquivado criptografado com **`age`** ou **`gpg`** como **evidência imutável e consultável** do estado exato da infraestrutura naquela data!|Consulte o arquivo gerado diretamente na CLI: `duckdb /cases/cspm/aws_inventory_2026_10.duckdb "SELECT count(*) FROM aws_s3_buckets;"`.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, age-criptografia-arquivos-chaves-x25519-formato-header-stanza-payload, steampipe-powerpipe-benchmarks-conformidade-cis-nist-pci-soc2
+
+===NOTE===
+0918|cloudquery-deteccao-drift-historico-temporal-snapshots-sql|CloudQuery Forense: **Histórico Temporal (`write_mode: append`)** para Investigação de Incidentes ("O Que Mudou na Conta Antes do Ataque?")|Durante uma investigação de incidente em nuvem (DFIR), a pergunta mais difícil que o SOC precisa responder é: **"Esse Security Group ou essa IAM Policy maliciosa estava aberta há 6 meses ou foi alterada ontem às 03:00 da manhã? E como era a configuração exata desse recurso na terça-feira passada?"**|Se o seu inventário sobrescreve os dados a cada leitura, o passado é destruído; porém, quando você configura o destino do CloudQuery com **`write_mode: append`** (em PostgreSQL particionado, ClickHouse, BigQuery ou S3 Parquet), cada execução agendada grava um novo snapshot datado pela coluna **`_cq_sync_time`**!|Com isso, usando funções de janela SQL (`LAG()` / `LEAD()` sobre `PARTITION BY arn ORDER BY _cq_sync_time`), você reconstrói a **Linha do Tempo Completa de Mudanças de Configuração (*Configuration Drift Timeline*)** de qualquer ativo da organização!|```sql
+-- Detectar recursos S3 cuja configuracao de bloqueio de acesso publico MUDOU entre duas sincronizacoes consecutivas!
+WITH historico AS (
+  SELECT
+    arn,
+    _cq_sync_time,
+    block_public_acls,
+    LAG(block_public_acls) OVER (PARTITION BY arn ORDER BY _cq_sync_time) AS prev_block_public_acls
+  FROM
+    aws_s3_buckets_history
+)
+SELECT
+  arn,
+  _cq_sync_time AS change_detected_at,
+  prev_block_public_acls AS before_value,
+  block_public_acls AS after_value
+FROM
+  historico
+WHERE
+  prev_block_public_acls IS DISTINCT FROM block_public_acls;
+```|Em bancos PostgreSQL que usam `write_mode: append`, lembre-se de que a chave primária padrão (`pk_mode`) não pode ser apenas o `arn` (pois haverá múltiplas linhas para o mesmo `arn` em datas diferentes); o CloudQuery ajusta as constraints ou permite incluir `_cq_sync_time` na chave composta para preservar o histórico sem conflito.|Cruze o timestamp `change_detected_at` encontrado na query acima com os eventos do AWS CloudTrail no Timesketch/OpenSearch para identificar o autor exato da mudança.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-modos-sincronizacao-write-mode-overwrite-delete-stale-append, timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch
+
+===NOTE===
+0919|cloudquery-grafo-ativos-seguranca-neo4j-caminhos-ataque-iam-rede|CloudQuery + **Neo4j (`cloudquery/neo4j`)**: Construção de **Grafos de Superfície de Ataque Cloud** (Rede -> Computação -> Identidade -> Dados)|Por que ferramentas líderes de CNAPP comercial representam a nuvem como um **Grafo**? Porque ataques reais em nuvem são **Caminhos em Grafo (*Attack Paths*)**: *Internet (`0.0.0.0/0`) -> LoadBalancer -> Pod Kubernetes -> Node IAM Role -> Permissão `s3:GetObject` -> Bucket S3 Confidencial*!|Além de bancos relacionais SQL, o CloudQuery possui um plugin oficial de destino para o banco de grafos **Neo4j (`cloudquery/neo4j`)**!|Ao sincronizar fontes como AWS, GCP, Azure e Kubernetes para o Neo4j (ou construir arestas de relacionamento sobre as chaves estrangeiras/ARNs), os ativos tornam-se **Nós (*Nodes*)** e os vínculos de rede, anexação de volumes e permissões IAM tornam-se **Arestas (*Relationships*)** consultáveis com a linguagem **Cypher** (a mesma usada pelo **BloodHound CE**)!|```yaml
+# aws-to-neo4j.yml — Sincronizando ativos de nuvem diretamente para um banco de grafos Neo4j para analise de Attack Paths
+kind: destination
+spec:
+  name: neo4j
+  path: cloudquery/neo4j
+  registry: cloudquery
+  version: "v5.0.0"
+  write_mode: overwrite-delete-stale
+  spec:
+    connection_string: "bolt://127.0.0.1:7687"
+    username: "neo4j"
+    password: "${NEO4J_PASSWORD}"
+```|Unir os dados de Active Directory/Entra ID do **BloodHound CE** com os ativos de infraestrutura AWS/GCP/K8s sincronizados pelo **CloudQuery no Neo4j** permite mapear caminhos de ataque híbridos completos (de uma estação Windows on-premises até um bucket S3 na nuvem)!|Consulte o grafo no Neo4j Browser para visualizar o raio de explosão (*blast radius*) de cada IAM Role.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, bloodhound-arquitetura-active-directory-attack-paths-cypher-neo4j, guac-arquitetura-grafo-cadeia-suprimentos-sbom-slsa-osv-vex
+
+===NOTE===
+0920|cloudquery-execucao-segura-containers-kubernetes-cronjob-telemetria|CloudQuery em Produção: Implantação como **Kubernetes CronJob Hardened**, Logs Estruturados e Monitoramento de Métricas OpenTelemetry|Para operar o CloudQuery continuamente em produção (por exemplo, sincronizando toda a organização de 6 em 6 horas), o padrão arquitetural recomendado é executá-lo como um **Kubernetes `CronJob` *stateless*** autenticado nos provedores de nuvem via **Workload Identity / OIDC (`IRSA` na AWS, `Workload Identity` no GKE, `Managed Identity` no AKS)** — sem armazenar chaves estáticas de longo prazo em `Secrets`!|A CLI do CloudQuery gera automaticamente ao final de cada execução um resumo estruturado de métricas (total de recursos extraídos por tabela, duração, avisos e erros de permissão `AccessDenied`) e suporta saída de logs em formato JSON (**`--log-format json`**) e envio de traces/métricas **OpenTelemetry**!|Monitorar os erros de `AccessDenied` no log do CloudQuery é essencial: se uma nova conta AWS ou um novo serviço não conceder permissão de leitura para a role de auditoria, a tabela ficará vazia silenciosamente se você não alertar sobre `errors > 0`!|```bash
+# Executar o CloudQuery em modo producao com logs estruturados em JSON e sem telemetria externa (--no-telemetry)
+cloudquery sync /etc/cloudquery/config.yml \
+  --log-format json \
+  --log-level info \
+  --no-telemetry
+```|Adicione sempre a flag **`--no-telemetry`** (ou a variável de ambiente **`CQ_NO_TELEMETRY=true`**) nos pipelines corporativos e ambientes regulados para desativar o envio de estatísticas anônimas de execução para os servidores externos do projeto.|Configure um alerta no seu agregador de logs sempre que o código de saída do `cloudquery sync` for diferente de `0` ou o campo `errors` no resumo JSON for maior que zero.|cloudquery-arquitetura-elt-apache-arrow-inventario-ativos-cspm, cloudquery-descoberta-multi-conta-aws-organizations-gcp-folders-azure, prowler-execucao-containers-docker-kubernetes-cronjob-ci-cd

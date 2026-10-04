@@ -1,0 +1,97 @@
+1101|kratix-arquitetura-promises-platform-destinations-statestores|Kratix: Arquitetura com Promises, Platform Cluster, Destinations e State Stores|Kratix é um framework open-source de engenharia de plataforma criado pela Syntasso sobre Kubernetes que estrutura Internal Developer Platforms por meio de contratos declarativos chamados Promises, desacoplando a API consumida por desenvolvedores da entrega assíncrona via State Stores e Destinations.|Sem um framework explícito para construir serviços internos sob demanda, equipes de plataforma acumulam operadores avulsos, pipelines imperativos ou templates rígidos que misturam a interface voltada ao desenvolvedor com detalhes de infraestrutura e dificultam governança de frota no Dia 2.|O controlador do Kratix roda no cluster de plataforma (`kratix-platform-system`) e introduz CRDs estruturais (`Promise`, `Work`, `WorkPlacement`, `Destination`, `BucketStateStore`, `GitStateStore`). Quando uma Promise é publicada, o Kratix registra a CRD de consumo no cluster de plataforma; ao receber uma Resource Request, executa pipelines em containers isolados e grava os manifestos resultantes num State Store (Git ou S3) monitorado por agentes GitOps (Flux ou Argo CD) nos clusters de destino.|```bash
+kubectl apply -f https://github.com/syntasso/kratix/releases/download/latest/kratix-quick-start-installer.yaml
+kubectl get pods -n kratix-platform-system
+kubectl get crds | grep platform.kratix.io
+kubectl get destinations.platform.kratix.io,bucketstatestores.platform.kratix.io -A
+```|Tratar o cluster de plataforma do Kratix como ambiente de execução direta das cargas de trabalho finais sem isolar Destinations dedicados mistura o plano de controle da IDP com o tráfego de aplicações de usuários.|Verifique se o `kratix-platform-controller-manager` está `Running`, se o `cert-manager` emitiu os certificados dos webhooks e se ao menos um `Destination` e um `StateStore` aparecem prontos no cluster.|https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://docs.kratix.io/main/quick-start;https://github.com/syntasso/kratix
+1102|kratix-promise-crd-api-contrato-produtor-consumidor|Kratix: Definição de Promise e Contrato de API entre Produtor e Consumidor|Uma Promise no Kratix encapsula tanto a definição da API de autoatendimento (`spec.api` contendo uma CRD Kubernetes) quanto os workflows de provisionamento e as dependências de plataforma exigidas para operar um serviço interno em escala.|Separar claramente o que o consumidor solicita (`spec` enxuto focado na intenção de negócio) do que o produtor de plataforma implementa (operadores, políticas de rede, backups, credenciais) reduz a carga cognitiva sem sacrificar padronização corporativa.|Ao aplicar um recurso `kind: Promise` (`apiVersion: platform.kratix.io/v1alpha1`), o Kratix valida e instala automaticamente a CRD embutida em `spec.api`, rotulando-a com `kratix.io/promise-name`. O time consumidor passa a consultar o contrato com `kubectl explain` e submeter pedidos declarativos sem precisar conhecer os operadores subjacentes que atendem àquela Promise.|```bash
+kubectl apply -f https://raw.githubusercontent.com/syntasso/promise-postgresql/refs/heads/main/promise.yaml
+kubectl get promises.platform.kratix.io
+kubectl get crds -l kratix.io/promise-name=postgresql
+kubectl explain postgresqls.marketplace.kratix.io.spec
+```|Expor dezenas de parâmetros de baixo nível do operador subjacente diretamente em `spec.api` da Promise destrói a abstração de plataforma e transfere de volta ao desenvolvedor a complexidade que a IDP deveria absorver.|Confirme que a Promise entrou em estado `Available` e que `kubectl explain` na CRD gerada exibe descrições claras e defaults seguros para todos os campos opcionais.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1103|kratix-resource-requests-ciclo-vida-status-connectiondetails|Kratix: Ciclo de Vida de Resource Requests e Retorno de Status ao Consumidor|Resource Requests no Kratix representam instâncias concretas solicitadas pelos consumidores contra a CRD de uma Promise, cujo ciclo de vida inclui execução de workflows `configure` e retorno estruturado de `status.message` e `status.connectionDetails`.|Quando um desenvolvedor solicita um banco de dados ou fila por autoatendimento, ele precisa saber exatamente quando o recurso terminou de ser provisionado e onde estão o host e o Secret de credenciais, sem precisar vasculhar logs de operadores de infraestrutura.|Ao submeter o manifesto da Resource Request (por exemplo, `kind: postgresql`), o Kratix dispara um Job de pipeline com o rótulo `kratix.io/promise-name`. Ao concluir o pipeline, o Kratix atualiza `status.conditions` (`ConfigureWorkflowCompleted=True`) e mescla no `status` da requisição qualquer arquivo `status.yaml` gravado pelo workflow em `/kratix/metadata/status.yaml`, expondo endpoints e referências de Secrets ao usuário.|```yaml
+apiVersion: marketplace.kratix.io/v1alpha2
+kind: postgresql
+metadata:
+  name: order-db
+  namespace: default
+spec:
+  teamId: "checkout-squad"
+  backupEnabled: true
+---
+# Verificacao via CLI:
+# kubectl get postgresqls.marketplace.kratix.io order-db -o yaml
+```|Gravar senhas em texto claro dentro de `status.connectionDetails` da Resource Request em vez de gravar apenas o nome do `Secret` Kubernetes expõe credenciais a qualquer usuário com permissão de leitura (`get`/`list`) na CRD.|Inspecione `status.conditions`, `status.observedGeneration` e `status.connectionDetails` na Resource Request para validar que o workflow preencheu os metadados esperados sem vazar segredos.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1104|kratix-workflows-pipelines-containers-input-output-metadata|Kratix: Workflows Imperativos-Declarativos com Containers (/kratix/input, /kratix/output e /kratix/metadata)|Os Workflows do Kratix executam sequências de containers em Pods de Job Kubernetes que leem a requisição em `/kratix/input/object.yaml`, executam lógica arbitrária de validação ou composição e escrevem os artefatos declarativos finais em `/kratix/output/`.|Nem toda regra de negócio corporativa cabe em templates YAML puros: integrar CMDB, reservar sub-redes em IPAM, registrar custos em FinOps ou compor múltiplos recursos exige linguagens de programação reais antes da entrega GitOps.|Cada etapa de `spec.workflows.resource.configure` ou `spec.workflows.promise.configure` roda como container em um Pod gerenciado pelo Kratix com volumes compartilhados montados em `/kratix/input` (somente leitura com o objeto solicitado), `/kratix/output` (onde os manifestos destinados aos clusters alvo são gravados) e `/kratix/metadata` (para `status.yaml` e `destination-selectors.yaml`).|```yaml
+apiVersion: platform.kratix.io/v1alpha1
+kind: Promise
+metadata:
+  name: redis-cache
+spec:
+  workflows:
+    resource:
+      configure:
+        - apiVersion: platform.kratix.io/v1alpha1
+          kind: Pipeline
+          metadata:
+            name: instance-configure
+          spec:
+            containers:
+              - name: generate-manifests
+                image: ghcr.io/org/platform-redis-pipeline:v1.2.0
+```|Fazer chamadas externas mutáveis em containers de pipeline sem garantir idempotência causa efeitos colaterais duplicados sempre que o Kratix reconcilia novamente a Promise ou a Resource Request.|Liste os Pods de workflow (`kubectl get pods -l kratix.io/promise-name`) e inspecione os logs de cada container da pipeline para confirmar leitura de `/kratix/input` e escrita limpa em `/kratix/output`.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1105|kratix-statestores-gitstatestore-bucketstatestore-gitops|Kratix: State Stores (GitStateStore e BucketStateStore) e Desacoplamento GitOps|State Stores no Kratix (`GitStateStore` e `BucketStateStore`) definem o repositório Git ou bucket compatível com S3 onde o Kratix persiste os manifestos gerados pelos workflows, desacoplando a geração da aplicação nos clusters de destino.|Em vez de o plano de controle da plataforma deter credenciais `cluster-admin` de escrita direta sobre dezenas de clusters de produção, o Kratix grava estado declarativo num armazenamento intermediário que cada cluster consome em modo pull via Flux ou Argo CD.|Quando um `WorkPlacement` é escalado para um `Destination`, o controlador do Kratix autentica no `StateStore` referenciado pelo destino (via Secret SSH/token no `GitStateStore` ou credenciais S3/IAM no `BucketStateStore`) e escreve os arquivos YAML no caminho configurado. O agente GitOps no cluster alvo detecta a mudança e aplica os recursos.|```yaml
+apiVersion: platform.kratix.io/v1alpha1
+kind: BucketStateStore
+metadata:
+  name: default-bucket-store
+spec:
+  endpoint: seaweedfs.kratix-platform-system.svc.cluster.local:8333
+  insecure: false
+  bucketName: kratix-workloads
+  secretRef:
+    name: bucket-credentials
+    namespace: kratix-platform-system
+```|Usar `BucketStateStore` local inseguro (como a instância SeaweedFS do quick-start) em produção sem TLS, versionamento de objetos e controle estrito de acesso expõe os manifestos de toda a frota a adulteração.|Verifique as condições de reconciliação do `GitStateStore` ou `BucketStateStore` e confirme no repositório Git ou bucket S3 que os diretórios de `dependencies` e `resources` estão sendo populados sem erros de autenticação.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1106|kratix-destinations-scheduling-label-selectors-workplacements|Kratix: Destinations, Agendamento por Label Selectors e WorkPlacements|Recursos `Destination` no Kratix representam ambientes alvo (clusters Kubernetes, contas cloud ou ambientes Terraform) rotulados com metadados que permitem ao scheduler do Kratix direcionar `Work` para os destinos corretos por meio de `WorkPlacements`.|Uma plataforma corporativa precisa rotear cargas de desenvolvimento para clusters de baixo custo, bancos PCI-DSS para clusters isolados e operadores de base para toda a frota sem codificar nomes de clusters estáticos nos pipelines.|Cada `Destination` aponta para um `stateStoreRef` e declara labels (como `environment: prod`, `region: sa-east-1`, `pci: "true"`). A Promise ou o arquivo `/kratix/metadata/destination-selectors.yaml` emitido pelo pipeline define seletores de labels; o Kratix avalia a correspondência e cria objetos `WorkPlacement` que materializam os manifestos nas pastas daquele `Destination` dentro do State Store.|```yaml
+apiVersion: platform.kratix.io/v1alpha1
+kind: Destination
+metadata:
+  name: prod-sa-east-1
+  labels:
+    environment: prod
+    region: sa-east-1
+spec:
+  stateStoreRef:
+    kind: GitStateStore
+    name: fleet-git-store
+  filepath:
+    mode: nestedByMetadata
+```|Alterar os labels de um `Destination` em produção sem avaliar quais `WorkPlacements` ativos dependem daquele seletor faz o Kratix remover os manifestos do State Store daquele cluster, descomissionando recursos ativos.|Execute `kubectl get workplacements.platform.kratix.io -A` e verifique se cada `Work` foi associado ao `Destination` esperado sem condições de `ScheduleSucceeded=False`.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1107|kratix-dependencies-promise-workflows-fleet-bootstrapping|Kratix: Dependências de Promise e Workflows de Bootstrapping de Frota|As dependências de uma Promise (`spec.dependencies` ou geradas por `spec.workflows.promise.configure`) definem os operadores, CRDs e políticas de base que devem estar instalados nos `Destinations` antes que instâncias daquela Promise possam funcionar.|Se um desenvolvedor pede um banco PostgreSQL via Promise, o cluster de destino já precisa ter o operador Postgres (como Zalando Postgres Operator ou CloudNativePG) instalado; gerenciar esse pré-requisito manualmente por cluster quebra a automação da plataforma.|Ao publicar uma Promise, o Kratix executa os workflows de nível de Promise (`workflows.promise.configure`) ou lê `spec.dependencies` e agenda esses manifestos nos `Destinations` compatíveis. Assim, qualquer novo cluster registrado com os labels correspondentes recebe automaticamente o operador base via GitOps antes mesmo da primeira Resource Request.|```bash
+kubectl get works.platform.kratix.io -A -l kratix.io/promise-name=postgresql
+kubectl get workplacements.platform.kratix.io -A -l kratix.io/work-type=static-dependency
+kubectl get kustomizations.kustomize.toolkit.fluxcd.io -n flux-system
+```|Empacotar operadores pesados com CRDs conflitantes em `spec.dependencies` de múltiplas Promises que compartilham os mesmos `Destinations` causa disputas de reconciliação no Flux ou Argo CD.|Inspecione os objetos `Work` do tipo `static-dependency` ou gerados pelo workflow da Promise e confirme no Flux/Argo CD do cluster de destino que os operadores base subiram saudáveis.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1108|kratix-gestao-frota-day2-upgrades-reconciliacao-instancias|Kratix: Gestão de Frota no Dia 2 e Atualização em Massa de Instâncias via Promise|No Kratix, atualizar a definição de uma Promise (como corrigir uma CVE de imagem base, elevar o número padrão de réplicas ou adicionar políticas de rede) dispara automaticamente a reexecução dos workflows para todas as Resource Requests existentes daquela Promise.|Em plataformas tradicionais baseadas em scaffolding ou templates de repositório, corrigir uma vulnerabilidade em 300 bancos de dados exige abrir 300 Pull Requests e depender da ação manual de dezenas de squads consumidoras.|Quando o manifesto da `Promise` é atualizado no cluster de plataforma (`kubectl apply -f promise-ha.yaml`), o controlador do Kratix detecta a mudança de geração da Promise e reconcilia cada Resource Request ativa ligada àquela Promise, reexecutando os pipelines `resource.configure` e atualizando os `WorkPlacements` no State Store para toda a frota de uma só vez.|```bash
+kubectl apply -f https://raw.githubusercontent.com/syntasso/promise-postgresql/refs/heads/main/promise-ha.yaml
+kubectl get pods -l kratix.io/promise-name=postgresql --watch
+kubectl get pods -l application=spilo -A
+```|Introduzir uma alteração incompatível ou destrutiva no pipeline de uma Promise e aplicá-la diretamente em produção propaga a regressão simultaneamente para todas as instâncias existentes da frota.|Teste atualizações de Promise primeiro em ambiente de homologação, acompanhe a reexecução dos Jobs de pipeline de cada instância e monitore o rollout gradual nos clusters de destino.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1109|kratix-compound-promises-composicao-paved-roads-multicamada|Kratix: Compound Promises e Composição de Paved Roads Multicamada|Compound Promises no Kratix são Promises de nível superior cujo pipeline `resource.configure` emite Resource Requests para outras Promises de nível inferior (como banco de dados, cache, ingress e pipeline CI), compondo "paved roads" completas em uma única requisição.|Equipes de produto frequentemente precisam provisionar um ambiente completo de microsserviço (aplicação + PostgreSQL + Redis + rota DNS) de forma atômica, enquanto especialistas de domínio continuam mantendo cada Promise individual separadamente.|Na Compound Promise, `spec.workflows.promise.configure` garante que as sub-Promises requeridas estejam instaladas na plataforma, e o pipeline `spec.workflows.resource.configure` gera manifestos das CRDs filhas destinados ao próprio cluster de plataforma (usando um `Destination` que aponta para o plano de controle da plataforma), acionando em cascata os workflows de cada serviço especializado.|```yaml
+# Trecho de manifesto emitido por uma Compound Promise em /kratix/output/db-request.yaml:
+apiVersion: marketplace.kratix.io/v1alpha2
+kind: postgresql
+metadata:
+  name: checkout-service-db
+  namespace: default
+spec:
+  teamId: "checkout-squad"
+  backupEnabled: true
+```|Criar dependências circulares entre Compound Promises ou aninhar muitas camadas sem propagar corretamente o status das sub-requisições torna o diagnóstico de falhas de provisionamento opaco para o usuário final.|Verifique se a Resource Request da Compound Promise cria as Resource Requests filhas com ` labels` de rastreabilidade e se o status consolidado reflete a prontidão de todos os sub-recursos.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix
+1110|kratix-delete-workflows-garbage-collection-descomissionamento|Kratix: Workflows de Deleção (resource.delete) e Descomissionamento Seguro|Além dos fluxos `configure`, o Kratix suporta workflows `delete` (`spec.workflows.resource.delete` e `spec.workflows.promise.delete`) e finalizers que executam limpezas externas e removem os manifestos do State Store quando uma Resource Request ou Promise é excluída.|Se um workflow `configure` provisionou recursos fora do Kubernetes (como registros em API externa, DNS corporativo ou buckets cloud via chamadas de API) ou requer snapshot final antes da remoção, simplesmente apagar o YAML do GitOps deixaria recursos órfãos ou causaria perda de dados.|Quando o usuário executa `kubectl delete` na Resource Request, o finalizer do Kratix retém o objeto, dispara o Job de pipeline configurado em `workflows.resource.delete` passando o manifesto em `/kratix/input/object.yaml` e, somente após o container de deleção terminar com código zero, remove o `Work` e o `WorkPlacement` do State Store e libera o finalizer.|```bash
+kubectl delete postgresql.marketplace.kratix.io order-db -n default
+kubectl get pods -l kratix.io/promise-name=postgresql,kratix.io/workflow-action=delete
+kubectl get workplacements.platform.kratix.io -A
+```|Escrever um pipeline `resource.delete` que falha permanentemente quando o recurso externo já foi removido manualmente trava o finalizer da Resource Request no Kubernetes em estado `Terminating`.|Garanta que toda lógica em `workflows.resource.delete` seja idempotente (tratando `404 Not Found` como sucesso) e valide que o `WorkPlacement` e os artefatos no State Store desaparecem após a deleção.|https://docs.kratix.io/main/quick-start;https://raw.githubusercontent.com/syntasso/kratix/main/README.md;https://github.com/syntasso/kratix

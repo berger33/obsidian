@@ -1,0 +1,118 @@
+0201|zeeknsm-arquitetura-event-engine-script-interpreter-nsm|Zeek Network Security Monitor: arquitetura em duas camadas (*Event Engine* e *Script Interpreter*) para análise semântica de rede|Conforme documentado na seção oficial *Architecture* (`doc/about/architecture.rst`) e no README do repositório, o **Zeek** (`zeek/zeek`, anteriormente conhecido como *Bro*, licenciado sob BSD-3-Clause) é um framework poderoso de análise de tráfego e **Network Security Monitoring (NSM)** estruturado em duas camadas fundamentais: o **Event Engine (Core)** e o **Script Interpreter**.|Ao contrário de um IDS tradicional baseado apenas em casar assinaturas estáticas de bytes para emitir alertas pontuais, o Zeek reconstrói o estado completo da camada de aplicação e produz um arquivo histórico rico e semântico de toda a atividade da rede.|O **Event Engine** consome pacotes da interface de rede (ou PCAP), realiza análise de pacotes, análise de sessão (HTTP, DNS, TLS/SSL, SMB, Kerberos, SSH, RDP, FTP, SMTP) e análise de arquivos, reduzindo o fluxo de pacotes em **eventos neutros de política** (como `connection_established`, `http_request`, `dns_request`). Em seguida, o **Script Interpreter** executa programas na linguagem de domínio específico do Zeek (*Zeek Scripting Language*) que correlacionam eventos ao longo do tempo, geram todos os logs padrão e aplicam as políticas de detecção do site!|```bash
+# Analisando um arquivo PCAP com o Zeek e gerando os logs transacionais estruturados no diretório atual:
+zeek -C -r captura-rede.pcap local
+ls -la *.log
+```|Use sempre a flag **`-C`** (`--no-checksums`) ao processar arquivos `.pcap` capturados em interfaces com *TCP Checksum Offloading*, evitando que o Event Engine ignore segmentos TCP com checksum ainda não calculado pela placa de rede.|Execute `zeek --version` e processe um PCAP de teste verificando a geração de `conn.log`, `dns.log`, `http.log` e `ssl.log`.|https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://github.com/zeek/zeek
+0202|zeeknsm-logs-transacionais-conn-dns-http-ssl-files-x509-uid|Zeek Logs Transacionais e Correlação por `uid` (`conn.log`, `dns.log`, `http.log`, `ssl.log`, `files.log`): pivotamento forense no SOC|Toda a telemetria gerada pelos scripts padrão do Zeek é organizada em arquivos de log tabulares ou JSON (`conn.log`, `dns.log`, `http.log`, `ssl.log`, `x509.log`, `files.log`, `pe.log`, `smb_files.log`, `kerberos.log`, `ssh.log`, `notice.log`) interligados por identificadores únicos determinísticos: **`uid`** (Connection UID, ex.: `C5bLoe2M0t3...`) e **`fuid`** (File UID, ex.: `F9aK1p3...`).|Quando um analista de resposta a incidentes investiga uma conexão suspeita no firewall, logs comuns não vinculam diretamente a sessão TCP de camada 4 aos múltiplos certificados TLS ou aos arquivos binários transferidos dentro daquela sessão.|No Zeek, toda conexão em `conn.log` recebe um **`uid`** único que é repetido em `http.log`, `dns.log`, `ssl.log` e `ssh.log`; quando um arquivo ou certificado trafega nessa conexão, o Zeek gera um **`fuid`** em `files.log` que referencia o `uid` da conexão e aponta para os metadados detalhados em `x509.log` ou `pe.log`!|```bash
+#habilitando saída nativa em JSON em todos os logs do Zeek e filtrando uma sessão específica pelo uid:
+zeek -C -r tráfego.pcap LogAscii::use_json=T
+jq 'select(.uid == "CHhAvVGS1DHFjwGM9")' conn.log http.log ssl.log files.log
+```|Além do `uid` interno do Zeek, carregue o script `policy/protocols/conn/community-id-logging` para incluir a coluna `community_id` (hash SHA-1 padrão de 5-tupla) em `conn.log`, permitindo pivotar instantaneamente entre eventos do **Zeek** e alertas do **Suricata**!|Verifique os campos de `conn.log` (`id.orig_h`, `id.resp_h`, `proto`, `service`, `duration`, `orig_bytes`, `resp_bytes`, `conn_state`) com `jq . conn.log | head -n 20`.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0203|zeeknsm-linguagem-scripts-eventos-tipos-nativos-addr-subnet-port-table|Zeek Scripting Language: programação orientada a eventos com tipos nativos de rede (`addr`, `subnet`, `port`, `interval`, `set` e `table`)|Conforme destacado no README e em `doc/about/architecture.rst`, o diferencial central do Zeek é sua linguagem de script orientada a eventos (*Zeek Scripting Language*), que inclui tipos primitivos de primeira classe para engenharia de rede: **`addr`** (IPv4/IPv6), **`subnet`** (CIDR como `10.0.0.0/8`), **`port`** (`80/tcp`, `53/udp`), **`interval`** (`5mins`, `30secs`), **`time`** e estruturas **`table` / `set`** com expiração automática (`&create_expire`, `&read_expire`, `&write_expire`)!|Escrever correlações temporais de rede em linguagens genéricas exige implementar manualmente parsers de CIDR, tabelas hash com coleta de lixo por TTL e máquinas de estado de conexão.|Na linguagem do Zeek, você escreve handlers `event http_request(c: connection, method: string, original_URI: string, unescaped_URI: string, version: string)` ou `event dns_request(...)`, mantém contadores por IP de origem em uma `table[addr] of count &create_expire=1min` e dispara ações quando um limiar é atingido!|```zeek
+# Script detect-ssh-bruteforce-custom.zeek demonstrando tipos nativos addr, port e table com expiração:
+module CustomSec;
+
+global ssh_attempts: table[addr] of count &default=0 &create_expire=5mins;
+
+event connection_state_remove(c: connection)
+    {
+    if ( c$id$resp_p == 22/tcp && c$conn?$conn_state && c$conn$conn_state == "S0" )
+        {
+        ssh_attempts[c$id$orig_h] += 1;
+        if ( ssh_attempts[c$id$orig_h] == 20 )
+            print fmt("Possível scan/força bruta SSH a partir de %s", c$id$orig_h);
+        }
+    }
+```|Sempre anote tabelas globais que acumulam IPs ou conexões da internet com atributos de expiração (**`&create_expire`**, **`&write_expire`** ou **`&read_expire`**); tabelas sem expiração em links de alto tráfego crescerão na memória RAM até esgotar o worker!|Execute seu script localmente sobre um PCAP com `zeek -C -r sample.pcap ./detect-ssh-bruteforce-custom.zeek`.|https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://github.com/zeek/zeek
+0204|zeeknsm-file-analysis-framework-faf-extracao-arquivos-hashing-mime|Zeek File Analysis Framework (`FAF`): dissecção agnóstica de protocolo, detecção de MIME (`file_sniff`) e cálculo de hashes (`MD5`, `SHA1`, `SHA256`)|Conforme descrito em `doc/about/architecture.rst` (*"File analysis dissects the content of files transferred over sessions"*), o **File Analysis Framework (FAF)** do Zeek desacopla a análise do arquivo do protocolo de transporte: não importa se um executável Windows PE ou script malicioso foi transferido via **HTTP**, **SMB**, **FTP**, **SMTP** ou **IRC**, ele passa pelo mesmo pipeline de inspeção de arquivos e gera registros padronizados em `files.log`!|Atacantes frequentemente renomeiam um executável `.exe` para `.jpg` ou o transferem por compartilhamento SMB interno; depender do nome da URL ou apenas de um proxy HTTP deixa passar transferências em outros protocolos.|No evento **`file_sniff(f: fa_file, meta: fa_metadata)`**, o Zeek já identificou o **MIME type real** pelos *magic bytes* do conteúdo (ex.: `application/x-dosexec` ou `application/x-executable`), permitindo anexar dinamicamente analisadores de hash (`Files::add_analyzer(f, Files::ANALYZER_SHA256)`) e extrair uma cópia forense para o disco (`Files::ANALYZER_EXTRACT`)!|```zeek
+# Script extract-executables.zeek: calcula SHA-256 e extrai automaticamente binários PE/ELF detectados na rede:
+event file_sniff(f: fa_file, meta: fa_metadata)
+    {
+    if ( ! meta?$mime_type )
+        return;
+
+    if ( meta$mime_type == "application/x-dosexec" || meta$mime_type == "application/x-executable" )
+        {
+        Files::add_analyzer(f, Files::ANALYZER_SHA256);
+        local ext_file = fmt("extracted-%s.bin", f$id);
+        Files::add_analyzer(f, Files::ANALYZER_EXTRACT, [$extract_filename=ext_file]);
+        }
+    }
+```|Defina um limite máximo de tamanho de arquivo extraído (`FileExtract::default_limit`) e monitore o espaço em disco da pasta `extract_files/` para evitar preenchimento de disco por transferências legítimas de imagens ISO.|Teste com `zeek -C -r http-download.pcap ./extract-executables.zeek` e confira a coluna `sha256` e `extracted` em `files.log`.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0205|zeeknsm-notice-framework-alertas-notice-log-action-alarm-hook|Zeek Notice Framework (`notice.log`): geração de alertas contextuais (`NOTICE`), deduplicação por `suppress_for` e hooks de resposta|Enquanto os logs normais do Zeek (`conn.log`, `dns.log`) são neutros de política, o **Notice Framework** é o subsistema pelo qual scripts do Zeek emitem alertas acionáveis quando detectam comportamentos anômalos ou violações de política, gravando-os em **`notice.log`** através da função **`NOTICE([$note=..., $msg=..., $conn=c, $identifier=..., $suppress_for=...])`**.|Emitir milhares de alertas idênticos quando um host infectado tenta conectar-se a um servidor C2 a cada segundo inunda o SIEM; o Notice Framework resolve isso nativamente no próprio motor de script.|Ao preencher os campos **`$identifier`** (uma string única que identifica a entidade, ex.: o par IP origem + destino) e **`$suppress_for=1hr`** na chamada `NOTICE(...)`, o Zeek suprime automaticamente alertas duplicados com o mesmo identificador em todo o cluster pelo período configurado, e permite rotear tipos críticos (`Notice::ACTION_ALARM`, `Notice::ACTION_EMAIL`) via `hook Notice::policy(n: Notice::Info)`!|```zeek
+# Emitindo um alerta estruturado no notice.log com supressão automática de duplicatas por 30 minutos:
+redef enum Notice::Type += {
+    Suspicious_User_Agent
+};
+
+event http_header(c: connection, is_orig: bool, original_name: string, name: string, value: string)
+    {
+    if ( is_orig && name == "USER-AGENT" && /curl|sqlmap|nikto/ in value )
+        {
+        NOTICE([
+            $note=Suspicious_User_Agent,
+            $msg=fmt("User-Agent de automação/scan detectado: %s", value),
+            $conn=c,
+            $identifier=cat(c$id$orig_h, value),
+            $suppress_for=30mins
+        ]);
+        }
+    }
+```|Use `hook Notice::policy(n: Notice::Info)` na configuração local (`local.zeek`) para elevar notas críticas para `ACTION_ALARM` ou ignorar avisos informativos de sub-redes de laboratório.|Execute o script acima sobre um PCAP de teste e verifique a criação e os campos de `notice.log`.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0206|zeeknsm-intelligence-framework-ioc-matching-ips-domains-hashes-cif|Zeek Intelligence Framework (`intel.log`): ingestão em tempo real de Indicadores de Comprometimento (`ADDR`, `DOMAIN`, `URL`, `FILE_HASH`, `CERT_HASH`)|O **Intelligence Framework** do Zeek permite carregar listas de **Indicadores de Comprometimento (IoCs)** de feeds de Threat Intelligence (MISP, OpenCTI, STIX/TAXII convertidos para arquivos tabulares `.dat`) e cruzá-los em memória contra cada IP (`Intel::ADDR`), domínio (`Intel::DOMAIN`), URL (`Intel::URL`), e-mail (`Intel::EMAIL`), User-Agent (`Intel::SOFTWARE`), hash de arquivo (`Intel::FILE_HASH`) e certificado (`Intel::CERT_HASH`) observados na rede, gerando hits detalhados em **`intel.log`**!|Fazer buscas retroativas de 50.000 domínios e hashes de IoCs no SIEM pode ser lento e caro; quando o Zeek avalia os indicadores em streaming no momento da conexão, o alerta em `intel.log` já traz o `uid` exato da sessão e o contexto onde o indicador foi visto (`seen.where`, ex.: `DNS::IN_REQUEST`, `SSL::IN_SERVER_NAME`, `HTTP::IN_HOST_HEADER`).|Mais importante: como o Intelligence Framework é alimentado pelo **Input Framework** do Zeek, qualquer atualização no arquivo de IoCs em disco é **recarregada automaticamente em memória em tempo de execução** sem precisar reiniciar o Zeek nem perder pacotes!|```text
+# Exemplo de arquivo de indicadores /opt/zeek/share/zeek/site/intel-feeds.dat (separado por TAB):
+#fields	indicator	indicator_type	meta.source	meta.desc	meta.do_notice
+198.51.100.77	Intel::ADDR	CORP-CERT	Servidor C2 identificado no incidente #402	T
+bad-actor-login.example	Intel::DOMAIN	MISP-Feed	Domínio de credential harvesting	T
+```|Quando a coluna `meta.do_notice` do feed é definida como `T` (com `policy/frameworks/intel/do_notice` carregado), cada hit em `intel.log` também dispara uma notificação no `notice.log`.|Teste o carregamento de um arquivo `.dat` de inteligência e verifique os registros gerados em `intel.log`.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0207|zeeknsm-arquitetura-cluster-zeekctl-manager-logger-proxy-workers|Zeek Arquitetura de Cluster (`zeekctl` / `node.cfg`): papéis de `Manager`, `Logger`, `Proxy` e `Workers` com `AF_PACKET` e `lb_procs`|Para monitorar links corporativos de **10 Gbps a 100+ Gbps**, o Zeek opera em uma arquitetura de **Cluster multi-processo** gerenciada pelo **`zeekctl`** e definida em `etc/node.cfg`, dividindo o trabalho entre quatro papéis especializados que se comunicam via biblioteca **Broker / ZeroMQ**: **`worker`** (processa pacotes da placa de rede), **`proxy`** (sincroniza estado distribuído em memória entre workers), **`manager`** (coordena configuração e consolida avisos) e **`logger`** (dedicado a gravar todos os logs em disco sem bloquear os workers).|Como uma única instância de processo do Zeek executa seu loop de eventos de script em uma thread principal, monitorar uma interface de 10 Gbps com um único processo causaria perda de pacotes (`capture_loss.log`); em vez disso, você instancia N processos `worker` na mesma interface balanceados por hash simétrico de fluxo via `AF_PACKET` (`lb_method=af_packet`, `lb_procs=16`)!|Separar pelo menos um processo **`logger`** dedicado garante que a serialização de I/O de disco de gigabytes de logs JSON nunca atrase o loop de captura de pacotes dos processos `worker`.|```ini
+# Exemplo de /opt/zeek/etc/node.cfg para um sensor NSM de alta velocidade com 8 workers AF_PACKET:
+[logger-1]
+type=logger
+host=127.0.0.1
+
+[manager]
+type=manager
+host=127.0.0.1
+
+[proxy-1]
+type=proxy
+host=127.0.0.1
+
+[worker-1]
+type=worker
+host=127.0.0.1
+interface=af_packet::eth1
+lb_method=af_packet
+lb_procs=8
+pin_cpus=2,3,4,5,6,7,8,9
+```|Monitore diariamente o arquivo **`capture_loss.log`** gerado pelo script `policy/misc/capture-loss`: ele estima a porcentagem de pacotes perdidos pelo sensor observando lacunas de números de sequência TCP (`percent_lost`), devendo permanecer próximo de `0.0`!|Execute `zeekctl check`, `zeekctl deploy` e `zeekctl status` para validar e operar o cluster.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0208|zeeknsm-spicy-parser-generator-gramaticas-seguras-protocolos-arquivos|Zeek `Spicy`: gerador moderno de parsers seguros em C++ para protocolos de rede e formatos de arquivo customizados|O Zeek integra nativamente o **Spicy** — uma linguagem declarativa e compilador de gramáticas que gera parsers C++ de alta performance e **seguros contra corrupção de memória** para novos protocolos de rede (TCP/UDP) e formatos de arquivo, substituindo a escrita manual de analisadores C++/BinPAC propensos a *buffer overflows*.|Escrever um parser manual em C ou C++ para dissecar um protocolo binário complexo que chega diretamente da rede não confiável é uma das maiores fontes históricas de vulnerabilidades críticas (CVEs de leitura/escrita fora dos limites) em sensores de rede.|No Spicy (arquivos `.spicy` e `.evt`), você declara a estrutura dos pacotes/mensagens como unidades tipadas (`public type Message = unit { ... }`) e o mapeamento direto para eventos do Zeek (`on MyProto::Message -> event myproto::message($conn, self.field);`); o compilador `spicyz` valida limites de bytes automaticamente e compila a gramática em código nativo carregável pelo Zeek!|```bash
+# Verificando o suporte embutido ao compilador Spicy na instalação do Zeek:
+zeek --version
+spicyc --version
+```|Muitos dos analisadores oficiais modernos do próprio Zeek (como QUIC, HTTP/3, OpenVPN, WireGuard, LDAP e DNS estendido) são implementados usando **Spicy**.|Execute `zeek -NN | grep -i spicy` para listar todos os analisadores Spicy registrados no seu binário do Zeek.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek
+0209|zeeknsm-package-manager-zkg-ja3-ja4-bzar-mitre-attack-extensoes|Zeek Package Manager (`zkg`): instalação de pacotes comunitários (`JA3`, `JA4`, `MITRE ATT&CK BZAR`, `hassh`, `cve-detectors`)|O utilitário oficial **`zkg` (Zeek Package Manager)** gerencia a descoberta, instalação, teste, atualização e carregamento de pacotes do diretório oficial **[packages.zeek.org](https://packages.zeek.org)** — incluindo pacotes consagrados de detecção como **`ja3`**, **`ja4`** (fingerprinting TLS/QUIC), **`hassh`** (fingerprinting de clientes/servidores SSH), **`bzar`** (*Bro/Zeek ATT&CK-based Analytics and Reporting* para detecção de movimentação lateral SMB/DCE-RPC/WMI mapeada ao MITRE ATT&CK) e detectores de CVEs.|Copiar scripts `.zeek` avulsos da internet para dentro de `/opt/zeek/share/zeek/site/` sem controle de versão, sem rodar a suíte de testes (`btest`) do pacote e sem rastrear dependências dificulta a manutenção do sensor.|Com o `zkg`, você instala pacotes validados (`zkg install <pacote>`), congela versões em um manifesto (`zkg bundle` para ambientes air-gapped sem acesso à internet) e carrega todos os pacotes instalados adicionando `@load packages` ao seu `local.zeek`!|```bash
+# Instalando pacotes de fingerprinting SSH (HASSH) e detecção MITRE ATT&CK (BZAR) via zkg:
+zkg refresh
+zkg install salesforce/hassh
+zkg install mitre-attack/bzar
+zkg list
+```|Para sensores NSM em redes isoladas (*air-gapped*), execute `zkg bundle meu-pacote.bundle ...` em uma máquina conectada e transfira o arquivo `.bundle` para instalar offline no sensor com `zkg unbundle`.|Verifique os pacotes ativos com `zkg list` e confirme a presença de `@load packages` em `site/local.zeek`.|https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://github.com/zeek/zeek
+0210|zeeknsm-summary-statistics-sumstats-deteccao-anomalias-scans-exfiltracao|Zeek `SumStats` (Summary Statistics Framework): agregação estatística distribuída para detectar Port Scans, DGA e Beaconing|O **Summary Statistics Framework (`SumStats`)** do Zeek é um motor de redução estatística distribuída em memória que agrega observações (`SumStats::observe`) de todos os processos `worker` do cluster ao longo de uma janela de tempo (`epoch`) e calcula métricas como **`SUM`**, **`UNIQUE`**, **`AVERAGE`**, **`VARIANCE`**, **`MAX`**, **`MIN`**, **`STDDEV`** e **`HLL_UNIQUE`** (*HyperLogLog* para cardinalidade de milhões de itens com memória constante!).|Se um atacante realizar um *Horizontal Port Scan* lento ou consultas DNS distribuídas que caem em 8 workers diferentes do cluster Zeek, contadores locais por worker não enxergam o total global da rede; o `SumStats` agrega automaticamente os contadores de todos os workers no final de cada `epoch`.|No callback `threshold_crossed` ou `epoch_result` do `SumStats`, você recebe o resultado consolidado de todo o cluster e emite um único alerta preciso no `notice.log`!|```zeek
+# Usando SumStats com HyperLogLog (HLL_UNIQUE) para detectar hosts que consultam mais de 150 domínios NXDOMAIN em 5 minutos (possível malware DGA):
+event zeek_init()
+    {
+    local r1 = SumStats::Reducer($stream="dns.nxdomain", $apply=set(SumStats::UNIQUE));
+    SumStats::create([
+        $name="detect-dga-nxdomain",
+        $epoch=5mins,
+        $reducers=set(r1),
+        $threshold=150.0,
+        $threshold_val(key: SumStats::Key, result: SumStats::Result): double =
+            { return result["dns.nxdomain"]$unique + 0.0; },
+        $threshold_crossed(key: SumStats::Key, result: SumStats::Result) =
+            { print fmt("Host %s gerou %d NXDOMAINs distintos em 5min!", key$host, result["dns.nxdomain"]$unique); }
+    ]);
+    }
+```|Prefira o cálculo probabilístico **`SumStats::HLL_UNIQUE`** em vez de `SumStats::UNIQUE` quando monitorar cardinalidade em janelas longas de alto volume, reduzindo drasticamente o consumo de RAM por chave.|Teste scripts baseados em `SumStats` sobre um PCAP usando `zeek -C -r scan.pcap` e valide o disparo de `threshold_crossed`.|https://raw.githubusercontent.com/zeek/zeek/master/doc/about/architecture.rst;https://raw.githubusercontent.com/zeek/zeek/master/README.md;https://github.com/zeek/zeek

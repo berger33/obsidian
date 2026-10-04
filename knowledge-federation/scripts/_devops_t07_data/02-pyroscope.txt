@@ -1,0 +1,184 @@
+=== NOTE: 611 | pyroscope-continuous-profiling-arquitetura-v2-object-storage | Grafana Pyroscope 2.0: plataforma de continuous profiling e arquitetura v2 nativa em Object Storage ===
+ONE_LINER: O Grafana Pyroscope 2.0 (AGPL-3.0) é uma plataforma de continuous profiling cuja arquitetura v2 padrão grava perfis diretamente em object storage, eliminando ingesters em memória e discos locais.
+IMPORTANCE: Identificar gargalos de CPU, alocações de memória, contenção de locks e operações de I/O em produção exige visibilidade em nível de linha de código ao longo do tempo, tanto de forma proativa (redução de custos de nuvem e latência) quanto reativa (resolução rápida de incidentes). Segundo a documentação oficial do Pyroscope 2.0, o redesenho arquitetural v2 remove a necessidade de discos locais e ingesters stateful da v1, reduzindo drasticamente o consumo de recursos e a sobrecarga operacional em larga escala, além de desacoplar totalmente os caminhos de escrita e leitura.
+HOW_IT_WORKS: Na arquitetura v2 do Grafana Pyroscope, a maioria dos componentes é stateless e não requer persistência local entre reinicializações: o caminho de escrita utiliza `distributor` e `segment-writer` para enviar blocos pequenos (segments) direto para o object storage (Amazon S3, Google Cloud Storage, Azure Storage, OpenStack Swift ou sistema de arquivos local em nó único); o `metastore` (único componente stateful, replicado via consenso Raft) mantém o índice de metadados e coordena os `compaction-workers`; e o caminho de leitura escala horizontalmente com `query-frontend` e `query-backend`. Implantações v1 existentes podem habilitar a arquitetura v2 via flag e migrar sem perda de dados.
+EXAMPLE:
+```bash
+# Execução rápida do servidor Grafana Pyroscope localmente via Docker na porta 4040
+docker run -it --rm -p 4040:4040 grafana/pyroscope:latest
+
+# Verificação de prontidão da instância Pyroscope na porta padrão 4040
+curl -s http://localhost:4040/ready
+```
+TRADE_OFFS: Embora a arquitetura v2 elimine a gestão de volumes persistentes (PVCs) nos serviços de escrita e leitura, ela torna a disponibilidade e a latência de escrita diretamente dependentes do armazenamento de objetos e da saúde do cluster Raft do `metastore`; em modo de microsserviços, o uso de filesystem local não é suportado, exigindo obrigatoriamente um backend de object storage compatível.
+VERIFY: Inicie o servidor Pyroscope, consulte `http://localhost:4040/ready` e verifique nos logs de inicialização que os módulos da arquitetura v2 e o armazenamento de blocos estão ativos e respondendo na porta `4040`.
+LINKS: [[pyroscope-caminho-escrita-distributor-segment-writer-metastore]] | [[pyroscope-compactacao-compaction-worker-metastore-raft]] | [[pyroscope-caminho-leitura-query-frontend-backend-flame-graphs]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 612 | pyroscope-caminho-escrita-distributor-segment-writer-metastore | Grafana Pyroscope v2: caminho de escrita stateless com Distributor e Segment-Writer ===
+ONE_LINER: No caminho de escrita do Pyroscope v2, os componentes stateless e sem disco `distributor` e `segment-writer` agrupam perfis da mesma aplicação em pequenos segmentos gravados sincronamente no object storage.
+IMPORTANCE: Em sistemas de profiling contínuo que recebem milhares de amostras de pilha por segundo de centenas de microsserviços, gravar cada perfil individualmente no S3 ou GCS geraria custos proibitivos de requisições `PUT` e alta amplificação de leitura posterior. De acordo com a documentação da arquitetura v2 do Pyroscope, o agrupamento inteligente por serviço no `segment-writer` minimiza o número de operações de escrita no object storage e co-localiza perfis que serão consultados juntos.
+HOW_IT_WORKS: Os perfis chegam ao `distributor` através da API Push RPC ou do endpoint HTTP `/ingest`. O `distributor` roteia as requisições para instâncias de `segment-writer` de forma a concentrar perfis da mesma aplicação no mesmo escritor. O `segment-writer` acumula os perfis recebidos em pequenos blocos chamados segmentos (segments), produzindo um único objeto por shard que contém os dados de todos os serviços do tenant naquele shard, grava o segmento diretamente no object storage e atualiza o índice de blocos no serviço `metastore`. Por padrão, a ingestão é síncrona: os clientes permanecem bloqueados até que o objeto esteja duravelmente salvo no object storage e registrado no índice de metadados, com latência mediana esperada inferior a 500 ms.
+EXAMPLE:
+```bash
+# Verificação de métricas do caminho de escrita (distributor e segment-writer) no Pyroscope
+curl -s http://localhost:4040/metrics | grep -E "pyroscope_(distributor|segment_writer|ingest)"
+```
+TRADE_OFFS: Como a ingestão padrão aguarda a confirmação de escrita no object storage e de registro no `metastore` (latência mediana < 500 ms), os clientes de envio (SDKs, Grafana Alloy ou coletores OTel) precisam configurar timeouts de requisição adequados e buffers de retentativa para absorver oscilações momentâneas de latência na API do provedor de armazenamento em nuvem.
+VERIFY: Envie perfis de teste para o endpoint de ingestão do Pyroscope e confirme que objetos de segmentos estão sendo criados no bucket configurado e registrados no índice do `metastore` sem erros HTTP 5xx no `distributor`.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-compactacao-compaction-worker-metastore-raft]] | [[pyroscope-coleta-perfis-sdks-grafana-alloy-opentelemetry-ebpf]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 613 | pyroscope-compactacao-compaction-worker-metastore-raft | Grafana Pyroscope v2: Metastore com consenso Raft e fusão em segundo plano via Compaction-Worker ===
+ONE_LINER: O serviço `metastore` (replicado via consenso Raft) mantém o índice de metadados e coordena os `compaction-workers` stateless para fundir pequenos segmentos em blocos maiores em até 15 segundos medianos.
+IMPORTANCE: Em um cluster de grande porte, o número de pequenos segmentos criados no armazenamento de objetos pode chegar a milhões por hora, o que degradaria severamente o desempenho das consultas por amplificação de leitura e sobrecarregaria o índice de metadados. Segundo a documentação oficial da arquitetura v2 do Pyroscope, a compactação contínua em segundo plano mantém o número de objetos e entradas de metadados sob controle sem exigir discos locais nos trabalhadores de compactação.
+HOW_IT_WORKS: O `metastore` é o único componente stateful do Pyroscope v2, utilizando o algoritmo de consenso Raft para replicar o índice de metadados dos blocos e agendar trabalhos de compactação. Assim que novos segmentos são gravados no object storage pelos `segment-writers`, o `metastore` coordena instâncias stateless de `compaction-worker` para buscar esses segmentos pequenos, mesclá-los em blocos maiores e mais eficientes para leitura, gravar os blocos consolidados de volta no object storage e atualizar o índice de metadados. Os `compaction-workers` iniciam a compactação o mais rápido possível após a escrita, mantendo o tempo mediano até a primeira compactação em no máximo 15 segundos.
+EXAMPLE:
+```yaml
+# Trecho conceitual de implantação distribuída dos papéis metastore e compaction-worker no Pyroscope v2
+target: metastore,compaction-worker
+storage:
+  backend: s3
+  s3:
+    bucket_name: pyroscope-profiles-prod
+    endpoint: s3.amazonaws.com
+```
+TRADE_OFFS: Como o `metastore` utiliza consenso Raft e participa tanto do caminho de escrita (registro de novos segmentos e coordenação de compactação) quanto do caminho de leitura (localização de objetos para o `query-frontend`), ele deve ser implantado com número ímpar de réplicas (por exemplo, 3 ou 5) sobre rede e armazenamento de baixa latência; a perda de quórum no Raft interrompe novas confirmações de metadados e agendamentos de compactação.
+VERIFY: Monitore as métricas de saúde do `metastore` e dos `compaction-workers` em `/metrics`, verificando que a latência até a primeira compactação permanece dentro da faixa esperada (~15 segundos) e que não há acúmulo de segmentos não compactados no bucket.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-caminho-escrita-distributor-segment-writer-metastore]] | [[pyroscope-caminho-leitura-query-frontend-backend-flame-graphs]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 614 | pyroscope-caminho-leitura-query-frontend-backend-flame-graphs | Grafana Pyroscope v2: caminho de leitura com Query-Frontend, Query-Backend e geração paralela de Flame Graphs ===
+ONE_LINER: O caminho de leitura do Pyroscope v2 utiliza `query-frontend` e `query-backend` stateless para localizar objetos via `metastore` e executar grafos de subconsultas em paralelo para construir flame graphs.
+IMPORTANCE: Renderizar um flame graph na interface gráfica frequentemente exige ler muitos gigabytes de dados brutos de profiling do object storage e aplicar pós-processamento computacionalmente pesado para agregar pilhas de chamadas. De acordo com a documentação da arquitetura v2 do Pyroscope, separar e paralelizar o caminho de leitura permite escalar `query-frontend` e `query-backend` para centenas de instâncias instantaneamente, sem interferir na ingestão e sem exigir discos locais ou camadas complexas de cache.
+HOW_IT_WORKS: Quando o usuário solicita um perfil ou flame graph pela Query API, a requisição chega ao `query-frontend`, que realiza o planejamento preliminar da consulta, consulta o `metastore` para descobrir exatamente quais objetos de dados no object storage contêm os perfis do serviço e intervalo solicitados, e despacha a execução para o serviço `query-backend`. A execução no `query-backend` é modelada como um grafo distribuído onde múltiplas instâncias buscam objetos do object storage em paralelo, processam as subconsultas e combinam os resultados parciais de forma otimizada para minimizar o tráfego de rede antes de devolver o flame graph consolidado ao cliente.
+EXAMPLE:
+```bash
+# Consulta à API de leitura do Pyroscope na porta 4040 para listar tipos de perfil e labels disponíveis
+curl -s "http://localhost:4040/querier.v1.QuerierService/ProfileTypes" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+TRADE_OFFS: Embora `query-frontend` e `query-backend` sejam completamente stateless e escaláveis horizontalmente, consultas que abrangem janelas temporais muito amplas sobre serviços com milhões de símbolos de funções geram alto throughput de leitura contra o object storage (S3/GCS), podendo incorrer em custos de transferência e limites de taxa de `GET` do provedor de nuvem caso a compactação não esteja em dia.
+VERIFY: Execute consultas de flame graph em janelas de tempo variadas e observe nos logs e métricas do `query-frontend` e `query-backend` o fan-out das subconsultas e o tempo de resposta sem impacto na latência do `segment-writer`.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-compactacao-compaction-worker-metastore-raft]] | [[pyroscope-grafana-profiles-drilldown-exploracao-queryless]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 615 | pyroscope-coleta-perfis-sdks-grafana-alloy-opentelemetry-ebpf | Grafana Pyroscope: instrumentação e coleta de perfis via SDKs, Grafana Alloy e OpenTelemetry eBPF Profiler ===
+ONE_LINER: O Grafana Pyroscope recebe dados de profiling por push direto dos SDKs de linguagens, por pull/push via Grafana Alloy ou via protocolo OTLP a partir do OpenTelemetry eBPF profiler.
+IMPORTANCE: Ambientes políglotas de microsserviços combinam aplicações que podem ser instrumentadas no código-fonte (Go, Java, Python, Ruby, Node.js, .NET, Rust) com binários nativos ou serviços legados onde alterar o código é inviável. Segundo o README oficial do Pyroscope, suportar múltiplos métodos de coleta — SDKs, Grafana Alloy e OTLP/eBPF — permite adotar continuous profiling em todo o cluster sem lacunas de visibilidade.
+HOW_IT_WORKS: Existem três caminhos principais para enviar perfis ao Pyroscope Server: (1) instrumentação com os Pyroscope Language SDKs embutidos na aplicação, que coletam amostras de CPU, alocações de heap, goroutines ou mutexes e fazem push periódico para o servidor; (2) coleta via agente Grafana Alloy rodando no host ou como DaemonSet no Kubernetes, que pode fazer scrape (pull) de endpoints `/debug/pprof` de aplicações Go ou receber perfis via push e encaminhá-los ao Pyroscope; e (3) ingestão nativa sobre OTLP a partir de fontes compatíveis com OpenTelemetry, destacando-se o OpenTelemetry eBPF profiler, que captura pilhas de execução de todo o sistema operacional e containers diretamente no kernel Linux com zero alteração de código.
+EXAMPLE:
+```go
+// Exemplo de instrumentação push em Golang com o SDK do Grafana Pyroscope
+package main
+
+import "github.com/grafana/pyroscope-go"
+
+func main() {
+    pyroscope.Start(pyroscope.Config{
+        ApplicationName: "servico.pagamentos.api",
+        ServerAddress:   "http://pyroscope:4040",
+        Tags:            map[string]string{"env": "prod", "region": "sa-east-1"},
+        ProfileTypes: []pyroscope.ProfileType{
+            pyroscope.ProfileCPU,
+            pyroscope.ProfileAllocObjects,
+            pyroscope.ProfileAllocSpace,
+        },
+    })
+}
+```
+TRADE_OFFS: O profiling via eBPF não exige recompilar nem reiniciar aplicações e cobre código C/C++/Rust/Go/kernel de forma transparente, porém exige privilégios elevados no nó Linux e símbolos de depuração ou frame pointers disponíveis para reconstruir pilhas legíveis; já os SDKs de linguagem fornecem tipos de perfil semânticos específicos do runtime (como alocações de objetos gerenciados, garbage collection e locks), mas exigem atualização de dependências em cada repositório.
+VERIFY: Após configurar o SDK, o Grafana Alloy ou o OpenTelemetry eBPF profiler, verifique na interface do Grafana se o `service_name` ou `ApplicationName` aparece listado com amostras recentes de CPU e memória.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-caminho-escrita-distributor-segment-writer-metastore]] | [[opentelemetry-collector-receivers-processors-exporters-pipelines]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 616 | pyroscope-grafana-profiles-drilldown-exploracao-queryless | Grafana Pyroscope: visualização e análise sem consultas com Grafana Profiles Drilldown ===
+ONE_LINER: O Grafana Profiles Drilldown (anteriormente Explore Profiles) fornece uma experiência visual queryless no Grafana para explorar perfis de CPU, memória e I/O e comparar flame graphs entre janelas e versões.
+IMPORTANCE: Diferentemente de métricas e logs, muitos engenheiros de software não dominam sintaxes específicas de consulta de perfis e precisam encontrar rapidamente qual função ou linha de código causou uma regressão de CPU após um deploy. De acordo com o README oficial do Grafana Pyroscope, o Grafana Profiles Drilldown vem pré-instalado no Grafana Cloud e no Grafana OSS como a forma padrão e intuitiva de visualizar e analisar dados de profiling sem precisar escrever queries.
+HOW_IT_WORKS: Conectado a uma fonte de dados Pyroscope, o aplicativo Grafana Profiles Drilldown descobre automaticamente todos os serviços instrumentados, tipos de perfil disponíveis (CPU time, memory allocations, in-use space, goroutines, mutex contention) e rótulos de metadados (`namespace`, `pod`, `version`, `region`). O usuário navega visualmente selecionando o serviço e o tipo de perfil, filtra por rótulos com cliques, inspeciona séries temporais de consumo ao lado do flame graph correspondente, foca em funções específicas (top table / flame graph) e utiliza a visão de diff para comparar o comportamento de duas versões de código ou dois intervalos de tempo lado a lado.
+EXAMPLE:
+```bash
+# Subir ambiente local com Pyroscope na porta 4040 para inspeção imediata no Grafana Profiles Drilldown
+brew install pyroscope-io/brew/pyroscope
+brew services start pyroscope
+
+# Validar que a porta HTTP 4040 do Pyroscope está pronta para conexão como Data Source no Grafana
+curl -I http://localhost:4040/ready
+```
+TRADE_OFFS: Para que a exploração no Grafana Profiles Drilldown permita comparar versões de deploy ou isolar pods problemáticos sem ruído, os clientes de instrumentação (SDKs ou Grafana Alloy) devem anexar rótulos estáticos de baixa cardinalidade (como `service_git_ref`, `version`, `namespace`, `env`); anexar rótulos de cardinalidade ilimitada (como `request_id` ou `user_id` diretamente como tags de série de perfil) fragmenta os segmentos e degrada a agregação visual.
+VERIFY: Abra o Grafana, acesse a seção **Drilldown > Profiles** (ou Explore Profiles), selecione o datasource do Pyroscope e confirme a renderização interativa dos gráficos de série temporal e dos flame graphs por serviço.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-caminho-leitura-query-frontend-backend-flame-graphs]] | [[grafana-provisioning-datasources-dashboards-alerting-codigo]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/ | https://github.com/grafana/pyroscope
+
+=== NOTE: 617 | pyroscope-formatos-bloco-indice-metadados-distribuicao-dados | Grafana Pyroscope v2: formato de blocos, distribuição adaptativa de dados e índice de metadados ===
+ONE_LINER: A arquitetura v2 do Pyroscope organiza os dados em formatos de bloco otimizados no object storage com distribuição adaptativa por serviço e índice de metadados centralizado no `metastore`.
+IMPORTANCE: Uma consulta comum de flame graph na interface gráfica pode abranger horas de execução de um serviço distribuído em centenas de pods; se os perfis desse serviço estivessem espalhados aleatoriamente em milhares de objetos no S3, a leitura exigiria baixar dados irrelevantes de outros serviços. Segundo a documentação oficial da arquitetura v2 do Pyroscope, o posicionamento adaptativo de dados (adaptive data placement) e o índice de metadados minimizam o número de objetos lidos por consulta.
+HOW_IT_WORKS: Durante a ingestão, os `distributors` encaminham os perfis para `segment-writers` específicos de modo a co-localizar perfis da mesma aplicação, garantindo que dados com alta probabilidade de serem consultados juntos sejam armazenados juntos. Cada `segment-writer` grava um único objeto por shard contendo os dados dos serviços daquele shard e registra a localização, o intervalo de tempo e os metadados dos serviços no `metastore`. Posteriormente, os `compaction-workers` fundem esses segmentos em blocos maiores no formato de bloco v2, atualizando o índice de metadados no `metastore` para que o `query-frontend` saiba exatamente quais blocos contêm os dados necessários antes de acionar os `query-backends`.
+EXAMPLE:
+```yaml
+# Configuração de armazenamento de blocos S3 para o Pyroscope Server
+storage:
+  backend: s3
+  s3:
+    endpoint: s3.sa-east-1.amazonaws.com
+    bucket_name: pyroscope-v2-blocks
+    secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    access_key_id: ${AWS_ACCESS_KEY_ID}
+```
+TRADE_OFFS: A co-localização de dados de múltiplos serviços de um tenant dentro de um único objeto por shard reduz drasticamente o custo de chamadas `PUT` no S3 durante a escrita, mas exige que os `compaction-workers` reorganizem e compactem esses dados rapidamente em segundo plano para evitar amplificação de leitura quando um único serviço do shard é consultado em janelas longas.
+VERIFY: Inspecione as métricas de leitura de blocos e de consultas ao `metastore` no endpoint `/metrics` do Pyroscope para confirmar que o número de objetos lidos do object storage por consulta de flame graph permanece baixo após a compactação.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-caminho-escrita-distributor-segment-writer-metastore]] | [[pyroscope-compactacao-compaction-worker-metastore-raft]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 618 | pyroscope-modos-implantacao-monolitico-microsservicos-kubernetes | Grafana Pyroscope: modos de implantação monolítico e de microsserviços em Kubernetes com Helm ===
+ONE_LINER: O Grafana Pyroscope pode ser implantado como um único binário/container em modo monolítico ou desmembrado em componentes independentes (`distributor`, `segment-writer`, `metastore`, `compaction-worker`, `query-frontend`, `query-backend`) no Kubernetes via Helm.
+IMPORTANCE: Equipes que estão iniciando com continuous profiling precisam de uma instalação simples de nó único para validação rápida, enquanto plataformas de produção que coletam perfis de milhares de containers exigem escalonamento independente entre ingestão e consulta. De acordo com a documentação do Pyroscope v2, ambos os modos compartilham o mesmo binário e a mesma arquitetura orientada a object storage, permitindo evoluir a topologia conforme a demanda cresce.
+HOW_IT_WORKS: No modo monolítico (single-node), um único processo `./pyroscope` (ou container `grafana/pyroscope` na porta `4040`) executa todos os componentes internamente, podendo usar tanto um bucket de object storage quanto o sistema de arquivos local para armazenar os arquivos de bloco. No modo de microsserviços em Kubernetes (implantado via Helm chart oficial), cada papel arquitetural é executado em pods dedicados: `distributor`, `segment-writer`, `compaction-worker`, `query-frontend` e `query-backend` rodam como Deployments stateless sem discos locais, enquanto o `metastore` roda como StatefulSet com consenso Raft, todos apontando para um bucket compartilhado no S3, GCS, Azure Storage ou Swift.
+EXAMPLE:
+```bash
+# Desempacotar e executar o binário do Pyroscope localmente na porta 4040
+tar xvf pyroscope_linux_amd64.tar.gz
+./pyroscope
+
+# Verificar os endpoints HTTP expostos na porta 4040
+curl -s http://localhost:4040/ready
+```
+TRADE_OFFS: O uso de sistema de arquivos local (`filesystem`) como armazenamento de objetos é suportado exclusivamente em implantações de nó único (single-node); tentar escalar múltiplos pods em modo de microsserviços sem configurar um object storage real (S3, GCS, Azure Blob ou Swift) impede que `segment-writers`, `compaction-workers` e `query-backends` compartilhem segmentos e blocos.
+VERIFY: No Kubernetes, verifique com `kubectl get pods` se todos os pods dos componentes do Pyroscope estão `Ready` e consulte `/ready` na porta `4040` para validar a comunicação com o `metastore` e o bucket de objetos.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-caminho-escrita-distributor-segment-writer-metastore]] | [[helm-charts-estrutura-templates-values-ciclo-vida]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope
+
+=== NOTE: 619 | pyroscope-migracao-v1-para-v2-sem-perda-dados | Grafana Pyroscope: migração da arquitetura v1 (ingesters com disco) para v2 (object storage direto) ===
+ONE_LINER: O Pyroscope 2.0 torna a arquitetura v2 o padrão e permite que implantações v1 existentes habilitem a nova arquitetura via flag e migrem para escrita direta em object storage sem perda de dados.
+IMPORTANCE: Na arquitetura v1 do Pyroscope, os perfis precisavam ser mantidos em memória e em discos locais dentro de `ingesters` stateful antes de serem enviados ao armazenamento de longo prazo, o que exigia provisionamento caro de RAM/SSD e tornava rollouts e reescalonamentos demorados. Segundo o anúncio e a documentação oficial do Pyroscope 2.0, a migração para a v2 elimina os ingesters e discos locais mantendo a continuidade dos dados históricos já coletados.
+HOW_IT_WORKS: Ao atualizar para o Pyroscope 2.0 (ou habilitar a arquitetura v2 via flag de configuração/Helm em implantações v1), o tráfego de ingestão deixa de passar por `ingesters` com WAL em disco local e passa a fluir pelo novo caminho de escrita composto por `distributor` e `segment-writer`, que gravam segmentos diretamente no bucket de object storage e registram seus metadados no `metastore`. Durante e após a transição, o sistema preserva o acesso aos perfis armazenados no bucket para que consultas históricas no Grafana Profiles Drilldown não sofram interrupção nem perda de dados.
+EXAMPLE:
+```bash
+# Verificação da versão do binário Pyroscope antes de iniciar a migração para v2
+./pyroscope -version
+
+# Consulta de saúde e métricas de armazenamento após ativar a arquitetura v2
+curl -s http://localhost:4040/metrics | grep -E "pyroscope_build_info|metastore|segment_writer"
+```
+TRADE_OFFS: Durante o processo de migração de um cluster v1 em Kubernetes via Helm para a arquitetura v2, é necessário descomissionar de forma ordenada os StatefulSets antigos de `ingester` (garantindo o flush final dos blocos pendentes em seus discos locais) e provisionar o novo componente `metastore` com consenso Raft, além de ajustar dashboards e alertas operacionais que monitoravam métricas antigas de `ingester`.
+VERIFY: Após concluir o rollout de migração via Helm, confirme que novos perfis estão sendo gravados por `segment-writers` e compactados por `compaction-workers`, e execute uma consulta no Grafana cobrindo o período anterior à migração para atestar zero perda de dados.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-compactacao-compaction-worker-metastore-raft]] | [[pyroscope-modos-implantacao-monolitico-microsservicos-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/ | https://github.com/grafana/pyroscope
+
+=== NOTE: 620 | pyroscope-casos-uso-proativo-reativo-otimizacao-cpu-memoria-io | Grafana Pyroscope: uso proativo e reativo de continuous profiling para otimizar CPU, memória e I/O ===
+ONE_LINER: O Grafana Pyroscope atende tanto casos de uso proativos (redução contínua de CPU/memória e prevenção de latência) quanto reativos (resolução de incidentes em produção com detalhe em nível de linha de código).
+IMPORTANCE: Ferramentas tradicionais de APM (traces) mostram qual requisição HTTP ou chamada RPC demorou, e métricas mostram que o uso de CPU de um pod subiu para 95%, mas nenhuma das duas revela qual função interna, expressão regular ou alocação em loop está consumindo os ciclos de processador. Conforme o README oficial do Grafana Pyroscope, o continuous profiling preenche essa lacuna fornecendo visibilidade contínua sobre o comportamento interno do código em produção.
+HOW_IT_WORKS: No fluxo **proativo**, equipes de engenharia analisam flame graphs agregados ao longo de dias ou semanas para identificar as funções mais quentes (top CPU consumers, maiores alocadores de memória heap ou pontos de bloqueio de I/O) em toda a frota, priorizando refatorações que reduzem diretamente a conta de computação em nuvem e previnem degradações de latência em horários de pico. No fluxo **reativo**, durante um incidente ativo de alta utilização de CPU, vazamento de memória (memory leak) ou contenção de threads, o engenheiro de plantão abre o Grafana Profiles Drilldown na janela exata do alerta e inspeciona o flame graph até o nível da linha de código que originou a anomalia, sem precisar reproduzir o problema localmente nem anexar um profiler manual ao container em crise.
+EXAMPLE:
+```bash
+# Expor e coletar perfis de CPU de 30 segundos de um serviço Go instrumentado para análise no Pyroscope
+curl -s "http://localhost:4040/ready"
+
+# Exemplo de verificação de endpoint pprof local que o Grafana Alloy coleta continuamente para o Pyroscope
+curl -s http://localhost:6060/debug/pprof/profile?seconds=5 > cpu.pprof
+```
+TRADE_OFFS: Para que o profiling contínuo seja seguro em produção 24x7, os profilers utilizam amostragem estatística de baixo overhead (tipicamente 1% a 2% de CPU, como 100 Hz para amostras de pilha de CPU); isso significa que funções ultrarrápidas executadas raramente podem não aparecer nas amostras estatísticas, sendo o continuous profiling ideal para gargalos sistêmicos de recursos e não um substituto para tracing distribuído de transações individuais.
+VERIFY: Compare o flame graph de um serviço antes e depois de uma otimização de código usando a funcionalidade de comparação (diff) no Grafana Profiles Drilldown e valide a queda correspondente na largura da função otimizada e na métrica de CPU do pod.
+LINKS: [[pyroscope-continuous-profiling-arquitetura-v2-object-storage]] | [[pyroscope-coleta-perfis-sdks-grafana-alloy-opentelemetry-ebpf]] | [[pyroscope-grafana-profiles-drilldown-exploracao-queryless]]
+SOURCES: https://raw.githubusercontent.com/grafana/pyroscope/main/README.md | https://grafana.com/docs/pyroscope/latest/reference-pyroscope-v2-architecture/about-pyroscope-v2-architecture.md | https://github.com/grafana/pyroscope

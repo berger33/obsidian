@@ -1,0 +1,132 @@
+SOURCES: https://raw.githubusercontent.com/secdev/scapy/master/README.md | https://raw.githubusercontent.com/secdev/scapy/master/doc/scapy/usage.rst
+
+===NOTE===
+1481|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas|Arquitetura do **Scapy (`secdev/scapy`)**: Construção e Dissecação de Pacotes de Rede em **Python**, Operador de Composição **`/`** e Sobrecarga Inteligente de Campos|Por que o **Scapy (`secdev/scapy`)** é a biblioteca e shell interativo em **Python** preferido por pesquisadores de vulnerabilidades de protocolo, engenheiros de NIDS (**Snort 3 / Suricata / Zeek**) e desenvolvedores de segurança de rede no mundo inteiro?|Como resume a documentação oficial (`usage.rst`), enquanto ferramentas de linha de comando tradicionais fazem apenas uma tarefa fixa e escondem a estrutura interna dos pacotes, o **Scapy** modela cada protocolo de rede (`Ether`, `Dot1Q`, `ARP`, `IP`, `IPv6`, `ICMP`, `TCP`, `UDP`, `DNS`, `TLS`, `Dot11`) como uma **Classe Python composicional unida pelo operador `/` (*Stacking Layers*)**!|Quando você escreve **`pkt = Ether() / IP(dst="10.0.0.1") / TCP(dport=443, flags="S")`**, a camada inferior (`Ether` e `IP`) **sobrecarrega automaticamente seus campos padrão de acordo com a camada superior** (por exemplo: `Ether.type` vira `0x0800 IPv4`, `IP.proto` vira `6 TCP`, `IP.src` é preenchido automaticamente consultando a tabela de roteamento do sistema operacional para `10.0.0.1`, e todos os *checksums* e comprimentos `len` são calculados na hora de serializar com `raw(pkt)`)!|```python
+# Construir, inspecionar os campos resolvidos (show2) e dissecar um pacote TCP/IP com payload HTTP usando a biblioteca Scapy em Python 3
+from scapy.all import Ether, IP, TCP, Raw, hexdump, raw
+
+pkt = Ether() / IP(dst="192.0.2.10", ttl=64) / TCP(dport=80, flags="S") / Raw(b"TEST")
+pkt.show2()
+hexdump(raw(pkt))
+```|Qual é a diferença fundamental entre chamar **`pkt.show()`** e **`pkt.show2()`** no Scapy documentada na tabela oficial de comandos? **`pkt.show()`** mostra o pacote antes da montagem (onde campos calculados automaticamente como `len` e `chksum` ainda aparecem como `None`), enquanto **`pkt.show2()`** monta os bytes brutos (`raw(pkt)`) e disseca o pacote montado — exibindo os **valores reais calculados de `len`, `ihl`, `dataofs` e `chksum`** exatamente como sairão na placa de rede!|Use **`ls(TCP)`** (ou `ls(IP)`, `ls(DNS)`) no shell do Scapy para listar instantaneamente todos os nomes de campos, tipos e valores default de qualquer protocolo suportado.|scapy-envio-recebimento-send-sendp-sr-sr1-srp-matching-respostas, scapy-geracao-conjuntos-pacotes-produto-cartesiano-packetlist, tcpdump-arquitetura-libpcap-bpf-kernel-zero-copy-af-packet
+
+===NOTE===
+1482|scapy-envio-recebimento-send-sendp-sr-sr1-srp-matching-respostas|A Família de Funções de Envio e Recebimento no Scapy: **`send()` vs. `sendp()`** e Pareamento Estímulo-Resposta com **`sr()`, `sr1()` e `srp()`**|Qual é a diferença exata no Scapy entre as funções que terminam sem `p` (**`send()`, `sr()`, `sr1()`**) e as funções que terminam com `p` (**`sendp()`, `srp()`, `srp1()`**), e como o Scapy sabe qual pacote recebido da rede é a resposta correspondente ao pacote que ele acabou de enviar?|A regra é cristalina: **(1) As funções SEM `p` (`send`, `sr`, `sr1`) operam na Camada 3 (Rede: `IP(...) / TCP(...)`)** — o próprio Scapy consulta a tabela de roteamento do sistema operacional e monta o cabeçalho de Camada 2 automaticamente; já **(2) As funções COM `p` (`sendp`, `srp`, `srp1`) operam na Camada 2 (Enlace: `Ether(...) / ...` ou `Dot11(...)`)**, exigindo que você construa o quadro Ethernet/802.11 explicitamente e escolha a interface `iface="eth0"`!|E o grande diferencial do **`sr(pacotes)` (*Send and Receive*)** é o paradigma **Estímulo -> Resposta (`ans, unans`)**: o Scapy envia todos os estímulos, pareia matematicamente cada pacote de resposta com o pacote que o provocou (mesmo que uma requisição `TCP` volte como um erro `ICMP Time Exceeded` de um roteador no meio do caminho!) e retorna duas listas: **`ans` (pares `(estímulo, resposta)` respondidos)** e **`unans` (estímulos sem resposta)**!|```python
+# Enviar um probe TCP SYN na Camada 3 aguardando apenas a primeira resposta (sr1) com timeout e inspecionar as flags TCP retornadas
+from scapy.all import IP, TCP, sr1
+
+resp = sr1(IP(dst="192.0.2.10") / TCP(dport=443, flags="S"), timeout=2, verbose=0)
+if resp and resp.haslayer(TCP):
+    print(f"Flags TCP recebidas: {resp[TCP].flags}")
+```|Veja na verificação `resp[TCP].flags` acima como funciona um scanner TCP SYN em 4 linhas de Scapy: se o servidor alvo responder com **`SA` (`SYN+ACK`, `0x12`)**, a porta está aberta; se responder com **`RA` (`RST+ACK`, `0x14`)**, a porta está fechada; e se `resp` for `None` (ou voltar um `ICMP` tipo 3 código 13 *Communication Administratively Prohibited*), há um firewall filtrando o pacote!|Atenção ao testar handshakes TCP manuais com o Scapy no Linux: quando o servidor remoto responde `SYN+ACK` para o seu pacote `SYN` forjado pelo Scapy, **o Kernel Linux local vê um `SYN+ACK` para um socket que o Kernel não abriu e envia automaticamente um `RST` que derruba a conexão**! Para impedir isso em laboratórios de teste TCP com Scapy, bloqueie o envio de `RST` do kernel para o IP de teste no `nftables`/`iptables` (`tcp flags rst drop`).|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, scapy-geracao-conjuntos-pacotes-produto-cartesiano-packetlist, naabu-modos-varredura-syn-scan-connect-scan-privilegios-raw-sockets
+
+===NOTE===
+1483|scapy-geracao-conjuntos-pacotes-produto-cartesiano-packetlist|Geração Declarativa de Conjuntos de Pacotes (**Produto Cartesiano de Campos**) e Manipulação de **`PacketList`** no Scapy|Como o Scapy permite gerar uma varredura de sub-rede inteira, um *traceroute* paralelo de 30 saltos em 1 segundo ou uma matriz combinatória de portas e flags TCP **sem escrever um único loop `for` explícito**?|Conforme demonstrado em `usage.rst` (*Generating sets of packets*), **qualquer campo de qualquer camada no Scapy aceita uma Lista, uma Tupla de intervalo `(inicio, fim)` ou uma Sub-rede CIDR `Net("10.0.0.0/24")`**!|Quando você cria `pacotes = IP(dst="192.0.2.0/30", ttl=(1, 15)) / TCP(dport=[80, 443, 8443])`, o Scapy define implicitamente o **Produto Cartesiano (`4 IPs x 15 TTLs x 3 Portas = 180 pacotes`)**! Ao passar esse objeto para `ans, unans = sr(pacotes)`, o Scapy desenrola o gerador, dispara os 180 pacotes e armazena os resultados em um objeto poderoso chamado **`PacketList`** (que suporta métodos analíticos como `.summary()`, `.nsummary()`, `.filter()`, `.conversations()` e `.plot()`)!|```python
+# Executar um Traceroute TCP paralelo instantaneo (enviando TTLs de 1 a 20 simultaneamente para a porta 443) usando produto cartesiano no Scapy
+from scapy.all import IP, TCP, sr
+
+ans, unans = sr(
+    IP(dst="198.51.100.10", ttl=(1, 20)) / TCP(dport=443, flags="S"),
+    timeout=2,
+    verbose=0,
+)
+for snd, rcv in ans:
+    print(f"TTL={snd.ttl:02d} -> Hop={rcv.src} (TCP={rcv.haslayer(TCP)})")
+```|Compare o **Traceroute TCP Paralelo** de 8 linhas acima com o comando `traceroute` tradicional: enquanto o `traceroute` antigo usa pacotes UDP/ICMP (que quase todos os firewalls corporativos bloqueiam!) e espera um salto responder antes de mandar o próximo, o Scapy envia os 20 pacotes **`TCP SYN` na porta `443`** com `ttl=(1, 20)` de uma só vez — atravessando firewalls de borda e mapeando toda a rota de rede em um único RTT!|Lembre-se do aviso oficial de `usage.rst`: se você chamar uma função de pacote único como `raw(a)` sobre um conjunto de pacotes sem antes desdobrá-lo com `[p for p in a]` ou `PacketList(a)`, apenas o primeiro elemento do conjunto será serializado.|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, scapy-envio-recebimento-send-sendp-sr-sr1-srp-matching-respostas, scapy-captura-sniff-filtros-bpf-lfilter-prn-offline-rdpcap-wrpcap
+
+===NOTE===
+1484|scapy-captura-sniff-filtros-bpf-lfilter-prn-offline-rdpcap-wrpcap|Captura Programática (**`sniff()`** com `filter` BPF, `lfilter` Python e Callback `prn`) e Processamento de PCAPs em Streaming (**`PcapReader` vs. `rdpcap`**) no Scapy|Como construir em poucas linhas de Python com o **Scapy** um sensor customizado de rede que analisa pacotes ao vivo na placa de rede (`sniff()`) ou processa arquivos `.pcap` gigantescos de vários Gigabytes sem estourar a memória RAM da máquina?|Para captura ao vivo (ou leitura filtrada), a função **`sniff()`** do Scapy combina: **(1) `filter="tcp port 53 or udp port 53"`** (filtro **BPF compilado no Kernel** para descartar tráfego irrelevante com custo zero de Python!); **(2) `lfilter=lambda pkt: ...`** (função booleana em Python que avalia qualquer condição profunda das camadas dissecadas pelo Scapy!); **(3) `prn=minha_funcao`** (callback executado em tempo real para cada pacote capturado!); e **(4) `store=False`** (fundamental em sensores 24x7 para **não acumular os pacotes capturados na memória RAM**!)!|E ao analisar arquivos `.pcap` salvos em disco: use **`rdpcap("pequeno.pcap")`** para carregar arquivos pequenos de uma vez na memória (e **`wrpcap("saida.pcap", pkts)`** para salvar), mas para arquivos `.pcap` de **Gigabytes**, use sempre o iterador em streaming **`with PcapReader("gigante.pcap") as pcap_reader:`**!|```python
+# Processar um arquivo PCAP grande em streaming (memoria constante O(1)) usando PcapReader do Scapy para extrair todas as consultas DNS
+from scapy.all import DNS, DNSQR, IP, PcapReader
+
+with PcapReader("./captura_rede.pcap") as reader:
+    for pkt in reader:
+        if pkt.haslayer(DNSQR) and pkt.haslayer(IP):
+            qname = pkt[DNSQR].qname.decode("utf-8", errors="ignore")
+            print(f"{pkt[IP].src} consultou DNS: {qname}")
+```|Por que usar **`store=False`** no `sniff(iface="eth0", filter="...", prn=callback, store=False)` e **`PcapReader`** na leitura de arquivos é obrigatório em ferramentas de produção? Porque `rdpcap()` e `sniff(store=True)` guardam cada objeto `Packet` dissecado em uma lista Python na RAM — em poucos milhões de pacotes, o processo consumiria dezenas de Gigabytes de memória! Com `PcapReader` e `sniff(store=False)`, o consumo de memória RAM permanece constante em poucos Megabytes mesmo processando 100 GB de tráfego!|Você também pode usar **`AsyncSniffer`** do Scapy quando quiser iniciar e parar a captura de pacotes em uma thread de background enquanto o seu script Python executa testes de integração.|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, tcpdump-arquitetura-libpcap-bpf-kernel-zero-copy-af-packet, wireshark-cli-tshark-automacao-filtros-captura-exibicao-campos-json
+
+===NOTE===
+1485|scapy-fuzzing-protocolos-fuzz-randfield-teste-robustez-parsers-ids|Fuzzing Inteligente de Protocolos de Rede com **`fuzz()`** e `VolatileValue` no Scapy: Testando a Robustez de Parsers, Firewalls e Regras IDS/IPS|Se você gerar bytes 100% aleatórios com `/dev/urandom` e enviá-los na placa de rede para testar um servidor DNS, um parser industrial Modbus ou uma regra do **Snort 3 / Suricata**, o pacote será descartado logo na primeira linha do kernel porque o comprimento do cabeçalho IP ou o checksum estará inválido!|Como fazer **Fuzzing Estruturado de Camada (`Layer-Aware Protocol Fuzzing`)** onde todos os valores dos campos da camada alvo mudam aleatoriamente a cada pacote enviado, mas **os comprimentos calculados, tipos de protocolo e checksums permanecem matematicamente válidos** para que o pacote atravesse a pilha TCP/IP e atinja em cheio o parser da aplicação?|Com a função mágica **`fuzz()`** do Scapy! Quando você envolve uma camada com **`fuzz(DNS())`** (por exemplo: `IP(dst="10.0.0.50") / UDP(dport=53) / fuzz(DNS(qd=fuzz(DNSQR())))`), o Scapy transforma todos os campos daquela camada (exceto os campos que você fixou explicitamente e os campos de cálculo automático de comprimento/checksum!) em objetos **`VolatileValue` (`RandByte`, `RandShort`, `RandString`, `RandIP`)** que sorteiam um valor novo e válido para o tipo de dado daquele campo a cada pacote emitido!|```python
+# Criar um gerador de Fuzzing de protocolo DNS sobre UDP onde IP e UDP permanecem integros e todos os campos DNS variam aleatoriamente
+from scapy.all import DNS, DNSQR, IP, UDP, fuzz
+
+pacote_fuzz = IP(dst="192.0.2.53") / UDP(dport=53) / fuzz(DNS(qd=fuzz(DNSQR())))
+for _ in range(3):
+    amostra = IP( bytes(pacote_fuzz) )
+    print(amostra.summary(), "id=", amostra[DNS].id, "opcode=", amostra[DNS].opcode)
+```|Veja no loop acima o que acontece a cada vez que `bytes(pacote_fuzz)` (ou `send(pacote_fuzz, count=100)`) é avaliado: o mesmo objeto `pacote_fuzz` produz um pacote DNS estruturalmente diferente a cada iteração (testando `opcode`, `rcode`, flags truncadas, contagens de registros e strings malformadas), com o checksum UDP recalculado perfeitamente!|Para testar se uma nova regra do **Snort 3** ou **Suricata** realmente dispara ou se pode ser burlada por variações de cabeçalho, gere um arquivo `.pcap` de teste com `wrpcap("teste_ids.pcap", [bytes(pacote_fuzz) for _ in range(500)])` e passe para `snort -r teste_ids.pcap`!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, snort-inspetores-http-inspect-js-norm-dce-smb-scada-ics, radare2-analise-diferencial-bindiff-radiff2-patch-analysis-1day
+
+===NOTE===
+1486|scapy-auditoria-camada-2-arp-vlan-8021q-dhcp-dai-port-security|Testes de Segurança de **Camada 2 (Data Link)** com Scapy: Auditoria de **Dynamic ARP Inspection (DAI)**, **802.1Q VLAN Hopping (Double Tagging)** e **DHCP Snooping**|Como usar o **Scapy** durante um Pentest Interno autorizado ou validação de arquitetura de rede para testar se os switches corporativos estão com **Dynamic ARP Inspection (`DAI`)**, **DHCP Snooping** e bloqueio de **VLAN Hopping (`802.1Q Double Tagging` / `DTP`)** devidamente configurados?|Como o Scapy constrói o quadro Ethernet byte a byte na Camada 2 (`sendp` / `srp`), você pode montar exatamente os quadros de teste de cada controle L2: **(1) ARP Discovery & Validação DAI**: construir quadros `Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="10.10.10.0/24")` com `srp()` (`arping()`) ou testar se a porta do switch bloqueia respostas ARP `is-at` (`op=2`) com IP que não consta na tabela de *DHCP Snooping Binding*.|**(2) Teste de `802.1Q Double Tagging`**: empilhar **duas tags VLAN `Dot1Q` seguidas (`Ether() / Dot1Q(vlan=1) / Dot1Q(vlan=20) / IP(...)`)** para verificar se o switch remove a VLAN nativa externa e encaminha o pacote indevidamente para a VLAN interna `20`!|```python
+# Executar descoberta ARP ultra-rapida em uma sub-rede local (srp na Camada 2) e construir um quadro de teste 802.1Q VLAN Tagging no Scapy
+from scapy.all import ARP, Dot1Q, Ether, ICMP, IP, srp
+
+ans, _ = srp(Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="192.0.2.0/24"), timeout=2, verbose=0)
+for _, rcv in ans:
+    print(rcv.sprintf(r"%Ether.src% -> %ARP.psrc%"))
+
+quadro_vlan = Ether() / Dot1Q(vlan=10) / Dot1Q(vlan=20) / IP(dst="192.0.2.99") / ICMP()
+```|Olhe o método **`rcv.sprintf(r"%Ether.src% -> %ARP.psrc%")`** no exemplo acima (documentado na tabela de métodos do `usage.rst`): o método `.sprintf()` do Scapy permite extrair e formatar campos de qualquer camada do pacote usando placeholders `%Camada.campo%` sem precisar encadear `if pkt.haslayer(...)`!|Como impedir **100% dos ataques de `802.1Q Double Tagging`, `ARP Spoofing` e `Rogue DHCP`** nos switches de acesso corporativos? **(1)** Desative negociação dinâmica de trunk (`switchport mode access` + `switchport nonegotiate`); **(2)** Nunca use a `VLAN 1` (ou qualquer VLAN de usuários) como `Native VLAN` nos links de trunk; e **(3)** Habilite **`ip dhcp snooping`** + **`ip arp inspection vlan ...`**!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, scapy-envio-recebimento-send-sendp-sr-sr1-srp-matching-respostas, bettercap-spoofing-arp-ban-fullduplex-dns-spoof-redirecionamento
+
+===NOTE===
+1487|scapy-teste-evasao-fragmentacao-ip-overlap-idps-snort-suricata|Testando Motores de Reassemblagem de **NIDS/NIPS (Snort 3 / Suricata / Firewalls)** com **`fragment()`** e Fragmentação IP/TCP Customizada no Scapy|Na Tranche 14 vimos que o inspetor `stream_tcp` e o motor de desfragmentação IP do **Snort 3** e do **Suricata** remontam pacotes fragmentados antes de aplicar as regras de assinatura. Como um engenheiro de detecção usa o **Scapy** para gerar arquivos `.pcap` de teste com **Fragmentação IP (`fragment()`), Fragmentos Fora de Ordem e Segmentos TCP Pequenos** e provar que o NIDS não sofre bypass?|O Scapy inclui a função nativa **`fragment(pkt, fragsize=...)`**, que divide qualquer pacote IP grande em uma lista de fragmentos IPv4 ajustando automaticamente a flag **`MF` (*More Fragments*)** e o campo **`frag` (*Fragment Offset* em múltiplos de 8 bytes)** de cada pedaço!|Além disso, como os fragmentos retornados por `fragment()` são objetos `Packet` normais em uma lista Python, você pode **inverter a ordem da lista (`frags[::-1]`)** ou construir fragmentos sobrepostos manualmente para verificar se a política de reassemblagem de SO (`linux` vs. `windows` vs. `bsd`) do seu NIDS/Firewall reconstrói exatamente o mesmo payload que o servidor de destino!|```python
+# Fragmentar um pacote IP/ICMP grande em pedacos de 16 bytes com fragment(), inverter a ordem de envio e salvar em PCAP para testar o Snort 3 / Suricata
+from scapy.all import ICMP, IP, Raw, fragment, wrpcap
+
+pkt_original = IP(dst="192.0.2.10") / ICMP() / Raw(b"A" * 64)
+lista_fragmentos = fragment(pkt_original, fragsize=16)
+wrpcap("./teste_fragmentos_fora_de_ordem.pcap", lista_fragmentos[::-1])
+for f in lista_fragmentos:
+    print(f.summary(), "flags=", f.flags, "offset=", f.frag)
+```|Por que o campo `frag` (*Fragment Offset*) impresso pelo loop acima avança de `0`, `2`, `4`, `6` quando o `fragsize=16`? Porque no cabeçalho IPv4 (`RFC 791`), o campo *Fragment Offset* tem 13 bits e é expresso em **unidades de 8 octetos (8 bytes)**: portanto, `offset = 2` significa `2 x 8 = 16 bytes`!|Execute o seu sensor **Snort 3** ou **Suricata** contra o arquivo `./teste_fragmentos_fora_de_ordem.pcap` gerado acima para validar que as regras de detecção disparam normalmente mesmo quando os fragmentos chegam em ordem reversa!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, snort-inspetores-http-inspect-js-norm-dce-smb-scada-ics, suricata-evasao-ids-fragmentacao-ip-overlap-tcp-reassembly-politicas
+
+===NOTE===
+1488|scapy-camadas-avancadas-tls-http2-80211-dot11-iot-scada-modbus|Submódulos Avançados do Scapy (`load_layer` / `load_contrib`): Dissecando **TLS 1.3 (`scapy.layers.tls`)**, **HTTP/2**, **Wi-Fi `Dot11`/`RadioTap`** e **Protocolos Industriais (`modbus`, `s7comm`)**|Você sabia que além de TCP/IP básico, o repositório oficial do **Scapy** traz implementações completas de **TLS 1.2/1.3 (incluindo handshakes, certificados X.509 e descriptografia com `NSS Key Log`!)**, **HTTP/2 (`scapy.contrib.http2`)**, **Quadros Sem Fio 802.11 (`Dot11`, `RadioTap`, `Dot11Beacon`, `Dot11Deauth`, `EAPOL`)** e dezenas de protocolos industriais **OT/SCADA (`modbus`, `pnio`, `opcua`, `can`, `isotp`)**?|Para manter a inicialização do Scapy rápida, as camadas especializadas e contribuições ficam organizadas sob **`load_layer("tls")`** (ou `load_layer("http")`) e **`load_contrib("modbus")`** (ou `load_contrib("http2")`, `load_contrib("bgp")`, `load_contrib("gtp")` para redes móveis 4G/5G)!|Uma vez carregado `load_layer("tls")`, o Scapy disseca nativamente mensagens `TLSClientHello`, extensões `TLS_Ext_ServerName` (`SNI`), `TLS_Ext_SupportedGroups` (incluindo grupos pós-quânticos!), `TLS_Ext_ALPN` e cadeias de certificados `Cert`!|```python
+# Carregar a camada TLS oficial do Scapy (load_layer("tls")) e construir um registro TLSClientHello com extensao SNI para auditoria de servidores
+from scapy.all import load_layer
+
+load_layer("tls")
+from scapy.layers.tls.all import TLS, TLSClientHello, TLS_Ext_ServerName, ServerName
+
+ch = TLS(msg=[TLSClientHello(ext=[TLS_Ext_ServerName(servernames=[ServerName(servername=b"api.exemplo.br")])])])
+ch.show2()
+```|Veja como é simples usar **`load_layer("tls")`** no Scapy para criar testes automatizados de conformidade TLS ou verificar como um servidor reage a extensões `TLSClientHello` específicas (como `Encrypted Client Hello`, `ALPN` customizado ou *cipher suites* específicas) sem depender de bibliotecas externas rígidas!|Use **`list_contrib()`** no shell do Scapy para pesquisar os mais de 150 protocolos industriais, automotivos (`CAN bus` / `UDS`), telecom (`GTP` / `PFCP`) e de roteamento (`BGP` / `OSPF` / `MPLS`) disponíveis em `scapy.contrib`!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, rustls-privacidade-encrypted-client-hello-ech-rfc9849-sni-alpn, aircrack-arquitetura-suite-auditoria-wifi-80211-monitor-injection
+
+===NOTE===
+1489|scapy-automaton-maquinas-estado-protocolos-customizados-pipes|Máquinas de Estado de Protocolo (**`Automaton` — `@ATMT.state`, `@ATMT.receive_condition`**) e **`Pipetool`** no Scapy: Implementando Clientes, Servidores e Honeypots|Quando você precisa implementar um protocolo que exige **múltiplos passos com estado e temporizadores** (por exemplo: um cliente/servidor de handshake customizado, um emulador de protocolo industrial para um Honeypot ou um testador de máquina de estados TLS/DHCP/EAPOL), usar apenas `sr1()` sequencial fica complexo se pacotes chegarem fora de ordem ou sofrerem timeout!|Como o **Scapy** permite programar **Máquinas de Estado Finitas Orientadas a Eventos de Rede e Timeouts** de forma limpa e declarativa em Python?|Através da classe nativa **`Automaton` (`from scapy.automaton import Automaton, ATMT`)**! Em uma subclasse de `Automaton`, você decora métodos com **`@ATMT.state(initial=1)`** (estados da máquina), **`@ATMT.receive_condition(ESTADO)`** (transições disparadas quando um pacote específico chega da rede!), **`@ATMT.timeout(ESTADO, segundos)`** (transições automáticas se o par remoto demorar a responder!) e **`@ATMT.action(...)`** (ações executadas durante a transição)!|```python
+# Definir a estrutura declarativa de uma Maquina de Estados de Protocolo (Automaton) no Scapy com estados, condicao de recebimento e timeout
+from scapy.automaton import Automaton, ATMT
+
+class MonitorHandshake(Automaton):
+    @ATMT.state(initial=1)
+    def AGUARDANDO(self):
+        pass
+
+    @ATMT.timeout(AGUARDANDO, 5)
+    def expirar_espera(self):
+        raise self.FIM()
+
+    @ATMT.state(final=1)
+    def FIM(self):
+        return "Ciclo concluido"
+```|Além de rodar diretamente na placa de rede, toda subclasse de **`Automaton`** do Scapy pode gerar automaticamente o **Grafo Visual Graphviz da sua Máquina de Estados** chamando ` MonitorHandshake.graph()` — desenhando todas as bolhas de estados e as setas de transição de pacotes e timeouts para a documentação da sua equipe!|Para fluxos contínuos de transformação de pacotes (como ler de um PCAP, filtrar, modificar um cabeçalho IP e injetar em uma interface TAP ou Wireshark ao vivo), o Scapy também inclui o motor **`PipeEngine` (`Scapy Pipetool`)**!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, scapy-definicao-protocolos-customizados-packet-fieldsdesc-dissector, opencanary-arquitetura-honeypot-modular-python-twisted-protocolos
+
+===NOTE===
+1490|scapy-definicao-protocolos-customizados-packet-fieldsdesc-dissector|Criando Dissecadores de **Protocolos Proprietários ou Binários Customizados** em 10 Linhas no Scapy: Subclasse **`Packet`**, **`fields_desc`** e **`bind_layers()`**|Durante uma engenharia reversa de firmware IoT, auditoria de jogo online, análise de protocolo industrial ou investigação de um malware de C2 que usa um **protocolo binário proprietário sobre TCP/UDP** (por exemplo: `Magic (4 bytes) + Opcode (1 byte) + Tamanho (2 bytes) + Payload`), no Wireshark ou `tcpdump` o pacote inteiro aparece apenas como uma sopa hexadecimal genérica (`Raw Data`)!|Como ensinar o **Scapy** a dissecar e construir esse protocolo proprietário em **menos de 15 linhas de Python**?|Criando uma subclasse de **`Packet`**, declarando a lista **`fields_desc`** com os tipos de campos ricos do Scapy (`XIntField`, `ByteEnumField`, `FieldLenField`, `StrLenField`, `BitField`, `ConditionalField`) e conectando-a à porta TCP/UDP com **`bind_layers(UDP, MeuProtocolo, dport=9999)`**!|```python
+# Definir um dissecador e construtor completo para um protocolo binario customizado (Magic + Opcode + Tamanho auto-calculado + Payload) no Scapy
+from scapy.all import ByteEnumField, FieldLenField, Packet, StrLenField, UDP, XIntField, bind_layers
+
+class ProtoCustom(Packet):
+    name = "ProtocoloInternoIoT"
+    fields_desc = [
+        XIntField("magic", 0xCAFEBABE),
+        ByteEnumField("opcode", 1, {1: "PING", 2: "AUTH", 3: "DATA"}),
+        FieldLenField("tam", None, length_of="dados", fmt="H"),
+        StrLenField("dados", b"", length_from=lambda pkt: pkt.tam),
+    ]
+
+bind_layers(UDP, ProtoCustom, dport=9999)
+pkt = UDP(sport=12345, dport=9999) / ProtoCustom(opcode="AUTH", dados=b"token123")
+pkt.show2()
+```|Olhe a inteligência da dupla **`FieldLenField("tam", None, length_of="dados", fmt="H")`** e **`StrLenField("dados", b"", length_from=lambda pkt: pkt.tam)`** na classe `ProtoCustom` acima: **(1) Na Construção**: quando você passa `dados=b"token123"` (`8 bytes`) deixando `tam=None`, o `FieldLenField` calcula e preenche `tam = 8` automaticamente!; e **(2) Na Dissecação (`UDP(bytes_da_rede)`)**: o `StrLenField` lê o valor de `pkt.tam` que veio da rede e recorta exatamente `tam` bytes para o campo `dados`, deixando o resto do pacote para a próxima camada!|E como usamos **`bind_layers(UDP, ProtoCustom, dport=9999)`**, qualquer captura aberta com `rdpcap()` ou `sniff()` no Scapy já reconhecerá e decodificará automaticamente todos os pacotes da porta `9999` como `ProtocoloInternoIoT` (`opcode = AUTH`, `tam = 8`)!|scapy-arquitetura-manipulacao-pacotes-python-operador-composicao-camadas, scapy-fuzzing-protocolos-fuzz-randfield-teste-robustez-parsers-ids, wireshark-arquitetura-captura-dumpcap-libpcap-dissectors-epan

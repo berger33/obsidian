@@ -1,0 +1,160 @@
+=== NOTE: 901 | vault-gerenciamento-centralizado-segredos-arquitetura-acesso | HashiCorp Vault: gerenciamento centralizado de segredos, controle de acesso e trilha de auditoria ===
+ONE_LINER: O HashiCorp Vault (`hashicorp/vault`) é uma ferramenta para acesso seguro a segredos (chaves de API, senhas de bancos de dados, certificados e chaves criptográficas) que oferece uma interface unificada, controle de acesso estrito baseado em políticas e registro detalhado de auditoria.
+IMPORTANCE: Em arquiteturas modernas distribuídas, credenciais acabam espalhadas em variáveis de ambiente, arquivos de configuração e pipelines de CI/CD de forma específica para cada plataforma, tornando quase impossível responder quem acessou qual segredo, rotacionar chaves ou revogar credenciais após um incidente. Segundo o README oficial e a página `What is Vault?` (`developer.hashicorp.com/vault/docs/about-vault/what-is-vault`), o Vault centraliza e endurece o gerenciamento de segredos on-premises, em nuvem ou em ambientes híbridos.
+HOW_IT_WORKS: Conforme documenta o fluxo oficial em `What is Vault?`: (1) os clientes autenticam-se no Vault utilizando tokens gerados manualmente, protocolos como LDAP/OIDC ou provedores de nuvem/orquestração como AWS, Azure e Kubernetes; (2) o Vault valida a identidade e gera um **access token** vinculado a uma entidade interna e às políticas de segurança aplicáveis; (3) o cliente interage com segredos e operações de criptografia através de caminhos de recursos (**resource paths**) montados no Vault; (4) o Vault autoriza a requisição contra as políticas definidas para aquele caminho e concede ou nega o acesso; e (5) durante todo o processo, o Vault grava logs de auditoria detalhados independentemente de a autenticação ou autorização ter tido sucesso ou falhado.
+EXAMPLE:
+```bash
+# Iniciar um servidor Vault local em modo dev para experimentação e verificar o status do cluster
+vault server -dev -dev-root-token-id="dev-only-token"
+export VAULT_ADDR="http://127.0.0.1:8200"
+vault status
+```
+TRADE_OFFS: Como ressalta a própria documentação oficial (`When should I not use Vault?`), o Vault é extremamente robusto e flexível, mas planejar, implantar e operar um cluster Vault auto-hospedado em alta disponibilidade exige disciplina operacional (gerenciamento de unseal, backups de storage e políticas); para equipes com necessidades iniciais ou que desejam evitar o overhead operacional de manter servidores, a documentação sugere avaliar o serviço gerenciado `HCP Vault Dedicated`.
+VERIFY: Execute `vault status` apontando para `VAULT_ADDR` e confirme que o servidor responde informando o estado de inicialização (`Initialized: true`), o estado de selamento (`Sealed: false`) e o tipo de armazenamento (`Storage Type`).
+LINKS: [[vault-armazenamento-criptografado-integrated-storage-raft-backends]] | [[vault-segredos-dinamicos-leases-renovacao-revogacao]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 902 | vault-armazenamento-criptografado-integrated-storage-raft-backends | HashiCorp Vault: criptografia em repouso (barreira de segurança) e backends de armazenamento (Integrated Storage Raft) ===
+ONE_LINER: O Vault criptografa todos os dados antes de gravá-los no armazenamento persistente — de modo que obter acesso bruto ao disco ou banco não revela os segredos — e recomenda o **Integrated Storage (Raft)** como backend padrão com suporte a alta disponibilidade (HA).
+IMPORTANCE: Em muitos sistemas tradicionais, um invasor que consiga ler um snapshot de disco ou um dump do banco de dados consegue extrair os segredos armazenados. No Vault, a barreira criptográfica separa o motor do Vault do backend de armazenamento físico, e a escolha correta do backend determina se o cluster suporta alta disponibilidade nativa e backups integrados.
+HOW_IT_WORKS: Conforme o README oficial (`Secure Secret Storage`) e a tabela `Where does Vault store data?` em `What is Vault?`, o Vault suporta quatro categorias de armazenamento durável: (1) **Integrated Storage (`raft`)**: opção embutida recomendada para a maioria das implantações de produção, que criptografa e replica os dados entre os nós de um cluster Vault via protocolo de consenso Raft (com suporte a HA: `YES` e snapshots nativos); (2) **File system (`file`)**: persiste os dados criptografados no sistema de arquivos local da máquina (sem suporte a HA: `NO`); (3) **External** (como Consul, AWS, Azure, Google Cloud ou MySQL): sistemas externos de terceiros (HA: `MAYBE`, dependendo do backend); e (4) **In-memory (`inmem`)**: mantém tudo em memória RAM apenas para desenvolvimento (`-dev`) e testes (HA: `NO`).
+EXAMPLE:
+```bash
+# Gerar um snapshot consistente de backup do Integrated Storage (Raft) em um cluster Vault de produção
+vault operator raft snapshot save /tmp/vault-raft-backup.snap
+vault operator raft list-peers
+```
+TRADE_OFFS: Conforme destaca a documentação oficial, o **Integrated Storage (Raft)** é preferido frente a sistemas de armazenamento externos porque suporta fluxos nativos de backup/restore, alta disponibilidade e recursos de replicação sem depender de um segundo sistema distribuído externo onde o Vault não pode verificar diretamente a segurança e a rastreabilidade de acesso aos dados subjacentes.
+VERIFY: Execute `vault operator raft list-peers` em um cluster com Integrated Storage para verificar o líder (`leader`), os seguidores (`follower`) e a saúde do quórum Raft.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-segredos-dinamicos-leases-renovacao-revogacao]] | [[talos-bootstrap-etcd-gerenciamento-control-plane-ha]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 903 | vault-segredos-dinamicos-leases-renovacao-revogacao | HashiCorp Vault: geração de Segredos Dinâmicos sob demanda, Leases, Renovação e Revogação em árvore ===
+ONE_LINER: Com **Dynamic Secrets**, o Vault gera credenciais efêmeras sob demanda (ex.: chaves IAM da AWS ou usuários SQL em bancos de dados) associadas a um **lease** com tempo de vida (TTL), revogando-as automaticamente ao expirar ou imediatamente em árvore em caso de intrusão.
+IMPORTANCE: Quando 20 instâncias de uma aplicação compartilham a mesma senha estática de banco de dados PostgreSQL por meses, vazar um único log compromete todo o banco e descobrir qual instância fez determinada query é impossível. Segundo o README oficial do Vault (`Dynamic Secrets`, `Leasing and Renewal` e `Revocation`), credenciais dinâmicas com leases curtos eliminam credenciais compartilhadas de longa duração.
+HOW_IT_WORKS: Quando uma aplicação precisa acessar um recurso (como um bucket S3 na AWS ou um banco de dados SQL), ela solicita credenciais ao caminho do secrets engine no Vault: (1) o Vault cria em tempo real um par de chaves/usuário exclusivo no sistema alvo com as permissões exatas e retorna a credencial acompanhada de um **`lease_id`** e **`lease_duration`**; (2) enquanto estiver em uso ativo, o cliente pode estender o prazo chamando a API embutida de renovação (**`vault lease renew <lease_id>`**) até o `max_ttl`; e (3) quando o lease expira — ou quando um operador aciona **`vault lease revoke`** — o Vault conecta-se ao banco/provedor de nuvem e exclui aquela credencial temporária imediatamente, suportando inclusive revogação em árvore (`-prefix`) de todos os segredos lidos por um usuário ou de um tipo inteiro.
+EXAMPLE:
+```bash
+# Ler credenciais dinâmicas de um papel de banco de dados, renovar o lease e revogar toda uma árvore de leases por prefixo
+vault read database/creds/readonly-app
+vault lease renew database/creds/readonly-app/2c9a8f1b-exemplo
+vault lease revoke -prefix database/creds/readonly-app
+```
+TRADE_OFFS: Ao adotar segredos dinâmicos com TTL curto em aplicações que mantêm pools de conexões de longa duração com o banco de dados, a aplicação (ou um agente auxiliar como o Vault Agent / External Secrets) precisa renovar o lease antes do vencimento ou recriar conexões do pool quando as credenciais forem rotacionadas, caso contrário as conexões ativas ou novas falharão quando o Vault apagar o usuário temporário no banco ao fim do lease.
+VERIFY: Gere uma credencial dinâmica no Vault, anote o `lease_id` retornado, execute `vault lease revoke <lease_id>` e tente autenticar no banco de dados com a credencial revogada para confirmar que o usuário já foi removido pelo Vault.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-criptografia-como-servico-transit-data-encryption]] | [[bytebase-controle-acesso-rbac-aprovacao-jit-data-masking]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 904 | vault-criptografia-como-servico-transit-data-encryption | HashiCorp Vault: criptografia de dados como serviço (Encryption as a Service) sem armazenar os dados no Vault ===
+ONE_LINER: A capacidade de **Data Encryption** (implementada pelo motor `transit`) permite que o Vault criptografe e descriptografe dados em trânsito via API sem armazená-los no Vault, delegando à equipe de segurança o controle dos parâmetros criptográficos e da rotação de chaves.
+IMPORTANCE: Quando desenvolvedores precisam criptografar colunas sensíveis (como CPF, números de documentos ou tokens financeiros) antes de gravar em um banco SQL convencional, implementar criptografia manualmente em cada linguagem de programação frequentemente leva a escolhas inseguras de algoritmos/IVs e ao problema de onde guardar e como rotacionar a chave de criptografia na aplicação. O README oficial (`Data Encryption`) destaca como o Vault resolve esse problema.
+HOW_IT_WORKS: A equipe de segurança habilita o motor de criptografia (`vault secrets enable transit`) e cria uma chave nomeada (`vault write -f transit/keys/pagamentos-key`) definindo o algoritmo e políticas de rotação. Quando a aplicação precisa proteger um dado sensível antes de fazer `INSERT` no seu próprio banco SQL, ela envia o texto em base64 para **`transit/encrypt/pagamentos-key`** e recebe de volta o texto cifrado prefixado (`vault:v1:...`), gravando esse ciphertext no banco SQL. O Vault **nunca armazena o dado da aplicação**: ele apenas executa a operação criptográfica em memória e retorna o resultado; para ler o dado depois, a aplicação envia o ciphertext para **`transit/decrypt/pagamentos-key`**.
+EXAMPLE:
+```bash
+# Habilitar o motor transit, criar uma chave de criptografia e cifrar um dado sem armazená-lo no Vault
+vault secrets enable transit
+vault write -f transit/keys/app-pii-key
+vault write transit/encrypt/app-pii-key plaintext=$(echo -n "dado-sensivel-123" | base64)
+```
+TRADE_OFFS: Como toda operação de `encrypt` e `decrypt` faz uma chamada de rede HTTP/HTTPS para o cluster Vault, cifrar milhares de linhas individualmente dentro de um loop em uma única requisição web adicionará latência de rede; para alto volume, utilize o suporte a **batch input** (`batch_input` na API do `transit`) ou envelope encryption (gerando uma Data Key local via `transit/datakey/plaintext/<key>`).
+VERIFY: Execute `vault write -f transit/keys/app-pii-key/rotate` para rotacionar a chave para a versão `v2` e confirme que textos antigos (`vault:v1:...`) continuam sendo descriptografados normalmente enquanto novos textos saem com `vault:v2:...`.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-ecossistema-plugins-auth-secrets-database]] | [[sops-editor-arquivos-criptografados-yaml-json-env-ini]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 905 | vault-ecossistema-plugins-auth-secrets-database | HashiCorp Vault: arquitetura modular de plugins (Authentication, General Secrets e Database Plugins) ===
+ONE_LINER: Conforme a documentação oficial `What is Vault?`, a arquitetura do Vault é construída em torno de um ecossistema modular de **plugins** divididos em três categorias principais: plugins de autenticação (`auth`), plugins gerais de segredos (`secret`) e plugins de bancos de dados (`database`).
+IMPORTANCE: Nenhuma organização possui exatamente a mesma pilha tecnológica: uma empresa autentica workloads via Kubernetes ServiceAccounts e gera credenciais no PostgreSQL, enquanto outra usa AWS IAM e gerencia certificados PKI internos. Ao isolar cada integração em plugins montados em caminhos de URL (`paths`), o núcleo do Vault permanece enxuto e extensível.
+HOW_IT_WORKS: Conforme explica a seção `What is a plugin?` em `developer.hashicorp.com/vault/docs/about-vault/what-is-vault`, os plugins atuam como blocos de construção que controlam como os dados fluem e como os clientes os acessam: (1) **Authentication plugins (`vault auth enable <tipo>`)**: tratam fluxos de autenticação e vinculam identidades externas (Kubernetes, OIDC/JWT, AppRole, AWS, Azure, LDAP, GitHub) a tokens e políticas do Vault; (2) **General secret plugins (`vault secrets enable <tipo>`)**: geram, armazenam, gerenciam ou transformam informações sensíveis (KV v1/v2, PKI/certificados, Transit, SSH, AWS/GCP/Azure); e (3) **Database secret plugins**: gerenciam credenciais dinâmicas e rotação de senhas para bancos de dados relacionais e NoSQL.
+EXAMPLE:
+```bash
+# Listar os motores de segredos e os métodos de autenticação atualmente montados e ativos no Vault
+vault secrets list -detailed
+vault auth list -detailed
+```
+TRADE_OFFS: Cada plugin montado no Vault vive isolado dentro do seu próprio caminho de montagem (por exemplo, `secret/`, `pki/`, `database/`) — um segredo ou configuração criado em uma montagem não é visível para outro plugin; ao registrar plugins customizados externos no catálogo do Vault, o administrador deve registrar explicitamente o hash **`sha256`** do binário do plugin por segurança.
+VERIFY: Execute `vault secrets list` e `vault auth list` para auditar todos os plugins ativos, seus caminhos de montagem (`Path`) e suas configurações de TTL padrão.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-politicas-autorizacao-hcl-caminhos-least-privilege]] | [[vault-bibliotecas-go-api-sdk-desenvolvimento-testes]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 906 | vault-politicas-autorizacao-hcl-caminhos-least-privilege | HashiCorp Vault: autorização baseada em caminhos (Path-Based Policies em HCL) e princípio do privilégio mínimo ===
+ONE_LINER: No Vault, toda operação (mesmo após autenticação bem-sucedida) é negada por padrão (`default deny`) até que uma **Policy** associada ao token conceda explicitamente as capacidades (`create`, `read`, `update`, `delete`, `list`, `sudo`) sobre o caminho de recurso (`path`) solicitado.
+IMPORTANCE: Em um cofre centralizado que guarda segredos de dezenas de equipes e ambientes (`dev`, `staging`, `prod`), autenticar um pod ou engenheiro não significa dar acesso a todos os segredos do cluster: cada aplicação deve conseguir ler exclusivamente o seu próprio prefixo de segredos. A seção `Who can access data in Vault?` da documentação oficial descreve esse modelo de autorização por caminhos.
+HOW_IT_WORKS: Como tudo no Vault é exposto através de uma hierarquia de caminhos (`paths`, como `secret/data/pagamentos/prod` ou `database/creds/pagamentos-ro`), as políticas do Vault são escritas em **HCL (HashiCorp Configuration Language)** ou JSON associando padrões de caminhos (com suporte a wildcards `*` e parâmetros de identidade) a uma lista de **`capabilities`**: `create`, `read`, `update`, `patch`, `delete`, `list`, `sudo` e `deny`. Quando o cliente faz uma requisição com seu access token, o Vault avalia todas as políticas vinculadas ao token/entidade contra o `path` solicitado (onde `deny` sempre prevalece sobre qualquer permissão).
+EXAMPLE:
+```hcl
+# Exemplo de política HCL (pagamentos-prod-ro.hcl) concedendo leitura apenas aos segredos da aplicação pagamentos
+path "secret/data/pagamentos/prod/*" {
+  capabilities = ["read"]
+}
+
+path "database/creds/pagamentos-readonly" {
+  capabilities = ["read"]
+}
+```
+TRADE_OFFS: No motor **KV Secrets Engine v2** (versionado), os dados reais de um segredo ficam no subcaminho **`<mount>/data/<caminho>`** enquanto a listagem e os metadados de versões ficam em **`<mount>/metadata/<caminho>`**; um erro clássico ao escrever políticas HCL para o KV v2 é conceder permissão em `secret/pagamentos/*` em vez de `secret/data/pagamentos/*`, o que resulta em erro `403 permission denied` quando a aplicação tenta ler o segredo.
+VERIFY: Após carregar uma política com `vault policy write pagamentos-ro pagamentos-prod-ro.hcl`, teste as permissões efetivas usando `vault token capabilities <token> secret/data/pagamentos/prod/db`.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-ecossistema-plugins-auth-secrets-database]] | [[externalsecrets-seguranca-rbac-least-privilege-multi-controller]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 907 | vault-motor-segredos-estaticos-kv-v2-versionamento-check-and-set | HashiCorp Vault: gerenciamento de segredos estáticos (KV Secrets Engine v2), versionamento e Check-and-Set (CAS) ===
+ONE_LINER: Para segredos estáticos (chaves de API de terceiros, webhooks e senhas externas que não suportam geração dinâmica), o motor **KV v2** do Vault mantém histórico de versões, exclusão reversível (`delete`/`undelete`), destruição permanente (`destroy`) e proteção contra sobrescrita concorrente (`cas`).
+IMPORTANCE: Embora segredos dinâmicos sejam ideais para bancos de dados e nuvens próprias, toda empresa precisa armazenar chaves estáticas emitidas por parceiros externos (Stripe, Twilio, SendGrid, tokens OAuth). Se alguém sobrescrever acidentalmente uma chave estática em produção sem versionamento, a aplicação cai imediatamente sem possibilidade de rollback rápido.
+HOW_IT_WORKS: Com o motor KV v2 habilitado (`vault secrets enable -version=2 kv`), cada escrita via **`vault kv put kv/minha-app api_key=...`** cria uma nova versão numerada (`version 1`, `version 2`, ... up to `max_versions`, padrão 10) em vez de sobrescrever os bytes anteriores. O operador pode: (1) ler a versão mais recente ou uma versão específica (`vault kv get -version=1 kv/minha-app`); (2) fazer **rollback** (`vault kv rollback -version=1 kv/minha-app`); (3) exigir **Check-And-Set (`-cas=<versão>`)** na escrita para garantir que outro processo não alterou o segredo no meio tempo; e (4) realizar soft-delete (`vault kv delete`, recuperável com `vault kv undelete`) ou destruir criptograficamente os bytes de uma versão (`vault kv destroy`).
+EXAMPLE:
+```bash
+# Gravar um segredo estático no KV v2 exigindo Check-And-Set (-cas=0 para criação inicial) e inspecionar metadados
+vault kv put -cas=0 secret/pagamentos/stripe webhook_secret="whsec_exemplo123"
+vault kv metadata get secret/pagamentos/stripe
+```
+TRADE_OFFS: Atenção à diferença entre `vault kv delete` e `vault kv destroy`: o comando `vault kv delete` faz apenas uma exclusão lógica (marcando `deletion_time` nos metadados), permitindo que qualquer pessoa com permissão de `undelete` restaure o valor; se uma chave vazou ou precisa ser expurgada definitivamente por conformidade regulatória, utilize **`vault kv destroy -versions=1,2 <caminho>`** (ou `vault kv metadata delete` para apagar todas as versões e o histórico).
+VERIFY: Execute `vault kv metadata get secret/pagamentos/stripe` para verificar o número da versão atual (`current_version`), o histórico de timestamps de criação e se `cas_required` está ativo.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-politicas-autorizacao-hcl-caminhos-least-privilege]] | [[externalsecrets-modelo-recursos-secretstore-externalsecret-clustersecretstore]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 908 | vault-gerenciamento-certificados-pki-x509-ca-interna | HashiCorp Vault: emissão automatizada de certificados X.509 de curta duração como Autoridade Certificadora (PKI) ===
+ONE_LINER: Conforme destacado em `Why should I use Vault?` (`Manage certificates`), o Vault pode atuar como uma Autoridade Certificadora (CA) intermediária interna via motor **PKI**, gerando certificados TLS X.509 e chaves privadas sob demanda com TTL curto e sem fila manual de CSR.
+IMPORTANCE: Em arquiteturas Zero Trust e mTLS entre microsserviços, emitir certificados manualmente com validade de 1 ano e copiá-los em Secrets estáticos leva a quedas catastróficas quando alguém esquece de renovar um certificado vencido; além disso, revogar certificados de longa duração exige distribuir listas CRL pesadas. Com o motor PKI do Vault, os certificados podem durar poucas horas ou dias e ser renovados automaticamente.
+HOW_IT_WORKS: A equipe de segurança habilita o motor PKI (`vault secrets enable pki`), configura uma CA Intermediária assinada pela CA Raiz offline da organização e define um papel (`vault write pki/roles/servico-interno allowed_domains="interno.empresa.com" allow_subdomains=true max_ttl="72h"`). Quando um workload (ou o `cert-manager` no Kubernetes integrado ao Issuer do Vault) solicita um certificado em **`vault write pki/issue/servico-interno common_name="api.interno.empresa.com"`**, o Vault gera o par de chaves, assina o certificado X.509 instantaneamente e o devolve na resposta da API.
+EXAMPLE:
+```bash
+# Solicitar a emissão instantânea de um certificado TLS X.509 de curta duração (24h) para um serviço interno
+vault write pki/issue/servico-interno \
+  common_name="checkout.interno.empresa.com" \
+  ttl="24h"
+```
+TRADE_OFFS: Quando o motor PKI do Vault emite milhares de certificados de curtíssima duração (por exemplo, a cada poucas horas para centenas de pods) com armazenamento padrão de certificados emitidos (`no_store=false`), o estado no storage Raft do Vault crescerá rapidamente com certificados expirados; para evitar inchaço do storage, habilite `no_store=true` no role PKI (quando revogação individual por número de série não for necessária) e configure a limpeza periódica (`vault write pki/tidy ...`).
+VERIFY: Emita um certificado de teste e inspecione a cadeia e a data de expiração com `vault write -field=certificate pki/issue/servico-interno common_name="teste.interno.empresa.com" | openssl x509 -noout -text`.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-segredos-dinamicos-leases-renovacao-revogacao]] | [[k3s-gerenciamento-certificados-tls-rotacao-operacoes]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 909 | vault-integracao-kubernetes-auth-injector-csi-eso | HashiCorp Vault: padrões de integração com Kubernetes (Kubernetes Auth, Vault Agent Injector, CSI e ESO) ===
+ONE_LINER: Em clusters Kubernetes, os workloads autenticam-se no Vault apresentando o JWT de sua `ServiceAccount` ao método de autenticação **Kubernetes Auth**, podendo consumir segredos via **External Secrets Operator (ESO)**, **Vault Agent Sidecar Injector**, **Vault Secrets Operator (VSO)** ou **Secrets Store CSI Driver**.
+IMPORTANCE: Para que os pods no Kubernetes consigam buscar segredos no Vault sem precisar de um token estático do Vault pré-gravado na imagem ou no manifesto YAML (o problema do "secret zero"), o Vault precisa confiar na identidade nativa fornecida pelo API Server do Kubernetes.
+HOW_IT_WORKS: O administrador habilita `vault auth enable kubernetes`, configura o endereço e o certificado do API Server do Kubernetes e cria papéis (`vault write auth/kubernetes/role/minha-app bound_service_account_names=app-sa bound_service_account_namespaces=prod policies=pagamentos-ro ttl=1h`). No momento em que o pod inicia no cluster, o JWT projetado pelo Kubernetes para a ServiceAccount `app-sa` no namespace `prod` é enviado ao endpoint **`auth/kubernetes/login`**: o Vault valida a assinatura do JWT na API `TokenReview` do Kubernetes e devolve um token do Vault com a política `pagamentos-ro`, permitindo que o ESO sincronize `Secret`s ou que o Vault Agent injete templates no pod em `/vault/secrets/`.
+EXAMPLE:
+```bash
+# Configurar um papel no método de autenticação Kubernetes do Vault vinculando ServiceAccount e Namespace a uma Policy
+vault write auth/kubernetes/role/orders-service \
+  bound_service_account_names=orders-sa \
+  bound_service_account_namespaces=production \
+  policies=orders-prod-policy \
+  ttl=1h
+```
+TRADE_OFFS: Enquanto o **External Secrets Operator (ESO)** e o **Vault Secrets Operator (VSO)** sincronizam segredos do Vault para objetos `Kind=Secret` nativos do Kubernetes (permitindo que as aplicações continuem lendo variáveis de ambiente ou volumes padrão sem saber que o Vault existe), o **Vault Agent Sidecar Injector** renderiza os segredos diretamente em um volume compartilhado em memória (`tmpfs` em `/vault/secrets/`) sem nunca gravar um `Secret` no `etcd` do Kubernetes, ao custo de adicionar um container sidecar em cada pod.
+VERIFY: De dentro de um pod usando a ServiceAccount `orders-sa`, envie o token `/var/run/secrets/kubernetes.io/serviceaccount/token` para `v1/auth/kubernetes/login` e confirme o recebimento do `client_token` do Vault.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[externalsecrets-operador-kubernetes-sincronizacao-segredos-externos]] | [[externalsecrets-modelo-recursos-secretstore-externalsecret-clustersecretstore]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault
+
+=== NOTE: 910 | vault-bibliotecas-go-api-sdk-desenvolvimento-testes | HashiCorp Vault: compilação a partir do código-fonte (make dev/dev-ui) e bibliotecas oficiais Go (vault/api e vault/sdk) ===
+ONE_LINER: Conforme documenta a seção `Developing Vault` e `Importing Vault` do README oficial, o repositório do Vault compila binários de desenvolvimento via `make dev` (`make static-dist dev-ui`) e publica exclusivamente dois módulos Go suportados para importação externa: `github.com/hashicorp/vault/api` e `github.com/hashicorp/vault/sdk`.
+IMPORTANCE: Desenvolvedores que escrevem clientes em Go para interagir com o Vault ou criam plugins customizados precisam saber quais pacotes do repositório `hashicorp/vault` possuem garantia de suporte como biblioteca, evitando o erro comum de importar o pacote raiz `github.com/hashicorp/vault` em projetos externos.
+HOW_IT_WORKS: Conforme especifica o README oficial do repositório `hashicorp/vault`: (1) **Compilação local**: clona-se o repositório fora do `$GOPATH`, executa-se `make bootstrap` para baixar ferramentas de build, **`make dev`** para compilar o binário `bin/vault` (ou **`make static-dist dev-ui`** para embutir a interface web UI) e **`make test TEST=./vault`** (que requer Docker instalado) para rodar os testes; e (2) **Módulos Go publicados (`Importing Vault`)**: apenas **`github.com/hashicorp/vault/api`** (cliente HTTP oficial para aplicações consumirem a API do Vault) e **`github.com/hashicorp/vault/sdk`** (framework para desenvolvimento de plugins) são bibliotecas suportadas para importação por outros projetos.
+EXAMPLE:
+```bash
+# Adicionar a biblioteca cliente oficial suportada do Vault (vault/api) em um projeto Go externo
+go get github.com/hashicorp/vault/api@latest
+```
+TRADE_OFFS: O README oficial faz um alerta explícito na seção `Importing Vault`: embora a presença de um arquivo `go.mod` na raiz do repositório torne tecnicamente possível importar o pacote principal `github.com/hashicorp/vault` (por exemplo, para tentar reutilizar utilitários internos de teste do próprio produto), **isso não é e nunca foi suportado** pelos mantenedores — importe sempre apenas `github.com/hashicorp/vault/api` ou `github.com/hashicorp/vault/sdk`.
+VERIFY: Verifique no arquivo `go.mod` dos seus microsserviços em Go que qualquer integração com o Vault utiliza exclusivamente `github.com/hashicorp/vault/api` (ou `vault/sdk`) e não o módulo raiz do servidor.
+LINKS: [[vault-gerenciamento-centralizado-segredos-arquitetura-acesso]] | [[vault-ecossistema-plugins-auth-secrets-database]] | [[ko-construtor-imagens-containers-go-sem-docker]]
+SOURCES: https://raw.githubusercontent.com/hashicorp/vault/main/README.md | https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault | https://github.com/hashicorp/vault

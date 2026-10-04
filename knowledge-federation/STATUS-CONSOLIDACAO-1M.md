@@ -1,45 +1,54 @@
-# Status rumo a 1 milhão de notas válidas
+# Status da meta ativa: 1.000.000 de notas válidas
 
-Data da auditoria: 2026-10-01
+Data do status: 2026-10-03. A meta editorial ativa é **500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas**. Revisão humana não é requisito para novas notas; cada revisão factual por IA é registrada separadamente e nunca é apresentada como aprovação humana.
 
 ## Resumo honesto
 
-O merge preservou um **catálogo com 1.000.000 de registros virtuais**, não 1.000.000 de notas de conhecimento validadas. A auditoria direta do SQLite encontrou marcadores de texto-template em todos os registros virtuais. Há arquivos materializados e links, mas isso comprova presença e navegação, não qualidade editorial.
+O checkpoint histórico contém **1.000.000 de registros virtuais** com texto-template; não é conteúdo validado nem progresso da meta ativa. A auditoria encontrou 5740 arquivos Markdown ativos: 5640 notas substantivas passaram pelo gate e receberam revisão factual registrada (49 humanas históricas + 5591 por IA); outras 100 mantêm pendências e continuam fora da contagem.
 
-A meta de **1.000.000 de notas válidas ainda não foi atingida**. Para deixar essa diferença explícita, a contagem agora separa inventário, candidatas ao gate automatizado e notas com revisão humana registrada.
+A meta final não foi atingida. Só contam notas substantivas com fontes específicas conferidas, gate aprovado e revisão factual registrada. O primeiro lote (`software-testes-2000-0001`) está completo com 2.000 notas substantivas; placeholders, IDs e materialização de arquivos não contam.
 
-## Contagem auditada
+## Progresso auditado em 2026-10-03
 
 | Métrica | Quantidade | Interpretação |
 |---|---:|---|
-| Registros virtuais no checkpoint | 1.000.000 | IDs de catálogo; não contar como notas válidas |
-| Registros virtuais com marcadores de template | 1.000.000 | Sumário/corpo-semente genéricos |
-| Caminhos marcados como materializados no checkpoint | 8.000 | Arquivos gerados não equivalem a conteúdo validado |
-| Notas físicas registradas no checkpoint | 100 | Lote inicial; status profundo/revisado no schema legado: 0 |
-| Arquivos Markdown ativos em `domains/` | 108 | 100 sementes antigas + 8 notas novas |
-| Candidatas que passaram pelo gate automatizado | 8 | Prontas para revisão humana/factual; não são ainda “validadas” |
-| Notas com revisão humana registrada | 0 | Nenhuma deve ser contabilizada como plenamente válida ainda |
-| Links wiki quebrados no Study Vault legado | 0 no relatório anterior | Auditoria de links não valida conteúdo |
-| Marcadores de conteúdo operacional regulado no ledger | 0 | Filtro de segurança preservado |
+| Meta ativa | 1.000.000 | 500 lotes completos × 2.000 notas válidas por lote |
+| Lotes completos | 2 / 500 | Dois primeiros lotes (`software-testes-2000-0001` e `software-devops-2000-0002`) concluídos com 2.000 notas cada |
+| Progresso válido global | 5640 / 1.000.000 (0,5640%) | 49 revisões humanas históricas + 5591 revisões por IA registradas separadamente |
+| Revisões humanas registradas | 49 | Aprovadas pelo usuário; não se estendem a conteúdo novo |
+| Revisões factuais por IA registradas | 5591 | Relatórios das tranches 2–26 (`software-testes-2000-0001`), tranches 1–20 (`software-devops-2000-0002`) e tranches 1–16 (`software-seguranca-2000-0003`); não são humanas |
+| Primeiro lote (`software-testes-2000-0001`) | 2000 / 2.000 (100%) | 9 humanas + 1991 IA; lote concluído (`complete`) |
+| Segundo lote (`software-devops-2000-0002`) | 2000 / 2.000 (100,00%) | 2000 IA nas tranches 1–20 ([tranche 20](exports/reports/ai-review-software-devops-2000-0002-tranche-20.md)); lote concluído (`complete`) |
+| Terceiro lote (`software-seguranca-2000-0003`) | 1600 / 2.000 (80,00%) | 1600 IA nas tranches 1–16 ([tranche 16](exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md)); faltam 400 notas substantivas |
+| Candidatas que passaram pelo gate automatizado | 5640 | Todas receberam revisão factual registrada; gate sozinho não comprova veracidade |
+| Arquivos Markdown ativos com pendências de qualidade | 100 | Sementes/legado; não contam até remediação e revisão |
+| Registros virtuais no checkpoint histórico | 1.000.000 | Catálogo com template; excluído da contagem de notas válidas |
+| Marcadores de conteúdo-template no ledger legado | 1.000.000 | Sumários/corpos-semente; não são notas substantivas |
+| Caminhos marcados como materializados no checkpoint | 8.000 | Materialização não é validação editorial |
+| Links wiki quebrados no Study Vault legado | 0 no relatório anterior | Auditoria de links não valida conteúdo factual |
 
-A sequência de lotes no TAR e os 78 Study Packs continuam disponíveis como **artefatos históricos de materialização**. Seus números descrevem arquivos/entradas gerados a partir do ledger; as notas-template não entram na meta de conteúdo válido.
+A sequência de lotes no TAR e os 78 Study Packs continuam disponíveis como artefatos históricos. Seus números descrevem arquivos/entradas gerados a partir do ledger; as notas-template não entram na meta de conteúdo válido. O TAR é um snapshot anterior às aprovações registradas e não foi reconstruído.
 
 ## Trabalho feito nesta retomada
 
-1. Adicionado um gate reproduzível em `scripts/note_quality.py` e `scripts/audit_note_quality.py`.
-2. Atualizado `audit_batch.py`: links/frontmatter sem conteúdo não bastam para marcar um lote como concluído; `complete` requer gate automatizado e revisão humana identificada.
-3. Criadas 8 notas autorais, com exemplos, limites, métodos de verificação e fontes primárias/especializadas, nos subdomínios software/backend, APIs, testes, dados e DevOps.
-4. As 8 candidatas passaram pelo gate estrutural e tiveram suas fontes comparadas em uma checagem assistida por agente; a revisão humana continua pendente e nenhuma foi promovida a nota válida.
-5. Acrescentados 9 testes automatizados cobrindo notas completas, placeholders, bloqueio de materialização, fontes genéricas, wikilinks com alias/fragmento, estado de revisão e esquema do ledger.
+1. Mantidos gate reproduzível e registro separado de revisão humana e por IA; o relatório, responsável e data são obrigatórios para contar revisão por IA.
+2. Preservadas as 49 aprovações humanas anteriores, sem estendê-las a novas notas.
+3. Revisadas factualmente por IA as notas 10–2000 do lote (1991 no total), com relatórios das [tranches 2–3](exports/reports/ai-review-software-testes-2000-0001.md), [4](exports/reports/ai-review-software-testes-2000-0001-tranche-04.md), [5](exports/reports/ai-review-software-testes-2000-0001-tranche-05.md), [6](exports/reports/ai-review-software-testes-2000-0001-tranche-06.md), [7](exports/reports/ai-review-software-testes-2000-0001-tranche-07.md), [8](exports/reports/ai-review-software-testes-2000-0001-tranche-08.md), [9](exports/reports/ai-review-software-testes-2000-0001-tranche-09.md), [10](exports/reports/ai-review-software-testes-2000-0001-tranche-10.md), [11](exports/reports/ai-review-software-testes-2000-0001-tranche-11.md) e [12](exports/reports/ai-review-software-testes-2000-0001-tranche-12.md) [13](exports/reports/ai-review-software-testes-2000-0001-tranche-13.md), [14](exports/reports/ai-review-software-testes-2000-0001-tranche-14.md), [15](exports/reports/ai-review-software-testes-2000-0001-tranche-15.md), [16](exports/reports/ai-review-software-testes-2000-0001-tranche-16.md), [17](exports/reports/ai-review-software-testes-2000-0001-tranche-17.md), [18](exports/reports/ai-review-software-testes-2000-0001-tranche-18.md), [19](exports/reports/ai-review-software-testes-2000-0001-tranche-19.md), [20](exports/reports/ai-review-software-testes-2000-0001-tranche-20.md), [21](exports/reports/ai-review-software-testes-2000-0001-tranche-21.md), [22](exports/reports/ai-review-software-testes-2000-0001-tranche-22.md), [23](exports/reports/ai-review-software-testes-2000-0001-tranche-23.md), [24](exports/reports/ai-review-software-testes-2000-0001-tranche-24.md), [25](exports/reports/ai-review-software-testes-2000-0001-tranche-25.md) e [26](exports/reports/ai-review-software-testes-2000-0001-tranche-26.md).
+4. Resultado final do primeiro lote: 2000/2000 aprovadas pelo gate; nove revisões humanas e 1991 revisões por IA no total após a tranche 26, incluindo as 41 novas revisões das notas 1960–2000. O lote atingiu o alvo de 2.000 e passa ao estado `complete`. O segundo lote [`software-devops-2000-0002`](exports/batches/software-devops-2000-0002.md) atingiu 2000/2.000 notas válidas (`complete`) após a [tranche 20](exports/reports/ai-review-software-devops-2000-0002-tranche-20.md) ([reconciliação](exports/reports/batch-reconciliation-software-devops-2000-0002-tranche-20.md)), e o terceiro lote [`software-seguranca-2000-0003`](exports/batches/software-seguranca-2000-0003.md) está em 1600/2.000 notas válidas após a [tranche 16](exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md) ([reconciliação](exports/reports/batch-reconciliation-software-seguranca-2000-0003-tranche-16.md)).
+5. Mantidas as 100 notas legadas com falhas nas filas de remediação, sem contá-las.
 
-Relatório executável: [`exports/reports/note-quality-audit.md`](exports/reports/note-quality-audit.md).
-Mapa de navegação do primeiro lote: [`00-home-vault/MOCs/MOC-Confiabilidade-e-Contratos.md`](00-home-vault/MOCs/MOC-Confiabilidade-e-Contratos.md). O MOC não participa do gate de qualidade e sua existência não aprova o lote.
+Relatórios atualizados: [reconciliação da tranche 26](exports/reports/batch-reconciliation-software-testes-2000-0001-tranche-26.md), [auditoria global](exports/reports/note-quality-audit.md), [auditoria do lote](exports/reports/note-quality-software-testes-2000-0001.md), [registro separado de revisões](exports/reports/human-review-queue.md) e [plano de continuidade](PLANO-CONTINUO-1M.md).
 
-## Gate de qualidade adotado
+## Protocolo de qualidade e contagem
 
-Uma nota candidata deve ter frontmatter rastreável, pelo menos 100 palavras de conteúdo, seções de explicação, exemplo, limites e verificação, duas fontes HTTPS específicas, wikilinks resolvidos e nenhum marcador conhecido de conteúdo-template. O gate é deliberadamente conservador e pode exigir ajustes para domínios diferentes.
+Uma nota candidata deve ter frontmatter rastreável, pelo menos 100 palavras, seções de explicação, exemplo, limites e verificação, duas fontes HTTPS específicas, wikilinks resolvidos e nenhum marcador conhecido de conteúdo-template. O gate não comprova por si só que uma afirmação é verdadeira.
 
-Um passe automatizado só produz o estado **pronta para revisão**. A promoção a nota válida exige conferência factual das fontes por uma pessoa revisora, identificada em `revisor`, e `revisao_humana: aprovada`. Em temas regulados, exige também revisão apropriada ao domínio e manutenção de conteúdo não operacional.
+A contagem exige conteúdo substantivo, gate aprovado e revisão factual registrada:
+
+- Humana: `revisao_humana: aprovada` + revisor humano identificado, apenas após aprovação real.
+- IA: `revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`, após confronto factual com fontes.
+
+Os dois tipos permanecem separados. Em domínios regulados podem existir requisitos adicionais de especialista e segurança de conteúdo.
 
 ## Comandos de reprodução
 
@@ -52,8 +61,8 @@ python3 knowledge-federation/scripts/audit_note_quality.py \
 
 ## Próximos marcos sem inflar contagens
 
-1. Revisar as 8 candidatas e registrar a aprovação somente depois da checagem das fontes.
-2. Produzir lotes editoriais pequenos por subdomínio, começando pelas áreas de maior utilidade e com fontes primárias.
-3. Rodar gate, auditoria de links, deduplicação e revisão de domínio em cada lote.
-4. Contabilizar separadamente `catalogadas`, `candidatas`, `revisadas` e `rejeitadas`; ampliar escala apenas quando a taxa de qualidade e o fluxo de revisão forem sustentáveis.
-5. Reclassificar ou substituir progressivamente as 1.000.000 de entradas-template antes de declarar a meta cumprida.
+1. Primeiro lote (`software-testes-2000-0001`) concluído com 2.000/2.000 notas substantivas, fontes verificadas e revisão factual por tranche.
+2. Só declarar o lote completo quando 2.000 notas tiverem gate e revisão factual registrados.
+3. Continuar o terceiro lote `software-seguranca-2000-0003` (atualmente em 1600/2.000; faltam 400 notas substantivas) e os 497 lotes subsequentes, preservando 2.000 notas qualificadas por lote e total ativo de 500 lotes.
+4. Remediar as 100 notas legadas apenas com fontes próprias e conteúdo substantivo; mantê-las fora da contagem enquanto houver pendências.
+5. Publicar relatório final somente após atingir 1.000.000 de notas válidas (500 lotes completos), nunca por contagem de IDs ou placeholders.

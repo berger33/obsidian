@@ -1,0 +1,167 @@
+=== NOTE: 691 | crun-runtime-oci-linguagem-c-baixo-consumo-memoria | Containers crun: runtime OCI escrito inteiramente em C para alta performance e baixo footprint de memória ===
+ONE_LINER: O `crun` (projeto da organização `containers` em conformidade com `opencontainers/runtime-spec`) é um runtime de containers OCI rápido e de baixíssimo consumo de memória escrito inteiramente em linguagem C, podendo também ser embarcado como biblioteca (`libcrun`).
+IMPORTANCE: Embora a maioria das ferramentas do ecossistema de containers Linux seja escrita em Go (como o `runc`), o runtime Go precisa inicializar o coletor de lixo, múltiplas threads de sistema operacional e re-executar a si mesmo usando um módulo em C para configurar namespaces antes que o processo do container inicie. Segundo o README oficial do `crun`, escrever o runtime inteiramente em C reduz o tempo de execução de 100 containers sequenciais `/bin/true` em quase metade (`-49.4%`, de `3.34s` no `runc` para `1.69s` no `crun`) e permite rodar containers com limites estritos de memória nos quais o `runc` falha.
+HOW_IT_WORKS: O `crun` implementa toda a especificação OCI Runtime em C puro (utilizando `libocispec` para gerar o parser C de `config.json` em tempo de compilação, sem depender de Python em tempo de execução) e é o runtime OCI padrão adotado pelo Podman em distribuições modernas como Fedora e RHEL. Por exigir muito menos memória RAM durante a inicialização do container dentro do cgroup recém-criado, o README oficial demonstra que um container com `--memory 4M` falha ao iniciar com `/usr/bin/runc` (pois o próprio processo de init do runtime Go estoura o limite de 4 MB antes de fazer `execve`), enquanto o `/usr/bin/crun` consegue iniciar um container com sucesso usando um limite de apenas `--memory 512k`.
+EXAMPLE:
+```bash
+# Comparação prática documentada no README do crun executando um container com limite estrito de 512 KB de memória
+podman --runtime /usr/bin/crun run --rm --memory 512k fedora echo it works
+
+# Verificar a versão e os recursos suportados pelo binário crun no host Linux
+crun --version
+```
+TRADE_OFFS: Por ser escrito em C, o desenvolvimento e a manutenção do `crun` exigem gerenciamento rigoroso de memória e ponteiros (auditado continuamente no repositório com Coverity e CodeQL), e a construção das bibliotecas compartilhadas (`libcrun`) não vem habilitada no `./configure` padrão, exigindo passar `./configure --enable-shared` quando se deseja embarcar o `crun` como biblioteca em outros programas ou usar seus bindings Lua/Python.
+VERIFY: Execute `crun --version` para confirmar a versão instalada e teste `podman --runtime /usr/bin/crun run --rm --memory 2M alpine true` para validar a inicialização sob limite restrito de cgroup de memória.
+LINKS: [[crun-comandos-cli-estado-mounts-dinamicos-update]] | [[crun-gerenciamento-cgroups-v2-systemd-subgroup-delegation]] | [[runc-runtime-oci-referencia-linux-especificacao]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 692 | crun-comandos-cli-estado-mounts-dinamicos-update | Containers crun: comandos de ciclo de vida OCI, diretórios de estado, mounts dinâmicos e update de recursos ===
+ONE_LINER: A CLI do `crun` implementa todos os comandos padrão OCI (`create`, `start`, `run`, `exec`, `kill`, `delete`, `list`, `state`, `ps`, `pause`, `resume`, `spec`, `update`) e adiciona subcomandos experimentais `mounts add` e `mounts remove` para alterar volumes com o container em execução.
+IMPORTANCE: Em operações avançadas de containers, além do ciclo de vida básico, administradores precisam ajustar limites de CPU/memória/PIDs a quente sem reiniciar o processo (`crun update`), enviar sinais ou remover múltiplos containers usando expressões regulares (`--regex`) ou anexar/desanexar pontos de montagem dinamicamente em um container já em execução (`crun mounts add/remove`). A página de manual oficial `crun.1.md` especifica todas essas operações e o gerenciamento de estado.
+HOW_IT_WORKS: Por padrão, quando executado como usuário `root`, o `crun` salva o estado dos containers sob o diretório `/run/crun`; quando executado como usuário não privilegiado (rootless), ele respeita a variável de ambiente `XDG_RUNTIME_DIR` e utiliza `$XDG_RUNTIME_DIR/crun` (ambos podendo ser sobrescritos pela opção global `--root=DIR`). O comando `crun update` altera restrições de recursos em tempo real (como `--memory`, `--memory-swap`, `--cpu-quota`, `--cpu-period`, `--cpuset-cpus`, `--pids-limit` ou lendo de um arquivo via `-r / --resources=FILE`). Já os comandos experimentais `crun mounts add <container-id> <mounts.json>` e `crun mounts remove <container-id> <mounts.json>` permitem adicionar ou remover montagens em um container ativo passando um arquivo JSON com a seção `mounts` da configuração OCI.
+EXAMPLE:
+```bash
+# Listar containers gerenciados pelo crun, atualizar o limite de memória e PIDs a quente e verificar o estado
+crun list
+crun update --memory 268435456 --pids-limit 512 meu-container-id
+crun state meu-container-id
+```
+TRADE_OFFS: Conforme documentado em `crun.1.md`, os subcomandos `mounts add` e `mounts remove` são recursos experimentais sujeitos a alterações sem aviso prévio; além disso, nos comandos `create` e `run`, a flag `--no-pivot` (que usa `chroot(2)` em vez de `pivot_root(2)`) é explicitamente marcada como **não segura** na documentação oficial e deve ser evitada em produção.
+VERIFY: Inicie um container com `crun`, execute `crun ps <container-id> --format=json` e `crun state <container-id>` e confirme a leitura precisa dos processos e do estado a partir de `/run/crun` (ou `$XDG_RUNTIME_DIR/crun`).
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-logging-global-options-journald-syslog-json]] | [[runc-ciclo-vida-create-start-list-delete-run]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 693 | crun-logging-global-options-journald-syslog-json | Containers crun: opções globais de diagnóstico, backends de log (file, journald, syslog) e formatos text/json ===
+ONE_LINER: O `crun` oferece opções globais de observabilidade e depuração (`--debug`, `--log`, `--log-format` e `--log-level`) com suporte nativo aos backends de log `file:PATH`, `journald:IDENTIFIER` e `syslog:IDENTIFIER`.
+IMPORTANCE: Quando a inicialização de um container falha dentro do namespace isolado antes que o processo da aplicação comece a emitir logs padrão, capturar o motivo exato do erro de sistema (como falha em uma regra seccomp, mount SELinux negado ou limite de cgroup inválido) exige direcionar as mensagens internas do runtime OCI para o agregador de logs do host de forma estruturada. O manual oficial `crun.1.md` detalha o funcionamento dos backends e níveis de log do `crun`.
+HOW_IT_WORKS: A opção global `--log=BACKEND:SPECIFIER` define o destino das mensagens de erro e aviso geradas pelo `crun`, suportando três backends: `file:PATH` (padrão caso nenhum prefixo de backend seja especificado), `journald:IDENTIFIER` (enviando diretamente ao systemd-journald do host) e `syslog:IDENTIFIER`. O formato das mensagens é controlado por `--log-format=FORMAT` (`text` por padrão, ou `json` para integração com motores como CRI-O, Podman e coletores de log), enquanto `--log-level=LEVEL` ajusta a verbosidade entre `error` (padrão), `warning` e `debug` (ou ativando `--debug` diretamente). Se um erro ocorrer tardiamente no processo init do container, quando o processo pai do `crun` já parou de monitorá-lo, a mensagem é impressa no `stderr` do próprio container.
+EXAMPLE:
+```bash
+# Executar um comando crun com nível de log debug estruturado em JSON gravando em arquivo de diagnóstico
+crun --debug --log=file:/tmp/crun-debug.json --log-format=json --log-level=debug list
+cat /tmp/crun-debug.json
+```
+TRADE_OFFS: Habilitar `--debug` ou `--log-level=debug` globalmente na configuração do container runtime do nó Kubernetes (`crio.conf` ou `containerd/config.toml`) gera dezenas de entradas detalhadas a cada `create`, `start` e `exec` (incluindo probes de liveness/readiness do kubelet), podendo aumentar o uso de disco do journald; recomenda-se manter `error` em produção e ativar `debug` apenas ao diagnosticar falhas de inicialização de pods.
+VERIFY: Execute um comando `crun` passando `--log=file:/tmp/test.log --log-format=json --log-level=debug` e valide que qualquer aviso ou informação de depuração é gravado em JSON válido no arquivo especificado.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-comandos-cli-estado-mounts-dinamicos-update]] | [[crun-gerenciamento-cgroups-v2-systemd-subgroup-delegation]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 694 | crun-gerenciamento-cgroups-v2-systemd-subgroup-delegation | Containers crun: gerenciamento de cgroups (cgroupfs, systemd) e anotações de subgrupo e delegação em cgroup v2 ===
+ONE_LINER: O `crun` gerencia cgroups via `--cgroup-manager` (`cgroupfs`, `systemd` ou `disabled`) e fornece anotações OCI avançadas (`run.oci.systemd.subgroup`, `run.oci.delegate-cgroup` e `run.oci.systemd.force_cgroup_v1`) para controle fino de hierarquia e delegação segura em cgroup v2.
+IMPORTANCE: Na hierarquia unificada do Linux `cgroup v2`, a regra de "sem processos internos" (no internal processes rule) exige que os processos de um container fiquem em um subgrupo folha separado dos nós intermediários que distribuem controladores; além disso, containers que executam o próprio systemd ou gerenciadores internos precisam receber um sub-cgroup delegado sem escapar dos limites impostos pelo runtime no host. A documentação `crun.1.md` detalha como o `crun` resolve esses dois desafios.
+HOW_IT_WORKS: Por meio de `--cgroup-manager=MANAGER` (ou `--systemd-cgroup`), o `crun` configura os limites de recursos diretamente via `cgroupfs` ou via `systemd`. Quando gerenciado pelo systemd em `cgroup v2`, a anotação `run.oci.systemd.subgroup=SUBGROUP` controla o sub-cgroup criado sob o escopo do systemd (`/sys/fs/cgroup/$PATH/$SUBGROUP`, cujo padrão é `container` em cgroup v2 e `""` em cgroup v1). Se além dela a anotação `run.oci.delegate-cgroup=DELEGATED-CGROUP` for especificada (suportada exclusivamente em cgroup v2, pois a delegação em cgroup v1 não é segura), o `crun` cria mais um nível `/sys/fs/cgroup/$PATH/$SUBGROUP/$DELEGATED-CGROUP` e move o processo do container para lá: o runtime aplica os limites apenas em `$PATH/$SUBGROUP`, permitindo que o payload do container gerencie livremente `$DELEGATED-CGROUP` sem jamais exceder o teto do pai. Já `run.oci.systemd.force_cgroup_v1=/PATH` permite rodar containers com versões legadas do systemd dentro de um host cgroup v2.
+EXAMPLE:
+```bash
+# Executar crun especificando explicitamente o gerenciador systemd para cgroups v2
+crun --cgroup-manager=systemd list
+```
+TRADE_OFFS: Conforme adverte a documentação oficial em `crun.1.md`, a anotação `run.oci.delegate-cgroup` só funciona em sistemas `cgroup v2` e exige que `run.oci.systemd.subgroup` esteja ativo; já o uso de `run.oci.systemd.force_cgroup_v1=/PATH` requer que o host já possua a montagem manual `none,name=systemd` preparada em `/sys/fs/cgroup/systemd` com permissões adequadas.
+VERIFY: Inspecione `/proc/<pid-do-container>/cgroup` em um host Linux com `cgroup v2` e `crun --cgroup-manager=systemd` para confirmar que o processo do container reside no subgrupo `/container` (ou no subgrupo delegado configurado).
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-comandos-cli-estado-mounts-dinamicos-update]] | [[runc-supervisores-systemd-cgroup-v2-checkpoint-criu]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 695 | crun-checkpoint-restore-criu-pre-dump-gerenciamento | Containers crun: Checkpoint e Restore de containers com CRIU, pre-dumps incrementais e restauração LSM ===
+ONE_LINER: Os subcomandos `crun checkpoint` e `crun restore` integram o CRIU para congelar e restaurar containers (incluindo conexões TCP ativas e UNIX sockets), suportando cópias incrementais de memória sem parar o container (`--pre-dump` / `--parent-path`) e reconfiguração de contexto SELinux/AppArmor na restauração.
+IMPORTANCE: Realizar o checkpoint completo de um container que utiliza vários gigabytes de memória RAM pausa a aplicação durante todo o tempo necessário para gravar as páginas de memória em disco. De acordo com a página de manual `crun.1.md`, o suporte do `crun` a `--pre-dump` permite copiar a memória em segundo plano enquanto o container continua rodando, reduzindo o tempo de congelamento no checkpoint final para uma fração de segundo.
+HOW_IT_WORKS: O comando `crun checkpoint` aceita opções como `--image-path=DIR`, `--work-path=DIR`, `--leave-running`, `--tcp-established`, `--ext-unix-sk`, `--shell-job` e `--manage-cgroups-mode=MODE` (`soft` por padrão, `ignore`, `full` ou `strict`). Quando `--pre-dump` é utilizado, o `crun` faz o dump apenas da memória sem parar o container; como não é possível restaurar diretamente de um pre-dump, executam-se quantos pre-dumps forem necessários e um checkpoint final apontando para o pre-dump anterior via `--parent-path=DIR` (que deve obrigatoriamente ser um caminho relativo a partir do diretório `--image-path`, falhando se for usado caminho absoluto). Na restauração (`crun restore`), opções como `--lsm-profile=TYPE:NAME` (`apparmor` ou `selinux`) e `--lsm-mount-context=VALUE` permitem restaurar o container em um novo Pod Kubernetes onde os rótulos SELinux mudaram, e a anotação `org.criu.config=FILE` (requer CRIU >= 4.2) permite customizar a configuração RPC do CRIU (`/etc/criu/crun.conf` ou `/etc/criu/runc.conf`).
+EXAMPLE:
+```bash
+# Realizar um pre-dump de memória sem parar o container seguido do checkpoint final com caminho relativo
+mkdir -p /tmp/ckpt/predump1 /tmp/ckpt/final
+sudo crun checkpoint --pre-dump --image-path=/tmp/ckpt/predump1 meu-container
+sudo crun checkpoint --parent-path=../predump1 --image-path=/tmp/ckpt/final meu-container
+
+# Restaurar o container a partir do checkpoint final em modo detached
+sudo crun restore --detach --image-path=/tmp/ckpt/final --bundle=/caminho/bundle meu-container-restaurado
+```
+TRADE_OFFS: Conforme enfatizado na documentação de `--parent-path` em `crun.1.md`, passar um caminho absoluto em `--parent-path` (como `/tmp/ckpt/predump1`) fará com que o `crun` e o CRIU falhem; é obrigatório usar um caminho relativo a partir do diretório especificado em `--image-path` (como `../predump1`).
+VERIFY: Após executar `crun checkpoint` e `crun restore --detach`, execute `crun list` e `crun ps <id>` para confirmar que o processo restaurado retomou a execução a partir do estado salvo.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-comandos-cli-estado-mounts-dinamicos-update]] | [[runc-supervisores-systemd-cgroup-v2-checkpoint-criu]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 696 | crun-extensoes-oci-seccomp-annotations-handlers-wasm-krun | Containers crun: extensões de anotações OCI para seccomp avançado, pidfd e handlers nativos para WebAssembly (wasm) e libkrun (krun) ===
+ONE_LINER: O `crun` estende a especificação OCI por meio de anotações `run.oci.*` que habilitam delegação de seccomp listener (`seccomp.receiver`/`plugins`), carregamento de BPF bruto (`seccomp_bpf_data`) e execução nativa de workloads WebAssembly (`handler=wasm`) ou microVMs via `libkrun` (`handler=krun`).
+IMPORTANCE: Em arquiteturas cloud-native modernas, operadores de plataforma desejam usar a mesma infraestrutura de Kubernetes/CRI-O/Podman para rodar não apenas containers Linux tradicionais, mas também módulos WebAssembly (`.wasm`/`.wat`) ultraleves ou containers isolados em microVMs baseadas em KVM (`libkrun`), além de otimizar o carregamento de filtros seccomp. O manual `crun.1.md` documenta essas extensões nativas do `crun`.
+HOW_IT_WORKS: Por meio de anotações no `config.json`, o `crun` ativa comportamentos avançados: (1) **`run.oci.handler=HANDLER`** permite escolher os handlers experimentais `wasm` (executa cargas WebAssembly nativamente aceitando binários `.wasm` ou compilando automaticamente arquivos `.wat` e retransmitindo o `stdout`) ou `krun` (carrega a biblioteca compartilhada `libkrun.so` para lançar o container dentro de uma microVM isolada por hardware via `libkrun`); (2) **`run.oci.seccomp.receiver=PATH`** (ou variável `RUN_OCI_SECCOMP_RECEIVER`) envia o descritor do seccomp listener para um socket UNIX externo, enquanto **`run.oci.seccomp.plugins`** processa o listener via plugins carregados por `dlopen(3)`; (3) **`run.oci.seccomp_bpf_data=PATH`** ignora a seção seccomp do JSON e carrega diretamente um programa BPF codificado em base64 na syscall `seccomp(SECCOMP_SET_MODE_FILTER)`; e (4) **`run.oci.seccomp_fail_unknown_syscall=1`** força falha imediata caso uma syscall desconhecida seja encontrada no perfil.
+EXAMPLE:
+```json
+{
+  "annotations": {
+    "run.oci.handler": "wasm",
+    "run.oci.seccomp_fail_unknown_syscall": "1"
+  }
+}
+```
+TRADE_OFFS: Para que `run.oci.handler=krun` ou `run.oci.handler=wasm` funcionem em tempo de execução, o binário do `crun` no host precisa ter sido compilado com suporte aos respectivos cabeçalhos e as bibliotecas compartilhadas correspondentes (como `libkrun.so` e um runtime WASM como WasmEdge/Wasmtime) devem estar instaladas no sistema hospedeiro; além disso, o handler `krun` requer acesso ao dispositivo de virtualização `/dev/kvm`.
+VERIFY: Verifique na saída de `crun --version` quais handlers e recursos opcionais (`+WASM`, `+KRUN`, `+SECCOMP`) estão compilados no binário `crun` do seu sistema.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-anotacoes-selinux-grupos-hooks-pidfd]] | [[inspektor-webassembly-wasm-pos-processamento-operadores]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 697 | crun-anotacoes-selinux-grupos-hooks-pidfd | Containers crun: anotações OCI para contextos de mount SELinux, preservação de grupos, logs de hooks e pidfd receiver ===
+ONE_LINER: O `crun` disponibiliza anotações OCI específicas para controlar o tipo de contexto de montagem SELinux (`run.oci.mount_context_type`), preservar grupos suplementares (`run.oci.keep_original_groups`), redirecionar `stdout`/`stderr` de hooks OCI e exportar `pidfd` (`run.oci.pidfd_receiver`).
+IMPORTANCE: Em ambientes corporativos com SELinux habilitado (RHEL, CentOS Stream, Fedora CoreOS), diferentes volumes exigem flags específicas de contexto no `mount(8)` (`context`, `fscontext`, `defcontext`, `rootcontext`); similarmente, depurar falhas em hooks OCI (`prestart`, `createRuntime`, `poststop`) ou rastrear processos de containers sem condições de corrida de reciclagem de PID exige recursos dedicados no runtime. A documentação `crun.1.md` especifica as anotações que resolvem cada um desses casos.
+HOW_IT_WORKS: (1) **`run.oci.mount_context_type=context`** define o tipo de contexto de montagem aplicado a volumes com rótulos SELinux, aceitando `context` (padrão), `fscontext`, `defcontext` ou `rootcontext`; (2) **`run.oci.keep_original_groups=1`** instrui o `crun` a pular a chamada de sistema `setgroups`, preservando os grupos suplementares herdados do processo chamador em vez de redefini-los ou limpá-los; (3) **`run.oci.hooks.stdout=FILE`** e **`run.oci.hooks.stderr=FILE`** abrem os arquivos especificados em modo `append` (criando-os se não existirem) e os utilizam como saída padrão e erro padrão para todos os processos de hooks OCI; e (4) **`run.oci.pidfd_receiver=PATH`** envia o descritor de arquivo do processo (`pidfd`) do container para um socket UNIX, permitindo gerenciamento de processos imune à reutilização de PIDs no kernel.
+EXAMPLE:
+```json
+{
+  "annotations": {
+    "run.oci.mount_context_type": "fscontext",
+    "run.oci.hooks.stdout": "/var/log/containers/oci-hooks-out.log",
+    "run.oci.hooks.stderr": "/var/log/containers/oci-hooks-err.log"
+  }
+}
+```
+TRADE_OFFS: O uso de `run.oci.keep_original_groups=1` mantém no processo do container os grupos suplementares que o processo pai possuía no host antes de iniciar o container; por questões de isolamento de segurança (prevenção de acesso indevido por GID compartilhado), essa anotação só deve ser usada em fluxos rootless ou de computação científica/HPC onde o compartilhamento de grupos de diretórios POSIX é intencional.
+VERIFY: Configure um hook OCI simples no `config.json` junto às anotações `run.oci.hooks.stdout` e `run.oci.hooks.stderr`, inicie o container com `crun` e confirme a gravação da saída do hook nos arquivos de log indicados.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-extensoes-oci-seccomp-annotations-handlers-wasm-krun]] | [[runc-oci-bundle-rootfs-config-json-runc-spec]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 698 | crun-compilacao-autotools-libcrun-shared-dependencies | Containers crun: compilação com Autotools, geração de parser via libocispec, biblioteca compartilhada libcrun e bindings Lua ===
+ONE_LINER: A compilação do `crun` utiliza GNU Autotools (`./autogen.sh && ./configure && make`), usa Python apenas em tempo de build pelo `libocispec` para gerar o parser C, permite construir a biblioteca compartilhada `libcrun` com `--enable-shared` e oferece bindings para Lua e Python.
+IMPORTANCE: Diferentemente de projetos puramente Go, o `crun` foi concebido desde o início para poder ser usado também como uma biblioteca C (`libcrun`) embutida diretamente dentro de outros programas e motores de containers, eliminando até mesmo o custo de criar um processo externo `fork/exec` para gerenciar containers OCI. O README oficial do `crun` detalha as dependências por distribuição (Fedora, RHEL/CentOS Stream 9/10, Ubuntu, Alpine, openSUSE Tumbleweed) e o fluxo de compilação.
+HOW_IT_WORKS: Para compilar o `crun` a partir do código-fonte, instalam-se os cabeçalhos de desenvolvimento do sistema (`libcap`, `libseccomp`, `systemd`, `yajl`/`json-c`, `autoconf`, `automake`, `libtool`, `go-md2man` e `python3`). A menos que os bindings Python também estejam sendo compilados, o Python é utilizado exclusivamente em tempo de compilação pelo submódulo `libocispec` para gerar automaticamente o código C que faz o parse dos esquemas JSON da OCI, não sendo necessário em tempo de execução. O fluxo padrão `./autogen.sh && ./configure && make && sudo make install` instala o binário em `/usr/local/bin/crun`; para habilitar a construção da biblioteca compartilhada `libcrun.so` (necessária para vincular outros programas à `libcrun` ou usar os bindings em `lua/`), executa-se `./configure --enable-shared`.
+EXAMPLE:
+```bash
+# Compilar o crun habilitando a biblioteca compartilhada libcrun (--enable-shared)
+./autogen.sh
+./configure --enable-shared
+make -j$(nproc)
+sudo make install
+```
+TRADE_OFFS: Conforme observa o README oficial do `crun`, em distribuições como o openSUSE Tumbleweed os cabeçalhos do `libseccomp` ficam em `/usr/include/libseccomp`, exigindo passar explicitamente `./configure CFLAGS='-I/usr/include/libseccomp'`; além disso, em RHEL/CentOS Stream 9 e 10, é necessário habilitar previamente o repositório `crb` (`dnf config-manager --set-enabled crb`) para encontrar todos os pacotes `-devel`.
+VERIFY: Após compilar com `./configure --enable-shared && make`, verifique a geração da biblioteca compartilhada `libcrun` e execute `./crun --version` para validar o binário resultante.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-builds-estaticos-reprodutiveis-nix-verificacao-gpg]] | [[runc-compilacao-build-tags-nocriu-obsoletos]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 699 | crun-builds-estaticos-reprodutiveis-nix-verificacao-gpg | Containers crun: builds estáticos reprodutíveis com Nix, automação Ansible e verificação GPG com crun.keyring ===
+ONE_LINER: O projeto `crun` fornece derivações oficiais do gerenciador de pacotes Nix (`nix/`) para produzir binários ELF `x86_64/amd64` estaticamente vinculados e 100% reprodutíveis, além de assinar todos os artefatos de release com chaves listadas em `crun.keyring`.
+IMPORTANCE: Em nós Kubernetes minimalistas (como imagens imutáveis de sistema operacional ou distribuições com versões diferentes de `glibc`, `libseccomp` e `libcap`), distribuir um binário dinâmico de runtime OCI pode falhar por incompatibilidade de bibliotecas compartilhadas (`GLIBC_2.XX not found`), enquanto a ausência de verificação criptográfica expõe o host a adulteração de binários. O README oficial do `crun` documenta tanto o build estático reprodutível via Nix quanto a verificação GPG das releases.
+HOW_IT_WORKS: Para verificar qualquer artefato oficial baixado da página de releases (como `crun-1.29.1.tar.zst` e sua assinatura `.asc`), o administrador importa o arquivo `crun.keyring` da raiz do repositório em um chaveiro GPG dedicado (`gpg --no-default-keyring --keyring ./crun.gpg --import crun.keyring`) e executa `--verify`. Para construir um binário estaticamente vinculado e totalmente reprodutível (stripped ELF para glibc), utiliza-se a derivação Nix incluída na pasta `nix/` do repositório com o comando `nix --extra-experimental-features "nix-command flakes" build "path:.#crun-static-amd64"`, que gera o executável autocontido em `./result/bin/crun` (também automatizável via role Ansible `alvistack/ansible-role-crun`).
+EXAMPLE:
+```bash
+# Verificar a assinatura GPG de uma release oficial do crun usando o arquivo crun.keyring
+gpg --no-default-keyring --keyring ./crun.gpg --import crun.keyring
+gpg --no-default-keyring --keyring ./crun.gpg --verify crun-1.29.1.tar.zst.asc crun-1.29.1.tar.zst
+
+# Construir um binário estático reprodutível do crun usando Nix flakes
+nix --extra-experimental-features "nix-command flakes" build "path:.#crun-static-amd64"
+./result/bin/crun --version
+```
+TRADE_OFFS: Um binário estaticamente vinculado (`crun-static-amd64`) elimina dependências de bibliotecas dinâmicas no servidor alvo e facilita implantações portáveis, porém embute internamente o código das bibliotecas vinculadas (como `libseccomp` e `libcap`); se uma vulnerabilidade for corrigida em uma dessas bibliotecas, o binário estático do `crun` precisa ser reconstruído e redistribuído em vez de depender apenas de um `apt upgrade` da biblioteca no host.
+VERIFY: Execute `file ./result/bin/crun` e `ldd ./result/bin/crun` no binário gerado pela derivação Nix para confirmar que ele é um executável ELF estaticamente vinculado (`statically linked`).
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-compilacao-autotools-libcrun-shared-dependencies]] | [[runc-assinatura-releases-gpg-keyring-auditoria-seguranca]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun
+
+=== NOTE: 700 | crun-execucao-processos-exec-capabilities-lsm-sub-cgroups | Containers crun: execução de processos adicionais (crun exec) com isolamento de sub-cgroup, capabilities, AppArmor e SELinux ===
+ONE_LINER: O subcomando `crun exec` inicia um novo processo dentro de um container em execução permitindo customizar perfil AppArmor (`--apparmor`), rótulo SELinux (`--process-label`), capabilities (`--cap`), `--no-new-privs`, usuário (`--user`) e alocação em um `--cgroup` interno específico.
+IMPORTANCE: Quando um engenheiro de plataforma ou um agente de diagnóstico executa um comando dentro de um container ativo (`exec`), muitas vezes é necessário que esse processo auxiliar rode com privilégios diferentes do processo principal da aplicação (por exemplo, sem adquirir novos privilégios, sob um perfil LSM mais restrito ou dentro de um sub-cgroup separado para que um comando de diagnóstico não consuma a cota de memória principal nem altere a contabilidade do serviço). A página de manual `crun.1.md` especifica todas as flags de `crun exec`.
+HOW_IT_WORKS: Ao invocar `crun [global options] exec [options] CONTAINER CMD`, o runtime entra nos namespaces do container ativo e lança o comando solicitado aplicando as restrições passadas por linha de comando ou por um arquivo JSON completo de processo (`--process=FILE`). As opções incluem `--cwd=PATH` (diretório de trabalho), `--env=ENV` (variáveis de ambiente), `-u / --user=UID[:GID]`, `-t / --tty` e `--console-socket=SOCKET`, `--detach` e `--pid-file=PATH`. Na camada de segurança e recursos, `--cap=CAP` adiciona capabilities específicas, `--no-new-privs` ativa o bit `no_new_privs` do kernel, `--apparmor=PROFILE` e `--process-label=VALUE` aplicam contextos de AppArmor e SELinux ao novo processo, e `--cgroup=PATH` posiciona o processo em um sub-cgroup específico que já exista dentro do cgroup do container.
+EXAMPLE:
+```bash
+# Executar um processo de diagnóstico dentro de um container ativo com usuário não-root e no-new-privs
+sudo crun exec --user 1000:1000 --no-new-privs --cwd /tmp meu-container-id id
+```
+TRADE_OFFS: Conforme documentado em `crun.1.md` para a flag `--cgroup=PATH` do subcomando `exec`, o caminho do sub-cgroup informado já deve existir previamente dentro do cgroup do container antes da chamada `crun exec`, caso contrário a movimentação do novo processo para o sub-cgroup falhará.
+VERIFY: Com um container em execução sob o `crun`, execute `crun exec --no-new-privs <container-id> grep NoNewPrivs /proc/self/status` e confirme que a saída reporta `NoNewPrivs: 1`.
+LINKS: [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]] | [[crun-comandos-cli-estado-mounts-dinamicos-update]] | [[crun-gerenciamento-cgroups-v2-systemd-subgroup-delegation]]
+SOURCES: https://raw.githubusercontent.com/containers/crun/main/README.md | https://raw.githubusercontent.com/containers/crun/main/crun.1.md | https://github.com/containers/crun

@@ -1,0 +1,32 @@
+# Relatório de Reconciliação de Lote — `software-seguranca-2000-0003` (Tranche 05: Notas 401–500)
+
+## Resumo da Reconciliação
+
+- **Lote**: `software-seguranca-2000-0003` (`knowledge-federation/domains/software-0009/software/seguranca/`)
+- **Tranche concluída**: `05` (IDs `401–500`, `100` notas atômicas)
+- **Progresso acumulado no lote**: `500 / 2.000` (`25,00%`, status `in_progress`)
+- **Revisão factual por IA**: `500` notas aprovadas por IA (`revisao_ia: aprovada`, `revisao_humana: nao_solicitada`)
+- **Revisão humana**: `0` notas neste lote (`49` notas históricas preservadas globalmente)
+- **Progresso global acumulado**: `4540 / 1.000.000` notas válidas (`0,4540%`), `2 / 500` lotes completos (`software-testes-2000-0001` e `software-devops-2000-0002`) + Lote 3 em `500/2.000`
+- **Arquivos Markdown ativos em `knowledge-federation/domains/`**: `4640` (`4540` válidas + `100` legadas pendentes de gate)
+
+## Famílias Técnicas Adicionadas na Tranche 05 (`401–500`)
+
+1. **`0401–0410` (`sqlmap-*`)**: **sqlmap** (`sqlmapproject/sqlmap`, GPLv2) — motor de detecção SQLi (`BEUSTQ`), calibração `--level`/`--risk`, ingestão OpenAPI/raw HTTP, *Second-Order SQLi*, scripts `--tamper`, exfiltração DNS OOB (`--dns-domain`), auditoria de privilégios DBA, otimização HTTP, `sqlmapapi.py` e validação de *Prepared Statements* em CI/CD.
+2. **`0411–0420` (`dalfox-*`)**: **Dalfox** (`hahwul/dalfox`, MIT) — análise de parâmetros e scanner de XSS (`V`/`R`/`A`/`I`), *Parameter Mining* (`--mining-dict`, `--mining-dom`), `--param name:location` e `--inject-marker`, verificação DOM/AST e *Blind XSS*, monitoramento `--session-check`, governança `--out-of-scope-file`, *WAF Fingerprinting*, modo pipeline com `--state-file`, servidores REST/MCP e comparação diferencial `--baseline` em SARIF.
+3. **`0421–0430` (`mispsoc-*`)**: **MISP & PyMISP** (`MISP/MISP`, AGPLv3) — ontologia de *Events/Attributes/Objects/Galaxies*, motor de correlação (exato, CIDR, `ssdeep`), taxonomias `TLP`/`PAP` e *Sharing Groups*, `misp-warninglists`, automação `restSearch` via PyMISP, `misp-modules`, exportação para Suricata/Zeek/RPZ/STIX 2.1, *Cache Feeds* OSINT, *Workflows* (`event-before-publish`) e *Sightings* / *Decaying Models*.
+4. **`0431–0440` (`bloodhound-*`)**: **BloodHound CE** (`SpecterOps/BloodHound`, Apache-2.0) — gestão de caminhos de ataque em grafos (Go REST API, PostgreSQL e Neo4j), coletores `SharpHound` e `AzureHound`, abuso de ACLs no AD (`GenericAll`, `WriteDacl`, `ForceChangePassword`), movimentação lateral e `DCSync`, delegações Kerberos (`Unconstrained`, `Constrained`, `RBCD`), escalação via ADCS (`ESC1`–`ESC13`), caminhos híbridos Entra ID, governança **Tier Zero** (`admin_tier_0`), consultas `Cypher` (`shortestPath`) e **BloodHound OpenGraph**.
+5. **`0441–0450` (`paralus-*`)**: **CNCF Paralus** (`paralus/paralus`, Apache-2.0) — acesso Zero-Trust ao Kubernetes, conexão de clusters privados via `relay-agent` mTLS *outbound*, `Projects`/`Groups`/`Roles`, federação SSO OIDC, `kubeconfig` *Just-in-Time* com revogação instantânea, terminal web `prompt`, automação *RBAC-as-Code* com `pctl`, trilhas `System` e `Kubectl/Relay Audit Logs`, `Custom Roles` restritivas e hardening do plano de controle.
+6. **`0451–0460` (`lynis-*`)**: **CISOfy Lynis** (`CISOfy/lynis`, GPLv3) — arquitetura `lynis audit system` e *Hardening Index*, análise de `Warnings` vs `Suggestions` com `lynis show details` e `lynis-report.dat`, perfis `/etc/lynis/custom.prf`, hardening de `sysctl` (`KRNL-6000`) e OpenSSH (`SSH-7408`), `lynis audit dockerfile`, modo `--pentest`, montagens de filesystem (`FILE-*` e GRUB), execução contínua via `--cronjob` e escrita de testes `CUST-*` com `lynis-sdk`.
+7. **`0461–0470` (`auditd-*`)**: **Linux Audit Framework (`auditd` / `audit-userspace`)** (GPLv2) — interceptação de syscalls no kernel e `auid` imutável (`RefuseManualStop=yes`), ordenação `10`–`99` em `/etc/audit/rules.d/` e trava imutável (`-e 2`), monitoramento `-w` de arquivos de identidade/sudoers/SSH, auditoria de execução privilegiada (`uid!=euid`) e binários SUID, módulos de kernel/`ptrace`/tempo/MAC, supressão `never,exit`, partição `/var/log/audit` dedicada, investigação com `ausearch -i`/`aureport`, plugins `audisp` e monitoramento de runtimes de containers.
+8. **`0471–0480` (`usbguard-*`)**: **USBGuard** (`USBGuard/usbguard`, GPLv2) — autorização de dispositivos USB no kernel Linux contra *BadUSB*, gramática de regras (`allow`, `block`, `reject`, `hash`, `via-port`), operadores de conjunto em `with-interface` (`equals`, `all-of`), condições dinâmicas (`if !allowed-matches(...)`, `localtime`), `usbguard generate-policy -p`, hardening de `usbguard-daemon.conf`, controle IPC/Polkit, telemetria `LinuxAudit` (`USER_DEVICE`), backend LDAP e sandboxing `libseccomp`/`libcap-ng`.
+9. **`0481–0490` (`apparmor-*`)**: **AppArmor LSM** (`gitlab.com/apparmor/apparmor`, GPLv2/LGPL) — MAC baseado em caminhos no kernel Linux, modos `enforce` vs `complain` (`aa-status`, `aa-enforce`, `aa-complain`), regras de arquivos/capabilities/rede/mount/ptrace, transições `Px`/`Cx`/`ix` com limpeza de ambiente, `abstractions/` e overrides em `local/`, geração guiada `aa-genprof`/`aa-logprof`, `securityContext.appArmorProfile` no Kubernetes, `aa_change_hat`/`aa_change_profile`, diagnóstico `apparmor="DENIED"` e cache binário AOT do `apparmor_parser`.
+10. **`0491–0500` (`selinux-*`)**: **SELinux** (`SELinuxProject/selinux`, GPLv2) — MAC baseado em rótulos (`user:role:type:level`) e *Type Enforcement*, modos `Enforcing`/`Permissive`, domínios permissivos (`semanage permissive`) e *Booleans* (`setsebool -P`), `semanage fcontext` + `restorecon -Rv`, `semanage port`, isolamento multi-tenant de containers com **MCS** (`s0:cX,cY`, `container_t`, `:Z`), diagnóstico `AVC` com `ausearch`/`audit2why`, compilação de módulos `.te`/`.cil` (`semodule`), confinamento RBAC de usuários SSH (`semanage login`, `staff_u`, `user_u`), auditoria formal com `setools` (`sesearch`, `seinfo`) e replicação com `semanage export`/`import`.
+
+## Artefatos Atualizados e Verificados
+
+- [Manifesto do Lote `software-seguranca-2000-0003`](../batches/software-seguranca-2000-0003.md)
+- [MOC `MOC-Seguranca-Software-0009`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
+- [Relatório de Revisão Factual por IA — Tranche 05](ai-review-software-seguranca-2000-0003-tranche-05.md)
+- [Relatório de Qualidade do Lote 3](note-quality-software-seguranca-2000-0003.md)
+- [Fila Global de Revisão Humana (`4540` notas válidas)](human-review-queue.md)

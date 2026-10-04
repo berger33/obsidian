@@ -1,0 +1,170 @@
+0271|gosec-arquitetura-securego-ast-ssa-taint-analysis-golang|Securego `gosec`: arquitetura em três motores (`AST`, `SSA` e `Taint Analysis`) para análise estática de segurança em Go|Conforme documentado no README e em `RULES.md` do repositório oficial (`securego/gosec`, licenciado sob Apache 2.0), o **gosec (Go Security Checker)** inspeciona o código-fonte Go combinando três motores complementares de análise: **1. Regras baseadas em padrões `AST`** (`go/ast` + `go/types`), **2. Analisadores baseados em `SSA` (*Static Single Assignment*)** e **3. Análise de Fluxo de Dados Contaminados (`Taint Analysis`, regras `G701`–`G710`)**!|Um linter puramente sintático consegue ver se você importou `crypto/md5`, mas não consegue rastrear se um parâmetro lido de `r.URL.Query().Get("id")` passou por três variáveis intermediárias até chegar a um `db.Query(q)` ou se uma função `cancel()` retornada por `context.WithTimeout` deixou de ser chamada em algum caminho de execução.|No `gosec`, as regras são organizadas em sete categorias oficiais: **`G1xx`** (codificação segura geral, HTTP, cookies, secrets, context), **`G2xx`** (padrões de injeção), **`G3xx`** (filesystem, permissões e Zip Slip), **`G4xx`** (criptografia e TLS), **`G5xx`** (blocklist de imports), **`G6xx`** (segurança de memória/slices em Go) e **`G7xx`** (*Taint Analysis* fim-a-fim)!|```bash
+# Instalando o gosec e escaneando recursivamente todos os pacotes do módulo Go atual:
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+gosec ./...
+```|Conforme documentado no README oficial, o `gosec` também exporta o pacote `goanalysis` compatível com a interface padrão `golang.org/x/tools/go/analysis.Analyzer` (usado pelo `golangci-lint` e pelo framework `nogo` do Bazel).|Execute `gosec -version` e `gosec ./...` verificando o código de saída (`0` sem achados, `1` quando há achados não suprimidos).|https://raw.githubusercontent.com/securego/gosec/master/README.md;https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://github.com/securego/gosec
+0272|gosec-taint-analysis-g701-a-g710-sqli-cmdi-ssrf-xss-path-traversal|`gosec` Motor de *Taint Analysis* (`G701`–`G710`): rastreamento de fluxo de dados de entradas HTTP até sinks perigosos|Conforme listado na seção *G7xx: Taint Analysis* do arquivo oficial `RULES.md`, o motor de **Taint Analysis** do `gosec` (`taint.NewGosecAnalyzer`) rastreia o fluxo de dados desde fontes não confiáveis controladas pelo usuário (*Sources*, como `http.Request`, argumentos CLI e variáveis de ambiente) até funções críticas (*Sinks*) através de dez regras dedicadas: **`G701`** (SQL Injection), **`G702`** (Command Injection), **`G703`** (Path Traversal), **`G704`** (SSRF), **`G705`** (XSS), **`G706`** (Log Injection), **`G707`** (SMTP Injection), **`G708`** (SSTI em `text/template`), **`G709`** (Unsafe Deserialization) e **`G710`** (Open Redirect)!|Nas regras antigas `G201`/`G202` (baseadas apenas em AST), o scanner olhava apenas se a chamada `db.Query` continha um `fmt.Sprintf` ou `+` naquela mesma expressão; se a string contaminada fosse montada em uma função auxiliar e passada por variável, apenas a análise de fluxo **SSA/Taint (`G701`–`G710`)** acompanha a propagação!|Isso permite identificar vulnerabilidades reais de **SSRF (`G704`)**, **Log Injection (`G706`)** e **Path Traversal (`G703`)** mesmo quando o dado percorre múltiplas atribuições antes de atingir o sink.|```go
+package api
+
+import (
+	"database/sql"
+	"net/http"
+)
+
+func GetUserSafe(db *sql.DB, r *http.Request) (*sql.Row, error) {
+	userID := r.URL.Query().Get("id")
+	// SEGURO contra G201/G202/G701: utiliza placeholder parametrizado ($1) em vez de concatenar userID:
+	return db.QueryRowContext(r.Context(), "SELECT id, email FROM users WHERE id = $1", userID), nil
+}
+```|Para mitigar **`G703` (Path Traversal)** ao ler arquivos baseados em entrada do usuário, use `filepath.Clean` combinado com verificação de prefixo ou a API **`os.Root` (`os.OpenInRoot`)** introduzida no Go moderno para confinar acessos a um diretório base.|Execute `gosec -include=G701,G702,G703,G704,G705,G706,G707,G708,G709,G710 ./...` para rodar especificamente a suíte de Taint Analysis.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0273|gosec-analisadores-ssa-g113-http-smuggling-g115-integer-overflow-g118-context|`gosec` Analisadores `SSA`: detecção de *HTTP Smuggling* (`G113`), *Integer Overflow* (`G115`), *Context Leak* (`G118`) e *TOCTOU* (`G122`)|Conforme documentado em `RULES.md`, os analisadores baseados em representação **SSA (*Static Single Assignment*)** do `gosec` detectam bugs sutis de segurança e confiabilidade que dependem de tipos e caminhos de execução: **`G113`** (*HTTP Request Smuggling*), **`G115`** (conversão numérica com *Integer Overflow*, ex.: `int64` -> `int32`/`uint`), **`G118`** (falha de propagação/cancelamento de `context.Context` causando vazamento de goroutines — CWE-400), **`G119`** (propagação insegura de cabeçalhos em redirecionamento HTTP), **`G122`** (*TOCTOU race* em `filepath.WalkDir`), **`G123`** (bypass de TLS resumption) e **`G602`** (acesso fora dos limites de slice).|Em Go, esquecer de chamar a função `cancel` retornada por `context.WithTimeout(ctx, 5*time.Second)` (`G118`) mantém timers e goroutines presos em memória até o timeout expirar, permitindo esgotamento de recursos (DoS); já converter um `int` de 64 bits vindo de uma requisição para `int32` ou `uint16` sem validar os limites (`G115`) pode transformar um número negativo em um tamanho de alocação gigantesco!|O analisador SSA da regra **`G118`** verifica se `cancel` foi chamado via `defer cancel()`, closure diferida, retornado ao chamador ou armazenado em uma struct com método de limpeza.|```go
+package worker
+
+import (
+	"context"
+	"math"
+	"time"
+)
+
+func SafeProcess(ctx context.Context, count int64) (int32, error) {
+	// 1. Aprovado pelo G118 (SSA): cancel() é garantido via defer
+	childCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	_ = childCtx
+
+	// 2. Aprovado pelo G115 (SSA): verifica limites antes de converter int64 para int32
+	if count < math.MinInt32 || count > math.MaxInt32 {
+		return 0, context.DeadlineExceeded
+	}
+	return int32(count), nil
+}
+```|Observe também a regra **`G112`** e **`G114`**: nunca suba um servidor HTTP em Go usando `http.ListenAndServe(":8080", handler)` direto na internet pública, pois a struct padrão não define **`ReadHeaderTimeout`**, deixando o servidor vulnerável a ataques **Slowloris**!|Rode `gosec -include=G112,G114,G115,G118 ./...` para auditar seus servidores HTTP e conversões numéricas.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0274|gosec-seguranca-http-cookies-serializacao-segredos-g117-g120-g124|`gosec` Hardening de Serviços Web e Serialização: exposição de segredos em JSON/YAML (`G117`), `ParseMultipartForm` (`G120`) e Cookies (`G124`)|As regras modernas da série `G1xx` documentadas em `RULES.md` protegem aplicações web Go contra quatro falhas frequentes em APIs: **`G116`** (*Trojan Source* com caracteres Unicode bidirecionais), **`G117`** (exposição acidental de campos sensíveis `Password`/`Secret`/`Token` durante serialização `json.Marshal` / `yaml.Marshal`), **`G120`** (`ParseMultipartForm` sem limite razoável causando exaustão de memória) e **`G124`** (configuração insegura de `http.Cookie` faltando `Secure`, `HttpOnly` ou `SameSite`).|Em Go, se uma struct `User` tiver um campo exportado `PasswordHash string` ou `APIToken string` e você esquecer de colocar a tag **`json:"-"`** (e `yaml:"-"`), qualquer chamada `json.NewEncoder(w).Encode(user)` enviará o hash da senha ou o token secreto na resposta JSON da API!|A regra **`G117`** inspeciona structs passadas para funções de marshaling (JSON, YAML, XML, TOML) e alerta sempre que campos cujos nomes casam com `(?i)secret|token|password` não estão explicitamente omitidos ou protegidos!|```go
+package auth
+
+import "net/http"
+
+type Account struct {
+	ID           string `json:"id"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"-" yaml:"-"` // Aprovado pela G117: nunca serializado em JSON/YAML
+}
+
+func SetSessionCookie(w http.ResponseWriter, token string) {
+	// Aprovado pela G124: define explicitamente Secure, HttpOnly e SameSiteStrictMode
+	http.SetCookie(w, &http.Cookie{
+		Name:     "__Host-session",
+		Value:    token,
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+```|Você pode customizar a expressão regular de nomes de campos sensíveis da regra `G117` no arquivo JSON de configuração do `gosec` (`{"G117": {"pattern": "(?i)secret|token|password|api_key|cpf"}}`).|Execute `gosec -include=G117,G120,G124 ./...` para auditar serialização de structs e emissão de cookies.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0275|gosec-seguranca-filesystem-permissoes-zip-slip-decompression-bomb-g110-g301-g307|`gosec` Segurança de Sistema de Arquivos (`G110` *Decompression Bomb*, `G301`–`G307` Permissões Octais e `G305` *Zip Slip*)|A família **`G3xx`** (junto com **`G110`**) do `gosec` audita operações de arquivo e descompactação em Go: **`G110`** detecta o uso de `io.Copy` sem limite ao descomprimir streams `gzip`/`zlib`/`zip` (*Decompression Bomb / Zip Bomb*), **`G305`** detecta extração de arquivos `.zip`/`.tar` vulnerável a *Zip Slip* (`../../etc/cron.d/pwn`) e **`G301`, `G302`, `G306`, `G307`** auditam permissões POSIX excessivamente abertas em diretórios e arquivos.|Em Go, `os.Create("secret.txt")` cria o arquivo com permissão **`0666`** (antes da `umask`), permitindo que outros usuários locais na mesma máquina leiam o arquivo se a `umask` for permissiva (`G307`); já `os.WriteFile("key", data, 0644)` expõe o arquivo para leitura global quando `G306` exige no máximo **`0600`**!|Da mesma forma, ao descomprimir qualquer payload `gzip` ou arquivo `zip` enviado por um usuário, usar `io.Copy(dst, zipReader)` direto permite que um arquivo `.zip` de 100 KB expanda para 50 GB e derrube o processo por *Out-Of-Memory*; a regra **`G110`** exige usar **`io.CopyN`** ou **`io.LimitReader`**!|```go
+package storage
+
+import (
+	"io"
+	"os"
+)
+
+func SaveCompressedSafely(path string, compressedReader io.Reader) error {
+	// Aprovado por G302/G306/G307: abre arquivo com permissão estrita 0600 (apenas dono lê/escreve)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Aprovado por G110: limita a leitura descompactada a no máximo 10 MiB contra Decompression Bomb
+	limited := io.LimitReader(compressedReader, 10*1024*1024)
+	_, err = io.Copy(f, limited)
+	return err
+}
+```|Conforme documentado em `RULES.md`, o ID **`G307`** costumava verificar `defer f.Close()`, mas essa verificação antiga foi aposentada e hoje **`G307`** verifica especificamente o uso de `os.Create` (que usa permissão `0666` fixa em vez de `os.OpenFile` com `0600`).|Execute `gosec -include=G110,G301,G302,G304,G305,G306,G307 ./...` para auditar toda manipulação de arquivos.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0276|gosec-criptografia-tls-ssh-g401-a-g408-math-rand-vs-crypto-rand|`gosec` Criptografia, TLS e SSH (`G401`–`G408` e `G501`–`G507`): `crypto/rand`, `MinVersion: tls.VersionTLS13`, IVs hardcoded e SSH|As categorias **`G4xx`** e **`G5xx`** do `gosec` auditam o uso de primitivas criptográficas e protocolos de segurança em Go: **`G401`/`G405`/`G406`** e **`G501`–`G507`** bloqueiam algoritmos quebrados (`md5`, `sha1`, `des`, `rc4`, `md4`, `ripemd160`), **`G402`** audita configurações `tls.Config` inseguras (`InsecureSkipVerify: true` ou `MinVersion` antiga), **`G403`** exige chaves RSA >= 2048 bits, **`G404`** proíbe `math/rand` para segurança, **`G407` (SSA)** detecta IV/nonce estático hardcoded em cifras AEAD/CBC e **`G408` (SSA)** detecta bypass de autenticação em `ssh.PublicKeyCallback`!|Reutilizar um **nonce/IV constante (hardcoded)** no `aes.NewGCM` (`G407`) destrói completamente a confidencialidade e a autenticidade do AES-GCM na segunda mensagem cifrada; e configurar `InsecureIgnoreHostKey()` no cliente SSH (`G106`) ou `InsecureSkipVerify: true` no `tls.Config` (`G402`) abre a conexão para ataques *Man-in-the-Middle (MitM)*.|Use sempre **`crypto/rand.Read`** para gerar chaves e nonces aleatórios e defina **`MinVersion: tls.VersionTLS12`** (ou `tls.VersionTLS13`) em toda instância de `tls.Config`.|```go
+package transport
+
+import (
+	"crypto/rand"
+	"crypto/tls"
+	"io"
+)
+
+func NewSecureTLSConfig() (*tls.Config, []byte, error) {
+	nonce := make([]byte, 12)
+	// Aprovado por G404 e G407: gera nonce aleatório via CSPRNG do sistema operacional (crypto/rand)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, nil, err
+	}
+	// Aprovado por G402: exige TLS 1.3 mínimo e mantém verificação de certificado ativa
+	cfg := &tls.Config{
+		MinVersion: tls.VersionTLS13,
+	}
+	return cfg, nonce, nil
+}
+```|Observe a regra **`G123` (SSA)** em `RULES.md`: ao usar o callback customizado `VerifyPeerCertificate` no `tls.Config`, configure também `VerifyConnection`, pois sessões TLS retomadas (*resumption*) não invocam `VerifyPeerCertificate`!|Rode `gosec -include=G106,G123,G401,G402,G403,G404,G407,G408 ./...` sobre seus pacotes de rede e criptografia.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0277|gosec-configuracao-regras-json-g101-entropia-g104-erros-allowlist|`gosec` Configuração Fina por Regra (`-conf config.json`): ajuste de entropia em `G101`, allowlist de erros em `G104` e permissões em `G301`/`G306`|Conforme documentado na seção *Rules configuration* de `RULES.md`, o `gosec` aceita um arquivo JSON de configuração (`gosec -conf .gosec.json ./...`) contendo ajustes globais e configurações específicas para as regras **`G101`**, **`G104`**, **`G111`**, **`G117`**, **`G301`**, **`G302`**, **`G306`** e **`G307`**.|Na regra **`G104` (erros não verificados)**, funções como `fmt.Println` retornam um erro que quase nenhum código Go verifica; sem configurar uma allowlist no `G104`, a equipe acaba desativando a regra `G104` inteira e perde a detecção de erros ignorados em chamadas críticas como `tx.Rollback()` ou `rows.Close()`.|No arquivo `.gosec.json`, você mantém a `G104` ativa mas ignora apenas pacotes/funções triviais (como `fmt: ["Println", "Printf"]`), além de ajustar os limiares de entropia da `G101` (`entropy_threshold`, `per_char_threshold`) e o modo máximo de permissão da `G306`!|```json
+{
+  "global": {
+    "audit": "enabled"
+  },
+  "G101": {
+    "pattern": "(?i)passwd|pass|password|pwd|secret|private_key|token|api_key",
+    "ignore_entropy": false,
+    "entropy_threshold": "80.0",
+    "per_char_threshold": "3.0"
+  },
+  "G104": {
+    "fmt": ["Println", "Printf", "Fprintf"]
+  },
+  "G306": "0600"
+}
+```|Você também pode excluir arquivos gerados automaticamente (como `*.pb.go` do Protobuf ou mocks) usando a flag **`-exclude-generated`** na linha de comando.|Execute `gosec -conf .gosec.json -exclude-generated ./...` para validar sua configuração customizada.|https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://raw.githubusercontent.com/securego/gosec/master/README.md;https://github.com/securego/gosec
+0278|gosec-supressao-anotacoes-nosec-justificativa-tracking-suppressions|`gosec` Supressões Auditáveis (`// #nosec Gxxx -- justificativa`) e Rastreamento com `-track-suppressions`|O `gosec` permite suprimir falsos positivos em um nó AST ou linha específica usando a diretiva de comentário **`// #nosec G401 -- justificativa técnica`** e oferece as flags **`-track-suppressions`** (que inclui as supressões e suas justificativas no relatório SARIF/JSON final!) e **`-ignore-nosec=true`** (que ignora todas as diretivas `#nosec`).|Permitir que desenvolvedores adicionem `// #nosec` sem especificar qual regra `Gxxx` está sendo ignorada e sem registrar o motivo no relatório de segurança impede que o time de AppSec audite as exceções aprovadas.|Ao exigir o formato **`// #nosec Gxxx -- motivo`** e rodar `gosec -track-suppressions -fmt sarif -out results.sarif ./...`, o relatório SARIF enviado ao GitHub Code Scanning / DefectDojo registra formalmente cada supressão com o texto da justificativa escrito pelo autor no código!|```go
+package legacy
+
+import (
+	"crypto/sha1" // #nosec G505 -- exigido pelo protocolo RFC 3174 do parceiro legado (sem uso criptográfico)
+	"fmt"
+)
+
+func ComputeLegacyPartnerChecksum(payload []byte) string {
+	// #nosec G401 -- checksum de compatibilidade protocolar não usado para assinatura ou senha
+	sum := sha1.Sum(payload)
+	return fmt.Sprintf("%x", sum)
+}
+```|Nunca configure uma diretiva `#nosec` sem listar o código explícito da regra (ex.: `G401`); assim, qualquer outro problema na mesma função continuará sendo detectado normalmente.|Execute `gosec -track-suppressions -fmt json ./... | jq '.Issues'` para inspecionar os metadados de supressão registrados.|https://raw.githubusercontent.com/securego/gosec/master/README.md;https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://github.com/securego/gosec
+0279|gosec-filtragem-severity-confidence-include-exclude-tests-build-tags|`gosec` Seleção de Escopo na CLI: `-severity`, `-confidence`, `-include`/`-exclude`, `-tests` e `-tags` de compilação|Para controlar o escopo e a precisão da varredura, a CLI do `gosec` disponibiliza as flags **`-severity`** (`low`, `medium`, `high`), **`-confidence`** (`low`, `medium`, `high`), **`-include=G101,G701`**, **`-exclude=G104`**, **`-exclude-dir`**, **`-tests`** (inclui arquivos `*_test.go` que são ignorados por padrão) e **`-tags`** (passa *build tags* do Go para analisar arquivos condicionais, ex.: `-tags=linux,integration`)!|Como o `gosec` compila a árvore de tipos e o SSA usando as tags de build ativas, se você tiver código específico de plataforma ou de produção atrás de `//go:build linux && cgo` ou `//go:build prod` e não passar `-tags`, esses arquivos não serão analisados!|Por padrão, o `gosec` **não analisa arquivos `*_test.go`** para evitar falsos positivos com credenciais fictícias de teste; porém, você pode rodar um segundo passo no CI com `-tests -include=G101` se quiser garantir que ninguém colou uma chave real da AWS dentro de um teste de integração.|```bash
+# Executando o gosec filtrando por severidade e confiança >= medium, excluindo código gerado e passando build tags:
+gosec \
+  -severity medium \
+  -confidence medium \
+  -exclude-generated \
+  -exclude-dir=vendor \
+  -tags=linux \
+  ./...
+```|Use a flag **`-stdout -verbose=text`** junto com `-out=results.json -fmt=json` quando quiser imprimir o resumo legível no log do CI e simultaneamente salvar o arquivo JSON para ingestão automatizada.|Teste a diferença de cobertura com e sem `-tests` em um módulo Go com testes unitários.|https://raw.githubusercontent.com/securego/gosec/master/README.md;https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://github.com/securego/gosec
+0280|gosec-integracao-github-actions-sarif-private-modules-golangci-lint|`gosec` em Pipelines CI/CD: GitHub Actions com `SARIF`, módulos privados (`GOPRIVATE`) e integração com `golangci-lint` / Bazel `nogo`|Conforme detalhado na seção *Installation / GitHub Action* do README oficial (`securego/gosec`), o `gosec` integra-se nativamente ao **GitHub Code Scanning** exportando arquivos **SARIF (`-fmt sarif -out results.sarif`)**, suporta repositórios com módulos Go privados via variáveis **`GOPRIVATE`** e **`GITHUB_AUTHENTICATION_TOKEN`**, e pode rodar embutido no **`golangci-lint`** ou no **`nogo` do Bazel**.|Se o seu serviço Go importa pacotes internos privados da sua organização (`github.com/sua-org/pkg-interno`) e o runner do `gosec` não tiver `GOPRIVATE` e `GITHUB_AUTHENTICATION_TOKEN` configurados, o `go/packages` falhará ao baixar os tipos das dependências e a análise SSA/Taint ficará incompleta!|Ao usar o workflow com upload SARIF para o GitHub Code Scanning, o README oficial recomenda passar **`-no-fail -fmt sarif -out results.sarif ./...`** na etapa do `gosec` para que o step seguinte (`github/codeql-action/upload-sarif`) sempre receba e publique o relatório SARIF antes de o GitHub aplicar o bloqueio da PR.|```yaml
+# Exemplo baseado no README oficial do securego/gosec para projetos com módulos Go privados e upload SARIF:
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+      GOPRIVATE: github.com/minha-org/*
+      GITHUB_AUTHENTICATION_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out results.sarif ./...'
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+```|Quando habilitar o linter `gosec` dentro do `.golangci.yml`, lembre-se de atualizar regularmente a versão do `golangci-lint` para receber as novas regras de *Taint Analysis* (`G701`–`G710`) e *SSA* (`G113`–`G124`).|Execute `gosec -fmt sarif -out results.sarif ./...` localmente e valide o schema SARIF gerado com `jq '.runs[0].tool.driver.name' results.sarif`.|https://raw.githubusercontent.com/securego/gosec/master/README.md;https://raw.githubusercontent.com/securego/gosec/master/RULES.md;https://github.com/securego/gosec

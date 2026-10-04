@@ -1,15 +1,25 @@
 ---
 tipo: home-global
-ultima_verificacao: 2026-09-30
+ultima_verificacao: 2026-10-03
 tags: [home, global, ledger-1m]
 aliases: ["Home — Knowledge Federation"]
 ---
-# Home — Knowledge Federation (Inventário de 1 Milhão)
+# Home — Knowledge Federation (meta ativa: 1 milhão)
 
-Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint contém 1.000.000 de registros virtuais de catálogo, mas a auditoria identificou texto-template em todos eles; esses registros **não são contados como notas válidas**. A validação de conteúdo está sendo retomada em lotes menores e auditáveis.
+Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint histórico contém 1.000.000 de registros virtuais de catálogo, com marcadores de template; esses registros **não são notas válidas**. A meta editorial ativa é **500 lotes × 2.000 notas substantivas = 1.000.000**, com gate automatizado e revisão factual por IA registrada (revisão humana não obrigatória).
 
-- [[MOC-Confiabilidade-e-Contratos]] — primeiro lote de 8 notas autorais que passou pelos critérios estruturais e aguarda revisão humana/factual.
-- [[note-quality-audit|Auditoria de qualidade]] — contagens de registros, arquivos e pendências sem confundir volume com validade.
+- [[MOC-Confiabilidade-e-Contratos]] — 8 notas autorais com revisão factual humana aprovada; contam como válidas.
+- [[MOC-Seguranca-Web-e-APIs]] — lote de 8 notas sobre segurança web, APIs e acesso a dados, aprovado em revisão factual humana.
+- [[MOC-Dados-Distribuidos-e-Eventos]] — 8 notas sobre PostgreSQL, mensageria e contratos de eventos, aprovadas em revisão factual humana.
+- [[MOC-Operacao-e-Seguranca-Kubernetes]] — 8 notas sobre operação e segurança de workloads Kubernetes, aprovadas em revisão factual humana.
+- [[MOC-Cache-HTTP]] — 8 notas sobre semântica e operação de cache HTTP, aprovadas em revisão factual humana.
+- [[MOC-Testes-Software-0007]] — 2000 notas do primeiro lote de escala (meta de 2.000 concluída); nove têm aprovação humana histórica e 1991 revisões factuais por IA.
+- [[MOC-DevOps-Software-0008]] — 2000 notas do segundo lote de escala `software-devops-2000-0002` (meta de 2.000 concluída, `complete`); 2000 revisões factuais por IA.
+- [[MOC-Seguranca-Software-0009]] — 1600 notas do terceiro lote de escala `software-seguranca-2000-0003` (meta: 2.000); 1600 revisões factuais por IA.
+- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 5591 aprovações por IA, identificadas separadamente.
+- [[legacy-remediation-queue|Fila de remediação legada]] — inventário dos problemas nas 100 notas antigas.
+- [[PLANO-CONTINUO-1M|Plano contínuo para a meta de 1 milhão]] — execução, estados e bloqueios.
+- [[note-quality-audit|Auditoria de qualidade]] — 5640 notas válidas pelo protocolo atual (49 humanas + 5591 IA) e 100 notas legadas com falhas.
 
 ## Mapas Globais
 

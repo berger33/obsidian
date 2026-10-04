@@ -1,0 +1,162 @@
+=== NOTE: 941 | atlantis-automacao-terraform-pull-requests-webhooks | Atlantis: automação self-hosted de fluxos Terraform em Pull Requests via webhooks ===
+ONE_LINER: O **Atlantis** (`runatlantis/atlantis`) é uma aplicação Go auto-hospedada (self-hosted) que escuta eventos de Pull Request/Merge Request via webhooks do Git, executa `terraform plan`, `import` e `apply` remotamente e comenta o resultado de volta diretamente no Pull Request.
+IMPORTANCE: Quando engenheiros executam `terraform apply` de suas máquinas locais, ninguém na equipe vê o plano que foi aplicado, estados ficam dessincronizados com a branch `main` e credenciais administrativas da nuvem precisam ser distribuídas nos laptops dos desenvolvedores. Segundo o README oficial (`What is Atlantis?` / `Why should you use it?`), o Atlantis torna as mudanças de Terraform visíveis para toda a equipe, permite colaboração segura e padroniza os fluxos de IaC.
+HOW_IT_WORKS: O servidor Atlantis roda dentro da infraestrutura da própria empresa (por exemplo, como um Deployment/StatefulSet no Kubernetes ou container ECS com uma IAM Role da nuvem) conectado por webhook ao GitHub, GitLab, Bitbucket ou Azure DevOps: (1) quando um engenheiro abre ou atualiza um Pull Request alterando arquivos `.tf`, o Atlantis recebe o webhook, clona o PR, executa **`terraform plan`** automaticamente (**Autoplanning**) e posta a saída completa do plano em um comentário no PR; (2) a equipe revisa o código e o plano no próprio PR; e (3) após a aprovação humana do PR, comentar **`atlantis apply`** instrui o Atlantis a aplicar exatamente aquele plano salvo (`$PLANFILE`), postar o resultado do `apply` e opcionalmente fazer o merge automático do PR (**Automerging**).
+EXAMPLE:
+```text
+# Comentários de Pull Request reconhecidos pelo Atlantis conforme a documentação Using Atlantis
+atlantis help
+atlantis version
+atlantis plan
+atlantis apply
+```
+TRADE_OFFS: Como o Atlantis aplica as mudanças no ambiente real **antes** que o Pull Request seja mergeado na branch `main` (para garantir que, se o `terraform apply` falhar no meio do caminho, o engenheiro possa corrigir na mesma branch do PR e re-executar `atlantis plan`/`apply` sem deixar a `main` quebrada), é obrigatório utilizar o sistema de **Locking** do Atlantis e fazer o merge do PR imediatamente após o `apply` bem-sucedido.
+VERIFY: Comente `atlantis version` ou `atlantis help` em um Pull Request de teste conectado ao servidor Atlantis e verifique que o bot responde em segundos com a versão do Terraform configurada.
+LINKS: [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-bloqueio-diretorio-workspace-locking-unlock]] | [[infracost-estimativa-custos-nuvem-terraform-finops-shift-left]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/locking.html
+
+=== NOTE: 942 | atlantis-comandos-pull-request-plan-apply-flags-workspaces | Atlantis: comandos de comentário em PR (atlantis plan e apply), seleção de projeto (-d, -p, -w) e arquivos env/{workspace}.tfvars ===
+ONE_LINER: Conforme documenta a página oficial `Using Atlantis` (`runatlantis.io/docs/using-atlantis.html`), os comentários `atlantis plan` e `atlantis apply` aceitam filtros por diretório (`-d`), projeto (`-p`) e workspace (`-w`), flags extras do Terraform após `--` e carregam automaticamente arquivos `env/{workspace}.tfvars`.
+IMPORTANCE: Em um repositório Git que contém múltiplos diretórios Terraform ou utiliza múltiplos workspaces (`default`, `staging`, `production`), os engenheiros precisam saber como planejar e aplicar um único projeto/workspace específico, passar variáveis pontuais (`-target` ou `-destroy`) e organizar variáveis por ambiente sem repetição manual de `-var-file`.
+HOW_IT_WORKS: Nos comentários do Pull Request: (1) **`atlantis plan`** (sem flags) roda o plano para todos os projetos modificados no PR, enquanto **`atlantis plan -d <dir> -w <workspace>`** ou **`atlantis plan -p <project>`** planeja apenas o alvo especificado; (2) **Automatic Environment Variable Files**: ao rodar `atlantis plan` para um workspace `<workspace>`, o Atlantis verifica automaticamente se existe o arquivo **`env/{workspace}.tfvars`** relativo ao diretório do projeto (ex.: `env/default.tfvars`, `env/staging.tfvars`, `env/production.tfvars`) e o inclui automaticamente via `-var-file`; (3) **Flags extras do Terraform**: qualquer argumento após `--` é repassado ao Terraform (ex.: `atlantis plan -d dir -- -var foo='bar'` ou `atlantis plan -- -destroy`); e (4) **`atlantis apply`** (sem flags) aplica **todos os planos ainda não aplicados daquele PR**.
+EXAMPLE:
+```text
+# Planejar e aplicar um workspace específico (carregando automaticamente env/staging.tfvars) ou passar flags extras após --
+atlantis plan -d infra/network -w staging
+atlantis plan -d infra/network -- -target=aws_security_group.web
+atlantis apply -d infra/network -w staging
+```
+TRADE_OFFS: Conforme alerta uma nota importante na documentação oficial `Using Atlantis`, executar um **`atlantis plan` sem flags** (assim como um autoplan disparado por novo commit) **descarta todos os planos criados anteriormente com flags manuais `-p` / `-d` / `-w`** naquele PR; portanto, se você planeja múltiplos workspaces manualmente com `-w staging` e `-w production`, aplique-os antes de rodar um `atlantis plan` geral sem flags.
+VERIFY: Crie a pasta `env/staging.tfvars` dentro de um diretório de projeto Terraform e comente `atlantis plan -w staging` no PR, verificando na saída comentada pelo Atlantis a inclusão automática de `-var-file=env/staging.tfvars`.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-bloqueio-diretorio-workspace-locking-unlock]] | [[atlantis-configuracao-repositorio-atlantis-yaml-autoplan-when-modified]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/locking.html
+
+=== NOTE: 943 | atlantis-bloqueio-diretorio-workspace-locking-unlock | Atlantis: sistema de Locking por diretório e workspace, Global Apply Lock e relação com o Terraform State Lock ===
+ONE_LINER: Conforme detalha a página oficial `Locking` (`runatlantis.io/docs/locking.html`), quando um `plan` é executado em um PR, o Atlantis **bloqueia (Locks)** aquele diretório e workspace até que o PR seja mergeado/fechado ou que o plano seja descartado manualmente (`atlantis unlock`), operando em uma camada acima do Terraform State Locking.
+IMPORTANCE: Como o `atlantis apply` roda na branch do Pull Request **antes** do merge na `main`, se um segundo desenvolvedor abrisse outro PR alterando o mesmo diretório/workspace antes do primeiro PR ser mergeado, o segundo PR geraria um plano inválido ou reverteria as mudanças recém-aplicadas pelo primeiro PR. O bloqueio em nível de PR do Atlantis impede essa condição de corrida.
+HOW_IT_WORKS: (1) **Escopo do Lock**: apenas o par **(diretório do repositório + workspace do Terraform)** fica bloqueado para aquele Pull Request — outros diretórios ou outros workspaces no mesmo repositório continuam livres para outros PRs planejarem e aplicarem normalmente; (2) se outro PR tentar rodar `plan` no diretório/workspace bloqueado, o Atlantis posta um erro com link direto para o PR que detém o lock; (3) **Global Apply Lock (fail-closed)**: antes de rodar `atlantis apply`, o Atlantis também verifica o bloqueio global de apply; se não conseguir alcançar o backend de lock, ele **falha fechado (`fails closed`)** e rejeita o apply; e (4) **Unlocking**: o lock é liberado automaticamente quando o PR é mergeado ou fechado, ou manualmente comentando **`atlantis unlock`** no PR (ou clicando em *Discard Plan and Unlock* na interface web do Atlantis).
+EXAMPLE:
+```text
+# Liberar manualmente os planos e os locks de diretório/workspace mantidos pelo Pull Request atual sem fazer merge
+atlantis unlock
+```
+TRADE_OFFS: Conforme explica a seção `Relationship to Terraform State Locking` da documentação oficial, o lock do Atlantis **não substitui nem conflita** com o **Terraform State Locking** (como o lock no S3/DynamoDB ou GCS): o lock nativo do Terraform dura apenas os segundos/minutos em que o comando `terraform apply` está rodando para evitar escrita concorrente no arquivo `.tfstate`, enquanto o lock do Atlantis dura todo o ciclo de vida do Pull Request (horas ou dias) para impedir que dois PRs trabalhem sobre o mesmo estado ao mesmo tempo.
+VERIFY: Acesse a URL da interface web do servidor Atlantis para visualizar todos os locks ativos no painel `Locks` ou comente `atlantis unlock` em um PR para descartar o plano e liberar o diretório/workspace.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-automerge-apply-requirements-protecao-branches]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/locking.html | https://www.runatlantis.io/docs/using-atlantis.html
+
+=== NOTE: 944 | atlantis-configuracao-repositorio-atlantis-yaml-autoplan-when-modified | Atlantis: configuração de projetos no repositório com atlantis.yaml (projects, workspace, autoplan e when_modified) ===
+ONE_LINER: O arquivo **`atlantis.yaml`** (`version: 3`) na raiz do repositório permite declarar explicitamente cada projeto Terraform (`projects:`), seu diretório (`dir`), seu `workspace`, o `workflow` customizado e as regras de **`autoplan.when_modified`** para disparar planos quando módulos compartilhados são alterados.
+IMPORTANCE: Por padrão, sem um `atlantis.yaml`, o Atlantis detecta projetos apenas no diretório exato onde um arquivo `.tf` foi modificado; porém, se um repositório possui módulos compartilhados em `modules/vpc/` consumidos por `envs/staging/` e `envs/prod/`, alterar um arquivo em `modules/vpc/` precisa disparar automaticamente o `plan` nos diretórios `envs/staging` e `envs/prod`.
+HOW_IT_WORKS: No arquivo **`atlantis.yaml`** (`version: 3`), a lista **`projects:`** define cada unidade de execução com: (1) **`name`**: nome único do projeto para uso com `atlantis plan -p <name>` e `atlantis apply -p <name>`; (2) **`dir`**: diretório relativo à raiz do repositório; (3) **`workspace`**: workspace do Terraform (permitindo declarar múltiplos projetos apontando para o mesmo `dir` com `workspace`s diferentes!); (4) **`terraform_version`**: fixa a versão exata do binário Terraform para aquele projeto; e (5) **`autoplan`**: define `enabled: true` e a lista de globs **`when_modified`** (ex.: `["*.tf", "*.tfvars", "../../modules/**/*.tf"]`) que disparam o plano automático quando alterados em um PR.
+EXAMPLE:
+```yaml
+# Exemplo de arquivo atlantis.yaml (version 3) definindo projetos por ambiente e rastreamento de módulos compartilhados
+version: 3
+automerge: false
+parallel_plan: true
+parallel_apply: false
+projects:
+  - name: network-staging
+    dir: envs/staging/network
+    workspace: staging
+    terraform_version: v1.9.5
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../../../modules/vpc/*.tf"]
+      enabled: true
+```
+TRADE_OFFS: Conforme documenta `Using Atlantis`, quando um projeto é referenciado pelo nome configurado no `atlantis.yaml` via flag **`-p <project>`** (`atlantis plan -p network-staging`), você **não pode** passar simultaneamente as flags `-d` ou `-w`, pois o projeto no `atlantis.yaml` já define fixamente seu diretório e seu workspace.
+VERIFY: Abra um Pull Request alterando um arquivo em `modules/vpc/` listado em `when_modified` do `atlantis.yaml` e confirme que o Atlantis dispara automaticamente o `plan` para os projetos dependentes.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-workflows-customizados-repos-yaml-server-side]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/how-atlantis-works.html
+
+=== NOTE: 945 | atlantis-workflows-customizados-repos-yaml-server-side | Atlantis: configuração server-side (repos.yaml), restrição de allowed_overrides e Custom Workflows ($PLANFILE) ===
+ONE_LINER: Para governança centralizada de segurança, o administrador do servidor Atlantis utiliza a configuração server-side (**`repos.yaml`** / `--repo-config`) para definir requisitos de aprovação (`apply_requirements`), controlar quais chaves o `atlantis.yaml` do repositório pode sobrescrever (`allowed_overrides`) e definir **Custom Workflows** usando `$PLANFILE`.
+IMPORTANCE: Se qualquer desenvolvedor puder editar o `atlantis.yaml` dentro da branch do seu próprio Pull Request para definir um workflow customizado que executa `curl | bash` ou desabilita requisitos de aprovação antes do `apply`, um PR não revisado poderia exfiltrar as credenciais de nuvem do servidor Atlantis.
+HOW_IT_WORKS: O arquivo server-side **`repos.yaml`** (montado no servidor Atlantis via `--repo-config=repos.yaml`) define políticas por repositório (`id: /.*/` ou `id: github.com/minha-org/infra`): (1) **`apply_requirements: [approved, mergeable, undiverged]`**: exige que o PR esteja aprovado no Git, sem conflitos de merge e atualizado com a branch base antes de aceitar `atlantis apply`; (2) **`allowed_overrides`**: restringe exatamente o que o `atlantis.yaml` do repositório pode customizar; e (3) **`workflows`**: permite customizar os estágios `plan` e `apply` (ex.: rodar Terragrunt, OpenTofu, TFLint ou scripts de preparação), onde o passo de plano **deve** gravar o arquivo de saída na variável de ambiente **`$PLANFILE`** (ex.: `terraform plan -out $PLANFILE`) para que os comandos do Atlantis funcionem.
+EXAMPLE:
+```yaml
+# Exemplo de repos.yaml server-side exigindo PR aprovado, mergeable e atualizado antes de permitir atlantis apply
+repos:
+  - id: /.*/
+    branch: /^main$/
+    apply_requirements: [approved, mergeable, undiverged]
+    allowed_overrides: [workflow, apply_requirements]
+    allow_custom_workflows: false
+```
+TRADE_OFFS: Como o comando `atlantis plan` roda automaticamente assim que um Pull Request é aberto (antes mesmo de qualquer revisor humano ter aprovado o código do PR!), nunca habilite `allow_custom_workflows: true` no `repos.yaml` nem permita que PRs não confiáveis executem código arbitrário durante o `plan` (como providers maliciosos ou `external` data sources sem revisão) em servidores Atlantis com credenciais de produção.
+VERIFY: Com `apply_requirements: [approved, mergeable]` configurado no `repos.yaml`, tente comentar `atlantis apply` em um PR ainda não aprovado no GitHub/GitLab e confirme que o Atlantis bloqueia a execução.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-configuracao-repositorio-atlantis-yaml-autoplan-when-modified]] | [[atlantis-verificacao-politicas-policy-checking-conftest-opa]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/how-atlantis-works.html
+
+=== NOTE: 946 | atlantis-automerge-apply-requirements-protecao-branches | Atlantis: Automerging de Pull Requests, método de merge (--auto-merge-method) e requisito undiverged ===
+ONE_LINER: O recurso de **Automerging** do Atlantis faz o merge automático do Pull Request assim que todos os planos do PR tiverem sido aplicados com sucesso via `atlantis apply`, permitindo controlar o método de merge (`--auto-merge-method`) ou desabilitá-lo pontualmente (`--auto-merge-disabled`).
+IMPORTANCE: Como o Atlantis aplica as mudanças de infraestrutura antes do merge do PR, se o engenheiro rodar `atlantis apply`, ver que deu certo e esquecer de clicar no botão "Merge Pull Request" no GitHub/GitLab, a branch `main` ficará desatualizada em relação à nuvem e o diretório continuará bloqueado (`Locked`) impedindo o restante da equipe de trabalhar.
+HOW_IT_WORKS: Quando `automerge: true` está habilitado (no `atlantis.yaml` ou via flag `--automerge` no servidor), ao executar `atlantis apply` o Atlantis verifica se todos os planos gerados naquele Pull Request já foram aplicados com sucesso; caso positivo, o Atlantis realiza o merge automático do PR via API do GitHub/GitLab/Bitbucket e libera todos os locks. Conforme documenta `Using Atlantis`, no momento do comentário `atlantis apply`, o usuário pode passar **`--auto-merge-disabled`** para impedir o automerge naquele comando específico ou **`--auto-merge-method <method>`** (ex.: `squash`, `merge`, `rebase` no GitHub) para escolher o método de merge.
+EXAMPLE:
+```text
+# Aplicar todos os planos pendentes do PR especificando o método squash para o automerge ou desabilitando o automerge
+atlantis apply --auto-merge-method squash
+atlantis apply -p network-staging --auto-merge-disabled
+```
+TRADE_OFFS: Se um Pull Request modifica 3 projetos diferentes (`proj-a`, `proj-b` e `proj-c`) e você executa apenas `atlantis apply -p proj-a`, o Automerging **não** fará o merge do PR ainda porque `proj-b` e `proj-c` continuam com planos pendentes não aplicados; o automerge só dispara quando 100% dos planos do PR foram aplicados (ou quando `atlantis apply` sem filtros aplica todos de uma vez).
+VERIFY: Configure `automerge: true` em um repositório de homologação, aprove o PR, comente `atlantis apply` e confirme que o PR é mergeado automaticamente e que o lock desaparece da UI do Atlantis.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-bloqueio-diretorio-workspace-locking-unlock]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/how-atlantis-works.html
+
+=== NOTE: 947 | atlantis-operacoes-import-state-rm-destroy-pr | Atlantis: importação de recursos (atlantis import), remoção de estado (state rm) e planos destrutivos (-destroy) via PR ===
+ONE_LINER: Além de `plan` e `apply`, o Atlantis suporta importar recursos existentes para o estado do Terraform (**`atlantis import ADDRESS ID`**), gerenciar recursos no state e gerar planos de destruição controlada (**`atlantis plan -- -destroy`**) diretamente por comentários no Pull Request sem precisar de acesso local ao `.tfstate`.
+IMPORTANCE: Em equipes que bloquearam o acesso de escrita direto ao bucket S3 do `.tfstate` a partir das máquinas dos desenvolvedores (permitindo escrita apenas pela IAM Role do servidor Atlantis), importar um recurso criado manualmente no console da nuvem exigiria abrir exceções de segurança se o Atlantis não tivesse suporte nativo ao comando `atlantis import`.
+HOW_IT_WORKS: Conforme documenta o README oficial (`Runs terraform plan, import, apply remotely`) e o guia `Using Atlantis`: (1) **`atlantis import [options] ADDRESS ID`**: o desenvolvedor adiciona o bloco `resource "..." "..."` no código `.tf` do Pull Request e comenta `atlantis import -d <dir> -w <workspace> aws_s3_bucket.logs meu-bucket-existente`; o Atlantis executa `terraform import` no workspace bloqueado e posta o resultado no PR; e (2) **Planos destrutivos (`-destroy`)**: comentar **`atlantis plan -d dir -- -destroy`** gera um plano de destruição (`destroy plan`) em `$PLANFILE` que, após revisão cuidadosa da equipe no comentário do PR, pode ser efetivado com `atlantis apply -d dir`.
+EXAMPLE:
+```text
+# Importar um recurso existente para o estado do Terraform pelo PR e rodar um novo plano para confirmar zero diffs
+atlantis import -d infra/storage -w production aws_s3_bucket.audit_logs empresa-audit-logs-prod
+atlantis plan -d infra/storage -w production
+```
+TRADE_OFFS: Como o comando `atlantis import` altera imediatamente o arquivo `.tfstate` remoto adicionando o recurso importado antes mesmo do `atlantis apply`, após rodar `atlantis import` com sucesso execute sempre um `atlantis plan` em seguida no mesmo PR para verificar que o código `.tf` escrito no PR corresponde exatamente aos atributos do recurso importado na nuvem e faça o merge do PR.
+VERIFY: Após executar `atlantis import ADDRESS ID` no comentário do PR, rode `atlantis plan` no mesmo projeto e confirme que o plano reporta `No changes. Your infrastructure matches the configuration`.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-bloqueio-diretorio-workspace-locking-unlock]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/locking.html
+
+=== NOTE: 948 | atlantis-verificacao-politicas-policy-checking-conftest-opa | Atlantis: avaliação automatizada de políticas sobre planos Terraform (Policy Checking com Conftest / OPA Rego) ===
+ONE_LINER: O recurso de **Policy Checking** do Atlantis executa o **Conftest** (Open Policy Agent / Rego) contra o arquivo JSON do plano gerado pelo `terraform show -json $PLANFILE`, bloqueando o `atlantis apply` até que todas as políticas passem ou que um revisor autorizado emita `atlantis approve_policies`.
+IMPORTANCE: Revisão humana de planos Terraform de 500 linhas em comentários de PR frequentemente deixa passar erros de conformidade (como um bucket S3 público, um Security Group abrindo `0.0.0.0/0` na porta 22 ou ausência de tags obrigatórias de centro de custo). Integrar Policy Checking no próprio fluxo do Atlantis transforma políticas Rego em um gate obrigatório antes do `apply`.
+HOW_IT_WORKS: Quando `--enable-policy-checks` está habilitado no servidor Atlantis e conjuntos de políticas (`policy_sets` do Conftest/OPA) estão configurados no `repos.yaml`: (1) logo após o estágio `plan` gerar o `$PLANFILE`, o Atlantis converte o plano binário para JSON (`$SHOWFILE`) e executa o estágio **`policy_check`** rodando `conftest test`; (2) o resultado da avaliação das políticas é comentado no PR ao lado do plano; e (3) se `policy_check` estiver em `apply_requirements` e alguma política falhar, o `atlantis apply` é bloqueado a menos que o código seja corrigido ou que um membro da equipe listada em `owners` aprove explicitamente a exceção com **`atlantis approve_policies`**.
+EXAMPLE:
+```text
+# Aprovar excepcionalmente um plano que falhou em uma política não-bloqueante (exige usuário listado em owners do policy_set)
+atlantis approve_policies -d envs/staging/network -w staging
+```
+TRADE_OFFS: Como um novo `atlantis plan` invalida aprovações anteriores, qualquer execução de `atlantis approve_policies` vale exclusivamente para o plano atual; se um novo commit for enviado ao PR ou um novo `atlantis plan` for rodado, as políticas serão reavaliadas do zero.
+VERIFY: Adicione `policy_check` na lista `apply_requirements` do `repos.yaml` e verifique no comentário do PR a seção `Policy Check Results` gerada após cada `atlantis plan`.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-workflows-customizados-repos-yaml-server-side]] | [[infracost-politicas-finops-tagging-guardrails-orcamentos]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/how-atlantis-works.html
+
+=== NOTE: 949 | atlantis-seguranca-webhooks-segredos-autenticacao-implantacao | Atlantis: modelo de segurança do servidor, proteção contra PRs maliciosos, Drift Detection API e implantação em Kubernetes ===
+ONE_LINER: A operação segura do Atlantis exige validar assinaturas de webhooks (`--gh-webhook-secret` / `--gitlab-webhook-secret`), proteger a interface web/API, persistir o diretório de dados (`--data-dir`) em um volume durável (`StatefulSet`) e compreender o lock de diretório em chamadas de API de Drift Detection (`PR: 0`).
+IMPORTANCE: Como o servidor Atlantis detém credenciais privilegiadas para criar e destruir recursos na nuvem via Terraform e armazena em disco (`--data-dir`) os arquivos `$PLANFILE` e os metadados de locks dos PRs abertos, expor o endpoint do Atlantis na internet sem validação criptográfica de webhook ou rodar em um pod sem volume persistente causaria riscos graves de segurança ou perda de locks em restarts.
+HOW_IT_WORKS: (1) **Persistência (`StatefulSet`)**: em Kubernetes, o Atlantis é implantado via Helm chart oficial como um `StatefulSet` com `PersistentVolumeClaim` montado em `/atlantis-data` para preservar os locks e os planos pendentes mesmo se o pod reiniciar; (2) **Segurança de Webhooks e UI**: o servidor valida o HMAC de cada requisição de webhook do provedor Git e suporta autenticação básica/OIDC na interface web de locks; e (3) **Locking e Drift Detection (`PR: 0`)**: conforme documenta a seção `Locking and Drift Detection` em `runatlantis.io/docs/locking.html`, quando detecção ou remediação de drift roda via API com `PR: 0` (fluxo fora de PR), o Atlantis ainda adquire e libera **working directory locks** para impedir operações concorrentes no mesmo projeto, liberando-os automaticamente ao concluir sem criar locks permanentes de PR na UI.
+EXAMPLE:
+```bash
+# Verificar a saúde do servidor Atlantis via endpoint /healthz e listar locks ativos
+curl -sSf https://atlantis.interno.empresa.com/healthz
+```
+TRADE_OFFS: Nunca exponha o servidor Atlantis a repositórios públicos abertos a Pull Requests de forks externos sem restrição, pois o Terraform executa código de inicialização de providers, módulos e blocos `local-exec` / `external` durante o `terraform init` e `terraform plan`; utilize o Atlantis apenas em repositórios privados internos com proteção de branch e revisão obrigatória.
+VERIFY: Inspecione o `StatefulSet` do Atlantis no Kubernetes (`kubectl get sts,pvc -n atlantis`) confirmando que o diretório de dados está montado em um volume persistente e que o secret de webhook está configurado.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-bloqueio-diretorio-workspace-locking-unlock]] | [[atlantis-workflows-customizados-repos-yaml-server-side]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/locking.html | https://www.runatlantis.io/docs/how-atlantis-works.html
+
+=== NOTE: 950 | atlantis-execucao-paralela-parallel-plan-apply-customizacao-bot | Atlantis: execução paralela de planos (parallel_plan), customização do executável (--executable-name) e modo --verbose ===
+ONE_LINER: Em monorepos com dezenas de projetos Terraform, o Atlantis acelera o feedback habilitando **`parallel_plan: true`** no `atlantis.yaml`, permite customizar o nome do comando invocado nos comentários (`--executable-name`, `run` ou `@GithubUser`) e anexar logs detalhados de diagnóstico com **`--verbose`**.
+IMPORTANCE: Quando um Pull Request altera um módulo base consumido por 15 projetos diferentes no mesmo repositório, rodar 15 `terraform plan` de forma estritamente sequencial um após o outro pode levar 20 minutos; além disso, empresas que rodam múltiplas instâncias do Atlantis (ex.: uma instância para AWS e outra para GCP no mesmo repositório) precisam que cada instância responda a um nome de comando diferente no comentário do PR.
+HOW_IT_WORKS: (1) **Paralelismo (`parallel_plan` e `parallel_apply`)**: habilitar `parallel_plan: true` no `atlantis.yaml` faz o Atlantis executar os planos de projetos independentes em goroutines paralelas (controladas por `--parallel-pool-size`, padrão 15); (2) **Customização do nome do comando**: conforme a dica na seção inicial de `Using Atlantis` (`runatlantis.io/docs/using-atlantis.html`), além do padrão `atlantis help` (configurável via `--executable-name`, ex.: `atlantis-aws plan`), o Atlantis também aceita o nome global `run help` ou menção direta ao usuário do bot `@GithubUser help`; e (3) **Diagnóstico (`--verbose`)**: adicionar `--verbose` ao final de qualquer comando (`atlantis plan --verbose` ou `atlantis apply --verbose`) anexa o log interno do Atlantis ao comentário do PR.
+EXAMPLE:
+```text
+# Executar um plano anexando os logs internos detalhados do servidor Atlantis (--verbose) ao comentário do PR
+atlantis plan -p network-staging --verbose
+```
+TRADE_OFFS: Embora `parallel_plan: true` seja seguro e altamente recomendado para acelerar PRs com múltiplos projetos, tenha cautela ao habilitar `parallel_apply: true` caso haja dependências implícitas entre diretórios diferentes no seu repositório (por exemplo, o diretório `eks-cluster` precisa terminar de ser aplicado antes que o diretório `k8s-addons` tente conectar no cluster); para projetos com ordem de dependência, mantenha `parallel_apply: false` ou configure `execution_order_group`.
+VERIFY: Habilite `parallel_plan: true` no `atlantis.yaml` de um repositório multi-projeto e observe o tempo total reduzido ao rodar `atlantis plan` sobre múltiplos projetos simultaneamente.
+LINKS: [[atlantis-automacao-terraform-pull-requests-webhooks]] | [[atlantis-comandos-pull-request-plan-apply-flags-workspaces]] | [[atlantis-configuracao-repositorio-atlantis-yaml-autoplan-when-modified]]
+SOURCES: https://raw.githubusercontent.com/runatlantis/atlantis/main/README.md | https://www.runatlantis.io/docs/using-atlantis.html | https://www.runatlantis.io/docs/how-atlantis-works.html

@@ -1,0 +1,100 @@
+0111|owaspcrs-arquitetura-core-rule-set-v4-protecao-owasp-top-ten|OWASP CRS (Core Rule Set v4): arquitetura do conjunto de regras de detecção genérica para ModSecurity e Coraza|O **OWASP CRS (*Core Rule Set*)** (projeto *Flagship* da OWASP licenciado sob Apache 2.0) é o conjunto padrão da indústria de regras genéricas de detecção de ataques para Web Application Firewalls compatíveis com SecLang (como **OWASP Coraza** e **OWASP ModSecurity**), protegendo aplicações contra o OWASP Top 10 com o mínimo de falsos alertas.|Um motor WAF recém-instalado (como Coraza ou ModSecurity) sem um conjunto de regras é apenas um interpretador vazio: ele não bloqueia nenhum ataque até que regras de inspeção sejam carregadas.|O OWASP CRS v4 fornece centenas de regras curadas e testadas continuamente contra regressões para detectar **SQL Injection (SQLi)**, **Cross-Site Scripting (XSS)**, **Local/Remote File Inclusion (LFI/RFI)**, **Remote Code Execution (RCE / Shellshock / Command Injection)**, **PHP/Java/Node.js Injection**, **SSRF**, **Scanners/Bots** e **vazamento de dados/erros na resposta**.|```apache
+# Ordem padrão de carregamento do OWASP CRS v4 em um motor SecLang (Coraza ou ModSecurity):
+Include /etc/coraza/crs-setup.conf
+Include /etc/coraza/plugins/*-config.conf
+Include /etc/coraza/plugins/*-before.conf
+Include /etc/coraza/rules/*.conf
+Include /etc/coraza/plugins/*-after.conf
+```|Nunca edite diretamente os arquivos dentro da pasta `rules/*.conf` do CRS (pois isso impediria atualizar o CRS quando saem novas versões); faça todas as customizações em `crs-setup.conf`, `REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf` e `RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf`!|Verifique nos logs de auditoria a tag `ver:'OWASP_CRS/4...'` confirmando que o CRS v4 está carregado e ativo.|https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://github.com/coreruleset/coreruleset
+0112|owaspcrs-anomaly-scoring-mode-collaborative-detection-delayed-blocking|OWASP CRS Anomaly Scoring Mode: detecção colaborativa (`setvar`) e bloqueio adiado em `949` (Inbound) e `959` (Outbound)|Conforme documentado na página oficial *Anomaly Scoring* do CRS (`coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/`), o modo de **Pontuação de Anomalia (*Anomaly Scoring Mode*)** desacopla a lógica de **detecção** da ação de **bloqueio**, combinando *Collaborative Detection* com *Delayed Blocking*.|No modo tradicional legado (*Self-Contained Mode*), a primeira regra que casasse bloqueava imediatamente a requisição, impedindo você de saber quais outras regras teriam disparado e causando bloqueios abruptos por uma única violação menor de protocolo.|No *Anomaly Scoring Mode*: 1) cada regra de detecção que casa apenas incrementa uma variável transacional de pontuação via `setvar:'tx.anomaly_score_pl1=+%{tx.critical_anomaly_score}'` e registra o log; 2) ao final das regras de requisição, o arquivo **`REQUEST-949-BLOCKING-EVALUATION.conf`** soma a pontuação inbound total e bloqueia se ela atingir o `tx.inbound_anomaly_score_threshold`; e 3) ao final das regras de resposta, o arquivo **`RESPONSE-959-BLOCKING-EVALUATION.conf`** avalia a pontuação outbound contra `tx.outbound_anomaly_score_threshold`!|```apache
+# Exemplo oficial da documentação do CRS mostrando como uma regra incrementa o anomaly score por nível de paranoia:
+SecRule REQUEST_HEADERS:Content-Length "!@rx ^\d+$" \
+    "id:920160,\
+    phase:1,\
+    block,\
+    t:none,\
+    msg:'Content-Length HTTP header is not numeric',\
+    tag:'paranoia-level/1',\
+    severity:'CRITICAL',\
+    setvar:'tx.anomaly_score_pl1=+%{tx.critical_anomaly_score}'"
+```|Note que, quando o bloqueio ocorre no `RESPONSE-959-BLOCKING-EVALUATION.conf` (Outbound), a requisição **já foi processada pelo backend**, mas a resposta contendo o vazamento (ex.: stack trace SQL ou código-fonte) é impedida de chegar ao cliente.|Inspecione nos logs a regra `949110` (*Inbound Anomaly Score Exceeded*) para ver a soma final que disparou o bloqueio.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0113|owaspcrs-thresholds-severidades-critical-error-warning-notice-calibragem|OWASP CRS Limiares de Anomalia e Severidades (`CRITICAL=5`, `ERROR=4`, `WARNING=3`, `NOTICE=2`): por que a meta de produção é Threshold `5`|No OWASP CRS, cada regra possui uma severidade que soma pontos ao score da transação: **`CRITICAL` = 5 pontos**, **`ERROR` = 4 pontos**, **`WARNING` = 3 pontos** e **`NOTICE` = 2 pontos**, enquanto os limiares padrão em `crs-setup.conf` são **`tx.inbound_anomaly_score_threshold = 5`** (Inbound) e **`tx.outbound_anomaly_score_threshold = 4`** (Outbound).|Conforme alerta a documentação oficial de *Anomaly Scoring*, aumentar o limiar inbound para `10` ou `20` para "esconder" falsos positivos deixa a aplicação desprotegida contra ataques específicos cobertos por uma única regra `CRITICAL` (que soma exatamente 5 pontos).|A prática recomendada oficial do CRS para rollout em produção é: começar com um limiar alto (ex.: `100` ou `DetectionOnly`), analisar os logs reais, escrever regras de exclusão cirúrgicas para os falsos positivos e **reduzir progressivamente o limiar até atingir a meta padrão de `inbound_anomaly_score_threshold = 5` e `outbound_anomaly_score_threshold = 4`**.|```apache
+# Configuração padrão recomendada no arquivo crs-setup.conf (Regra 900110):
+SecAction \
+    "id:900110,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:tx.inbound_anomaly_score_threshold=5,\
+    setvar:tx.outbound_anomaly_score_threshold=4"
+```|Se a sua equipe desejar bloquear já na Fase 1 as violações encontradas nos cabeçalhos HTTP sem esperar a Fase 2 (economizando processamento de body), habilite a opção **`tx.early_blocking=1`** na regra `900120` do `crs-setup.conf`.|Verifique o valor ativo de `tx.inbound_anomaly_score_threshold` no seu `crs-setup.conf`.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0114|owaspcrs-paranoia-levels-pl1-a-pl4-blocking-vs-detection-paranoia-level|OWASP CRS Níveis de Paranoia (`PL1` a `PL4`): uso combinado de `tx.blocking_paranoia_level` e `tx.detection_paranoia_level`|O OWASP CRS classifica todas as suas regras em quatro **Níveis de Paranoia (*Paranoia Levels — PL1, PL2, PL3 e PL4*)** e permite configurar separadamente **`tx.blocking_paranoia_level`** (quais níveis efetivamente contam para bloquear requisições) e **`tx.detection_paranoia_level`** (quais níveis adicionais rodam apenas emitindo alertas de telemetria).|Subir diretamente o `blocking_paranoia_level` de `1` para `3` em uma API que recebe textos livres ou código gerará bloqueios imediatos em usuários legítimos; porém, como saber quais regras do `PL2` dariam falso positivo antes de ativá-lo?|Configurando **`tx.blocking_paranoia_level=1`** e **`tx.detection_paranoia_level=2`** (conhecido na documentação oficial como *Executing Paranoia Level*), o CRS bloqueia apenas com base nas regras seguras do `PL1` (`tx.anomaly_score_pl1`), mas executa e loga em paralelo as regras do `PL2` (`tx.anomaly_score_pl2`) sem somá-las na decisão de bloqueio!|```apache
+# Regra 900000 e 900001 no crs-setup.conf: bloqueia em PL1 enquanto testa PL2 em modo de observação:
+SecAction \
+    "id:900000,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:tx.blocking_paranoia_level=1"
+
+SecAction \
+    "id:900001,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:tx.detection_paranoia_level=2"
+```|Resumo dos níveis: **PL1** (padrão para todos os sites, quase zero falsos positivos), **PL2** (aplicações corporativas/e-commerce que lidam com dados sensíveis, requer algum tuning), **PL3** (bancos/fintechs de alta segurança, exige tuning intenso) e **PL4** (ambientes extremos de segurança máxima).|Filtre nos seus logs de auditoria a tag `paranoia-level/2` para revisar e tratar falsos positivos antes de subir `blocking_paranoia_level` para `2`.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0115|owaspcrs-taxonomia-arquivos-regras-request-911-a-949-response-950-a-959|OWASP CRS Taxonomia Numerada de Regras (`901–999`): organização modular de `REQUEST-911..949` e `RESPONSE-950..959`|Os arquivos de regras do OWASP CRS seguem uma numeração padronizada de 3 dígitos que define tanto a ordem exata de execução quanto a categoria de ameaça (os 3 primeiros dígitos do `id:` de 6 dígitos da regra identificam o arquivo de origem, ex.: `942100` pertence a `REQUEST-942-APPLICATION-ATTACK-SQLI.conf`).|Quando um alerta WAF aparece no SIEM informando `id: 932130` ou `id: 941100`, conhecer a tabela de prefixos do CRS permite identificar instantaneamente a família do ataque.|As principais famílias de requisição são: **`901`** (Inicialização), **`911`** (Method Enforcement), **`913`** (Scanner Detection), **`920`** (Protocol Enforcement), **`921`** (Protocol Attack / HTTP Splitting / Smuggling), **`922`** (Multipart Bypass), **`930`** (LFI), **`931`** (RFI), **`932`** (RCE / Command Injection), **`933`** (PHP), **`934`** (Node.js/Generic RCE), **`941`** (XSS), **`942`** (SQLi), **`943`** (Session Fixation), **`944`** (Java/Log4j) e **`949`** (Blocking Evaluation Inbound). Já na resposta: **`950–955`** (Data/Error Leakages: SQL, PHP, IIS, Java, Web Shells) e **`959`** (Blocking Evaluation Outbound).|```bash
+# Listando os arquivos de regras do OWASP CRS v4 em ordem de avaliação:
+ls -1 /etc/coraza/rules/
+```|Para desativar toda uma categoria irrelevante para sua stack apenas em um parâmetro específico, você pode usar intervalos ou prefixos de tag como `attack-php` ou `attack-java`.|Inspecione o campo `id` e as `tag` de qualquer alerta do CRS para mapear sua categoria (`920`, `932`, `941`, `942`).|https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://github.com/coreruleset/coreruleset
+0116|owaspcrs-tratamento-falsos-positivos-ctl-ruleremovetargetbyid-before-after|OWASP CRS Tuning de Falsos Positivos: `ctl:ruleRemoveTargetById` em tempo de execução (`BEFORE-CRS`) vs `SecRuleUpdateTargetById` (`AFTER-CRS`)|Para tratar falsos positivos no OWASP CRS sem enfraquecer a segurança global, existem dois mecanismos precisos: 1) **Runtime Exclusion** (usando `ctl:ruleRemoveTargetById=942100;ARGS:content` no arquivo `REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf`, quando a exceção depende da URI ou método HTTP); e 2) **Configure-time Exclusion** (usando `SecRuleUpdateTargetById 942100 "!ARGS:content"` no arquivo `RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf`).|Um erro gravíssimo e comum é usar `SecRuleRemoveById 942100` globalmente (o que desliga a regra de SQLi para **todos** os endpoints e parâmetros da aplicação) ou colocar uma regra com `ctl:ruleRemoveById` **depois** que as regras do CRS já foram executadas!|A regra de ouro da ordem de inclusão do CRS é: regras que usam ações dinâmicas **`ctl:`** (`ctl:ruleRemoveById`, `ctl:ruleRemoveTargetById`, `ctl:ruleRemoveTargetByTag`) **devem vir ANTES das regras do CRS (`BEFORE-CRS`)**; já diretivas de configuração que modificam regras já carregadas (**`SecRuleRemoveById`**, **`SecRuleUpdateTargetById`**) **devem vir DEPOIS das regras do CRS (`AFTER-CRS`)**!|```apache
+# Exemplo em REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:
+# Ignora apenas o parâmetro ARGS:markdown_body na regra 941100 exclusivamente na rota POST /api/v1/articles:
+SecRule REQUEST_URI "@beginsWith /api/v1/articles" \
+    "id:100010,\
+    phase:1,\
+    pass,\
+    nolog,\
+    ctl:ruleRemoveTargetById=941100;ARGS:markdown_body"
+```|Prefira sempre `ctl:ruleRemoveTargetById=<ID>;ARGS:<campo>` escopado por `REQUEST_URI` em vez de remover a regra inteira.|Envie um payload de teste no campo `markdown_body` para `/api/v1/articles` (deve passar) e para `/api/v1/login` (deve continuar bloqueado).|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0117|owaspcrs-exclusion-packages-pre-construidos-wordpress-nextcloud-dokuwiki|OWASP CRS Rule Exclusion Packages e CRS v4 Plugins: perfis oficiais de exclusão para WordPress, Nextcloud, Drupal e cPanel|O OWASP CRS fornece pacotes oficiais de exclusão de regras (*Rule Exclusion Profiles*, migrados para a arquitetura de **Plugins** no CRS v4) para aplicações web populares como **WordPress**, **Nextcloud**, **DokuWiki**, **Drupal**, **phpMyAdmin** e **XenForo**.|Aplicações ricas como WordPress (no editor Gutenberg `/wp-admin` ou `wp-json`) e Nextcloud (WebDAV) enviam fragmentos HTML, XML e caminhos de arquivos complexos que acionariam dezenas de regras genéricas de XSS/SQLi/Protocolo sem um perfil pré-ajustado.|Habilitando o pacote de exclusão correspondente (por exemplo `tx.crs_exclusions_wordpress=1` na regra `900130` ou instalando o plugin oficial `wordpress-rule-exclusions-plugin` na pasta `plugins/`), o CRS aplica automaticamente exceções cirúrgicas apenas para as rotas e cookies específicos daquela plataforma.|```apache
+# Habilitando exclusões específicas de aplicação em crs-setup.conf (ou via diretório plugins/ no CRS v4):
+SecAction \
+    "id:900130,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:tx.crs_exclusions_wordpress=1"
+```|Ative apenas os perfis de exclusão das aplicações que realmente rodam atrás daquele virtual host WAF; nunca habilite todos os perfis simultaneamente.|Verifique que a edição de um post no `/wp-admin/` ocorre sem bloqueio enquanto ataques contra `/wp-login.php` continuam bloqueados.|https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://github.com/coreruleset/coreruleset
+0118|owaspcrs-validacao-protocolo-http-911-920-metodos-content-type-charset|OWASP CRS Políticas de Protocolo HTTP (`900200–900250` e `REQUEST-911`/`920`): restrição de métodos HTTP, `Content-Type` e versões TLS/HTTP|No arquivo `crs-setup.conf` (regras `900200` a `900250`), o usuário parametriza as políticas estritas de protocolo aplicadas pelos arquivos **`REQUEST-911-METHOD-ENFORCEMENT.conf`** e **`REQUEST-920-PROTOCOL-ENFORCEMENT.conf`**, incluindo a lista de **métodos HTTP permitidos (`tx.allowed_methods`)**, **`Content-Type` permitidos (`tx.allowed_request_content_type`)**, versões HTTP e extensões/cabeçalhos restritos.|Por padrão no CRS, `tx.allowed_methods` permite apenas `GET HEAD POST OPTIONS`; se a sua API REST legítima utiliza `PUT`, `PATCH` e `DELETE` e você não descomentar e ajustar a regra `900200`, toda chamada `PUT` ou `DELETE` será bloqueada pela regra **`911100` (*Method is not allowed by policy*)**!|Configurando explicitamente a regra `900200` em `crs-setup.conf` (ou escopada por rota em `BEFORE-CRS`) para incluir `GET HEAD POST OPTIONS PUT PATCH DELETE`, você alinha a política de protocolo ao contrato OpenAPI da sua API.|```apache
+# Regra 900200 no crs-setup.conf liberando PUT, PATCH e DELETE para APIs RESTful:
+SecAction \
+    "id:900200,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:'tx.allowed_methods=GET HEAD POST OPTIONS PUT PATCH DELETE'"
+```|Da mesma forma, se sua API utiliza um `Content-Type` customizado (como `application/vnd.api+json` ou `application/grpc`), adicione-o em `tx.allowed_request_content_type` (regra `900220`) para evitar falsos positivos na regra `920420`.|Teste chamadas `PATCH` e `DELETE` contra a API protegida e confirme que a regra `911100` não é acionada.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0119|owaspcrs-inspecao-outbound-response-950-a-959-prevencao-vazamento-dados|OWASP CRS Inspeção de Resposta Outbound (`RESPONSE-950` a `959`): bloqueio de vazamento de erros SQL, stack traces e web shells|Os arquivos **`RESPONSE-950-DATA-LEAKAGES.conf`** a **`RESPONSE-955-WEB-SHELLS.conf`** do OWASP CRS inspecionam os cabeçalhos e o corpo da resposta HTTP retornada pelo servidor de aplicação (Fases 3 e 4) para detectar vazamentos de mensagens de erro de banco de dados (`951`), erros de Java (`952`), erros e código-fonte PHP (`953`), erros do IIS (`954`) e saídas conhecidas de Web Shells (`955`).|Em ataques de *Error-based SQL Injection* ou falhas de configuração em produção (`APP_DEBUG=true`), a resposta HTTP devolve ao invasor a mensagem exata do driver PostgreSQL/MySQL ou o stack trace completo com caminhos internos do servidor.|Quando as regras `950–955` detectam uma assinatura crítica de erro de banco ou stack trace na resposta, elas incrementam o `tx.outbound_anomaly_score_pl*`, e o arquivo **`RESPONSE-959-BLOCKING-EVALUATION.conf`** intercepta a resposta antes de enviá-la à rede, substituindo-a por um erro genérico `403`/`500` seguro!|```apache
+# Garantindo que o motor WAF inspecione respostas textuais e JSON para as regras 950-959 do CRS:
+SecResponseBodyAccess On
+SecResponseBodyMimeType text/plain text/html application/json
+SecResponseBodyLimit 524288
+SecResponseBodyLimitAction ProcessPartial
+```|Para que as regras `950–959` funcionem sobre APIs REST que retornam JSON, certifique-se de que `application/json` consta na diretiva `SecResponseBodyMimeType` do motor WAF.|Simule em ambiente de teste o retorno de uma string de erro `You have an error in your SQL syntax;` e verifique o acionamento da família `951` e `959100`.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset
+0120|owaspcrs-sampling-percentage-rollout-gradual-crs-setup-900400|OWASP CRS Sampling Mode (`tx.sampling_percentage`, Regra `900400`) e `coreruleset-cli`: rollout gradual por amostragem de tráfego|A regra **`900400`** do `crs-setup.conf` permite configurar **`tx.sampling_percentage`** (de `0` a `100`), instruindo o OWASP CRS a inspecionar apenas uma porcentagem estatística das requisições HTTP enquanto o restante faz bypass imediato na regra `901450`.|Ao implantar o WAF pela primeira vez na frente de um serviço de altíssimo tráfego (dezenas de milhares de requisições por segundo), habilitar 100% da inspeção de imediato sem medir o impacto real de CPU e latência P99 no proxy traz risco operacional.|Definindo `setvar:tx.sampling_percentage=10`, o CRS gera um número pseudo-aleatório por requisição e avalia o conjunto completo de regras em apenas 10% do tráfego, permitindo validar a capacidade de CPU, o volume de logs e a taxa de falsos positivos antes de escalar para `50` e `100`.|```apache
+# Regra 900400 no crs-setup.conf: avalia o CRS em 20% das requisições durante o canário de performance:
+SecAction \
+    "id:900400,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:tx.sampling_percentage=20"
+```|Lembre-se de que `tx.sampling_percentage` inferior a `100` é apenas uma ferramenta temporária de rollout/canário de performance, não devendo permanecer abaixo de `100` após a estabilização.|Verifique nos logs de métricas do proxy a proporção de transações avaliadas e promova `tx.sampling_percentage=100` após validar a latência.|https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/;https://raw.githubusercontent.com/coreruleset/coreruleset/main/README.md;https://github.com/coreruleset/coreruleset

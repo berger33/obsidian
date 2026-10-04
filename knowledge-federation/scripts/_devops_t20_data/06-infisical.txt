@@ -1,0 +1,102 @@
+1951|infisical-arquitetura-open-source-secrets-pki-kms-pam-platform|Infisical: arquitetura da plataforma open-source de gerenciamento de segredos, PKI, KMS e acesso privilegiado (PAM)|O **Infisical** (licenciado sob MIT) é uma plataforma open-source de infraestrutura de segurança que unifica quatro pilares em uma experiência amigável para desenvolvedores e equipes de plataforma: **Secrets Management** (com versionamento, rotação, segredos dinâmicos e sincronização), **Certificate Management (PKI)**, **Key Management System (KMS)** e **Privileged Access Management (PAM)**.|Em muitas organizações, variáveis `.env` são copiadas via Slack/mensageiros entre desenvolvedores, segredos de CI/CD no GitHub Actions divergem dos `Secrets` do Kubernetes e certificados internos são gerenciados em planilhas separadas.|No Infisical, os segredos são organizados por **Projects**, **Environments** (`dev`, `staging`, `prod`) e **Folders** hierárquicas, com *Point-in-Time Recovery* (permitindo reverter o estado inteiro de um projeto para qualquer ponto no passado), **Secret Syncs** nativos (para GitHub Actions, AWS Secrets Manager, Vercel, Terraform), **Honey Tokens** (credenciais isca que disparam alertas instantâneos se usadas) e **Agent Vault** (proxy que injeta credenciais em chamadas de agentes de IA sem expô-las a prompt injection).|```bash
+# Executando uma aplicação local injetando segredos em memória via Infisical CLI sem arquivo .env:
+infisical login
+infisical run --env=dev --path=/backend -- npm run start
+```|Ao usar `infisical run -- <comando>`, a CLI baixa os segredos autorizados para o ambiente e caminho especificados e os injeta apenas como variáveis de ambiente do processo filho em memória, eliminando arquivos `.env` em texto claro nos laptops.|Execute `infisical export --env=dev` ou `infisical secrets` em um projeto de teste para inspecionar as chaves resolvidas.|https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://github.com/Infisical/infisical
+1952|infisical-kubernetes-operator-arquitetura-cluster-wide-vs-namespaced|Infisical Kubernetes Operator: modos de instalação `Cluster-wide` vs `Namespace-scoped` (`scopedNamespaces` e `scopedRBAC`)|O **Infisical Kubernetes Operator** (instalado via Helm chart `infisical-helm-charts/secrets-operator` e testado em EKS, GKE, AKS, OKE e OpenShift nas versões Kubernetes 1.29 a 1.33+) é um conjunto de controladores Kubernetes que sincroniza segredos bidirecionalmente entre o Infisical e o cluster e gerencia leases dinâmicos.|Em clusters multi-tenant onde equipes de produto compartilham o mesmo cluster Kubernetes, um operador único com `ClusterRole` para ler e escrever `Secrets` em todos os namespaces pode violar políticas de isolamento estritas.|Conforme documentado no guia oficial do operador, você pode escolher entre dois modos de instalação no Helm: 1) **Cluster-wide** (padrão, onde o operador observa CRDs em todos os namespaces); ou 2) **Namespace-scoped** (`--set scopedNamespaces=ns1 --set scopedRBAC=true`), que restringe as permissões RBAC do operador exclusivamente aos namespaces listados.|```bash
+helm repo add infisical-helm-charts 'https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/'
+helm repo update
+
+# Instalação restrita a uma lista específica de namespaces com RBAC de escopo reduzido:
+helm install infisical-operator infisical-helm-charts/secrets-operator \
+  --namespace infisical-operator-system \
+  --create-namespace \
+  --set "scopedNamespaces={app-staging,app-prod}" \
+  --set scopedRBAC=true
+```|Se você instalar múltiplas instâncias separadas do operador (uma por namespace), defina `installCRDs: true` apenas na **primeira** instalação e `installCRDs: false` nas instalações subsequentes para evitar conflitos de propriedade sobre os CRDs cluster-wide.|Verifique o Pod do operador em execução com `kubectl get pods -n infisical-operator-system`.|https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://github.com/Infisical/infisical
+1953|infisical-crds-v1beta1-infisicalconnection-infisicalauth-staticsecret|Infisical Operator API `v1beta1`: desacoplamento entre `InfisicalConnection`, `InfisicalAuth` e `InfisicalStaticSecret`|A versão recomendada **`v1beta1`** da API do Infisical Kubernetes Operator separa a configuração de conectividade e de autenticação em Custom Resources reutilizáveis — **`InfisicalConnection`** e **`InfisicalAuth`** — referenciados pelo recurso **`InfisicalStaticSecret`** (que substitui o legado `InfisicalSecret` da `v1alpha1`).|Na API antiga `v1alpha1`, cada objeto `InfisicalSecret` precisava repetir a URL do servidor Infisical e a configuração de autenticação da *Machine Identity*, dificultando a manutenção quando dezenas de segredos compartilhavam a mesma identidade.|Com a API `v1beta1`: 1) `InfisicalConnection` define o `hostAPI` e certificados TLS da instância Infisical; 2) `InfisicalAuth` define o método de autenticação da Machine Identity (como *Kubernetes Auth* ou *Universal Auth*); e 3) múltiplos recursos `InfisicalStaticSecret` referenciam ambos para sincronizar pastas/ambientes distintos em `Secrets` nativos do Kubernetes.|```yaml
+apiVersion: secrets.infisical.com/v1beta1
+kind: InfisicalStaticSecret
+metadata:
+  name: backend-prod-secrets
+  namespace: app-prod
+spec:
+  connectionRef:
+    name: infisical-cloud-conn
+  authRef:
+    name: k8s-machine-identity-auth
+  projectSlug: "payments-platform"
+  envSlug: "prod"
+  secretsPath: "/backend"
+  destination:
+    secretName: "backend-env-secret"
+    secretType: Opaque
+```|Para novas implantações, utilize sempre os CRDs **`v1beta1`** (`InfisicalConnection`, `InfisicalAuth`, `InfisicalStaticSecret`), pois o recurso monolítico `InfisicalSecret` (`v1alpha1`) está marcado para deprecação.|Execute `kubectl get infisicalconnections,infisicalauths,infisicalstaticsecrets -A` para auditar os recursos `v1beta1` ativos.|https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://github.com/Infisical/infisical
+1954|infisical-push-secret-dynamic-secret-crds-leases-kubernetes|Infisical `InfisicalPushSecret` e `InfisicalDynamicSecret`: envio de segredos gerados no cluster e leases dinâmicos|Além de puxar segredos estáticos do Infisical para o cluster, o operador oferece dois CRDs especializados: **`InfisicalPushSecret`** (que empurra segredos gerados dentro do Kubernetes para o Infisical) e **`InfisicalDynamicSecret`** (que gera credenciais efêmeras sob demanda no Infisical, cria leases com TTL e atualiza o `Secret` do Kubernetes automaticamente antes do vencimento).|Às vezes um operador dentro do Kubernetes (como o `cert-manager` ou um operador de banco de dados CloudNativePG) gera uma credencial ou certificado que precisa ser exportado para o Infisical para uso externo (`InfisicalPushSecret`); em outros casos, um Pod precisa de credenciais de banco dinâmicas renovadas continuamente (`InfisicalDynamicSecret`).|Quando um `InfisicalDynamicSecret` é aplicado, o controlador solicita uma nova credencial ao *Dynamic Secret Producer* do Infisical (PostgreSQL, MySQL, RabbitMQ, AWS IAM), grava o usuário/senha no `Secret` Kubernetes de destino e monitora o lease para renová-lo ou recriá-lo automaticamente.|```yaml
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalDynamicSecret
+metadata:
+  name: pg-dynamic-creds
+  namespace: app-prod
+spec:
+  managedSecretReference:
+    secretName: pg-ephemeral-secret
+    secretNamespace: app-prod
+```|Combine `InfisicalDynamicSecret` com o auto-reload de Deployments do operador para que os Pods recebam as novas credenciais sempre que um lease atingir seu `maxTTL` e for rotacionado.|Inspecione as condições de status e o lease ativo com `kubectl describe infisicaldynamicsecret pg-dynamic-creds -n app-prod`.|https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://github.com/Infisical/infisical
+1955|infisical-auto-reload-deployments-annotations-rollout-zero-downtime|Infisical Auto-Reload no Kubernetes: reinicialização rolling automática de `Deployments` quando segredos mudam|O Infisical Kubernetes Operator suporta **auto-reload automático de `Deployments`**: sempre que um segredo sincronizado no Kubernetes é atualizado pelo operador (devido a uma edição no painel, rotação agendada ou expiração de lease dinâmico), o operador dispara um rolling restart automático dos `Deployments` dependentes.|Por padrão no Kubernetes, quando o conteúdo de um `Secret` referenciado via `envFrom` ou `valueFrom.secretKeyRef` muda, os Pods que já estão rodando **não** recebem os novos valores nas variáveis de ambiente até serem recriados.|Ao adicionar a anotação de auto-reload do Infisical (`secrets.infisical.com/auto-reload: "true"`) nos metadados do `Deployment`, o operador calcula o hash da revisão do `Secret` gerenciado e atualiza o `spec.template.metadata.annotations` do Deployment assim que detecta mudança no valor do segredo.|```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-api
+  namespace: app-prod
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/org/payment-api:1.4.0
+          envFrom:
+            - secretRef:
+                name: backend-env-secret
+```|Garanta que o `Deployment` anotado com `auto-reload: "true"` possua `readinessProbe` e `PodDisruptionBudget` adequados para que o rolling update acionado pela mudança de segredo ocorra com zero downtime.|Altere um valor no Infisical, aguarde o ciclo de resync do operador e observe `kubectl rollout status deploy/payment-api -n app-prod`.|https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://github.com/Infisical/infisical
+1956|infisical-secret-scanning-leak-prevention-git-pre-commit-ci|Infisical Secret Scanning e Leak Prevention (`infisical scan`): detecção preventiva de vazamentos em commits Git e pipelines CI|A CLI do Infisical inclui um motor rápido de **Secret Scanning (`infisical scan`)** projetado para varrer repositórios Git completos, intervalos de commits, arquivos staged (`git-changes`) ou diretórios em busca de chaves de API, tokens e chaves privadas expostas antes que cheguem ao repositório remoto.|Uma vez que uma chave privada ou credencial de nuvem é enviada por `git push` para um repositório remoto, mesmo que seja removida no commit seguinte ela permanece no histórico Git e em caches de clones.|O comando `infisical scan git-changes --staged` pode ser instalado diretamente como um hook `pre-commit` nas máquinas dos desenvolvedores para bloquear o commit localmente na origem, enquanto `infisical scan` roda no GitHub Actions/GitLab CI em todo Pull Request gerando relatórios SARIF/JSON.|```bash
+# Varrendo alterações staged antes do commit e instalando o hook pre-commit:
+infisical scan git-changes --staged -v
+
+# Varrendo todo o histórico de um repositório e gerando saída em JSON:
+infisical scan --report-path=scan-findings.json
+```|Se um segredo de teste falso (mock) for sinalizado, utilize um arquivo `.infisicalignore` (ou comentários inline de ignore) versionado na raiz do repositório em vez de desabilitar o scanner na pipeline.|Execute `infisical scan --no-git` em uma pasta local de configuração para validar que nenhuma credencial hardcoded está presente.|https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://github.com/Infisical/infisical
+1957|infisical-secret-rotation-point-in-time-recovery-honey-tokens|Infisical Governança de Segredos: `Secret Rotation` automática, `Point-in-Time Recovery` e detecção de intrusão com `Honey Tokens`|O pilar de gerenciamento de segredos do Infisical combina três mecanismos avançados de defesa em profundidade: **Secret Rotation** (rotação programada de credenciais em PostgreSQL, MySQL, AWS IAM, Auth0, etc.), **Point-in-Time Recovery (PITR)** (rollback do estado completo de um projeto) e **Honey Tokens** (credenciais isca para detecção de intrusão).|Apenas guardar segredos em um cofre não protege contra duas ameaças reais: 1) uma alteração humana acidental que apaga ou corrompe 30 variáveis de produção antes de um deploy; e 2) um invasor que compromete um runner de CI e faz dump de todas as variáveis de ambiente do projeto.|Com **Point-in-Time Recovery**, o administrador visualiza o diff exato de todos os commits de segredos do ambiente e restaura o projeto para qualquer timestamp anterior em um clique. Já ao plantar um **Honey Token** (uma credencial falsa monitorada junto aos segredos reais), no exato instante em que um atacante tenta usá-la, o Infisical dispara um alerta imediato identificando o vazamento.|```bash
+# Consultando o histórico de versões ou restaurando configurações via CLI/API do Infisical:
+infisical secrets get DATABASE_URL --env=prod --path=/backend
+```|Plante Honey Tokens com nomes plausíveis (ex.: `LEGACY_BACKUP_AWS_KEY`) nos mesmos caminhos acessados por runners de CI/CD para detectar exfiltração de variáveis de ambiente com zero falsos positivos.|Verifique no painel de *Commits / Point-in-Time Recovery* do projeto que cada alteração de segredo registra autor, timestamp e versão anterior.|https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://github.com/Infisical/infisical
+1958|infisical-pki-private-external-ca-acme-est-code-signing|Infisical Certificate Management (PKI) e Code Signing: operação de CA Interna/Externa, ACME, EST e assinatura de artefatos|O módulo **Certificate Management** do Infisical permite operar uma hierarquia completa de **CA Privada Interna** ou integrar **CAs Externas** (Let's Encrypt, DigiCert, Microsoft AD CS), gerenciando perfis, políticas, protocolos de matrícula (**API**, **ACME** e **EST**), sincronização de certificados (para AWS ACM e Azure Key Vault) e **Code Signing**.|Manter ferramentas desconectadas para segredos de aplicação, emissão de certificados TLS mTLS e assinatura de pacotes/containers fragmenta a auditoria e as políticas de aprovação.|No Infisical PKI, você cria *Certificate Profiles* e *Policies* que restringem SANs, algoritmos de chave e TTLs permitidos, expõe endpoints **ACME** ou **EST** para renovação automatizada, monitora vencimentos com alertas configuráveis e utiliza o módulo **Code Signing** para assinar containers e instaladores com aprovação centralizada e trilha completa de auditoria.|```bash
+# Exemplo de uso do Infisical Agent ou CLI para renderizar certificados/segredos em templates:
+infisical agent --config /etc/infisical/agent-config.yaml
+```|Configure *Certificate Syncs* para exportar automaticamente certificados gerenciados pelo Infisical para serviços de borda como AWS Certificate Manager (ACM) ou Azure Key Vault sem upload manual.|Audite o inventário de certificados ativos, revogados (CRL) e próximos do vencimento na seção PKI do projeto.|https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://github.com/Infisical/infisical
+1959|infisical-agent-vault-ai-agents-proxy-injecao-credenciais-kms|Infisical `Infisical Agent`, `Agent Vault` (para IA) e `KMS`: injeção de segredos sem SDK e proteção contra exfiltração por LLMs|O ecossistema Infisical oferece três mecanismos para aplicações e agentes que não devem carregar o SDK nem reter credenciais brutas: o **`Infisical Agent`** (daemon sidecar que autentica e renderiza templates de arquivos em disco), o **`Infisical KMS`** (criptografia simétrica/assimétrica via API) e o **`Agent Vault`** (proxy de saída para agentes de IA).|Em arquiteturas modernas com agentes de IA autônomos (LLMs com execução de ferramentas), entregar uma chave real de API (`OPENAI_API_KEY`, `GITHUB_TOKEN`, `STRIPE_KEY`) no ambiente do agente permite que um ataque de *prompt injection* instrua o agente a imprimir ou exfiltrar a credencial.|Com o **Agent Vault** (`Infisical/agent-vault`), os agentes de IA nunca recebem as credenciais reais: todas as requisições HTTP de saída do agente passam por um proxy controlado que valida a política e injeta o segredo real no cabeçalho apenas no momento de encaminhar ao destino externo.|```yaml
+# Exemplo de configuração do Infisical Agent renderizando um arquivo de configuração:
+infisical:
+  address: "https://app.infisical.com"
+auth:
+  type: "universal-auth"
+  config:
+    client-id: "/etc/infisical/client-id"
+    client-secret: "/etc/infisical/client-secret"
+templates:
+  - source-path: "/etc/infisical/app.conf.tpl"
+    destination-path: "/etc/app/app.conf"
+```|Ao usar o `Infisical Agent` em VMs ou containers legados, configure `remove-client-secret-on-read: true` quando aplicável para que o segredo de bootstrap não permaneça em disco após a autenticação inicial.|Verifique o arquivo renderizado em `destination-path` pelo `Infisical Agent` e monitore as métricas do agente.|https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://github.com/Infisical/infisical
+1960|infisical-operator-metricas-prometheus-serviceaccount-customizada-producao|Infisical Operator em Produção: métricas Prometheus (`/metrics`), `ServiceAccount` customizada e migração `v1alpha1` -> `v1beta1`|Para operar o Infisical Kubernetes Operator em produção com observabilidade e governança de identidade da nuvem (IRSA na AWS, Workload Identity no GKE/AKS), o chart Helm suporta trazer sua própria **`ServiceAccount`** (`controllerManager.serviceAccount.create: false`, a partir do chart `0.10.11+`) e expõe métricas **Prometheus** no endpoint `/metrics`.|Quando os Pods do operador usam *AWS IAM Auth* ou *Kubernetes Auth* vinculado a uma `ServiceAccount` pré-provisionada pelo Terraform/IAM, criar uma ServiceAccount genérica nova pelo Helm impediria herdar as anotações de IAM Role.|No `values.yaml` do chart `secrets-operator`, defina `controllerManager.serviceAccount.create: false` e `controllerManager.serviceAccount.name: my-existing-sa` (garantindo que a ServiceAccount já exista no namespace antes do `helm install`). Monitore também as métricas de reconciliação expostas pelo operador no Prometheus.|```yaml
+# values.yaml para o chart infisical-helm-charts/secrets-operator em produção:
+controllerManager:
+  serviceAccount:
+    create: false
+    name: infisical-operator-irsa-sa
+scopedNamespaces:
+  - prod-workloads
+scopedRBAC: true
+```|Conforme documentado no guia oficial do operador, a `ServiceAccount` customizada informada em `controllerManager.serviceAccount.name` **deve existir previamente** no namespace de instalação antes de executar o `helm install`.|Verifique a `ServiceAccount` em uso pelo Pod do operador com `kubectl get pod -n infisical-operator-system -o jsonpath='{.items[0].spec.serviceAccountName}'`.|https://infisical.com/docs/integrations/platforms/kubernetes/overview;https://raw.githubusercontent.com/Infisical/infisical/main/README.md;https://github.com/Infisical/infisical

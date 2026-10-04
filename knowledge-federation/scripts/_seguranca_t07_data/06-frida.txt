@@ -1,0 +1,121 @@
+TOPIC: Frida — Instrumentação Dinâmica de Binários e Apps Mobile (Gum, Interceptor, Stalker, Java/ObjC Bridges, Gadget e CModule)
+SOURCES: https://raw.githubusercontent.com/frida/frida/main/README.md | https://frida.re/docs/javascript-api/ | https://frida.re/docs/modes/
+
+===NOTE===
+0651|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos|Frida: Arquitetura de Instrumentação Dinâmica (`frida-core`, `frida-gum`, Runtimes **QuickJS/V8**) e Modos *Injected*, *Embedded (`frida-gadget`)* e *Preloaded*|**Frida** (`frida/frida`, wxWindows Library Licence, criado por Ole André Vadla Ravnås) é o toolkit multiplataforma de instrumentação dinâmica que permite injetar scripts JavaScript/TypeScript (executados pelo motor leve **QuickJS** por padrão ou **V8**) dentro de processos nativos e gerenciados em Windows, macOS, Linux, iOS, Android, watchOS, tvOS e QNX.|Permite que pesquisadores de segurança, analistas de malware e auditores de aplicações mobile (OWASP MASVS) inspecionem e modifiquem argumentos de funções, valores de retorno, memória RAM e tráfego criptografado em tempo real sem precisar do código-fonte.|O motor de baixo nível em C (**`frida-gum`**) realiza a reescrita de instruções em memória (`Inline Hooking` e *Code Tracing*), operando em três modos: **(1) Injected** (`frida-server` ou daemon local injeta `frida-agent` em um processo em execução ou via *spawn* `-f`), **(2) Embedded** (embutindo a biblioteca compartilhada **`frida-gadget.so` / `.dylib` / `.dll`** dentro do APK/IPA para dispositivos sem root/jailbreak) e **(3) Preloaded** (`LD_PRELOAD` / `DYLD_INSERT_LIBRARIES`).|```bash
+# Listar processos ativos no dispositivo local ou USB (-U) e anexar script de instrumentacao via CLI do Frida
+frida-ps -Uai
+frida -U -f com.exemplo.appcorporativo -l /cases/pentest/audit_hooks.js
+```|Ao usar `frida -f <binario>` (*Spawn Mode*), o Frida cria o processo suspenso na primeira instrução, injeta o agente e aplica todos os seus ganchos **antes** que `main()` ou inicializadores estáticos rodem, garantindo que verificações de inicialização não escapem.|Verifique `Frida.version` e `Script.runtime` (`"QJS"` ou `"V8"`) no console interativo do Frida para validar o ambiente do agente.|frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, frida-instrumentacao-mobile-android-java-perform-ios-objc-ssl-pinning, radare2-depuracao-reversivel-checkpoints-dts-rarun2-gdb-frida
+
+===NOTE===
+0652|frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer|Frida: Hooking de Funções Nativas C/C++/Rust/Go com **`Interceptor.attach`**, `Interceptor.replace`, `NativePointer` e `NativeFunction`|O módulo **`Interceptor`** da API JavaScript do Frida (`frida-gum`) intercepta qualquer função nativa pelo seu endereço de memória (`NativePointer`), permitindo inspecionar/alterar os argumentos na entrada (`onEnter(args)`) e o valor de retorno na saída (`onLeave(retval)`), ou substituir a implementação inteira (`Interceptor.replace`).|Quando um binário nativo ou biblioteca `libssl.so` / `ncrypt.dll` cifra um payload antes de enviá-lo ao socket, interceptar `SSL_write(ssl, buf, num)` e `SSL_read(ssl, buf, num)` captura o buffer exato em texto claro na memória do processo.|A classe **`NativePointer`** (`ptr("0x...")`) fornece métodos seguros para leitura e escrita tipada na memória (`readUtf8String()`, `readByteArray(len)`, `readU32()`, `writeByteArray()`), enquanto **`NativeFunction`** permite chamar diretamente qualquer função C exportada pelo processo alvo a partir do JavaScript.|```javascript
+// Interceptar chamadas a SSL_write na libssl.so para auditar payloads antes da criptografia TLS
+const sslWritePtr = Module.findExportByName("libssl.so", "SSL_write");
+if (sslWritePtr !== null) {
+    Interceptor.attach(sslWritePtr, {
+        onEnter(args) {
+            const buf = args[1];
+            const len = args[2].toInt32();
+            if (len > 0) {
+                console.log("[SSL_write] " + len + " bytes:\n" + hexdump(buf, { length: Math.min(len, 128) }));
+            }
+        }
+    });
+}
+```|O objeto `this` dentro de `onEnter(args)` e `onLeave(retval)` é um armazenamento local por invocação (*thread-local per call*): se você precisar ler em `onLeave` um ponteiro de saída que foi passado como argumento `args[1]` na entrada, salve **`this.outBuf = args[1];`** dentro de `onEnter` e leia `this.outBuf` dentro de `onLeave`!|Execute o script contra um binário de teste que usa OpenSSL e confirme a impressão do `hexdump` a cada chamada.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-rastreamento-instrucoes-stalker-code-tracing-coverage-cmodule, wireshark-decriptacao-tls13-sslkeylogfile-dsb-kerberos-keytab
+
+===NOTE===
+0653|frida-rastreamento-instrucoes-stalker-code-tracing-coverage-cmodule|Frida: Rastreamento Dinâmico de Instruções e Cobertura com **`Stalker`** (*Dynamic Binary Translation*) e Alta Performance com **`CModule`**|O motor **`Stalker`** do Frida realiza **tradução binária dinâmica (*Dynamic Binary Translation*) no nível de thread**: ele copia os blocos básicos de código da thread monitorada para um cache em memória, instrumenta cada instrução/chamada/salto/retorno (`call`, `ret`, `exec`, `block`, `compile`) e executa o código recompilado sem nunca deixar a thread escapar do monitoramento.|Enquanto o `Interceptor` exige saber previamente qual endereço de função você quer interceptar, o **`Stalker.follow(threadId, ...)`** rastreia todas as funções, blocos básicos e instruções executadas por uma thread (ideal para *Differential Coverage*, *Fuzzing* e desofuscação de *Control-Flow Flattening* / *OLLVM*).|Como um callback JavaScript invocado milhões de vezes por segundo pelo `Stalker` ou `Interceptor` causaria lentidão, a classe **`CModule`** compila em tempo real (usando o compilador *TinyCC* embutido no Frida) um trecho de código **C puro** diretamente para código de máquina na memória do processo, executando os callbacks `onEnter` / `transform` na velocidade nativa da CPU!|```javascript
+// Rastrear blocos basicos (compile) executados pela thread principal usando Stalker
+const mainThread = Process.enumerateThreads()[0];
+Stalker.follow(mainThread.id, {
+    events: { compile: true },
+    onReceive(events) {
+        const parsed = Stalker.parse(events, { annotate: true, stringify: true });
+        console.log("[Stalker Blocks] Recebidos: " + parsed.length);
+    }
+});
+```|Para encerrar o rastreamento de uma thread limpa e imediatamente, chame `Stalker.unfollow(threadId)` seguido de `Stalker.flush()` e `Stalker.garbageCollect()`.|Teste `Stalker.follow` em uma função específica (ligando o `Stalker.follow(this.threadId)` no `onEnter` do `Interceptor` e desligando com `Stalker.unfollow(this.threadId)` no `onLeave`) para capturar apenas o rastro exato daquela função.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, ghidra-depurador-dinamico-debugger-gdb-lldb-dbgeng-trace-time-travel
+
+===NOTE===
+0654|frida-instrumentacao-mobile-android-java-perform-ios-objc-ssl-pinning|Frida: Auditoria de Segurança Mobile (**OWASP MASVS**) — Pontes **`Java.perform`** (Android ART/Dalvik) e **`ObjC.classes`** (iOS/macOS Objective-C)|Além da camada nativa C/C++, o Frida fornece pontes completas de tempo de execução (**`Java`** para máquinas virtuais Android ART/Dalvik e JVM, e **`ObjC`** para o runtime Objective-C da Apple em iOS/macOS) para auditar aplicativos mobile segundo o padrão **OWASP MASVS (*Mobile Application Security Verification Standard*)**.|Permite inspecionar objetos vivos no heap (`Java.choose` / `ObjC.choose`), interceptar métodos Java sobrecarregados (`overload(...)`), auditar armazenamento inseguro no *Keystore/Keychain* e validar a implementação de *Certificate Pinning* e detecção de *Root/Jailbreak* durante pentests mobile autorizados.|No Android, todo código que interage com a VM Java deve ser envolvido em **`Java.perform(() => { ... })`**, obtendo a referência da classe com **`Java.use("pacote.NomeDaClasse")`** e substituindo `.implementation = function(...) { ... }`; no iOS, **`ObjC.classes.NSURLSession`** expõe diretamente os seletores Objective-C para o `Interceptor.attach`.|```javascript
+// Auditar chamadas de criptografia javax.crypto.Cipher.doFinal na VM Android ART via Java.perform
+Java.perform(() => {
+    const Cipher = Java.use("javax.crypto.Cipher");
+    const doFinalBytes = Cipher.doFinal.overload("[B");
+    doFinalBytes.implementation = function (inputBytes) {
+        console.log("[Android Cipher] Algoritmo: " + this.getAlgorithm());
+        return doFinalBytes.call(this, inputBytes);
+    };
+});
+```|Quando um método Java possui múltiplas sobrecargas (*overloads* com assinaturas de parâmetros diferentes), chame explicitamente **`.overload('java.lang.String', 'int')`** antes de atribuir `.implementation`, caso contrário o Frida lançará um erro listando todas as assinaturas disponíveis.|Execute o script contra um app Android de homologação e confirme a captura do algoritmo retornado por `this.getAlgorithm()`.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-empacotamento-frida-gadget-configuracao-sem-root-jailbreak, testssl-simulacao-clientes-tls-compatibilidade-navegadores-java-openssl
+
+===NOTE===
+0655|frida-inspecao-memoria-memory-scan-memoryaccessmonitor-apiresolver|Frida: Varredura de Memória em Tempo Real (`Memory.scan`, `Process.enumerateRanges`), **`MemoryAccessMonitor`** e **`ApiResolver`**|As APIs **`Process.enumerateRanges(protection)`**, **`Memory.scan(address, size, pattern, callbacks)`**, **`MemoryAccessMonitor`** e **`ApiResolver`** permitem pesquisar padrões binários, chaves e strings na memória RAM viva do processo e armar armadilhas de página de memória.|Diferente de um dump de memória estático, o **`MemoryAccessMonitor.enable(ranges, callbacks)`** monitora páginas de memória específicas e dispara o callback `onAccess(details)` no exato instante em que uma instrução lê, escreve ou executa (`read`, `write`, `execute`) aquele endereço (`details.from` informa o endereço da instrução que tocou na memória!).|Já a classe **`ApiResolver("module")`** (ou `"objc"` / `"swift"`) resolve funções por padrões curinga (`exports:*!open*`, `imports:program.exe!*Crypt*`), mesmo quando você não sabe em qual biblioteca compartilhada a função reside.|```javascript
+// Localizar funcoes de criptografia em todos os modulos carregados usando ApiResolver com curingas
+const resolver = new ApiResolver("module");
+const matches = resolver.enumerateMatches("exports:*!EVP_EncryptInit*");
+for (const m of matches) {
+    console.log("[ApiResolver] Encontrado: " + m.name + " @ " + m.address);
+}
+```|Ao usar `Memory.scan` percorrendo todas as regiões retornadas por `Process.enumerateRanges('r--')`, filtre regiões com nomes de dispositivos mapeados em `/dev/` para evitar leituras bloqueantes.|Teste o `ApiResolver` acima em um processo que carrega `libcrypto` e confirme a resolução dos símbolos `EVP_EncryptInit_ex`.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, volatility3-deteccao-injecao-memoria-malfind-hollowprocesses-vadinfo
+
+===NOTE===
+0656|frida-cli-frida-trace-frida-discover-autogenerated-handlers|Ferramentas CLI do Frida: Rastreamento Instantâneo com **`frida-trace`** (`-i`, `-I`, `-a`, `-j`, `-m`) e **`frida-discover`**|O utilitário de linha de comando **`frida-trace`** (`pip install frida-tools`) permite começar a rastrear chamadas de funções nativas, métodos Java ou métodos Objective-C em poucos segundos sem precisar escrever um script do zero: ele gera automaticamente um arquivo JavaScript de *handler* em `__handlers__/` para cada função encontrada e recarrega os handlers ao vivo sempre que você os edita!|Durante a triagem rápida de um binário desconhecido, rodar `frida-trace -i "open*" -i "connect" -f ./binario` mostra imediatamente na tela, com indentação por profundidade de pilha e cores por thread, todos os arquivos e conexões de rede abertos pelo processo.|As flags do `frida-trace` cobrem todas as camadas: **`-i <glob>`** (funções C exportadas), **`-I <modulo>`** (todas as exportações de uma biblioteca), **`-a <modulo!offset>`** (funções internas sem símbolo público pelo offset relativo ao módulo!), **`-j <classe!metodo>`** (métodos Java no Android) e **`-m <"-[NS* *]">`** (métodos Objective-C no iOS/macOS).|```bash
+# Rastrear chamadas de abertura de arquivos e resolucao DNS em um binario usando frida-trace
+frida-trace -i "open*" -i "getaddrinfo" -f /usr/bin/curl -- https://exemplo.com.br
+```|Depois que o `frida-trace` criar os arquivos em `./__handlers__/<modulo>/<funcao>.js`, basta editar o `onEnter(log, args, state)` (ex.: adicionando `log("Path: " + args[0].readUtf8String())`) e salvar o arquivo: o `frida-trace` faz *hot-reload* automático sem reiniciar o processo monitorado.|Inspecione os handlers gerados em `__handlers__/` após rodar o comando acima e verifique a captura do domínio em `getaddrinfo`.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, tracee-arquitetura-ebpf-deteccao-runtime-eventos-aquasecurity
+
+===NOTE===
+0657|frida-comunicacao-bidirecional-rpc-exports-send-recv-python-host|Frida: Comunicação Bidirecional Host-Agente (`send`/`recv`) e Exposição de Funções Internas como **API RPC (`rpc.exports`)** em Python|Um dos recursos mais poderosos do Frida para automação de pentests e fuzzing de protocolos proprietários é o **`rpc.exports`**: o script JavaScript injetado dentro do aplicativo expõe qualquer função interna do binário como um método Python (`script.exports_sync.<metodo>(...)`) que pode ser chamado diretamente do seu computador ou de uma extensão do Burp Suite / ZAP / `sqlmap`!|Imagine um aplicativo mobile bancário ou cliente grosso que cifra o corpo JSON de cada requisição usando uma biblioteca C++ ofuscada com chaves derivadas de hardware: em vez de gastar duas semanas fazendo engenharia reversa da biblioteca C++ para reimplementar a criptografia em Python, o `rpc.exports` simplesmente chama a própria função de criptografia original dentro do aplicativo ao vivo!|O script Python host carrega o agente via `session.create_script(js_code)`, registra um handler `script.on('message', on_message)` e invoca `script.exports_sync.sign_payload(raw_json)` de forma síncrona ou assíncrona.|```python
+import frida
+
+JS_AGENT = """
+rpc.exports = {
+    getProcessInfo() {
+        return { pid: Process.id, arch: Process.arch, platform: Process.platform };
+    }
+};
+"""
+
+session = frida.attach("cat")
+script = session.create_script(JS_AGENT)
+script.load()
+print(script.exports_sync.get_process_info())
+session.detach()
+```|Note que a versão moderna do binding Python do Frida converte automaticamente nomes `camelCase` definidos no JavaScript (`getProcessInfo`) para `snake_case` no atributo Python **`script.exports_sync.get_process_info()`**.|Integre `script.exports_sync` a um script de pré-processamento do ZAP/Nuclei/sqlmap quando precisar assinar payloads de teste com a rotina criptográfica nativa do cliente.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, sqlmap-evasao-normalizacao-tamper-scripts-evalcode-customizados
+
+===NOTE===
+0658|frida-empacotamento-frida-gadget-configuracao-sem-root-jailbreak|Frida: Instrumentação sem Root/Jailbreak com **`frida-gadget`** e Modos de Operação (`listen`, `connect`, `script`, `script-directory`)|Quando o dispositivo iOS ou Android de teste não possui *jailbreak*/*root* (ou quando se testa um perfil corporativo MDM onde o `frida-server` não pode rodar como `root`), o Frida opera em modo **Embedded** através da biblioteca compartilhada **`frida-gadget`** (`libfrida-gadget.so` no Android, `FridaGadget.dylib` no iOS/macOS, `frida-gadget.dll` no Windows).|Ao adicionar uma dependência `DT_NEEDED` (via `patchelf --add-needed libfrida-gadget.so` ou `System.loadLibrary("frida-gadget")` no Smali) e re-assinar o APK/IPA de homologação, o próprio aplicativo carrega o `frida-gadget` no seu próprio espaço de memória com as permissões do próprio app.|O comportamento do `frida-gadget` é controlado por um arquivo de configuração JSON com o mesmo nome (`libfrida-gadget.config.so`), que suporta quatro modos de **`interaction.type`**: **`listen`** (abre socket local/USB aguardando o cliente Frida), **`connect`** (conecta de saída a um `frida-portal`), **`script`** (executa um arquivo `.js` embutido de forma autônoma) e **`script-directory`**.|```json
+{
+  "interaction": {
+    "type": "script",
+    "path": "/data/local/tmp/autonomous_audit.js",
+    "on_change": "reload"
+  }
+}
+```|Usar `"type": "script"` no arquivo de configuração do `frida-gadget` renomeado evita abrir a porta TCP padrão `27042` do Frida (que muitos SDKs anti-tampering procuram via scan de portas local).|Verifique com `frida-ps -U` a conexão ao aplicativo instrumentado com o `frida-gadget` em um dispositivo Android sem root.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-instrumentacao-mobile-android-java-perform-ios-objc-ssl-pinning, frida-furtividade-cloak-anti-frida-deteccao-defesa-runtimes
+
+===NOTE===
+0659|frida-desempacotamento-memoria-malware-dex-pe-elf-dumping|Frida: Extração Dinâmica de Payloads Desempacotados em Memória (DEX Android, Módulos PE/ELF e Strings Decifradas)|Na análise dinâmica de malwares para Windows, Linux e Android (APKs protegidos por *packers* comerciais que decifram o arquivo `.dex` secundário apenas em memória RAM), o Frida permite interceptar o carregador de classes ou a alocação de memória e despejar o payload limpo em disco.|No Android, interceptar `dalvik.system.DexFile` / `InMemoryDexClassLoader` ou varrer a memória por cabeçalhos `dex\n035\0` (`64 65 78 0a 30 33 35 00`) recupera o bytecode Dalvik original; no Windows/Linux, interceptar `VirtualProtect` / `mprotect` quando uma região passa para `PAGE_EXECUTE_READ` (`r-x`) permite salvar o módulo com a API **`File.writeAllBytes(path, bytes)`**.|Combinado com `Process.findRangeByAddress(ptr)`, o script sabe exatamente o endereço base e o tamanho total da região alocada pelo *packer* para despejar o buffer completo.|```javascript
+// Interceptar mprotect no Linux quando uma regiao de memoria recem-desempacotada recebe permissao de execucao (PROT_EXEC = 4)
+const mprotectPtr = Module.findExportByName(null, "mprotect");
+Interceptor.attach(mprotectPtr, {
+    onEnter(args) {
+        const addr = args[0];
+        const size = args[1].toInt32();
+        const prot = args[2].toInt32();
+        if ((prot & 0x4) !== 0 && size > 4096) {
+            console.log("[Unpack Candidate] mprotect RX em " + addr + " (" + size + " bytes)");
+        }
+    }
+});
+```|Para gravar grandes blocos de memória em disco dentro do agente Frida, utilize `new File("/tmp/dump_" + addr + ".bin", "wb")` com `.write(addr.readByteArray(size))` e `.close()`.|Submeta os arquivos `.bin` ou `.dex` despejados pelo Frida ao Ghidra/Radare2 e ao motor YARA para classificação estática.|frida-hooking-nativo-interceptor-attach-replace-nativefunction-nativepointer, capev2-desempacotamento-dinamico-process-injection-unpacking, volatility3-deteccao-injecao-memoria-malfind-hollowprocesses-vadinfo
+
+===NOTE===
+0660|frida-furtividade-cloak-anti-frida-deteccao-defesa-runtimes|Frida: Subsistema **`Cloak`** e Engenharia de Detecção Anti-Instrumentação vs Bypass em Aplicações Críticas|A API JavaScript do Frida inclui o objeto **`Cloak`** (`Cloak.addThread(id)`, `Cloak.addRange(range)`, `Cloak.addFileDescriptor(fd)`), que registra os recursos internos do próprio Frida (threads, páginas de memória do agente e descritores de arquivo/sockets) para ocultá-los das enumerações normais do processo.|Entender como softwares de proteção (*RASP — Runtime Application Self-Protection*, jogos e malwares) detectam o Frida — e como o Frida se oculta — é essencial tanto para arquitetos defensivos que implementam RASP quanto para pentesters mobile.|Técnicas comuns de detecção de Frida (*Anti-Frida*) incluem: **(1)** varrer `/proc/self/maps` e `/proc/self/task/*/comm` procurando por strings `"frida"`, `"gum-js-loop"` ou `"gmain"`, **(2)** testar a porta local `27042` enviando `\x00 AUTH`, **(3)** verificar se os primeiros bytes (prólogo) de funções críticas como `open`, `strcmp` ou `SSL_write` na memória RAM diferem dos bytes do arquivo `.so` em disco (detecção de *inline trampoline* `JMP` do `Interceptor`) e **(4)** usar **Stalker** em vez de `Interceptor.attach` para observar o código sem modificar os bytes da função original no módulo!|```javascript
+// Verificar se um intervalo de memoria faz parte dos recursos internos ocultados pelo subsistema Cloak do Frida
+const ranges = Process.enumerateRanges("r-x");
+console.log("Total de regioes RX visiveis ao processo (filtradas pelo Cloak): " + ranges.length);
+```|Em arquiteturas defensivas de alto risco (apps financeiros mobile), nunca confie apenas em verificações no lado do cliente (que sempre podem ser contornadas com `Stalker` ou modificação de kernel/eBPF): implemente validação de integridade criptográfica de hardware (**Play Integrity API / Apple App Attest**) validada no **servidor backend**.|Teste a resiliência dos controles de integridade do aplicativo combinando auditoria estática no Ghidra com instrumentação via `Stalker`.|frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos, frida-rastreamento-instrucoes-stalker-code-tracing-coverage-cmodule, capev2-captura-amsi-powershell-dotnet-syscall-hooking-nirvana

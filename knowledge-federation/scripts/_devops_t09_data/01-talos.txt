@@ -1,0 +1,150 @@
+=== NOTE: 801 | talos-linux-sistema-operacional-imutavel-api-kubernetes | Talos Linux: sistema operacional moderno, imutável e gerenciado por API gRPC para Kubernetes ===
+ONE_LINER: O Talos Linux (`siderolabs/talos`, mantido pela Sidero Labs) é um sistema operacional moderno, minimalista e imutável construído especificamente para executar Kubernetes, onde todo o gerenciamento do sistema é feito via API gRPC autenticada com mTLS (sem shell nem SSH).
+IMPORTANCE: Em distribuições Linux de propósito geral (Ubuntu, RHEL, Debian), cada nó Kubernetes carrega centenas de pacotes desnecessários, acesso SSH interativo, scripts frágeis de `cloud-init` em bash e configuração mutável em `/etc`, gerando superfície de ataque e desvio de configuração (`configuration drift`). Segundo o README oficial e a documentação do Talos Linux, eliminar o shell e gerenciar o SO exclusivamente por uma API declarativa entrega segurança, previsibilidade e atualizações atômicas.
+HOW_IT_WORKS: O Talos Linux não é derivado de nenhuma outra distribuição Linux: abaixo do kernel Linux, todo o espaço de usuário foi escrito do zero em Go a partir do `PID 1` (chamado **`machined`**, substituindo completamente o `systemd`). O sistema não possui shell (`/bin/sh` ou `bash`), não possui daemon SSH, não possui utilitários GNU nem `busybox`, resultando em uma imagem SquashFS somente-leitura assinada de **menos de 80 MB**. Toda a configuração da máquina e do próprio cluster Kubernetes (incluindo o `etcd`) é definida por um único manifesto YAML declarativo e operada remotamente via CLI `talosctl` sobre uma API gRPC protegida por mutual TLS (`mTLS`).
+EXAMPLE:
+```bash
+# Consultar a versão e a saúde dos serviços de um nó Talos Linux remotamente via API gRPC mTLS com talosctl
+talosctl -n 10.0.0.10 version
+talosctl -n 10.0.0.10 services
+```
+TRADE_OFFS: Como o Talos Linux remove intencionalmente o shell interativo, o SSH e gerenciadores de pacotes tradicionais (`apt`/`yum`), operadores acostumados a fazer `ssh root@node` para instalar agentes no host ou rodar scripts bash ad-hoc precisam adaptar suas práticas: toda inspeção de processos, logs, captura de pacotes e configuração ocorre pela API do `talosctl` ou por DaemonSets/System Extensions imutáveis.
+VERIFY: Execute `talosctl -n <ip-do-no> dmesg` e `talosctl -n <ip-do-no> processes` para verificar que o diagnóstico completo do sistema operacional ocorre via API gRPC sem necessidade de SSH.
+LINKS: [[talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[k3s-distribuicao-kubernetes-leve-binario-unico-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/philosophy | https://github.com/siderolabs/talos
+
+=== NOTE: 802 | talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh | Talos Linux: reescrita do userspace em Go a partir do PID 1 (machined) sem systemd, GNU utilities ou SSH ===
+ONE_LINER: Considerado uma segunda geração de sistemas operacionais otimizados para containers, o Talos Linux reescreve o espaço de usuário em Go a partir do `PID 1` (`machined`), descartando `systemd`, utilitários GNU, `busybox`, shell e senhas.
+IMPORTANCE: Em sistemas da primeira geração de OS para containers (como CoreOS, Flatcar ou RancherOS), embora a partição raiz fosse somente-leitura, ainda existiam um shell bash, acesso SSH, `systemd` e dezenas de binários C utilitários que um atacante podia usar após um container escape (`living off the land`). A página `Philosophy` da documentação oficial do Talos explica como a ausência total desses binários neutraliza classes inteiras de vulnerabilidades.
+HOW_IT_WORKS: Quando o kernel Linux do Talos inicializa, em vez de invocar `/sbin/init` do `systemd`, ele lança diretamente o binário **`machined`** como `PID 1`. Escrito em Go e testado rigorosamente, o `machined` gerencia todo o ciclo de vida de inicialização, montagem de sistemas de arquivos, configuração de rede, rotação de certificados de curta duração, gerenciamento do `containerd`, do `kubelet` e dos pods estáticos do control plane (`kube-apiserver`, `kube-controller-manager`, `kube-scheduler` e `etcd`). Não existem senhas de usuário no Talos: toda comunicação em rede usa criptografia e autenticação por chaves (PKI separada para o Talos OS e para o Kubernetes).
+EXAMPLE:
+```bash
+# Inspecionar a lista de processos de um nó Talos via API confirmando que o PID 1 é o processo machined
+talosctl -n 10.0.0.10 processes | head -n 10
+```
+TRADE_OFFS: Como não há `systemd` nem interpretador `/bin/sh` no host do Talos Linux, ferramentas de terceiros ou instaladores legados de fornecedores de armazenamento/segurança que tentam criar unidades `.service` do `systemd` em `/etc/systemd/system` ou executar scripts shell diretamente no nó hospedeiro não funcionarão sem serem empacotados como containers Kubernetes ou extensões oficiais do Talos.
+VERIFY: Execute `talosctl -n <ip-do-no> service machined` para inspecionar o estado e os eventos do processo init `machined` no nó Talos.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[talos-endurecimento-seguranca-kspp-modulos-kernel-mtls]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/philosophy | https://github.com/siderolabs/talos
+
+=== NOTE: 803 | talos-particoes-disco-camadas-rootfs-squashfs-overlayfs | Talos Linux: layout das 6 partições de disco (EFI, BIOS, BOOT, META, STATE, EPHEMERAL) e 3 camadas de filesystem ===
+ONE_LINER: O Talos Linux particiona o disco em seis partições rotuladas (`EFI`, `BIOS`, `BOOT`, `META`, `STATE` e `EPHEMERAL`) e estrutura o sistema de arquivos raiz em três camadas: imagem `SquashFS` somente-leitura em memória, `tmpfs` (incluindo `/system`) e `overlayfs` sobre `/var` (XFS).
+IMPORTANCE: Compreender exatamente o que é imutável, o que é recriado a cada boot e o que persiste no disco (`/var` e `STATE`) é essencial para planejar armazenamento de nós Kubernetes, backups do `etcd` e procedimentos de reset no Talos. A página `Architecture` (`docs.siderolabs.com/talos/v1.9/learn-more/architecture`) detalha tanto as seis partições quanto as três camadas do filesystem.
+HOW_IT_WORKS: O disco de um nó Talos contém 6 partições: (1) **`EFI`** (dados de boot EFI); (2) **`BIOS`** (segundo estágio do GRUB); (3) **`BOOT`** (bootloader, `initramfs` e kernel); (4) **`META`** (metadados do nó, como IDs); (5) **`STATE`** (configuração da máquina, identidade de descoberta do cluster e dados do KubeSpan); e (6) **`EPHEMERAL`** (formatada em XFS e montada em `/var`). Já o sistema de arquivos raiz opera em **3 camadas**: (a) na base, uma imagem **`SquashFS` somente-leitura** montada via loop device em memória; (b) na segunda camada, sistemas **`tmpfs`** recriados do zero a cada boot (incluindo `/system`, onde o Talos grava `/system/etc/hosts` e `/system/etc/resolv.conf` e faz bind-mount sobre `/etc/hosts` e `/etc/resolv.conf` para manter o resto de `/etc` 100% read-only); e (c) na terceira camada, montagens **`overlayfs`** (como `/etc/kubernetes`) apoiadas no XFS de `/var`, que também armazena os dados do `etcd`, `kubelet` e `containerd`.
+EXAMPLE:
+```bash
+# Listar os discos e as partições (EFI, BIOS, BOOT, META, STATE, EPHEMERAL) de um nó Talos via API
+talosctl -n 10.0.0.10 get disks
+talosctl -n 10.0.0.10 mounts
+```
+TRADE_OFFS: O conteúdo de `/var` (partição `EPHEMERAL`) sobrevive a reboots normais e a upgrades do sistema operacional Talos, mas é completamente apagado em um `talosctl reset` (a menos que a flag `--system-labels-to-wipe` seja usada para limpar apenas partições específicas, como `STATE`, preservando `EPHEMERAL`); por isso, a filosofia do Talos trata a partição gravável como efêmera, exigindo que todos os dados nela sejam replicados (como o `etcd` em HA) ou reconstruíveis.
+VERIFY: Execute `talosctl -n <ip-do-no> mounts` para inspecionar o loop device do `squashfs` na raiz `/`, os `tmpfs` em `/system` e a partição XFS `EPHEMERAL` montada em `/var`.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh]] | [[talos-atualizacoes-atomicas-upgrades-reset-ciclo-vida]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/architecture | https://github.com/siderolabs/talos
+
+=== NOTE: 804 | talos-configuracao-declarativa-yaml-unica-machineconfig | Talos Linux: configuração declarativa unificada da máquina e do Kubernetes em um único manifesto YAML ===
+ONE_LINER: No Talos Linux, toda a configuração tanto do sistema operacional da máquina (rede, discos, NTP, sysctls, certificados) quanto do cluster Kubernetes que ela forma é definida por um único arquivo YAML declarativo (`controlplane.yaml` ou `worker.yaml`), sem scripts procedurais.
+IMPORTANCE: Em instalações tradicionais de Kubernetes, o operador precisa manter scripts Terraform/cloud-init para o SO, playbooks Ansible para instalar pacotes e arquivos separados do `kubeadm` para o cluster; quando uma etapa falha na metade, a máquina fica em estado inconsistente. Conforme destaca a seção `Declarative` da filosofia oficial do Talos, unificar tudo em um único YAML declarativo elimina passos procedurais e desvios.
+HOW_IT_WORKS: Usando o comando `talosctl gen config <nome-do-cluster> https://<endpoint>:6443`, o administrador gera os segredos PKI do cluster e os manifestos declarativos **`controlplane.yaml`**, **`worker.yaml`** e a configuração do cliente **`talosconfig`**. Um único arquivo `worker.yaml` pode frequentemente ser aplicado de forma idêntica a dezenas de máquinas workers (`talosctl apply-config --insecure -n <ip> --file worker.yaml`), e customizações específicas (como definir o disco de instalação, VIP da API ou patches de rede) são aplicadas de forma limpa via patches YAML/JSON (`--config-patch`) sem nunca editar scripts bash na máquina.
+EXAMPLE:
+```bash
+# Gerar os manifestos declarativos (controlplane.yaml, worker.yaml e talosconfig) e aplicar a um nó novo
+talosctl gen config prod-cluster https://10.0.0.100:6443
+talosctl apply-config --insecure --nodes 10.0.0.10 --file controlplane.yaml
+```
+TRADE_OFFS: A flag `--insecure` no comando `talosctl apply-config --insecure` só deve ser usada no momento do provisionamento inicial enquanto o nó está em modo de manutenção aguardando sua primeira configuração (antes de possuir as chaves mTLS do cluster); assim que a configuração inicial é aplicada, toda alteração subsequente deve usar `talosctl apply-config` autenticado por mTLS via `talosconfig`.
+VERIFY: Execute `talosctl -n <ip-do-no> get machineconfig -o yaml` para inspecionar a configuração declarativa ativa no nó e confirmar sua sincronização com o manifesto versionado no Git.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[talos-endurecimento-seguranca-kspp-modulos-kernel-mtls]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/philosophy | https://github.com/siderolabs/talos
+
+=== NOTE: 805 | talos-endurecimento-seguranca-kspp-modulos-kernel-mtls | Talos Linux: endurecimento de segurança por padrão (KSPP, bloqueio de módulos dinâmicos de kernel e PKI mTLS rotativa) ===
+ONE_LINER: O Talos Linux aplica por padrão as recomendações do Kernel Self Protection Project (`KSPP`), desabilita o carregamento dinâmico de módulos de kernel arbitrários, assina suas imagens SquashFS e utiliza certificados mTLS de curta duração com rotação automática.
+IMPORTANCE: Em servidores Linux convencionais, mesmo com containers rodando sem privilégios, parâmetros fracos de kernel (`sysctl`) ou a capacidade de carregar um rootkit como módulo de kernel (`.ko`) após uma escalada de privilégios comprometem a máquina. A seção `Secure` da documentação oficial de filosofia do Talos explica como o design minimalista permite impor proteções de kernel que quebrariam distribuições tradicionais.
+HOW_IT_WORKS: Como o Talos conhece exatamente sua única finalidade (executar Kubernetes), o sistema ativa configurações rigorosas de segurança de fábrica: (1) conformidade com os parâmetros de endurecimento de kernel e memória do **Kernel Self Protection Project (KSPP)**; (2) desativação de carregamento dinâmico arbitrário de módulos de kernel em tempo de execução (todos os módulos necessários são compilados ou assinados na imagem imutável); (3) entrega do sistema operacional como uma única imagem SquashFS versionada e assinada, verificável contra adulteração; e (4) ausência total de autenticação por senha, utilizando duas estruturas PKI separadas (uma para a API gRPC do Talos e outra para o Kubernetes) com certificados de curta duração que rotacionam automaticamente.
+EXAMPLE:
+```bash
+# Verificar parâmetros sysctl endurecidos pelo KSPP diretamente em um nó Talos via API gRPC
+talosctl -n 10.0.0.10 read /proc/sys/kernel/kptr_restrict
+talosctl -n 10.0.0.10 read /proc/sys/kernel/dmesg_restrict
+```
+TRADE_OFFS: Como o Talos desabilita o carregamento arbitrário de módulos de kernel em tempo de execução e possui um `rootfs` SquashFS somente-leitura, se um hardware específico exigir um driver de kernel extra, firmware proprietário, suporte a ZFS/DRBD ou utilitário de baixo nível (como `iscsid` para Longhorn/OpenEBS ou drivers NVIDIA), você não pode compilar módulos dentro do nó; deve-se gerar uma imagem Talos incluindo as **System Extensions** oficiais assinadas (via Talos Image Factory / `imager`).
+VERIFY: Verifique a assinatura e a versão da imagem instalada com `talosctl -n <ip-do-no> version` e audite a validade dos certificados mTLS no arquivo `talosconfig`.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh]] | [[kubescape-varredura-postura-seguranca-opa-regolibrary-frameworks]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/philosophy | https://github.com/siderolabs/talos
+
+=== NOTE: 806 | talos-atualizacoes-atomicas-upgrades-reset-ciclo-vida | Talos Linux: atualizações atômicas baseadas em imagem (talosctl upgrade) e reset limpo de nós (talosctl reset) ===
+ONE_LINER: Como o Talos Linux distribui o sistema operacional inteiro como uma imagem SquashFS única e versionada, atualizações do SO (`talosctl upgrade`) ocorrem de forma atômica trocando a imagem de boot (com fallback automático A/B), e a reciclagem do nó ocorre via `talosctl reset`.
+IMPORTANCE: Atualizar o sistema operacional de nós Kubernetes tradicionais com `apt-get dist-upgrade` ou `yum update` modifica centenas de pacotes individualmente no disco ativo, podendo deixar o nó incapaz de dar boot ou com bibliotecas incompatíveis entre diferentes nós do mesmo cluster. O README e a documentação de arquitetura do Talos destacam as atualizações atômicas e a velocidade de reconstrução de máquinas.
+HOW_IT_WORKS: Durante um **`talosctl upgrade --nodes <ip> --image ghcr.io/siderolabs/installer:<versao>`**, o Talos faz cordon/drain do nó Kubernetes, baixa a nova imagem unificada (contendo kernel Linux, `initramfs` e imagem SquashFS do `rootfs`), grava na partição `BOOT` secundária (esquema A/B), preserva os dados de `STATE` e `EPHEMERAL` (`/var`, mantendo dados do `etcd` e cache de imagens) e reinicia o nó na nova versão; caso o boot na nova versão falhe, o bootloader reverte automaticamente para a entrada anterior funcional. Já o comando **`talosctl reset`** drena/remove o nó do cluster e limpa as partições (ou seletivamente via `--system-labels-to-wipe STATE,EPHEMERAL`) para descomissionar ou reprovisionar o servidor do zero em poucos instantes.
+EXAMPLE:
+```bash
+# Executar upgrade atômico de um nó Talos para uma nova versão do instalador e verificar saúde pós-boot
+talosctl upgrade --nodes 10.0.0.10 --image ghcr.io/siderolabs/installer:v1.9.0
+talosctl health --nodes 10.0.0.10
+```
+TRADE_OFFS: Em nós de control plane que hospedam membros do banco de dados `etcd`, nunca dispare `talosctl upgrade` ou `talosctl reset` em todos os nós de control plane simultaneamente em paralelo; atualize sempre um nó de control plane por vez aguardando `talosctl health` confirmar que o membro do `etcd` voltou saudável ao quórum antes de prosseguir para o próximo nó.
+VERIFY: Execute `talosctl health --nodes <ip-control-plane>` antes e depois de cada `talosctl upgrade` para confirmar que o `etcd`, a API do Kubernetes, o `kubelet` e todos os nós estão saudáveis.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[talos-bootstrap-etcd-gerenciamento-control-plane-ha]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/architecture | https://github.com/siderolabs/talos
+
+=== NOTE: 807 | talos-bootstrap-etcd-gerenciamento-control-plane-ha | Talos Linux: bootstrap do cluster Kubernetes, gerenciamento nativo do etcd e recuperação de quórum via talosctl ===
+ONE_LINER: O Talos Linux gerencia nativamente o ciclo de vida do banco de dados `etcd` e dos componentes do control plane Kubernetes, inicializando o cluster com `talosctl bootstrap` e oferecendo comandos dedicados (`talosctl etcd members`, `snapshot`, `forfeit-leadership`) para operação em alta disponibilidade.
+IMPORTANCE: Em clusters Kubernetes auto-gerenciados, a operação do `etcd` (formação inicial do quórum de 3 ou 5 nós, remoção de membros quando um servidor físico queima e backup/restore de snapshots) é historicamente a parte mais delicada e propensa a indisponibilidade. Conforme documentado em `What is Talos Linux?` e `Philosophy`, o Talos incorpora a coordenação do control plane e do `etcd` diretamente no sistema operacional.
+HOW_IT_WORKS: Após aplicar o manifesto `controlplane.yaml` aos nós de control plane e `worker.yaml` aos nós workers, o operador executa **`talosctl bootstrap --nodes <ip-de-um-unico-control-plane>`** exatamente uma vez contra o primeiro nó de control plane. O `machined` desse nó inicializa o primeiro membro do cluster `etcd` e sobe os pods estáticos do `kube-apiserver`, `kube-controller-manager` e `kube-scheduler`; os demais nós de control plane detectam o cluster, juntam-se automaticamente ao quórum do `etcd` como membros votantes e geram o `kubeconfig` (obtido via `talosctl kubeconfig`). Toda a manutenção do `etcd` é exposta diretamente pela API do Talos via subcomandos `talosctl etcd`.
+EXAMPLE:
+```bash
+# Inicializar o cluster no primeiro nó de control plane, baixar o kubeconfig e listar os membros do etcd
+talosctl bootstrap --nodes 10.0.0.10
+talosctl kubeconfig --nodes 10.0.0.10
+talosctl etcd members --nodes 10.0.0.10
+```
+TRADE_OFFS: O comando `talosctl bootstrap` deve ser executado **apenas uma única vez** e apontando para **um único nó** de control plane durante a criação inicial do cluster; executar `talosctl bootstrap` simultaneamente em três nós de control plane fará com que cada nó crie seu próprio cluster `etcd` isolado de 1 membro (split-brain) em vez de formar um único quórum de 3 membros.
+VERIFY: Execute `talosctl etcd members --nodes 10.0.0.10` e `talosctl etcd status --nodes 10.0.0.10,10.0.0.11,10.0.0.12` para confirmar que os 3 nós de control plane fazem parte do mesmo ID de cluster `etcd` e possuem um líder eleito.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-configuracao-declarativa-yaml-unica-machineconfig]] | [[talos-atualizacoes-atomicas-upgrades-reset-ciclo-vida]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/overview/what-is-talos | https://github.com/siderolabs/talos
+
+=== NOTE: 808 | talos-ambientes-locais-docker-qemu-bare-metal-cloud | Talos Linux: provisionamento de clusters locais (em Docker ou QEMU via talosctl cluster create) e suporte multi-plataforma ===
+ONE_LINER: O Talos Linux pode ser executado em qualquer lugar que suporte um kernel Linux moderno — desde servidores bare-metal (ISO/PXE), máquinas virtuais e nuvens públicas (AWS, GCP, Azure) até clusters locais em segundos na máquina de desenvolvimento via `talosctl cluster create` (em Docker ou QEMU).
+IMPORTANCE: Para testar atualizações do Talos, validar patches de `machineconfig` ou aprender a operar um sistema operacional gerenciado por API antes de aplicá-lo em servidores bare-metal de produção, o engenheiro precisa simular um cluster multi-nós localmente no próprio laptop. A página oficial `What is Talos Linux?` destaca tanto o boot em bare-metal/VMs quanto a execução do Talos em Docker/QEMU.
+HOW_IT_WORKS: A CLI `talosctl` inclui um provisionador local completo através do comando **`talosctl cluster create`**: (1) no modo padrão (provisioner `docker`), o comando inicia containers Docker rodando a imagem do Talos Linux (`machined` e serviços internos), configura a rede virtual, aplica os manifestos e faz o bootstrap do Kubernetes em poucos segundos; e (2) no modo **`--provisioner=qemu`** (em Linux/macOS), o comando instancia máquinas virtuais completas com kernel Talos real, bootloader, as 6 partições de disco (`EFI` a `EPHEMERAL`), SquashFS e KubeSpan, simulando fielmente um ambiente bare-metal.
+EXAMPLE:
+```bash
+# Criar um cluster Talos Linux local para testes e destruí-lo ao finalizar
+talosctl cluster create --name talos-local --workers 2
+kubectl get nodes -o wide
+talosctl cluster destroy --name talos-local
+```
+TRADE_OFFS: Ao rodar o Talos localmente com o provisioner `docker` (`talosctl cluster create`), os nós compartilham o kernel do host Docker (portanto operações de particionamento físico de disco, bootloader GRUB/systemd-boot ou `talosctl upgrade` de kernel não se aplicam ao modo container); para testar upgrades completos de imagem de disco e particionamento, utilize `--provisioner=qemu` ou máquinas virtuais.
+VERIFY: Após executar `talosctl cluster create`, rode `kubectl get nodes -o wide` e confirme na coluna `OS-IMAGE` que todos os nós reportam `Talos (v...)`.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/overview/what-is-talos | https://github.com/siderolabs/talos
+
+=== NOTE: 809 | talos-observabilidade-troubleshooting-api-logs-pcap-dashboard | Talos Linux: diagnóstico e observabilidade sem SSH via talosctl (dashboard, logs, dmesg, pcap e leitura de /proc) ===
+ONE_LINER: Como o Talos Linux não possui shell nem SSH, toda a investigação e resolução de problemas do nó (monitoramento em tempo real no terminal, leitura de logs de serviços e kernel, inspeção de rede, captura de pacotes `pcap` e visualização de `/proc`) é servida pela API gRPC do `talosctl`.
+IMPORTANCE: Uma dúvida frequente de equipes de SRE ao avaliar um sistema operacional imutável sem SSH é: *"Como vou diagnosticar um problema de rede, disco cheio ou falha no kubelet se não posso dar SSH no servidor?"*. A documentação oficial (`What is Talos Linux?` e `Architecture`) explica que a API de rede do Talos foi projetada especificamente para cobrir todas as necessidades de configuração e troubleshooting.
+HOW_IT_WORKS: Por meio da conexão gRPC autenticada por mTLS na porta `50000` do nó, o operador utiliza subcomandos nativos do **`talosctl`** que substituem os antigos utilitários de linha de comando Linux: (1) `talosctl dashboard`: abre uma interface TUI interativa em tempo real exibindo uso de CPU, memória, carga, tráfego de rede, logs e status do nó; (2) `talosctl logs <servico>` e `talosctl dmesg -f`: fazem streaming dos logs do `kubelet`, `containerd`, `etcd`, `machined` ou do buffer do kernel; (3) `talosctl pcap -i eth0 -o capture.pcap`: realiza captura de pacotes de rede estilo `tcpdump` transmitindo o arquivo `.pcap` diretamente para a estação do engenheiro; e (4) `talosctl ls`, `talosctl read`, `talosctl df`, `talosctl memory` e `talosctl netstat`.
+EXAMPLE:
+```bash
+# Acompanhar logs em tempo real do kubelet e capturar pacotes de rede da interface eth0 via API do Talos
+talosctl -n 10.0.0.10 logs kubelet -f
+talosctl -n 10.0.0.10 pcap --interface eth0 --duration 10s --output /tmp/node-eth0.pcap
+```
+TRADE_OFFS: Como a API gRPC do Talos (`machined` na porta TCP `50000`) funciona de forma independente do `kube-apiserver` (porta `6443`) e do `kubelet`, mesmo quando o cluster Kubernetes está completamente fora do ar (por exemplo, certificado do Kubernetes expirado, CNI quebrado ou `kubelet` parado), o operador continua conseguindo conectar com `talosctl -n <ip>` para ler os logs do `kubelet`/`etcd` e corrigir a configuração da máquina.
+VERIFY: Execute `talosctl -n <ip-do-no> services` e `talosctl -n <ip-do-no> memory` para validar a telemetria instantânea do nó sem abrir nenhuma sessão de shell no servidor.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-filosofia-machined-pid1-sem-systemd-sem-shell-ssh]] | [[inspektor-arquitetura-oci-gadgets-ebpf-wasm-metadados]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/overview/what-is-talos | https://github.com/siderolabs/talos
+
+=== NOTE: 810 | talos-descoberta-cluster-kubespan-wireguard-particao-state | Talos Linux: identidade de nó na partição STATE, descoberta de cluster e malha criptografada KubeSpan (WireGuard) ===
+ONE_LINER: O Talos Linux armazena a configuração da máquina, os dados de identidade para descoberta de cluster (`Cluster Discovery`) e as informações do **KubeSpan** (malha de rede ponto a ponto sobre WireGuard integrada ao SO) na partição persistente `STATE`.
+IMPORTANCE: Em clusters Kubernetes híbridos que abrangem máquinas bare-metal em data centers locais e instâncias em nuvens públicas diferentes, conectar os nós entre si geralmente exige configurar VPNs externas complexas e manter listas estáticas de IPs de pares. A documentação de arquitetura do Talos (`File system partitions`) destaca o papel da partição `STATE` para a identidade do nó, descoberta automática de membros e KubeSpan.
+HOW_IT_WORKS: Durante o boot do nó Talos, o `machined` monta a partição **`STATE`** (criptografável por hardware TPM2/LUKS), onde residem: (1) o arquivo de configuração declarativa da máquina (`config.yaml`); (2) a identidade criptográfica do nó para o serviço **Cluster Discovery** (que permite aos nós do mesmo cluster descobrirem automaticamente os endereços IP e endpoints uns dos outros); e (3) as chaves e metadados do **KubeSpan**, que estabelece automaticamente túneis **WireGuard** ponto a ponto (full mesh) no kernel Linux entre todos os nós do cluster, atravessando NAT/firewalls e criptografando todo o tráfego de controle e dados entre os servidores sem exigir configuração manual de peers WireGuard.
+EXAMPLE:
+```bash
+# Inspecionar os membros descobertos automaticamente no cluster e o status dos peers KubeSpan via talosctl
+talosctl -n 10.0.0.10 get members
+talosctl -n 10.0.0.10 get kubespanpeerstatuses
+```
+TRADE_OFFS: Como a partição `STATE` guarda a configuração da máquina e a identidade criptográfica do nó no cluster, se a partição `STATE` for apagada durante um reset sem preservação, o nó perde sua identidade e configuração locais, voltando ao modo de manutenção inicial e aguardando um novo `talosctl apply-config`.
+VERIFY: Execute `talosctl -n <ip-do-no> get discoveredvolumes` para verificar a presença e o estado da partição `STATE` e `talosctl -n <ip-do-no> get members` para confirmar o registro de descoberta de todos os nós do cluster.
+LINKS: [[talos-linux-sistema-operacional-imutavel-api-kubernetes]] | [[talos-particoes-disco-camadas-rootfs-squashfs-overlayfs]] | [[clusterapi-arquitetura-declarativa-ciclo-vida-clusters-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/siderolabs/talos/main/README.md | https://docs.siderolabs.com/talos/v1.9/learn-more/architecture | https://github.com/siderolabs/talos

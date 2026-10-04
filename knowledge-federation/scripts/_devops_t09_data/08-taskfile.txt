@@ -1,0 +1,245 @@
+=== NOTE: 871 | taskfile-task-runner-moderno-go-alternativa-make-yaml | Task (Taskfile.yml): task runner moderno e multiplataforma escrito em Go como alternativa ao Make ===
+ONE_LINER: O **Task** (`go-task/task`, documentado em `taskfile.dev`) é um executor de tarefas e ferramenta de build rápida e multiplataforma escrita em Go, inspirada no GNU Make mas configurada em formato **YAML** (`Taskfile.yml`) com um interpretador shell Go nativo embutido (`mvdan/sh`).
+IMPORTANCE: Embora o `Makefile` clássico seja onipresente em sistemas Unix, sua sintaxe exige indentação obrigatória por caracteres `TAB`, possui regras obscuras de variáveis/escapes e quebra facilmente no Windows onde o `sh`/`bash` não está disponível por padrão. Segundo o README oficial e o guia `Quick Start` (`taskfile.dev/docs/getting-started`), o Task foi projetado para workflows modernos com sintaxe YAML legível e portabilidade real entre Linux, macOS e Windows.
+HOW_IT_WORKS: O usuário inicializa um projeto executando **`task --init`**, que gera um arquivo **`Taskfile.yml`** com `version: '3'`, um mapa `vars:` e um mapa `tasks:`. Para executar uma tarefa, basta invocar `task <nome-da-tarefa>` (ou simplesmente `task` sem argumentos para executar a tarefa especial chamada **`default`**). Crucialmente, o Task utiliza a biblioteca **`mvdan/sh`**, um interpretador POSIX `sh`/bash nativo escrito em Go: isso permite escrever comandos estilo `sh`/`bash` em `cmds:` que rodam de forma idêntica mesmo no Windows sem precisar de Bash/WSL instalado (desde que os executáveis invocados existam como built-ins ou no `$PATH`).
+EXAMPLE:
+```yaml
+# Taskfile.yml oficial do guia Quick Start definindo a versão 3, variáveis e tarefas default e build
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    desc: Print a greeting message
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  build:
+    desc: Compile the Go binary
+    cmds:
+      - go build ./cmd/main.go
+```
+TRADE_OFFS: Embora o interpretador embutido `mvdan/sh` do Task execute nativamente estruturas de controle de shell (`if`, `for`, pipes `|`, redirecionamentos `>`, variáveis e built-ins básicos como `echo`, `cd`, `pwd`) em qualquer SO, comandos que chamam programas externos específicos do Unix (como `sed`, `awk`, `grep` ou `tar`) ainda exigem que esses executáveis estejam instalados no `$PATH` da máquina Windows ou sejam substituídos por comandos portáveis/Go.
+VERIFY: Execute `task --init` em um diretório de teste, adicione `desc:` às tarefas e rode `task --list` (`task -l`) para listar todas as tarefas documentadas do `Taskfile.yml`.
+LINKS: [[taskfile-variaveis-argumentos-validacao-segredos-mascarados]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]] | [[earthly-automacao-build-containers-earthfile-reprodutivel]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 872 | taskfile-variaveis-argumentos-validacao-segredos-mascarados | Task: variáveis dinâmicas (sh:), argumentos CLI, validação de entradas (requires) e mascaramento de segredos ===
+ONE_LINER: O Task suporta variáveis estáticas e dinâmicas computadas por comandos shell (`sh:`), passagem de argumentos via `CLI_ARGS`, validação obrigatória de entradas/valores permitidos (`requires`) e variáveis secretas mascaradas nos logs.
+IMPORTANCE: Em automações de DevOps (como scripts de deploy em Kubernetes, publicação de releases ou migrações de banco), executar uma tarefa quando uma variável obrigatória (`ENV` ou `VERSION`) foi esquecida ou tiver um valor inválido (ex.: `ENV=prdo` com erro de digitação) pode causar acidentes graves; além disso, chaves de API nunca devem aparecer em texto claro nos logs do CI. A seção `Variables and arguments` do guia oficial (`taskfile.dev/docs/guide`) cobre esses controles.
+HOW_IT_WORKS: No `Taskfile.yml`, variáveis (globais ou por tarefa) são interpoladas com templates Go `{{.NOME_VAR}}`: (1) **Variáveis dinâmicas**: declarar `GIT_COMMIT: { sh: git rev-parse --short HEAD }` executa o comando e armazena a saída na variável; (2) **Argumentos CLI**: qualquer argumento passado após `--` na linha de comando (`task test -- -v ./pkg/...`) fica disponível na variável especial **`{{.CLI_ARGS}}`**; (3) **Validação (`requires`)**: o bloco `requires: { vars: [ { name: DEPLOY_ENV, enum: [dev, staging, prod] } ] }` aborta imediatamente a tarefa antes de rodar qualquer comando se a variável estiver ausente ou fora da lista permitida; e (4) **Secrets**: permite carregar e mascarar valores sensíveis na saída de log dos comandos do Task.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml com variável dinâmica (sh:), validação estrita de enum (requires) e uso de CLI_ARGS
+version: '3'
+
+vars:
+  GIT_SHA:
+    sh: git rev-parse --short HEAD
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: DEPLOY_ENV
+          enum: [dev, staging, prod]
+    cmds:
+      - echo "Deploying commit {{.GIT_SHA}} to {{.DEPLOY_ENV}} {{.CLI_ARGS}}"
+```
+TRADE_OFFS: Variáveis dinâmicas definidas com `sh:` no nível global (`vars:` no topo do `Taskfile.yml`) podem ser avaliadas na inicialização do arquivo; se um comando `sh:` for lento ou depender de uma ferramenta que só é necessária em uma tarefa específica de release, declare essa variável `sh:` apenas dentro do bloco `vars:` daquela tarefa específica para não atrasar todas as demais tarefas.
+VERIFY: Com o exemplo acima salvo no `Taskfile.yml`, execute `task deploy DEPLOY_ENV=invalido` e confirme que o Task bloqueia a execução imediatamente informando que o valor não pertence ao `enum: [dev, staging, prod]`.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]] | [[taskfile-execucao-condicional-preconditions-prompts-defer]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 873 | taskfile-dependencias-paralelas-sequenciais-loops-matrizes | Task: dependências concorrentes (deps), chamadas sequenciais (task:), controle de execução única (run: once) e Loops ===
+ONE_LINER: No Task, dependências declaradas na lista `deps:` de uma tarefa rodam **concorrentemente em paralelo** por padrão, enquanto chamadas `task:` dentro de `cmds:` rodam **em sequência**, contando ainda com deduplicação (`run: once`/`when_changed`) e **Loops** (`for:`) sobre listas, arquivos e matrizes.
+IMPORTANCE: Em um pipeline local de qualidade, tarefas independentes como `lint-go`, `lint-yaml` e `unit-test` devem rodar em paralelo usando todos os cores da CPU para terminar rápido (`deps:`), enquanto `build` -> `docker-build` -> `deploy` precisam rodar estritamente uma após a outra (`cmds:`). A seção `Task execution` do guia oficial (`taskfile.dev/docs/guide`) documenta `deps`, `cmds`, `run` e `for`.
+HOW_IT_WORKS: (1) **Paralelismo (`deps:`)**: todas as tarefas listadas em `deps: [lint, test]` iniciam simultaneamente em goroutines paralelas antes dos comandos de `cmds:` da tarefa pai (podendo limitar o paralelismo global com `--concurrency` / `-C`); (2) **Sequência (`cmds:`)**: invocar `- task: build` seguido de `- task: package` dentro de `cmds:` executa a segunda somente após a primeira terminar com sucesso; (3) **Deduplicação (`run:`)**: configurar `run: once` (ou `run: when_changed` quando chamada com `vars` diferentes) garante que uma tarefa base compartilhada (como `install-deps`) rode apenas uma vez no mesmo fluxo; e (4) **Loops (`for:`)**: permite repetir um comando ou chamada de tarefa iterando sobre um array de valores, sobre as `sources` da tarefa ou sobre uma matriz combinatória (`matrix:`), acessando o item atual via **`{{.ITEM}}`**.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml combinando deps em paralelo, run: once e loop em matriz multiplataforma (GOOS/GOARCH)
+version: '3'
+
+tasks:
+  generate:
+    run: once
+    cmds:
+      - go generate ./...
+
+  build-all:
+    deps: [generate]
+    cmds:
+      - for:
+          matrix:
+            OS: [linux, darwin]
+            ARCH: [amd64, arm64]
+        cmd: GOOS={{.ITEM.OS}} GOARCH={{.ITEM.ARCH}} go build -o dist/app-{{.ITEM.OS}}-{{.ITEM.ARCH}} ./cmd/app
+```
+TRADE_OFFS: Como todas as tarefas listadas em `deps:` executam em paralelo ao mesmo tempo, nunca coloque em `deps:` duas tarefas que escrevem ou apagam o mesmo diretório temporário simultaneamente (por exemplo, `deps: [clean, build]`, onde `clean` pode apagar arquivos enquanto `build` já começou a compilar!); tarefas com ordem obrigatória devem sempre ser encadeadas em `cmds:` com `- task: clean` seguido de `- task: build`.
+VERIFY: Execute `task build-all --dry` (modo dry-run) para pré-visualizar todas as combinações expandidas pelo loop de matriz sem executar a compilação real.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-execucao-condicional-preconditions-prompts-defer]] | [[taskfile-builds-incrementais-sources-generates-watch-mode]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 874 | taskfile-execucao-condicional-preconditions-prompts-defer | Task: execução condicional (if e preconditions), prompts de confirmação (prompt) e limpeza garantida (defer) ===
+ONE_LINER: O Task oferece controle fino do fluxo de execução por meio de `preconditions` (que validam pré-requisitos com mensagens de erro claras), `if` (que pula tarefas opcionais), `prompt` (que exige confirmação humana antes de tarefas perigosas) e `defer` (que garante limpeza mesmo em caso de erro).
+IMPORTANCE: Scripts de automação costumam falhar no meio do caminho porque o usuário esqueceu de ligar o Docker ou criar um arquivo `.env`, deixando containers temporários ou arquivos sujos para trás; além disso, tarefas destrutivas (como `terraform destroy` ou `db-reset`) precisam pedir confirmação explícita antes de rodar. A seção `Conditional execution` e `Errors and cleanup` do guia oficial (`taskfile.dev/docs/guide`) detalha esses quatro mecanismos.
+HOW_IT_WORKS: (1) **`preconditions:`**: lista de comandos (`sh: test -f .env` ou `sh: docker info`) com mensagem customizada `msg: "O arquivo .env não existe!"`; se qualquer pré-condição retornar código diferente de zero, o Task falha imediatamente exibindo `msg`; (2) **`if:`** (ou `status:`): permite pular silenciosamente um passo ou tarefa quando uma condição não se aplica; (3) **`prompt:`**: exibe uma pergunta interativa no terminal (ex.: `prompt: "Tem certeza que deseja aplicar no cluster de PRODUÇÃO?"`) e só prossegue se o operador confirmar (`y`/`yes`, ou se `--yes` for passado em CI); e (4) **`defer:`**: dentro de `cmds:`, declarar `- defer: rm -rf ./tmp-build` ou `- defer: { task: stop-test-db }` agenda o comando para rodar ao final da tarefa **mesmo que um comando anterior falhe** (análogo ao `defer` da linguagem Go ou `trap ... EXIT` no bash).
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml usando preconditions, prompt de confirmação e defer para limpeza garantida
+version: '3'
+
+tasks:
+  integration-test:
+    preconditions:
+      - sh: docker info > /dev/null 2>&1
+        msg: "Erro: o daemon Docker precisa estar em execução para rodar os testes de integração."
+    cmds:
+      - docker run -d --name pg-test-tmp -e POSTGRES_PASSWORD=test postgres:16-alpine
+      - defer: docker rm -f pg-test-tmp
+      - go test -v ./internal/db/...
+```
+TRADE_OFFS: Quando você adiciona `prompt:` a uma tarefa que também será executada em pipelines não-interativos de CI/CD, o job de CI travará ou abortará aguardando entrada de teclado a menos que o comando no servidor de CI passe explicitamente a flag **`--yes`** (`-y`) para auto-confirmar os prompts.
+VERIFY: Pare o serviço Docker (ou teste com um arquivo inexistente em `preconditions`) e execute `task integration-test` para confirmar que a mensagem amigável de `msg:` é exibida antes de qualquer comando de `cmds:` iniciar.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]] | [[taskfile-builds-incrementais-sources-generates-watch-mode]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 875 | taskfile-builds-incrementais-sources-generates-watch-mode | Task: checagem de arquivos atualizados (sources, generates, method: checksum/timestamp) e modo Watch (--watch) ===
+ONE_LINER: O Task evita recompilações desnecessárias (`up-to-date checks`) monitorando padrões glob em `sources:` e `generates:` por hash de conteúdo (`method: checksum`, o padrão) ou data de modificação (`method: timestamp`), além de reexecutar tarefas automaticamente ao salvar arquivos com `task --watch`.
+IMPORTANCE: A principal razão histórica pela qual desenvolvedores usavam o `make` era evitar recompilar alvos cujos arquivos de origem não mudaram; contudo, o `make` baseia-se apenas em timestamps (`mtime`), que falham quando se troca de branch no Git ou em clones de CI. A seção `Up-to-date checks` e `Watch mode` do guia oficial do Task resolve isso usando checksums por padrão.
+HOW_IT_WORKS: Quando uma tarefa declara a lista de globs de entrada em **`sources:`** (ex.: `["**/*.go", "go.mod"]`) e a lista de artefatos de saída em **`generates:`** (ex.: `["./bin/app"]`), o Task verifica antes de rodar se a tarefa já está atualizada: (1) com **`method: checksum`** (o padrão), o Task calcula um hash rápido do conteúdo de todos os arquivos em `sources` (gravado em `.task/checksum/`) e verifica se os arquivos em `generates` existem; se nada mudou, imprime `task: Task "build" is up to date` e pula a compilação; (2) com **`method: timestamp`**, compara as datas de modificação de `sources` contra `generates`; e (3) com **`task --watch build`** (`-w`), o Task permanece rodando em modo watch e reexecuta a tarefa instantaneamente toda vez que qualquer arquivo listado em `sources:` é salvo.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml com build incremental baseado em checksum de sources e verificação de generates
+version: '3'
+
+tasks:
+  build:
+    desc: Compila o binário apenas se os arquivos .go mudaram ou se bin/app não existir
+    sources:
+      - cmd/**/*.go
+      - internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - ./bin/app
+    cmds:
+      - go build -o ./bin/app ./cmd/app
+```
+TRADE_OFFS: Como o modo padrão `method: checksum` grava os hashes calculados das últimas execuções no diretório oculto **`.task/`** na raiz do projeto, lembre-se sempre de adicionar **`.task/`** ao arquivo `.gitignore` do repositório para não comitar arquivos temporários de cache local do Task no controle de versão.
+VERIFY: Execute `task build` duas vezes seguidas sem alterar nenhum arquivo `.go` e confirme que a segunda execução retorna instantaneamente com a mensagem `Task "build" is up to date` (ou force a reexecução com `task build --force`).
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]] | [[taskfile-composicao-includes-namespaces-remote-taskfiles]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 876 | taskfile-composicao-includes-namespaces-remote-taskfiles | Task: modularização em monorepos com includes, namespaces e Remote Taskfiles (HTTP/Git com checksums) ===
+ONE_LINER: O bloco `includes:` no `Taskfile.yml` permite importar outros Taskfiles locais (com isolamento por namespace, diretório de trabalho `dir:` e passagem de variáveis) ou carregar **Remote Taskfiles** via HTTP/Git com gerenciamento de confiança, cache e checksum.
+IMPORTANCE: Em um monorepo com 10 microsserviços ou em uma organização com 50 repositórios Git que compartilham exatamente as mesmas tarefas de `docker`, `k8s`, `helm` e `lint`, colocar 2.000 linhas em um único `Taskfile.yml` ou copiar e colar tarefas entre 50 repositórios torna a manutenção impraticável. A seção `Including Taskfiles` do guia oficial (`taskfile.dev/docs/guide`) resolve tanto a composição local quanto o compartilhamento remoto.
+HOW_IT_WORKS: Na seção **`includes:`** do `Taskfile.yml` raiz, cada chave define um namespace (por exemplo, `k8s:` ou `backend:`): (1) **Includes locais**: apontam para `./deploy/Taskfile.yml` ou `./services/api` (definindo `dir: ./services/api` para que os comandos daquele módulo rodem no subdiretório correto, ou `flatten: true` para expor tarefas sem prefixo); o usuário invoca as tarefas com **`task backend:build`** ou **`task k8s:deploy`**; e (2) **Remote Taskfiles**: permitem referenciar um Taskfile hospedado remotamente via HTTPS ou repositório Git, onde o Task verifica a confiança do usuário, valida o checksum do arquivo remoto e armazena uma cópia em cache local para execução offline.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml raiz em um monorepo incluindo Taskfiles de subdiretórios sob namespaces dedicados
+version: '3'
+
+includes:
+  api:
+    taskfile: ./services/api/Taskfile.yml
+    dir: ./services/api
+  infra:
+    taskfile: ./infra/terraform/Taskfile.yml
+    dir: ./infra/terraform
+```
+TRADE_OFFS: Ao incluir um Taskfile de um subdiretório (`./services/api/Taskfile.yml`), por padrão os comandos daquele Taskfile incluído rodariam no diretório raiz onde o comando `task` foi invocado a menos que você especifique explicitamente **`dir: ./services/api`** na configuração do `include`; defina sempre `dir:` quando as tarefas do submódulo esperam caminhos relativos à sua própria pasta.
+VERIFY: Execute `task --list-all` (`task -a`) na raiz do repositório para verificar que todas as tarefas dos módulos incluídos aparecem prefixadas com seus respectivos namespaces (`api:*`, `infra:*`).
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-ambientes-dotenv-plataformas-shells-output]] | [[earthly-imports-monorepos-multi-repositorios-remotos]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 877 | taskfile-ambientes-dotenv-plataformas-shells-output | Task: carregamento de arquivos .env (dotenv), filtragem por plataforma (platforms) e modos de saída (output) ===
+ONE_LINER: O Task suporta injeção de variáveis de ambiente (`env:`), carregamento nativo de múltiplos arquivos `.env` (`dotenv:`), restrição de tarefas ou comandos a sistemas operacionais/arquiteturas específicas (`platforms:`) e controle do formato de log de tarefas paralelas (`output: interleaved|group|prefixed`).
+IMPORTANCE: Ao rodar tarefas em paralelo (`deps:`) em CI ou localmente, os logs de múltiplos processos se misturam de forma ilegível se não forem agrupados ou prefixados; além disso, projetos frequentemente precisam carregar `.env.local` + `.env` automaticamente e rodar comandos específicos apenas em `linux` ou `darwin/arm64`. A seção `Environment and output` do guia oficial (`taskfile.dev/docs/guide`) documenta esses recursos.
+HOW_IT_WORKS: (1) **`env:` e `dotenv:`**: a lista `dotenv: ['.env.local', '.env']` (global ou por tarefa) lê arquivos `.env` na ordem declarada sem precisar de ferramentas externas como `direnv` ou `dotenv-cli`; (2) **`platforms:`**: pode ser adicionado a uma tarefa inteira ou a um comando individual dentro de `cmds:` (ex.: `platforms: [linux, darwin]` ou `platforms: [linux/amd64]`), pulando automaticamente o comando quando o SO/arquitetura atual não corresponde; e (3) **`output:`**: controla como os logs de tarefas concorrentes são exibidos — **`interleaved`** (padrão, imprime linha a linha em tempo real), **`group`** (acumula e imprime a saída de cada tarefa em bloco fechado ao terminar, com suporte a grupos retráteis em logs do GitHub Actions/GitLab CI) ou **`prefixed`** (adiciona o prefixo `[nome-da-tarefa]` em cada linha).
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml carregando .env, prefixando logs paralelos e filtrando comandos por plataforma
+version: '3'
+
+output: prefixed
+dotenv: ['.env']
+
+tasks:
+  setup-os:
+    cmds:
+      - cmd: sudo apt-get update
+        platforms: [linux/amd64, linux/arm64]
+      - cmd: brew update
+        platforms: [darwin]
+```
+TRADE_OFFS: Variáveis que já existem no ambiente do sistema operacional (ou na seção `env:` do `Taskfile.yml`) têm precedência sobre valores lidos dos arquivos listados em `dotenv:`; da mesma forma, na lista `dotenv: ['.env.local', '.env']`, o primeiro arquivo que define uma chave vence, portanto coloque sempre o arquivo mais específico (`.env.local`) **antes** do arquivo genérico (`.env`).
+VERIFY: Execute duas tarefas em paralelo (`deps:`) com `output: prefixed` (ou `output: group`) configurado no topo do `Taskfile.yml` e confirme a separação clara da saída de cada tarefa no terminal.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-variaveis-argumentos-validacao-segredos-mascarados]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 878 | taskfile-execucao-diretorios-subpastas-flags-cli-taskfile | Task: descoberta automática de arquivos Taskfile, execução a partir de subdiretórios (--dir, --taskfile, --global) ===
+ONE_LINER: O Task procura automaticamente por `Taskfile.yml` (e variações suportadas como `Taskfile.yaml`, `Taskfile.dist.yml`) e permite executar tarefas de outros diretórios (`--dir`), de arquivos com nomes customizados (`--taskfile`) ou de um Taskfile global do usuário (`--global` em `~/Taskfile.yml`).
+IMPORTANCE: Desenvolvedores frequentemente estão navegando dentro de uma subpasta profunda do projeto (`src/internal/handlers/`) ou querem manter um `Taskfile.local.yml` pessoal sem comitá-lo no Git sobrepondo o `Taskfile.dist.yml` da equipe, além de executar utilitários pessoais globais de qualquer lugar do terminal. O guia oficial `Quick Start` e `Running tasks` documenta essas opções.
+HOW_IT_WORKS: Conforme demonstra o `Quick Start` (`taskfile.dev/docs/getting-started`), `task --init ./subdirectory` ou `task --init Custom.yml` cria o arquivo no destino desejado, e na execução: (1) **`task --dir ./subdirectory <tarefa>`** (`-d`) muda o diretório de trabalho para `./subdirectory` antes de procurar e executar o `Taskfile.yml`; (2) **`task --taskfile Custom.yml <tarefa>`** (`-t`) executa um arquivo com nome customizado; (3) se o comando `task` for rodado dentro de uma subpasta que não tem `Taskfile.yml`, ele sobe a árvore de diretórios pais procurando o `Taskfile.yml` da raiz do repositório; e (4) **`task --global <tarefa>`** (`-g`) executa tarefas definidas no `Taskfile.yml` global da pasta `$HOME` do usuário.
+EXAMPLE:
+```bash
+# Executar tarefas apontando para outro diretório (--dir), outro nome de arquivo (--taskfile) ou modo dry-run (--dry)
+task --dir ./subdirectory build
+task --taskfile Custom.yml default
+task --dry build
+```
+TRADE_OFFS: Quando você mantém tanto um `Taskfile.dist.yml` (versionado no Git para toda a equipe) quanto permite overrides locais via `Taskfile.yml` ignorado no `.gitignore`, se um desenvolvedor criar seu próprio `Taskfile.yml` local sem incluir (`includes:`) o `Taskfile.dist.yml`, o Task carregará apenas o `Taskfile.yml` de maior precedência; por isso, no `Taskfile.yml` local deve-se incluir o `Taskfile.dist.yml` com `flatten: true` e `optional: true`.
+VERIFY: Execute `task --summary <nome-da-tarefa>` para exibir na tela a descrição completa, dependências e lista de comandos que compõem aquela tarefa antes de rodá-la.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-composicao-includes-namespaces-remote-taskfiles]] | [[taskfile-aliases-wildcard-tasks-internal-silent-desc]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 879 | taskfile-aliases-wildcard-tasks-internal-silent-desc | Task: definição avançada de tarefas (aliases, internal, silent, labels dinâmicas e captura de wildcards *) ===
+ONE_LINER: Na definição de tarefas do `Taskfile.yml`, é possível criar atalhos curtos (`aliases:`), ocultar tarefas auxiliares da listagem/CLI (`internal: true`), suprimir o eco dos comandos (`silent: true`) e capturar parâmetros diretamente no nome da tarefa com wildcards (`start:*` -> `{{index .MATCH 0}}`).
+IMPORTANCE: Em um `Taskfile.yml` grande com 40 tarefas (onde 25 são sub-tarefas internas auxiliares chamadas apenas por outras tarefas), rodar `task --list` sem filtrar tarefas internas polui a ajuda para o usuário; ao mesmo tempo, tarefas frequentes merecem atalhos de 1 ou 2 letras (`task b` para `task build`, `task t` para `task test`) e padrões dinâmicos como `task deploy:staging`. A seção `Defining tasks` e `Command-line arguments` do guia oficial cobre esses recursos.
+HOW_IT_WORKS: Dentro da declaração de uma tarefa em `tasks:`: (1) **`desc:`** e **`summary:`**: definem a descrição curta (exibida em `task --list`) e o texto longo de ajuda (exibido em `task --summary <task>`); (2) **`aliases: [b, compile]`**: permite invocar a tarefa tanto pelo nome completo quanto pelos apelidos curtos; (3) **`internal: true`**: impede que o usuário invoque a tarefa diretamente na linha de comando e a oculta da listagem, restringindo seu uso a chamadas internas via `deps:` ou `task:`; (4) **`silent: true`**: faz o Task imprimir apenas a saída (`stdout`/`stderr`) do programa executado, sem imprimir o comando em si; e (5) **Wildcards (`*`)**: uma tarefa nomeada `run:*:` casa com `task run:api` e expõe o valor capturado no array **`{{index .MATCH 0}}`**.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml usando aliases, internal: true, silent: true e captura de wildcard (*) no nome da tarefa
+version: '3'
+
+tasks:
+  _check-env:
+    internal: true
+    silent: true
+    cmds:
+      - test -n "$KUBECONFIG"
+
+  logs:*:
+    desc: Exibe os logs de um deployment específico (ex. task logs:api)
+    deps: [_check-env]
+    cmds:
+      - kubectl logs -l app={{index .MATCH 0}} --tail=100
+```
+TRADE_OFFS: Por padrão, o comando `task --list` (`task -l`) exibe **apenas** as tarefas que possuem o atributo `desc:` preenchido (tratando tarefas sem `desc:` como não documentadas); se você quiser listar absolutamente todas as tarefas do arquivo mesmo aquelas nas quais esqueceu de colocar `desc:`, deve usar **`task --list-all`** (`task -a`).
+VERIFY: Adicione `aliases: [t]` e `desc: Run unit tests` a uma tarefa `test:` no `Taskfile.yml` e execute `task -l` e `task t` para confirmar o funcionamento do alias e da listagem.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-variaveis-argumentos-validacao-segredos-mascarados]] | [[taskfile-execucao-diretorios-subpastas-flags-cli-taskfile]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide
+
+=== NOTE: 880 | taskfile-templating-sprig-funcoes-instalacao-cicd | Task: motor de templates Go/slim-sprig embutido (OS, ARCH, joinPath) e instalação em pipelines de CI/CD ===
+ONE_LINER: O Task incorpora o motor de templates do Go enriquecido com funções utilitárias (`OS`, `ARCH`, `joinPath`, `fromSlash`, manipulação de strings/listas/JSON) e instala-se em segundos como um binário único em qualquer plataforma ou CI (`go install`, Homebrew, Snap, npm ou script oficial).
+IMPORTANCE: Em scripts multiplataforma, concatenar caminhos de diretórios com `/` fixo ou tentar descobrir no YAML se a máquina atual é `arm64` ou `amd64` geralmente exige chamar subprocessos externos (`uname -m`); o motor de templates do Task resolve tudo isso nativamente em memória durante a avaliação do `Taskfile.yml`.
+HOW_IT_WORKS: Dentro de qualquer expressão `{{ ... }}` no `Taskfile.yml`, o Task disponibiliza constantes e funções nativas de template: (1) **Constantes de sistema**: `{{OS}}` (retorna `linux`, `darwin`, `windows`), `{{ARCH}}` (retorna `amd64`, `arm64`, etc.), `{{.TASKFILE_DIR}}` e `{{.ROOT_DIR}}`; (2) **Funções de caminho e texto**: `{{joinPath .ROOT_DIR "bin" "app"}}`, `{{exeExt}}` (retorna `.exe` no Windows e vazio no Linux/macOS), `upper`, `lower`, `trim`, `split`, `toJson`, `fromJson`; e (3) **Instalação universal**: como é um único binário Go sem dependências de runtime, pode ser instalado via `brew install go-task`, `npm install -g @go-task/cli`, `go install github.com/go-task/task/v3/cmd/task@latest` ou `sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin`.
+EXAMPLE:
+```yaml
+# Exemplo de Taskfile.yml usando constantes nativas {{OS}}, {{ARCH}} e {{exeExt}} para compilar binários portáveis
+version: '3'
+
+tasks:
+  build-native:
+    desc: Compila o binário nativo para o SO e arquitetura atuais
+    cmds:
+      - go build -o bin/app-{{OS}}-{{ARCH}}{{exeExt}} ./cmd/app
+```
+TRADE_OFFS: Quando um comando dentro de `cmds:` precisa passar uma sintaxe que usa chaves duplas `{{ ... }}` para **outra** ferramenta (como `kubectl get pods -o go-template='{{.items}}'` ou `docker inspect --format '{{.Id}}'`), o motor de templates do Task tentará interpretar `{{.Id}}` como uma variável do Taskfile e falhará; para escapar chaves duplas no `Taskfile.yml`, envolva a string literal como **`{{`{{.Id}}`}}`**.
+VERIFY: Execute `task --version` e teste uma tarefa com `echo "Sistema={{OS}} Arquitetura={{ARCH}}"` para verificar a avaliação nativa das funções de template do Task.
+LINKS: [[taskfile-task-runner-moderno-go-alternativa-make-yaml]] | [[taskfile-variaveis-argumentos-validacao-segredos-mascarados]] | [[taskfile-ambientes-dotenv-plataformas-shells-output]]
+SOURCES: https://raw.githubusercontent.com/go-task/task/main/README.md | https://taskfile.dev/docs/getting-started | https://taskfile.dev/docs/guide

@@ -1,0 +1,103 @@
+1781|spin-arquitetura-webassembly-microservices-wasi-component-model-wasmtime|Spin: arquitetura do framework CNCF para microsserviços serverless em WebAssembly com Component Model e Wasmtime|O **Spin** (`spinframework/spin`, projeto CNCF Sandbox licenciado sob Apache 2.0) é um framework open-source para construir, distribuir e executar microsserviços cloud-native rápidos, seguros e componíveis com **WebAssembly (Wasm)** sobre o **WebAssembly Component Model** (`wasm32-wasip2`) e o runtime **Wasmtime**.|Containers Linux tradicionais carregam sistemas de arquivos inteiros de dezenas ou centenas de megabytes e levam centenas de milissegundos a segundos para iniciar em *cold start*, enquanto componentes WebAssembly compilados para o Spin pesam poucos megabytes e iniciam em sub-milissegundo com isolamento sandboxed por requisição.|A CLI `spin` provê o ciclo completo: `spin new -t <template>` cria o projeto a partir de templates oficiais, `spin build` compila os componentes para o alvo `wasm32-wasip2`, `spin up` executa a aplicação localmente (servindo HTTP na porta `3000` por padrão) e `spin registry push` empacota e publica a aplicação Wasm diretamente em qualquer registry OCI.|```bash
+rustup target add wasm32-wasip2
+spin new --accept-defaults -t http-rust hello-rust
+cd hello-rust
+spin build
+spin up
+```|Diferentemente de containers que permanecem em memória consumindo recursos mesmo quando ociosos, o Spin instancia um ambiente Wasm limpo para cada evento/requisição HTTP ou Redis e o descarta imediatamente ao término da resposta.|Execute `spin up` em um terminal e `curl -i http://127.0.0.1:3000` em outro para comprovar a resposta instantânea do componente Wasm.|https://raw.githubusercontent.com/spinframework/spin/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md
+1782|spin-manifesto-spin-toml-triggers-http-redis-componentes-variaveis|Spin `spin.toml`: configuração declarativa de triggers (`http`, `redis`), rotas, variáveis e permissões de rede|O arquivo de manifesto **`spin.toml`** (formato `spin_manifest_version = 2`) define a topologia completa de uma aplicação Spin: metadados da aplicação, variáveis de configuração, gatilhos (*triggers* `http` ou `redis`), rotas mapeadas para cada componente `.wasm` e a lista explícita de capacidades permitidas (`allowed_outbound_hosts`, `key_value_stores`, `sqlite_databases`).|Por segurança *deny-by-default*, um componente WebAssembly no Spin não tem acesso a nenhum arquivo arbitrário do host, não pode abrir conexões de rede para nenhum domínio externo e não acessa bancos de dados a menos que o `spin.toml` conceda explicitamente essa permissão para aquele componente.|No `spin.toml`, cada componente aponta para seu binário `.wasm` (`source = "target/wasm32-wasip2/release/hello.wasm"`), seu comando de build e a lista `allowed_outbound_hosts = ["https://api.corp.internal:443"]`. Qualquer tentativa do código Wasm de chamar uma URL fora dessa lista é bloqueada imediatamente pelo runtime do Spin.|```toml
+spin_manifest_version = 2
+
+[application]
+name = "hello-rust"
+version = "0.1.0"
+
+[component.hello-rust]
+source = "target/wasm32-wasip2/release/hello_rust.wasm"
+allowed_outbound_hosts = ["https://api.example.com:443"]
+key_value_stores = ["default"]
+
+[component.hello-rust.build]
+command = "cargo build --target wasm32-wasip2 --release"
+```|Para permitir chamadas de saída para qualquer porta de um host ou protocolo específico (como Redis ou PostgreSQL), declare o esquema, host e porta explícitos em `allowed_outbound_hosts` (ex.: `"redis://redis.internal:6379"` ou `"postgres://db.internal:5432"`).|Remova um host de `allowed_outbound_hosts` no `spin.toml`, execute `spin up` e confirme que chamadas HTTP de saída do componente para aquele host são negadas pelo sandbox.|https://raw.githubusercontent.com/spinframework/spin/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md
+1783|spin-sdks-poliglotas-rust-typescript-python-tinygo-apis-embutidas|Spin SDKs Poliglotas e APIs de Plataforma: suporte a Rust, TypeScript/JS, Python e TinyGo com KV, SQLite, SQL e Serverless AI|O Spin fornece SDKs oficiais para **Rust**, **TypeScript/JavaScript**, **Python** e **Go (TinyGo)** (além de C# e integrações comunitárias para Zig e Moonbit), expondo interfaces WIT padronizadas para **HTTP**, **Redis**, **Key-Value Store**, **SQLite**, **MySQL/PostgreSQL**, **Configuration Variables** e **Serverless AI**.|Compilar drivers nativos de banco de dados baseados em sockets C/POSIX tradicionais para WebAssembly puro costuma exigir reescrever pilhas de rede; o Spin resolve isso fornecendo conexões gerenciadas pelo host através de interfaces WASI/WIT de alto nível.|Como todos os SDKs compilam para o **WebAssembly Component Model**, uma única aplicação Spin pode combinar um componente de API em TypeScript na rota `/api/*`, um componente de inferência em Python na rota `/predict` e um worker de alta performance em Rust na rota `/ingest`, compartilhando o mesmo Key-Value Store e banco SQLite embutidos.|```rust
+use spin_sdk::http::{IntoResponse, Request, Response};
+use spin_sdk::http_component;
+use spin_sdk::key_value::Store;
+
+#[http_component]
+fn handle_request(_req: Request) -> anyhow::Result<impl IntoResponse> {
+    let store = Store::open_default()?;
+    store.set("visitas", b"1")?;
+    Ok(Response::builder().status(200).body("OK from Spin Wasm!").build())
+}
+```|Durante o desenvolvimento local com `spin up`, o Spin cria e gerencia automaticamente um Key-Value Store e um banco SQLite locais em `.spin/` sem exigir instalar servidores externos; em produção, os mesmos stores podem ser mapeados para Redis/Turso/bancos externos em `runtime-config.toml`.|Execute `spin templates list` para visualizar os templates disponíveis em Rust, JS/TS, Python e Go.|https://raw.githubusercontent.com/spinframework/spin/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md
+1784|spinkube-arquitetura-wasm-kubernetes-spin-operator-runwasi-shim|SpinKube: arquitetura CNCF Sandbox para operar aplicações WebAssembly no Kubernetes (`Spin Operator`, `runwasi` e `RuntimeClass`)|O **SpinKube** (projeto CNCF Sandbox) integra o ecossistema Spin ao Kubernetes combinando três subprojetos: o **Spin Operator** (`spin-operator`, construído com Kubebuilder), o shim containerd **`containerd-shim-spin`** (baseado em `containerd/runwasi`) e o **Runtime Class Manager** (`runtime-class-manager`).|Embora o Kubernetes tenha sido originalmente desenhado para agendar imagens de containers Linux via `runc`, estender o `containerd` com um shim `runwasi` permite que o `kubelet` execute artefatos WebAssembly OCI nativamente como Pods com DNS, probes, HPA, Services e métricas Prometheus padrão.|No SpinKube, o nó Kubernetes possui o binário `containerd-shim-spin` registrado no `containerd` e exposto por uma `RuntimeClass` (`wasmtime-spin-v2`). Quando o desenvolvedor aplica um Custom Resource **`SpinApp`**, o Spin Operator cria automaticamente o `Deployment` (com `runtimeClassName: wasmtime-spin-v2`) e o `Service` correspondente.|```bash
+k3d cluster create wasm-cluster \
+  --image ghcr.io/spinframework/containerd-shim-spin/k3d:v0.23.0 \
+  -p "8081:80@loadbalancer" \
+  --agents 2
+kubectl get nodes -o wide
+```|Os artefatos Wasm empacotados para o SpinKube são significativamente menores que imagens de container e não consomem quase nada de CPU/memória quando ociosos.|Suba o cluster `k3d` com a imagem `containerd-shim-spin` e verifique a presença da `RuntimeClass` e dos CRDs `spinapps.core.spinkube.dev` e `spinappexecutors.core.spinkube.dev`.|https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md;https://raw.githubusercontent.com/spinframework/spin/main/README.md
+1785|spinkube-crd-spinapp-deploy-oci-replicas-variables-secrets|SpinKube CRD `SpinApp`: implantação declarativa de artefatos OCI WebAssembly com réplicas, variáveis e recursos no Kubernetes|O Custom Resource **`SpinApp`** (`core.spinkube.dev/v1alpha1`) é a abstração principal do SpinKube onde o desenvolvedor declara a imagem OCI da aplicação Spin (`spec.image`), o número de réplicas (`spec.replicas`), o executor (`spec.executor`) e o vínculo de variáveis e configurações de runtime a `Secrets` e `ConfigMaps` do Kubernetes.|Escrever manualmente um `Deployment` com `runtimeClassName`, portas de container, probes e montagens de configuração do Spin para cada microsserviço Wasm é propenso a erros; o `SpinApp` reduz a implantação a poucas linhas declarativas.|Ao aplicar um `SpinApp`, o Spin Operator valida o recurso via webhook (suportado pelo `cert-manager`), resolve o executor referenciado e reconcilia o `Deployment` e o `Service` Kubernetes, injetando variáveis de aplicação e o `runtime-config.toml` a partir de Secrets do cluster.|```yaml
+apiVersion: core.spinkube.dev/v1alpha1
+kind: SpinApp
+metadata:
+  name: simple-spinapp
+spec:
+  image: "ghcr.io/spinkube/containerd-shim-spin/examples/spin-rust-hello:v0.15.1"
+  executor: containerd-shim-spin
+  replicas: 2
+```|Para que os webhooks de validação e mutação do `spin-operator` funcionem em um cluster remoto, o `cert-manager` deve estar instalado e operacional antes do deploy do operador.|Aplique o manifesto `SpinApp`, execute `kubectl get spinapps,deploy,pods,svc` e teste o serviço com `kubectl port-forward svc/simple-spinapp 8083:80` seguido de `curl http://localhost:8083/hello`.|https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinframework/spin/main/README.md
+1786|spinkube-crd-spinappexecutor-containerd-shim-spin-deployment-model|SpinKube CRD `SpinAppExecutor`: configuração do modelo de execução (`containerd-shim-spin`) e `RuntimeClass`|O Custom Resource **`SpinAppExecutor`** (`core.spinkube.dev/v1alpha1`) instrui o Spin Operator sobre **como** uma `SpinApp` deve ser executada no cluster — seja delegando a execução diretamente ao shim `containerd-shim-spin` via `RuntimeClass` do Kubernetes, seja rodando através de uma imagem de container runner.|Em clusters gerenciados onde o administrador tem controle dos nós (ou usa o `runtime-class-manager`), usar `runtimeClassName: wasmtime-spin-v2` oferece a maior densidade e velocidade; já em clusters restritos onde não é possível instalar shims customizados no `containerd` do nó, o `SpinAppExecutor` permite alternar a estratégia sem alterar os manifestos `SpinApp`.|No manifesto do `SpinAppExecutor`, o campo `spec.createDeployment: true` e `spec.deploymentConfig.runtimeClassName: wasmtime-spin-v2` vinculam o operador à `RuntimeClass` associada ao handler `spin` no `containerd`.|```yaml
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: wasmtime-spin-v2
+handler: spin
+---
+apiVersion: core.spinkube.dev/v1alpha1
+kind: SpinAppExecutor
+metadata:
+  name: containerd-shim-spin
+spec:
+  createDeployment: true
+  deploymentConfig:
+    runtimeClassName: wasmtime-spin-v2
+    installDefaultCACerts: true
+```|A opção `installDefaultCACerts: true` em `deploymentConfig` garante que o ambiente minimalista do shim Wasm tenha o bundle de autoridades certificadoras raiz montado para validar chamadas HTTPS de saída (`allowed_outbound_hosts`).|Execute `kubectl get runtimeclass` e `kubectl get spinappexecutors` para confirmar que o executor e a `RuntimeClass` estão prontos antes de criar uma `SpinApp`.|https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinframework/spin/main/README.md
+1787|spinkube-runtime-class-manager-kwasm-instalacao-shims-nos-kubernetes|SpinKube Runtime Class Manager (`Shim` CRD): instalação declarativa de shims Wasm (`containerd-shim-spin`) nos worker nodes|O **Runtime Class Manager** (`spinframework/runtime-class-manager`, evolução do KWasm) automatiza a instalação, atualização e configuração de shims WebAssembly do `containerd` (como `containerd-shim-spin`) nos nós de um cluster Kubernetes por meio do Custom Resource `Shim`.|Conectar-se via SSH em cada worker node para copiar o binário `containerd-shim-spin-v2` em `/usr/local/bin/`, editar `/etc/containerd/config.toml` adicionando `[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]` e reiniciar o `containerd` manualmente inviabiliza o auto-scaling de nós.|O Runtime Class Manager observa os nós e os objetos `Shim`: quando um nó corresponde ao `nodeSelector`, um Job/DaemonSet instalador provisiona o binário do shim no host, registra o handler no `containerd`, aplica o label de prontidão no nó e cria a `RuntimeClass` correspondente.|```bash
+kubectl get runtimeclasses
+kubectl get nodes --show-labels | grep spinkube
+```|Ao usar `runtimeClassName` com `scheduling.nodeSelector` na `RuntimeClass`, o Kubernetes Scheduler agenda automaticamente os Pods de `SpinApp` apenas nos worker nodes onde o shim Wasm já foi instalado.|Verifique os labels dos nós e a definição da `RuntimeClass` com `kubectl get runtimeclass wasmtime-spin-v2 -o yaml`.|https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md;https://raw.githubusercontent.com/spinframework/spin/main/README.md
+1788|spin-registry-push-pull-distribuicao-artefatos-oci-wasm|Spin OCI Distribution: empacotamento e distribuição de aplicações Wasm em Registries OCI (`spin registry push` / `pull`)|O comando **`spin registry push`** empacota o manifesto `spin.toml`, todos os binários `.wasm` compilados dos componentes e os ativos estáticos da aplicação como um artefato OCI padrão e o publica em qualquer container registry compatível (GHCR, Docker Hub, ACR, ECR, Harbor, Zot).|Se aplicações WebAssembly exigissem um servidor de pacotes proprietário diferente dos registries OCI que a empresa já usa para imagens Docker e Helm charts, toda a cadeia de suprimentos (autenticação, replicação, assinatura Cosign) precisaria ser duplicada.|Após autenticar com `spin registry login`, `spin registry push ghcr.io/org/minha-app:v1.0.0` envia as camadas Wasm para o registry. Essa mesma referência OCI pode ser executada diretamente em qualquer máquina com `spin up --from-registry ghcr.io/org/minha-app:v1.0.0` ou referenciada em `spec.image` de uma `SpinApp` no Kubernetes com SpinKube.|```bash
+spin build
+spin registry login ghcr.io -u "$GITHUB_USER" --password-stdin <<< "$GITHUB_TOKEN"
+spin registry push ghcr.io/org/hello-rust:v0.1.0
+spin up --from-registry ghcr.io/org/hello-rust:v0.1.0
+```|Diferentemente de uma imagem Docker tradicional presa a `linux/amd64` ou `linux/arm64`, o artefato OCI gerado por `spin registry push` contém bytecode `.wasm` portátil que roda sem recompilação tanto em nós x86_64 quanto em nós ARM64.|Publique uma aplicação de teste em um registry OCI local e execute-a diretamente a partir da URL do registry com `spin up --from-registry`.|https://raw.githubusercontent.com/spinframework/spin/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md
+1789|spinkube-autoscaling-hpa-keda-scale-to-zero-workloads-wasm|SpinKube: auto-escalonamento horizontal (HPA) e *scale-to-zero* orientado a eventos com KEDA para `SpinApp`|Como o Spin Operator integra o CRD `SpinApp` às primitivas padrão do Kubernetes (incluindo o sub-recurso `/scale` e métricas de CPU/memória/requisições), aplicações WebAssembly no SpinKube suportam nativamente **HorizontalPodAutoscaler (HPA)** e escalonamento para zero (**scale-to-zero**) via **KEDA**.|Em microsserviços com tráfego intermitente ou picos repentinos, containers tradicionais sofrem ao escalar de `0` para `1` réplica porque o pull e a inicialização da imagem levam vários segundos; como artefatos Spin pesam poucos megabytes e iniciam rapidamente no `containerd-shim-spin`, o scale-to-zero com KEDA torna-se prático.|Configurando `spec.enableAutoscaling: true` na `SpinApp`, o operador delega o controle de `replicas` para um `HorizontalPodAutoscaler` ou `ScaledObject` do KEDA apontando para `scaleTargetRef: {apiVersion: core.spinkube.dev/v1alpha1, kind: SpinApp, name: ...}`.|```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: simple-spinapp-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: core.spinkube.dev/v1alpha1
+    kind: SpinApp
+    name: simple-spinapp
+  minReplicas: 1
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+```|Quando `enableAutoscaling: true` está ativo na `SpinApp`, não defina um valor fixo conflitante em `spec.replicas` no manifesto GitOps para que o controlador não reverta o número de réplicas ajustado pelo HPA/KEDA.|Aplique o HPA apontando para a `SpinApp` e verifique com `kubectl get hpa` a vinculação ao `scaleTargetRef` do recurso.|https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md;https://raw.githubusercontent.com/spinframework/spin/main/README.md
+1790|spin-plugins-templates-extensibilidade-custom-triggers-wasi|Spin: sistema de Plugins (`spin plugins`), Templates (`spin templates`) e criação de Custom Triggers|A CLI do Spin é extensível por meio de **Templates** (`spin templates install`) e **Plugins** (`spin plugins install`, como o plugin `kube` para gerar manifestos SpinKube, `js2wasm` ou `py2wasm`), além de permitir criar **Custom Triggers** em Rust usando o Spin SDK.|Equipes de plataforma precisam padronizar templates de projetos internos (já configurados com observabilidade e lint) e adicionar comandos como `spin kube scaffold` diretamente na CLI dos desenvolvedores.|Com `spin plugins update && spin plugins install kube`, o desenvolvedor ganha o subcomando `spin kube scaffold --from ghcr.io/org/app:v1.0.0`, que gera o manifesto `SpinApp` pronto para aplicar no cluster Kubernetes.|```bash
+spin plugins update
+spin plugins install kube --yes
+spin kube scaffold --from ghcr.io/spinkube/containerd-shim-spin/examples/spin-rust-hello:v0.15.1
+```|De acordo com a tabela oficial de suporte de linguagens do Spin, a autoria de novos *Custom Triggers* (além dos gatilhos nativos `http` e `redis`) é suportada usando o SDK de **Rust**.|Execute `spin plugins list` e `spin kube scaffold --from <image>` para validar a geração automática do manifesto `SpinApp`.|https://raw.githubusercontent.com/spinframework/spin/main/README.md;https://www.spinkube.dev/docs/overview/;https://raw.githubusercontent.com/spinkube/spin-operator/main/README.md

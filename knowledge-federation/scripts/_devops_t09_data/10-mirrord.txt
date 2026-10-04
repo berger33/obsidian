@@ -1,0 +1,161 @@
+=== NOTE: 891 | mirrord-execucao-processos-locais-contexto-cluster-kubernetes | MetalBear mirrord: execução de processos locais no contexto de um cluster Kubernetes em tempo real ===
+ONE_LINER: O `mirrord` (`metalbear-co/mirrord`, licenciado sob MIT) executa o processo local da máquina do desenvolvedor (ou de um agente de IA) diretamente no contexto de um cluster Kubernetes ao vivo, roteando tráfego, leituras/escritas de arquivos e variáveis de ambiente através de um pod alvo sem VPN, sem root local e sem deploy.
+IMPORTANCE: Ferramentas tradicionais de túnel de rede exigem privilégios de `root` na máquina do desenvolvedor para criar interfaces VPN (`tun`) e alteram o roteamento de toda a estação de trabalho, além de não interceptarem chamadas de sistema de arquivos no nível do processo. Segundo o README oficial e a página `What is mirrord?` (`metalbear.com/mirrord/docs/getting-started/what-is-mirrord`), o `mirrord` atua exclusivamente sobre o processo iniciado (`mirrord exec`), entregando o feedback de um deploy em segundos sem afetar o resto da máquina nem o cluster.
+HOW_IT_WORKS: Quando o usuário inicia seu processo com **`mirrord exec <comando> --target <alvo>`** (ou através das extensões oficiais para **VS Code** e **IntelliJ**), o `mirrord` atua em dois pontos: (1) injeta uma camada fina chamada **`mirrord-layer`** dentro do processo local (via `LD_PRELOAD` no Linux ou `DYLD_INSERT_LIBRARIES` no macOS) que intercepta chamadas de sistema de baixo nível (`libc` para sockets de rede, abertura/leitura/gravação de arquivos e variáveis de ambiente); e (2) lança um pod efêmero chamado **`mirrord-agent`** no mesmo nó Kubernetes onde roda o pod alvo (`pod/my-pod` ou `deployment/my-app`), conectando a `mirrord-layer` ao `mirrord-agent` para espelhar/roubar tráfego de entrada, enviar tráfego de saída pelo pod remoto, ler/gravar arquivos remotos e importar variáveis de ambiente.
+EXAMPLE:
+```bash
+# Executar um processo Node.js local no contexto do pod/my-pod no cluster Kubernetes usando mirrord exec
+mirrord exec --target pod/my-pod -- node app.js
+```
+TRADE_OFFS: Como a `mirrord-layer` intercepta chamadas de sistema na máquina local usando injeção de biblioteca dinâmica (`DYLD_INSERT_LIBRARIES` no macOS), binários protegidos pelo System Integrity Protection (SIP) do macOS (como binários em `/bin` ou `/usr/bin`) removem variáveis `DYLD_*` por segurança; o `mirrord` contorna isso automaticamente copiando/assinando binários temporários quando necessário no macOS, mas em binários Linux 100% estáticos que fazem syscalls diretas sem passar pela `libc` (exceto Go, que o mirrord suporta enganchando o runtime Go), deve-se verificar a matriz de suporte de linguagens.
+VERIFY: Instale o `mirrord` (`brew install metalbear-co/mirrord/mirrord` ou script `install.sh`), execute `mirrord --version` e rode `mirrord exec --target deployment/meu-app -- env` para confirmar a importação imediata das variáveis de ambiente do pod remoto.
+LINKS: [[mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities]] | [[mirrord-modos-trafego-mirror-vs-steal-filtragem-http]] | [[telepresence-desenvolvimento-local-remoto-kubernetes-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 892 | mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities | MetalBear mirrord: arquitetura mirrord-layer e mirrord-agent e gerenciamento de Linux Capabilities ===
+ONE_LINER: No modo open-source sem operador, o `mirrord` agenda um pod efêmero `mirrord-agent` no mesmo nó do pod alvo utilizando as capabilities Linux `CAP_NET_ADMIN`, `CAP_NET_RAW`, `CAP_SYS_PTRACE` e `CAP_SYS_ADMIN` (desativáveis via `MIRRORD_AGENT_DISABLED_CAPABILITIES`).
+IMPORTANCE: Diferentemente de ferramentas que exigem instalar previamente um servidor no cluster ou injetar um sidecar permanente que reinicia o Deployment da aplicação, o `mirrord` cria o `mirrord-agent` sob demanda no mesmo nó do pod alvo e o destrói assim que o processo local termina. Porém, administradores de clusters com políticas estritas de Pod Security Standards precisam saber exatamente quais capabilities o `mirrord-agent` usa e como restringi-las. A seção `How It Works -> Additional capabilities` do README oficial detalha cada uma.
+HOW_IT_WORKS: Quando `mirrord exec --target pod/my-pod` inicia, ele usa o `kubeconfig` padrão da máquina para criar o pod efêmero **`mirrord-agent`** agendado no mesmo `nodeName` de `my-pod`. Por padrão, o container do `mirrord-agent` solicita quatro Linux capabilities específicas para acessar o contexto do pod alvo sem modificá-lo: (1) **`CAP_NET_ADMIN`** e **`CAP_NET_RAW`**: para modificar tabelas de roteamento e capturar pacotes de rede; (2) **`CAP_SYS_PTRACE`**: para ler o ambiente e descritores do processo do pod alvo; e (3) **`CAP_SYS_ADMIN`**: para entrar no namespace de rede e mount do pod alvo. Caso a política de segurança do cluster proíba alguma dessas capabilities, o usuário pode desabilitá-las via configuração ou variável **`MIRRORD_AGENT_DISABLED_CAPABILITIES`**.
+EXAMPLE:
+```bash
+# Executar mirrord exec desabilitando capabilities específicas no container do mirrord-agent conforme o README oficial
+MIRRORD_AGENT_DISABLED_CAPABILITIES=CAP_NET_RAW,CAP_SYS_PTRACE mirrord exec --target pod/my-pod -- node app.js
+```
+TRADE_OFFS: Conforme adverte a seção `Additional capabilities` do README oficial do `mirrord`, desabilitar um subconjunto dessas capabilities com `MIRRORD_AGENT_DISABLED_CAPABILITIES` permite rodar em clusters mais restritivos, mas limitará as funcionalidades correspondentes do `mirrord` (por exemplo, sem `CAP_NET_RAW`/`CAP_NET_ADMIN` o agente não poderá capturar ou redirecionar tráfego de entrada do pod alvo) ou pode torná-lo inutilizável em determinados setups.
+VERIFY: Durante a execução de `mirrord exec`, abra outro terminal e rode `kubectl get pods` para observar o pod efêmero `mirrord-agent-*` em execução no mesmo nó do alvo, e confirme que ele desaparece automaticamente ao encerrar o processo local (`Ctrl+C`).
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-modos-trafego-mirror-vs-steal-filtragem-http]] | [[youki-inspecao-capacidades-kernel-bpf-checkpoint-restore-info]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 893 | mirrord-modos-trafego-mirror-vs-steal-filtragem-http | MetalBear mirrord: modos de tráfego de entrada (mirror padrão vs steal) e roteamento de saída pelo pod remoto ===
+ONE_LINER: Para o tráfego de entrada (`incoming`), o `mirrord` suporta dois modos — **mirror** (espelha uma cópia das requisições sem afetar o pod remoto) e **steal** (intercepta as requisições fazendo o processo local responder aos clientes do cluster) — enquanto o tráfego de saída (`outgoing`) e o DNS passam transparentemente pelo pod alvo.
+IMPORTANCE: Quando um desenvolvedor começa a testar seu código local contra um cluster compartilhado, o comportamento mais seguro por padrão é **espelhar (`mirror`)** o tráfego de entrada: o código local recebe as requisições reais para teste, mas o pod remoto continua respondendo normalmente aos clientes sem risco de quebrar o ambiente. Quando o desenvolvedor precisa que a resposta do seu código local seja devolvida ao chamador no cluster, ele ativa o modo **`steal`**.
+HOW_IT_WORKS: Na configuração de rede (`feature.network`) do `mirrord`: (1) **Incoming `mirror` (padrão no OSS)**: o `mirrord-agent` captura os pacotes TCP/HTTP que chegam à porta escutada pelo pod alvo e envia uma cópia para a `mirrord-layer` na máquina local, descartando a resposta gerada localmente; (2) **Incoming `steal` (`--steal` ou `"mode": "steal"` no arquivo `.mirrord/mirrord.json`)**: o `mirrord-agent` redireciona a conexão de entrada para o processo local e devolve a resposta do processo local para o cliente no cluster (suportando também `http_filter` por header, path ou método para roubar apenas requisições específicas); e (3) **Outgoing (`TCP` e `UDP`) + DNS**: todas as conexões abertas pelo processo local saem de dentro do namespace de rede do pod alvo no cluster.
+EXAMPLE:
+```json
+{
+  "target": "deployment/orders-service",
+  "feature": {
+    "network": {
+      "incoming": {
+        "mode": "steal",
+        "http_filter": {
+          "header_filter": "x-developer: alice"
+        }
+      },
+      "outgoing": true
+    }
+  }
+}
+```
+TRADE_OFFS: Assim como em qualquer ferramenta de espelhamento de tráfego, quando você roda em modo **`mirror`** com `outgoing: true`, o seu processo local recebe uma cópia da requisição que o pod remoto **também** está processando; se aquela requisição fizer um `INSERT` no banco de dados do cluster ou cobrar um cartão de crédito, a operação de saída será executada duas vezes (uma pelo pod remoto e outra pelo seu processo local), sendo recomendável usar `steal` com `http_filter` (ou DB branching) para rotas mutantes.
+VERIFY: Execute `mirrord exec --steal -f .mirrord/mirrord.json -- go run ./cmd/server` e envie uma requisição com o header `x-developer: alice` ao serviço no cluster, confirmando que a resposta recebida veio do seu código local.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities]] | [[telepresence-modos-nao-intrusivos-wiretap-ingest-producao-staging]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 894 | mirrord-interceptacao-sistema-arquivos-variaveis-ambiente-libc | MetalBear mirrord: interceptação de leituras/escritas de arquivos e variáveis de ambiente sem montar volumes no host ===
+ONE_LINER: Em vez de montar volumes de rede no sistema operacional da máquina do desenvolvedor, a `mirrord-layer` intercepta chamadas de abertura, leitura e escrita de arquivos (`open`, `read`, `write`, `stat`) diretamente dentro do processo local e as executa no sistema de arquivos do pod remoto.
+IMPORTANCE: Montar volumes remotos via FUSE/SSHFS/NFS no macOS ou Windows exige instalar drivers de sistema no host e não permite montar caminhos na raiz como `/etc/certs` ou `/var/run/secrets/kubernetes.io/serviceaccount` sem alterar o código da aplicação para ler um prefixo de diretório diferente. Como o `mirrord` intercepta as chamadas `open("/var/run/secrets/...")` dentro do próprio processo, nenhuma linha de código precisa ser alterada e nenhum volume precisa ser montado no SO host.
+HOW_IT_WORKS: Quando o processo iniciado sob `mirrord exec` chama funções de sistema de arquivos ou de ambiente: (1) **File system (`feature.fs`)**: a `mirrord-layer` avalia o caminho solicitado contra as regras configuradas (`mode`: `read`, `write` ou `local`, mais padrões regex `read_only`, `read_write`, `local` e `not_found`). Caminhos de código e bibliotecas locais (como `node_modules` ou `.py`) são lidos localmente para performance máxima, enquanto caminhos de configuração, segredos do Kubernetes e volumes do container são encaminhados ao `mirrord-agent` e lidos/gravados diretamente no filesystem do pod alvo; e (2) **Environment variables (`feature.env`)**: importa todas as variáveis do pod remoto (permitindo incluir/excluir ou sobrescrever variáveis específicas em `override`).
+EXAMPLE:
+```bash
+# Testar leitura direta do token de ServiceAccount do pod remoto como se o arquivo existisse na máquina local
+mirrord exec --target deployment/my-app -- cat /var/run/secrets/kubernetes.io/serviceaccount/namespace
+```
+TRADE_OFFS: Se uma aplicação em Node.js, Python ou PHP faz milhares de chamadas `stat`/`open` no boot para carregar pacotes locais em caminhos incomuns que não estejam nas listas padrão de leitura local do `mirrord`, encaminhar essas leituras pela rede até o pod remoto deixará a inicialização lenta; nesses casos, adicione o padrão do diretório local na lista `feature.fs.local` do `.mirrord/mirrord.json`.
+VERIFY: Execute o comando `mirrord exec --target deployment/<seu-app> -- cat /var/run/secrets/kubernetes.io/serviceaccount/namespace` na sua máquina local (onde `/var/run/secrets/kubernetes.io` não existe) e confirme que ele imprime o nome do namespace do pod no cluster.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities]] | [[telepresence-ambiente-remoto-variaveis-montagem-volumes-locais]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 895 | mirrord-extensoes-ide-vscode-intellij-configuracao-json | MetalBear mirrord: integração nativa com debuggers de IDEs (VS Code e IntelliJ) e arquivo .mirrord/mirrord.json ===
+ONE_LINER: O `mirrord` é distribuído tanto como ferramenta CLI quanto como extensão oficial do **VS Code** (`MetalBear.mirrord`) e plugin do **IntelliJ / JetBrains IDEs** (`plugin 19772`), acoplando-se diretamente ao botão "Start Debugging" da IDE e lendo configurações de `.mirrord/mirrord.json`.
+IMPORTANCE: Desenvolvedores passam a maior parte do tempo dentro da IDE colocando breakpoints visuais, inspecionando variáveis na pilha de execução e recarregando código; se conectar o processo ao cluster exigisse sair da IDE e montar comandos complexos de terminal a cada execução de debug, a fricção reduziria a adoção pela equipe. As seções `VS Code Extension` e `IntelliJ Plugin` do README oficial demonstram o fluxo de um clique.
+HOW_IT_WORKS: (1) **VS Code Extension**: adiciona o botão `"Enable mirrord"` na barra de status inferior do VS Code; quando ativado, clicar em *Start Debugging* (`F5`) abre um seletor rápido de namespace e pod/deployment para impersonar (ou usa o alvo já definido em **`.mirrord/mirrord.json`**) e injeta a `mirrord-layer` automaticamente no processo depurado; (2) **IntelliJ Plugin**: adiciona o ícone do `mirrord` na Navigation Toolbar das IDEs JetBrains (IntelliJ IDEA, GoLand, PyCharm, WebStorm, Rider, RustRover), funcionando com qualquer Run/Debug Configuration existente; e (3) **`.mirrord/mirrord.json` (ou `.toml`/`.yaml`)**: arquivo versionável no repositório que padroniza o alvo (`target`), modo de rede (`mirror`/`steal`), filtros HTTP, regras de arquivos e variáveis de ambiente para toda a equipe.
+EXAMPLE:
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/metalbear-co/mirrord/main/mirrord-schema.json",
+  "target": {
+    "path": "deployment/payment-api",
+    "namespace": "staging"
+  },
+  "feature": {
+    "env": true,
+    "fs": "read",
+    "network": true
+  }
+}
+```
+TRADE_OFFS: Ao versionar o arquivo `.mirrord/mirrord.json` no Git para compartilhamento da equipe, utilize expressões de template ou variáveis de ambiente (como `"header_filter": "x-user: {{ get_env(name=\"USER\", default=\"dev\") }}"`) para que dois desenvolvedores usando a mesma configuração no VS Code/IntelliJ não tentem roubar (`steal`) exatamente o mesmo cabeçalho estático ao mesmo tempo.
+VERIFY: Adicione a propriedade `"$schema": "https://raw.githubusercontent.com/metalbear-co/mirrord/main/mirrord-schema.json"` no topo do arquivo `.mirrord/mirrord.json` e verifique o autocompletar e a validação de campos na IDE.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-modos-trafego-mirror-vs-steal-filtragem-http]] | [[mirrord-multiplas-sessoes-concorrentes-mirrord-up]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 896 | mirrord-agentes-ia-claude-code-cursor-codex-testes-cluster | MetalBear mirrord: desenvolvimento e verificação end-to-end para agentes de codificação de IA (Claude Code, Cursor, Codex) ===
+ONE_LINER: O `mirrord` funciona de primeira classe com agentes de codificação de IA (Claude Code, Cursor, Codex CLI, Gemini CLI, Copilot, Windsurf), permitindo que o agente leia o contexto real do cluster ao escrever código e execute/verifique o código gerado contra os serviços reais do cluster em segundos sem fazer deploy.
+IMPORTANCE: Quando um agente de IA escreve código para um microsserviço que fala com bancos de dados internos, filas de mensagens e outras APIs gRPC/HTTP no Kubernetes, rodar apenas testes unitários com mocks locais não garante que a mudança funcione contra o esquema e os contratos reais implantados no cluster. A seção `Using mirrord with AI coding agents` do README oficial explica como o `mirrord` fecha as duas metades do loop de desenvolvimento para agentes de IA.
+HOW_IT_WORKS: Como `mirrord exec <comando> --target <alvo>` é um comando CLI não-interativo simples que envolve qualquer processo, um agente de IA (como Claude Code ou Cursor, apoiado pelos guias e skills em `metalbear-co/skills`) pode: (1) **Ler o contexto real do cluster enquanto escreve o código**: inspecionar variáveis de ambiente reais, respostas de serviços internos e formatos de mensagens nas filas; e (2) **Executar e validar o código end-to-end**: iniciar o servidor ou suíte de testes localmente com `mirrord exec` conectado ao cluster de staging, enviar requisições de teste e confirmar que a integração funciona de ponta a ponta sem esperar minutos por um pipeline de build/deploy e sem poluir o cluster.
+EXAMPLE:
+```bash
+# Comando executado por um agente de IA (ex.: Claude Code / Codex) para validar um teste de integração local contra os serviços reais do cluster
+mirrord exec --target deployment/checkout-service -f .mirrord/mirrord.json -- pytest tests/integration/
+```
+TRADE_OFFS: Quando múltiplos agentes de IA autônomos (ou agentes e desenvolvedores humanos) rodam testes simultaneamente contra o mesmo cluster compartilhado de staging, um agente que grava diretamente no banco de dados compartilhado ou consome mensagens de uma fila Kafka/SQS compartilhada pode interferir nos testes de outra pessoa; para isolar escritas de agentes de IA, o README oficial destaca o uso de **DB branching** e **Queue splitting** do mirrord for Teams/Enterprise (incluindo suporte a *Agent-Started Trials* de 7 dias).
+VERIFY: Configure um skill/instrução no agente de codificação para executar `mirrord exec -f .mirrord/mirrord.json -- <comando-de-teste>` e verifique a execução de chamadas contra os serviços internos do cluster.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-operador-teams-queue-splitting-db-branching-policies]] | [[bytebase-integracao-ia-mcp-server-text-to-sql-page-agent]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 897 | mirrord-operador-teams-queue-splitting-db-branching-policies | MetalBear mirrord: mirrord Operator (Teams), uso concorrente, Queue Splitting, DB Branching e Políticas ===
+ONE_LINER: O plano **mirrord for Teams** adiciona o **mirrord Operator** no cluster Kubernetes como um plano de controle centralizado que habilita uso concorrente no mesmo alvo, **Traffic filtering**, **Queue splitting** (divisão de filas Kafka/SQS/RMQ), **DB branching** (branches efêmeros de banco por sessão) e políticas RBAC.
+IMPORTANCE: No modo open-source básico (sem operador), o `mirrord` gerencia apenas conexões TCP/HTTP diretas; porém, em arquiteturas orientadas a eventos (onde o serviço consome de uma fila Kafka, SQS ou RabbitMQ) ou quando dois desenvolvedores precisam alterar dados no banco durante uma sessão de debug, é necessário dividir mensagens da fila por filtro e isolar o banco de dados por sessão. A seção `mirrord for Teams` em `What is mirrord?` detalha essas seis capacidades do Operator.
+HOW_IT_WORKS: Instalado no cluster Kubernetes, o **mirrord Operator** coordena todas as sessões ativas sem que os clientes precisem de permissões RBAC para criar pods `mirrord-agent` diretamente: (1) **Concurrent usage**: múltiplos desenvolvedores podem trabalhar no mesmo pod/deployment simultaneamente sem conflitos; (2) **Traffic filtering**: roteia apenas requisições HTTP específicas (por header, path ou método) para cada processo local; (3) **Queue splitting**: divide o tráfego de filas de mensagens (Kafka, SQS, RabbitMQ) para que cada desenvolvedor receba em sua máquina apenas as mensagens que casam com seus filtros; (4) **DB branching**: cria branches efêmeros de banco de dados (MySQL, Postgres, MongoDB) por sessão do mirrord para isolar escritas; (5) **Policies and profiles** (`MirrordPolicy`); e (6) **Session management**.
+EXAMPLE:
+```bash
+# Inspecionar todas as sessões ativas gerenciadas pelo mirrord Operator no cluster e encerrar sessões se necessário
+mirrord operator status
+```
+TRADE_OFFS: Enquanto o núcleo open-source do `mirrord` funciona de forma 100% client-side sem precisar instalar nada previamente no cluster (criando o pod `mirrord-agent` sob demanda via API do Kubernetes), os recursos marcados com **`[Teams]`** (uso concorrente no mesmo alvo, Queue splitting, DB branching e `MirrordPolicy`) exigem o **mirrord Operator** instalado no cluster com licença ativa (ou trial).
+VERIFY: Em um cluster com o mirrord Operator instalado, execute `mirrord operator status` para verificar a versão do operador, as sessões concorrentes ativas e as políticas aplicadas.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-modos-trafego-mirror-vs-steal-filtragem-http]] | [[mirrord-enterprise-preview-environments-ci-multicluster-airgap]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 898 | mirrord-multiplas-sessoes-concorrentes-mirrord-up | MetalBear mirrord: execução simultânea de múltiplos microsserviços locais conectados ao cluster com mirrord up ===
+ONE_LINER: Para desenvolvedores que estão alterando vários microsserviços ao mesmo tempo, o comando **`mirrord up`** inicia e gerencia múltiplas sessões concorrentes do `mirrord` a partir de um único arquivo de configuração (funcionando como um `docker compose` para sessões `mirrord`).
+IMPORTANCE: Quando uma funcionalidade nova exige modificar simultaneamente o `api-gateway` (em Go) e o `pricing-service` (em Python) enquanto os outros 30 microsserviços continuam rodando no cluster Kubernetes, abrir vários terminais manuais de `mirrord exec` e coordenar seus logs e encerramentos torna-se trabalhoso. A documentação oficial `What is mirrord?` destaca o comando **`mirrord up`** para esse fluxo multi-serviço.
+HOW_IT_WORKS: O desenvolvedor define um arquivo de composição declarando cada serviço local que deseja subir, seu comando de inicialização, diretório de trabalho, alvo (`target`) no cluster Kubernetes e configurações específicas de rede/ambiente. Ao executar **`mirrord up`**, a CLI inicia todas as sessões do `mirrord` em conjunto, conecta cada processo local ao seu respectivo deployment no cluster (de modo que quando o `api-gateway` local chama o DNS `pricing-service` do cluster, a requisição filtrada no cluster é roteada automaticamente para o `pricing-service` também rodando localmente!) e agrega o ciclo de vida de todas as sessões em um único comando.
+EXAMPLE:
+```bash
+# Iniciar múltiplas sessões locais de microsserviços conectadas ao cluster a partir de um arquivo de configuração unificado
+mirrord up -f mirrord-compose.json
+```
+TRADE_OFFS: Ao rodar múltiplos processos pesados localmente com `mirrord up` (especialmente com compiladores em modo watch/hot-reload para 3 ou 4 serviços simultâneos), cada sessão mantém sua própria conexão de agente com o cluster; limite o arquivo do `mirrord up` apenas aos 2 ou 3 serviços nos quais você está ativamente editando código naquela tarefa, deixando todos os demais serviços intocados rodando remotamente no cluster.
+VERIFY: Durante a execução de `mirrord up`, envie uma requisição para o primeiro serviço local que faz uma chamada HTTP interna para o segundo serviço e confirme nos logs unificados que ambos os processos locais atenderam à cadeia da requisição.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-extensoes-ide-vscode-intellij-configuracao-json]] | [[mirrord-enterprise-preview-environments-ci-multicluster-airgap]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 899 | mirrord-enterprise-preview-environments-ci-multicluster-airgap | MetalBear mirrord: mirrord for CI, Preview Environments, Multi-cluster e operação Air-gapped (Enterprise) ===
+ONE_LINER: O mesmo modelo arquitetural do `mirrord` alimenta o **mirrord for CI** (rodando testes de integração/e2e em CI contra um cluster de staging compartilhado sem criar ambientes efêmeros inteiros) e os recursos **Enterprise** como **Preview Environments**, **Multi-cluster** e **License Server Air-gapped**.
+IMPORTANCE: Em pipelines de CI/CD de grandes empresas, subir um cluster Kubernetes inteiro com 40 microsserviços a cada Pull Request para rodar testes end-to-end demora 20 minutos e custa caro em nuvem; usar `mirrord for CI` permite rodar apenas o serviço alterado no runner de CI (ou um pod efêmero leve em `Preview Environments`) conectado ao cluster de staging compartilhado. A página oficial `What is mirrord?` detalha essas capacidades.
+HOW_IT_WORKS: Conforme documentado nas seções `mirrord for CI` e `mirrord for Enterprise`: (1) **mirrord for CI**: o job de CI inicia o serviço sob teste no próprio runner do GitHub Actions/GitLab CI usando `mirrord` conectado ao cluster de staging compartilhado (com filtros de tráfego/filas e DB branching para não afetar outros PRs) e roda os testes e2e contra ele sem fazer deploy da imagem; (2) **Preview Environments**: implanta apenas pods efêmeros isolados dos serviços modificados no cluster para revisão assíncrona e QA, compartilhando o restante do cluster; (3) **Multi-cluster**: intercepta tráfego através de múltiplos clusters Kubernetes em uma única sessão do `mirrord`; e (4) **Air-gapped operation & HA**: executa o `License Server` on-prem sem enviar telemetria externa e roda o Operator em modo de alta disponibilidade (HA).
+EXAMPLE:
+```bash
+# Executar o binário do serviço e a suíte de testes e2e em um runner de CI conectado ao cluster de staging via mirrord
+mirrord ci start --target deployment/orders-api -f .mirrord/mirrord-ci.json -- ./bin/orders-api
+```
+TRADE_OFFS: Ao utilizar o **mirrord for CI** contra um cluster de staging compartilhado em múltiplos Pull Requests concorrentes, certifique-se de que os testes de integração enviem o cabeçalho HTTP de correlação daquele job de CI (configurado em `header_filter`) para que cada execução de CI alcance apenas a sua própria instância do serviço sob teste.
+VERIFY: Verifique a conclusão dos testes de integração no pipeline de CI usando `mirrord` sem que o Deployment oficial do cluster de staging tenha sofrido alteração de imagem (`kubectl get deployment <nome> -o wide`).
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-operador-teams-queue-splitting-db-branching-policies]] | [[mirrord-agentes-ia-claude-code-cursor-codex-testes-cluster]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord
+
+=== NOTE: 900 | mirrord-alvos-execucao-targetless-pod-deployment-rollout-job | MetalBear mirrord: tipos de alvos suportados (--target pod, deployment, statefulset, job, argoproj Rollout) e modo targetless ===
+ONE_LINER: O `mirrord` pode se conectar a múltiplos tipos de recursos Kubernetes como alvo (`pod`, `deployment`, `statefulset`, `job`, `cronjob` e `rollout` do Argo Rollouts, selecionando inclusive um `container` específico) ou rodar em modo **targetless** para apenas acessar serviços internos do cluster sem impersonar nenhum pod existente.
+IMPORTANCE: Nem sempre o desenvolvedor quer impersonar um `Deployment` existente: às vezes ele quer depurar um `StatefulSet`, um `Rollout` gerenciado pelo Argo Rollouts ou apenas rodar um script de migração/consulta local que precisa acessar o banco de dados e o DNS interno do cluster sem se atrelar a nenhum pod de aplicação (**targetless mode**).
+HOW_IT_WORKS: Na flag **`--target`** (ou campo `"target"` no `.mirrord/mirrord.json`), o usuário pode especificar a sintaxe `<tipo>/<nome>[/container/<container-name>]`, suportando: (1) `pod/<nome>`; (2) `deployment/<nome>` (onde o `mirrord` seleciona automaticamente um pod saudável do Deployment ou coordena todas as réplicas quando usado com o Operator); (3) `statefulset/<nome>`, `job/<nome>`, `cronjob/<nome>` e `rollout/<nome>` (Argo Rollouts); e (4) **Modo Targetless** (omitindo `--target` ou definindo `"target": "targetless"`): o `mirrord` cria um pod `mirrord-agent` autônomo no namespace selecionado sem se anexar a nenhum pod existente, permitindo que o processo local resolva DNS e faça conexões de saída (`outgoing`) para qualquer Service/Pod do cluster.
+EXAMPLE:
+```bash
+# Executar um comando local em modo targetless (sem impersonar nenhum pod) apenas para acessar um Service interno do cluster
+mirrord exec -n staging -- curl -sSf http://internal-catalog-api.staging.svc.cluster.local:8080/healthz
+```
+TRADE_OFFS: Quando você executa o `mirrord` em modo **targetless** (sem um pod alvo), como não há um container de aplicação existente sendo impersonado, o processo local não herda variáveis de ambiente nem sistema de arquivos de nenhum pod específico e não pode receber tráfego de entrada (`incoming`); o modo targetless destina-se exclusivamente ao tráfego de saída (`outgoing`) e resolução DNS para dentro do cluster.
+VERIFY: Execute `mirrord ls` (ou `mirrord ls -n <namespace>`) para listar todos os alvos disponíveis (`pod/...`, `deployment/...`, `rollout/...`) no namespace antes de iniciar `mirrord exec`.
+LINKS: [[mirrord-execucao-processos-locais-contexto-cluster-kubernetes]] | [[mirrord-arquitetura-mirrord-layer-mirrord-agent-capabilities]] | [[argo-rollouts-controlador-kubernetes-canary-bluegreen-crd]]
+SOURCES: https://raw.githubusercontent.com/metalbear-co/mirrord/main/README.md | https://metalbear.com/mirrord/docs/getting-started/what-is-mirrord | https://github.com/metalbear-co/mirrord

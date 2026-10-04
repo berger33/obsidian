@@ -1,0 +1,234 @@
+=== NOTE: 1071 | popeye-linter-cluster-kubernetes-vivo-readonly | Popeye: sanitizador e linter somente-leitura para clusters Kubernetes vivos ===
+ONE_LINER: O Popeye (`derailed/popeye`, Apache-2.0, criado pelo mesmo autor do K9s) é um utilitário somente-leitura (*readonly*) que escaneia clusters Kubernetes **em execução** (e não arquivos estáticos em disco) para detectar configurações incorretas, recursos órfãos/inutilizados, incompatibilidades de portas, problemas de RBAC e sobre/subalocação de CPU e memória.
+IMPORTANCE: Analisadores estáticos de YAML em CI/CD não conseguem saber se um `Service` aplicado no cluster realmente seleciona algum `Pod` ativo, se um `Secret`, `ConfigMap` ou `ServiceAccount` está órfão sem nenhum consumidor, se um `PersistentVolumeClaim` ficou preso em `Pending` ou se um container em produção está consumindo 95% do seu limite de memória. O Popeye inspeciona o estado vivo do cluster na prática.
+HOW_IT_WORKS: Conforme descrevem o README oficial (`derailed/popeye`) e `popeyecli.io`, o Popeye conecta-se ao cluster via `kubeconfig` (ou `ServiceAccount` in-cluster) usando apenas verbos de leitura (`get`, `list`), executa um conjunto curado de **linters** sobre os recursos implantados e, caso o cluster possua o **`metrics-server`**, cruza as especificações com o consumo real de CPU e memória (alertando por padrão quando o uso ultrapassa 80% de CPU/MEM). Ao final, gera um relatório categorizado por severidade e calcula o **Popeye Score** (de `0` a `100`) da saúde de configuração do cluster.
+EXAMPLE:
+```bash
+# Instalar o Popeye via Homebrew ou Go e executar uma varredura em todos os namespaces (-A)
+brew install derailed/popeye/popeye
+
+# Escanear um namespace específico ou todos os namespaces do contexto atual
+popeye -n producao
+popeye -A
+```
+TRADE_OFFS: Como o Popeye é estritamente uma ferramenta somente-leitura (*readonly*), ele nunca altera nem remove recursos no seu cluster; cabe ao operador ou ao pipeline GitOps corrigir os manifestos ou remover os recursos órfãos apontados pelo relatório.
+VERIFY: Execute `popeye version` para validar a instalação e rode `popeye -n default` verificando o cabeçalho de resumo e o **Popeye Score** ao final da saída no terminal (garantindo `export TERM=xterm-256color` em terminais Nix/Linux).
+LINKS: [[popeye-catalogo-linters-recursos-aliases-selecao]] | [[popeye-codigos-erro-severidades-containers-pods-seguranca]] | [[k9s-visoes-diagnostico-pulses-xray-popeye-usedby]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1072 | popeye-catalogo-linters-recursos-aliases-selecao | Catálogo de Linters do Popeye: recursos auditados, aliases de CLI (-s) e detecção de recursos órfãos ===
+ONE_LINER: O Popeye possui linters dedicados para mais de 20 tipos de recursos do Kubernetes — selecionáveis individualmente na CLI pela flag **`-s`** usando seus nomes ou aliases curtos (`no`, `ns`, `po`, `svc`, `sa`, `sec`, `cm`, `dp`, `sts`, `ds`, `pv`, `pvc`, `hpa`, `pdb`, `cr`, `crb`, `ro`, `rb`, `ing`, `np`, `cj`, `job`, `gwc`, `gw`, `gwr`).
+IMPORTANCE: Durante a investigação de um problema específico (por exemplo, revisar apenas `Services`, `Pods` e `NetworkPolicies` de um namespace, ou fazer uma faxina de `Secrets`, `ConfigMaps` e `ServiceAccounts` não utilizados), rodar apenas os linters desejados com `popeye -n <ns> -s po,svc,np` acelera o diagnóstico e reduz o ruído no console.
+HOW_IT_WORKS: Conforme a tabela oficial *Linters* do README (`derailed/popeye`), cada linter inspeciona aspectos específicos do recurso vivo e suas referências cruzadas: (1) **Node (`no`)**: condições de prontidão, pressão de disco/memória/PIDs, tolerations de pods referenciando taints e utilização > 80%; (2) **Namespace (`ns`)**: namespaces inativos ou mortos; (3) **Pod (`po`)** e **Workloads (`dp`, `sts`, `ds`, `cj`, `job`)**: status de containers, imagens sem tag ou com `:latest`, ausência de probes e requests/limits, portas nomeadas e utilização de CPU/MEM; (4) **Service (`svc`)**: presença de `Endpoints`, correspondência de labels de pods e portas nomeadas; (5) **Higiene de referências (`sa`, `sec`, `cm`, `pv`, `pvc`, `cr`, `crb`, `ro`, `rb`, `pdb`)**: detecta `ServiceAccounts`, `Secrets` (ou chaves específicas), `ConfigMaps`, volumes e papéis RBAC potencialmente **não utilizados (`Unused`)**; e (6) **Rede e Gateway API (`ing`, `np`, `gwc`, `gw`, `gwr`)**: valida `Ingress`, `NetworkPolicy` (incluindo políticas stale), `GatewayClass`, `Gateway` e `HTTPRoute`.
+EXAMPLE:
+```bash
+# Executar o Popeye no namespace ns1 filtrando apenas os linters de Pod (po), Service (svc) e Secret (sec) sem gravar arquivo de log
+popeye -n ns1 -s po,svc,sec --logs none
+```
+TRADE_OFFS: Quando o Popeye reporta um `Secret` (`sec`), `ConfigMap` (`cm`) ou `ServiceAccount` (`sa`) como potencialmente não utilizado (códigos `400` / `401`), lembre-se de que o Popeye verifica referências declarativas nos recursos do cluster; se uma aplicação ler um `ConfigMap` ou `Secret` dinamicamente fazendo chamadas diretas à API do Kubernetes em tempo de execução (sem montá-lo em `volumes` ou `env`), o linter poderá marcá-lo como `Unused`.
+VERIFY: Execute `popeye -n kube-system -s no,po --logs none` para auditar rapidamente apenas a saúde dos nós e dos pods do plano de controle.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[popeye-codigos-erro-severidades-containers-pods-seguranca]] | [[popeye-configuracao-spinach-yaml-allocations-excludes-overrides]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1073 | popeye-codigos-erro-severidades-containers-pods-seguranca | Níveis de severidade (0 a 3) e códigos de erro do Popeye para Containers (100–113), Pods (200–209) e Segurança (300–308) ===
+ONE_LINER: O Popeye classifica cada achado em quatro níveis de severidade — **`0: Ok` (`✅`)**, **`1: Info` (`🔊`)**, **`2: Warning` (`😱`)** e **`3: Error` (`💥`)** — utilizando códigos numéricos padronizados por domínio: **100–113 para Containers**, **200–209 para Pods** e **300–308 para Segurança**.
+IMPORTANCE: Conhecer os códigos numéricos exatos do Popeye (documentados em `popeyecli.io/docs/codes.html`) é indispensável tanto para interpretar rapidamente os relatórios e métricas Prometheus (`popeye_code_total`) quanto para configurar regras cirúrgicas de exclusão (`excludes`) ou alteração de severidade (`overrides`) no arquivo `spinach.yaml`.
+HOW_IT_WORKS: Conforme a tabela oficial de códigos (`popeyecli.io/docs/codes.html`):
+- **Containers (100–113)**: `100` (imagem Docker sem tag, Sev 3), `101` (tag `latest` em uso, Sev 2), `102`/`103`/`104` (sem probes / sem liveness / sem readiness, Sev 2), `105` (probe usa número de porta em vez de porta nomeada, Sev 1), `106`/`107` (sem requests/limits ou sem limits, Sev 2), `108` (porta não nomeada, Sev 1), `109`/`110` (CPU/Memória atual vs Request atingiu limiar, Sev 2), `111`/`112` (CPU/Memória atual vs Limit atingiu limiar, Sev 3) e `113` (imagem não hospedada em um registry permitido, Sev 3);
+- **Pods (200–209)**: `200`/`201` (terminating, Sev 2), `202`/`203` (waiting, Sev 3), `204` (pod não pronto, Sev 3), `205` (múltiplos restarts, Sev 2), `206` (sem PodDisruptionBudget definido, Sev 1), `207` (unhappy phase, Sev 3), `208` (pod órfão sem controlador, Sev 2) e `209` (gerenciado por múltiplos PDBs, Sev 2);
+- **Segurança (300–308)**: `300`/`308` (uso da ServiceAccount `default`, Sev 2/3), `301`/`303` (token da ServiceAccount montado automaticamente, Sev 2), `302`/`306` (pod/container rodando potencialmente como `root`, Sev 2) e `304`/`305`/`307` (referência a Secret, imagePullSecret ou ServiceAccount inexistente, Sev 3/2).
+EXAMPLE:
+```yaml
+# Trecho de spinach.yaml sobrescrevendo a severidade do código 206 (ausência de PDB) e ignorando o código 105 em pods específicos
+popeye:
+  overrides:
+    - code: 206
+      severity: 1
+```
+TRADE_OFFS: Códigos de severidade `3` (`Error` `💥`, como `100` imagem sem tag, `111`/`112` uso de CPU/MEM estourando o limit, ou `304` Secret referenciado que não existe) fazem o processo do Popeye terminar com **código de saída diferente de zero**, a menos que a flag `--force-exit-zero` seja passada.
+VERIFY: Execute `popeye -n default` e consulte os códigos numéricos exibidos entre colchetes (ex.: `[POP-106]`, `[POP-306]`) contra a referência oficial em `popeyecli.io/docs/codes.html`.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[popeye-codigos-workloads-hpa-nodes-services-networkpolicies]] | [[popeye-configuracao-spinach-yaml-allocations-excludes-overrides]]
+SOURCES: https://popeyecli.io/docs/codes.html | https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://github.com/derailed/popeye
+
+=== NOTE: 1074 | popeye-codigos-workloads-hpa-nodes-services-networkpolicies | Códigos de diagnóstico do Popeye para Geral (400–407), Workloads (500–508), HPA (600–605), Nodes (700–712), PV/PVC (1000–1004), Services (1100–1110) e NetworkPolicies (1200–1206) ===
+ONE_LINER: Além de containers e pods, a tabela de códigos do Popeye cobre diagnósticos profundos de infraestrutura e topologia: referências órfãs e APIs depreciadas (**400–407**), sub/sobrealocação em Deployments/StatefulSets (**500–508**), capacidade de explosão de HPAs (**600–605**), saúde de Nodes (**700–712**), PDBs (**900–901**), PVs/PVCs (**1000–1004**), Services/Endpoints (**1100–1110**) e NetworkPolicies (**1200–1206**).
+IMPORTANCE: Muitos incidentes graves em Kubernetes decorrem de inconsistências entre recursos distintos: um `Service` cujo seletor não casa com nenhum pod (`1100`) ou cuja `targetPort` não existe no container (`1106`), um `PodDisruptionBudget` cujo `minAvailable` é maior que o número de pods rodando (`901`) bloqueando o drain de nós, ou múltiplos `HorizontalPodAutoscalers` que, se dispararem juntos no pico (`604`/`605`), excederão a capacidade total de CPU e memória do cluster.
+HOW_IT_WORKS: Conforme documentado em `popeyecli.io/docs/codes.html`:
+- **General (400–407)**: `400`/`401` (recurso ou chave de Secret/ConfigMap não referenciado, Sev 1), `402` (`metrics-server` não detectado, Sev 1), `403` (grupo de API depreciado, Sev 2) e `407` (referência a recurso inexistente, Sev 3);
+- **Workloads (500–508)**: `500` (escala zero detectada, Sev 2), `501` (réplicas disponíveis abaixo do desejado, Sev 3), `503`/`505` (CPU/Memória subalocada na carga atual, Sev 2), `504`/`506` (CPU/Memória sobrealocada na carga atual, Sev 2) e `508` (nenhum pod corresponde ao seletor do controlador, Sev 3);
+- **HPA (600–605)**: `600`/`601` (HPA aponta para Deployment/StatefulSet inexistente, Sev 3) e `602`–`605` (no pico máximo de réplicas de um ou de todos os HPAs, a demanda igualará ou excederá a capacidade de CPU/memória do cluster, Sev 2);
+- **Nodes (700–712), PDB (900–901), PV/PVC (1000–1004), Service (1100–1110) e NetworkPolicies (1200–1206)**: incluem alertas como `700` (taint no nó que nenhum pod tolera), `1001`/`1003` (PV/PVC Pending, Sev 3), `1100`/`1105`/`1106` (Service sem pods/endpoints ou porta divergente, Sev 3) e `1204`/`1205` (Pod não protegido por NetworkPolicy de ingress/egress, Sev 2).
+EXAMPLE:
+```bash
+# Auditar especificamente Services, Endpoints, HPAs e PDBs de produção em busca de referências quebradas ou riscos de capacidade
+popeye -n producao -s svc,hpa,pdb,pvc --logs none
+```
+TRADE_OFFS: Os códigos `602`–`605` (verificação de burst de HPA contra a capacidade atual do cluster) comparam o `maxReplicas` dos HPAs com os nós atualmente presentes no cluster; em clusters com Cluster Autoscaler ou Karpenter configurados para provisionar novos nós sob demanda, esse aviso serve como estimativa do crescimento necessário da frota de nós.
+VERIFY: Execute `popeye -A -s hpa,svc,pdb` e verifique se existem ocorrências dos códigos `600`/`601`, `901`, `1100`, `1105` ou `1106`.
+LINKS: [[popeye-codigos-erro-severidades-containers-pods-seguranca]] | [[popeye-catalogo-linters-recursos-aliases-selecao]] | [[popeye-configuracao-spinach-yaml-allocations-excludes-overrides]]
+SOURCES: https://popeyecli.io/docs/codes.html | https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://github.com/derailed/popeye
+
+=== NOTE: 1075 | popeye-configuracao-spinach-yaml-allocations-excludes-overrides | Configuração avançada do Popeye com SpinachYAML (-f spinach.yaml): allocations, excludes, FQN, rx:, overrides e registries ===
+ONE_LINER: O arquivo de configuração **SpinachYAML** (`popeye -f spinach.yaml`) permite calibrar limiares de sobre/subalocação de CPU e memória (`allocations`), limites de nós e restarts de pods (`resources`), listas de registros de imagens permitidos (`registries`), sobrescrita de severidade de códigos (`overrides`) e regras de exclusão globais ou por linter (`excludes`) usando nomes totalmente qualificados (**FQN** `namespace/resource_name`) e expressões regulares com o prefixo **`rx:`**.
+IMPORTANCE: Em qualquer cluster Kubernetes real, namespaces de sistema como `kube-system` e `kube-public` possuem DaemonSets privilegiados e usa-se `hostNetwork` por design. Sem um arquivo `spinach.yaml` para excluir recursos de sistema e calibrar limiares, o relatório do Popeye fica poluído por falsos positivos que mascaram erros reais nas aplicações de negócio.
+HOW_IT_WORKS: Conforme a seção *SpinachYAML* do README oficial (`derailed/popeye`): (1) **`allocations.cpu` e `allocations.memory`** definem `underPercUtilization` (ex.: `200`%) e `overPercUtilization` (ex.: `50`%); (2) **`excludes.global`** e **`excludes.linters.<plural_kind_lowercase>`** filtram recursos por **`fqns`** (`namespace/resource_name` para recursos namespaced, ou `name` para recursos cluster-wide), `labels`, `annotations` e `codes` — suportando correspondência exata ou regex precedida por **`rx:`** (ex.: `rx:^kube-`); (3) **`resources.node.limits`** (`cpu: 90`, `memory: 80`) e **`resources.pod`** (`restarts: 3`, `limits: { cpu: 80, memory: 75 }`) ajustam os gatilhos de alerta; (4) **`overrides`** altera a severidade de códigos específicos (`1`, `2` ou `3`); e (5) **`registries`** lista os registros de container permitidos (acionando o código `113` para imagens fora da lista).
+EXAMPLE:
+```yaml
+# Exemplo de arquivo spinach.yaml calibrando alocações, excluindo namespaces kube-* via regex (rx:) e restringindo registries
+popeye:
+  allocations:
+    cpu:
+      underPercUtilization: 200
+      overPercUtilization: 50
+    memory:
+      underPercUtilization: 200
+      overPercUtilization: 50
+  excludes:
+    global:
+      fqns: ["rx:^kube-"]
+      codes: ["300", "206"]
+    linters:
+      pods:
+        instances:
+          - labels:
+              app: [legado]
+            codes: [102, 105]
+  resources:
+    node:
+      limits:
+        cpu: 90
+        memory: 80
+    pod:
+      restarts: 3
+      limits:
+        cpu: 80
+        memory: 75
+  overrides:
+    - code: 206
+      severity: 1
+  registries:
+    - quay.io
+    - docker.io
+    - ghcr.io
+```
+TRADE_OFFS: A documentação oficial alerta para ter cuidado com expressões regulares (`rx:`) frouxas em `excludes`, pois elas podem ocultar mais recursos do que o planejado; por isso, recomenda-se rodar o Popeye *"wide open"* (sem `-f spinach.yaml`) periodicamente para garantir que novos problemas não estejam sendo mascarados.
+VERIFY: Execute `popeye -A -f spinach.yaml` e confirme que os namespaces `kube-system` e `kube-public` foram filtrados pelas regras `rx:^kube-` e que imagens fora de `registries` acionam o código `113`.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[popeye-codigos-erro-severidades-containers-pods-seguranca]] | [[popeye-formatos-saida-html-json-junit-prometheus-score]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1076 | popeye-formatos-saida-html-json-junit-prometheus-score | Formatos de saída do Popeye (-o): standard, jurassic, yaml, html, json, junit, prometheus e score ===
+ONE_LINER: Por meio da flag **`-o` / `--out`**, o Popeye exporta seus relatórios de auditoria em **oito formatos distintos**: `standard` (padrão colorido com ícones), `jurassic` (texto puro sem ícones nem cores), `yaml`, `html`, `json`, `junit`, `prometheus` e `score` (retornando um único valor numérico de `0` a `100`).
+IMPORTANCE: Enquanto engenheiros no terminal preferem a saída visual `standard`, pipelines de CI/CD precisam de relatórios `junit` ou de um número puro (`-o score`) para aprovar/reprovar stages, auditores de governança preferem páginas `html` autocontidas e sistemas de observabilidade consomem `json` ou `prometheus`.
+HOW_IT_WORKS: Conforme as tabelas *Output Formats* e *Report Morphology* do README oficial (`derailed/popeye`): (1) **`standard`** (default) usa 256 cores e emojis por severidade (`✅` Ok, `🔊` Info, `😱` Warn, `💥` Error); (2) **`jurassic`** substitui ícones e cores por códigos ASCII (`OK`, `I`, `W`, `E`) para terminais ou logs de CI sem suporte ANSI; (3) **`yaml`** e **`json`** estruturam toda a árvore de achados e contagens para processamento programático; (4) **`html`** gera um relatório visual completo pronto para navegador; (5) **`junit`** formata os achados como suíte de testes XML JUnit; (6) **`prometheus`** despeja o relatório no formato de exposição de métricas Prometheus; e (7) **`score`** retorna apenas o valor inteiro do **Popeye Score (`0–100`)**.
+EXAMPLE:
+```bash
+# Obter apenas a nota numérica (0-100) do cluster ou gerar um relatório HTML completo no diretório atual
+popeye -n producao -o score
+
+POPEYE_REPORT_DIR=$(pwd) popeye -n producao --save --out html --output-file relatorio-producao.html
+```
+TRADE_OFFS: No modo `standard`, terminais sem suporte a 256 cores (ou ambientes Nix onde `TERM` não está definido adequadamente) podem falhar no PreFlight Check de cores; nesses ambientes, defina `export TERM=xterm-256color` ou utilize `-o jurassic`.
+VERIFY: Execute `popeye -n default -o json | jq .popeye.score` para extrair a nota geral do namespace a partir da saída estruturada JSON.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[popeye-persistencia-relatorios-save-s3-minio-docker]] | [[popeye-metricas-prometheus-pushgateway-grafana]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1077 | popeye-persistencia-relatorios-save-s3-minio-docker | Persistência de relatórios do Popeye: --save, POPEYE_REPORT_DIR, --output-file e upload direto para AWS S3 e MinIO ===
+ONE_LINER: O Popeye permite persistir relatórios em disco usando **`--save`**, **`POPEYE_REPORT_DIR`** e **`--output-file`**, ou enviá-los diretamente para buckets de armazenamento de objetos **AWS S3 (`s3://`)** e **MinIO (`minio://`)** via **`--s3-bucket`**, **`--s3-region`** e **`--s3-endpoint`**.
+IMPORTANCE: Quando o Popeye roda dentro de um container efêmero no Docker ou como um `CronJob` de auditoria dentro do Kubernetes, a saída em memória do pod se perde quando o container termina. Salvar automaticamente o relatório HTML/JSON em um diretório mapeado ou enviá-lo direto para um bucket S3/MinIO cria um histórico imutável de auditorias de conformidade do cluster.
+HOW_IT_WORKS: Conforme a seção *Saving Scans* do README oficial (`derailed/popeye`): (1) passar **`--save`** grava o relatório por padrão em um diretório temporário (impresso no `STDOUT`) com o nome `lint_<cluster-name>_<time-UnixNano>.<output-extension>`; (2) definir a variável de ambiente **`POPEYE_REPORT_DIR`** grava o relatório em `<POPEYE_REPORT_DIR>/<cluster>/<context>`, e **`--output-file`** fixa o nome do arquivo; e (3) passar **`--s3-bucket s3://meu-bucket/caminho`** (ou `minio://meu-bucket/caminho` combinado com `--s3-endpoint localhost:9000` e `--s3-region`, autenticando via `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY`) cria o bucket se não existir e faz o upload direto do relatório gerado.
+EXAMPLE:
+```bash
+# Salvar um relatório JSON do Popeye diretamente em um bucket AWS S3 ou servidor MinIO compatível
+popeye --s3-bucket s3://auditoria-k8s-popeye/prod \
+  --s3-region us-west-2 \
+  --out json \
+  --save \
+  --output-file scan-prod.json
+
+# Executar o Popeye via container Docker oficial mapeando o kubeconfig e o diretório /tmp para preservar o relatório salvo
+docker run --rm -it \
+  -v "$HOME/.kube:/root/.kube" \
+  -e POPEYE_REPORT_DIR=/tmp/popeye \
+  -v /tmp:/tmp \
+  quay.io/derailed/popeye --context prod -n default --save --output-file relatorio.txt
+```
+TRADE_OFFS: Ao executar `docker run --rm ... quay.io/derailed/popeye --save` sem mapear o diretório de saída (`-v /tmp:/tmp`), o Popeye gravará o relatório no `/tmp` interno do container e o arquivo será destruído imediatamente quando o container sair devido à flag `--rm`.
+VERIFY: Após executar o comando com `POPEYE_REPORT_DIR=$(pwd) popeye --save --out html --output-file report.html`, verifique o arquivo gerado no subdiretório `<cluster>/<context>/report.html`.
+LINKS: [[popeye-formatos-saida-html-json-junit-prometheus-score]] | [[popeye-execucao-in-cluster-cronjob-rbac-force-exit-zero]] | [[popeye-metricas-prometheus-pushgateway-grafana]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1078 | popeye-metricas-prometheus-pushgateway-grafana | Observabilidade contínua com Popeye: publicação de métricas no Prometheus Pushgateway e dashboards Grafana ===
+ONE_LINER: O Popeye pode publicar telemetria de conformidade diretamente em um **Prometheus Pushgateway** (`--push-gtwy-url`), expondo cinco métricas do tipo gauge — `popeye_severity_total`, `popeye_code_total`, `popeye_linter_tally_total`, `popeye_report_errors_total` e `popeye_cluster_score` — para visualização histórica no Grafana.
+IMPORTANCE: Executar o Popeye manualmente no terminal mostra apenas uma fotografia pontual. Enviar as métricas de cada varredura horária para o Prometheus permite criar alertas no Alertmanager caso o `popeye_cluster_score` caia abaixo de 80 ou caso surjam erros de severidade 3 (`popeye_severity_total`) após um deploy.
+HOW_IT_WORKS: Conforme a seção *The Prom Queen!* do README oficial (`derailed/popeye`), ao passar o argumento **`--push-gtwy-url http://pushgateway:9091`** (e credenciais se aplicável), o Popeye empurra ao final do scan os seguintes gauges Prometheus:
+1. **`popeye_severity_total`**: contagens totais agrupadas por nível de severidade (`Ok`, `Info`, `Warn`, `Error`);
+2. **`popeye_code_total`**: contagens agrupadas por código numérico de linter do Popeye (`100`, `106`, `306` etc.);
+3. **`popeye_linter_tally_total`**: contagens agregadas por linter de recurso (`pods`, `services`, `nodes` etc.);
+4. **`popeye_report_errors_total`**: total de erros de execução do scan;
+5. **`popeye_cluster_score`**: a nota geral (`0–100`) do relatório do cluster.
+EXAMPLE:
+```bash
+# Executar a varredura do Popeye em todos os namespaces e publicar as métricas no Prometheus Pushgateway
+popeye -A -f spinach.yaml --push-gtwy-url http://prometheus-pushgateway.monitoring:9091
+```
+TRADE_OFFS: Conforme observa a nota técnica do próprio README oficial, quando você combina `--save` (que grava o artefato em disco com timestamp UnixNano) com `--push-gtwy-url`, a métrica `popeye_cluster_score` inclui uma label adicional para rastrear o artefato persistido, o que aumenta a cardinalidade da série temporal a cada push; para manter cardinalidade baixa e previsível no Prometheus, evite combinar `--save` na mesma invocação que faz push ao Pushgateway.
+VERIFY: Após executar `popeye --push-gtwy-url http://localhost:9091`, consulte `curl -s http://localhost:9091/metrics | grep popeye_` para confirmar a presença dos cinco gauges publicados.
+LINKS: [[popeye-formatos-saida-html-json-junit-prometheus-score]] | [[popeye-execucao-in-cluster-cronjob-rbac-force-exit-zero]] | [[popeye-codigos-erro-severidades-containers-pods-seguranca]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1079 | popeye-execucao-in-cluster-cronjob-rbac-force-exit-zero | Execução do Popeye in-cluster via CronJob Kubernetes, flag --force-exit-zero e perfil RBAC somente-leitura ===
+ONE_LINER: O Popeye pode ser executado periodicamente dentro do próprio cluster Kubernetes como um **`CronJob`** (`batch/v1`), exigindo obrigatoriamente a flag **`--force-exit-zero`** nos argumentos do container e uma `ClusterRole` somente-leitura (`verbs: ["get", "list"]`) sobre os grupos de API inspecionados.
+IMPORTANCE: Entender por que a flag `--force-exit-zero` é indispensável em um `CronJob` evita um problema clássico de operação: como o Popeye por padrão retorna código de saída diferente de zero (`exit code != 0`) sempre que encontra qualquer erro de lint no cluster, sem `--force-exit-zero` o Kubernetes marcará todos os pods do CronJob como `Error`/`Failed`.
+HOW_IT_WORKS: Conforme a seção *In Cluster* e *Popeye Got Your RBAC!* do README oficial (`derailed/popeye`): (1) cria-se um namespace dedicado (`popeye`), uma `ServiceAccount` (`popeye`), uma `ClusterRole` concedendo exclusivamente os verbos **`["get", "list"]`** sobre os recursos core (`configmaps`, `endpoints`, `namespaces`, `nodes`, `persistentvolumes`, `persistentvolumeclaims`, `pods`, `secrets`, `serviceaccounts`, `services`), `apps`, `networking.k8s.io`, `batch.k8s.io`, `gateway.networking.k8s.io`, `autoscaling`, `policy`, `rbac.authorization.k8s.io` e `metrics.k8s.io`, e o respectivo `ClusterRoleBinding`; e (2) o `CronJob` executa a imagem do Popeye passando `-o yaml` (ou `--push-gtwy-url` / `--s3-bucket`) junto com **`--force-exit-zero`** para que o Job conclua com status `Completed` (`0`) mesmo quando encontrar alertas no cluster.
+EXAMPLE:
+```yaml
+# Trecho do CronJob oficial do Popeye rodando a cada hora com --force-exit-zero para evitar pods em estado Error
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: popeye
+  namespace: popeye
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: popeye
+          restartPolicy: Never
+          containers:
+            - name: popeye
+              image: quay.io/derailed/popeye:latest
+              imagePullPolicy: IfNotPresent
+              args:
+                - -A
+                - -o
+                - yaml
+                - --force-exit-zero
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 100Mi
+```
+TRADE_OFFS: Se a `ServiceAccount` do Popeye não tiver permissão `get`/`list` em algum dos grupos de recursos esperados pelos linters ativos (por exemplo, `metrics.k8s.io` ou `gateway.networking.k8s.io`), o linter correspondente falhará com erro de RBAC; se o seu cluster restrito não permitir acesso a certos recursos, filtre os linters executados com a flag `-s`.
+VERIFY: Aplique o `CronJob`, crie uma execução manual de teste com `kubectl -n popeye create job --from=cronjob/popeye popeye-manual-1` e verifique os logs com `kubectl -n popeye logs job/popeye-manual-1`.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[popeye-metricas-prometheus-pushgateway-grafana]] | [[popeye-persistencia-relatorios-save-s3-minio-docker]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye
+
+=== NOTE: 1080 | popeye-integracao-k9s-preflight-troubleshooting-clusters | Integração nativa do Popeye com o K9s (:popeye) e diagnóstico de problemas operacionais de linha de comando ===
+ONE_LINER: O Popeye compartilha sua engine de sanitização diretamente com a visão interativa **`:popeye`** dentro do **K9s** e dispõe de opções de linha de comando para seleção de contexto (`--context`), controle de arquivo de logs (`--logs /tmp/scan.log` ou `--logs none`) e níveis de verbosidade (`-v4`) para depuração.
+IMPORTANCE: Engenheiros que já operam o cluster diariamente pelo K9s podem invocar a auditoria do Popeye instantaneamente sem sair da TUI (`:popeye`), enquanto engenheiros de plataforma podem usar o binário standalone `popeye` com `--logs` e `-v4` para investigar falhas de conectividade ou lentidão na API do Kubernetes.
+HOW_IT_WORKS: Conforme documentam os READMEs oficiais do Popeye (`derailed/popeye`) e do K9s (`derailed/k9s`): (1) por padrão, rodar `popeye` sem argumentos usa o contexto e o namespace ativos do `kubeconfig` (ou `default`); (2) `--context <nome>` seleciona explicitamente o contexto do `kubeconfig`; (3) `-n <namespace>` audita um namespace específico e `-A` audita todos os namespaces; (4) `--logs none` desativa a gravação de arquivo de log, enquanto `--logs /tmp/fred.log -v4` grava logs detalhados de nível debug no caminho indicado; e (5) dentro do K9s, digitar `:popeye` (ou `:pop`) abre a visão interativa de sanitização que lista a pontuação e os códigos `[POP-xxx]` de cada recurso vivo.
+EXAMPLE:
+```bash
+# Executar o Popeye em um contexto específico do kubeconfig com log de depuração (-v4) em arquivo dedicado
+popeye --context prod-cluster -n pagamentos --logs /tmp/popeye-debug.log -v4
+
+# Verificar a versão e a localização padrão dos arquivos de log do Popeye
+popeye version
+```
+TRADE_OFFS: Ao executar `popeye` sem as flags `-n` ou `-A`, ele auditará **apenas o namespace definido no seu contexto atual do `kubeconfig`** (ou `default`), exactamente como o `kubectl`; para auditar o cluster inteiro, lembre-se sempre de passar explicitamente `-A`.
+VERIFY: Execute `popeye version` para conferir o caminho padrão de logs e rode `popeye -n default --logs none` confirmando a execução limpa no terminal.
+LINKS: [[popeye-linter-cluster-kubernetes-vivo-readonly]] | [[k9s-visoes-diagnostico-pulses-xray-popeye-usedby]] | [[popeye-catalogo-linters-recursos-aliases-selecao]]
+SOURCES: https://raw.githubusercontent.com/derailed/popeye/master/README.md | https://popeyecli.io/docs/codes.html | https://github.com/derailed/popeye

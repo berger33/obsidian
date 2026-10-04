@@ -1,0 +1,159 @@
+TOPIC: angr (angr/angr) — Framework Python de Análise Binária, Execução Simbólica/Concólica (SimulationManager, Claripy/Z3, PyVEX, CLE) e Decompilação
+SOURCES: https://raw.githubusercontent.com/angr/angr/master/README.md | https://docs.angr.io/en/latest/quickstart.html
+
+===NOTE===
+1051|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy|**`angr` (`angr/angr`)**: Arquitetura da Suíte de Análise Binária Multi-Arquitetura (**`CLE`, `archinfo`, `PyVEX`, `Claripy/Z3`, `SimEngine` e `Analyses`**)|Criado pelos pesquisadores do **Computer Security Lab da UC Santa Barbara (UCSB)**, **SEFCOM da Arizona State University (ASU)** e pela equipe de CTF **Shellphish** (`angr/angr`, licença BSD-2-Clause, escrito em Python 3 / C / Rust), o **`angr`** é o mais completo framework open-source de **Análise Binária Estática, Execução Simbólica Dinâmica (*Concolic Analysis*) e Decompilação Multi-Arquitetura**.|Como o `angr` consegue analisar binários de `x86`, `x86_64`, `ARM`, `AArch64`, `MIPS`, `PPC`, `RISC-V` e `JVM/Soot` com a mesma API Python? Porque sua arquitetura é dividida em 5 sub-bibliotecas modulares: **(1) `CLE` (*CLE Loads Everything*)** — carrega executáveis ELF, PE, Mach-O, CGC e blobs Raw de firmware em um espaço de endereçamento virtual; **(2) `archinfo`** — define registradores, convenções de chamada e endianness de cada CPU; **(3) `PyVEX` (e P-Code)** — traduz (*lifts*) o código de máquina nativo de qualquer arquitetura para uma **Representação Intermediária (IR VEX)** única; **(4) `Claripy`** — constrói Árvores de Sintaxe Abstrata (ASTs) de variáveis simbólicas (*Bitvectors*) e resolve restrições matemáticas via **Microsoft Z3 SMT Solver**; e **(5) `SimState` & `SimulationManager`** — executam e ramificam os caminhos do programa!|O ponto de entrada universal no `angr` é **`proj = angr.Project('/caminho/binario', auto_load_libs=False)`**!|```python
+import angr
+
+# Carregar um binario ELF no angr sem carregar bibliotecas compartilhadas externas (auto_load_libs=False) para evitar explosao de estados
+proj = angr.Project("/bin/true", auto_load_libs=False)
+print(f"Arquitetura: {proj.arch.name}, Entry Point: {hex(proj.entry)}, Main: {hex(proj.loader.main_object.min_addr)}")
+```|Por que quase sempre passamos **`auto_load_libs=False`** ao criar um `angr.Project` para execução simbólica? Porque se o `CLE` carregar a `libc.so.6` inteira e o `angr` entrar simbolicamente dentro do código real de `printf` ou `malloc` da glibc, o número de ramificações (`if/else`) explode exponencialmente (*State Explosion*)! Com `auto_load_libs=False`, o `angr` substitui automaticamente funções padrão da `libc` por resumos simbólicos rápidos em Python chamados **`SimProcedures`**!|Explore os atributos `proj.arch`, `proj.loader` e `proj.analyses` em uma sessão interativa do `ipython`.|angr-carregador-binarios-cle-shared-libraries-firmware-blobs-base-addr, angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid, ropper-busca-semantica-pyvex-z3-solver-restricoes-registradores
+
+===NOTE===
+1052|angr-carregador-binarios-cle-shared-libraries-firmware-blobs-base-addr|O Carregador **`CLE` (*CLE Loads Everything*)** do `angr`: Espaço de Endereçamento, Posição Independente (`PIE`), Bibliotecas Compartilhadas e **Firmware Raw (`Blob`)**|Antes de executar qualquer análise sobre um binário, o módulo **`proj.loader` (`CLE`)** do `angr` faz o papel do carregador do sistema operacional (`ld.so` no Linux ou `ntdll.dll` no Windows): ele mapeia segmentos ELF/PE/Mach-O na memória virtual, resolve símbolos de importação/exportação e aplica relocações no GOT/IAT.|Saber configurar o `CLE` em `angr.Project(..., main_opts={...})` evita dois erros muito comuns em engenharia reversa: **(1) Binários PIE (*Position-Independent Executable*)**: por padrão, o `CLE` mapeia binários ELF PIE de `64-bit` no endereço base **`0x400000`**; se você estiver comparando endereços com o **Ghidra** (que usa `0x100000` por padrão para PIE), passe **`main_opts={'base_addr': 0x100000}`** para que os endereços batam 100% entre o Ghidra e o seu script `angr`!|E **(2) Imagens de Firmware Bare-Metal / Bootloaders / ROMs IoT (`backend='blob'`)**: quando o arquivo é um dump bruto de memória Flash sem cabeçalho ELF, passe `main_opts={'backend': 'blob', 'arch': 'ARMEL', 'base_addr': 0x08000000, 'entry_point': 0x08000101}`!|```python
+import angr
+
+# Sincronizar o endereco base de um binario ELF PIE com o padrao do Ghidra (0x100000) e inspecionar objetos e simbolos carregados pelo CLE
+proj = angr.Project(
+    "/usr/bin/id",
+    main_opts={"base_addr": 0x100000},
+    auto_load_libs=False,
+)
+main_obj = proj.loader.main_object
+print("Objetos:", proj.loader.all_objects)
+print("Secoes:", [s.name for s in main_obj.sections])
+```|Observe a dica de ouro para dumps de firmware **ARM Thumb** no `CLE`: se o código no ponto de entrada do firmware usar o conjunto de instruções **Thumb (16/32 bits)**, lembre-se da convenção da arquitetura ARM de somar **`+1` (endereço ímpar, ex.: `0x08000101`)** no `entry_point` para que o `angr` / `PyVEX` saiba decodificar o bloco em modo Thumb!|Use `proj.loader.find_symbol('main')` para obter o objeto `Symbol` e consultar `sym.rebased_addr` sem precisar procurar o endereço manualmente.|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, ghidra-arquitetura-sleigh-pcode-projetos-colaborativos-ghidra-server, ropper-console-interativo-multi-binarios-cache-raw-firmware
+
+===NOTE===
+1053|angr-motor-solver-claripy-bitvectors-bvs-bvv-restricoes-z3|Álgebra Simbólica no `angr` com **`claripy`**: Bitvectors Simbólicos (**`BVS`** vs **`BVV`**), Árvores AST e Resolução de Restrições com **Z3 (`state.solver`)**|Qual é a diferença fundamental entre executar um programa normalmente na CPU e executá-lo simbolicamente no `angr`? Na CPU real, o registrador `rax` ou um buffer de entrada contém um valor concreto fixo (ex.: `0x41414141`); no `angr`, eles podem conter uma **Variável Matemática Simbólica (`BitVector Symbolic — BVS`)** gerenciada pela biblioteca **`claripy`**!|No `claripy`, você manipula dois tipos principais de Bitvectors: **(1) `claripy.BVV(valor, bits)` (*BitVector Value*)** — representa um número concreto com largura em bits exata (ex.: `claripy.BVV(0xdeadbeef, 32)`); e **(2) `claripy.BVS("nome", bits)` (*BitVector Symbolic*)** — representa uma incógnita de `N` bits (ex.: `flag = claripy.BVS("flag", 8 * 16)` para uma senha de 16 bytes!).|Quando o binário faz operações aritméticas ou bit-a-bit (`+`, `^`, `<<`, `*`) sobre `flag`, o `angr` constrói automaticamente uma **Árvore de Sintaxe Abstrata (AST)** da expressão; e quando o programa chega a um desvio condicional (`if (hash(flag) == 0x1337)`), o **`state.solver` (Z3)** resolve o sistema de equações (`state.solver.eval(flag, cast_to=bytes)`) para descobrir qual entrada satisfaz a condição!|```python
+import claripy
+
+# Criar um Bitvector Simbolico de 4 bytes (32 bits) com Claripy e usar o Solver Z3 para descobrir a entrada que satisfaz uma equacao XOR/ADD
+ solver = claripy.Solver()
+x = claripy.BVS("chave_secreta", 32)
+
+# Adicionar restricoes: cada byte deve ser ASCII imprimivel (0x20..0x7e) e ((x ^ 0x1337beef) + 0x10203040) == 0x628b0043
+for byte in x.chop(8):
+    solver.add(byte >= 0x20, byte <= 0x7E)
+solver.add(((x ^ 0x1337BEEF) + 0x10203040) == 0x628B0043)
+
+solucao = solver.eval(x, 1)[0].to_bytes(4, "big")
+print("Solucao encontrada pelo Claripy/Z3:", solucao)
+```|Repare no método **`x.chop(8)`** do exemplo acima: ele fatia um Bitvector simbólico de `N` bits em uma lista de Bitvectors de `8` bits (1 byte cada), permitindo adicionar facilmente restrições por caractere (como exigir que a entrada gerada contenha apenas caracteres ASCII alfanuméricos ou comece com o prefixo `CTF{`)!|Em um `SimState` do `angr`, o solver está sempre acessível em `state.solver` (com métodos `state.solver.add(...)`, `state.solver.satisfiable()`, `state.solver.eval(ast, cast_to=bytes)`).|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid, ropper-busca-semantica-pyvex-z3-solver-restricoes-registradores
+
+===NOTE===
+1054|angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid|Execução Simbólica com **`SimState`** e **`SimulationManager` (`simgr.explore`)**: Navegando até Estados Alvo (`find`) e Podando Caminhos Inválidos (`avoid`)|Como automatizar a descoberta de uma entrada (via `stdin`, `argv` ou memória) que faz um binário alcançar uma função específica (como uma rotina de autenticação bem-sucedida ou um ponto vulnerável de *buffer overflow*) sem cair nos ramos de erro?|O fluxo no `angr` segue três passos: **(1)** Criar um estado inicial com **`state = proj.factory.entry_state(...)`** (ou `blank_state(addr=...)` / `call_state(addr, arg1, ...)` para começar direto no meio de uma função!); **(2)** Criar um gerenciador de simulação com **`simgr = proj.factory.simulation_manager(state)`**; e **(3)** Executar **`simgr.explore(find=..., avoid=...)`**!|À medida que o `SimulationManager` avança bloco a bloco (`simgr.step()`), os estados são organizados em listas chamadas **`stashes`**: `simgr.active` (caminhos sendo explorados), `simgr.found` (caminhos que atingiram a condição `find`), `simgr.avoid` (caminhos podados por `avoid`), `simgr.deadended` (caminhos que terminaram `exit()`) e `simgr.unconstrained` (caminhos onde o ponteiro de instrução `rip`/`pc` se tornou simbólico — indicando um **Control-Flow Hijack / Buffer Overflow**!)!|```python
+import angr
+
+# Template padrao de exploracao simbolica com SimulationManager buscando um endereco/saida alvo e podando caminhos de falha
+proj = angr.Project("/bin/false", auto_load_libs=False)
+state = proj.factory.entry_state()
+simgr = proj.factory.simulation_manager(state)
+
+# find e avoid aceitam tanto enderecos (int/list) quanto funcoes lambda que inspecionam o stdout do estado (state.posix.dumps(1))!
+simgr.explore(
+    find=lambda s: b"Access Granted" in s.posix.dumps(1),
+    avoid=lambda s: b"Invalid" in s.posix.dumps(1),
+)
+
+if simgr.found:
+    win_state = simgr.found[0]
+    print("Entrada para stdin:", win_state.posix.dumps(0))
+```|Olhe que poder expressivo: passar `find=lambda s: b"Access Granted" in s.posix.dumps(1)` dispensa até mesmo ter que procurar no disassembler o endereço hexadecimal do bloco `if/else` de sucesso — o `angr` monitora o descritor de arquivo `1` (`stdout` simulado no POSIX) de cada estado e para assim que encontra um caminho que imprime a string desejada!|E para caça automática de vulnerabilidades de corrupção de memória (AEG — *Automatic Exploit Generation*), passe `save_unconstrained=True` no `simulation_manager`: qualquer estado que cair em `simgr.unconstrained` significa que a entrada simbólica conseguiu sobrescrever o endereço de retorno (`RIP`/`PC`)!|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-motor-solver-claripy-bitvectors-bvs-bvv-restricoes-z3, angr-hooks-simprocedures-substituicao-funcoes-anti-debug-crypto
+
+===NOTE===
+1055|angr-hooks-simprocedures-substituicao-funcoes-anti-debug-crypto|Engenharia Reversa com **`@proj.hook`** e **`angr.SimProcedure`**: Neutralizando `ptrace` Anti-Debug, `sleep`, Loops Pesados e Funções Criptográficas|Em binários do mundo real e malwares, se você rodar a execução simbólica cegamente desde o `main`, três obstáculos vão travar a análise: **(1) Armadilhas Anti-Debug** (como `ptrace(PTRACE_TRACEME, ...)` ou checagens de tempo `rdtsc`/`sleep(3600)`);|**(2) Funções de Hash/Criptografia unidirecionais** (como `SHA256`, `MD5` ou `AES`, que um SMT solver como o Z3 não consegue inverter matematicamente); e **(3) Funções complexas de bibliotecas estáticas ou C++**!|Para contornar esses obstáculos cirurgicamente, o `angr` oferece dois mecanismos de interceptação: **`@proj.hook(endereco, length=N)`** (substitui `N` bytes de instruções em um endereço específico por uma função Python `def meu_hook(state):`, podendo inclusive pular uma chamada `call` inteira!) e **`proj.hook_symbol('nome_funcao', MeuSimProcedure())`** (substitui qualquer função pelo seu nome ou endereço usando a classe **`angr.SimProcedure`**, que lida automaticamente com a convenção de chamada, argumentos e valor de retorno da arquitetura!)!|```python
+import angr
+import claripy
+
+proj = angr.Project("/bin/true", auto_load_libs=False)
+
+
+# Criar um SimProcedure que substitui ptrace() ou uma funcao de verificacao customizada retornando sempre 0 (sucesso)
+class BypassPtrace(angr.SimProcedure):
+    def run(self, request, pid, addr, data):
+        return claripy.BVV(0, self.arch.bits)
+
+
+proj.hook_symbol("ptrace", BypassPtrace())
+```|Quando você está analisando um binário *stripped* (sem tabela de símbolos, comum em firmwares IoT e malwares compilados estaticamente), o `angr` pode aplicar assinaturas **FLIRT** ou você pode ligar seus `SimProcedures` diretamente ao endereço da função descoberta no Ghidra via **`proj.hook(0x4012a0, angr.SIM_PROCEDURES['libc']['strcmp']())`**!|Use `@proj.hook(addr, length=5)` com corpo vazio (`pass`) quando quiser apenas transformar uma instrução `call check_debugger` (5 bytes no x86_64) em um `NOP` instantâneo sem modificar o arquivo binário em disco!|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid, frida-arquitetura-instrumentacao-dinamica-gum-v8-quickjs-modos
+
+===NOTE===
+1056|angr-analise-estatica-cfgfast-cfgemulated-decompilador-reaching-definitions|Análise Estática e Decompilação no `angr`: **`CFGFast` vs `CFGEmulated`**, Grafo de Dependências (**`DDG` / `ReachingDefinitions`**) e **`Decompiler`**|O `angr` não é apenas um motor de execução simbólica: o namespace **`proj.analyses`** contém uma suíte completa de **Análise Estática de Fluxo de Controle, Fluxo de Dados e Decompilação Programática** (que inclusive alimenta a interface gráfica oficial **`angr-management`**)!|O alicerce de todas as análises estáticas é a construção do **Control Flow Graph (CFG)**: **(1) `cfg = proj.analyses.CFGFast()`** — reconstrói o grafo de fluxo de controle e identifica todas as funções do binário em segundos usando heurísticas estáticas, resolução de tabelas de salto (*jump tables*) e análise leve de fluxo de dados (sendo a escolha recomendada em 95% dos casos!); e **(2) `proj.analyses.CFGEmulated()`** — usa execução simbólica forçada para resolver saltos indiretos complexos.|Uma vez construído o `CFGFast`, você pode rodar o **Decompilador em Python (`dec = proj.analyses.Decompiler(func, cfg=cfg.model)`)** para gerar código C estruturado de qualquer função, ou rodar **`proj.analyses.ReachingDefinitions`** para rastrear *taint analysis* estático (ex.: verificar se um parâmetro vindo da rede chega sem sanitização até o primeiro argumento de `system()`)!|```python
+import angr
+
+# Construir o Control Flow Graph rapido (CFGFast) e decompilar programaticamente a funcao 'main' para codigo C em Python!
+proj = angr.Project("/bin/true", auto_load_libs=False)
+cfg = proj.analyses.CFGFast(normalize=True)
+
+main_func = cfg.kb.functions.function(name="main") or cfg.kb.functions[proj.entry]
+decomp = proj.analyses.Decompiler(main_func, cfg=cfg.model)
+if decomp.codegen:
+    print(decomp.codegen.text)
+```|Por que ter um **Decompilador C acessível em 5 linhas de Python (`decomp.codegen.text`)** dentro do `angr` é revolucionário para pesquisa de vulnerabilidades em escala (e integração com LLMs de auditoria de código)? Porque você pode iterar automaticamente sobre milhares de funções de dezenas de binários de firmware, decompilar apenas as funções que chamam sinks perigosos (`strcpy`, `popen`, `sprintf`, `ioctl`) e analisar o código C resultante em lote!|Explore também `proj.analyses.BackwardSlice` e `proj.analyses.VariableRecoveryFast` na base de conhecimento `proj.kb`.|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, ghidra-headless-analyzer-analyzeheadless-automacao-lote-ci, pwndbg-integracao-decompiladores-decomp2dbg-ghidra-ida-binja
+
+===NOTE===
+1057|angr-mitigacao-explosao-estados-veritesting-dfs-length-limiter-symbion|Como Mitigar a **Explosão de Estados (*State Explosion*)** no `angr`: Técnicas de Exploração **`Veritesting`**, **`DFS`**, **`LoopSeer`**, **`LengthLimiter`** e **`LAZY_SOLVES`**|O maior desafio teórico e prático da Execução Simbólica é a **Explosão de Caminhos (*Path / State Explosion*)**: como o padrão do `SimulationManager` é explorar todos os caminhos em largura (*Breadth-First Search*), um simples loop de 64 iterações com um `if` simbólico dentro pode gerar $2^{64}$ estados e esgotar toda a memória RAM do servidor!|Para domar a explosão de estados em programas reais, o `angr` oferece **Técnicas de Exploração Pluggáveis (`simgr.use_technique(...)`)** e opções de estado (`angr.options`): **(1) `angr.exploration_techniques.Veritesting()`** — implementa o algoritmo da CMU que alterna automaticamente entre execução simbólica dinâmica (DSE) e execução simbólica estática (SSE, fundindo estados que divergem e reconvergem rapidamente em blocos `if/else` simples!); **(2) `angr.exploration_techniques.DFS()`** — explora em profundidade mantendo apenas 1 caminho ativo por vez em memória;|**(3) `angr.exploration_techniques.LoopSeer(cfg=cfg, bound=5)`** — limita quantas vezes um estado pode girar no mesmo loop!; e **(4) `angr.options.LAZY_SOLVES` + `ZERO_FILL_UNCONSTRAINED_MEMORY`**!|```python
+import angr
+
+proj = angr.Project("/bin/true", auto_load_libs=False)
+state = proj.factory.entry_state(
+    add_options={
+        angr.options.ZERO_FILL_UNCONSTRAINED_MEMORY,
+        angr.options.ZERO_FILL_UNCONSTRAINED_REGISTERS,
+    }
+)
+simgr = proj.factory.simulation_manager(state)
+
+# Ativar Veritesting (fusao estatica de ramificacoes simples) e DFS para controlar o consumo de memoria RAM
+simgr.use_technique(angr.exploration_techniques.Veritesting())
+simgr.use_technique(angr.exploration_techniques.DFS())
+print("Tecnicas ativas no SimulationManager:", simgr._techniques)
+```|Dica obrigatória de higiene no `angr`: adicione sempre **`angr.options.ZERO_FILL_UNCONSTRAINED_MEMORY`** e **`angr.options.ZERO_FILL_UNCONSTRAINED_REGISTERS`** ao criar um estado inicial! Isso elimina os avisos `WARNING | angr.storage.memory_mixins... | Filling memory/register with unconstrained symbolic bytes` e evita criar variáveis simbólicas desnecessárias para registradores não inicializados.|Outra técnica avançada é o **`Symbion`**: ele executa o programa concretamente em um debugger real (**GDB / Pwndbg** ou **QEMU**) até a função que você quer analisar, tira um snapshot concreto do estado da memória e transfere apenas aquele ponto para o `angr`!|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid, pwndbg-arquitetura-debugger-gdb-lldb-capstone-unicorn-contexto
+
+===NOTE===
+1058|angr-execucao-concolica-hibrida-fuzzing-driller-afl-qiling-unicorn|Execução Concólica Híbrida e Fuzzing Assistido por Solver (**`Driller`**) & Engine Nativa **Unicorn (`angr.options.UNICORN`)**|O segundo artigo acadêmico citado na documentação oficial do `angr` (`quickstart.html`) é o famoso paper **`Driller: Augmenting Fuzzing Through Selective Symbolic Execution` (NDSS 2016)** da UCSB/Shellphish.|Por que combinar **Fuzzing Baseado em Cobertura (AFL++)** com **Execução Simbólica Seletiva (`angr`)**? Porque um *fuzzer* é extremamente rápido (milhares de execuções por segundo) para explorar desvios simples (`if (x > 10)`), mas **fica completamente travado quando encontra uma checagem de "Número Mágico" ou Checksum de 32/64 bits (`if (input_int == 0x7f454c46)`)** — pois a chance de adivinhar 4 bytes exatos no sorteio aleatório é de $1$ em $4$ bilhões!|Na arquitetura **Driller / Execução Concólica**, quando o fuzzer trava sem conseguir descobrir novos caminhos, ele entrega uma das entradas concretas atuais para o `angr`; o `angr` traça exatamente aquele caminho concreto (`Preconstrainer`), inverte matematicamente no **Z3** a condição do `if (input_int == 0x7f454c46)` que bloqueava o fuzzer, gera uma nova semente válida e a devolve para o fuzzer continuar!|```python
+import angr
+
+# Acelerar a execucao de trechos concretos no angr habilitando o conjunto de opcoes nativas da engine Unicorn (angr.options.unicorn)
+proj = angr.Project("/bin/true", auto_load_libs=False)
+state = proj.factory.entry_state(add_options=angr.options.unicorn)
+simgr = proj.factory.simulation_manager(state)
+simgr.run()
+print("Estados finalizados com aceleracao Unicorn:", len(simgr.deadended))
+```|Repare em **`add_options=angr.options.unicorn`** no código acima: sempre que um `SimState` executa instruções que operam apenas sobre dados concretos (como loops de inicialização ou descompactação), o `angr` transfere a execução daquele trecho para o emulador C/JIT **Unicorn Engine** em velocidade nativa e só volta para o interpretador simbólico VEX na primeira instrução que tocar em um byte simbólico!|Essa combinação `Unicorn (para dados concretos) + PyVEX/Claripy (apenas para dados simbólicos)` acelera análises reais em mais de 10x a 50x.|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-mitigacao-explosao-estados-veritesting-dfs-length-limiter-symbion, pwndbg-arquitetura-debugger-gdb-lldb-capstone-unicorn-contexto
+
+===NOTE===
+1059|angr-auditoria-firmware-iot-firmalice-authentication-bypass-backdoors|Auditoria de Firmware IoT com `angr` (**`Firmalice`**): Detecção Automática de **Backdoors e Authentication Bypass** em Binários Embarcados|O terceiro paper fundador citado na documentação oficial do `angr` (`quickstart.html`) é **`Firmalice — Automatic Detection of Authentication Bypass Vulnerabilities in Binary Firmware` (NDSS 2015)**.|Qual é a ideia central por trás do modelo *Firmalice* no `angr`? Em roteadores, câmeras IP, CLPs industriais e dispositivos IoT, fabricantes frequentemente deixam contas de manutenção ocultas, senhas mestre *hardcoded* ou caminhos lógicos onde uma requisição HTTP específica alcança uma **Operação Privilegiada** (ex.: executar comandos via `system()`, abrir um shell telnet ou alterar configurações administrativas) sem passar por uma validação real de credenciais do banco de usuários!|Com o `angr`, você modela uma **Operação Privilegiada como o endereço alvo (`find=addr_operacao_privilegiada`)**, inicia um `call_state` ou `blank_state` na função de tratamento de requisições do servidor web embarcado (`httpd` / `goahead` / `boa`) e pede ao `SimulationManager` para encontrar uma entrada simbólica que alcance a operação privilegiada: se o solver Z3 produzir uma string constante determinística (ex.: `User-Agent: xmlset_roodkcableoj28840ybtide`), você acabou de descobrir um backdoor *hardcoded* no firmware!|```python
+import angr
+import claripy
+
+# Exemplo de setup para analisar uma funcao especifica de autenticacao de firmware IoT com call_state e argumentos simbolicos
+proj = angr.Project("/bin/true", auto_load_libs=False)
+senha_ptr = 0x600000
+senha_sym = claripy.BVS("password_input", 8 * 16)
+
+# Iniciar estado diretamente no endereco de uma funcao alvo passando o ponteiro para o buffer simbolico no 1o argumento
+state = proj.factory.call_state(proj.entry, senha_ptr)
+state.memory.store(senha_ptr, senha_sym)
+print("Estado configurado no endereco:", hex(state.addr))
+```|Por que usar **`proj.factory.call_state(addr_funcao, arg1, arg2)`** é a técnica preferida ao auditar binários gigantes de firmware IoT (como um binário `httpd` de 4 MB em arquitetura MIPS ou ARM)? Porque em vez de tentar simular toda a inicialização de hardware, NVRAM e sockets desde o `main()`, você começa a execução simbólica **diretamente no endereço da função suspeita** (`addr_funcao`), passando ponteiros para buffers simbólicos nos argumentos!|Combine a triagem estática no **Ghidra** (para localizar os endereços das funções de parse de autenticação) com o `call_state` do `angr` (para resolver as restrições exatas de entrada).|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-carregador-binarios-cle-shared-libraries-firmware-blobs-base-addr, ghidra-engenharia-reversa-firmware-iot-raw-binaries-svd-loader
+
+===NOTE===
+1060|angr-descoberta-vulnerabilidades-memoria-unconstrained-bof-aeg-rop|Caça a Corrupção de Memória e **Exploit Generation (`save_unconstrained=True` & `angrop`)**: Encontrando e Explorando **Stack Buffer Overflows** com `angr`|Como usar o `angr` para encontrar automaticamente uma vulnerabilidade de **Stack Buffer Overflow** em um binário C/C++ e gerar o payload exato que assume o controle do ponteiro de instrução (`RIP`/`EIP`/`PC`)?|Quando uma função vulnerável (como `gets`, `strcpy`, `sprintf` ou um `read(0, buf, 512)` sobre um buffer local de 64 bytes) permite sobrescrever o endereço de retorno salvo na pilha, ao executar a instrução `ret`, a CPU carrega os bytes simbólicos da sua entrada diretamente para dentro do registrador **`state.regs.rip` (`state.regs.pc`)**!|Ao configurar o `SimulationManager` com **`simgr = proj.factory.simulation_manager(state, save_unconstrained=True)`**, assim que o `angr` detecta que o `pc` do estado contém bits simbólicos não-restritos, ele move esse estado para a lista **`simgr.unconstrained`**! A partir daí, basta adicionar a restrição **`unconstrained_state.solver.add(unconstrained_state.regs.pc == endereco_alvo)`** e avaliar `dumps(0)` para que o Z3 calcule o offset exato de padding + todas as transformações nos bytes até apontar o `RIP` para `endereco_alvo`!|```python
+import angr
+
+# Configurar o SimulationManager com save_unconstrained=True para capturar estados onde o ponteiro de instrucao (PC/RIP) se torna simbolico
+proj = angr.Project("/bin/true", auto_load_libs=False)
+state = proj.factory.entry_state(
+    add_options={
+        angr.options.ZERO_FILL_UNCONSTRAINED_MEMORY,
+        angr.options.ZERO_FILL_UNCONSTRAINED_REGISTERS,
+    }
+)
+simgr = proj.factory.simulation_manager(state, save_unconstrained=True)
+
+# Em um binario vulneravel a buffer overflow, simgr.unconstrained recebera o estado no momento do 'ret' corrompido:
+print("Monitoramento de estados unconstrained ativo:", simgr.unconstrained)
+```|Além disso, o ecossistema oficial do `angr` inclui o pacote complementar **`angrop` (`angr/angrop`)**, que adiciona `proj.analyses.ROP()` sobre o motor simbólico do `angr` para encontrar gadgets e sintetizar cadeias ROP completas automaticamente usando resolução de restrições SMT!|Compare a abordagem simbólica do `angrop` / `Ropper --semantic` com o debug dinâmico no **Pwndbg** para validar cada etapa do payload.|angr-arquitetura-analise-binaria-execucao-simbolica-cle-pyvex-claripy, angr-execucao-simbolica-simstate-simulation-manager-explore-find-avoid, ropper-geracao-automatica-rop-chains-execve-mprotect-ret2libc

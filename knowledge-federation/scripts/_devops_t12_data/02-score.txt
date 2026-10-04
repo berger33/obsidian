@@ -1,0 +1,107 @@
+1111|score-especificacao-workload-platform-agnostic-score-yaml|Score: Especificação de Workload Agnóstica de Plataforma (score.yaml v1b1)|Score é uma especificação open-source de workload (CNCF Sandbox, `apiVersion: score.dev/v1b1`) centrada no desenvolvedor que descreve em um único arquivo `score.yaml` os containers, portas de serviço e dependências de recursos exigidos por uma aplicação, de forma independente da plataforma de execução.|Quando desenvolvedores usam Docker Compose localmente e Kubernetes ou Helm em ambientes remotos, manter duas ou mais árvores de configuração em sincronia gera deriva de variáveis de ambiente, portas divergentes e alta sobrecarga cognitiva.|O arquivo `score.yaml` é versionado junto ao código-fonte da aplicação e declara `metadata.name`, `containers` (imagem, variáveis interpoladas, arquivos, volumes, probes e limites), `service.ports` e `resources` (como `postgres`, `redis`, `dns`, `route`, `s3`). Implementações de referência como `score-compose` e `score-k8s` traduzem esse mesmo contrato para a plataforma alvo.|```yaml
+apiVersion: score.dev/v1b1
+metadata:
+  name: catalog-api
+containers:
+  web:
+    image: ghcr.io/org/catalog-api:1.4.0
+    variables:
+      DATABASE_URL: "postgresql://${resources.db.username}:${resources.db.password}@${resources.db.host}:${resources.db.port}/${resources.db.name}"
+service:
+  ports:
+    http:
+      port: 8080
+resources:
+  db:
+    type: postgres
+```|Tentar embutir construções específicas de um único orquestrador (como anotações proprietárias de Ingress Controller ou afinidades de nó do Kubernetes) diretamente no `score.yaml` viola a portabilidade entre ambientes locais e remotos.|Valide o `score.yaml` contra o schema `score.dev/v1b1` testando a geração simultânea com `score-compose generate` e `score-k8s generate` no pipeline de CI.|https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md
+1112|score-resources-dependencias-declarativas-interpolacao-outputs|Score: Declaração de Recursos Dependentes e Interpolação de Outputs (${resources.*})|Na especificação Score, a seção `resources` permite ao desenvolvedor declarar dependências abstratas (`type`, `class`, `id`, `params`, `metadata`), cujos atributos resolvidos pelo ambiente são injetados nos containers via placeholders `${resources.<nome>.<atributo>}`.|Hardcodar endereços de banco de dados, nomes de buckets S3 ou credenciais em arquivos de configuração da aplicação acopla o código a um ambiente específico e aumenta o risco de vazamento de segredos.|O desenvolvedor declara apenas o que precisa (por exemplo, `db: { type: postgres }` e `cache: { type: redis }`) e referencia `${resources.db.host}`, `${resources.db.port}` ou `${resources.cache.password}` em `containers.*.variables` ou `containers.*.files`. Cabe ao provisionador da implementação Score no ambiente alvo instanciar ou vincular o recurso real e fornecer os outputs correspondentes.|```yaml
+apiVersion: score.dev/v1b1
+metadata:
+  name: payment-worker
+containers:
+  worker:
+    image: ghcr.io/org/payment-worker:2.1.0
+    variables:
+      REDIS_ADDR: "${resources.cache.host}:${resources.cache.port}"
+      S3_BUCKET: "${resources.receipts.bucket}"
+resources:
+  cache:
+    type: redis
+    class: ha
+  receipts:
+    type: s3
+```|Referenciar um atributo de output (como `${resources.db.connection_uri}`) que não faz parte do contrato padrão do provisionador para aquele `type` causa falha de resolução durante o comando `generate`.|Consulte a tabela de outputs suportados pelo provisionador (`host`, `port`, `name`, `username`, `password`) e valide a resolução completa dos placeholders na saída gerada.|https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md
+1113|score-compose-desenvolvimento-local-docker-compose-generation|Score: score-compose para Geração de Ambientes Locais Docker Compose|O `score-compose` é a implementação de referência da especificação Score para Docker Compose, convertendo um ou mais arquivos `score.yaml` em um `compose.yaml` completo com containers de aplicação e serviços anexados provisionados automaticamente para desenvolvimento local.|Configurar manualmente containers de Postgres, Redis, MinIO, RabbitMQ e redes compartilhadas no Docker Compose para cada microsserviço consome tempo e frequentemente diverge das variáveis de ambiente que a aplicação receberá no Kubernetes.|O fluxo utiliza `score-compose init` para criar o diretório de estado `.score-compose/` com os provisionadores padrão e `score-compose generate score.yaml` para resolver os recursos e produzir o `compose.yaml` pronto para `docker compose up`. Ele suporta nativamente provisionadores locais para `postgres`, `mysql`, `redis`, `mongodb`, `amqp`, `kafka-topic`, `s3`, `elasticsearch`, `dns` e `route`.|```bash
+score-compose init --no-sample
+score-compose generate score.yaml --output compose.yaml
+docker compose -f compose.yaml config
+docker compose -f compose.yaml up -d
+```|Commitar o diretório `.score-compose/` no controle de versão público expõe o arquivo `state.yaml` local, que pode conter senhas geradas automaticamente e caminhos absolutos da máquina do desenvolvedor.|Adicione `.score-compose/` ao `.gitignore` e verifique com `docker compose config` se todos os serviços e variáveis de ambiente foram renderizados corretamente.|https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://github.com/score-spec/score-compose
+1114|score-k8s-geracao-manifestos-kubernetes-init-generate|Score: score-k8s para Tradução de Workloads em Manifestos Kubernetes|O `score-k8s` é a implementação de referência do Score para Kubernetes, traduzindo especificações `score.yaml` em um arquivo `manifests.yaml` contendo `Deployments`, `Services`, `Secrets`, `ConfigMaps` e recursos de dependências prontos para `kubectl apply`.|Escrever manifestos Kubernetes completos do zero para cada serviço exige repetir dezenas de linhas de boilerplate de seletores, portas, volumes e injeção de segredos que poderiam ser derivadas deterministicamente de uma especificação concisa.|Após inicializar o diretório de estado local (`.score-k8s/`) com `score-k8s init`, o comando `score-k8s generate score.yaml` avalia os containers, portas, probes e recursos de todos os workloads adicionados ao projeto, executa os provisionadores correspondentes e consolida a saída em `manifests.yaml`.|```bash
+score-k8s init --no-sample
+score-k8s generate score.yaml -o manifests.yaml
+kubectl apply --dry-run=client -f manifests.yaml
+```|Versionar o diretório `.score-k8s/` em repositórios Git compartilhados sem criptografia expõe dados sensíveis e segredos brutos persistidos no estado de geração dos provisionadores.|Ignore `.score-k8s/` no Git, execute `score-k8s generate` em pipelines controlados e valide o `manifests.yaml` resultante com `kubectl apply --dry-run=server`.|https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://github.com/score-spec/score-k8s
+1115|score-custom-provisioners-template-cmd-extensibilidade-plataforma|Score: Provisionadores Customizados (template:// e cmd://) em score-compose e score-k8s|Tanto `score-compose` quanto `score-k8s` utilizam um sistema extensível de provisionadores em arquivos `*.provisioners.yaml` que mapeiam recursos declarados (`type`, `class`, `id`) para geradores baseados em templates Go (`template://`) ou execução de comandos externos (`cmd://`).|Em clusters de produção, um recurso `type: postgres` não deve criar um Pod estático de brinquedo, mas sim emitir uma CRD do CloudNativePG, Crossplane ou Kratix Promise aprovada pela equipe de plataforma.|Os provisionadores são carregados em ordem de precedência com política first-match. Equipes de plataforma distribuem arquivos de provisionadores corporativos importados via `score-k8s init --provisioners <uri>`. Quando o workload pede `type: postgres` com `class: prod`, o provisionador customizado gera a CRD do operador do cluster e devolve os outputs (`host`, `port`, referências de `Secret`) para interpolação no Deployment.|```bash
+score-k8s init --no-sample \
+  --provisioners https://raw.githubusercontent.com/org/platform-provisioners/main/cnpg-postgres.provisioners.yaml
+score-k8s provisioners list
+score-k8s generate score.yaml -o manifests.yaml
+```|Escrever um provisionador customizado que retorna nomes de campos de output diferentes do provisionador default (por exemplo, `db_host` em vez de `host`) quebra a portabilidade do `score.yaml` entre `score-compose` e `score-k8s`.|Mantenha os mesmos nomes de outputs (`host`, `port`, `name`, `username`, `password`) entre os provisionadores locais e os de produção, verificando a lista ativa com `score-k8s provisioners list`.|https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md
+1116|score-containers-files-volumes-variables-probes-limits|Score: Configuração de Containers (Variables, Files, Volumes, Probes e Resources)|Dentro da seção `containers` do `score.yaml`, a especificação Score suporta definição detalhada de imagem, comando/argumentos, variáveis de ambiente, montagem de arquivos de configuração com interpolação, volumes persistentes, `livenessProbe`/`readinessProbe` HTTP e requests/limits de CPU e memória.|Aplicações reais frequentemente precisam montar arquivos de configuração estruturados (JSON/YAML/INI) ou definir healthchecks HTTP e limites de recursos que funcionem de maneira coerente sem reescrever `ConfigMaps` manualmente.|Enquanto o `score-k8s` traduz integralmente `resources.requests`, `resources.limits`, `livenessProbe.httpGet` e `readinessProbe.httpGet` em campos nativos do Pod Kubernetes, o `score-compose` valida esses campos contra o schema mas ignora limites e probes HTTP que não possuem equivalência confiável no Docker Compose local, preservando a execução do workload sem erro.|```yaml
+apiVersion: score.dev/v1b1
+metadata:
+  name: billing-service
+containers:
+  app:
+    image: ghcr.io/org/billing:3.0.1
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "512Mi"
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+```|Assumir que `livenessProbe.httpGet` e `resources.limits` declarados no `score.yaml` serão aplicados pelo Docker Compose local durante testes com `score-compose` leva a falsas suposições sobre comportamento de OOM ou reinício automático no laptop.|Teste os limites de memória e as probes HTTP geradas pelo `score-k8s` em um cluster efêmero (KinD/k3d) além do teste funcional em `score-compose`.|https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md
+1117|score-shared-resources-id-multi-workload-communication|Score: Recursos Compartilhados entre Múltiplos Workloads (id e service-port)|A especificação Score permite que múltiplos workloads compartilhem a mesma instância de um recurso (como um banco de dados ou tópico Kafka) definindo um identificador comum `id` no bloco `resources`, ou descubram portas de outros workloads via recurso `type: service-port`.|Em arquiteturas com uma API web e um worker assíncrono em serviços separados, ambos precisam acessar a mesma fila AMQP ou o mesmo banco de dados sem que os provisionadores criem duas instâncias isoladas.|Ao atribuir o mesmo campo `id` (por exemplo, `id: shared-orders-db`) em dois arquivos `score.yaml` processados no mesmo projeto `score-compose` ou `score-k8s`, o motor de estado resolve o recurso uma única vez e injeta os mesmos dados de conexão em ambos os workloads. Para chamadas diretas entre serviços, o recurso `type: service-port` recebe `params: { workload: target-svc, port: http }` e expõe `hostname` e `port`.|```yaml
+resources:
+  orders-queue:
+    type: amqp
+    id: shared-orders-rabbitmq
+  catalog-endpoint:
+    type: service-port
+    params:
+      workload: catalog-api
+      port: http
+```|Omitir o campo `id` esperando que dois recursos com o mesmo nome de chave (`db`) em arquivos `score.yaml` distintos sejam compartilhados faz o Score provisionar instâncias separadas por escopo de workload.|Passe ambos os arquivos `score.yaml` para `score-compose generate` ou `score-k8s generate` e confirme no manifesto final que apenas uma instância do recurso com `id` compartilhado foi criada.|https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md
+1118|score-dns-route-exposicao-http-roteamento-ingress|Score: Exposição de Tráfego Externo com Recursos dns e route|No Score, a exposição de rotas HTTP externas para um workload é modelada combinando um recurso `type: dns` (que provisiona ou aloca um hostname) com um recurso `type: route` que vincula `host`, `path` e a `port` do serviço.|Configurar roteamento HTTP em Docker Compose (via proxy reverso local) e no Kubernetes (via `Ingress` ou Gateway API `HTTPRoute`) exige sintaxes radicalmente diferentes se o desenvolvedor tiver que escrever os manifestos diretamente.|No `score.yaml`, o recurso `dns` expõe `${resources.dns.host}`, que é referenciado nos parâmetros do recurso `route` (`host: ${resources.dns.host}`, `path: /`, `port: 8080`). No `score-compose`, isso provisiona roteamento local acessível no navegador; no `score-k8s`, gera os objetos de roteamento Kubernetes correspondentes ao controlador do cluster.|```yaml
+service:
+  ports:
+    web:
+      port: 8080
+resources:
+  dns:
+    type: dns
+  route:
+    type: route
+    params:
+      host: ${resources.dns.host}
+      path: /api
+      port: 8080
+```|Apontar `params.port` no recurso `route` para uma porta numérica que não foi declarada na seção `service.ports` do workload causa falha de validação ou cria regras de roteamento apontando para um Service inexistente.|Verifique se o valor de `params.port` em `route` coincide exatamente com uma porta declarada em `service.ports` e teste o roteamento HTTP após o deploy.|https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://raw.githubusercontent.com/score-spec/score-compose/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md
+1119|score-k8s-patch-templates-post-processing-customizacao|Score: Pós-Processamento de Manifestos no score-k8s com --patch-templates|O `score-k8s` permite ajustar ou enriquecer os manifestos Kubernetes gerados sem alterar a especificação `score.yaml` do desenvolvedor por meio da flag `--patch-templates` durante o `score-k8s init`.|Equipes de plataforma e segurança frequentemente precisam injetar `securityContext` restritivo, labels de centro de custo, sidecars de malha de serviço ou `imagePullSecrets` em todos os Deployments gerados, sem poluir o arquivo `score.yaml`.|Cada arquivo passado em `--patch-templates` é armazenado no projeto e avaliado como um `text/template` Go que recebe `.Manifests` e `.Workloads` e emite um array YAML/JSON de operações de patch (`op: set` ou `op: delete`, `patch` com caminho separado por pontos, `value` e `description`).|```bash
+score-k8s init --no-sample \
+  --patch-templates ./platform-security-patches.tpl
+score-k8s generate score.yaml --image ghcr.io/org/catalog-api:1.4.2 -o manifests.yaml
+```|Usar `--patch-templates` para sobrescrever portas ou variáveis de negócio declaradas pelo desenvolvedor no `score.yaml` cria comportamento oculto que diverge do que foi testado localmente com `score-compose`.|Restrinja os templates de patch a metadados operacionais, segurança e governança de cluster, revisando os logs de descrição de cada patch aplicado durante `score-k8s generate`.|https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://github.com/score-spec/score-k8s
+1120|score-fluxo-gitops-integracao-kratix-argocd-humanitec|Score: Integração do Score em Fluxos GitOps, Kratix Promises e Orquestradores de Plataforma|Por ser uma especificação puramente declarativa e unidirecional, o `score.yaml` funciona como a interface de entrada ideal para pipelines CI/CD que geram manifestos para Argo CD/Flux, Promises do Kratix ou plataformas baseadas em Score.|Quando cada squad estrutura seu repositório de forma diferente, a plataforma não consegue automatizar deploys padronizados nem evoluir os operadores de infraestrutura sem quebrar os repositórios das aplicações.|No pipeline de CI da aplicação, o desenvolvedor altera apenas o código e o `score.yaml`; o job de build compila a imagem de container, executa `score-k8s generate score.yaml --image <nova-tag>` (com os provisionadores e patch templates oficiais da plataforma) e faz commit do `manifests.yaml` resultante no repositório GitOps ou submete uma Resource Request para uma Promise do Kratix.|```bash
+# Exemplo em pipeline CI antes do commit GitOps:
+score-k8s init --no-sample --provisioners https://platform.internal/provisioners.yaml
+score-k8s generate score.yaml --image ghcr.io/org/order-api:${GIT_SHA} -o dist/manifests.yaml
+kubectl kubeconform dist/manifests.yaml
+```|Permitir que desenvolvedores editem manualmente o `manifests.yaml` gerado pelo `score-k8s` no repositório GitOps faz com que as alterações manuais sejam sobrescritas na próxima execução automatizada do pipeline.|Trate `manifests.yaml` e `compose.yaml` como artefatos gerados de forma determinística a partir do `score.yaml`, bloqueando edições manuais via revisão de CI.|https://raw.githubusercontent.com/score-spec/spec/main/README.md;https://raw.githubusercontent.com/score-spec/score-k8s/main/README.md;https://raw.githubusercontent.com/score-spec/score-compose/main/README.md

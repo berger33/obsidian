@@ -1,0 +1,158 @@
+=== NOTE: 851 | buildpacks-cli-pack-build-lifecycle-builders-oci | Cloud Native Buildpacks (pack): transformação de código-fonte em imagens OCI sem Dockerfile ===
+ONE_LINER: O `pack` (`buildpacks/pack`, projeto CNCF Incubating) é a implementação CLI da especificação Platform Interface dos Cloud Native Buildpacks (`buildpacks.io`), convertendo código-fonte diretamente em imagens de container OCI prontas para execução sem precisar escrever um `Dockerfile`.
+IMPORTANCE: Manter centenas de `Dockerfile`s manuais espalhados por repositórios de microsserviços leva a imagens desatualizadas, camadas mal ordenadas, execução como `root` e dificuldade em aplicar patches de segurança na imagem base do SO. Segundo o README oficial do `pack` e a especificação `platform.md`, os Cloud Native Buildpacks padronizam a construção de imagens para desenvolvedores de aplicações, autores de buildpacks e operadores de plataforma.
+HOW_IT_WORKS: Quando o desenvolvedor executa **`pack build <nome-da-imagem> --builder <builder-image>`**, a plataforma (`pack`) inicia um ambiente de build containerizado baseado na **build image** do builder selecionado e orquestra o **lifecycle** dos Cloud Native Buildpacks sobre o código-fonte da aplicação. Os buildpacks detectam automaticamente a linguagem e o framework (Java, Node.js, Python, Go, .NET, Ruby, Rust), baixam os runtimes e dependências em camadas cacheadas finas e exportam uma **app image** OCI estendendo a **run image** enxuta com as **launch layers**, **app layers** e o binário **launcher**.
+EXAMPLE:
+```bash
+# Construir uma imagem OCI a partir do código-fonte atual usando o builder oficial Paketo Base sem Dockerfile
+pack build minha-app:v1.0.0 --builder paketobuildpacks/builder-jammy-base
+```
+TRADE_OFFS: Como os Cloud Native Buildpacks constroem imagens de forma determinística e focada em segurança (rodando como usuário não-root `cnb` e usando imagens `run` mínimas sem gerenciadores de pacotes desnecessários), aplicações legadas que tentam escrever arquivos arbitrários fora do diretório de trabalho ou instalar pacotes `apt` em tempo de inicialização do container exigem ajuste ou uso de **Image Extensions** (`extender`).
+VERIFY: Execute `pack inspect <nome-da-imagem>` após o `pack build` para visualizar a lista exata de buildpacks que participaram da imagem, a `run image` base, os processos de inicialização e as camadas exportadas.
+LINKS: [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[buildpacks-conceitos-builder-build-image-run-image-launcher]] | [[ko-construtor-imagens-containers-go-sem-docker]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 852 | buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter | Cloud Native Buildpacks: as fases do Lifecycle (analyzer, detector, restorer, extender, builder e exporter) ===
+ONE_LINER: Conforme a especificação Platform Interface (`platform.md`, Platform API `0.15`), a operação de build dos Cloud Native Buildpacks é executada pelo **lifecycle** em fases ordenadas: `detector`, `analyzer`, `restorer`, `extender` (opcional), `builder` e `exporter` (ou consolidada no binário `creator`).
+IMPORTANCE: Diferentemente de um `Dockerfile` que executa scripts imperativos cegos linha a linha, o lifecycle dos Cloud Native Buildpacks separa a inspeção de metadados de registries, a detecção de dependências, a restauração de cache e a exportação de camadas OCI, permitindo reutilizar camadas em cache mesmo sem baixá-las quando já existem no registry remoto. A especificação oficial `buildpacks/spec/platform.md` define formalmente cada fase.
+HOW_IT_WORKS: Durante uma operação `Build`, a plataforma executa os binários do lifecycle (ou o binário único **`creator`** quando confiável): (1) **`detector`**: executa a fase `bin/detect` dos buildpacks contra o código-fonte para definir o grupo ordenado de buildpacks (`group.toml`) e o plano de build (`plan.toml`); (2) **`analyzer`**: consulta a imagem anterior e o cache para validar metadados (`analyzed.toml`); (3) **`restorer`**: restaura camadas de cache para `<layers>`; (4) **`extender` (opcional)**: aplica Image Extensions (ex.: `Dockerfile`s gerados por extensões) para estender a imagem de build ou de run; (5) **`builder`**: executa `bin/build` de cada buildpack aprovado no grupo; e (6) **`exporter`**: monta a **app image** final sobre a **run image**, grava `report.toml` e adiciona as labels JSON `io.buildpacks.*`.
+EXAMPLE:
+```bash
+# Executar pack build com logs detalhados (--verbose) para acompanhar a saída de cada fase do lifecycle (detector -> analyzer -> restorer -> builder -> exporter)
+pack build minha-app:v1.0.0 --builder paketobuildpacks/builder-jammy-base --verbose
+```
+TRADE_OFFS: Quando a plataforma executa o binário consolidado **`creator`** (em vez de invocar containers separados para `detector`, `analyzer`, `restorer`, `builder` e `exporter`), o build é mais rápido por evitar o overhead de iniciar 5 containers sequenciais; contudo, quando há **Image Extensions** (`extender`) ou em plataformas multi-tenant não confiáveis onde as credenciais do registry não devem estar acessíveis durante a execução de `detector`/`builder`, a plataforma deve executar as fases separadamente em containers distintos.
+VERIFY: Inspecione as labels da imagem gerada com `docker inspect minha-app:v1.0.0 --format '{{index .Config.Labels "io.buildpacks.lifecycle.metadata"}}' | jq .` para verificar os metadados gravados pelo `exporter`.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-conceitos-builder-build-image-run-image-launcher]] | [[buildpacks-operacao-rebase-atualizacao-rapida-run-image]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 853 | buildpacks-conceitos-builder-build-image-run-image-launcher | Cloud Native Buildpacks: arquitetura de Builder, Build Image, Run Image, Launch Layers e processo Launcher ===
+ONE_LINER: Na terminologia oficial da especificação CNB (`platform.md`), um **Builder** empacota os buildpacks, o lifecycle e a **Build Image**, enquanto a **App Image** final combina a **Run Image** com as **Launch Layers**, **App Layers** e o executável **Launcher**.
+IMPORTANCE: Separar estritamente a imagem onde o código é compilado (**Build Image**, que contém compiladores, headers e ferramentas de build) da imagem onde a aplicação roda em produção (**Run Image**, enxuta e endurecida) garante o benefício de multi-stage builds automaticamente, enquanto o **Launcher** gerencia variáveis de ambiente e múltiplos tipos de processos em runtime.
+HOW_IT_WORKS: Conforme a seção `Terminology` de `platform.md`: (1) **Build Image**: imagem OCI que serve como base para o ambiente containerizado de compilação (`build environment`); (2) **Run Image**: imagem OCI que serve como base limpa para a imagem final da aplicação; (3) **Builder**: imagem OCI que agrupa um conjunto ordenado de buildpacks (`order.toml`), o binário do lifecycle, a Build Image e a referência para a Run Image; (4) **Launch Layer** e **App Layer**: camadas na imagem final criadas a partir de `<layers>/<layer>` (ex.: JRE, `node_modules`) e do diretório `<app>`; e (5) **Launcher**: executável do lifecycle empacotado na `launcher layer` da **App Image** como `ENTRYPOINT`, responsável por configurar o ambiente de inicialização (`Launch Environment`) e iniciar o processo padrão (`web`, `worker`, etc.) em tempo de execução.
+EXAMPLE:
+```bash
+# Inspecionar a composição interna de um Builder (buildpacks incluídos, ordem de detecção, lifecycle e run images)
+pack builder inspect paketobuildpacks/builder-jammy-base
+```
+TRADE_OFFS: Como o `ENTRYPOINT` da imagem gerada por Cloud Native Buildpacks é o binário **`/cnb/lifecycle/launcher`** (e não `/bin/sh`), ao sobrescrever o comando de inicialização no Docker ou no Kubernetes (`command` / `args`), o `launcher` interpreta os argumentos de acordo com o perfil de processo configurado pelos buildpacks; para descobrir quais tipos de processos (`process types`) foram exportados pela imagem, utilize `pack inspect <imagem>`.
+VERIFY: Execute `pack builder suggest` para listar os builders oficiais recomendados (Paketo, Google, Heroku) e `pack builder inspect <builder>` para auditar suas versões de Lifecycle e Run Image.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[buildpacks-operacao-rebase-atualizacao-rapida-run-image]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 854 | buildpacks-operacao-rebase-atualizacao-rapida-run-image | Cloud Native Buildpacks: atualização instantânea da imagem base do SO sem recompilar a aplicação (pack rebase) ===
+ONE_LINER: A operação **Rebase** (`pack rebase <imagem>`, executada pela fase `rebaser` do lifecycle) substitui em segundos as camadas da **Run Image** subjacente de uma **App Image** por uma versão corrigida mais recente sem recompilar nem tocar nas camadas da aplicação.
+IMPORTANCE: Quando uma vulnerabilidade crítica (CVE) é descoberta em uma biblioteca base do sistema operacional (como `openssl`, `glibc` ou `libcrypto`) em uma empresa com 500 microsserviços, reconstruir 500 `Dockerfile`s do zero (baixando dependências Maven/npm e rodando compiladores) leva horas de fila nos runners de CI. Com o `rebase` dos Cloud Native Buildpacks, a atualização da base de uma imagem ocorre em segundos apenas trocando os ponteiros de manifesto no registry.
+HOW_IT_WORKS: Graças à separação estrita garantida pela ABI entre as **run image layers** (na base da imagem) e as **launch/app layers** (no topo da imagem) registrada na label `io.buildpacks.lifecycle.metadata`, quando o operador executa **`pack rebase minha-app:v1.0.0`** (ou `pack rebase --publish` diretamente contra o registry OCI), a fase **`rebaser`** do lifecycle inspeciona o manifesto da imagem, busca a versão atualizada da **Run Image** compatível com o mesmo alvo de SO/arquitetura e gera um novo manifesto OCI que aponta para as novas camadas da Run Image mantendo intactas todas as camadas superiores da aplicação (mesmos SHAs de camada, zero recompilação).
+EXAMPLE:
+```bash
+# Atualizar a Run Image base de uma imagem de aplicação existente sem recompilar o código-fonte
+pack rebase minha-app:v1.0.0
+```
+TRADE_OFFS: A operação `pack rebase` atualiza exclusivamente as camadas pertencentes à **Run Image** (pacotes do sistema operacional base); se a vulnerabilidade CVE estiver dentro de uma dependência da própria aplicação (como um pacote `npm`, `pip`, crate Rust ou `.jar` do Maven) ou na versão da JVM/Node fornecida por uma Launch Layer de um buildpack, ainda será necessário executar `pack build` para atualizar as Launch Layers.
+VERIFY: Antes e depois de executar `pack rebase minha-app:v1.0.0`, rode `pack inspect minha-app:v1.0.0` e verifique que o digest da `Base Image` (`Run Image`) foi atualizado mantendo os mesmos digests das camadas dos buildpacks.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-conceitos-builder-build-image-run-image-launcher]] | [[kubescape-patching-imagens-copacetic-remediacao-auto-fix]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://buildpacks.io/docs/for-app-developers/
+
+=== NOTE: 855 | buildpacks-reprodutibilidade-timestamps-caching-camadas | Cloud Native Buildpacks: builds reprodutíveis (SOURCE_DATE_EPOCH / --creation-time) e cache granular de camadas ===
+ONE_LINER: Os Cloud Native Buildpacks garantem **Build Reproducibility** zerando timestamps variáveis nas camadas geradas (ou fixando via `--creation-time`) para produzir exatamente o mesmo digest de imagem a partir das mesmas entradas, combinando isso com cache dedicado de compilação e de lançamento.
+IMPORTANCE: Em um `Dockerfile` comum, executar `docker build` duas vezes seguidas sobre exatamente o mesmo código-fonte sem cache gera imagens com digests SHA-256 diferentes porque os timestamps de modificação (`mtime`) dos arquivos e a data de criação no JSON da imagem mudam a cada segundo, dificultando auditorias de cadeia de suprimentos (SLSA) e invalidando caches downstream. A especificação `platform.md` (`Build Reproducibility` e `Caching`) padroniza essa garantia.
+HOW_IT_WORKS: Durante a fase `exporter` do lifecycle: (1) **Reprodutibilidade**: os metadados de tempo de modificação dos arquivos nas camadas criadas pelos buildpacks e a data de criação do manifesto são normalizados para um timestamp fixo determinístico (podendo ser definido ao momento do commit Git ou atual com `pack build --creation-time now`), garantindo que entradas idênticas gerem o mesmo digest SHA-256; e (2) **Caching**: cada subdiretório `<layers>/<layer>` criado por um buildpack pode ser marcado independentemente em `<layer>.toml` com as flags booleanas `build = true` (disponível para buildpacks subsequentes), `cache = true` (persistido no volume/imagem de cache para o `restorer` na próxima compilação, como o repositório `.m2` do Maven) e `launch = true` (incluído na imagem final de produção).
+EXAMPLE:
+```bash
+# Construir imagem com cache persistido em uma imagem de cache no registry (--cache-image) e timestamp controlado
+pack build registry.interno.com/app:v1.0.0 \
+  --builder paketobuildpacks/builder-jammy-base \
+  --publish \
+  --cache-image registry.interno.com/app:cache
+```
+TRADE_OFFS: Quando uma camada é marcada pelo buildpack apenas com `cache = true` e `launch = false` (por exemplo, o cache de dependências baixadas do Maven ou do Cargo que já foram linkadas no binário final), ela acelera os próximos builds via `restorer`, mas **não** é enviada para a **App Image** final, mantendo a imagem de produção mínima; já camadas marcadas apenas com `launch = true` e `cache = false` são reaproveitadas pelo `analyzer`/`exporter` diretamente do manifesto da imagem anterior no registry sem precisar trafegar pela rede local.
+VERIFY: Execute `pack build minha-app:repro --builder paketobuildpacks/builder-jammy-base` duas vezes seguidas sem alterar o código nem o builder e confirme com `docker inspect --format '{{.Id}}' minha-app:repro` que o digest da imagem permanece idêntico.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[nix-gerenciador-pacotes-puramente-funcional-nix-store]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://buildpacks.io/docs/for-app-developers/
+
+=== NOTE: 856 | buildpacks-configuracao-project-toml-env-vars-build | Cloud Native Buildpacks: configuração declarativa do build com project.toml, variáveis BP_* e BPE_* ===
+ONE_LINER: O comportamento do build e dos buildpacks pode ser parametrizado via flags da CLI (`--env`, `--buildpack`, `--path`) ou versionado declarativamente no repositório através do arquivo **`project.toml`**, utilizando variáveis de tempo de build (como `BP_JVM_VERSION`) e modificadores de ambiente de lançamento.
+IMPORTANCE: Em vez de exigir que cada desenvolvedor decore parâmetros de linha de comando para definir a versão do Java/Node, flags de compilação do Go, arquivos a incluir/excluir ou buildpacks extras (como agentes de APM/OpenTelemetry), a equipe pode codificar essas configurações no arquivo `project.toml` na raiz do repositório. O guia `Configure build inputs` (`buildpacks.io/docs/for-app-developers/`) documenta esse padrão.
+HOW_IT_WORKS: Quando o `pack build` é executado em um diretório que contém um arquivo **`project.toml`** (ou apontado via `--descriptor`), o `pack` lê as tabelas `[project]` e `[build]`: (1) o bloco de lista `io.buildpacks.build.env` (`build.env`) injeta variáveis de ambiente na fase de build (por exemplo, nos Paketo Buildpacks, variáveis prefixadas com `BP_*` configuram o build, como `BP_JVM_VERSION="21"` ou `BP_GO_TARGETS="./cmd/api"`, enquanto variáveis `BPE_*` configuram variáveis da imagem final em runtime); (2) o bloco `io.buildpacks.build.buildpacks` (`build.buildpacks`) define a lista explícita de buildpacks a executar; e (3) `[io.buildpacks]` (`include` / `exclude`) filtra quais arquivos do repositório entram no contexto de build.
+EXAMPLE:
+```toml
+# Exemplo de arquivo project.toml versionado na raiz do repositório para parametrizar o pack build
+[_]
+schema-version = "0.2"
+
+[io.buildpacks]
+exclude = ["README.md", "docs/", ".git/"]
+
+[io.buildpacks.build]
+env = [
+  { name = "BP_JVM_VERSION", value = "21" }
+]
+```
+TRADE_OFFS: Variáveis passadas para a fase de compilação via `--env` ou na tabela `io.buildpacks.build.env` ficam visíveis aos processos `bin/detect` e `bin/build` dos buildpacks (e não devem conter segredos permanentes se um buildpack as gravar em camadas); para configurar variáveis que só devem existir quando o container iniciar em produção, configure-as no manifesto do Deployment Kubernetes (onde o `launcher` CNB as processa em tempo de inicialização).
+VERIFY: Crie um `project.toml` definindo `BP_JVM_VERSION="21"` (ou equivalente da linguagem) e execute `pack build minha-app:v1` verificando nos logs da fase `builder` a seleção da versão 21.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-conceitos-builder-build-image-run-image-launcher]] | [[earthly-automacao-build-containers-earthfile-reprodutivel]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://buildpacks.io/docs/for-app-developers/
+
+=== NOTE: 857 | buildpacks-image-extensions-extender-dockerfile-dinamico | Cloud Native Buildpacks: extensão de imagens de build e run com Image Extensions e a fase extender ===
+ONE_LINER: Conforme a especificação Platform Interface (`platform.md`), as **Image Extensions** participam da fase `detector` e são executadas na fase opcional **`extender`** antes dos buildpacks para instalar pacotes de sistema operacional adicionais na Build Image ou na Run Image usando Dockerfiles gerados dinamicamente.
+IMPORTANCE: Historicamente, uma limitação clássica dos Buildpacks era quando uma aplicação em Python, Ruby ou Node.js precisava de uma biblioteca C específica do sistema operacional (ex.: `libpq-dev`, `ffmpeg`, `imagemagick` ou `curl`) que não vinha pré-instalada na Build Image ou na Run Image padrão; antes das Image Extensions, a equipe era obrigada a criar e manter uma imagem de Stack/Builder customizada inteira. A especificação `platform.md` resolve isso com `Image Extensions` e a fase `extender`.
+HOW_IT_WORKS: Uma **Image Extension** segue a especificação `image_extension.md` e reside no diretório de extensões do builder. Durante a fase **`detector`**, as extensões rodam junto aos buildpacks para verificar se são necessárias e geram `build.Dockerfile` e/ou `run.Dockerfile`. Caso alguma extensão seja ativada no plano, a plataforma executa a fase **`extender`** (utilizando kaniko/buildkit embutido no lifecycle) para aplicar o `build.Dockerfile` sobre a Build Image (antes de rodar a fase `builder` dos buildpacks) e/ou aplicar o `run.Dockerfile` para trocar ou estender a Run Image final.
+EXAMPLE:
+```bash
+# Inspecionar um builder com pack builder inspect para verificar se ele inclui image extensions e suporte à Platform API moderna
+pack builder inspect paketobuildpacks/builder-jammy-base --output json | jq '.remote_info.buildpacks'
+```
+TRADE_OFFS: Quando uma **Image Extension** modifica as camadas da **Run Image** adicionando pacotes via `run.Dockerfile` durante a fase `extender`, a imagem final passa a depender daquelas camadas estendidas; dependendo de como a extensão foi aplicada, a operação rápida `pack rebase` pode exigir restrições ou reconstrução se a extensão alterou a estrutura base da Run Image.
+VERIFY: Consulte a seção `Image Extensions` e `extender (optional)` na especificação `buildpacks/spec/platform.md` e verifique a versão da Platform API suportada pelo seu binário `pack version`.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[kaniko-construcao-imagens-containers-userspace-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 858 | buildpacks-autoria-empacotamento-buildpack-toml-pack-package | Cloud Native Buildpacks: criação e empacotamento de Buildpacks (buildpack.toml, bin/detect, bin/build e pack buildpack package) ===
+ONE_LINER: Para autores de buildpacks e operadores de plataforma, um buildpack consiste em um arquivo de metadados `buildpack.toml` e dois executáveis (`bin/detect` e `bin/build`), podendo ser inicializado com `pack buildpack new` e empacotado como imagem OCI com `pack buildpack package`.
+IMPORTANCE: Organizações com dezenas de equipes frequentemente desejam padronizar a injeção de certificados internos, agentes de observabilidade, configurações de segurança ou frameworks internos em todas as aplicações sem pedir para cada desenvolvedor editar seu código. Conforme destaca o README oficial do `pack`, a CLI atende diretamente a **Buildpack Authors** e **Operators** para desenvolver e distribuir buildpacks.
+HOW_IT_WORKS: Um buildpack implementa a `Buildpack Interface Specification` (`buildpack.md`) por meio de três elementos: (1) **`buildpack.toml`**: declara o ID, versão, API suportada e alvos compatíveis; (2) **`bin/detect`**: executável (em qualquer linguagem: Go, Rust, Bash) que inspeciona o diretório da aplicação e retorna código `0` se o buildpack deve ser aplicado (gravando o que ele fornece `provides` e o que exige `requires` no Build Plan); e (3) **`bin/build`**: executável que recebe o diretório `<layers>`, cria subdiretórios de camadas (`<layers>/<nome>`), grava `<layers>/<nome>.toml` (`launch`/`build`/`cache`) e define comandos de inicialização em `launch.toml`. Com **`pack buildpack package <registry/meu-bp:v1>`**, o buildpack é empacotado e distribuído como um artefato OCI padrão.
+EXAMPLE:
+```bash
+# Criar o esqueleto de um novo buildpack customizado e empacotá-lo como imagem OCI usando a CLI pack
+pack buildpack new empresa/certificados-corporativos \
+  --api 0.10 \
+  --path ./bp-certificados \
+  --version 1.0.0
+
+pack buildpack package registry.interno.com/buildpacks/certificados:1.0.0 --path ./bp-certificados
+```
+TRADE_OFFS: Para manter imagens finais enxutas e rápidas de inicializar, autores de buildpacks em produção (como os Paketo Buildpacks) costumam compilar `bin/detect` e `bin/build` como binários estáticos em Go (usando bibliotecas como `libcnb`) em vez de scripts Bash longos que dependam de ferramentas externas como `jq`, `curl` ou `awk` na Build Image.
+VERIFY: Após criar o buildpack em `./bp-certificados`, teste-o localmente em uma aplicação executando `pack build app-teste --builder paketobuildpacks/builder-jammy-base --buildpack ./bp-certificados`.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[buildpacks-criacao-builders-customizados-builder-toml]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 859 | buildpacks-criacao-builders-customizados-builder-toml | Cloud Native Buildpacks: empacotamento de Builders corporativos customizados (builder.toml e pack builder create) ===
+ONE_LINER: Operadores de plataforma utilizam um arquivo `builder.toml` e o comando `pack builder create <imagem> --config builder.toml` para empacotar seus próprios buildpacks, a versão do lifecycle, a Build Image e a Run Image em um único **Builder** corporativo padronizado.
+IMPORTANCE: Em ambientes corporativos regolados ou air-gapped, os pipelines de CI/CD não devem buscar dezenas de buildpacks avulsos da internet a cada build: a equipe de plataforma cria e homologa um único Builder interno contendo a imagem base endurecida da empresa, os buildpacks de linguagens aprovados e os buildpacks corporativos de segurança/observabilidade.
+HOW_IT_WORKS: O operador define um arquivo **`builder.toml`** declarando: (1) a lista de tabelas `buildpacks` com as URIs/imagens dos buildpacks incluídos; (2) a lista de grupos `order` (grupos de detecção testados sequencialmente pelo `detector` até que um grupo passe); (3) o bloco `[build]` e `[run]` apontando para a **Build Image** e a(s) **Run Image(s)** homologadas; e (4) opcionalmente a versão de `[lifecycle]`. Ao executar **`pack builder create registry.interno.com/platform/builder:v1 --config builder.toml`**, o `pack` baixa os componentes e monta a imagem do Builder pronta para ser definida como padrão com `pack config default-builder`.
+EXAMPLE:
+```bash
+# Definir o builder corporativo como padrão na estação ou runner de CI e listar a configuração do pack
+pack config default-builder paketobuildpacks/builder-jammy-base
+pack config trusted-builders list
+```
+TRADE_OFFS: Por segurança, o `pack` só utiliza o binário consolidado rápido **`creator`** se o builder estiver na lista de **Trusted Builders** (`pack config trusted-builders add <builder>` ou `--trust-builder`); se um builder customizado não for marcado como confiável, o `pack` executa as 5 fases do lifecycle em containers separados para isolar as credenciais do registry da execução de código dos buildpacks de terceiros.
+VERIFY: Execute `pack builder inspect <seu-builder-customizado>` para validar a ordem dos grupos de detecção (`Detection Order`), a versão do lifecycle e as imagens de execução incluídas.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-conceitos-builder-build-image-run-image-launcher]] | [[buildpacks-autoria-empacotamento-buildpack-toml-pack-package]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack
+
+=== NOTE: 860 | buildpacks-metadados-sbom-labels-oci-deprecacao-stacks | Cloud Native Buildpacks: geração integrada de SBOM, labels OCI (io.buildpacks.*) e transição de Stacks para Target Data ===
+ONE_LINER: Os Cloud Native Buildpacks anexam metadados ricos nas labels OCI (`io.buildpacks.build.metadata`, `io.buildpacks.lifecycle.metadata`, `io.buildpacks.project.metadata`), geram Software Bills of Materials (`SBOM` em Syft, CycloneDX e SPDX) registráveis com `pack sbom download` e substituíram o antigo conceito de `stack` por **Target Data** (`os`, `arch`, distro).
+IMPORTANCE: Equipes de segurança de cadeia de suprimentos precisam extrair a lista exata de todas as dependências de compilação e de runtime (SBOM) de cada imagem OCI sem depender de scanners heurísticos externos que erram versões de binários compilados; além disso, entender a depreciação de `io.buildpacks.stack.*` na especificação Platform API moderna evita usar metadados obsoletos. A especificação `platform.md` documenta tanto os arquivos/labels de metadados quanto a depreciação de `stack`.
+HOW_IT_WORKS: Durante o build, cada buildpack grava arquivos SBOM padronizados (`<layer>.sbom.<ext>.json` em formatos CycloneDX, SPDX ou Syft JSON) descrevendo exatamente os pacotes e versões que instalou. O `exporter` empacota esses SBOMs na imagem (extraíveis via **`pack sbom download <imagem>`**) e preenche três labels JSON padronizadas na configuração OCI: (1) `io.buildpacks.build.metadata` (BOM, buildpacks participantes, processos e launcher); (2) `io.buildpacks.lifecycle.metadata` (digests das camadas de app, run image e buildpacks); e (3) `io.buildpacks.project.metadata` (repositório Git e commit). Na Platform API `0.15`, o antigo conceito de **stack** (`io.buildpacks.stack.id`) foi depreciado em favor de **Target Data** padrão da OCI (`os`, `arch`, `arch_variant` e nome/versão da distribuição Linux).
+EXAMPLE:
+```bash
+# Baixar e inspecionar os arquivos de Software Bill of Materials (SBOM) embutidos pelos buildpacks na imagem OCI
+pack sbom download minha-app:v1.0.0 --output-dir ./sbom-out
+ls -la ./sbom-out
+```
+TRADE_OFFS: Ao atualizar builders ou criar novos buildpacks seguindo a especificação Platform API `0.12+` / `0.15`, não dependa mais da label depreciada `io.buildpacks.stack.id` para validar compatibilidade entre buildpacks e imagens base; utilize os campos de **Target Data** (`targets` em `buildpack.toml` especificando `os = "linux"`, `arch = "amd64"` e `distributions`).
+VERIFY: Execute `pack sbom download <imagem> --output-dir /tmp/sbom` e confirme a presença dos arquivos SBOM detalhados por camada e por buildpack.
+LINKS: [[buildpacks-cli-pack-build-lifecycle-builders-oci]] | [[buildpacks-fases-lifecycle-analyzer-detector-restorer-builder-exporter]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]]
+SOURCES: https://raw.githubusercontent.com/buildpacks/pack/main/README.md | https://raw.githubusercontent.com/buildpacks/spec/main/platform.md | https://github.com/buildpacks/pack

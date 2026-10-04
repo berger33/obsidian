@@ -1,0 +1,158 @@
+SOURCES: https://wiki.nftables.org/wiki-nftables/index.php/Quick_reference-nftables_in_10_minutes | https://wiki.nftables.org/wiki-nftables/index.php/Sets
+
+===NOTE===
+1181|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet|Arquitetura do **`nftables` (`Netfilter Project`)**: Máquina Virtual de Bytecode no Kernel Linux, Família Dual-Stack **`inet`** e Substituição do `iptables`|Por que o projeto **Netfilter** do Kernel Linux desenvolveu o **`nftables`** (`nft`) para substituir os antigos `iptables`, `ip6tables`, `arptables` e `ebtables`, e quais problemas graves de segurança e performance da arquitetura antiga ele resolve?|No antigo `iptables`, você era obrigado a manter **dois arquivos de firewall completamente separados** (um para IPv4 no `iptables` e outro para IPv6 no `ip6tables` — o que frequentemente deixava servidores expostos em IPv6 por esquecimento!), a avaliação de milhares de regras era linear $O(n)$ e cada modificação individual recarregava toda a tabela no kernel!|O **`nftables`** (padrão no Debian 10+, Ubuntu 20.04+, RHEL 8+, AlmaLinux e Rocky Linux) compila suas regras em espaço de usuário (`nft`) para um **bytecode de máquina virtual (`nf_tables`)** executado no kernel, introduz a família de endereços unificada **`inet` (que filtra IPv4 e IPv6 simultaneamente na mesma tabela e na mesma regra!)**, aplica **atualizações 100% atômicas (`nft -f /etc/nftables.conf`)** e possui estruturas nativas de **Sets e Mapas ($O(1)$ / $O(\log n)$)**!|```nft
+#!/usr/sbin/nft -f
+# Exemplo de firewall host-based atomico Dual-Stack (IPv4 + IPv6) usando a familia 'inet' no /etc/nftables.conf
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iif "lo" accept
+        ct state vmap { established : accept, related : accept, invalid : drop }
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+        tcp dport { 22, 443 } ct state new accept
+    }
+}
+```|Observe a elegância da família **`inet`**: a única regra `tcp dport { 22, 443 } ct state new accept` protege e autoriza simultaneamente conexões TCP sobre **IPv4 e IPv6**, eliminando para sempre o risco de *drift* de segurança entre as duas pilhas de rede!|Diferente do `iptables` (que criava dezenas de tabelas e chains vazias por padrão no kernel mesmo sem uso), no `nftables` **zero tabelas ou chains existem até que você as declare explicitamente**, economizando ciclos de CPU em cada pacote que atravessa a interface de rede.|nftables-chains-hooks-prioridades-conntrack-stateful-firewall, nftables-conjuntos-sets-anonimos-nomeados-intervalos-timeouts-dinamicos, wireguard-integracao-firewall-nftables-postup-postdown-killswitch
+
+===NOTE===
+1182|nftables-chains-hooks-prioridades-conntrack-stateful-firewall|Anatomia de **Chains, Hooks (`prerouting`, `input`, `forward`, `output`, `postrouting`, `ingress`), Prioridades** e **Connection Tracking (`ct state`)** no `nftables`|No **`nftables`**, uma **Tabela (`table`)** é um container lógico de **Chains (`chain`)**, e existem dois tipos de chains: **Base Chains** (que se conectam diretamente a um *hook* da pilha de rede do kernel Linux com um `type`, `hook`, `priority` e `policy`) e **Regular Chains** (sem hook, usadas para organizar e modularizar regras via `jump` ou `goto`)!|Para as famílias `ip`, `ip6` e `inet`, os cinco hooks clássicos do Netfilter são: **`prerouting`** (antes da decisão de roteamento — ideal para DNAT e raw/notrack), **`input`** (pacotes destinados ao próprio host local), **`forward`** (pacotes roteados através do host para outra máquina/container), **`output`** (pacotes gerados por processos locais) e **`postrouting`** (após o roteamento — ideal para SNAT/Masquerade)!|Dentro de uma base chain `input` ou `forward` com política padrão restritiva (**`policy drop;`**), a primeira regra após liberar o loopback (`iif "lo" accept`) deve sempre consultar o motor stateful de **Connection Tracking (`ct state`)** para aprovar pacotes `established, related` e descartar pacotes `invalid` antes de avaliar qualquer abertura de porta!|```bash
+# Inspecionar todas as tabelas, base chains, hooks, prioridades e handles (-a) ativos no kernel Linux
+sudo nft -a list ruleset
+```|Por que descartar explicitamente **`ct state invalid drop`** logo no topo da chain `input` e `forward`? Porque pacotes classificados como `invalid` pelo `nf_conntrack` incluem pacotes TCP `ACK`/`FIN`/`RST` órfãos que não pertencem a nenhuma conexão estabelecida (típicos de scans furtivos `nmap -sA` / `-sF` / `-sX`) ou pacotes com checksums/estados corrompidos!|Use sempre `sudo nft -c -f /etc/nftables.conf` (`-c, --check`) para validar a sintaxe e a semântica de todo o arquivo de regras em modo *dry-run* antes de aplicá-lo em produção.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-conjuntos-sets-anonimos-nomeados-intervalos-timeouts-dinamicos, nftables-protecao-ddos-familia-netdev-ingress-synproxy-raw-notrack
+
+===NOTE===
+1183|nftables-conjuntos-sets-anonimos-nomeados-intervalos-timeouts-dinamicos|Conjuntos de Alta Performance (**Sets Anônimos e Nomeados**) no `nftables`: Intervalos CIDR (`flags interval`), `auto-merge`, `timeout` e Blocklists em $O(1)$|No antigo `iptables`, se você quisesse bloquear uma lista de 50.000 endereços IP maliciosos de Threat Intelligence sem instalar a extensão externa `ipset`, adicionar 50.000 regras `-A INPUT -s <IP> -j DROP` derrubava a performance de rede do servidor. No **`nftables`**, o subsistema de **Sets (Conjuntos)** é nativo do próprio bytecode e usa **hashtables e árvores rubro-negras (*red-black trees*)** no kernel!|O `nftables` oferece **Sets Anônimos** (declarados inline entre chaves `{ 22, 80, 443 }`, imutáveis e atrelados à regra) e **Sets Nomeados (`set <nome> { ... }`)**, referenciados nas regras com **`@<nome>`** e atualizáveis em tempo real sem tocar nas regras!|Ao criar um Set Nomeado para blocklists ou allowlists de redes, você pode habilitar: **`type ipv4_addr`** (ou `typeof ip saddr`), **`flags interval`** (para suportar blocos CIDR como `10.0.0.0/8` e faixas `192.168.1.1-192.168.1.50`), **`auto-merge`** (que funde automaticamente IPs e sub-redes adjacentes/sobrepostas sem dar erro de conflito!), **`flags timeout`** (para que cada IP bloqueado expire sozinho após ex.: `24h`!) e **`counter`** (contador individual de pacotes/bytes por IP dentro do set!)!|```nft
+# Definicao de um Set Nomeado com suporte a CIDR (interval), auto-merge, timeout automatico e contadores por elemento
+table inet filter {
+    set threat_blocklist_v4 {
+        type ipv4_addr
+        flags interval, timeout
+        auto-merge
+        timeout 24h
+        counter
+        elements = { 198.51.100.0/24, 203.0.113.45 timeout 1h }
+    }
+
+    chain input {
+        type filter hook input priority -10; policy accept;
+        ip saddr @threat_blocklist_v4 drop
+    }
+}
+```|Com o set nomeado ativo, adicionar ou remover um endereço IP em tempo real a partir de um script de resposta a incidentes (ou do **CrowdSec** / **Fail2ban**) leva microssegundos: **`sudo nft add element inet filter threat_blocklist_v4 { 192.0.2.99 timeout 6h }`** — e para consultar se um IP específico pertence a um intervalo CIDR dentro do set, basta rodar **`sudo nft get element inet filter threat_blocklist_v4 { 198.51.100.77 }`**!|O comando `nft get element` é um recurso fantástico de diagnóstico para descobrir qual bloco CIDR dentro de um set de milhares de linhas está casando com um determinado IP.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-mapas-vereditos-vmap-concatenacoes-arquitetura-escalavel, nftables-rate-limiting-meters-dynamic-sets-anti-bruteforce-ssh
+
+===NOTE===
+1184|nftables-mapas-vereditos-vmap-concatenacoes-arquitetura-escalavel|Mapas de Veredito (**`vmap`**) e **Concatenações de Seletores (`.` Tuplas)** no `nftables`: Substituindo Centenas de Regras Lineares por Uma Única Busca em Hash|Como um engenheiro de segurança sênior projeta um firewall `nftables` em um gateway corporativo que precisa aplicar políticas diferentes para dezenas de interfaces VLAN, protocolos e portas, mantendo o tempo de inspeção de pacotes constante ($O(1)$)? Usando **Verdict Maps (`vmap`)** combinados com **Concatenações (operador `.`)**!|Um **Verdict Map (`vmap`)** mapeia uma chave (ex.: protocolo de camada 4, interface de entrada, estado `ct state` ou porta) diretamente para uma ação/veredito (`accept`, `drop`, `jump chain_web`, `goto chain_dmz`): em vez de o kernel avaliar 20 regras `if/else` sequenciais, ele faz **uma única busca em tabela hash** e salta diretamente para a chain de destino!|Melhor ainda: o operador de **Concatenação (`.`)** do `nftables` permite combinar múltiplos campos de cabeçalho em uma única tupla de busca (por exemplo, **`ip saddr . meta l4proto . th dport`** — IP de origem + Protocolo TCP/UDP + Porta de Destino)! Com uma única regra e um único set concatenado, você expressa uma matriz inteira de controle de acesso (ACL) de microsegmentação!|```nft
+# Usar Concatenacao (ip saddr . meta l4proto . th dport) e Verdict Map (vmap) para microsegmentacao em O(1)
+table inet microseg {
+    set matriz_acesso {
+        typeof ip saddr . meta l4proto . th dport
+        elements = {
+            10.20.1.10 . tcp . 5432,
+            10.20.1.11 . tcp . 6379,
+            10.20.2.50 . udp . 53
+        }
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        ct state established,related accept
+        ct state invalid drop
+        ip saddr . meta l4proto . th dport @matriz_acesso accept
+    }
+}
+```|Observe a expressão **`meta l4proto . th dport`**: o seletor de cabeçalho de transporte genérico **`th dport`** (*Transport Header destination port*) lê os primeiros bytes da porta de destino tanto para **TCP** quanto para **UDP** (e SCTP/UDPLite) na mesma estrutura!|Sempre que precisar adicionar uma nova permissão temporária ou permanente na matriz de microsegmentação acima, você nem precisa editar as regras da chain `forward`: basta adicionar a tupla no set `@matriz_acesso` com `nft add element`!|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-conjuntos-sets-anonimos-nomeados-intervalos-timeouts-dinamicos, wireguard-integracao-firewall-nftables-postup-postdown-killswitch
+
+===NOTE===
+1185|nftables-rate-limiting-meters-dynamic-sets-anti-bruteforce-ssh|Proteção Anti-Brute-Force e **Rate Limiting Dinâmico por IP (`flags dynamic, timeout` / `ct count`)** Nativamente no `nftables`|Você sabia que o **`nftables`** consegue detectar e banir automaticamente em nível de kernel qualquer endereço IP que tente fazer força bruta no SSH (porta `22`) ou abrir centenas de conexões simultâneas na porta `443` — **sem precisar de nenhum daemon externo lendo arquivos de log em espaço de usuário**?|Isso é feito através dos **Dynamic Sets (`flags dynamic, timeout`)** (que substituíram e unificaram a antiga sintaxe `meter`): quando uma nova conexão TCP (`ct state new`) chega na porta `22`, a expressão **`add @ssh_ratelimit { ip saddr limit rate over 4/minute burst 4 packets }`** rastreia a taxa de pacotes **individualmente para cada `ip saddr`**; se aquele IP específico ultrapassar 4 novas conexões por minuto, a condição avalia como verdadeira e você pode **adicioná-lo automaticamente a um segundo set `@ssh_jail` com `timeout 1h`**, bloqueando-o instantaneamente no kernel!|Além de limitar por taxa temporal (`limit rate over`), você também pode limitar o **número máximo de conexões simultâneas abertas por um mesmo IP de origem** usando **`ct count over 20`**!|```nft
+# Banir automaticamente por 1 hora no kernel qualquer IP que exceder 4 novas conexoes SSH por minuto usando Dynamic Sets
+table inet filter {
+    set ssh_ratelimit {
+        type ipv4_addr
+        size 65535
+        flags dynamic, timeout
+        timeout 1m
+    }
+
+    set ssh_jail {
+        type ipv4_addr
+        size 65535
+        flags dynamic, timeout
+        timeout 1h
+    }
+
+    chain input {
+        type filter hook input priority filter; policy accept;
+        ip saddr @ssh_jail counter drop
+        tcp dport 22 ct state new add @ssh_ratelimit { ip saddr limit rate over 4/minute burst 4 packets } add @ssh_jail { ip saddr } drop
+    }
+}
+```|Defina sempre o parâmetro **`size 65535`** (número máximo de entradas na tabela hash) e **`timeout`** em todo set com a flag `dynamic` — isso garante que um ataque distribuído de milhões de IPs falsificados não possa esgotar a memória RAM do kernel!|Para inspecionar em tempo real quais endereços IP estão atualmente na prisão `@ssh_jail` e quantos segundos faltam para expirarem (`expires`), execute `sudo nft list set inet filter ssh_jail`.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-conjuntos-sets-anonimos-nomeados-intervalos-timeouts-dinamicos, openssh-hardening-sshd-config-criptografia-autenticacao-restricoes
+
+===NOTE===
+1186|nftables-nat-masquerade-dnat-snat-redirecionamento-portas|Configuração de **NAT (`snat`, `masquerade`, `dnat` e `redirect`)** no `nftables` para Gateways VPN, Containers e Honeypots|Como configurar tradução de endereços de rede (**Source NAT / Masquerade** para saída de sub-redes WireGuard/Containers e **Destination NAT / Port Redirect** para publicação de serviços ou redirecionamento de portas de honeypots como o Cowrie) usando a família `inet` (suportada para NAT desde o kernel Linux 5.2+ e `nftables` 0.9.1+)?|No `nftables`, as operações de NAT ocorrem em base chains do **`type nat`**: **(1) `hook prerouting priority dstnat`** (avaliado quando o primeiro pacote da conexão chega, usado para **`dnat to <ip>:<porta>`** que encaminha para outro host ou **`redirect to :<porta>`** que redireciona para uma porta local da própria máquina); e **(2) `hook postrouting priority srcnat`** (avaliado quando o pacote está saindo pela interface externa, usado para **`snat to <ip_fixo>`** quando o gateway tem IP público estático ou **`masquerade`** quando o IP da interface de saída é dinâmico)!|Como o subsistema de NAT depende do `conntrack`, apenas o primeiro pacote (`ct state new`) atravessa a chain `type nat` — todos os pacotes subsequentes daquela sessão são traduzidos automaticamente em alta velocidade pela tabela de estado do `nf_conntrack`!|```nft
+# Configuracao de NAT Dual-Stack na familia inet: Redirect local (22->2222) no prerouting e Masquerade da VPN wg0 no postrouting
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+        iifname "eth0" tcp dport 22 redirect to :2222
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        iifname "wg0" oifname "eth0" masquerade
+    }
+}
+```|Lembre-se de um detalhe importante da chain `filter forward` ao usar **`dnat to <ip_interno>`**: quando o pacote chega na chain `forward`, o `prerouting` já ocorreu, portanto o endereço de destino do pacote (`ip daddr`) já é o IP interno traduzido; você também pode liberar de forma elegante todos os pacotes que sofreram DNAT legítimo usando a condição **`ct status dnat accept`** na chain `forward`!|Se o seu gateway de borda possui um endereço IPv4 público estático fixo, prefira **`snat ip to <IP_PUBLICO>`** em vez de `masquerade`, pois o `snat` é computacionalmente mais leve e não precisa consultar o endereço da interface a cada evento de link.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-chains-hooks-prioridades-conntrack-stateful-firewall, cowrie-isolamento-seguranca-redirecionamento-portas-nftables-docker
+
+===NOTE===
+1187|nftables-protecao-ddos-familia-netdev-ingress-synproxy-raw-notrack|Mitigação de **DDoS em Linha de Velocidade** com `nftables`: Família **`netdev` (`hook ingress`)**, Bypass de Conntrack (**`notrack`**) e **`synproxy`**|Quando um servidor Linux sofre um ataque volumétrico de **UDP Flood**, **TCP SYN Flood** com IPs falsificados (*IP Spoofing*) ou pacotes malformados (ex.: pacotes TCP com flags `SYN+FIN` ou `SYN+RST` simultâneas, ou fragmentos IPv4 anômalos), por que bloqueá-los apenas na chain `inet filter input` comum pode não ser suficiente para salvar a CPU?|Porque antes de um pacote chegar ao hook `input` (`priority 0`), o kernel já alocou uma entrada na tabela de **Connection Tracking (`nf_conntrack`, `priority -200`)**! Sob milhões de pacotes por segundo com IPs de origem falsificados, a tabela `nf_conntrack` enche (`nf_conntrack: table full, dropping packet`) e derruba as conexões dos usuários reais!|O `nftables` resolve isso com **três defesas de baixíssimo nível**: **(1) Família `netdev` no `hook ingress` (`priority -500`)** — atrelada diretamente ao driver da placa de rede (`device "eth0"`), descarta pacotes malformados, bogons e blocklists logo após o DMA da NIC, **antes mesmo da camada IP e muito antes do `conntrack`**!; **(2) `notrack` no `hook prerouting priority raw (-300)`** para protocolos stateless de altíssimo volume (como servidores DNS autoritativos na porta `53`); e **(3) `synproxy`** para absorver ataques TCP SYN Flood validando SYN Cookies antes de abrir conexão!|```nft
+# Descartar fragmentos IP, pacotes TCP invalidos (XMAS/NULL/SYN+FIN) e IPs banidos diretamente no hook ingress (netdev) antes do conntrack
+table netdev ddos_shield {
+    chain ingress_eth0 {
+        type filter hook ingress device "eth0" priority -500; policy accept;
+        ip frag-off & 0x1fff != 0 counter drop
+        tcp flags & (fin|syn) == (fin|syn) counter drop
+        tcp flags & (syn|rst) == (syn|rst) counter drop
+        tcp flags & (fin|syn|rst|psh|ack|urg) == 0x0 counter drop
+    }
+}
+```|Processar descartes de DDoS em uma base chain **`table netdev ... hook ingress`** é dezenas de vezes mais rápido do que na chain `input` tradicional, pois o pacote é descartado na porta de entrada da pilha de rede sem alocar memória no `nf_conntrack` nem consultar a tabela de roteamento!|A partir do kernel Linux 5.5+, uma única chain `netdev` suporta múltiplos dispositivos (`devices = { eth0, eth1 }`).|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-chains-hooks-prioridades-conntrack-stateful-firewall, nftables-aceleracao-hardware-software-flowtables-fastpath-roteadores
+
+===NOTE===
+1188|nftables-aceleracao-hardware-software-flowtables-fastpath-roteadores|Aceleração de Fluxos de Rede com **`flowtables` (Fastpath Software e Hardware Offload)** no `nftables` para Gateways de Alta Vazão (10GbE / 40GbE)|Em um gateway de borda ou firewall roteador Linux de 10 Gbps / 40 Gbps, avaliar toda a pilha clássica de roteamento e chains de `forward` para cada um dos milhões de pacotes pertencentes a um fluxo TCP/UDP já estabelecido e autorizado (por exemplo, um backup grande ou streaming de vídeo) consome CPU desnecessariamente.|A partir do Kernel Linux 4.16+, o `nftables` introduziu as **`flowtables` (`flowtable`)**: um mecanismo de **Fastpath (Software e Hardware Offload na NIC)** onde, assim que os primeiros pacotes de uma conexão passam pela inspeção de segurança e entram no estado estabelecido, a regra **`flow add @minha_flowtable`** transfere o fluxo para uma tabela de encaminhamento direto na recepção (`ingress`)!|Todos os pacotes subsequentes daquela conexão dão **bypass completo no caminho lento de roteamento e filtragem (`forward`)**, sendo encaminhados diretamente da interface de entrada para a interface de saída (ou processados diretamente no ASIC da placa de rede quando `flags offload;` é suportado pelo driver)!|```nft
+# Configurar uma Flowtable no nftables para acelerar fluxos TCP/UDP ja estabelecidos entre eth0 e eth1
+table inet filter {
+    flowtable fastpath {
+        hook ingress priority filter
+        devices = { eth0, eth1 }
+    }
+
+    chain forward {
+        type filter hook forward priority 10; policy drop;
+        ip protocol { tcp, udp } flow add @fastpath
+        ct state { established, related } counter accept
+        iifname "eth1" oifname "eth0" accept
+    }
+}
+```|O ganho de throughput de uma **`flowtable`** em software já multiplica em até 3x–5x a capacidade de pacotes por segundo (pps) de um roteador Linux em fluxos estabelecidos, mantendo 100% da política de segurança na abertura de cada nova conexão (`ct state new`).|Se um pacote TCP `FIN` ou `RST` chegar (ou o fluxo ficar ocioso), o kernel remove ou devolve o fluxo automaticamente para o caminho normal do `conntrack`.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-chains-hooks-prioridades-conntrack-stateful-firewall, nftables-protecao-ddos-familia-netdev-ingress-synproxy-raw-notrack
+
+===NOTE===
+1189|nftables-logging-estruturado-ulogd2-nflog-rastreamento-nftrace-debug|Depuração em Tempo Real (**`meta nftrace set 1` / `nft monitor trace`**) e Logging Estruturado JSON (**`nflog` + `ulogd2`**) no `nftables`|Quando um pacote legítimo está sendo bloqueado por um ruleset complexo do `nftables` (com dezenas de chains, sets, vmaps e NAT) e você não sabe qual linha exata está descartando o pacote, como rastrear o caminho completo do pacote dentro do kernel sem adivinhar?|O `nftables` possui uma ferramenta de diagnóstico incomparável chamada **`nftrace`**: basta criar uma regra temporária no `prerouting` marcando apenas o tráfego que você quer investigar (por exemplo, **`ip saddr 10.20.30.40 tcp dport 443 meta nftrace set 1`**) e abrir em outro terminal **`sudo nft monitor trace`**! O kernel imprimirá em tempo real cada hook, cada tabela, cada chain, **o número exato da linha/regra que casou** e o veredito final (`verdict drop` ou `verdict accept`)!|E para o logging contínuo de produção no SIEM, em vez de poluir o `dmesg` do kernel com `log prefix ...` comum (quesem `limit rate` pode travar o console serial!), utilize **`log group <N>` (subsistema `nflog` via Netlink)** integrado ao daemon **`ulogd2`**, que grava logs de firewall diretamente em formato **JSON estruturado** em disco!|```bash
+# Ativar rastreamento nftrace apenas para pacotes vindos de 10.20.30.40 na porta 8443 e assistir a avaliacao regra por regra ao vivo
+sudo nft insert rule inet filter input ip saddr 10.20.30.40 tcp dport 8443 meta nftrace set 1
+sudo nft monitor trace
+```|Sempre que usar a instrução `log` tradicional no `nftables`, proteja-a obrigatoriamente com um limitador de taxa (ex.: **`limit rate 10/minute burst 5 packets log prefix "NFT-DROP: " drop`**) para que um scan de portas não gere milhões de linhas por minuto no `journald`/`rsyslog`.|Lembre-se de remover a regra temporária de `meta nftrace set 1` (usando `sudo nft -a list chain ...` e `sudo nft delete rule ... handle <N>`) assim que concluir o troubleshooting.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-chains-hooks-prioridades-conntrack-stateful-firewall, cowrie-telemetria-json-siem-splunk-elastic-misp-threat-intel
+
+===NOTE===
+1190|nftables-transacoes-atomicas-rollback-seguro-automacao-ansible-json|Operação Segura sem Lockout: **Transações Atômicas (`nft -f`)**, Saída JSON (`nft -j`), Migração `iptables-translate` e Rollback Automático|Qual é o maior pesadelo de qualquer administrador de sistemas ou engenheiro de segurança ao atualizar regras de firewall remotamente via SSH em um servidor em nuvem? **Cometer um erro na regra e cortar a própria conexão SSH (*Remote Firewall Lockout*)**!|No `nftables`, dois recursos fundamentais tornam a automação de firewall muito mais segura e previsível: **(1) Atomicidade Transacional (`nft -f /etc/nftables.conf`)** — todo o arquivo começando com `flush ruleset` é compilado e aplicado em uma **única transação atômica do kernel** (ou 100% do novo ruleset entra em vigor instantaneamente sem nenhuma janela de milissegundos com o firewall aberto, ou, se houver qualquer erro em qualquer linha, a transação inteira aborta e o ruleset antigo permanece intacto!); e **(2) API JSON nativa (`nft -j list ruleset`)** para auditoria automatizada!|Para eliminar o risco de *lockout* humano ao testar uma mudança remota via SSH, utilize sempre o padrão de **Aplicação com Rollback Automático (`at` ou `systemd-run --on-active=60s`)** que restaura `/etc/nftables.backup.conf` após 60 segundos caso você perca a conexão e não cancele o timer!|```bash
+# Aplicar um novo ruleset do nftables remotamente com rollback automatico garantido em 60 segundos caso a sessao SSH caia
+sudo nft list ruleset > /etc/nftables.backup.conf
+sudo systemd-run --unit=nft-rollback --on-active=60s /usr/sbin/nft -f /etc/nftables.backup.conf
+sudo nft -c -f /etc/nftables.conf && sudo nft -f /etc/nftables.conf
+# Se a conexao SSH continuar funcionando, cancele o timer de rollback imediatamente:
+sudo systemctl stop nft-rollback.timer
+```|Se você ainda possui scripts legados em `iptables` que precisam ser migrados para `nftables`, utilize os utilitários oficiais **`iptables-translate`** e **`iptables-restore-translate`**, que convertem comandos `iptables` automaticamente para a sintaxe equivalente do `nftables`!|Habilite o serviço `systemd` (`sudo systemctl enable nftables.service`) para garantir que o `/etc/nftables.conf` seja carregado automaticamente no boot antes da subida das interfaces de rede.|nftables-arquitetura-firewall-kernel-linux-netfilter-tabelas-inet, nftables-chains-hooks-prioridades-conntrack-stateful-firewall, openssh-hardening-sshd-config-criptografia-autenticacao-restricoes

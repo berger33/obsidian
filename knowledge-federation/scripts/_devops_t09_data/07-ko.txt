@@ -1,0 +1,158 @@
+=== NOTE: 861 | ko-construtor-imagens-containers-go-sem-docker | ko: construtor rápido de imagens de container para aplicações Go sem necessidade de Docker ===
+ONE_LINER: O `ko` (`ko-build/ko`, projeto CNCF Sandbox) é um construtor simples e rápido de imagens de container para aplicações Go que executa `go build` localmente e monta a imagem OCI diretamente no registry sem exigir `docker` nem `Dockerfile`.
+IMPORTANCE: A imensa maioria dos microsserviços e operadores Kubernetes escritos em Go compila para um único binário estático sem dependências de sistema operacional (`CGO_ENABLED=0`); manter um `Dockerfile` multi-stage e iniciar um daemon Docker pesado em runners de CI apenas para colocar um binário Go dentro de uma imagem `distroless` é lento e desnecessário. O README oficial do `ko` e o guia `Get Started` (`ko.build/get-started/`) explicam como o `ko` elimina essa camada.
+HOW_IT_WORKS: Quando o desenvolvedor define a variável de ambiente **`KO_DOCKER_REPO`** (por exemplo, `KO_DOCKER_REPO=ghcr.io/minha-org/meu-repo`) e executa **`ko build ./cmd/app`** (onde `./cmd/app` é um pacote `main` com `func main()`), o `ko` invoca `go build` na máquina local, pega uma imagem base mínima (por padrão `cgr.dev/chainguard/static:latest`), adiciona uma nova camada OCI contendo o binário compilado em **`/ko-app/app`** (definindo-o como `ENTRYPOINT` da imagem), faz o push diretamente via API HTTP do registry OCI e imprime o digest completo (`registry.../app@sha256:...`) no `stdout`.
+EXAMPLE:
+```bash
+# Definir o repositório de destino e construir/publicar uma imagem OCI de um pacote Go sem usar Docker
+export KO_DOCKER_REPO="ghcr.io/minha-org/meu-projeto"
+ko build ./cmd/app
+```
+TRADE_OFFS: Conforme destaca o README oficial do `ko`, a ferramenta é ideal para casos onde a imagem contém uma única aplicação Go sem dependências de pacotes do sistema operacional base (sem `cgo` complexo ou binários externos); se a sua aplicação Go invocar utilitários CLI externos via `os/exec` (como `git`, `ffmpeg` ou `bash`), você precisará configurar uma imagem base que já contenha esses utilitários no `.ko.yaml`.
+VERIFY: Execute `ko version` e teste uma construção local sem push para registry remoto usando `ko build ./cmd/app --push=false --tarball=/tmp/image.tar` verificando o tarball OCI gerado.
+LINKS: [[ko-autenticacao-registries-ko-docker-repo-ko-login]] | [[ko-integracao-kubernetes-ko-resolve-apply-delete-uri]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 862 | ko-autenticacao-registries-ko-docker-repo-ko-login | ko: autenticação transparente em registries (GCR/GAR, ECR, ACR, GHCR e ko login) e variável KO_DOCKER_REPO ===
+ONE_LINER: O `ko` reutiliza automaticamente as credenciais de `~/.docker/config.json`, inclui o comando `ko login` para ambientes sem Docker e possui autenticação nativa embutida para Google Artifact Registry/GCR, Amazon ECR, Azure ACR e GitHub Container Registry (`GITHUB_TOKEN`).
+IMPORTANCE: Em runners leves de CI/CD (onde o daemon Docker não está instalado), configurar helpers externos de credenciais apenas para autenticar no registry de containers da nuvem adiciona passos extras ao pipeline. A seção `Authenticate` e `Choose Destination` de `ko.build/get-started/` documenta o suporte nativo de autenticação do `ko`.
+HOW_IT_WORKS: Se você já consegue fazer `docker push`, já está autenticado para o `ko` (pois ele lê `~/.docker/config.json`). Em máquinas sem Docker, **`ko login <registry> -u <user> -p <pass>`** grava as credenciais diretamente. Além disso, mesmo sem nenhuma configuração prévia no Docker config, o `ko` autentica automaticamente nos quatro grandes registries usando credenciais do ambiente: (1) **GCR e Google Artifact Registry**: via Application Default Credentials (ADC) ou `gcloud`; (2) **Amazon ECR**: via credenciais padrão da AWS (`AWS_ACCESS_KEY_ID` / IAM Role); (3) **Azure Container Registry (ACR)**: via variáveis de ambiente do Azure; e (4) **GitHub Container Registry (`ghcr.io`)**: via variável de ambiente `GITHUB_TOKEN`. O destino do push é controlado por **`KO_DOCKER_REPO`**.
+EXAMPLE:
+```bash
+# Autenticar e publicar no GitHub Container Registry (ghcr.io) em um runner sem Docker usando apenas GITHUB_TOKEN
+export GITHUB_TOKEN="ghp_exemploTokenSegredoCI"
+export KO_DOCKER_REPO="ghcr.io/minha-org/meu-servico"
+ko build ./cmd/server
+```
+TRADE_OFFS: A variável `KO_DOCKER_REPO` é obrigatória para comandos que publicam imagens; se `KO_DOCKER_REPO` não estiver definida no ambiente (nem for um destino local especial como `ko.local` ou `kind.local`), o `ko build` falhará solicitando que você especifique o repositório de destino.
+VERIFY: Verifique a autenticação executando `ko login ghcr.io -u $USER --password-stdin` (ou exportando `GITHUB_TOKEN`) e confirmando o push bem-sucedido de `ko build`.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-desenvolvimento-local-ko-local-kind-local-minikube]] | [[ko-integracao-kubernetes-ko-resolve-apply-delete-uri]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 863 | ko-integracao-kubernetes-ko-resolve-apply-delete-uri | ko: integração nativa com manifestos Kubernetes via referências ko://, ko resolve, ko apply e ko delete ===
+ONE_LINER: O `ko` permite referenciar pacotes Go diretamente no campo `image:` de manifestos Kubernetes usando o prefixo `ko://<importpath>`, onde `ko resolve -f` compila, publica e substitui a URI pelo digest SHA-256 exato da imagem construída, e `ko apply -f` aplica tudo ao cluster em um único passo.
+IMPORTANCE: No desenvolvimento tradicional para Kubernetes, alterar uma linha de código Go exige rodar `docker build`, criar uma tag, fazer `docker push`, copiar o digest SHA-256 gerado, editar o arquivo `deployment.yaml` com o novo digest e rodar `kubectl apply`. Conforme explica a página oficial `Kubernetes Integration` (`ko.build/features/k8s/`), o `ko` transforma o empacotamento e o push de imagens em um detalhe de implementação invisível.
+HOW_IT_WORKS: No manifesto YAML do Kubernetes (`Deployment`, `Job`, `StatefulSet`, `CronJob`), em vez de escrever uma tag de imagem tradicional, o desenvolvedor escreve **`image: ko://github.com/meu-org/meu-repo/cmd/app`**. Ao executar **`ko resolve -f config/ > release.yaml`**, o `ko`: (1) varre todos os arquivos YAML em busca de strings com o prefixo `ko://`; (2) para cada importpath único encontrado, executa `ko build <importpath>` em paralelo (compilando e enviando a imagem para `KO_DOCKER_REPO`); (3) substitui a string `ko://...` no YAML pela referência completa com digest imutável (`registry.../app@sha256:...`); e (4) imprime o YAML resolvido no `stdout`. Para aplicar diretamente ao cluster sem arquivo intermediário, usa-se **`ko apply -f config/`** (e **`ko delete -f config/`** como atalho para `kubectl delete`).
+EXAMPLE:
+```bash
+# Resolver todas as referências ko:// em config/ gerando release.yaml ou aplicar diretamente ao cluster Kubernetes
+ko resolve -f config/ > release.yaml
+ko apply -f config/ -- --context=staging-cluster
+```
+TRADE_OFFS: O comando `ko apply -f config/` exige que o binário `kubectl` esteja instalado e disponível no `$PATH` da máquina (repassando quaisquer flags após `--` diretamente para o `kubectl apply`); já o comando `ko resolve -f config/` não depende de `kubectl` nem de acesso ao cluster Kubernetes, sendo ideal para o estágio de build do CI que gera o artefato `release.yaml` imutável.
+VERIFY: Execute `ko resolve -f deployment.yaml` com `KO_DOCKER_REPO=ko.local` e verifique no YAML impresso no `stdout` que o campo `image: ko://...` foi substituído por `ko.local/...:...@sha256:...`.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-desenvolvimento-local-ko-local-kind-local-minikube]] | [[kind-carregamento-imagens-locais-load-docker-image-archive]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 864 | ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade | ko: builds multiplataforma (--platform=all), geração de SBOM por padrão e reprodutibilidade ===
+ONE_LINER: O `ko` produz **Software Bills of Materials (SBOMs)** por padrão a partir dos metadados do módulo Go (`go.mod`) anexando-os ao registry OCI, constrói imagens multi-arquitetura (`linux/amd64`, `linux/arm64`, etc.) via cross-compilation nativa do Go com `--platform=all` e gera camadas reprodutíveis.
+IMPORTANCE: Construir imagens multi-arquitetura com `docker buildx` frequentemente recorre à emulação lenta via QEMU, e gerar SBOMs precisos exige ferramentas adicionais no pipeline. Como destacado no README oficial do `ko`, a ferramenta resolve builds multiplataforma, geração de SBOM por padrão e determinismo nativamente porque compreende a estrutura de compilação do Go.
+HOW_IT_WORKS: (1) **Multi-platform builds**: como o compilador Go faz cross-compilation nativa instantaneamente apenas variando `GOOS` e `GOARCH` sem precisar de emulador QEMU, passar **`ko build ./cmd/app --platform=linux/amd64,linux/arm64`** (ou `--platform=all` para todas as plataformas suportadas pela imagem base) compila os binários em paralelo e publica um OCI Image Index / Docker Manifest List multi-arch; (2) **SBOMs por padrão**: o `ko` lê as informações de dependências compiladas pelo toolchain Go, gera um SBOM (formato SPDX por padrão, ou CycloneDX, desativável com `--sbom=none`) e faz upload do artefato `.sbom` no registry ao lado da imagem (inspecionável com `cosign download sbom`); e (3) **Reprodutibilidade**: zera timestamps na camada tar do binário Go para produzir digests determinísticos.
+EXAMPLE:
+```bash
+# Construir e publicar uma imagem multi-arquitetura (amd64 e arm64) com geração automática de SBOM SPDX
+ko build ./cmd/app --platform=linux/amd64,linux/arm64 --sbom=spdx
+```
+TRADE_OFFS: O suporte a cross-compilation instantânea com `--platform=all` funciona perfeitamente porque o `ko` compila com `CGO_ENABLED=0` por padrão; se você habilitar `CGO_ENABLED=1` nas configurações de build do `.ko.yaml`, a compilação cruzada para outra arquitetura exigirá toolchains C de cross-compilation (`gcc-aarch64-linux-gnu`) instalados na máquina host.
+VERIFY: Construa uma imagem com `ko build ./cmd/app --sbom-dir=/tmp/ko-sbom` e inspecione o arquivo SPDX gerado em `/tmp/ko-sbom` contendo a lista completa de módulos Go compilados no binário.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-configuracao-ko-yaml-imagens-base-flags-ldflags]] | [[buildpacks-metadados-sbom-labels-oci-deprecacao-stacks]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 865 | ko-configuracao-ko-yaml-imagens-base-flags-ldflags | ko: customização de imagem base (defaultBaseImage), flags de compilação e ldflags com .ko.yaml ===
+ONE_LINER: O arquivo de configuração `.ko.yaml` permite customizar a imagem base global (`defaultBaseImage`), definir imagens base por pacote (`baseImageOverrides`) e configurar opções do `go build` (`builds`, `flags`, `ldflags` e `env`) por binário.
+IMPORTANCE: Embora o comportamento zero-configuração do `ko` (usando `cgr.dev/chainguard/static:latest`) atenda à maioria dos serviços, projetos reais em produção quase sempre precisam injetar a versão do Git no binário via `-ldflags "-s -w -X main.version={{.Env.VERSION}}"` ou usar uma imagem base específica (como Alpine/Wolfi com certificados ou tzdata customizados) para determinados binários.
+HOW_IT_WORKS: Quando o `ko` é executado em um diretório que contém um arquivo **`.ko.yaml`** (ou via variável `KO_CONFIG_PATH`), ele carrega: (1) **`defaultBaseImage`**: substitui a imagem base padrão para todos os pacotes; (2) **`baseImageOverrides`**: mapa que associa pacotes Go específicos a imagens base diferentes; (3) **`defaultPlatforms`**: lista padrão de arquiteturas (ex.: `["linux/amd64", "linux/arm64"]`) para não precisar passar `--platform` na CLI; e (4) **`builds`**: lista de configurações de compilação por `id`/`main` onde é possível declarar `env`, `flags` (ex.: `-trimpath`) e `ldflags` com suporte a templates `{{.Env.VAR}}` e `{{.Date}}`.
+EXAMPLE:
+```yaml
+# Exemplo de arquivo .ko.yaml definindo imagem base padrão, plataformas multi-arch e ldflags de versão
+defaultBaseImage: cgr.dev/chainguard/static:nonroot
+defaultPlatforms:
+  - linux/amd64
+  - linux/arm64
+builds:
+  - id: api-server
+    main: ./cmd/api
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Env.RELEASE_VERSION}}
+```
+TRADE_OFFS: Ao trocar `defaultBaseImage` no `.ko.yaml` por uma imagem base em um registry privado ou corporativo, certifique-se de que a imagem base escolhida seja um manifesto multi-arquitetura caso você tenha configurado `defaultPlatforms: [linux/amd64, linux/arm64]`, pois o `ko` precisa encontrar na imagem base os descritores correspondentes a cada arquitetura alvo.
+VERIFY: Defina `-X main.version=v1.2.3` em `ldflags` no `.ko.yaml`, construa a imagem com `ko build ./cmd/api --local` e execute `docker run --rm <imagem> --version` para confirmar a injeção da versão no binário `/ko-app/api`.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]] | [[ko-arquivos-estaticos-kodata-caminho-ko-data-path]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 866 | ko-desenvolvimento-local-ko-local-kind-local-minikube | ko: publicação direta para o daemon Docker local (ko.local / --local) e clusters kind (kind.local) ===
+ONE_LINER: Para desenvolvimento local sem registry remoto, o `ko` reconhece os destinos especiais `KO_DOCKER_REPO=ko.local` (ou flag `--local` / `-L`, que carrega a imagem diretamente no daemon Docker local) e `KO_DOCKER_REPO=kind.local` (que injeta a imagem diretamente dentro de um cluster `kind` ativo).
+IMPORTANCE: Durante o desenvolvimento local de um operador Kubernetes ou microsserviço em Go rodando em um cluster **`kind`**, fazer push de cada build de teste para um registry na nuvem e esperar o `kubelet` baixar pela internet desperdiça tempo e banda; da mesma forma, rodar `docker build` + `kind load docker-image` exige passos extras. O `ko` integra nativamente tanto o Docker local quanto o `kind`.
+HOW_IT_WORKS: Em vez de apontar `KO_DOCKER_REPO` para um registry remoto: (1) ao definir **`KO_DOCKER_REPO=ko.local`** (ou passar a flag **`ko build --local`** / **`-L`**), o `ko` exporta a imagem construída diretamente para o daemon Docker local da estação de trabalho sem fazer push para a internet; e (2) ao definir **`KO_DOCKER_REPO=kind.local`** (e opcionalmente `KIND_CLUSTER_NAME=<nome>` caso o cluster não se chame `kind`), executar `ko build ./cmd/app` ou **`KO_DOCKER_REPO=kind.local ko apply -f config/`** compila o binário Go no host, monta a imagem OCI em memória, carrega-a diretamente dentro dos nós do cluster `kind` e aplica o manifesto Kubernetes resolvido com o digest `@sha256:...` em segundos.
+EXAMPLE:
+```bash
+# Compilar um controlador Go, injetar a imagem diretamente no cluster kind local e aplicar o manifesto em um único comando
+KO_DOCKER_REPO=kind.local ko apply -f config/
+```
+TRADE_OFFS: Ao usar `KO_DOCKER_REPO=kind.local`, o `ko` constrói a imagem para a arquitetura do nó do cluster `kind` local; se o seu cluster `kind` tiver um nome customizado diferente do padrão `kind` (criado com `kind create cluster --name meu-cluster`), você **deve** exportar `export KIND_CLUSTER_NAME=meu-cluster`, caso contrário o `ko` tentará carregar a imagem no cluster padrão `kind` e falhará se ele não existir.
+VERIFY: Com um cluster `kind` ativo, execute `KO_DOCKER_REPO=kind.local ko build ./cmd/app` e confirme com `docker exec -it kind-control-plane crictl images | grep kind.local` que a imagem foi injetada diretamente no nó.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-integracao-kubernetes-ko-resolve-apply-delete-uri]] | [[kind-carregamento-imagens-locais-load-docker-image-archive]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 867 | ko-arquivos-estaticos-kodata-caminho-ko-data-path | ko: empacotamento de arquivos estáticos sem Dockerfile usando o diretório kodata e KO_DATA_PATH ===
+ONE_LINER: Para incluir arquivos estáticos (templates HTML, assets web, migrações SQL ou configurações) na imagem OCI sem usar um `Dockerfile` nem `COPY`, basta colocá-los em um subdiretório chamado **`kodata/`** dentro do pacote `main` e lê-los em runtime a partir do caminho na variável de ambiente **`KO_DATA_PATH`**.
+IMPORTANCE: Embora binários Go modernos possam embutir pequenos arquivos no próprio executável usando `//go:embed`, muitas aplicações precisam distribuir diretórios de assets estáticos grandes, templates ou arquivos lidos diretamente do sistema de arquivos por bibliotecas que esperam um caminho em disco.
+HOW_IT_WORKS: Quando o `ko` constrói o pacote `./cmd/app`, ele verifica automaticamente se existe um diretório **`./cmd/app/kodata`** (ou um link simbólico `kodata` apontando para outra pasta do repositório). Se existir, o `ko` empacota todo o conteúdo de `kodata/` em uma camada separada da imagem OCI montada em `/var/run/ko` e define automaticamente na configuração da imagem a variável de ambiente **`KO_DATA_PATH=/var/run/ko`**. No código Go, basta ler `os.Getenv("KO_DATA_PATH")` (por exemplo, `filepath.Join(os.Getenv("KO_DATA_PATH"), "index.html")`) para acessar os arquivos em produção.
+EXAMPLE:
+```bash
+# Criar o diretório kodata ao lado do main.go e verificar que o ko empacota os arquivos em /var/run/ko ($KO_DATA_PATH)
+mkdir -p ./cmd/app/kodata
+echo '{"env": "prod"}' > ./cmd/app/kodata/config.json
+ko build ./cmd/app --local
+```
+TRADE_OFFS: Como o `ko` coloca os arquivos de `kodata/` em uma camada OCI dedicada separada da camada do binário `/ko-app/app`, se você alterar apenas o código `.go` sem tocar em `kodata/`, a camada de dados estáticos é 100% reutilizada no registry; lembre-se apenas de definir `KO_DATA_PATH=./cmd/app/kodata` ao rodar `go run ./cmd/app` fora de containers na máquina local caso seu código espere essa variável.
+VERIFY: Inspecione a configuração da imagem gerada com `docker inspect <imagem> --format '{{.Config.Env}}'` e confirme a presença de `KO_DATA_PATH=/var/run/ko`.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-configuracao-ko-yaml-imagens-base-flags-ldflags]] | [[ko-nomenclatura-imagens-base-import-paths-preserve-import-paths]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 868 | ko-nomenclatura-imagens-base-import-paths-preserve-import-paths | ko: estratégias de nomenclatura de imagens no registry (--base-import-paths, --preserve-import-paths e --bare) ===
+ONE_LINER: O `ko` oferece quatro estratégias para formar o nome do repositório da imagem a partir de `KO_DOCKER_REPO` e do importpath Go: o modo padrão (com hash MD5 do caminho para evitar colisões), `--preserve-import-paths` (`-P`), `--base-import-paths` (`-B`) e `--bare`.
+IMPORTANCE: Por padrão, conforme mostra o guia `Get Started` (`ko.build/get-started/`), `ko build ./cmd/app` publica uma imagem com um sufixo hash como `registry.example.com/my-project/app-099ba5bcefdead87f92606265fb99ac0@sha256:...`; em registries como Docker Hub ou Amazon ECR (onde cada nome de repositório precisa ser pré-criado ou seguir um nome limpo previsível), a equipe precisa controlar exatamente como a URL final da imagem é gerada.
+HOW_IT_WORKS: Supondo `KO_DOCKER_REPO=ghcr.io/minha-org` e o pacote `github.com/minha-org/repo/cmd/app`: (1) **Padrão (sem flags)**: gera `ghcr.io/minha-org/app-<md5-do-importpath>` (evitando colisão caso o repositório tenha dois binários chamados `app` em pastas diferentes); (2) **`--base-import-paths` (`-B`)**: usa apenas o último segmento do caminho sem o hash MD5, gerando `ghcr.io/minha-org/app`; (3) **`--preserve-import-paths` (`-P`)**: anexa o importpath completo em letras minúsculas, gerando `ghcr.io/minha-org/github.com/minha-org/repo/cmd/app`; e (4) **`--bare`**: usa literalmente apenas o valor de `KO_DOCKER_REPO` sem anexar nada do importpath, ideal para publicar em um repositório único pré-criado no Docker Hub ou AWS ECR (`123456.dkr.ecr.../meu-servico`).
+EXAMPLE:
+```bash
+# Publicar a imagem usando apenas o nome base do pacote (-B) e definindo tags explícitas (-t) além do digest
+export KO_DOCKER_REPO="ghcr.io/minha-org/projeto"
+ko build ./cmd/app --base-import-paths --tags=v1.0.0,latest
+```
+TRADE_OFFS: A flag `--bare` só deve ser usada quando você está construindo **um único binário** por comando (ou quando cada binário tem seu próprio `KO_DOCKER_REPO`), pois se você usar `ko resolve --bare -f config/` em um YAML que contém dois microsserviços Go diferentes (`ko://.../cmd/api` e `ko://.../cmd/worker`), ambos serão enviados para exatamente o mesmo repositório `KO_DOCKER_REPO` sobrescrevendo a mesma tag `:latest` (embora seus digests `@sha256:...` no YAML resolvido continuem distintos).
+VERIFY: Execute `ko build ./cmd/app --base-import-paths --push=false` e observe na referência impressa no `stdout` que o sufixo de hash MD5 foi removido do nome da imagem.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-autenticacao-registries-ko-docker-repo-ko-login]] | [[ko-integracao-kubernetes-ko-resolve-apply-delete-uri]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 869 | ko-origens-bazel-rules-docker-arquitetura-camadas-oci | ko: herança arquitetural do Bazel (rules_docker / rules_k8s) e montagem direta de camadas OCI com go-containerregistry ===
+ONE_LINER: Conforme documentado nos agradecimentos do README oficial, o `ko` nasceu da experiência dos autores em construir `rules_docker` e `rules_k8s` para o Bazel, trazendo a montagem direta de camadas OCI em memória (via biblioteca `google/go-containerregistry`) para projetos Go padrão sem exigir Bazel.
+IMPORTANCE: No Bazel (`rules_docker` / `rules_oci` e `rules_k8s`), a comunidade descobriu que para linguagens compiladas não faz sentido iniciar uma máquina virtual ou container completo só para criar um arquivo `.tar` contendo um binário e dar `PUT` de blobs em um registry HTTP; o `ko` democratizou essa velocidade para qualquer projeto que use apenas `go.mod` padrão.
+HOW_IT_WORKS: Internamente, o `ko` utiliza a biblioteca Go **`google/go-containerregistry`**. Em vez de falar com o socket de um daemon Docker (`/var/run/docker.sock`), o `ko` atua como um cliente HTTP direto da especificação OCI Distribution: ele baixa apenas o manifesto JSON da imagem base remota (sem sequer precisar baixar os blobs das camadas da imagem base para a máquina local!), compila o binário Go localmente em um stream tar em memória com permissões fixas (`/ko-app/<binario>`), faz upload (`BLOB UPLOAD`) apenas da camada nova do binário para o registry e publica o novo manifesto JSON combinando os digests das camadas da imagem base com o digest da nova camada do binário.
+EXAMPLE:
+```bash
+# Construir e publicar uma imagem em segundos (transferindo pela rede apenas a camada do binário Go compilado)
+KO_DOCKER_REPO="ghcr.io/minha-org/projeto" ko build ./cmd/controller
+```
+TRADE_OFFS: Como o `ko` monta a camada do binário Go em memória e faz streaming direto para o registry sem baixar nem executar a imagem base na máquina local, ele nunca executa instruções `RUN` dentro da imagem; qualquer preparação do sistema operacional base já deve vir pronta na `defaultBaseImage` escolhida.
+VERIFY: Observe o tempo de execução de `ko build` em um runner de CI limpo e note que os blobs da imagem base não precisam ser baixados localmente quando já existem no registry de destino (cross-repository blob mounting / manifest referencing).
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]] | [[gvisor-build-bazel-docker-testes-macos]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/
+
+=== NOTE: 870 | ko-cicd-github-actions-assinatura-cosign-slsa-seguranca | ko: pipelines leves de CI/CD, integração com Sigstore Cosign e segurança com imagens base Chainguard nonroot ===
+ONE_LINER: Por não exigir daemon Docker nem privilégios de `root` no runner, o `ko` encaixa-se em pipelines leves de CI/CD (GitHub Actions `ko-build/setup-ko`, GitLab CI, Tekton) e encadeia sua saída diretamente com o **Sigstore Cosign** (`cosign sign $(ko build ...)`) sobre imagens base mínimas sem shell.
+IMPORTANCE: Em pipelines de CI/CD modernos no Kubernetes (como Tekton ou GitHub Actions Runners em pods sem privilégios), rodar Docker-in-Docker (`dind`) introduz riscos severos de segurança; além disso, como `ko build` imprime exclusivamente a referência imutável `imagem@sha256:...` no `stdout`, ele foi desenhado para composição UNIX com ferramentas de assinatura criptográfica como o `cosign`.
+HOW_IT_WORKS: Como a imagem base padrão do `ko` (`cgr.dev/chainguard/static:latest`) é uma imagem *distroless* mínima que **não contém shell (`/bin/sh`), não contém gerenciador de pacotes e roda como usuário não-privilegiado (`nonroot`, UID 65532)**, a superfície de ataque da imagem gerada é reduzida ao próprio binário Go em `/ko-app/<nome>`. Em um pipeline de CI, o comando `DIGEST=$(ko build ./cmd/app)` captura a URI exata com `@sha256:...` da imagem publicada (e seu SBOM anexado automaticamente), permitindo assinar imediatamente a imagem e o SBOM sem chave estática (keyless OIDC) via `cosign sign --yes "${DIGEST}"`.
+EXAMPLE:
+```bash
+# Construir e publicar a imagem com ko capturando o digest imutável no stdout para assinatura ou deploy imediato
+IMAGE_URI=$(KO_DOCKER_REPO=ghcr.io/minha-org/app ko build ./cmd/app --base-import-paths)
+echo "Imagem publicada com digest imutável: ${IMAGE_URI}"
+```
+TRADE_OFFS: Como a imagem base padrão do `ko` não possui shell (`/bin/sh` ou `/bin/bash`) nem utilitários como `ls` ou `curl`, se um operador tentar executar `kubectl exec -it <pod> -- /bin/sh` em produção receberá erro de executável não encontrado; para depurar um pod construído com `ko` em Kubernetes, utilize containers efêmeros de debug (`kubectl debug -it <pod> --image=busybox --target=<container>`).
+VERIFY: Inspecione o usuário e o entrypoint da imagem gerada com `docker inspect <imagem> --format '{{.Config.User}} {{.Config.Entrypoint}}'` confirmando o execução não-root e o caminho `/ko-app/<binario>`.
+LINKS: [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]] | [[kubescape-varredura-vulnerabilidades-imagens-grype-cve]]
+SOURCES: https://raw.githubusercontent.com/ko-build/ko/main/README.md | https://ko.build/get-started/ | https://ko.build/features/k8s/

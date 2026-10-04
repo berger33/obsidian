@@ -1,0 +1,102 @@
+1681|k0s-arquitetura-zero-friction-binario-unico-sem-dependencias-os|k0s: arquitetura *Zero Friction* em binário único auto-extraível sem dependências de sistema operacional|O `k0s` (projeto CNCF Sandbox, licenciado sob Apache 2.0) é uma distribuição Kubernetes 100% upstream e certificada empacotada como um único binário estático auto-extraível que não possui nenhuma dependência de pacotes do sistema operacional host além do próprio kernel Linux.|Na operação tradicional de Kubernetes, atualizações de pacotes do sistema operacional host (`systemd`, `containerd`, `iptables`, `socat`, `conntrack` via `apt`/`rpm`) podem quebrar o cluster ou introduzir vulnerabilidades originadas na distro Linux. O `k0s` embute absolutamente todos os binários e bibliotecas necessários com controle total de versão.|Quando iniciado, o binário `k0s` extrai seus binários internos (incluindo `kube-apiserver`, `kube-controller-manager`, `kube-scheduler`, `etcd`, `kine`, `konnectivity-server`, `containerd`, `runc`, `kubelet`) para `/var/lib/k0s/bin` e atua diretamente como supervisor de processos (*process supervisor*), exigindo apenas 1 vCPU e 1 GB de RAM.|```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get.k0s.sh | sudo sh
+sudo k0s install controller --single
+sudo k0s start
+sudo k0s status
+sudo k0s kubectl get nodes
+```|Como o `k0s` embute o cliente `kubectl`, o comando `sudo k0s kubectl` funciona imediatamente após a partida do controlador sem precisar instalar nada adicional na máquina.|Execute `sudo k0s status` e `sudo k0s sysinfo` para validar os pré-requisitos do kernel Linux e o estado de supervisão do processo.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1682|k0s-isolamento-control-plane-processos-naked-sem-container-engine|k0s: isolamento de Control Plane executando componentes como processos *naked* sem CRI nem Kubelet no controller|Por padrão, um nó controlador do `k0s` (`k0s controller`) executa todos os componentes do plano de controle (`etcd`/`kine`, `kube-apiserver`, `kube-scheduler`, `kube-controller-manager` e `konnectivity-server`) diretamente como processos filhos do sistema operacional (*naked processes*) supervisionados pelo `k0s`, sem rodar `containerd` nem `kubelet` no nó controlador.|Em distribuições baseadas em Static Pods (`kubeadm`, `RKE2`), cada nó master ainda precisa rodar um container runtime (`containerd`) e um `kubelet` apenas para subir o próprio control plane, consumindo RAM adicional e registrando o nó master na API onde cargas de usuário poderiam ser agendadas se um taint fosse removido.|Como o `k0s controller` padrão não inicia nem `containerd` nem `kubelet`, os nós controladores nem sequer aparecem na lista de `kubectl get nodes`! Isso cria um isolamento físico estrito entre control plane e data plane, além de permitir escalar planos de controle muito densos ou rodar controladores dentro de containers leves.|```bash
+sudo k0s status
+ps -ef | grep "/var/lib/k0s/bin/kube-apiserver"
+```|Quando o administrador deseja explicitamente um cluster de nó único ou quer que os nós controladores também executem Pods de trabalho, basta passar a flag `--single` ou `--enable-worker` (`k0s controller --enable-worker`), que ativa o `kubelet` e o `containerd` junto ao controlador.|Em um nó iniciado apenas com `k0s controller` (sem `--enable-worker`), execute `sudo k0s kubectl get nodes` e confirme que a lista de worker nodes está vazia enquanto a API responde normalmente.|https://docs.k0sproject.io/stable/architecture/;https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://github.com/k0sproject/k0s
+1683|k0s-konnectivity-server-agent-comunicacao-control-plane-workers|k0s: comunicação reversa entre Control Plane e Workers via `Konnectivity` (`konnectivity-server` e `konnectivity-agent`)|Devido ao isolamento padrão do plano de controle (onde os nós controladores não participam da malha de rede CNI dos Pods), o `k0s` inclui e configura por padrão o serviço **Konnectivity** (`konnectivity-server` no controller e `konnectivity-agent` nos workers) para intermediar toda comunicação do `kube-apiserver` para os nós e Pods.|Quando o `kube-apiserver` roda fora da rede CNI dos workers (ou quando os workers estão em sub-redes remotas atrás de NAT), chamadas originadas no `kube-apiserver` — como `kubectl logs`, `kubectl exec`, `kubectl port-forward` e chamadas a admission webhooks ou aggregated apiservers hospedados em Pods — não teriam rota direta.|Os `konnectivity-agents` (implantados como DaemonSet nos workers) abrem conexões TCP/gRPC persistentes de saída na porta `8132` até o `konnectivity-server` (supervisionado pelo `k0s controller`). Assim, o `kube-apiserver` roteia todo o tráfego destinado a IPs de Nós, Pods e Services por dentro desse túnel seguro sem exigir CNI nos nós controladores.|```bash
+sudo k0s kubectl get daemonset konnectivity-agent -n kube-system
+sudo k0s kubectl get pods -n kube-system -l k8s-app=konnectivity-agent
+```|Em clusters multi-controller de alta disponibilidade com balanceador de carga externo, a porta `8132` (Konnectivity) também deve ser balanceada junto à porta `6443` (`kube-apiserver`) e `9443` (k0s join API).|Execute `sudo k0s kubectl logs -n kube-system -l k8s-app=konnectivity-agent` e teste um `kubectl exec` em qualquer Pod worker para validar o túnel Konnectivity.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1684|k0s-storage-backends-etcd-gerenciado-kine-sqlite-mysql-postgres|k0s: armazenamento de estado com `etcd` gerenciado ou bancos SQL via `kine` (`SQLite`, `MySQL`, `PostgreSQL`)|Na camada de persistência (`spec.storage` em `k0s.yaml`), o `k0s` suporta tanto um cluster **etcd** totalmente gerenciado pelo supervisor (padrão para clusters multi-node) quanto o shim **kine** embutido para usar **SQLite** (padrão no modo `--single`), **MySQL**, **PostgreSQL** ou **dqlite**.|Em dispositivos de borda de 1 GB de RAM, rodar um `etcd` completo consome memória e IOPS de disco flash excessivos; já em nuvens públicas que já possuem um banco RDS PostgreSQL/Aurora altamente disponível, usar `kine` elimina a manutenção de discos de `etcd`.|Quando configurado com `type: etcd`, unir um novo controlador com `k0s controller <join-token>` faz o `k0s` reconfigurar automaticamente a lista de membros do cluster `etcd` via API interna na porta `9443`. Quando configurado com `type: kine`, o `k0s` inicia o processo `kine` traduzindo a API gRPC do `etcd` para a string `dataSource` do banco SQL escolhido.|```yaml
+apiVersion: k0s.k0sproject.io/v1beta1
+kind: ClusterConfig
+metadata:
+  name: k0s-cluster
+spec:
+  storage:
+    type: kine
+    kine:
+      dataSource: "postgres://k0s:secret@pg-ha.internal:5432/k0s_state?sslmode=require"
+```|Conforme documentado na arquitetura do `k0s`, o `k0s` adiciona membros ao `etcd` automaticamente no join, mas não reduz (*shrink*) o cluster `etcd` sozinho: antes de desligar permanentemente um nó controlador de um cluster `etcd`, o membro deve ser removido explicitamente com `k0s etcd leave`.|Execute `sudo k0s etcd member-list` em um cluster multi-controller baseado em `etcd` para auditar os pares ativos do quórum.|https://docs.k0sproject.io/stable/architecture/;https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://github.com/k0sproject/k0s
+1685|k0s-k0sctl-gerenciamento-ciclo-vida-multi-node-upgrades-backups|k0s `k0sctl`: provisionamento declarativo, upgrades zero-downtime, backup e restore de clusters multi-nó via SSH|O `k0sctl` é a ferramenta oficial de linha de comando do ecossistema `k0s` que gerencia o ciclo de vida completo de clusters multi-nó (instalação, adição de nós, atualização de versão do Kubernetes, backup e restauração) a partir de um único arquivo declarativo `k0sctl.yaml` via SSH.|Conectar-se manualmente via SSH em 20 servidores para baixar o binário `k0s`, gerar tokens de controller e worker, distribuir arquivos de configuração e coordenar upgrades sequenciais é trabalhoso e propenso a erros humanos.|O engenheiro declara em `k0sctl.yaml` a lista de `hosts` (endereços SSH, chaves e `role`: `controller`, `controller+worker` ou `worker`) e a seção `k0s` (versão e configuração `k0s.yaml`). Ao executar `k0sctl apply --config k0sctl.yaml`, a ferramenta conecta-se em paralelo aos hosts, instala o binário `k0s`, inicializa o primeiro controller, gera e aplica os tokens de join nos demais controllers e workers e entrega o `kubeconfig` pronto com `k0sctl kubeconfig`.|```yaml
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: prod-k0s-cluster
+spec:
+  hosts:
+    - ssh:
+        address: 10.0.0.10
+        user: ubuntu
+        port: 22
+        keyPath: ~/.ssh/id_ed25519
+      role: controller
+    - ssh:
+        address: 10.0.0.21
+        user: ubuntu
+        port: 22
+        keyPath: ~/.ssh/id_ed25519
+      role: worker
+  k0s:
+    version: 1.31.2+k0s.0
+```|Para atualizar o cluster inteiro para uma nova versão do `k0s`, basta incrementar `spec.k0s.version` no `k0sctl.yaml` e reexecutar `k0sctl apply`: o `k0sctl` orquestra o upgrade rolling dos controladores e workers mantendo a disponibilidade.|Execute `k0sctl apply --config k0sctl.yaml` seguido de `k0sctl kubeconfig --config k0sctl.yaml > kubeconfig` para validar o acesso ao cluster provisionado.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1686|k0s-cni-kube-router-padrao-calico-custom-cni-networking|k0s: opções de rede CNI (`kube-router` padrão, `calico` pré-configurado e CNI customizada)|Na configuração de rede (`spec.network.provider`), o `k0s` oferece o **Kube-Router** como plugin CNI padrão leve, o **Calico** como alternativa pré-configurada (suportando VXLAN, IPIP e NetworkPolicies avançadas) e o modo **`custom`** para permitir a instalação manual de Cilium ou outras CNIs.|Dispositivos de borda e clusters enxutos beneficiam-se do baixo consumo de memória do Kube-Router (que também pode substituir o `kube-proxy` via IPVS), enquanto ambientes multi-tenant corporativos podem preferir o motor do Calico ou Cilium.|No arquivo `k0s.yaml` (`k0s config create`), o administrador define `spec.network.provider: kuberouter` (ou `calico` / `custom`), além de `podCIDR` e `serviceCIDR`. O controlador de bootstrap do `k0s` reconcilia automaticamente os DaemonSets e CRDs da CNI selecionada na inicialização.|```yaml
+apiVersion: k0s.k0sproject.io/v1beta1
+kind: ClusterConfig
+metadata:
+  name: k0s
+spec:
+  network:
+    provider: calico
+    calico:
+      mode: vxlan
+      vxlanPort: 4789
+      mtu: 1450
+    podCIDR: 10.244.0.0/16
+    serviceCIDR: 10.96.0.0/12
+```|O campo `spec.network.provider` não deve ser trocado em um cluster já em execução com cargas de trabalho ativas sem planejar a recriação da malha de rede e dos Pods.|Gere e valide um arquivo de configuração com `k0s config create > k0s.yaml` e `k0s config validate --config k0s.yaml`.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1687|k0s-autopilot-upgrades-declarativos-in-cluster-controlplanes-workers|k0s `Autopilot`: atualizações declarativas in-cluster de controladores, workers e imagens airgap via CRD `Plan`|Além de upgrades externos via SSH com `k0sctl`, o `k0s` inclui um operador nativo in-cluster chamado **Autopilot** (`autopilot.k0sproject.io/v1beta2`) que executa atualizações coordenadas de versão do `k0s` e de pacotes airgap por meio de objetos Custom Resource `Plan`.|Em frotas de borda onde os nós não aceitam conexões SSH de entrada a partir de uma estação central (ou em fluxos puramente GitOps com Argo CD / Flux), o próprio cluster precisa ser capaz de atualizar seu binário `k0s` declarativamente via API do Kubernetes.|Cada nó do cluster registra um objeto `ControlNode` no Autopilot. Quando o administrador aplica um objeto `Plan` especificando a nova versão do `k0s` e a estratégia de atualização (por exemplo, atualizando lote por lote de controladores e depois os workers), os agentes do Autopilot baixam o novo binário `k0s`, validam o hash SHA-256, substituem o executável no host e reiniciam o serviço de forma sequencial.|```yaml
+apiVersion: autopilot.k0sproject.io/v1beta2
+kind: Plan
+metadata:
+  name: autopilot
+spec:
+  id: upgrade-to-1-31-2
+  timestamp: "now"
+  commands:
+    - k0supdate:
+        version: v1.31.2+k0s.0
+        platforms:
+          linux-amd64:
+            url: https://github.com/k0sproject/k0s/releases/download/v1.31.2+k0s.0/k0s-v1.31.2+k0s.0-amd64
+        targets:
+          controllers:
+            discovery:
+              static:
+                nodes:
+                  - controller-01
+```|O objeto `Plan` processado pelo Autopilot deve ter obrigatoriamente `metadata.name: autopilot`; planos criados com outros nomes são ignorados pelo controlador por design para impedir múltiplos upgrades concorrentes.|Execute `sudo k0s kubectl get controlnodes` e acompanhe `sudo k0s kubectl get plan autopilot -o yaml` durante o rollout.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1688|k0s-suporte-multi-arquitetura-x86-arm64-armv7-riscv-docker|k0s: suporte nativo a `x86-64`, `ARM64`, `ARMv7` e `RISC-V` e execução de clusters em containers Docker|O `k0s` compila e distribui binários oficiais para quatro arquiteturas de processador — **`x86-64` (`amd64`)**, **`ARM64`**, **`ARMv7` (`arm`)** e **`RISC-V` (`riscv64`)** — além de fornecer imagens oficiais `k0sproject/k0s` para rodar controladores e workers diretamente dentro de containers Docker.|Laboratórios de IoT heterogêneos combinam servidores x86, placas ARM de 32/64 bits e novas placas RISC-V, enquanto pipelines de CI precisam subir um cluster Kubernetes completo em segundos usando um simples `docker run` sem VM intermediária.|Como o plano de controle do `k0s` não exige `kubelet` nem `containerd` por padrão, subir um plano de controle Kubernetes completo para testar operadores ou CRDs em CI requer apenas iniciar um container `docker run -d --name k0s-cp --privileged -p 6443:6443 docker.io/k0sproject/k0s:latest k0s controller`, gastando uma fração da memória de um cluster completo.|```bash
+docker run -d --name k0s-single \
+  --hostname k0s-single \
+  --privileged \
+  -v /var/lib/k0s \
+  -p 6443:6443 \
+  docker.io/k0sproject/k0s:latest k0s controller --single
+docker exec k0s-single k0s kubeconfig admin > k0s-docker.kubeconfig
+```|Ao executar o `k0s` com `--single` (ou worker) dentro de um container Docker, é obrigatório montar `-v /var/lib/k0s` como volume dedicado para que o overlayfs do `containerd` interno não tente aninhar sobre o overlayfs da camada raiz do container Docker host.|Extraia o `kubeconfig` com `docker exec k0s-single k0s kubeconfig admin` e execute `kubectl --kubeconfig k0s-docker.kubeconfig get nodes`.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s
+1689|k0s-cri-runtimes-containerd-padrao-custom-cri-gvisor-kata|k0s: gerenciamento do `containerd` embutido, importação de bundles airgap e configuração de CRI customizado|Nos worker nodes, o `k0s` supervisiona como processos *naked* o `containerd` (runtime de alto nível) e o `runc` (runtime OCI de baixo nível), permitindo customizar configurações em `/etc/k0s/containerd.d/`, pré-carregar bundles de imagens airgap em `/var/lib/k0s/images/` ou apontar para um CRI externo (`--cri-socket`).|Em ambientes air-gapped ou que exigem isolamento reforçado de containers (como `gVisor` `runsc`, `Kata Containers` ou `Docker`/`CRI-O` preexistente), o worker node precisa mesclar novos runtimes OCI sem editar o arquivo principal gerenciado pelo supervisor.|Qualquer arquivo `.toml` colocado em `/etc/k0s/containerd.d/` nos workers é automaticamente importado pelo `containerd` gerenciado pelo `k0s` (permitindo registrar mirrors de registry ou runtimes secundários como `gVisor`). Além disso, arquivos `.tar` de imagens OCI colocados em `/var/lib/k0s/images/` são importados automaticamente no namespace `k8s.io` do `containerd` durante a partida do worker.|```bash
+sudo mkdir -p /var/lib/k0s/images
+sudo k0s ctr images ls
+```|Para usar o cliente `ctr` contra o `containerd` embutido do `k0s`, invoque sempre `sudo k0s ctr` (que já aponta automaticamente para o socket `/run/k0s/containerd.sock` e para o namespace `k8s.io`), em vez de um `ctr` avulso do host.|Execute `sudo k0s ctr images ls` em um nó worker para listar todas as imagens carregadas no runtime do `k0s`.|https://docs.k0sproject.io/stable/architecture/;https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://github.com/k0sproject/k0s
+1690|k0s-backup-restore-cluster-state-tokens-join-controller-worker|k0s: geração de tokens de ingresso (`k0s token create`) com expiração por papel e backup/restore nativo (`k0s backup`)|O `k0s` separa estritamente os tokens de bootstrap por função (`--role=worker` vs `--role=controller` com `--expiry`) e provê os subcomandos nativos `k0s backup` e `k0s restore` para salvar e restaurar um arquivo `.tar.gz` completo com o estado do datastore, certificados PKI e manifestos de deploy.|Se o mesmo token de join usado para adicionar centenas de worker nodes de borda também tivesse permissão para ingressar um novo nó controlador no quórum `etcd`, o comprometimento físico de um único worker de borda permitiria assumir o controle total do plano de controle.|O token gerado por `k0s token create --role=worker --expiry=24h` contém apenas credenciais de bootstrap de `kubelet` restritas a nós workers, enquanto `--role=controller` autoriza chamadas na porta `9443` da API de join do controlador. Para proteção de desastres, `sudo k0s backup --save-path /backups/` gera um tarball datado contendo o snapshot do `etcd`/SQLite e toda a PKI de `/var/lib/k0s/pki`.|```bash
+sudo k0s token create --role=worker --expiry=4h > worker.token
+sudo k0s backup --save-path /tmp/
+ls -lh /tmp/k0s_backup_*.tar.gz
+```|O comando `k0s restore <arquivo-backup.tar.gz>` deve ser executado em um nó controlador onde o serviço `k0s` ainda não foi iniciado (antes de `k0s start`), restaurando o estado antes da subida do `etcd` e do `kube-apiserver`.|Gere um backup de teste com `sudo k0s backup --save-path /tmp/` e liste o conteúdo do arquivo `.tar.gz` gerado com `tar -ztvf /tmp/k0s_backup_*.tar.gz`.|https://raw.githubusercontent.com/k0sproject/k0s/main/README.md;https://docs.k0sproject.io/stable/architecture/;https://github.com/k0sproject/k0s

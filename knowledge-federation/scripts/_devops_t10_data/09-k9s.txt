@@ -1,0 +1,168 @@
+=== NOTE: 981 | k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes | K9s: interface de terminal (TUI) interativa em tempo real para observação e gerenciamento de clusters Kubernetes ===
+ONE_LINER: O **K9s** (`derailed/k9s`, licenciado sob Apache-2.0 e documentado em `k9scli.io`) fornece uma interface de usuário em terminal (TUI) de 256 cores que observa continuamente os recursos do cluster Kubernetes em tempo real e oferece atalhos de teclado diretos para inspecionar, filtrar, editar e depurar aplicações.
+IMPORTANCE: Durante um incidente em produção, digitar repetidamente comandos longos como `kubectl get pods -n meu-namespace -o wide`, copiar o nome do pod com o mouse, digitar `kubectl logs -f <pod> -c <container>` e depois `kubectl describe pod <pod>` desperdiça segundos preciosos. Segundo o README oficial, o K9s torna muito mais rápido navegar, observar e gerenciar aplicações Kubernetes sem sair do terminal.
+HOW_IT_WORKS: O K9s conecta-se ao API Server do Kubernetes usando o `KUBECONFIG` padrão da máquina e mantém *informers/watches* ativos sobre os recursos observados, atualizando a tela em tempo real. Conforme documenta a seção `PreFlight Checks` e `The Command Line` do README oficial: (1) requer um terminal com suporte a 256 cores (`export TERM=xterm-256color`) e usa as variáveis `KUBE_EDITOR` / `EDITOR` para edição de manifestos; (2) pode ser iniciado diretamente em um namespace específico (`k9s -n mycoolns`), em um contexto específico (`k9s --context coolCtx`) ou em uma visão inicial (`k9s -c pod`); e (3) suporta modo somente-leitura (**`k9s --readonly`**), onde todos os comandos que modificam ou apagam recursos do cluster ficam desabilitados.
+EXAMPLE:
+```bash
+# Verificar caminhos de configuração/logs do K9s e iniciar a TUI em modo somente-leitura (--readonly) para produção
+k9s info
+k9s --context prod-cluster -n payments --readonly
+```
+TRADE_OFFS: Ao conectar-se a clusters de **produção** apenas para investigar logs, eventos ou consumo de CPU/memória, inicie sempre o K9s com a flag **`k9s --readonly`**: isso evita que um atalho pressionado por engano no teclado (como `Ctrl-k` que mata um recurso sem pedir confirmação!) apague um pod ou deployment de produção.
+VERIFY: Execute `k9s version` e `k9s info` no terminal para verificar a versão instalada e os caminhos exatos onde o K9s armazena `config.yaml`, `k9s.log`, `skins`, `plugins.yaml` e `views.yaml`.
+LINKS: [[k9s-navegacao-modo-comando-filtros-regex-labels-contextos]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]] | [[stern-tail-logs-multi-pod-multi-container-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 982 | k9s-navegacao-modo-comando-filtros-regex-labels-contextos | K9s: modo de comando (:pod, :ctx, :ns) e filtragem avançada por Regex (/), inversa (/!), Labels (/-l) e Fuzzy (/-f) ===
+ONE_LINER: No K9s, pressionar **`:`** abre o modo de comando para saltar para qualquer recurso Kubernetes (por nome singular, plural, short-name ou alias, combinável com namespace, filtro, labels ou `@contexto`), enquanto pressionar **`/`** filtra a visão atual por expressão regular, regex inversa (`/!`), seletor de labels (`/-l`) ou busca fuzzy (`/-f`).
+IMPORTANCE: Em clusters com centenas de CRDs e milhares de pods distribuídos em dezenas de namespaces, rolar listas manualmente com as setas do teclado é inviável; dominar a gramática de comandos `:` e filtros `/` do K9s (documentada na tabela `Key Bindings` do README oficial e em `k9scli.io/topics/commands/`) permite localizar qualquer pod em menos de 2 segundos.
+HOW_IT_WORKS: Conforme especifica a tabela oficial de `Key Bindings` (incluindo os recursos introduzidos no K9s v0.30.0+): (1) **Navegação por recurso (`:`)**: `:pod` (ou `:po`, `:deploy`, `:svc`, `:crd`, ou `ctrl-a` para ver todos os aliases); (2) **Argumentos diretos no comando `:pod`**: `:pod ns-x` abre os pods do namespace `ns-x`; **`:pod /fred`** já abre os pods filtrados por `fred`; **`:pod app=fred,env=dev`** filtra por labels; e **`:pod @ctx1`** alterna imediatamente para o contexto `ctx1` exibindo seus pods; (3) **Filtros na visão (`/`)**: `/fred|blee` filtra usando Regex2; **`/! filter`** aplica filtro regex inverso (mantendo tudo que *não* casa); **`/-l app=web`** filtra por label selector; e **`/-f texto`** faz busca fuzzy; e (4) **Histórico de comandos**: `-` alterna para o último comando ativo (como `cd -`), e `[` / `]` navegam para trás e para frente no histórico.
+EXAMPLE:
+```text
+# Exemplos de comandos interativos (:) e filtros (/) digitados dentro da interface do K9s
+:pod app=checkout,env=prod
+:deploy @staging-cluster
+/!Running|Completed
+/-l tier=backend
+```
+TRADE_OFFS: O filtro inverso **`/! Running|Completed`** é uma das ferramentas mais rápidas para triagem de incidentes no K9s: em uma visão com 800 pods em todos os namespaces (`:pod all`), digitar `/!Running|Completed` oculta instantaneamente todos os pods saudáveis e deixa na tela apenas pods em `CrashLoopBackOff`, `Pending`, `Error` ou `ImagePullBackOff` (ou pressione `ctrl-z` para alternar a exibição de falhas/erros).
+VERIFY: Dentro do K9s, pressione `ctrl-a` para listar todos os aliases de recursos disponíveis no cluster (incluindo CRDs instalados) e pressione `?` para ver o menu de ajuda contextual da tela atual.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]] | [[k9s-visoes-diagnostico-pulses-xray-popeye-usedby]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 983 | k9s-atalhos-operacao-logs-shell-port-forward-benchmark | K9s: atalhos de operação em recursos (YAML y, Describe d, Edit e, Logs l/p, Shell s, Port-Forward SHIFT-F e Benchmark b) ===
+ONE_LINER: Sobre qualquer recurso selecionado na lista do K9s, teclas de uma única letra acionam operações imediatas: `y` (ver YAML), `d` (describe), `e` (editar), `l` (logs atuais), `p` (logs anteriores de container reiniciado), `s` (abrir shell no container), `Shift-f` (port-forward) e `b` (benchmark HTTP embutido).
+IMPORTANCE: Além de observar recursos, o operador precisa inspecionar por que um container acabou de reiniciar (`p`), abrir um túnel de porta local para testar um endpoint HTTP (`Shift-f`) e até medir a taxa de requisições por segundo e latência daquele endpoint (`b`) sem precisar sair da TUI.
+HOW_IT_WORKS: Conforme lista a tabela `Key Bindings` do README oficial: (1) **Inspeção e Edição**: `y` exibe o manifesto YAML completo (com `f` para tela cheia e `c` para copiar), `d` executa o equivalente ao `kubectl describe`, e `e` abre o recurso no `$KUBE_EDITOR` (desabilitado em `--readonly`); (2) **Logs e Containers**: `l` abre o streaming de logs do pod/deployment (onde `w` alterna quebra de linha *text wrap* e `t` alterna timestamps), `p` exibe os logs da instância anterior (`--previous`), `s` abre um shell interativo dentro do container e `a` faz attach; (3) **Ciclo de vida e Rollout**: `r` faz restart de Deployments/DaemonSets/StatefulSets (ou `drain` na visão de Nodes), `z` lista os ReplicaSets de um Deployment e `ctrl-l` faz rollback; e (4) **Port-Forward e Benchmark**: `Shift-f` cria um port-forward (listado em `f` ou `:pf`), e pressionar **`b`** sobre o port-forward ou Service dispara um gerador de carga HTTP de benchmark (gravando o relatório no diretório `Benchmarks dir` exibido em `k9s info`).
+EXAMPLE:
+```text
+# Sequência de teclas no K9s para criar um Port-Forward em um Pod, listar os túneis ativos e rodar um Benchmark HTTP
+1. Selecione o Pod e pressione: Shift-f (confirme a porta local:container)
+2. Navegue para a visão de Port-Forwards digitando: :pf
+3. Selecione o túnel ativo e pressione: b (para iniciar/parar o benchmark HTTP)
+```
+TRADE_OFFS: Atenção redobrada à diferença entre **`ctrl-d`** e **`ctrl-k`** ao remover recursos no K9s: enquanto **`ctrl-d`** abre uma caixa de diálogo pedindo confirmação explícita (`TAB` e `ENTER`, permitindo escolher propagation policy), pressionar **`ctrl-k`** (*Kill*) executa o equivalente imediato a `kubectl delete --now` **sem nenhuma caixa de diálogo de confirmação**!
+VERIFY: Em um cluster de desenvolvimento, selecione um Pod no K9s, pressione `y` para ver o YAML, `Esc` para voltar, `l` para ver os logs e `w` para alternar o word-wrap dos logs.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-navegacao-modo-comando-filtros-regex-labels-contextos]] | [[k9s-visoes-diagnostico-pulses-xray-popeye-usedby]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 984 | k9s-visoes-diagnostico-pulses-xray-popeye-usedby | K9s: visões integradas de diagnóstico de saúde e topologia (:pulses, :xray, :popeye, UsedBy u e Jump to Owner SHIFT-J) ===
+ONE_LINER: O K9s inclui visões analíticas especiais além das tabelas padrão de recursos: **`:pulses`** (`:pu`, painel de sinais vitais do cluster), **`:xray RESOURCE [NAMESPACE]`** (árvore hierárquica de dependências ao vivo), **`:popeye`** (`:pop`, auditoria de sanitização e boas práticas) e navegação relacional com **`u` (`UsedBy`)** e **`Shift-j` (`Jump to owner`)**.
+IMPORTANCE: Em tabelas planas, é difícil responder rapidamente *"Quais Pods estão montando este Secret ou esta ServiceAccount?"* ou visualizar em uma única árvore como um `Deployment` se conecta aos seus `ReplicaSet`s, `Pod`s, `Container`s, `Service`s, `ConfigMap`s e `Secret`s. As visões `:xray`, `:pulses`, `:popeye` e o atalho `u` (`UsedBy`) resolvem isso diretamente no terminal.
+HOW_IT_WORKS: Conforme documenta a tabela `Key Bindings` do README oficial: (1) **`:pulses` (ou `:pu`)**: exibe um dashboard dinâmico em ASCII com gráficos de saúde de Deployments, ReplicaSets, Pods, consumo de CPU/Memória e eventos do cluster; (2) **`:xray RESOURCE [NAMESPACE]`** (onde `RESOURCE` pode ser `po`, `svc`, `dp`, `rs`, `sts`, `ds`): renderiza uma árvore interativa mostrando cada objeto e todas as suas referências filhas (pods -> containers -> secrets/configmaps/pvcs); (3) **`:popeye` (ou `:pop`)**: executa o sanitizador de cluster **Popeye** embutido no K9s, atribuindo notas (score de 0 a 100) e apontando configurações inseguras, recursos sem limites de CPU/RAM, portas órfãs ou imagens `:latest`; e (4) **`u` (`UsedBy`) e `Shift-j`**: pressionar `u` sobre uma `ServiceAccount`, `PVC`, `Secret` ou `ConfigMap` lista todos os recursos que o utilizam, enquanto `Shift-j` salta para o recurso pai (`ownerReference`).
+EXAMPLE:
+```text
+# Comandos de visões especiais de diagnóstico e topologia digitados no prompt (:) do K9s
+:pulses
+:xray dp default
+:popeye
+```
+TRADE_OFFS: Em clusters muito grandes (com milhares de pods e dezenas de namespaces), abrir a visão `:xray po` em todos os namespaces simultaneamente exige que o K9s correlacione em memória toda a árvore de `Pod` -> `ServiceAccount` -> `Secret` -> `ConfigMap` -> `PVC`; para manter a árvore legível e responsiva, passe o namespace desejado ao comando (ex.: `:xray dp meu-namespace`).
+VERIFY: No K9s, navegue até `:secrets` (`:sec`), selecione um Secret usado por uma aplicação e pressione a tecla `u` (`UsedBy`) para listar imediatamente quais Pods referenciam aquele Secret.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-navegacao-modo-comando-filtros-regex-labels-contextos]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 985 | k9s-configuracao-xdg-diretorios-logs-debug-screendumps | K9s: estrutura de diretórios XDG (config.yaml, clusters, screendumps), logs de debug (-l debug) e variável K9S_CONFIG_DIR ===
+ONE_LINER: O K9s segue a especificação **XDG Base Directory** para organizar seus arquivos YAML de configuração, estado e compartilhamento (revelados por `k9s info` ou customizados via `K9S_CONFIG_DIR`), gravando capturas de recursos com `Ctrl-s` (`:screendump`) e logs de diagnóstico com `k9s -l debug`.
+IMPORTANCE: Como o K9s ocupa toda a tela do terminal com a TUI interativa, ele não pode imprimir logs internos de erro no `stdout`/`stderr`; saber onde fica o arquivo `k9s.log` (`k9s info` / `--logFile` / `K9S_LOGS_DIR`) e onde são salvos os manifestos exportados com `Ctrl-s` é indispensável para troubleshooting e customização.
+HOW_IT_WORKS: Conforme detalham as seções `Logs And Debug Logs` e `K9s Configuration` do README oficial: executar **`k9s info`** imprime todos os caminhos ativos no sistema operacional (no Linux em `~/.config/k9s`, `~/.local/state/k9s` e `~/.local/share/k9s`; no macOS em `~/Library/Application Support/k9s` ou `~/.config/k9s`; no Windows em `%LOCALAPPDATA%\k9s`, podendo ser sobrescrito por **`K9S_CONFIG_DIR`**): (1) **`Config`**: `config.yaml` global; (2) **`Logs`**: `k9s.log` (detalhado ao iniciar com **`k9s -l debug`**, customizável com `--logFile /tmp/k9s.log` ou `K9S_LOGS_DIR`); (3) **`Dumps dir`**: pasta `screen-dumps` onde o atalho **`Ctrl-s`** salva em disco o conteúdo da tabela ou manifesto YAML atual (visualizável em `:screendump` ou `:sd`); e (4) arquivos de extensão: `views.yaml`, `plugins.yaml`, `hotkeys.yaml`, `aliases.yaml` e `skins`.
+EXAMPLE:
+```bash
+# Iniciar o K9s em modo de debug gravando logs em um arquivo específico para diagnosticar falhas de RBAC ou conexão
+k9s -l debug --logFile /tmp/k9s-debug.log
+```
+TRADE_OFFS: Quando você trabalha conectado a um servidor remoto via SSH ou dentro de um multiplexador de terminal (`tmux`), copiar o nome de um pod (`c`) ou conteúdo de um YAML no K9s pode não chegar à área de transferência da sua máquina local se o clipboard nativo do servidor remoto for usado; para resolver isso, conforme documenta o README oficial, configure a variável de ambiente **`export K9S_CLIPBOARD=osc52`** (ou `auto`) para copiar via sequência de escape ANSI OSC52 pelo túnel SSH.
+VERIFY: Dentro do K9s, selecione qualquer visão ou YAML, pressione `Ctrl-s` para salvar um dump e digite `:sd` (`:screendump`) para visualizar o arquivo salvo no `Dumps dir`.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-extensibilidade-plugins-hotkeys-aliases-views-skins]] | [[k9s-execucao-container-docker-build-multiplataforma-compatibilidade]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 986 | k9s-extensibilidade-plugins-hotkeys-aliases-views-skins | K9s: extensibilidade com plugins customizados (plugins.yaml), atalhos (hotkeys.yaml), colunas (views.yaml) e temas (skins) ===
+ONE_LINER: O K9s pode ser estendido sem recompilar o código por meio dos arquivos YAML listados em `k9s info`: **`plugins.yaml`** (para acionar ferramentas externas como `stern`, `kubectl debug`, `dive` ou `helm` com variáveis de contexto), **`views.yaml`** (colunas customizadas), **`hotkeys.yaml`**, **`aliases.yaml`** e **`skins`**.
+IMPORTANCE: Cada equipe de engenharia de plataforma possui suas próprias ferramentas e fluxos operacionais — como abrir os logs de um Deployment no `stern`, iniciar um container efêmero `kubectl debug`, disparar uma sincronização do Argo CD ou exibir uma coluna customizada mostrando uma label específica do pod.
+HOW_IT_WORKS: Nos arquivos localizados nos diretórios exibidos por `k9s info`: (1) **`plugins.yaml`**: permite definir novos atalhos de teclado vinculados a `scopes` específicos (ex.: `pods`, `deployments`, `containers`) que executam qualquer comando binário externo (`command` e `args`), injetando variáveis de ambiente automáticas do item atualmente selecionado na tela do K9s (`$NAME`, `$NAMESPACE`, `$CONTEXT`, `$CONTAINER`, `$POD`, `$COL-<NOME>`); (2) **`views.yaml`**: customiza quais colunas (incluindo expressões JSONPath) são exibidas em cada tipo de recurso; (3) **`hotkeys.yaml`** e **`aliases.yaml`**: criam teclas de salto rápido (ex.: `Shift-0` para ir direto a `:pods`) e apelidos curtos para CRDs longos; e (4) **`skins`**: personaliza a paleta de cores da interface (podendo associar uma cor de topo diferente para cada cluster de produção vs desenvolvimento!).
+EXAMPLE:
+```yaml
+# Exemplo de plugin em ~/.local/share/k9s/plugins.yaml para abrir os logs do pod selecionado usando o stern (Shift-T)
+plugins:
+  stern-logs:
+    shortCut: Shift-T
+    confirm: false
+    description: "Tail logs with Stern"
+    scopes:
+      - pods
+    command: stern
+    background: false
+    args:
+      - --tail=100
+      - $NAME
+      - -n
+      - $NAMESPACE
+      - --context
+      - $CONTEXT
+```
+TRADE_OFFS: Configurar um tema visual (**skin**) específico por contexto de cluster (por exemplo, fundo de cabeçalho vermelho para clusters de produção e verde/azul para clusters de desenvolvimento/kind) é uma das melhores práticas operacionais no K9s para evitar que o engenheiro execute comandos destrutivos achando que está conectado ao cluster de testes.
+VERIFY: Execute `k9s info` para localizar o caminho exato de `Plugins file` e `Custom views file` no seu sistema e adicione um atalho em `hotkeys.yaml` ou `plugins.yaml` verificando sua exibição no menu `?`.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-configuracao-xdg-diretorios-logs-debug-screendumps]] | [[stern-tail-logs-multi-pod-multi-container-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 987 | k9s-ordenacao-colunas-marcacao-lote-operacoes-nodes | K9s: ordenação de colunas (SHIFT-N/A/S/O), seleção múltipla em lote (SPACE / CTRL-SPACE) e operações de Node (cordon/drain) ===
+ONE_LINER: Nas tabelas de recursos do K9s, o operador pode ordenar linhas instantaneamente por coluna (`Shift-n` nome, `Shift-a` idade, `Shift-s` status, `Shift-o` coluna selecionada), marcar múltiplos recursos (`Space` e `Ctrl-Space`) para operações em lote e gerenciar nós (`u` cordon/uncordon e `r` drain).
+IMPORTANCE: Durante uma manutenção de cluster ou limpeza de pods com falha, precisar deletar 15 pods em estado `Evicted` um por um ou lembrar a sintaxe de flags do `kubectl drain` / `kubectl sort-by` atrasa a operação; a marcação em lote e a ordenação por teclado do K9s executam isso em segundos.
+HOW_IT_WORKS: Conforme lista a tabela completa de `Key Bindings` no README oficial: (1) **Ordenação e Colunas**: `Shift-n` ordena por `Name`, `Shift-a` ordena por `Age` (idade do recurso, ideal para ver os pods recém-criados no topo), `Shift-s` ordena por `Status`, `Shift-p` ordena por `Namespace`, e usar `Shift-Left` / `Shift-Right` move o cursor de coluna permitindo ordenar por qualquer coluna selecionada com **`Shift-o`** (além de `Ctrl-w` para alternar colunas *wide*); (2) **Marcação em lote (*Marks*)**: **`Space`** marca/desmarca a linha atual, **`Ctrl-Space`** marca um intervalo inteiro de linhas e **`Ctrl-\`** limpa todas as marcas, permitindo aplicar `Ctrl-d` (delete) ou `Ctrl-s` (save) em todos os itens marcados de uma só vez; e (3) **Node View (`:node`)**: selecionar um nó e pressionar **`u`** alterna *Cordon/Uncordon*, enquanto **`r`** executa *Drain node*.
+EXAMPLE:
+```text
+# Atalhos na visão :pod para ordenar pelos pods mais recentes, selecionar um intervalo de pods e deletá-los em lote
+1. Pressione Shift-a (ordena os pods por Age)
+2. Selecione o primeiro pod alvo e pressione Space
+3. Mova até o último pod do bloco e pressione Ctrl-Space (marca o intervalo)
+4. Pressione Ctrl-d para deletar todos os pods marcados (ou Ctrl-\ para limpar a seleção)
+```
+TRADE_OFFS: Na visão de **Nodes (`:node`)**, a tecla **`r`** executa **`Drain node`** (evacuando os pods do nó), enquanto na visão de **Deployments / DaemonSets / StatefulSets** a mesma tecla **`r`** executa **`Restart resource`** (`rollout restart`); verifique sempre no cabeçalho superior da tela em qual visão você está antes de pressionar `r` ou `u`.
+VERIFY: Na visão `:pod` do K9s, pressione `Ctrl-w` para expandir as colunas detalhadas (`wide`, mostrando IP e Node), use `Shift-Right` para navegar até a coluna `RESTARTS` e pressione `Shift-o` para ordenar os pods pelo número de reinicializações.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-navegacao-modo-comando-filtros-regex-labels-contextos]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 988 | k9s-execucao-container-docker-build-multiplataforma-compatibilidade | K9s: execução via container Docker (derailed/k9s), compilação com KUBECTL_VERSION e matriz de compatibilidade Kubernetes ===
+ONE_LINER: O K9s pode ser executado diretamente como um container Docker montando o arquivo `~/.kube/config` (`docker run --rm -it -v ~/.kube/config:/root/.kube/config derailed/k9s`), compilado do código-fonte em Go 1.23+ (`make build` / `make imgx`) e customizado com a versão exata do `kubectl` (`--build-arg KUBECTL_VERSION`).
+IMPORTANCE: Em máquinas bastion de emergência ou ambientes onde você não quer instalar pacotes locais, rodar a imagem oficial `derailed/k9s` via Docker (ou como extensão do Docker Desktop `spurin/k9s-dd-extension:latest`) entrega a TUI completa instantaneamente junto com o binário `kubectl` embutido para shells e plugins.
+HOW_IT_WORKS: Conforme documentam as seções `Building From Source`, `Running with Docker` e `K8S Compatibility Matrix` do README oficial: (1) **Execução em Docker**: basta montar `$KUBECONFIG` em `/root/.kube/config` no container `derailed/k9s`; (2) **Build customizado da imagem**: o `Dockerfile` oficial aceita `--build-arg KUBECTL_VERSION=${KUBECTL_VERSION}` (obtido via `make kubectl-stable-version`) para embutir a versão exata do cliente `kubectl` compatível com seu cluster, e o alvo **`make imgx`** constrói imagens multiplataforma (`linux/amd64` e `linux/arm64`) via Docker buildx; e (3) **Compatibilidade**: o K9s prefere versões recentes do Kubernetes (`1.28+`, mantendo retrocompatibilidade documentada na matriz de cliente `1.26.1+` para `k9s >= v0.27.0`).
+EXAMPLE:
+```bash
+# Executar a imagem oficial do K9s via Docker montando o KUBECONFIG atual do usuário
+docker run --rm -it -v "${KUBECONFIG:-$HOME/.kube/config}:/root/.kube/config" derailed/k9s
+```
+TRADE_OFFS: Quando você executa o K9s dentro de um container Docker (`docker run ... derailed/k9s`) apontando para um cluster local (como `kind` ou `minikube` cujo `server:` no `~/.kube/config` aponta para `https://127.0.0.1:<porta>`), dentro do container do K9s o endereço `127.0.0.1` refere-se ao próprio container e não ao host; adicione `--network host` ao comando `docker run` no Linux para que o container do K9s alcance a porta local do API Server.
+VERIFY: Verifique a versão do cliente e do servidor reportada por `k9s version` confirmando o alinhamento com a versão do seu cluster Kubernetes.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-configuracao-xdg-diretorios-logs-debug-screendumps]] | [[kind-clusters-kubernetes-locais-containers-docker-arquitetura]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 989 | k9s-gerenciamento-port-forwards-cronjobs-replicasets-rollback | K9s: disparo manual de CronJobs (t), inspeção e Rollback de ReplicaSets (z / CTRL-L) e variável K9S_DEFAULT_PF_ADDRESS ===
+ONE_LINER: Para operações diárias de workloads, o K9s permite disparar um `Job` imediato a partir de um `CronJob` selecionando-o e pressionando **`t` (`Trigger`)**, fazer rollback de um `Deployment` para um `ReplicaSet` anterior com **`z`** + **`Ctrl-l`** e definir o endereço padrão de Port-Forward via **`K9S_DEFAULT_PF_ADDRESS`**.
+IMPORTANCE: Testar um `CronJob` que só rodaria às 03:00 da manhã exige normalmente digitar `kubectl create job --from=cronjob/<nome> <nome-manual> -n <ns>`; da mesma forma, reverter um deploy problemático para uma revisão específica exige consultar `kubectl rollout history`. No K9s, ambas as ações são visuais e levam uma única tecla.
+HOW_IT_WORKS: Conforme especifica a tabela `Key Bindings` e a seção `K9s Configuration` do README oficial: (1) **Trigger de CronJob (`:cj`)**: na visão de CronJobs, selecionar o CronJob desejado e pressionar **`t`** cria imediatamente uma execução manual de `Job` no cluster; (2) **Inspeção de ReplicaSets e Rollback**: na visão de Deployments (`:dp`), pressionar **`z`** abre os `ReplicaSet`s daquele Deployment (mostrando a imagem e o número de réplicas de cada revisão histórica), e pressionar **`Ctrl-l`** executa o rollback do recurso; e (3) **Endereço de Port-Forward (`K9S_DEFAULT_PF_ADDRESS`)**: exportar `K9S_DEFAULT_PF_ADDRESS=0.0.0.0` (ou um IP de interface específico `a.b.c.d`) sobrescreve o endereço local padrão (`localhost`) ao abrir túneis com `Shift-f`.
+EXAMPLE:
+```bash
+# Definir o endereço padrão de bind para todos os Port-Forwards abertos no K9s e iniciar na visão de CronJobs
+export K9S_DEFAULT_PF_ADDRESS="127.0.0.1"
+k9s -c cj
+```
+TRADE_OFFS: Tenha cuidado ao definir `K9S_DEFAULT_PF_ADDRESS=0.0.0.0` em um laptop conectado a uma rede Wi-Fi pública ou compartilhada: ao fazer `Shift-f` (Port-Forward) para um banco de dados ou serviço interno sem autenticação do cluster, fazer bind em `0.0.0.0` expõe aquela porta na interface de rede da sua máquina para outros dispositivos na mesma rede local; mantenha `127.0.0.1` a menos que precise acessar a porta a partir de uma VM/container local.
+VERIFY: Navegue até `:cj` (CronJobs) em um ambiente de desenvolvimento, pressione `t` sobre um CronJob e pressione `Enter` sobre o CronJob para ver o novo `Job` criado em execução.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]] | [[k9s-configuracao-xdg-diretorios-logs-debug-screendumps]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s
+
+=== NOTE: 990 | k9s-navegacao-contextual-warp-namespace-breadcrumbs-cabecalho | K9s: navegação rápida entre namespaces (Warp w e Use u) e controle de layout da TUI (Header CTRL-E, Crumbs CTRL-G) ===
+ONE_LINER: O K9s otimiza o aproveitamento de espaço em telas pequenas permitindo ocultar/exibir o cabeçalho superior (**`Ctrl-e`**) e a barra inferior de breadcrumbs (**`Ctrl-g`**), além de saltar diretamente para o namespace de um recurso selecionado na visão global com a tecla **`w` (`Warp to namespace`)**.
+IMPORTANCE: Quando você está visualizando todos os namespaces de uma vez (`:pod all`) e encontra um pod com problema no namespace `checkout-prod`, você frequentemente quer mudar o escopo de navegação do K9s para dentro daquele namespace `checkout-prod` sem precisar digitar `:ns`, procurar `checkout-prod` na lista de 100 namespaces e selecioná-lo.
+HOW_IT_WORKS: Conforme lista a tabela `Key Bindings` do README oficial: (1) **Warp to namespace (`w`)**: quando a coluna `NAMESPACE` está visível na tabela (por exemplo, na visão de todos os namespaces `0` / `all`), selecionar qualquer linha e pressionar **`w`** transporta (*warps*) a visão atual diretamente para o namespace daquele recurso; (2) **Use namespace (`u`)**: na visão `:ns` (Namespaces), pressionar `u` define aquele namespace como o namespace ativo e o adiciona aos namespaces favoritos no cabeçalho; (3) **Copiar nome/namespace (`c` / `n`)**: `c` copia o nome do recurso selecionado e `n` copia o nome do seu namespace para o clipboard; e (4) **Ajuste de tela**: **`Ctrl-e`** oculta/mostra o cabeçalho de métricas/atalhos do topo, e **`Ctrl-g`** oculta/mostra a trilha de navegação (*breadcrumbs*) no rodapé.
+EXAMPLE:
+```text
+# Fluxo rápido de navegação entre namespaces e otimização de espaço de tela no K9s
+1. Digite :pod all (exibe pods de todos os namespaces com a coluna NAMESPACE)
+2. Selecione um pod qualquer e pressione: w (Warp direto para o namespace daquele pod)
+3. Pressione Ctrl-e para ocultar o cabeçalho superior e ganhar mais linhas na tabela
+```
+TRADE_OFFS: Lembre-se de que a tecla **`w`** tem funções contextuais diferentes dependendo da tela em que você está no K9s: em uma tabela de recursos com a coluna `NAMESPACE`, **`w`** faz *Warp to namespace*; já dentro da tela de **visualização de Logs (`l`)**, a mesma tecla **`w`** ativa ou desativa a quebra automática de linhas longas (*Toggle text wrap*).
+VERIFY: Abra o K9s, pressione `Ctrl-e` e `Ctrl-g` para testar o redimensionamento do cabeçalho e dos breadcrumbs, e pressione `?` em qualquer tela para consultar os atalhos ativos naquele contexto.
+LINKS: [[k9s-interface-terminal-tui-gerenciamento-clusters-kubernetes]] | [[k9s-navegacao-modo-comando-filtros-regex-labels-contextos]] | [[k9s-atalhos-operacao-logs-shell-port-forward-benchmark]]
+SOURCES: https://raw.githubusercontent.com/derailed/k9s/master/README.md | https://k9scli.io/topics/commands/ | https://github.com/derailed/k9s

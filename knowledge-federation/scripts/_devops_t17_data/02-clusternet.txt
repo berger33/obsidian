@@ -1,0 +1,116 @@
+1611|clusternet-arquitetura-hub-agent-scheduler-controller-cncf|Clusternet: arquitetura CNCF Sandbox (`clusternet-hub`, `clusternet-agent`, `clusternet-scheduler` e `clusternet-controller-manager`)|O Clusternet (*Cluster Internet*, projeto CNCF Sandbox) é um add-on leve que permite gerenciar frotas de clusters Kubernetes (em nuvem pública, privada, híbrida ou na borda) e visitá-los através de túneis reversos WebSocket como se estivessem rodando localmente.|Clusters Kubernetes em VPCs isoladas, ambientes on-premise ou estações de borda não possuem IPs públicos acessíveis pelo cluster central, e gerenciar credenciais e ferramentas distintas para cada cluster inviabiliza operações em larga escala.|O Clusternet é composto por quatro binários: **`clusternet-agent`** (roda nos clusters filhos, auto-registra o cluster como `ManagedCluster`, envia heartbeats e mantém um túnel WebSocket full-duplex sobre uma única conexão TCP até o pai), **`clusternet-hub`** (roda no cluster pai como *Aggregated APIServer* servindo as Shadow APIs e o servidor WebSocket), **`clusternet-scheduler`** (agenda `Subscriptions` para clusters filhos) e **`clusternet-controller-manager`** (aprova registros, cria namespaces/RBAC dedicados e coordena entregas).|```bash
+kubectl get managedclusters -A
+kubectl get pods -n clusternet-system
+```|Como o `clusternet-hub` opera como um *Aggregated APIServer* (AA), o `kube-apiserver` do cluster pai precisa ter conectividade de rede até o Service do `clusternet-hub` e, em Kubernetes v1.22.14+/v1.26+, exige a flag `--aggregator-reject-forwarding-redirect=false` no `kube-apiserver` pai.|Verifique que o `APIService` `v1alpha1.shadow.clusternet.io` está com `AVAILABLE: True` executando `kubectl get apiservice | grep clusternet`.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1612|clusternet-shadow-apis-aggregated-apiserver-manifest-encapsulation|Clusternet: *Shadow APIs* via Aggregated APIServer (`shadow/v1alpha1`) para captura transparente de recursos|O `clusternet-hub` expõe o grupo de API `shadow/v1alpha1` como um *Aggregated APIServer*, espelhando todos os tipos de recursos do Kubernetes (e CRDs) para que objetos criados pelos usuários sejam automaticamente encapsulados em objetos `Manifest` multi-cluster em vez de serem instanciados localmente no cluster pai.|No cluster hospedeiro (pai), criar um `apps/v1 Deployment` normal faria o `kube-controller-manager` local criar Pods no próprio cluster pai. Com as *Shadow APIs*, o usuário usa a mesma estrutura exata do recurso (ou o plugin `kubectl clusternet`) e o Clusternet o armazena apenas como um template de distribuição (`Manifest`).|Quando uma requisição é enviada para `/apis/shadow/v1alpha1/...` (ou interceptada pelo wrapper `client-go` / `kubectl clusternet apply`), o `clusternet-hub` converte e persiste o objeto em um recurso `Manifest` (`apps.clusternet.io/v1alpha1`), mantendo-o inerte no cluster pai até que uma `Subscription` o selecione e distribua para os clusters filhos.|```bash
+kubectl krew install clusternet
+kubectl clusternet apply -f my-deployment.yaml
+kubectl get manifests -n default
+```|Se o `clusternet-hub` estiver indisponível, chamadas direcionadas ao grupo `shadow/v1alpha1` falharão na camada de agregação da API do cluster pai; monitore continuamente a saúde do `APIService`.|Após executar `kubectl clusternet apply -f my-deployment.yaml`, rode `kubectl get manifests` para confirmar que o template foi gravado sem criar Pods locais no cluster pai (`kubectl get pods`).|https://clusternet.io/docs/introduction/;https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://github.com/clusternet/clusternet
+1613|clusternet-sockets-websocket-tunnel-acesso-clusters-filhos-rbac|Clusternet: túnel reverso WebSocket e visitação direta de clusters filhos com regras RBAC dinâmicas|O `clusternet-agent` estabelece um canal de comunicação full-duplex sobre WebSocket até o `clusternet-hub`, permitindo que operadores e ferramentas acessem a API de qualquer cluster filho (mesmo atrás de firewall/NAT) usando um endpoint proxy no cluster pai com impersonação RBAC dinâmica.|Expor a porta `6443` de centenas de clusters de borda na internet pública representa um risco grave de segurança, e distribuir centenas de arquivos `kubeconfig` estáticos para engenheiros impede a revogação centralizada de acessos.|Quando o `clusternet-agent` se registra, o `clusternet-controller-manager` cria um objeto `ManagedCluster` e registra o socket de proxy no `clusternet-hub`. Um usuário autenticado no cluster pai pode acessar o cluster filho apontando o `kubectl` para o sub-recurso de proxy do cluster pai (`/apis/proxies.clusternet.io/v1alpha1/sockets/<cluster-id>/proxy/...`), onde o Clusternet aplica regras de RBAC dinâmicas antes de encaminhar a chamada pelo túnel.|```bash
+kubectl get managedclusters -A -o wide
+kubectl --kubeconfig parent.kubeconfig \
+  --server="https://parent-apiserver:6443/apis/proxies.clusternet.io/v1alpha1/sockets/cls-child-01/proxy/direct" \
+  get nodes
+```|Para que o redirecionamento e upgrade de conexões (`kubectl exec`, `logs`, `port-forward`) funcionem através do `clusternet-hub` em versões modernas do Kubernetes (`>= 1.26`), a flag `--aggregator-reject-forwarding-redirect=false` deve estar configurada no `kube-apiserver` do cluster pai.|Execute `kubectl get nodes` através da URL de socket proxy de um cluster filho e confirme que os nós retornados são os do cluster filho remoto.|https://clusternet.io/docs/introduction/;https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://github.com/clusternet/clusternet
+1614|clusternet-subscription-scheduling-replication-dividing-static-dynamic|Clusternet: agendamento multi-cluster via CRD `Subscription` (`Replication`, `Static` e `Dynamic` Dividing)|O CRD `Subscription` (`apps.clusternet.io/v1alpha1`) vincula um conjunto de `feeds` (recursos Kubernetes, CRDs ou `HelmChart` inclusive em registries OCI) aos clusters filhos selecionados (`subscribers`), suportando as estratégias de agendamento `Replication` e `Dividing` (estática por peso ou dinâmica por capacidade).|Permite declarar em um único manifesto quais aplicações e charts Helm compõem uma pilha e como suas réplicas devem ser replicadas ou fatiadas entre subgrupos de clusters.|Quando uma `Subscription` é criada, o `clusternet-scheduler` avalia os seletores de cluster em `spec.subscribers`, calcula a distribuição de réplicas (consultando preditores `in-tree` ou `out-of-tree` no modo `Dynamic`) e gera um objeto `Base` no namespace dedicado de cada cluster filho selecionado, de onde os manifestos finais (`Description`) são sincronizados.|```yaml
+apiVersion: apps.clusternet.io/v1alpha1
+kind: Subscription
+metadata:
+  name: web-stack-sub
+  namespace: default
+spec:
+  schedulingStrategy: Replication
+  subscribers:
+    - clusterAffinity:
+        matchLabels:
+          clusters.clusternet.io/Nothing: ""
+          env: prod
+  feeds:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: web-frontend
+      namespace: default
+```|O Clusternet cria um namespace dedicado `clusternet-<id>` no cluster pai para cada cluster filho registrado, onde residem os objetos `Base` e `Description` específicos daquele destino.|Inspecione `kubectl get subscription web-stack-sub -o yaml` e verifique em `status.bindingClusters` a lista de namespaces de clusters filhos vinculados pelo `clusternet-scheduler`.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1615|clusternet-globalization-localization-overrides-duas-etapas-canary|Clusternet: overrides em dois estágios (`Globalization` e `Localization`) com prioridades e rollback|O Clusternet separa as customizações de configuração em dois CRDs com escopos distintos — `Globalization` (cluster-scoped, aplica overrides globais em múltiplos namespaces) e `Localization` (namespaced, aplica overrides restritos a um namespace) — com prioridades numéricas (`priority: 0..1000`) para suportar rollouts canário entre clusters e rollback instantâneo.|Em um sistema simples de um único nível de override, uma regra global de infraestrutura (como injetar proxy corporativo) e um ajuste específico da equipe da aplicação (como alterar a tag da imagem em apenas um cluster canário) sobrescrevem-se mutuamente sem ordem clara.|O Clusternet avalia primeiro todas as `Globalizations` aplicáveis em ordem crescente de `spec.priority` (valores maiores têm precedência e são aplicados por último) e, em seguida, avalia todas as `Localizations` também em ordem de `spec.priority`, suportando formatos `Helm`, `JSONPatch`, `MergePatch`, `FieldJSONPatch` e `FieldMergePatch`. Para fazer um rollout canário ou reverter uma mudança, basta criar ou remover um objeto `Localization` de prioridade superior (ex.: `priority: 600`) sem tocar na configuração base.|```yaml
+apiVersion: apps.clusternet.io/v1alpha1
+kind: Localization
+metadata:
+  name: canary-image-override
+  namespace: clusternet-abcde
+spec:
+  priority: 600
+  overridePolicy: ApplyLater
+  overrides:
+    - name: bump-canary-tag
+      type: JSONPatch
+      value: '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "ghcr.io/org/web:v2.0-rc1"}]'
+  feed:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-frontend
+    namespace: default
+```|Em `spec.overridePolicy`, `ApplyLater` retém a aplicação do novo override até a próxima atualização da `Subscription` ou confirmação manual, enquanto `ApplyNow` propaga a mudança imediatamente para o `Description` do cluster filho.|Execute `kubectl get description -n clusternet-abcde -o yaml` para verificar o manifesto final resultante após a fusão de `Globalization` e `Localization`.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1616|clusternet-helm-charts-oci-registries-distribuicao-multi-cluster|Clusternet: distribuição nativa de Helm Charts e artefatos OCI via CRD `HelmChart` e `HelmRelease`|O Clusternet gerencia o ciclo de vida de pacotes Helm em múltiplos clusters nativamente através dos CRDs `HelmChart` e `HelmRelease` (`apps.clusternet.io/v1alpha1`), suportando tanto repositórios HTTP tradicionais de `index.yaml` quanto registries OCI (`oci://...`).|Implantar charts Helm em 100 clusters usando pipelines de CI imperativos que rodam `helm upgrade` em loop não possui reconciliação contínua se um cluster estiver temporariamente offline no momento do pipeline.|O usuário declara um objeto `HelmChart` (especificando `repo`, `chart`, `version` e `targetNamespace`) e o referencia dentro de `spec.feeds` de uma `Subscription`. O Clusternet resolve o chart, aplica quaisquer valores customizados via `Globalization`/`Localization` (`type: Helm`) e cria automaticamente objetos `HelmRelease` que o `clusternet-agent` reconcilia localmente em cada cluster filho.|```yaml
+apiVersion: apps.clusternet.io/v1alpha1
+kind: HelmChart
+metadata:
+  name: redis-cluster-chart
+  namespace: default
+spec:
+  repo: oci://registry-1.docker.io/bitnamicharts
+  chart: redis
+  version: 20.1.0
+  targetNamespace: cache-system
+  createNamespace: true
+```|Se o repositório OCI ou HTTPS do chart exigir autenticação privada, as credenciais devem ser fornecidas via `Secret` referenciado no objeto `HelmChart` para que tanto o plano de controle quanto os agentes possam validar e instalar o pacote.|Consulte `kubectl get helmchart -A` e `kubectl get helmrelease -n clusternet-abcde` para verificar a fase de instalação (`Phase: Installed`) do release Helm em cada cluster filho.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1617|clusternet-resource-predictor-framework-agendamento-capacidade-dinamica|Clusternet: *Cluster Resource Predictor Framework* para agendamento dinâmico baseado em capacidade|Para suportar `schedulingStrategy: Dividing` com divisão dinâmica (`Dynamic`), o Clusternet implementa um *Resource Predictor Framework* extensível (`in-tree` e `out-of-tree`) que calcula quantas réplicas de um dado `PodSpec` cabem realmente em cada cluster filho.|Simplesmente subtrair a soma de `requests` da capacidade bruta de todos os nós de um cluster filho superestima grosseiramente o número de réplicas agendáveis, pois ignora fragmentação por nó, `nodeSelector`, `affinity`, `taints` e topologias de zona.|No modo `in-tree`, o `clusternet-agent` executa um preditor embutido dentro de cada cluster filho que simula o algoritmo de filtragem e pontuação do scheduler contra os nós locais e reporta ao `clusternet-scheduler` o máximo exato de réplicas suportadas por topologia. Também é possível conectar preditores `out-of-tree` externos para políticas customizadas.|```yaml
+apiVersion: apps.clusternet.io/v1alpha1
+kind: Subscription
+metadata:
+  name: dynamic-capacity-sub
+  namespace: default
+spec:
+  schedulingStrategy: Dividing
+  dividingScheduling:
+    type: Dynamic
+    dynamicDividing:
+      strategy: Spread
+  subscribers:
+    - clusterAffinity:
+        matchLabels:
+          tier: compute
+  feeds:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: batch-inference
+      namespace: default
+```|Para que o agendamento dinâmico funcione com precisão, o `clusternet-agent` nos clusters filhos precisa estar com o servidor preditor habilitado e acessível pelo `clusternet-scheduler` (diretamente ou via túnel `clusternet-hub`).|Inspecione o `FeedInventory` gerado (`kubectl get feedinventory batch-inference-sub -o yaml`) para ver os requisitos de recursos extraídos de cada réplica e a alocação calculada.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1618|clusternet-auto-descoberta-cluster-api-node-feature-discovery-labels|Clusternet: auto-descoberta de clusters Cluster API (CAPI) e rotulagem automática via Node Feature Discovery|O Clusternet integra-se nativamente com o Kubernetes Cluster API (`cluster-api`) para descobrir e registrar automaticamente novos clusters provisionados, além de propagar características de hardware descobertas pelo Node Feature Discovery (NFD) para os labels do `ManagedCluster`.|Em plataformas elásticas onde clusters de clientes ou filiais são criados sob demanda via Cluster API e possuem hardwares variados (GPUs, AVX-512, SR-IOV, arquiteturas `arm64`/`ppc64le`/`s390x`), registrar e rotular cada cluster manualmente atrasa o agendamento de cargas especializadas.|O `clusternet-controller-manager` observa objetos do Cluster API para automatizar o bootstrap, enquanto o `clusternet-agent` agrega os labels de nós (incluindo os prefixos gerados pelo `node-feature-discovery`, versão do Kubernetes e plataforma de SO/arquitetura) e os publica automaticamente no objeto `ManagedCluster` do cluster pai, permitindo que `Subscriptions` filtrem clusters por `clusterAffinity` de hardware.|```bash
+kubectl get managedclusters -A --show-labels
+```|O próprio cluster pai (*parent cluster*) também pode registrar a si mesmo como um cluster filho executando o `clusternet-agent` localmente, permitindo que receba workloads agendados pelas mesmas `Subscriptions`.|Execute `kubectl get managedclusters -A --show-labels` e confirme a presença automática dos labels de plataforma, arquitetura (`beta.kubernetes.io/arch`, `kubernetes.io/os`) e versão do Kubernetes.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1619|clusternet-tolerancia-version-skew-multi-arquitetura-mcs-api|Clusternet: compatibilidade com *Kubernetes Version Skew* amplo e descoberta de serviços via `mcs-api`|O Clusternet foi projetado para suportar amplo desvio de versão (*Version Skew*) entre o cluster pai e os clusters filhos (gerenciando desde clusters legados v1.18+ até versões atuais >= v1.30), além de integrar descoberta de serviços multi-cluster baseada na especificação `mcs-api` (`ServiceExport` / `ServiceImport`).|Na prática corporativa, é impossível atualizar simultaneamente centenas de clusters de borda (`k3s`), clusters on-premise e clusters gerenciados em nuvem pública para a mesma versão minor do Kubernetes.|Por desacoplar o armazenamento dos manifestos (`Manifest` / `Description`) da versão interna da API do cluster pai e usar o túnel WebSocket do `clusternet-agent`, o plano de controle pode rodar em uma versão recente do Kubernetes enquanto coordena clusters filhos em versões distintas e em 6 arquiteturas (`linux/amd64`, `arm64`, `ppc64le`, `s390x`, `386`, `arm`).|```yaml
+apiVersion: multicluster.x-k8s.io/v1alpha1
+kind: ServiceExport
+metadata:
+  name: payment-backend
+  namespace: prod
+```|Para clusters rodando Kubernetes `>= v1.30`, utilize Clusternet `v0.18.x` ou superior conforme a matriz oficial de compatibilidade do projeto.|Verifique a coluna `KUBERNETES VERSION` em `kubectl get managedclusters -A` para auditar a frota heterogênea de versões gerenciadas pelo mesmo `clusternet-hub`.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet
+1620|clusternet-client-go-wrapper-kubectl-plugin-integracao-programatica|Clusternet: integração programática com `client-go` wrapper e operação via plugin `kubectl-clusternet`|O Clusternet disponibiliza um wrapper mínimo sobre o `k8s.io/client-go` oficial e o plugin `kubectl clusternet` (instalável via Krew) para que aplicações Go e pipelines de CI passem de single-cluster para multi-cluster alterando apenas uma linha de inicialização.|Reescrever plataformas internas de PaaS ou scripts de automação para usar SDKs proprietários de multi-cluster exige meses de refatoração. Ao interceptar a camada de transporte REST do `client-go`, todo o código existente que manipula `Clientset.AppsV1().Deployments()` continua funcionando sem alterações.|Em Go, basta envolver a função `kubeClient.Transport` (ou o cliente REST) com o wrapper do Clusternet para redirecionar as chamadas `Create`, `Update`, `Watch` e `Delete` às Shadow APIs do `clusternet-hub` ou a um cluster filho específico via socket proxy. Na CLI, `kubectl clusternet get/apply/delete/edit` oferece exatamente a mesma experiência do `kubectl` nativo.|```go
+package main
+
+import (
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"github.com/clusternet/clusternet/pkg/wrappers/clientgo"
+)
+
+func newMultiClusterClient(kubeconfigPath string) (*kubernetes.Clientset, error) {
+	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+	cfg.WrapTransport = clientgo.NewClusternetTransport
+	return kubernetes.NewForConfig(cfg)
+}
+```|O módulo de tipos e esquemas de CRDs do Clusternet é publicado separadamente em `github.com/clusternet/apis` para evitar arrastar dependências pesadas do servidor para clientes Go.|Compile um cliente Go com `clientgo.NewClusternetTransport` (ou execute `kubectl clusternet get deploy`) e confirme que a requisição é atendida pelo `clusternet-hub` via Shadow API.|https://raw.githubusercontent.com/clusternet/clusternet/main/README.md;https://clusternet.io/docs/introduction/;https://github.com/clusternet/clusternet

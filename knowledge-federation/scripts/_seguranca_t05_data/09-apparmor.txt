@@ -1,0 +1,121 @@
+TOPIC: AppArmor Linux Security Module — MAC Baseado em Caminhos, Perfis Enforce/Complain, Abstrações e Containers/Kubernetes
+SOURCES: https://gitlab.com/apparmor/apparmor/-/raw/master/README.md | https://gitlab.com/apparmor/apparmor/-/wikis/home | https://gitlab.com/apparmor/apparmor/-/wikis/Documentation
+
+===NOTE===
+0481|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles|AppArmor: Arquitetura do Módulo LSM de Controle de Acesso Obrigatório (MAC Baseado em Caminhos e Confinamento de Superusuário)|**AppArmor** (`gitlab.com/apparmor/apparmor`, GPLv2 / LGPL para `libapparmor`) é um sistema de *Mandatory Access Control* (MAC) integrado ao framework Linux Security Module (LSM) desde o kernel 2.6.36 (e padrão no Ubuntu, Debian, SUSE e derivados) que confina processos individuais por meio de perfis declarativos baseados em caminhos de arquivos.|Diferente do controle de acesso discricionário tradicional (DAC — permissões `rwx` e proprietário), as restrições do AppArmor são obrigatórias e aplicam-se inclusive a processos executando como **`root` (UID 0)**: se um daemon web vulnerável rodando como root for explorado, o perfil AppArmor impede que ele leia `/etc/shadow`, carregue módulos de kernel ou execute `/bin/sh` se não estiverem explicitamente listados no perfil.|Os perfis de texto residem em `/etc/apparmor.d/`, são compilados para bytecode binário pelo `apparmor_parser` (com cache em `/var/cache/apparmor/`) e carregados no kernel. Processos sem perfil aplicável rodam `unconfined`, permitindo adoção incremental focada nos daemons expostos à rede.|```bash
+# Verificar o status do modulo AppArmor no kernel e a contagem de perfis em modo enforce e complain
+sudo aa-status
+```|Como o AppArmor resolve políticas de arquivo pelo caminho (*pathname*), a criação de *hard links* para um arquivo sensível em um diretório não protegido permitiria contornar uma regra baseada apenas no caminho original se o perfil também não restringir operações `link` ou se `fs.protected_hardlinks = 1` não estiver ativo no kernel.|Execute `sudo aa-enabled && sudo aa-status --json | jq '.profiles | length'` para confirmar que o LSM está ativo e carregando perfis.|apparmor-modos-operacao-enforce-complain-audit-deny-aa-enforce, apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal, selinux-arquitetura-mac-baseada-rotulos-type-enforcement-contextos
+
+===NOTE===
+0482|apparmor-modos-operacao-enforce-complain-audit-deny-aa-enforce|AppArmor: Modos de Operação de Perfis (`enforce`, `complain`, `unconfined`, `kill`) e Comandos `aa-enforce`, `aa-complain` e `aa-disable`|Cada perfil carregado no AppArmor opera em um modo de execução explícito: **`enforce`** (bloqueia qualquer operação não autorizada pelo perfil e registra a violação no log de auditoria) ou **`complain`** (*learning mode* — permite a operação não listada, mas registra `apparmor="ALLOWED"` no `auditd`/`dmesg` para aprendizado).|Colocar um perfil recém-escrito diretamente em modo `enforce` em produção sem um período de observação em modo `complain` pode interromper fluxos legítimos raros da aplicação (como rotação de certificados ou geração de relatórios mensais).|Os utilitários de espaço de usuário permitem alternar o modo instantaneamente sem reiniciar o processo confinado: **`sudo aa-complain /etc/apparmor.d/<perfil>`** adiciona a flag `flags=(complain)` e recarrega o perfil; **`sudo aa-enforce /etc/apparmor.d/<perfil>`** ativa o bloqueio estrito; e **`sudo aa-disable /etc/apparmor.d/<perfil>`** cria um symlink em `/etc/apparmor.d/disable/` e descarrega o perfil do kernel.|```bash
+# Colocar o perfil de um servico em modo complain para homologacao e depois promove-lo para enforce
+sudo aa-complain /etc/apparmor.d/usr.sbin.nginx
+sudo aa-enforce /etc/apparmor.d/usr.sbin.nginx
+sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.nginx
+```|Dentro de um perfil em modo `enforce`, o modificador **`audit`** antes de uma regra (ex.: `audit /etc/ssl/private/** r,`) força o registro de acessos bem-sucedidos, enquanto **`deny`** (ex.: `deny /proc/kcore r,`) bloqueia silenciosamente sem poluir os logs (ou `audit deny` para bloquear e logar mesmo em modo `complain`).|Verifique com `sudo aa-status` que o binário `/usr/sbin/nginx` e seus workers em execução aparecem listados sob `processes are in enforce mode`.|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles, apparmor-geracao-aprendizado-perfis-aa-genprof-aa-logprof-auditd, apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal
+
+===NOTE===
+0483|apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal|AppArmor: Sintaxe de Regras de Perfil — Permissões de Arquivos (`r`, `w`, `a`, `k`, `l`, `m`), `capability`, `network`, `mount`, `ptrace` e `signal`|Um perfil AppArmor funciona sob o modelo **default-deny** (*tudo o que não é explicitamente permitido dentro do bloco `{ ... }` é negado*): ele governa acesso a arquivos (com globs `*`, `**`, `?`, `{a,b}`), capabilities POSIX (`capability net_bind_service,`), sockets de rede (`network inet tcp,`), montagens (`mount`), `ptrace`, `signal` e IPC D-Bus/Unix.|Permite restringir um microserviço para que ele possa apenas abrir sockets TCP IPv4/IPv6 (`network inet stream,`), usar `capability setgid`/`setuid`, ler seus próprios certificados TLS (`owner /etc/myapp/tls/** r,`) e gravar apenas em `/var/log/myapp/*.log` (`w` ou `a` *append-only*).|Nas regras de arquivo, **`r`** permite leitura, **`w`** escrita completa, **`a`** apenas anexação ao final do arquivo (*append* — impede que um atacante apague linhas anteriores de um log!), **`k`** trava de arquivo (`flock`), **`l`** criação de links e **`m`** mapeamento de memória executável (`mmap` com `PROT_EXEC`). O prefixo **`owner`** exige que o UID do processo coincida com o proprietário do arquivo.|```nginx
+#include <tunables/global>
+
+profile myapp /usr/local/bin/myapp flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  capability net_bind_service,
+  network inet stream,
+  network inet6 stream,
+
+  /usr/local/bin/myapp mr,
+  owner /etc/myapp/config.yaml r,
+  owner /var/log/myapp/** a,
+  deny /etc/shadow r,
+}
+```|Nunca conceda `/ rw,` ou `capability sys_admin,` / `capability sys_module,` em um perfil de aplicação, pois `sys_admin` e `sys_module` permitem escapar do confinamento montando sistemas de arquivos ou injetando código no kernel.|Valide a sintaxe e compile o perfil sem carregá-lo usando `apparmor_parser -p /etc/apparmor.d/usr.local.bin.myapp > /dev/null`.|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles, apparmor-transicoes-execucao-ix-px-cx-ux-scrubbing-ambiente, apparmor-abstracoes-tunables-local-overrides-manutencao-perfis
+
+===NOTE===
+0484|apparmor-transicoes-execucao-ix-px-cx-ux-scrubbing-ambiente|AppArmor: Modos de Transição de Execução (`ix`, `px`/`Px`, `cx`/`Cx`, `ux`/`Ux`) e Limpeza de Ambiente (*Environment Scrubbing*)|Quando um processo confinado pelo AppArmor invoca `execve()` para iniciar outro binário, a regra de execução no perfil deve especificar exatamente como o domínio de confinamento transitará: **`ix`** (*Inherit*), **`px`/`Px`** (*Discrete Profile*), **`cx`/`Cx`** (*Child Profile*) ou **`ux`/`Ux`** (*Unconfined*).|A diferença entre a letra minúscula (`px`, `cx`, `ux`) e a **maiúscula (`Px`, `Cx`, `Ux`)** é crítica para a segurança: as variantes **maiúsculas** acionam o *Environment Scrubbing* da `glibc`/linker dinâmico, limpando variáveis perigosas como `LD_PRELOAD`, `LD_LIBRARY_PATH`, `PYTHONPATH` e `PATH` na transição de domínio.|Usar `px` minúsculo sem limpeza de ambiente permite que o processo pai comprometido defina `LD_PRELOAD=/tmp/evil.so` antes de invocar o binário filho, injetando código dentro do novo perfil. Já **`Ux`/`ux`** retira o processo filho de qualquer confinamento e quase nunca deve ser usado em perfis de segurança; prefira sempre **`ix`** (herda o mesmo perfil) ou **`Px` / `Cx`** (transita para perfil próprio ou subperfil limpando o ambiente).|```nginx
+profile backup-runner /usr/local/sbin/backup-runner {
+  #include <abstractions/base>
+
+  # Herdar o mesmo perfil ao executar utilitarios basicos de compressao
+  /usr/bin/gzip ixr,
+
+  # Transitar para um subperfil dedicado limpando LD_PRELOAD/LD_LIBRARY_PATH (Cx maiusculo)
+  /usr/bin/curl Cx -> curl_uploader,
+
+  profile curl_uploader {
+    #include <abstractions/base>
+    #include <abstractions/ssl_certs>
+    network inet stream,
+    /usr/bin/curl mr,
+    /var/backups/encrypted/*.tar.gz.enc r,
+  }
+}
+```|Se você definir `/usr/bin/helper Px,` (maiúsculo), mas não existir nenhum perfil carregado no kernel para `/usr/bin/helper`, a chamada `execve()` **falhará com `Permission denied`** (*fail-closed*); use `Pix` apenas se desejar fallback explícito para herança.|Teste a execução do processo pai e verifique em `ps auxZ` que o processo filho `/usr/bin/curl` assumiu o contexto `backup-runner//curl_uploader (enforce)`.|apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal, apparmor-subperfis-change-hat-pam-apparmor-mod-apparmor, selinux-arquitetura-mac-baseada-rotulos-type-enforcement-contextos
+
+===NOTE===
+0485|apparmor-abstracoes-tunables-local-overrides-manutencao-perfis|AppArmor: Modularização com `abstractions/`, Variáveis `tunables/` e Customizações Seguras em `local/`|O diretório `/etc/apparmor.d/` inclui blocos reutilizáveis de regras em **`abstractions/`** (ex.: `abstractions/base`, `abstractions/nameservice`, `abstractions/ssl_certs`, `abstractions/openssl`, `abstractions/python`), variáveis globais em **`tunables/`** (`@{HOME}`, `@{PROC}`, `@{pid}`, `@{tid}`) e o diretório de extensão **`local/`**.|Escrever regras do zero para carregamento de bibliotecas C (`libc.so`), leitura de `/etc/resolv.conf` ou validação de certificados CA raiz em `/etc/ssl/certs/` tornaria os perfis frágeis; incluir `#include <abstractions/nameservice>` e `#include <abstractions/ssl_certs>` mantém os perfis enxutos e portáveis.|Para customizar um perfil fornecido pela distribuição Linux (ex.: `/etc/apparmor.d/usr.sbin.mysqld`) sem sofrer conflitos de atualização de pacotes `apt`/`zypper`, os perfis oficiais terminam com `#include if exists <local/usr.sbin.mysqld>`. O administrador coloca apenas as regras extras (como um diretório de dados customizado `/mnt/nvme-db/** rwk,`) dentro de `/etc/apparmor.d/local/usr.sbin.mysqld`.|```bash
+# Adicionar permissao para diretorio customizado de dados no override local sem tocar no perfil principal
+cat << 'EOF' | sudo tee /etc/apparmor.d/local/usr.sbin.mysqld
+  # Permitir acesso ao volume NVMe dedicado de banco de dados
+  /mnt/nvme-db/mysql/ r,
+  /mnt/nvme-db/mysql/** rwk,
+EOF
+
+sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld
+```|Algumas abstrações de desktop (como `abstractions/ubuntu-browsers` ou `abstractions/user-tmp`) são amplas demais para daemons de servidor; em servidores de produção, restrinja-se a `abstractions/base`, `abstractions/nameservice` e `abstractions/ssl_certs`.|Recarregue o perfil com `sudo apparmor_parser -r` e confirme que atualizações do pacote de distribuição preservam intacto o arquivo em `/etc/apparmor.d/local/`.|apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal, apparmor-geracao-aprendizado-perfis-aa-genprof-aa-logprof-auditd, lynis-perfis-customizados-custom-prf-skip-test-sysctl-ssh
+
+===NOTE===
+0486|apparmor-geracao-aprendizado-perfis-aa-genprof-aa-logprof-auditd|AppArmor: Criação e Refinamento Guiado de Perfis com `aa-genprof`, `aa-logprof` e `aa-autodep`|O pacote `apparmor-utils` fornece ferramentas interativas baseadas em aprendizado dinâmico — **`aa-autodep`**, **`aa-genprof`** e **`aa-logprof`** — que analisam os eventos de auditoria do kernel (`/var/log/audit/audit.log` ou `/var/log/syslog`) e propõem regras e abstrações adequadas.|Em aplicações complexas que carregam dezenas de bibliotecas dinâmicas e arquivos de localização no startup, usar `aa-genprof` reduz de dias para minutos o tempo necessário para construir um perfil funcional.|O comando `sudo aa-genprof /usr/local/bin/myapp` gera um esqueleto mínimo em modo `complain`, instrui o engenheiro a exercitar as funcionalidades da aplicação em outro terminal e, ao pressionar `S` (*Scan*), lê todas as solicitações registradas no `auditd`, sugerindo se o analista deseja permitir o caminho exato, usar um glob, incluir uma `abstraction` correspondente ou negar (`Deny`). Posteriormente, **`sudo aa-logprof`** refina perfis existentes a partir de novos logs.|```bash
+# Analisar logs recentes do auditd para refinar perfis em modo complain ou investigar negacoes
+sudo aa-logprof -f /var/log/audit/audit.log
+```|Nunca aprove cegamente (`Allow`) todas as sugestões do `aa-logprof` em um servidor que já esteja exposto a tráfego externo não confiável, pois você poderia incorporar o comportamento de uma tentativa de ataque dentro do perfil permitido; execute `aa-genprof` apenas em ambiente controlado de homologação/CI.|Após revisar o perfil gerado pelo `aa-genprof` em Git, execute `sudo apparmor_parser -r` e confirme zero mensagens `apparmor="DENIED"` sob carga normal.|apparmor-modos-operacao-enforce-complain-audit-deny-aa-enforce, apparmor-diagnostico-violacoes-apparmor-denied-dmesg-ausearch, auditd-investigacao-forense-ausearch-aureport-auid-correlacao
+
+===NOTE===
+0487|apparmor-integracao-containers-docker-kubernetes-securitycontext|AppArmor: Confinamento de Containers e Pods Kubernetes (`securityContext.appArmorProfile` GA no Kubernetes v1.30+)|O AppArmor é suportado nativamente pelo Docker (`--security-opt apparmor=<perfil>`), pelo `containerd`/`CRI-O` e pela especificação oficial do Kubernetes através do campo nativo **`securityContext.appArmorProfile`** (estável/GA a partir do Kubernetes v1.30, substituindo a antiga anotação `container.apparmor.security.beta.kubernetes.io/*`).|O perfil padrão de containers (`container-default` / `docker-default`) bloqueia a montagem de sistemas de arquivos e escrita em `/proc/sys`, mas ainda permite que processos dentro do container executem shells, gravem na maior parte do filesystem do container e abram conexões de rede arbitrárias; perfis customizados por workload trancam o pod ao mínimo estrito.|Nos nós de trabalho do cluster, um DaemonSet ou gerenciador de configuração (ou o *Security Profiles Operator*) carrega o perfil customizado em `/etc/apparmor.d/` via `apparmor_parser -r`. No manifesto do Pod (ou container individual), declara-se `appArmorProfile.type: Localhost` e `localhostProfile: k8s-payments-worker`.|```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: payments-worker
+  namespace: production
+spec:
+  securityContext:
+    appArmorProfile:
+      type: Localhost
+      localhostProfile: k8s-payments-worker
+  containers:
+    - name: worker
+      image: registry.internal.corp/payments/worker@sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+```|Perfis de containers em Kubernetes **devem** declarar a flag `flags=(attach_disconnected,mediate_deleted)` no cabeçalho do perfil para lidar corretamente com namespaces de montagem (`mount namespaces`) e sockets abertos antes do `pivot_root` do container.|Dentro do nó onde o pod foi agendado, verifique `/proc/<PID>/attr/current` do processo do container e confirme que ele exibe `k8s-payments-worker (enforce)`.|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles, apparmor-regras-arquivos-capabilities-network-mount-ptrace-signal, kubearmor-arquitetura-ebpf-lsm-enforcement-inline-containers-nodos
+
+===NOTE===
+0488|apparmor-subperfis-change-hat-pam-apparmor-mod-apparmor|AppArmor: Mudança Dinâmica de Privilégio Intra-Processo com `aa_change_hat(2)`, `aa_change_profile(2)` e `pam_apparmor`|A biblioteca **`libapparmor`** (licenciada sob LGPL) expõe as chamadas de API **`aa_change_hat()`** e **`aa_change_profile()`**, utilizadas por módulos como `mod_apparmor` (Apache) e `pam_apparmor` (PAM) para alterar o confinamento de um processo já em execução sem precisar invocar `execve()`.|Um servidor web multi-tenant ou um daemon de sessão SSH inicia com privilégios mais amplos, mas assim que identifica qual virtual host HTTP ou qual usuário PAM autenticou, pode restringir aquela thread/processo específico a um subperfil (**`^hat`**) muito mais restrito.|Com `aa_change_profile()`, a transição é unidirecional e irreversível (o processo nunca mais pode voltar ao perfil original). Já com `aa_change_hat(subprofile, magic_token)`, o processo passa um token secreto aleatório de 64 bits ao kernel para entrar no subperfil `^subprofile` durante o processamento da requisição e pode fornecer o mesmo `magic_token` ao final para retornar ao perfil pai.|```nginx
+profile /usr/sbin/apache2 {
+  #include <abstractions/base>
+  #include <abstractions/apache2-common>
+
+  # Subperfil (Hat) dedicado exclusivamente ao VirtualHost de upload de documentos
+  ^vhost_uploads {
+    #include <abstractions/base>
+    /var/www/uploads/** rw,
+    deny /var/www/admin/** rwx,
+    deny /bin/** x,
+  }
+}
+```|Se o processo dentro do `^hat` for comprometido por um exploit de corrupção de memória (buffer overflow) na mesma thread onde o `magic_token` está armazenado na heap/stack, o atacante poderia ler o token da memória e chamar `aa_change_hat(NULL, magic_token)`; para isolamento definitivo, prefira processos separados com **`aa_change_profile()`** (irreversível).|Inspecione `sudo aa-status` e confirme que os subperfis `apache2//vhost_uploads` estão carregados no kernel.|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles, apparmor-transicoes-execucao-ix-px-cx-ux-scrubbing-ambiente, selinux-arquitetura-mac-baseada-rotulos-type-enforcement-contextos
+
+===NOTE===
+0489|apparmor-diagnostico-violacoes-apparmor-denied-dmesg-ausearch|AppArmor: Diagnóstico de Negativas (`apparmor="DENIED"`), `aa-notify` e Decodificação de Campos `operation`, `requested_mask` e `denied_mask`|Quando o módulo AppArmor do kernel bloqueia uma ação em modo `enforce` (ou registra em modo `complain`), ele emite um evento LSM (`type=AVC` / `apparmor="DENIED"` ou `apparmor="ALLOWED"`) para o subsistema `auditd` (ou `dmesg`/`journald` caso o `auditd` não esteja rodando).|Compreender os campos exatos do log de negação (`profile`, `operation`, `name`, `pid`, `comm`, `requested_mask`, `denied_mask` e `fsuid`/`ouid`) permite distinguir imediatamente um erro legítimo de configuração de perfil de uma tentativa real de exploração pós-comprometimento.|Por exemplo, um evento com `apparmor="DENIED" operation="open" profile="myapp" name="/etc/myapp/db.conf" requested_mask="r" denied_mask="r" fsuid=1001 ouid=0` indica que o processo `myapp` (rodando como UID `1001`) tentou ler `/etc/myapp/db.conf` (cujo dono é `root`, `ouid=0`): se a regra no perfil tiver o prefixo `owner /etc/myapp/** r,`, a negação ocorreu porque `fsuid (1001) != ouid (0)`.|```bash
+# Filtrar todas as violacoes do AppArmor registradas hoje no auditd ou journald do kernel
+sudo ausearch -m AVC -ts today | grep 'apparmor="DENIED"'
+sudo journalctl -k --since today | grep 'apparmor="DENIED"'
+```|Quando um acesso falha silenciosamente sem aparecer nos logs com `apparmor="DENIED"`, verifique se o perfil possui uma regra explícita **`deny`** (que suprime o log por padrão); remova temporariamente o `deny` ou troque por `audit deny` durante a depuração.|Compare `fsuid` e `ouid` e a máscara `denied_mask` no log do kernel para ajustar cirurgicamente o perfil afetado.|apparmor-modos-operacao-enforce-complain-audit-deny-aa-enforce, apparmor-geracao-aprendizado-perfis-aa-genprof-aa-logprof-auditd, auditd-investigacao-forense-ausearch-aureport-auid-correlacao
+
+===NOTE===
+0490|apparmor-otimizacao-cache-binario-apparmor-parser-boot-systemd|AppArmor: Compilação AOT, Cache Binário (`/var/cache/apparmor/`), Pré-Validação em CI e Hardening de Boot (`apparmor=1 security=apparmor`)|O compilador **`apparmor_parser`** transforma as expressões regulares e regras de texto de `/etc/apparmor.d/` em máquinas de estados determinísticas (DFA) binárias otimizadas para avaliação em tempo constante pelo kernel Linux, armazenando os binários pré-compilados em `/var/cache/apparmor/`.|Compilar centenas de perfis complexos do zero a cada boot atrasaria a inicialização do servidor em vários segundos; o cache binário (`--write-cache`) permite carregar os perfis no kernel em milissegundos antes que os serviços de rede iniciem.|Em pipelines de infraestrutura como código (Ansible, Packer, imagens de nós Kubernetes), `apparmor_parser -Q -K /etc/apparmor.d/<perfil>` pré-valida a sintaxe no CI (`--preprocess` / `--skip-kernel-load` `-Q`) e pré-aquece o cache binário na construção da Golden Image, enquanto os parâmetros de linha de comando do kernel no GRUB (`apparmor=1 security=apparmor` ou lista LSM `lsm=landlock,lockdown,yama,integrity,apparmor,bpf`) garantem a ativação desde o PID 1.|```bash
+# Pre-validar todos os perfis customizados em CI sem exigir carregamento no kernel (-Q) e atualizar cache
+apparmor_parser -Q --preprocess /etc/apparmor.d/usr.local.bin.myapp > /dev/null
+sudo apparmor_parser -r --write-cache /etc/apparmor.d/usr.local.bin.myapp
+```|Se você atualizar o kernel Linux para uma versão com novo formato de ABI de recursos LSM e o cache binário estiver corrompido ou desatualizado, limpe e reconstrua o cache com `sudo apparmor_parser -r -W -T /etc/apparmor.d/` (onde `-T` ignora a leitura do cache antigo e `-W` reescreve o novo).|Verifique `cat /sys/module/apparmor/parameters/enabled` (deve retornar `Y`) e confirme a presença dos arquivos compilados em `/var/cache/apparmor/`.|apparmor-arquitetura-lsm-mandatory-access-control-path-based-profiles, apparmor-integracao-containers-docker-kubernetes-securitycontext, lynis-hardening-sistemas-arquivos-montagens-suid-permissoes-boot

@@ -1,0 +1,174 @@
+=== NOTE: 681 | runc-runtime-oci-referencia-linux-especificacao | OpenContainer runc: ferramenta CLI e runtime de referência para criar e executar containers segundo a especificação OCI ===
+ONE_LINER: O `runc` (mantido pela Open Container Initiative sob licença Apache-2.0) é a ferramenta CLI de baixo nível de referência para criar e executar containers no Linux de acordo com a especificação OCI (`runtime-spec`).
+IMPORTANCE: Motores de containers de alto nível como Docker, containerd, CRI-O e Podman não interagem diretamente com todas as chamadas de sistema de namespaces, cgroups e capabilities do kernel Linux ao iniciar cada processo; eles delegam essa etapa final a um runtime OCI de baixo nível. Segundo o README oficial do `runc`, embora seja projetado principalmente para ser invocado por softwares de nível superior (instalado tipicamente em `/usr/local/sbin/runc`), compreender sua operação direta é essencial para depurar falhas de inicialização de containers, segurança de kernel e conformidade OCI.
+HOW_IT_WORKS: O `runc` consome um **OCI bundle** — um diretório no sistema de arquivos Linux contendo um subdiretório com o sistema de arquivos raiz do container (`rootfs`) e um arquivo de especificação `config.json` que descreve namespaces (`pid`, `net`, `ipc`, `uts`, `mount`, `user`, `cgroup`), limites de recursos cgroups, capabilities Linux, perfil seccomp, rótulos SELinux/AppArmor e o processo inicial a ser executado. Quando invocado, o processo Go do `runc` utiliza um módulo auxiliar em C (`nsenter`) para configurar os namespaces antes de iniciar o processo do container e, uma vez que o processo do container está em execução, o binário do `runc` sai de cena sem permanecer residente como daemon.
+EXAMPLE:
+```bash
+# Verificar a versão do runc instalado no host Linux e os recursos compilados (seccomp, libpathrs, cgroup)
+runc --version
+runc features
+```
+TRADE_OFFS: Conforme ressalta a seção `Using runc` do README oficial, o `runc` é uma ferramenta de baixo nível que não gerencia pull de imagens de registries, camadas de overlayfs, redes virtuais CNI nem reinicialização automática de containers; tentar usá-lo diretamente no lugar de Docker, Podman ou containerd para cargas gerais exige orquestrar manualmente o rootfs, a rede e um supervisor externo como o systemd.
+VERIFY: Execute `runc --version` no host Linux para inspecionar a versão do runtime, o commit, a versão da especificação OCI suportada (`spec: 1.x.x`), a versão do Go e o status do `libseccomp`.
+LINKS: [[runc-oci-bundle-rootfs-config-json-runc-spec]] | [[runc-ciclo-vida-create-start-list-delete-run]] | [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 682 | runc-oci-bundle-rootfs-config-json-runc-spec | OpenContainer runc: criação de OCI Bundles com rootfs e geração de config.json via runc spec ===
+ONE_LINER: Para executar um container com o `runc`, o operador prepara um OCI bundle contendo o diretório `rootfs` e gera o template de configuração `config.json` por meio do comando `runc spec`.
+IMPORTANCE: Quando um nó Kubernetes falha ao iniciar um container com um erro críptico de `OCI runtime create failed`, engenheiros de plataforma precisam saber inspecionar ou reproduzir isoladamente o OCI bundle (`config.json` + `rootfs`) que o `containerd` ou `CRI-O` entregou ao `runc`. De acordo com o README oficial do `runc` (`Creating an OCI Bundle`), um bundle pode ser construído em segundos exportando um filesystem existente e rodando `runc spec`.
+HOW_IT_WORKS: Um OCI bundle consiste em um diretório pai (por exemplo, `/mycontainer`) contendo uma pasta `rootfs` populada com a árvore de arquivos do container (que pode ser obtida com `docker export $(docker create busybox) | tar -C rootfs -xvf -`) e o arquivo `config.json`. O comando `runc spec` gera um arquivo `config.json` base em conformidade com a especificação `opencontainers/runtime-spec`, definindo no bloco `process` o terminal (`"terminal": true` ou `false`), o usuário (`uid`/`gid`), os argumentos (`"args": ["sh"]`), variáveis de ambiente (`PATH`, `TERM`), conjuntos de capabilities Linux (`bounding`, `effective`, `inheritable`, `permitted`, `ambient`, como `CAP_AUDIT_WRITE`, `CAP_KILL`, `CAP_NET_BIND_SERVICE`), limites `rlimits` (`RLIMIT_NOFILE`) e `"noNewPrivileges": true`.
+EXAMPLE:
+```bash
+# Criar um OCI bundle completo a partir do busybox e gerar o arquivo config.json padrão com runc spec
+mkdir -p /tmp/mycontainer/rootfs
+cd /tmp/mycontainer
+docker export $(docker create busybox) | tar -C rootfs -xvf -
+runc spec
+ls -la config.json rootfs/
+```
+TRADE_OFFS: O template padrão gerado por `runc spec` vem com `"terminal": true` (esperando uma sessão interativa de TTY) e com o filesystem raiz configurado como somente leitura (`"readonly": true`) no bloco `root`; para rodar o container em segundo plano ou permitir escritas no `rootfs`, é obrigatório editar o `config.json` ajustando `"terminal": false` e `"readonly": false`.
+VERIFY: Após executar `runc spec`, valide a estrutura do JSON gerado com `jq .process config.json` e confirme que os campos `args`, `capabilities`, `rlimits` e `noNewPrivileges` estão presentes.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-ciclo-vida-create-start-list-delete-run]] | [[runc-containers-rootless-user-namespaces-configuracao]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 683 | runc-ciclo-vida-create-start-list-delete-run | OpenContainer runc: operações de ciclo de vida OCI (create, start, list, delete) versus comando composto run ===
+ONE_LINER: O `runc` suporta duas formas de execução sobre um OCI bundle: o comando de conveniência `runc run` (que cria, inicia e remove o container ao sair) e as operações granulares de ciclo de vida da especificação OCI (`runc create`, `runc start`, `runc list` e `runc delete`).
+IMPORTANCE: Se um container fosse criado e iniciado em um único passo indivisível, motores como `containerd` e plugins CNI do Kubernetes não teriam como configurar a interface de rede virtual (`veth`), atribuir o endereço IP e aplicar regras de firewall dentro do network namespace do container **antes** que o processo principal da aplicação comece a rodar. O README oficial do `runc` (`Running Containers`) explica como a separação entre `create` e `start` viabiliza essa orquestração.
+HOW_IT_WORKS: (1) No modo de conveniência, `runc run mycontainerid` executa em sequência a criação do ambiente, o início do processo e a remoção do container após o encerramento. (2) No modo de ciclo de vida OCI (com `"terminal": false` no `config.json`), `runc create mycontainerid` cria todos os namespaces Linux, cgroups e mounts do container e inicializa o processo auxiliar aguardando em estado `"created"` (visível em `runc list`). Nesse intervalo entre `create` e `start`, o orquestrador de nível superior configura a pilha de rede e anexos externos do container. Em seguida, `runc start mycontainerid` dispara a execução do binário configurado em `process.args`; quando o processo termina, o estado passa para `"stopped"` em `runc list`, e `runc delete mycontainerid` limpa o estado e os cgroups remanescentes.
+EXAMPLE:
+```bash
+# Executar o ciclo de vida OCI completo passo a passo (create -> list -> start -> list -> delete)
+cd /tmp/mycontainer
+jq '.process.terminal = false | .process.args = ["sleep", "5"]' config.json > config.tmp && mv config.tmp config.json
+
+sudo runc create mycontainerid
+sudo runc list
+sudo runc start mycontainerid
+sleep 6
+sudo runc list
+sudo runc delete mycontainerid
+```
+TRADE_OFFS: Ao utilizar `runc create` e `runc start` com `"terminal": false` sem configurar um socket de console ou redirecionamento explícito de descritores de arquivo, o container é lançado em segundo plano; além disso, se o processo terminar e `runc delete <id>` não for chamado, o identificador do container permanece registrado no diretório de estado em status `stopped`, impedindo a criação de outro container com o mesmo ID.
+VERIFY: Execute `sudo runc create test-lc` seguido de `sudo runc list` e confirme que a coluna `STATUS` exibe exatamente `created` antes de invocar `sudo runc start test-lc` e `sudo runc delete test-lc`.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-oci-bundle-rootfs-config-json-runc-spec]] | [[runc-supervisores-systemd-cgroup-v2-checkpoint-criu]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 684 | runc-containers-rootless-user-namespaces-configuracao | OpenContainer runc: execução de containers rootless com User Namespaces (CONFIG_USER_NS) ===
+ONE_LINER: O `runc` suporta a execução de containers sem privilégios de root (`rootless`) utilizando User Namespaces do kernel Linux (`CONFIG_USER_NS=y`), `runc spec --rootless` e diretório de estado gravável pelo usuário (`--root`).
+IMPORTANCE: Executar o runtime de containers como `root` no host significa que qualquer vulnerabilidade de escape no runtime ou na configuração de volumes pode conceder ao invasor controle total (`UID 0`) sobre o servidor hospedeiro. Segundo a seção `Rootless containers` do README oficial do `runc`, o modo rootless permite que um usuário comum sem privilégios crie e execute containers isolados.
+HOW_IT_WORKS: Para que o modo rootless funcione, o kernel Linux deve ter suporte a User Namespaces compilado e habilitado (`CONFIG_USER_NS=y` em `/proc/config.gz`, com `unprivileged_userns_clone=1` em Arch/Debian ou `user.max_user_namespaces` > 0 em RHEL/CentOS). O usuário comum cria o diretório do bundle em sua home (`~/mycontainer`), extrai o `rootfs` e executa `runc spec --rootless`, que gera um `config.json` adaptado para usuários não privilegiados (incluindo o mapeamento do UID/GID do usuário atual para o `uid 0` dentro do user namespace do container e removendo opções de mount/rede que exigiriam root no host). Na execução, como o diretório padrão `/run/runc` pertence ao root, passa-se a flag global `--root /tmp/runc` apontando para um diretório de estado gravável pelo usuário comum.
+EXAMPLE:
+```bash
+# Gerar especificação rootless e iniciar um container como usuário comum sem sudo
+mkdir -p ~/mycontainer/rootfs
+cd ~/mycontainer
+docker export $(docker create alpine:latest) | tar -C rootfs -xf -
+
+runc spec --rootless
+runc --root /tmp/runc-$USER run mycontainerid
+```
+TRADE_OFFS: No modo rootless puro gerado por `runc spec --rootless`, o usuário não privilegiado não possui permissão no kernel para criar interfaces de rede no host nem manipular cgroups sem delegação prévia do systemd (cgroup v2 delegation); por isso, o template rootless padrão compartilha ou isola recursos dentro dos limites permitidos ao UID do usuário no host.
+VERIFY: Como usuário não-root, execute `runc spec --rootless` e inspecione a seção `linux.namespaces` e `linux.uidMappings` no `config.json` para confirmar o mapeamento do seu `uid` do host para `containerID: 0`.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-oci-bundle-rootfs-config-json-runc-spec]] | [[buildah-execucao-rootless-unshare-user-namespaces]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 685 | runc-seguranca-path-safety-libpathrs-seccomp | OpenContainer runc: segurança de caminhos com a biblioteca Rust libpathrs e filtragem de syscalls com libseccomp ===
+ONE_LINER: Por padrão, a compilação do `runc` habilita as build tags `seccomp` (filtragem de chamadas de sistema via `libseccomp`) e `libpathrs` (uso da biblioteca em Rust `libpathrs` >= 0.2.5 para segurança contra ataques de resolução de caminhos e symlinks).
+IMPORTANCE: Uma das classes mais críticas de vulnerabilidades históricas em runtimes de containers envolve ataques de corrida de caminhos e links simbólicos (TOCTOU / symlink traversal) no momento em que o runtime no host abre arquivos dentro do `rootfs` ou `/proc` controlado pelo container, além da exposição de syscalls perigosas do kernel Linux. Conforme documentado na seção `Pre-Requisites` e `Build Tags` do README oficial do `runc`, o uso padrão de `libpathrs` e `libseccomp` mitiga estruturalmente esses dois vetores.
+HOW_IT_WORKS: Durante o build do `runc`, duas tags vêm habilitadas por padrão no Makefile principal: (1) **`seccomp`**, que vincula a biblioteca C `libseccomp` para compilar filtros BPF de chamadas de sistema definidos na seção `linux.seccomp` do `config.json` e carregá-los no kernel antes de iniciar o processo do container; e (2) **`libpathrs`**, que integra a biblioteca escrita em Rust `libpathrs` (exigindo versão mínima `0.2.5` e Rust 1.63+ para compilação) para realizar operações de abertura e resolução de caminhos dentro do container de forma imune a escapes por symlinks e condições de corrida usando primitivas modernas do kernel (`openat2` / descritores O_PATH).
+EXAMPLE:
+```bash
+# Instalar dependências de compilação em Ubuntu/Debian e verificar suporte a seccomp e libpathrs no binário runc
+sudo apt update && sudo apt install -y make gcc linux-libc-dev libseccomp-dev pkg-config git
+runc --version
+```
+TRADE_OFFS: Conforme explica o README oficial do `runc`, como poucas distribuições Linux ainda empacotam `libpathrs >= 0.2.5` nativamente nos repositórios oficiais, compilar o `runc` a partir do código-fonte com as build tags padrão exige compilar e instalar a `libpathrs` localmente (com `cargo`, `clang` e `lld`) ou desabilitar explicitamente a tag na compilação (`make RUNC_BUILDTAGS="-libpathrs"`), o que remove a camada extra de proteção da `libpathrs`.
+VERIFY: Execute `runc features` (ou `runc --version` e `ldd $(which runc)`) para verificar se o binário em uso foi compilado com suporte a `seccomp` e às extensões de segurança do kernel.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-compilacao-build-tags-nocriu-obsoletos]] | [[crun-extensoes-oci-seccomp-annotations-handlers-wasm-krun]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 686 | runc-compilacao-build-tags-nocriu-obsoletos | OpenContainer runc: customização de compilação com RUNC_BUILDTAGS, EXTRA_VERSION e tags obsoletas ===
+ONE_LINER: A compilação do `runc` permite adicionar ou remover funcionalidades via variável `RUNC_BUILDTAGS` (`seccomp`, `libpathrs`, `runc_nocriu`) e customizar a string de versão com `EXTRA_VERSION`, tendo tornado AppArmor e SELinux sempre ativos por padrão.
+IMPORTANCE: Mantenedores de distribuições Linux e engenheiros de plataformas embarcadas/edge frequentemente precisam compilar binários customizados do `runc` (por exemplo, desativando o suporte a CRIU em sistemas minimalistas ou adicionando um sufixo de versão corporativo), mas muitas vezes utilizam documentações antigas que passam build tags já obsoletas como `apparmor`, `selinux`, `nokmem` ou `runc_nodmz`. O README oficial do `runc` esclarece exatamente quais tags existem hoje e quais foram aposentadas.
+HOW_IT_WORKS: Para modificar o conjunto padrão de tags de build (`seccomp` e `libpathrs`), usa-se a variável `RUNC_BUILDTAGS`, onde tags prefixadas com `-` são removidas do conjunto padrão e as demais são adicionadas: por exemplo, `make RUNC_BUILDTAGS="runc_nocriu -seccomp"` desabilita o suporte a checkpoint/restore via CRIU (`runc_nocriu`) e remove o `seccomp`. Para identificar builds customizados na saída de `runc --version`, passa-se `make EXTRA_VERSION="+build-1"`. O README documenta ainda as quatro build tags obsoletas que não devem mais ser usadas: `apparmor` e `selinux` (sempre habilitadas desde o `runc v1.0.0-rc93`), `nokmem` (configurações de memória de kernel são ignoradas desde `v1.0.0-rc94`) e `runc_nodmz` (o binário `runc dmz` foi removido desde o `runc v1.2.1`).
+EXAMPLE:
+```bash
+# Compilar o runc adicionando sufixo de versão customizado e desabilitando checkpoint/restore (CRIU)
+make EXTRA_VERSION="+prod-1" RUNC_BUILDTAGS="runc_nocriu"
+sudo make install
+/usr/local/sbin/runc --version
+```
+TRADE_OFFS: Compilar o `runc` com `RUNC_BUILDTAGS="-seccomp"` para contornar a ausência do pacote `libseccomp-dev` produz um binário incapaz de aplicar perfis seccomp de restrição de syscalls, o que fará com que o `kubelet` ou `containerd` falhem ao tentar iniciar containers que exigem `RuntimeDefault` ou perfis seccomp customizados em produção.
+VERIFY: Após compilar com `make EXTRA_VERSION="+custom-1"`, execute `./runc --version` e confirme que a string `+custom-1` aparece anexada à versão e que o suporte a AppArmor, SELinux e seccomp está ativo.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-seguranca-path-safety-libpathrs-seccomp]] | [[runc-testes-integracao-bats-rootless-go-modules]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 687 | runc-supervisores-systemd-cgroup-v2-checkpoint-criu | OpenContainer runc: integração com supervisores systemd, cgroup v2 e Checkpoint/Restore com CRIU ===
+ONE_LINER: O `runc` integra-se a supervisores de processos como o `systemd` (via units `Type=forking` com `--pid-file` e driver systemd de cgroup), suporta a hierarquia unificada `cgroup v2` e realiza checkpoint/restore de containers em execução com CRIU.
+IMPORTANCE: Como o `runc` não possui um daemon residente para monitorar ou reiniciar containers que saem inesperadamente, ambientes Linux que executam containers OCI diretamente sem Docker/containerd precisam delegar o gerenciamento de ciclo de vida, reinicialização e controle de recursos (cgroups) ao sistema de init do host (`systemd`), além de contar com suporte a congelamento e migração de estado em memória via CRIU. O README oficial do `runc` documenta o uso com supervisores e aponta para a documentação de `cgroup-v2`, `systemd` e `checkpoint-restore`.
+HOW_IT_WORKS: Para supervisionar um container com o `systemd`, cria-se um arquivo de unit `[Service]` com `Type=forking`, `WorkingDirectory=/mycontainer`, `PIDFile=/run/mycontainerid.pid`, `ExecStart=/usr/local/sbin/runc run -d --pid-file /run/mycontainerid.pid mycontainerid` e `ExecStopPost=/usr/local/sbin/runc delete mycontainerid`. Para gerenciamento de recursos, o `runc` suporta plenamente a hierarquia unificada `cgroup v2` e o driver `systemd` (`--systemd-cgroup`), onde as regras de cgroup são solicitadas ao systemd via D-Bus em vez de escritas diretamente no cgroupfs. Além disso, quando compilado sem `runc_nocriu` e com o utilitário **CRIU** instalado no host, `runc checkpoint` e `runc restore` permitem salvar o estado em memória de um container em disco e restaurá-lo posteriormente.
+EXAMPLE:
+```ini
+# Exemplo oficial de unit file do systemd para supervisionar um container executado com runc
+[Unit]
+Description=Start My Container
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/runc run -d --pid-file /run/mycontainerid.pid mycontainerid
+ExecStopPost=/usr/local/sbin/runc delete mycontainerid
+WorkingDirectory=/mycontainer
+PIDFile=/run/mycontainerid.pid
+
+[Install]
+WantedBy=multi-user.target
+```
+TRADE_OFFS: Ao usar o driver `--systemd-cgroup` (recomendado em distribuições modernas com systemd e cgroup v2, como no Kubernetes com `cgroupDriver: systemd`), todos os componentes da pilha (kubelet, containerd/CRI-O e runc) devem estar configurados de forma idêntica para usar `systemd` e respeitar a regra de escritor único (single-writer rule) do cgroup v2.
+VERIFY: Recarregue o systemd (`sudo systemctl daemon-reload`), inicie o serviço do container e verifique com `systemctl status` e `sudo runc list` se o PID rastreado em `/run/mycontainerid.pid` está ativo e sob o slice esperado no `systemd-cgls`.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-ciclo-vida-create-start-list-delete-run]] | [[crun-checkpoint-restore-criu-pre-dump-gerenciamento]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 688 | runc-testes-integracao-bats-rootless-go-modules | OpenContainer runc: suíte de testes isolada em container (make test, BATS, rootless) e gestão de dependências Go ===
+ONE_LINER: O repositório do `runc` executa sua suíte de testes unitários e de integração (BATS e rootless) dentro de containers via `make test` (`TESTFLAGS`, `TESTPATH`, `ROOTLESS_TESTPATH`) e gerencia dependências Go com vendoring (`make vendor` e `make verify-dependencies`).
+IMPORTANCE: Como os testes de um runtime de containers manipulam mounts, namespaces, cgroups, dispositivos e arquivos em todo o sistema operacional, executá-los diretamente na máquina de desenvolvimento sem isolamento pode modificar ou remover arquivos do host. Conforme alerta a seção `Running the test suite` do README oficial do `runc`, a execução dos testes fora de um container não é recomendada, pois os testes assumem que podem escrever e remover arquivos em qualquer lugar.
+HOW_IT_WORKS: O comando `make test` constrói uma imagem de container de teste contendo todas as dependências (incluindo `libpathrs`, `libseccomp`, `criu` e `bats`) e executa a suíte de forma isolada. O desenvolvedor pode filtrar um caso de teste unitário específico em Go definindo `TESTFLAGS="-run=SomeTestFunction"`, rodar apenas um arquivo de teste de integração BATS com `TESTPATH="/checkpoint.bats"` ou executar um teste de integração rootless específico com `ROOTLESS_TESTPATH="/checkpoint.bats"`, além de passar flags de proxy/engine via `CONTAINER_ENGINE_BUILD_FLAGS` e `CONTAINER_ENGINE_RUN_FLAGS`. Para gerenciamento de módulos Go, o projeto mantém dependências vendored no repositório, atualizadas via `make vendor` e auditadas no CI com `make verify-dependencies`.
+EXAMPLE:
+```bash
+# Executar um teste de integração BATS específico e verificar dependências vendored no repositório do runc
+make test TESTPATH="/checkpoint.bats"
+make verify-dependencies
+```
+TRADE_OFFS: Embora existam alvos no Makefile (`localunittest`, `localintegration`) para rodar testes diretamente no host Linux (usados dentro de máquinas virtuais efêmeras de CI), rodá-los em uma estação de trabalho compartilhada pode deixar mounts órfãos, cgroups de teste ou alterações no sistema de arquivos local.
+VERIFY: Em um clone do repositório `opencontainers/runc`, execute `make verify-dependencies` para confirmar que o diretório `vendor/` e o `go.mod`/`go.sum` estão íntegros e sem divergências.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-compilacao-build-tags-nocriu-obsoletos]] | [[runc-assinatura-releases-gpg-keyring-auditoria-seguranca]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 689 | runc-assinatura-releases-gpg-keyring-auditoria-seguranca | OpenContainer runc: verificação de releases assinadas com runc.keyring, auditoria Cure53 e processo de segurança OCI ===
+ONE_LINER: Todas as releases oficiais do `runc` são assinadas criptograficamente por chaves PGP listadas no arquivo `runc.keyring` na raiz do repositório, seguindo o processo de divulgação de segurança da OCI e contando com auditoria independente da Cure53.
+IMPORTANCE: Por ser o binário executado com privilégios máximos no host Linux toda vez que um container inicia no Docker ou no Kubernetes, comprometer o binário do `runc` na cadeia de suprimentos (supply chain) daria acesso root a milhões de servidores. Segundo as seções `Releases` e `Security` do README oficial do `runc`, verificar a assinatura das releases contra o `runc.keyring` garante a autenticidade e integridade dos artefatos baixados.
+HOW_IT_WORKS: Na raiz do repositório `opencontainers/runc`, o arquivo `runc.keyring` armazena o conjunto oficial de chaves públicas OpenPGP dos mantenedores autorizados a assinar releases. A cada nova versão publicada na página de Releases do GitHub, os binários (`runc.amd64`, `runc.arm64`, etc.), o tarball de código-fonte e o arquivo `runc.sha256sum` são acompanhados de assinaturas destacáveis `.asc`. Além disso, o projeto segue a política formal de comunicação e embargo de vulnerabilidades da Open Container Initiative (`SECURITY.md`) e disponibiliza publicamente em `docs/Security-Audit.pdf` o relatório completo da auditoria de segurança de terceiros conduzida pela Cure53.
+EXAMPLE:
+```bash
+# Importar o keyring oficial do runc e verificar a assinatura GPG de uma release baixada
+gpg --no-default-keyring --keyring ./runc-trusted.gpg --import runc.keyring
+gpg --no-default-keyring --keyring ./runc-trusted.gpg --verify runc.amd64.asc runc.amd64
+sha256sum -c runc.sha256sum --ignore-missing
+```
+TRADE_OFFS: Baixar o binário `runc.amd64` em scripts de provisionamento de nós Kubernetes (como imagens de AMI/Packer) verificando apenas o checksum SHA-256 sem validar a assinatura GPG contra o `runc.keyring` protege contra corrupção de rede, mas não garante autenticidade criptográfica do mantenedor caso o espelho de download seja comprometido.
+VERIFY: Execute `gpg --show-keys runc.keyring` na raiz do repositório do `runc` para listar as impressões digitais (fingerprints) das chaves dos mantenedores autorizados.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-seguranca-path-safety-libpathrs-seccomp]] | [[crun-runtime-oci-linguagem-c-baixo-consumo-memoria]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc
+
+=== NOTE: 690 | runc-gerenciamento-terminais-tty-console-socket-stdio | OpenContainer runc: gerenciamento de terminais pseudo-TTY (--console-socket), descritores stdio e capabilities ===
+ONE_LINER: O `runc` gerencia a alocação de pseudo-terminais (PTY) e fluxos de entrada/saída padrão (`stdin`, `stdout`, `stderr`) diferenciando sessões interativas (`"terminal": true` ou `--console-socket`) de execuções desacopladas em segundo plano (`"terminal": false`).
+IMPORTANCE: Quando um orquestrador como `containerd` (via `containerd-shim`) ou `kubectl exec -ti` inicia um container com um terminal interativo, o processo que cria o PTY (`ptmx`/`pts`) roda dentro do user/mount namespace do container, mas quem precisa ler e escrever no lado mestre do PTY é o shim no host. De acordo com o README oficial do `runc` e sua documentação de terminais (`docs/terminals.md`), o mecanismo de `--console-socket` e a configuração do bloco `process` no `config.json` governam essa passagem segura de descritores.
+HOW_IT_WORKS: Quando `"terminal": true` está definido em `process` no `config.json` e o operador executa `runc run` diretamente no shell, o `runc` conecta o PTY recém-alocado do container ao terminal atual do usuário. Porém, quando o container é iniciado de forma desacoplada (`runc create` / `runc run -d`) por um runtime de nível superior, se `"terminal": true` for usado, o chamador deve fornecer um caminho de socket UNIX via `--console-socket /caminho/console.sock`, pelo qual o `runc` envia o descritor de arquivo do lado mestre (`ptmx`) usando `SCM_RIGHTS`. Já quando `"terminal": false`, o `runc` não aloca um PTY no container e herda os descritores `stdin`, `stdout` e `stderr` (normalmente pipes criados pelo shim para captura de logs), além de suportar `--preserve-fds` para passar descritores de arquivo adicionais para dentro do container.
+EXAMPLE:
+```bash
+# Inspecionar a configuração de terminal, capabilities e rlimits no config.json de um bundle OCI
+jq '{terminal: .process.terminal, args: .process.args, capabilities: .process.capabilities.effective, noNewPrivileges: .process.noNewPrivileges}' config.json
+```
+TRADE_OFFS: Tentar executar `runc create` ou `runc run -d` (em background) mantendo `"terminal": true` no `config.json` sem passar `--console-socket` resultará em erro imediato do `runc` (`cannot allocate tty if runc will detach without setting console socket`), pois o container perderia o controle do terminal sem ter para quem entregar o descritor `ptmx`.
+VERIFY: Edite um `config.json` definindo `"terminal": false` e execute `sudo runc run -d --pid-file /tmp/c.pid test-bg` redirecionando `stdout`/`stderr` para um arquivo de log, confirmando que o container inicia em segundo plano sem exigir um console socket.
+LINKS: [[runc-runtime-oci-referencia-linux-especificacao]] | [[runc-oci-bundle-rootfs-config-json-runc-spec]] | [[runc-ciclo-vida-create-start-list-delete-run]]
+SOURCES: https://raw.githubusercontent.com/opencontainers/runc/main/README.md | https://github.com/opencontainers/runtime-spec | https://github.com/opencontainers/runc

@@ -1,0 +1,179 @@
+TOPIC: Filigran OpenCTI — Plataforma de Threat Intelligence em Grafo STIX 2.1, Conectores, Inferência, RBAC Markings e Feeds
+SOURCES: https://raw.githubusercontent.com/OpenCTI-Platform/opencti/master/README.md | https://raw.githubusercontent.com/OpenCTI-Platform/connectors/master/README.md | https://docs.opencti.io/latest/deployment/connectors/
+
+===NOTE===
+0511|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran|OpenCTI: Arquitetura da Plataforma de Threat Intelligence Baseada em Grafo de Conhecimento **STIX 2.1** e API GraphQL|**OpenCTI** (*Open Cyber Threat Intelligence Platform*, `OpenCTI-Platform/opencti`, Apache-2.0, mantido pela Filigran) é uma plataforma moderna de gestão de conhecimento e observáveis de inteligência de ameaças construída nativamente sobre o padrão **OASIS STIX 2.1** e exposta via API **GraphQL**.|Conecta a inteligência estratégica e geopolítica (atores de ameaça, campanhas, vitimologia por setor/país e relatórios de inteligência) diretamente à inteligência tática e operacional (técnicas MITRE ATT&CK, vulnerabilidades CVE, malwares e indicadores de comprometimento) com rastreabilidade até a fonte primária.|A pilha de infraestrutura do OpenCTI combina uma aplicação Node.js/TypeScript e frontend React com **OpenSearch/Elasticsearch** (armazenamento do grafo de entidades e relacionamentos STIX), **Redis** (gerenciamento de sessões, cache e streams de eventos em tempo real), **RabbitMQ** (filas de processamento assíncrono dos workers e conectores) e **MinIO/S3** (armazenamento de relatórios PDF e artefatos binários).|```graphql
+# Consulta GraphQL na API do OpenCTI listando Intrusion Sets e suas relacoes STIX
+query ListIntrusionSets {
+  intrusionSets(first: 10, orderBy: name, orderMode: asc) {
+    edges {
+      node {
+        id
+        standard_id
+        name
+        description
+        confidence
+      }
+    }
+  }
+}
+```|Cada entidade no OpenCTI possui um `standard_id` determinístico STIX 2.1 (ex.: `intrusion-set--...` calculado a partir das propriedades canônicas), o que impede a duplicação de atores de ameaça ou técnicas ATT&CK quando ingeridos de múltiplas fontes distintas.|Execute uma query GraphQL autenticada (`Authorization: Bearer <TOKEN>`) em `/graphql` consultando `{ about { version } }` para validar a saúde da instância.|opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes, opencti-ecossistema-conectores-import-enrichment-stream-export, mispsoc-arquitetura-threat-intelligence-events-attributes-objects-galaxies
+
+===NOTE===
+0512|opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes|OpenCTI: Modelagem com Objetos **STIX 2.1** — Domain Objects (SDOs), Cyber Observables (SCOs), Relationships (SROs) e `Confidence`|O esquema de dados do OpenCTI implementa fielmente a separação formal do padrão STIX 2.1 entre **STIX Domain Objects (SDOs)**, **STIX Cyber-observable Objects (SCOs)** e **STIX Relationship Objects (SROs)**.|Evita a confusão comum entre um fato técnico bruto (*Observável / SCO*: o endereço IPv4 `198.51.100.44` existe) e uma hipótese analítica de detecção (*Indicador / SDO*: o padrão `[ipv4-addr:value = '198.51.100.44']` indica atividade do malware X entre a data A e a data B com confiança 85).|Os **SDOs** modelam conceitos analíticos (`Threat-Actor`, `Intrusion-Set`, `Campaign`, `Malware`, `Tool`, `Attack-Pattern`, `Vulnerability`, `Indicator`, `Report`, `Case-Incident`, `Grouping`), os **SCOs** modelam artefatos técnicos (`IPv4-Addr`, `Domain-Name`, `StixFile`, `Url`, `X509-Certificate`, `Autonomous-System`) e os **SROs** são arestas tipadas com vigência temporal (`first_seen`, `last_seen`, `confidence`, `author` e `external_references`), como `Intrusion-Set --[uses]--> Malware` ou `Indicator --[based-on]--> IPv4-Addr`.|```python
+from pycti import OpenCTIApiClient
+
+client = OpenCTIApiClient("https://opencti.soc.internal.corp", "OPENCTI_API_TOKEN")
+indicator = client.indicator.create(
+    name="C2 Domain evil-updater.example",
+    pattern="[domain-name:value = 'evil-updater.example']",
+    pattern_type="stix",
+    x_opencti_main_observable_type="Domain-Name",
+    confidence=85,
+    x_opencti_CreateObservables=True
+)
+```|Ao usar `x_opencti_CreateObservables=True` na criação de um `Indicator`, o OpenCTI extrai automaticamente o `Domain-Name` da expressão STIX e cria o SCO correspondente vinculado pela relação `based-on`.|Consulte o indicador recém-criado na UI ou via `pycti` e confirme a presença do relacionamento `based-on` apontando para o observável `evil-updater.example`.|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, opencti-motor-inferencia-regras-deducao-relacoes-transitivas, opencti-ciclo-vida-indicadores-decay-rules-score-revogacao
+
+===NOTE===
+0513|opencti-ecossistema-conectores-import-enrichment-stream-export|OpenCTI: Arquitetura dos Cinco Tipos de Conectores (`EXTERNAL_IMPORT`, `INTERNAL_IMPORT_FILE`, `INTERNAL_ENRICHMENT`, `INTERNAL_EXPORT_FILE` e `STREAM`)|A integração do OpenCTI com o ecossistema de segurança (`OpenCTI-Platform/connectors`) é realizada por microserviços Python independentes que se comunicam com a plataforma via API GraphQL, filas RabbitMQ e streams Redis, classificados em cinco categorias arquiteturais.|Desacoplar a ingestão e o enriquecimento do núcleo da plataforma garante que um conector lento ou uma falha de API externa jamais degrade a performance do banco de grafos ou da interface dos analistas.|As cinco classes são: **(1) `EXTERNAL_IMPORT`** (busca dados periodicamente de fontes externas como MITRE ATT&CK, MISP, AlienVault OTX, Mandiant, Abuse.ch, CISA KEV e envia bundles STIX2 para os workers), **(2) `INTERNAL_IMPORT_FILE`** (extrai entidades de PDFs, relatórios Markdown ou STIX enviados na plataforma), **(3) `INTERNAL_ENRICHMENT`** (enriquece observáveis sob demanda ou em *auto-trigger* com VirusTotal, Shodan, CrowdSec, GreyNoise), **(4) `INTERNAL_EXPORT_FILE`** (exporta relatórios em STIX2, CSV, PDF) e **(5) `STREAM`** (consome o stream Redis ao vivo do OpenCTI para sincronizar indicadores em tempo real com Splunk, Elastic, Sentinel, QRadar ou Tanium).|```yaml
+# Exemplo de servico de conector EXTERNAL_IMPORT (MITRE ATT&CK) em docker-compose.yml
+connector-mitre:
+  image: opencti/connector-mitre:6.3.6
+  environment:
+    - OPENCTI_URL=http://opencti:8080
+    - OPENCTI_TOKEN=${OPENCTI_MITRE_CONNECTOR_TOKEN}
+    - CONNECTOR_ID=88ec0c6a-13ce-5e39-b486-354fe4a7084f
+    - CONNECTOR_NAME=MITRE Datasets
+    - CONNECTOR_SCOPE=tool,report,malware,identity,campaign,intrusion-set,attack-pattern,course-of-action
+    - CONNECTOR_CONFIDENCE_LEVEL=90
+    - MITRE_INTERVAL=7
+  restart: always
+```|Todo conector envia pacotes para a fila RabbitMQ, que só são gravados no OpenCTI pelos **OpenCTI Workers** (`opencti/worker`); se os containers de `worker` estiverem parados ou subdimensionados, as filas de conectores ficarão acumuladas em `Pending` na tela *Data -> Ingestion -> Connectors*.|Inspecione na aba *Connectors* que tanto os conectores ativos quanto os `Workers` estão reportando batimentos cardíacos (`Active`) e fila sem gargalo.|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, opencti-streams-taxii21-live-streams-feeds-csv-integracao-siem, thehive-sincronizacao-bidirecional-misp-import-export-iocs
+
+===NOTE===
+0514|opencti-motor-inferencia-regras-deducao-relacoes-transitivas|OpenCTI: Motor de Raciocínio e Inferência (`Rule Engine`) para Dedução Automática de Relações Transitivas no Grafo|O OpenCTI incorpora um **Rule Engine** (motor de inferência lógica) que analisa continuamente as relações explícitas inseridas no grafo STIX 2.1 e cria automaticamente **relações inferidas** (*inferred relationships*) baseadas em regras lógicas de transitividade.|Se o Relatório A documenta que o `Intrusion-Set APT-X` **`uses`** o `Malware Loader-Y`, e uma investigação de incidente local documenta que o `Malware Loader-Y` **`targets`** a `Organization Banco-Z`, o motor de inferência deduz automaticamente que `APT-X` **`targets`** `Banco-Z` sem exigir que o analista crie essa aresta manualmente.|Crucialmente, as relações inferidas mantêm um ponteiro direto para as relações de origem (*explanations*): se uma das relações originais for excluída ou tiver sua validade encerrada, o motor de inferência remove imediatamente a relação deduzida, garantindo zero órfãos lógicos no grafo.|```graphql
+# Consultar relacoes STIX incluindo explicitamente aquelas deduzidas pelo Rule Engine (is_inferred)
+query CheckInferredRelations($fromId: [String]) {
+  stixCoreRelationships(fromId: $fromId, first: 25) {
+    edges {
+      node {
+        id
+        relationship_type
+        is_inferred
+        to {
+          ... on BasicObject {
+            id
+            entity_type
+          }
+        }
+      }
+    }
+  }
+}
+```|Habilitar regras de inferência em uma base onde conectores de baixa qualidade inserem relações especulativas com `confidence` alta amplificará falsas atribuições; ajuste o nível máximo de confiança de cada conector (`CONNECTOR_CONFIDENCE_LEVEL`).|Ative uma regra de inferência em *Settings -> Customization -> Rules* e verifique na visualização de grafo de um ator de ameaça as arestas tracejadas marcadas como `Inferred`.|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes, opencti-governanca-rbac-marking-definitions-tlp-confianca-organizacoes
+
+===NOTE===
+0515|opencti-ciclo-vida-indicadores-decay-rules-score-revogacao|OpenCTI: Ciclo de Vida de Indicadores — **Decay Rules** (Curvas de Decaimento de `x_opencti_score`), Expiração `valid_until` e Revogação|Para evitar que SIEMs e sensores conectados aos streams do OpenCTI gerem alertas falsos eternos por causa de IPs ou domínios reciclados, o OpenCTI gerencia o ciclo de vida de cada `Indicator` através de **Decay Rules** (regras matemáticas de decaimento do atributo `x_opencti_score` de `0` a `100`).|Um endereço IPv4 de proxy residencial usado em um ataque hoje pode ser reatribuído a um usuário doméstico legítimo em 15 dias; as *Decay Rules* reduzem progressivamente o `x_opencti_score` ao longo dos dias até atingir o limiar de revogação (`revoke_score`), marcando automaticamente `revoked = true`.|Cada *Decay Rule* pode ser filtrada pelo tipo de observável principal (`x_opencti_main_observable_type`: ex.: decaimento rápido de 15 dias para `IPv4-Addr` e `Url`, médio de 60 dias para `Domain-Name` e lento de 365 dias para `StixFile` hashes), definindo pontos de queda (`decay_points`, ex.: `[80, 50, 20]`), tempo de vida (`decay_lifetime`) e pontuação de revogação (`decay_revoke_score`). Quando um conector `STREAM` detecta que o indicador passou para `revoked = true`, ele instrui imediatamente o SIEM/EDR receptor a remover o IOC da lista de detecção ativa.|```graphql
+# Consultar indicadores ativos com score elevado e ainda nao revogados pelas Decay Rules
+query ActiveHighScoreIndicators {
+  indicators(
+    first: 50
+    filters: {
+      mode: and
+      filters: [
+        { key: "revoked", values: ["false"] }
+        { key: "x_opencti_score", values: ["70"], operator: gt }
+      ]
+      filterGroups: []
+    }
+  ) {
+    edges {
+      node {
+        id
+        name
+        pattern
+        x_opencti_score
+        valid_until
+        revoked
+      }
+    }
+  }
+}
+```|Se um indicador em decaimento receber um novo **Sighting** (avistamento real confirmado em produção) ou uma nova atualização de fonte confiável com pontuação superior, o OpenCTI reaquece (*bumps*) o `x_opencti_score` e estende `valid_until`.|Inspecione a aba *Lifecycle* dentro da página de detalhes de um `Indicator` no OpenCTI para visualizar a curva exata de decaimento e as datas projetadas para cada queda de score e revogação.|opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes, opencti-streams-taxii21-live-streams-feeds-csv-integracao-siem, mispsoc-colaboracao-sightings-opinions-decaying-models-ciclo-vida
+
+===NOTE===
+0516|opencti-governanca-rbac-marking-definitions-tlp-confianca-organizacoes|OpenCTI: Controle de Acesso Baseado em **Marking Definitions** (`TLP`, `PAP`, `Statement`), Segregação por Organizações e `Max Confidence Level`|O modelo de segurança do OpenCTI combina **Role-Based Access Control (RBAC)** (definindo capacidades como `KNOWLEDGE_KNUPDATE`, `SETTINGS_SETACCESSES`), segregação multi-tenant por **Organizations** e filtragem obrigatória no nível de linha por **STIX Marking Definitions** (`TLP:CLEAR`, `TLP:GREEN`, `TLP:AMBER`, `TLP:AMBER+STRICT`, `TLP:RED`).|Mesmo que um usuário ou conector de API possua permissão de leitura na base de conhecimento, ele **jamais** verá no GraphQL ou na interface qualquer entidade, relatório ou relacionamento cujo `objectMarking` exceda as marcações explicitamente autorizadas para o seu Grupo.|Adicionalmente, cada Usuário ou Grupo no OpenCTI possui um **Max Confidence Level** (`0` a `100`) e uma política de sobrescrita: um conector de feed OSINT público configurado com `Max Confidence Level = 40` nunca conseguirá sobrescrever um atributo ou relação que já foi validado manualmente por um analista humano do CSIRT com `Confidence = 90`.|```python
+# Criar um relatorio STIX no OpenCTI aplicando explicitamente a marcacao TLP:AMBER
+tlp_amber = client.marking_definition.read(
+    filters={"mode": "and", "filters": [{"key": "definition", "values": ["TLP:AMBER"]}], "filterGroups": []}
+)
+report = client.report.create(
+    name="Analise Tecnica de Campanha Direcionada Q4",
+    published="2026-10-03T12:00:00Z",
+    report_types=["threat-report"],
+    confidence=90,
+    objectMarking=[tlp_amber["id"]]
+)
+```|Criar contas de serviço para conectores `EXTERNAL_IMPORT` com `Max Confidence Level = 100` permite que feeds automatizados externos alterem descrições, nomes e scores curados manualmente pela equipe interna de CTI; limite feeds externos entre `30` e `70`.|Teste consultar a API GraphQL usando um token pertencente a um grupo restrito apenas a `TLP:CLEAR` e `TLP:GREEN` e confirme que o relatório `TLP:AMBER` acima não é retornado.|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, opencti-ecossistema-conectores-import-enrichment-stream-export, mispsoc-taxonomias-tlp-pap-sharing-groups-federacao-sincronizacao
+
+===NOTE===
+0517|opencti-streams-taxii21-live-streams-feeds-csv-integracao-siem|OpenCTI: Compartilhamento de Inteligência em Tempo Real — **Live Streams** (SSE), Coleções **TAXII 2.1** e **CSV Feeds** para Firewalls/EDRs|Na seção *Data -> Data Sharing*, o OpenCTI oferece três mecanismos nativos para distribuir inteligência filtrada para ferramentas de defesa sem precisar escrever código de integração customizado: **Live Streams**, **TAXII 2.1 Collections** e **CSV Feeds**.|Diferentes ferramentas consomem formatos distintos: firewalls de borda (Palo Alto PAN-OS, Fortinet, Check Point) exigem *External Dynamic Lists* (EDLs) em texto/CSV simples; SIEMs modernos (Splunk, Elastic, Sentinel) consomem *Live Streams* contínuos em STIX 2.1; e plataformas parceiras consomem servidores *TAXII 2.1*.|Cada Stream, Coleção TAXII ou Feed CSV é respaldado por um **filtro visual dinâmico** (ex.: `entity_type = Indicator AND revoked = false AND x_opencti_score >= 75 AND objectMarking IN [TLP:CLEAR, TLP:GREEN, TLP:AMBER]`) e restrito a grupos ou autenticado por token, garantindo que revogações e exclusões sejam propagadas instantaneamente para os sensores consumidores.|```bash
+# Consumir um CSV Feed autenticado do OpenCTI para alimentar uma External Dynamic List (EDL) de Firewall
+curl -sS "https://opencti.soc.internal.corp/feeds/ip-blocklist-high-confidence.csv" \
+  -H "Authorization: Bearer ${OPENCTI_FEED_READONLY_TOKEN}" | head -n 20
+```|Nunca crie um CSV Feed público sem autenticação (`Public feed`) contendo indicadores marcados com `TLP:AMBER` ou `TLP:RED`; o próprio OpenCTI exige definir quais marcações máximas um feed público pode expor.|Acesse o endpoint `/taxii2/` ou o CSV Feed com o token de leitura e verifique que indicadores com `revoked = true` desaparecem imediatamente da lista.|opencti-ciclo-vida-indicadores-decay-rules-score-revogacao, opencti-ecossistema-conectores-import-enrichment-stream-export, mispsoc-exportacao-nids-suricata-zeek-rpz-stix-siem
+
+===NOTE===
+0518|opencti-automacao-playbooks-enriquecimento-notificacoes-triage|OpenCTI: Automação de Fluxos de Conhecimento com **Playbooks** (Gatilhos de Stream, Filtros, Enriquecimento, Marcação e Criação de Casos)|O motor de **Playbooks** do OpenCTI (*Data -> Processing -> Playbooks*) permite construir automações reativas em grafo que escutam todos os eventos de criação, modificação ou exclusão no *stream* interno da plataforma e executam cadeias de transformação e resposta.|Elimina o trabalho manual repetitivo de triagem: por exemplo, sempre que um novo `Indicator` do tipo `Domain-Name` ou `IPv4-Addr` entrar na plataforma com `x_opencti_score >= 80`, o playbook pode acionar automaticamente conectores de enriquecimento, adicionar um rótulo, reduzir ou elevar a confiança e abrir um `Case-Incident` se o indicador tiver um `Sighting` interno.|Os nós disponíveis nos Playbooks incluem: *Listen knowledge events*, *Filter knowledge*, *Enrich through connector*, *Manipulate knowledge* (alterar TLP, score, labels, autor), *Reduce knowledge*, *Container wrapper* (empacotar em um Report ou Case-Incident) e *Send to notifier* (e-mail/webhook).|```json
+{
+  "playbook_name": "Auto-Enrich-And-Escalate-Sighted-IOCs",
+  "trigger": "knowledge_created",
+  "filter": {
+    "entity_type": ["Indicator", "Stix-Cyber-Observable"],
+    "x_opencti_score_gt": 80
+  },
+  "steps": [
+    "enrich_connector:virustotal",
+    "enrich_connector:crowdsec",
+    "manipulate_labels:add:auto-triaged"
+  ]
+}
+```|Cuidado com loops infinitos de Playbooks: se um Playbook escuta eventos de **atualização** (`Update` event) de `Indicator` e um de seus passos modifica o próprio `Indicator`, ele re-acionará a si mesmo indefinidamente caso o filtro de entrada não exclua objetos já processados.|Ative o Playbook em homologação, crie um indicador de teste que case com o filtro e verifique no painel de execução do Playbook a conclusão de cada etapa.|opencti-ecossistema-conectores-import-enrichment-stream-export, opencti-gestao-casos-incident-response-rfi-tasks-workbenches, mispsoc-workflows-automacao-gatilhos-bloqueio-publicacao
+
+===NOTE===
+0519|opencti-gestao-casos-incident-response-rfi-tasks-workbenches|OpenCTI: Módulo de `Cases` (`Incident Response`, `Requests for Information — RFI`, `Requests for Takedown`) e `Analyst Workbenches`|Além de gerenciar inteligência de ameaças, o OpenCTI inclui o módulo nativo **Cases** (cobrindo *Incident Response*, *Requests for Information — RFIs* e *Requests for Takedown*) e **Analyst Workbenches** (áreas de rascunho para revisão e validação humana antes de comitar entidades no grafo principal).|Permite que equipes de CTI e CSIRT recebam pedidos formais de investigação (*RFIs*) de executivos ou equipes de SOC, modelem um incidente de segurança como um contêiner STIX (`Case-Incident`) contendo a linha do tempo de observáveis, TTPs MITRE ATT&CK e tarefas, ou revisem extrações de relatórios PDF em um *Workbench* isolado antes de poluir o grafo de produção.|Nos *Analyst Workbenches*, quando um analista importa um relatório PDF/Markdown (assistido por conectores de extração), os SDOs, SCOs e relacionamentos identificados ficam em estado de rascunho (*draft*) onde o analista pode corrigir tipos, ajustar marcações `TLP` e validar vínculos antes de clicar em *Validate & Import*.|```graphql
+# Criar um contêiner de Request for Information (RFI) via GraphQL para a equipe de Threat Intelligence
+mutation CreateRfiCase {
+  caseRfiAdd(
+    input: {
+      name: "RFI-2026-089: Avaliacao de Exposicao Setorial ao Grupo Akira"
+      information_types: ["strategic-threat-landscape"]
+      severity: "high"
+      priority: "P1"
+      confidence: 85
+    }
+  ) {
+    id
+    standard_id
+    name
+  }
+}
+```|Importar relatórios brutos diretamente para o grafo principal sem passar pela revisão de um **Analyst Workbench** frequentemente introduz observáveis benignos (ex.: domínios de notícias citados no rodapé do PDF) vinculados incorretamente ao ator de ameaça.|Importe um arquivo PDF de boletim de segurança selecionando a opção *Import into Analyst Workbench* e revise cada entidade extraída antes da submissão final.|opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes, thehive-arquitetura-sirp-alerts-cases-tasks-observables
+
+===NOTE===
+0520|opencti-desenvolvimento-conectores-pycti-stix2-bundles-workers|OpenCTI: Desenvolvimento de Conectores Customizados com o SDK Python **`pycti`** (`OpenCTIConnectorHelper` e Envio de Bundles STIX 2.1)|A biblioteca oficial **`pycti`** (`OpenCTI-Platform/client-python`) fornece a classe **`OpenCTIConnectorHelper`**, que abstrai o registro do conector na plataforma, o gerenciamento de estado persistente (`get_state` / `set_state`), o agendamento de ciclos e o particionamento e envio de *STIX 2.1 Bundles* para a fila RabbitMQ dos workers.|Permite integrar rapidamente fontes internas proprietárias (como alertas de antifraude bancária, honeypots internos ou listas de domínios recém-registrados de *typosquatting* da marca da empresa) diretamente na malha de conhecimento do OpenCTI.|O conector instancia `OpenCTIConnectorHelper(config)`, lê o último cursor processado via `self.helper.get_state()`, constrói objetos com a biblioteca `stix2` (`stix2.Indicator`, `stix2.Malware`, `stix2.Relationship`), empacota-os em um `stix2.Bundle(objects=..., allow_custom=True)` e chama `self.helper.send_stix2_bundle(bundle.serialize(), work_id=work_id)`, finalizando o trabalho com `self.helper.api.work.to_processed(work_id, message)`.|```python
+import stix2
+from pycti import OpenCTIConnectorHelper, Indicator as CtiIndicator
+
+# Construir um objeto STIX 2.1 Indicator com ID determinístico do OpenCTI para envio via bundle
+pattern = "[ipv4-addr:value = '203.0.113.99']"
+stix_indicator = stix2.Indicator(
+    id=CtiIndicator.generate_id(pattern),
+    name="Honeypot SSH Brute-Force Source 203.0.113.99",
+    pattern=pattern,
+    pattern_type="stix",
+    confidence=80,
+    custom_properties={"x_opencti_main_observable_type": "IPv4-Addr", "x_opencti_score": 80}
+)
+bundle = stix2.Bundle(objects=[stix_indicator], allow_custom=True)
+```|Use sempre os geradores de ID determinísticos do `pycti` (`Indicator.generate_id(pattern)`, `Malware.generate_id(name)`, `IntrusionSet.generate_id(name)`) ao construir objetos `stix2`; gerar UUIDs aleatórios a cada execução do conector impedirá a deduplicação e criará objetos duplicados ou conflitos.|Execute o script de teste gerando `CtiIndicator.generate_id(pattern)` duas vezes para o mesmo padrão STIX e confirme que o UUID v5 retornado é idêntico.|opencti-ecossistema-conectores-import-enrichment-stream-export, opencti-ontologia-stix21-sdos-scos-sros-rastreabilidade-fontes, mispsoc-automacao-pymisp-restsearch-ingestao-enriquecimento

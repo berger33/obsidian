@@ -1,0 +1,226 @@
+=== NOTE: 961 | goreleaser-automacao-release-engineering-multilinguagem | GoReleaser: automação completa de engenharia de releases para Go, Rust, Zig, Node.js, Bun, Deno e Python ===
+ONE_LINER: O **GoReleaser** (`goreleaser/goreleaser`, licenciado sob MIT) é uma ferramenta de automação de engenharia de releases que compila binários para múltiplas plataformas, empacota arquivos (`.tar.gz`, `.zip`, `.deb`, `.rpm`, `.apk`), gera checksums/SBOMs, assina artefatos e publica releases completos no GitHub, GitLab ou Gitea a partir de um único arquivo **`.goreleaser.yaml`**.
+IMPORTANCE: Construir manualmente binários para Linux, macOS e Windows em arquiteturas `amd64` e `arm64`, compactar cada um com `README`/`LICENSE`, calcular `sha256sum`, gerar changelog a partir de commits Git, criar a release na API do GitHub e atualizar fórmulas do Homebrew exige centenas de linhas de scripts Bash frágeis no CI. Segundo o README oficial e o guia `Quick Start` (`goreleaser.com/getting-started/quick-start/`), o GoReleaser simplifica todo esse processo em um comando declarativo.
+HOW_IT_WORKS: Embora tenha nascido para a linguagem **Go**, o GoReleaser moderno (v2.18+) suporta múltiplos builders nativos documentados no `Quick Start`: **Go**, **Rust (`cargo`)**, **Node.js**, **Zig**, **Bun**, **Deno**, **uv (Python)** e **Poetry (Python)**. O desenvolvedor inicializa a configuração na raiz do repositório com **`goreleaser init`** (que gera o arquivo `.goreleaser.yaml`), valida a sintaxe com **`goreleaser check`** e, ao criar uma tag SemVer (`git tag -a v0.1.0`) e rodar **`goreleaser release --clean`**, o GoReleaser compila todos os alvos configurados na seção `builds`, empacota-os na seção `archives` (dentro do diretório `./dist`) e publica o release completo.
+EXAMPLE:
+```bash
+# Inicializar o .goreleaser.yaml no repositório, validar a configuração e testar um release local sem publicar (--snapshot)
+goreleaser init
+goreleaser check
+goreleaser release --snapshot --clean
+```
+TRADE_OFFS: Conforme destaca o guia `Quick Start`, o comando `goreleaser release` padrão exige que o repositório Git esteja em uma **tag compatível com Semantic Versioning (SemVer)** (ex.: `v0.1.0` ou `v1.2.3`) e que a árvore de trabalho do Git não esteja suja (`dirty`); para testar o pipeline localmente ou em commits intermediários sem criar uma tag Git nem publicar na internet, utilize sempre a flag **`--snapshot`**.
+VERIFY: Execute `goreleaser release --snapshot --clean` em um projeto Go ou Rust e inspecione a pasta `./dist` gerada contendo os binários compilados para cada sistema operacional/arquitetura, os arquivos compactados e o arquivo `checksums.txt`.
+LINKS: [[goreleaser-modos-execucao-snapshot-single-target-skip-publish]] | [[goreleaser-empacotamento-archives-nfpm-deb-rpm-apk-homebrew]] | [[ko-construtor-imagens-containers-go-sem-docker]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 962 | goreleaser-modos-execucao-snapshot-single-target-skip-publish | GoReleaser: modos de validação e dry-run (check, healthcheck, build --single-target, --snapshot e --skip=publish) ===
+ONE_LINER: Conforme documenta o guia oficial `Quick Start`, o GoReleaser oferece comandos graduais para testar e depurar o pipeline antes de um release real: `goreleaser check`, `goreleaser healthcheck`, `goreleaser build --single-target`, `goreleaser release --snapshot` e `goreleaser release --skip=publish`.
+IMPORTANCE: Descobrir que o `.goreleaser.yaml` tem um erro de sintaxe, que falta uma ferramenta externa no runner ou que a compilação cruzada para `darwin/arm64` quebrou apenas no momento em que você empurra a tag `v1.0.0` de produção gera tags órfãs e atrasos no lançamento.
+HOW_IT_WORKS: Cada modo de execução listado na seção `Dry run` do `Quick Start` atende a uma etapa do fluxo: (1) **`goreleaser check`**: valida se o arquivo `.goreleaser.yaml` é sintaticamente válido e sem opções depreciadas; (2) **`goreleaser healthcheck`**: verifica se todas as ferramentas de terceiros exigidas pela sua configuração atual (ex.: `git`, `go`, `cargo`, `docker`, `cosign`, `syft`) estão instaladas no `$PATH`; (3) **`goreleaser build --single-target --clean`**: compila apenas o binário para o alvo atual (`GOOS`/`GOARCH` ou `TARGET` no Rust/Zig/Bun/Deno) sem empacotar nem publicar, ideal para desenvolvimento local; (4) **`goreleaser build`**: compila todos os alvos da matriz em Pull Requests de CI para garantir que tudo compila sem erros; e (5) **`goreleaser release --skip=publish`** (ou `--snapshot --clean`): executa todo o empacotamento em `./dist` pulando apenas o upload final.
+EXAMPLE:
+```bash
+# Verificar dependências externas (healthcheck) e compilar rapidamente apenas o binário para linux/arm64 (--single-target)
+goreleaser healthcheck
+GOOS="linux" GOARCH="arm64" goreleaser build --single-target --clean
+```
+TRADE_OFFS: Sempre passe a flag **`--clean`** ao executar `goreleaser build` ou `goreleaser release` em uma máquina local onde você já rodou o GoReleaser anteriormente: sem `--clean`, o GoReleaser falhará caso a pasta `./dist` ainda contenha artefatos residuais de uma execução anterior.
+VERIFY: Execute `goreleaser check` e `goreleaser healthcheck` no repositório e confirme que ambos retornam código de saída `0` sem erros.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-configuracao-builds-matriz-ldflags-env-hooks]] | [[taskfile-dependencias-paralelas-sequenciais-loops-matrizes]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 963 | goreleaser-configuracao-builds-matriz-ldflags-env-hooks | GoReleaser: customização da seção builds (goos, goarch, env, flags, ldflags e hooks de pré/pós-build) ===
+ONE_LINER: Na seção **`builds:`** do `.goreleaser.yaml`, o engenheiro define a matriz de sistemas operacionais (`goos`), arquiteturas (`goarch`/`targets`), variáveis de ambiente (`CGO_ENABLED=0`), injeção de metadados de versão no binário (`ldflags`) e `hooks` de compilação.
+IMPORTANCE: Um binário CLI distribuído para usuários finais precisa responder corretamente ao comando `--version` informando a versão exata da tag Git, o hash do commit e a data do build, além de ser compilado estaticamente (`CGO_ENABLED=0`) e sem símbolos de debug desnecessários (`-s -w`) para reduzir o tamanho do download.
+HOW_IT_WORKS: Por padrão, o GoReleaser injeta automaticamente no `ldflags` do Go as três variáveis padrão **`-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}`**. No bloco `builds:` do `.goreleaser.yaml`, é possível customizar: (1) `main: ./cmd/minha-cli` e `binary: minha-cli`; (2) `env: [CGO_ENABLED=0]`; (3) `goos: [linux, darwin, windows]` e `goarch: [amd64, arm64]` (podendo excluir combinações específicas com `ignore:`); (4) `flags: [-trimpath]` para builds reprodutíveis; e (5) `hooks.pre` / `hooks.post` (ou `before.hooks` global no topo do arquivo, como `go mod tidy` e `go generate ./...`).
+EXAMPLE:
+```yaml
+# Exemplo de seção builds no .goreleaser.yaml (v2) compilando binários estáticos reprodutíveis para Linux, macOS e Windows
+version: 2
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: cli
+    main: ./cmd/cli
+    binary: minha-cli
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+```
+TRADE_OFFS: Se o seu pacote `main` em Go armazena a variável `Version` dentro de um subpacote interno (por exemplo, `internal/version.Version` em vez de `main.version`), o `ldflags` padrão do GoReleaser não preencherá aquela variável a menos que você declare explicitamente `ldflags: ["-s -w -X github.com/org/repo/internal/version.Version={{.Version}}"]` na seção `builds`.
+VERIFY: Execute `goreleaser build --single-target --clean` e rode o binário gerado dentro de `./dist/cli_*/minha-cli --version` para confirmar que `{{.Version}}` e `{{.Commit}}` foram injetados no executável.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-modos-execucao-snapshot-single-target-skip-publish]] | [[ko-configuracao-ko-yaml-imagens-base-flags-ldflags]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 964 | goreleaser-empacotamento-archives-nfpm-deb-rpm-apk-homebrew | GoReleaser: empacotamento em arquivos (.tar.gz/.zip), pacotes Linux via nFPM (.deb, .rpm, .apk) e gerenciadores (Homebrew/Scoop/Winget) ===
+ONE_LINER: Após compilar os binários, o GoReleaser cria arquivos compactados por plataforma na seção **`archives:`**, gera pacotes nativos de distribuições Linux (`.deb`, `.rpm`, `.apk`, `.archlinux`) sem precisar de ferramentas específicas da distro via **`nfpms:`** e publica fórmulas/manifestos para **Homebrew**, **Scoop**, **Winget**, **AUR** e **Snapcraft**.
+IMPORTANCE: Usuários de macOS esperam instalar sua ferramenta com `brew install sua-org/tap/sua-cli`, usuários de Ubuntu/Debian querem um pacote `.deb`, usuários de RHEL/Fedora querem um `.rpm` e usuários de Windows querem `.zip`, `scoop` ou `winget`. Manter pipelines separados em máquinas diferentes para criar pacotes `.deb` e `.rpm` é complexo; o **nFPM** embutido no GoReleaser gera todos eles em puro Go em qualquer SO.
+HOW_IT_WORKS: No `.goreleaser.yaml`: (1) **`archives:`**: empacota o binário de cada alvo junto com `README.md`, `LICENSE` e scripts de autocompletar em `.tar.gz` (ou `.zip` para Windows via `format_overrides`, ou publica o binário puro com `formats: [binary]`); (2) **`nfpms:`**: utiliza a biblioteca Go `goreleaser/nfpm` para construir pacotes `.deb`, `.rpm`, `.apk` (Alpine) e `.archlinux` definindo `maintainer`, `description`, `license`, `dependencies`, arquivos de configuração (`/etc/...`) e scripts de `postinstall`; e (3) **`brews:` / `scoops:` / `winget:`**: commita automaticamente a fórmula Ruby ou manifesto JSON atualizado em um repositório Git de `homebrew-tap` ou `scoop-bucket` apontando para as URLs e hashes SHA-256 da nova release.
+EXAMPLE:
+```yaml
+# Exemplo de configuração archives e nfpms no .goreleaser.yaml para gerar tar.gz, zip no Windows e pacotes .deb/.rpm
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+nfpms:
+  - package_name: minha-cli
+    vendor: Minha Org
+    homepage: https://exemplo.com
+    maintainer: DevOps <devops@exemplo.com>
+    formats:
+      - deb
+      - rpm
+      - apk
+```
+TRADE_OFFS: Para que o GoReleaser consiga fazer push automático da fórmula do Homebrew (`brews:`) para um **outro** repositório Git (como `github.com/sua-org/homebrew-tap`), o `GITHUB_TOKEN` padrão gerado automaticamente pelo GitHub Actions para o repositório atual não terá permissão de escrita no repositório `homebrew-tap`; você precisará configurar um Personal Access Token (ou GitHub App Token) com permissão `contents: write` no repositório do tap.
+VERIFY: Execute `goreleaser release --snapshot --clean` com a seção `nfpms` ativa e verifique na pasta `./dist` a criação dos pacotes `.deb`, `.rpm` e `.apk` prontos para instalação.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-seguranca-checksums-sbom-syft-assinatura-cosign]] | [[nix-gerenciador-pacotes-puramente-funcional-nix-store]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 965 | goreleaser-seguranca-checksums-sbom-syft-assinatura-cosign | GoReleaser: segurança de cadeia de suprimentos com checksums SHA-256, geração de SBOM (Syft) e assinatura (Cosign / GPG) ===
+ONE_LINER: O GoReleaser gera por padrão o arquivo `checksums.txt` (SHA-256) de todos os artefatos produzidos e integra nativamente a geração de **Software Bills of Materials (`sboms:` via Syft)** e a assinatura criptográfica de artefatos e containers (**`signs:` e `docker_signs:` via Sigstore Cosign ou GPG**).
+IMPORTANCE: Em conformidade moderna de segurança de cadeia de suprimentos (SLSA / OpenSSF Scorecard), publicar binários soltos em uma página de GitHub Releases sem checksums autenticados, sem assinatura criptográfica e sem SBOM impede que usuários e sistemas automatizados verifiquem se o binário baixado foi adulterado.
+HOW_IT_WORKS: Durante o pipeline do `goreleaser release`: (1) **`checksum:`**: calcula o hash SHA-256 de todos os arquivos gerados em `archives`, `nfpms`, etc., gravando `<projeto>_<versão>_checksums.txt`; (2) **`sboms:`**: invoca o `syft` sobre cada arquivo ou binário construído para gerar arquivos `.sbom.json` (SPDX ou CycloneDX) e incluí-los nos assets da release; e (3) **`signs:` / `docker_signs:`**: invoca o `cosign` (suportando assinatura *keyless* via OIDC no GitHub Actions com `cmd: cosign`) ou `gpg` para assinar o arquivo `checksums.txt` (ou todos os artefatos) e as imagens de container publicadas, gerando os arquivos `.sig` e `.pem` de verificação.
+EXAMPLE:
+```yaml
+# Exemplo de geração automática de SBOMs (via Syft) e assinatura keyless do arquivo de checksums (via Cosign) no .goreleaser.yaml
+sboms:
+  - artifacts: archive
+signs:
+  - cmd: cosign
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+```
+TRADE_OFFS: Para que os passos `sboms:` (que chama `syft` por padrão) e `signs:` (que chama `cosign` ou `gpg`) funcionem durante o `goreleaser release`, os respectivos binários (`syft` e `cosign`) precisam estar instalados no runner de CI (verificável previamente com `goreleaser healthcheck`), e no GitHub Actions o job precisa declarar a permissão `id-token: write` para assinatura keyless do Cosign.
+VERIFY: Execute `goreleaser healthcheck` após adicionar `sboms:` e `signs:` ao `.goreleaser.yaml` para confirmar que o `syft` e o `cosign` foram detectados no ambiente.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-integracao-github-actions-permissoes-token-ci]] | [[ko-cicd-github-actions-assinatura-cosign-slsa-seguranca]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 966 | goreleaser-imagens-containers-dockers-buildx-ko-manifests | GoReleaser: publicação de imagens de container multi-arquitetura (dockers, docker_manifests e integração ko) ===
+ONE_LINER: O GoReleaser pode empacotar os binários pré-compilados em imagens de container OCI usando `docker` / `buildx` (`dockers:` e `docker_manifests:`) ou construir e publicar imagens Go multiplataforma sem daemon Docker usando a integração nativa **`kos:`**.
+IMPORTANCE: Em um`Dockerfile` tradicional multi-arquitetura (`linux/amd64` e `linux/arm64`), rodar `go build` dentro do `docker buildx` usa emulação QEMU lenta para a arquitetura estrangeira; no GoReleaser, os binários já foram compilados nativamente em segundos no estágio `builds` do host e são apenas copiados (`COPY`) para dentro da imagem de cada arquitetura (ou publicados diretamente via `kos:`).
+HOW_IT_WORKS: O `.goreleaser.yaml` oferece dois caminhos para publicar containers: (1) **`dockers:` + `docker_manifests:`** (ou `dockers_v2`): o GoReleaser copia o binário já compilado para o contexto temporário de cada plataforma (`linux/amd64`, `linux/arm64`), constrói e publica as imagens específicas da arquitetura e cria a lista de manifestos multi-arch (`docker_manifests`) sob a tag principal (ex.: `ghcr.io/org/app:v1.0.0` e `:latest`); ou (2) **`kos:`**: integra a biblioteca do projeto **`ko`** diretamente dentro do GoReleaser para construir e publicar imagens multi-arquitetura (`platforms: [linux/amd64, linux/arm64]`) sobre imagens base Chainguard/distroless sem precisar de `Dockerfile` nem de daemon Docker!
+EXAMPLE:
+```yaml
+# Exemplo de publicação de imagem multi-arquitetura sem Dockerfile usando a seção nativa kos: no .goreleaser.yaml
+kos:
+  - id: app-ko
+    build: cli
+    repositories:
+      - ghcr.io/minha-org/minha-cli
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    tags:
+      - "{{.Version}}"
+      - latest
+    bare: true
+```
+TRADE_OFFS: Quando você utiliza `dockers:` com um `Dockerfile` externo no GoReleaser, o `Dockerfile` **não** deve conter uma etapa `RUN go build ...` — ele deve conter apenas **`COPY minha-cli /usr/bin/minha-cli`** (pois o GoReleaser já coloca o binário pré-compilado da arquitetura correta na raiz do contexto de build do Docker).
+VERIFY: Teste a construção local com `goreleaser release --snapshot --clean` e verifique as imagens geradas ou a validação da seção `kos:` / `dockers:` com `goreleaser check`.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[ko-construtor-imagens-containers-go-sem-docker]] | [[ko-geracao-automatica-sbom-multiplataforma-reprodutibilidade]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 967 | goreleaser-integracao-github-actions-permissoes-token-ci | GoReleaser: publicação em CI/CD (GITHUB_TOKEN, escopos write:packages e contents:write e goreleaser-action) ===
+ONE_LINER: Conforme detalha o guia oficial `Quick Start` (`goreleaser.com/getting-started/quick-start/`), publicar releases no GitHub exige exportar `GITHUB_TOKEN` com permissão **`contents: write`** (ou escopo `repo` em tokens clássicos) e adicionar **`write:packages`** (`packages: write`) quando o pipeline também faz push de imagens Docker para o GitHub Container Registry (`ghcr.io`).
+IMPORTANCE: A falha mais comum ao configurar o GoReleaser pela primeira vez no GitHub Actions é o pipeline compilar todos os binários com sucesso e falhar no último passo com erro `403 Resource not accessible by integration` porque o `GITHUB_TOKEN` padrão do workflow estava com permissão somente-leitura (`contents: read`).
+HOW_IT_WORKS: No GitHub Actions (usando `goreleaser/goreleaser-action`), quando um push de tag `v*` dispara o workflow: (1) o passo `actions/checkout` deve buscar o histórico completo de tags e commits com **`fetch-depth: 0`** para que o GoReleaser possa calcular o changelog entre a tag anterior e a tag atual; (2) o bloco `permissions:` do job deve conceder `contents: write` (para criar a GitHub Release e fazer upload dos `.tar.gz`/`.deb`), `packages: write` (se publicar imagens no `ghcr.io`) e `id-token: write` (se assinar com Cosign keyless); e (3) a variável `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` é passada ao comando `goreleaser release --clean`.
+EXAMPLE:
+```yaml
+# Trecho essencial de permissões e checkout (fetch-depth: 0) para rodar o GoReleaser no GitHub Actions
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+steps:
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+  - uses: goreleaser/goreleaser-action@v6
+    with:
+      version: "~> v2"
+      args: release --clean
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+TRADE_OFFS: Se você esquecer de configurar `fetch-depth: 0` no `actions/checkout` (que por padrão faz um *shallow clone* buscando apenas 1 commit), o GoReleaser não conseguirá encontrar a tag anterior no histórico Git local e gerará um changelog contendo todos os commits desde o início do repositório ou falhará ao validar o estado da tag.
+VERIFY: Confirme no seu arquivo `.github/workflows/release.yml` a presença de `fetch-depth: 0` no checkout e de `contents: write` no bloco `permissions`.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-modos-execucao-snapshot-single-target-skip-publish]] | [[goreleaser-changelog-automatico-conventional-commits-filtros]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 968 | goreleaser-changelog-automatico-conventional-commits-filtros | GoReleaser: geração automática de Changelog categorizado com Conventional Commits, grupos e filtros ===
+ONE_LINER: Durante o `goreleaser release`, a seção **`changelog:`** do `.goreleaser.yaml` analisa os commits Git entre a tag anterior e a tag atual, filtrando commits irrelevantes (`docs:`, `test:`, `chore:`) e agrupando as notas de lançamento em categorias baseadas em **Conventional Commits** (`feat:`, `fix:`, `perf:`).
+IMPORTANCE: Escrever notas de versão manualmente a cada release é demorado e sujeito a esquecimentos, enquanto despejar a saída bruta de `git log` na página de Releases mistura refatorações internas e ajustes de CI com novas funcionalidades importantes para o usuário.
+HOW_IT_WORKS: Na seção **`changelog:`** do `.goreleaser.yaml`, o engenheiro configura: (1) **`sort: asc`** (ou `desc`); (2) **`use: github`** (ou `git`, `gitlab`, `github-native`), onde `github` enriquece cada linha com o `@username` do autor no GitHub; (3) **`filters.exclude`**: lista de expressões regulares de mensagens de commit que não devem aparecer nas notas de release (ex.: `^docs:`, `^test:`, `^chore:`, `Merge pull request`); e (4) **`groups:`**: lista de grupos com `title` (ex.: `Features`, `Bug Fixes`, `Security`) e `regexp` (ex.: `^.*?feat(\(\w+\))??!?:.+$`) que organizam as mudanças em seções Markdown limpas no corpo da GitHub/GitLab Release.
+EXAMPLE:
+```yaml
+# Exemplo de seção changelog no .goreleaser.yaml agrupando Conventional Commits e excluindo commits de docs/testes
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+  groups:
+    - title: "Novas Funcionalidades"
+      regexp: '^.*?feat(\(\w+\))??!?:.+$'
+      order: 0
+    - title: "Correções de Bugs"
+      regexp: '^.*?fix(\(\w+\))??!?:.+$'
+      order: 1
+```
+TRADE_OFFS: Se a sua equipe já utiliza as notas geradas pelo próprio GitHub (`Release Drafter` ou `.github/release.yml` nativo do GitHub), você pode configurar `changelog: { use: github-native }` ou `disable: true` no `.goreleaser.yaml` para delegar a formatação das notas de release à API nativa do GitHub.
+VERIFY: Execute `goreleaser release --skip=publish --clean` em um repositório com tags e inspecione o arquivo `./dist/CHANGELOG.md` gerado para pré-visualizar exatamente como as notas da release ficarão formatadas.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-integracao-github-actions-permissoes-token-ci]] | [[goreleaser-suporte-rust-zig-node-bun-deno-python]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 969 | goreleaser-suporte-rust-zig-node-bun-deno-python | GoReleaser: uso além do Go com builders nativos para Rust (Cargo), Zig, Node.js, Bun, Deno e Python (uv / Poetry) ===
+ONE_LINER: Conforme demonstra o guia oficial `Quick Start` (`goreleaser.com/getting-started/quick-start/`), o GoReleaser v2 deixou de ser exclusivo para Go e possui builders nativos para projetos **Rust (`cargo`)**, **Zig**, **Node.js**, **Bun**, **Deno**, **Python (`uv`)** e **Python (`poetry`)**.
+IMPORTANCE: Muitas organizações poliglotas que já usavam o GoReleaser para empacotar, assinar (Cosign), gerar SBOMs (Syft), criar pacotes `.deb`/`.rpm` (nFPM) e publicar no Homebrew suas ferramentas em Go queriam exatamente o mesmo pipeline declarativo para seus novos projetos escritos em **Rust**, **Zig**, **TypeScript (Bun/Deno/Node)** ou **Python (`uv`/`poetry`)**.
+HOW_IT_WORKS: No `.goreleaser.yaml`, cada item de `builds:` declara `builder: <linguagem>` (ou `goreleaser init` detecta a linguagem inicializada no diretório): (1) **Rust (`builder: rust`)**: compila usando `cargo` para targets como `TARGET="aarch64-unknown-linux-gnu" goreleaser build --single-target --clean`; (2) **Zig (`builder: zig`)**: usa o poderoso cross-compiler nativo do Zig para targets como `TARGET="aarch64-linux"`; (3) **Bun (`builder: bun`) e Deno (`builder: deno`)**: compilam projetos TypeScript/JavaScript em executáveis standalone (`TARGET="bun-linux-arm64"`, `TARGET="aarch64-unknown-linux-gnu"`); e (4) **Python (`uv` e `poetry`)**: constroem distribuições wheel/sdist (`TARGET="none-any"`). Todos os passos posteriores do GoReleaser (archives, nFPM, SBOM, Cosign, GitHub Release, Homebrew) funcionam de maneira idêntica!
+EXAMPLE:
+```bash
+# Compilar um único alvo em um projeto Rust, Zig ou Bun usando o GoReleaser conforme documentado no Quick Start
+TARGET="aarch64-unknown-linux-gnu" goreleaser build --single-target --clean
+TARGET="aarch64-linux" goreleaser build --single-target --clean
+TARGET="bun-linux-arm64" goreleaser build --single-target --clean
+```
+TRADE_OFFS: Enquanto o compilador Go e o compilador Zig realizam cross-compilation nativa para múltiplos sistemas operacionais sem dependências extras, compilar projetos **Rust** para múltiplos targets Linux/macOS/Windows na seção `builds:` do GoReleaser exige que os targets do `rustup` e os linkers de cross-compilation (ou `cargo-zigbuild` / `cross`) estejam instalados no ambiente de build.
+VERIFY: Em um diretório de teste inicializado com `cargo init --bin` ou `zig init`, execute `goreleaser init` e `goreleaser release --snapshot --clean` para verificar a geração dos artefatos em `./dist`.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-modos-execucao-snapshot-single-target-skip-publish]] | [[goreleaser-configuracao-builds-matriz-ldflags-env-hooks]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser
+
+=== NOTE: 970 | goreleaser-templates-globais-variaveis-artefatos-dist-metadata | GoReleaser: motor de Name Templates ({{.Version}}, {{.Os}}, {{.Arch}}) e metadados em dist/artifacts.json ===
+ONE_LINER: O GoReleaser utiliza um sistema unificado de **Name Templates** (`{{ .ProjectName }}`, `{{ .Version }}`, `{{ .Tag }}`, `{{ .Os }}`, `{{ .Arch }}`, `{{ .Env.VAR }}`) em todas as seções do `.goreleaser.yaml` e grava o inventário estruturado da execução em `dist/artifacts.json` e `dist/metadata.json`.
+IMPORTANCE: Em pipelines corporativos, etapas posteriores do CI (como scripts de notificação, registro em portais internos de desenvolvedor como Backstage ou promoção para repositórios internos) precisam ler um JSON estruturado listando exatamente quais binários, pacotes e digests foram produzidos pelo build sem precisar fazer parsing de logs de texto.
+HOW_IT_WORKS: (1) **Name Templates**: qualquer campo de nome de arquivo, tag de imagem Docker, flag de compilação ou cabeçalho de release no `.goreleaser.yaml` aceita expressões Go template com variáveis de contexto do build — incluindo `{{ .Version }}` (versão sem o prefixo `v`, ex.: `0.1.0`), `{{ .Tag }}` (`v0.1.0`), `{{ .ShortCommit }}`, `{{ .Date }}`, `{{ .Os }}`, `{{ .Arch }}` e `{{ .Env.MINHA_VAR }}`; e (2) **Metadados em `./dist`**: ao final de `goreleaser build` ou `goreleaser release`, o GoReleaser grava na pasta `./dist` os arquivos **`dist/metadata.json`** (informações da versão, tag, commit e data) e **`dist/artifacts.json`** (lista JSON completa de todos os binários, archives, pacotes `.deb`/`.rpm`, SBOMs e checksums gerados com seus caminhos e hashes).
+EXAMPLE:
+```bash
+# Inspecionar programaticamente com jq todos os artefatos construídos pelo GoReleaser no diretório ./dist
+goreleaser release --snapshot --clean
+jq '.[] | {name: .name, type: .type, path: .path}' dist/artifacts.json
+```
+TRADE_OFFS: Atenção à diferença entre **`{{ .Tag }}`** e **`{{ .Version }}`** nos templates do `.goreleaser.yaml`: se a sua tag Git for `v1.2.3`, `{{ .Tag }}` avalia para `v1.2.3` (com a letra `v`), enquanto `{{ .Version }}` avalia para `1.2.3` (sem a letra `v`, ideal para nomes de pacotes `.deb`/`.rpm` que exigem que a versão comece com um dígito numérico).
+VERIFY: Após executar `goreleaser build --single-target --clean`, leia `cat dist/metadata.json` e `cat dist/artifacts.json` para verificar os metadados gerados.
+LINKS: [[goreleaser-automacao-release-engineering-multilinguagem]] | [[goreleaser-modos-execucao-snapshot-single-target-skip-publish]] | [[taskfile-templating-sprig-funcoes-instalacao-cicd]]
+SOURCES: https://raw.githubusercontent.com/goreleaser/goreleaser/main/README.md | https://goreleaser.com/getting-started/quick-start/ | https://github.com/goreleaser/goreleaser

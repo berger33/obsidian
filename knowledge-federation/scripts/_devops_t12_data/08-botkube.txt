@@ -1,0 +1,102 @@
+1171|botkube-arquitetura-chatops-monitoramento-debugging-kubernetes|Botkube: Arquitetura ChatOps para Monitoramento e Debugging Colaborativo de Clusters Kubernetes|Botkube é um assistente de mensagens open-source (licença MIT, criado pela Kubeshop) para monitoramento e troubleshooting de clusters Kubernetes que conecta eventos do cluster e execução segura de comandos (`kubectl`, `helm`) a plataformas de colaboração como Slack, Discord e Mattermost, além de sinks como Elasticsearch e Webhook.|Quando desenvolvedores precisam diagnosticar falhas de suas aplicações em ambientes de staging ou produção, conceder acesso direto ao `kubeconfig` do cluster amplia a superfície de risco, enquanto depender exclusivamente da equipe de SRE para rodar `kubectl logs` cria gargalos operacionais.|O agente do Botkube roda dentro do cluster Kubernetes e opera com dois tipos de extensões modulares: **Source plugins** (que observam eventos de Kubernetes, Prometheus e outras fontes e emitem notificações) e **Executor plugins** (que processam comandos enviados pelos usuários nos canais de chat sob políticas estritas de RBAC por canal).|```bash
+helm repo add botkube https://charts.botkube.io
+helm repo update
+kubectl get pods -n botkube
+kubectl logs -n botkube -l app=botkube --tail=50
+```|Habilitar um executor `kubectl` em um canal público de chat sem restringir os verbos permitidos e o RBAC por canal permite que qualquer membro do canal execute ações destrutivas no cluster a partir do chat.|Vincule cada canal de chat a políticas explícitas de RBAC somente leitura (`get`, ` list`, `logs`, `describe`) e valide os plugins ativos com `@Botkube list executors` e `@Botkube list sources`.|https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/;https://github.com/kubeshop/botkube
+1172|botkube-source-plugins-eventos-kubernetes-prometheus-filtros|Botkube: Source Plugins para Eventos Kubernetes e Alertas Prometheus|Os Source plugins do Botkube atuam como observadores assíncronos dentro do cluster que capturam eventos de recursos Kubernetes, alertas Prometheus ou diagnósticos customizados, aplicam filtros de namespace, tipo de evento, labels e anotações e publicam notificações contextualizadas nos canais vinculados.|Receber todos os eventos `Normal` do Kubernetes (como `Scheduled`, `Pulled`, `Created`) em um canal de Slack gera centenas de mensagens irrelevantes por hora, fazendo a equipe silenciar o canal e perder eventos críticos de erro.|Na configuração de `sources`, a equipe define instâncias nomeadas do plugin `botkube/kubernetes` especificando `event.types` (por exemplo, apenas `error` ou `warning`), `namespaces.include` e lista de `resources` (`v1/pods`, `apps/v1/deployments`, `batch/v1/jobs`), garantindo que apenas anomalias reais cheguem ao canal da squad responsável.|```yaml
+sources:
+  'k8s-err-events':
+    botkube/kubernetes:
+      enabled: true
+      config:
+        event:
+          types:
+            - error
+        namespaces:
+          include:
+            - "^payments-.*"
+        resources:
+          - type: v1/pods
+          - type: apps/v1/deployments
+```|Incluir eventos de `create` e `update` sem filtro de erro para recursos de alta rotatividade (como `v1/events`, `v1/endpoints` ou `coordination.k8s.io/v1/leases`) esgota os limites de rate limit da API do Slack ou Discord.|Restrinja os Source plugins a eventos de erro (`types: [error]`) e namespaces de negócio, verificando o status dos sources no canal com `@Botkube list sources`.|https://docs.botkube.io/plugins/;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://github.com/kubeshop/botkube
+1173|botkube-executor-plugins-kubectl-helm-comandos-chat|Botkube: Executor Plugins para Execução Controlada de kubectl e helm via Chat|Os Executor plugins do Botkube (como `botkube/kubectl`, `botkube/helm` e `botkube/echo`) processam comandos interativos digitados diretamente no Slack, Discord ou Mattermost (por exemplo, `@Botkube kubectl get pods -n checkout`), executam a operação no cluster e devolvem a saída formatada para toda a thread acompanhar em tempo real.|Durante uma sala de guerra (war room) de incidente, compartilhar trechos de terminal copiando e colando manualmente atrasa a colaboração, enquanto o uso de Executor plugins no canal do incidente registra uma trilha auditável e visível para todos os participantes.|Na seção `executors` dos valores do Botkube, habilita-se o plugin `botkube/kubectl` ou `botkube/helm` a partir do repositório oficial `plugins-index.yaml` e vincula-se aquela configuração apenas aos canais de comunicação autorizados em `communications`.|```yaml
+executors:
+  'k8s-read-only':
+    botkube/kubectl:
+      enabled: true
+      config:
+        defaultNamespace: default
+  'helm-list-only':
+    botkube/helm:
+      enabled: true
+      config:
+        defaultNamespace: default
+```|Usar comandos interativos que exigem TTY ou bloqueiam indefinidamente (como `kubectl exec -it` ou `kubectl logs -f` sem limite) não é suportado ou trava a resposta do executor no chat.|Execute apenas comandos não-interativos e finitos via `@Botkube kubectl` (usando `--tail=100` em `logs`) e consulte o help no canal com `@Botkube help`.|https://docs.botkube.io/plugins/;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://github.com/kubeshop/botkube
+1174|botkube-rbac-por-canal-channel-mapping-least-privilege|Botkube: Políticas de RBAC por Canal de Chat e Isolamento Multi-Tenant|O Botkube suporta configuração granular de RBAC por plugin e por canal (`context.rbac`), permitindo que o canal `#squad-checkout` execute `kubectl` e receba eventos apenas do namespace `checkout` usando uma `Role` restrita, enquanto o canal `#sre-ops` opera com visibilidade em todo o cluster.|Se o agente do Botkube utilizasse uma única `ClusterRole` global para todos os canais sem impersonation ou mapeamento de RBAC por canal, um desenvolvedor em um canal de testes poderia inspecionar `Secrets` de produção digitando `-n prod`.|Ao configurar a política de RBAC de uma instância de source ou executor, o Botkube pode mapear a execução para um `ServiceAccount`, `Group` ou `User` específico do Kubernetes (via impersonation) ou restringir estaticamente os namespaces e recursos acessíveis àquele canal específico.|```yaml
+rbac:
+  groups:
+    'checkout-devs-group':
+      create: true
+      rules:
+        - apiGroups: ["", "apps"]
+          resources: ["pods", "pods/log", "deployments"]
+          Namespaces: ["checkout"]
+          verbs: ["get", "list"]
+```|Conceder o verbo `get` no recurso `secrets` ao perfil de RBAC vinculado a um canal de chat faz com que qualquer participante possa imprimir segredos codificados em base64 no histórico permanente de mensagens do Slack ou Discord.|Nunca inclua `secrets` nas regras de RBAC associadas a canais de chat e verifique o isolamento tentando executar `@Botkube kubectl get secrets -A` no canal para confirmar que o comando é negado.|https://github.com/kubeshop/botkube;https://docs.botkube.io/plugins/;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md
+1175|botkube-integracoes-bots-sinks-slack-discord-mattermost-elasticsearch|Botkube: Comparação de Integrações Bidirecionais (Bots) e Unidirecionais (Sinks)|A arquitetura de comunicação do Botkube divide as integrações em dois grupos: **Bots** bidirecionais (Slack, Discord e Mattermost), que suportam tanto Source plugins quanto Executor plugins e RBAC por canal, e **Sinks** unidirecionais (Elasticsearch e Webhook), voltados à exportação contínua de eventos multi-cluster.|Equipes frequentemente precisam enviar alertas interativos e permitir comandos de diagnóstico no Slack ou Mattermost e, simultaneamente, arquivar todos os eventos estruturados do cluster no Elasticsearch ou disparar sistemas externos via Webhook usando o mesmo agente.|Um único agente Botkube instalado no cluster pode habilitar múltiplas plataformas simultaneamente na seção `communications`. As integrações Slack oferecem suporte adicional a mensagens interativas e notificações acionáveis com botões, enquanto Discord, Mattermost, Elasticsearch e Webhook suportam roteamento multi-cluster.|```yaml
+communications:
+  'default-group':
+    socketSlack:
+      enabled: true
+      appToken: "{{ .Values.slack.appToken }}"
+      botToken: "{{ .Values.slack.botToken }}"
+      channels:
+        'sre-alerts':
+          name: 'k8s-sre-alerts'
+          bindings:
+            sources: ['k8s-err-events']
+            executors: ['k8s-read-only']
+    elasitcsearch:
+      enabled: false
+```|Tentar vincular `executors` a uma integração do tipo Sink (como `elasticsearch` ou `webhook`) é inválido, pois Sinks são estritamente unidirecionais e processam apenas `sources`.|Associe `executors` apenas a integrações de Bots (`socketSlack`, `discord`, `mattermost`) e utilize Sinks para retenção e auditoria de eventos.|https://github.com/kubeshop/botkube;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/
+1176|botkube-repositorios-plugins-index-extensoes-customizadas|Botkube: Repositórios de Plugins (botkube e botkubeExtra) e Desenvolvimento de Plugins Customizados|O sistema de plugins do Botkube consome índices declarativos (`plugins-index.yaml`) distribuídos nos repositórios oficiais `botkube` (`kubeshop/botkube`) e `botkubeExtra` (`kubeshop/botkube-plugins`), além de permitir que equipes de plataforma desenvolvam e hospedem seus próprios plugins Source ou Executor em Go.|Quando uma organização precisa executar verificações internas no chat (como consultar status de feature flags, acionar um script de diagnóstico de rede interno ou buscar metadados de deploy), não é necessário fazer fork do código-fonte do Botkube.|Durante a instalação ou upgrade, o bloco `plugins.repositories` aponta para as URLs dos arquivos `plugins-index.yaml` da versão correspondente (ou de um repositório interno). O agente baixa e gerencia o ciclo de vida dos binários de cada plugin habilitado como processos gRPC isolados.|```yaml
+plugins:
+  repositories:
+    botkube:
+      url: https://github.com/kubeshop/botkube/releases/download/v1.14.0/plugins-index.yaml
+    botkubeExtra:
+      url: https://github.com/kubeshop/botkube-plugins/releases/download/v1.14.0/plugins-index.yaml
+```|Apontar `plugins.repositories` para URLs externas no GitHub em um cluster corporativo air-gapped (sem acesso de saída à internet) faz o pod do Botkube falhar na inicialização ao tentar baixar os binários dos plugins.|Em clusters com saída restrita, espelhe os binários dos plugins e o `plugins-index.yaml` em um servidor HTTP/artefatos interno acessível dentro da VPC.|https://docs.botkube.io/plugins/;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://github.com/kubeshop/botkube
+1177|botkube-automated-actions-autodiagnostico-eventos-kubectl|Botkube: Ações Automatizadas (Actions) Disparadas por Eventos de Source Plugins|O recurso de `actions` do Botkube conecta automaticamente a emissão de um evento por um Source plugin à execução imediata de um Executor plugin, anexando o diagnóstico (como `kubectl describe` ou `kubectl logs`) junto ao alerta publicado no canal de chat.|Mesmo com o comando `@Botkube kubectl` disponível no chat, exigir que um humano digite `kubectl logs` toda vez que um Pod falha desperdiça tempo se o próprio bot pode rodar esse comando automaticamente no instante do erro.|Na seção `actions`, define-se uma regra vinculando `bindings.sources` (por exemplo, `k8s-err-events`) a um template de comando em `command` (como `"kubectl describe {{ .Event.TypeMeta.Kind | lower }} {{ .Event.Name }} -n {{ .Event.Namespace }}"`) usando `bindings.executors`, de modo que todo erro já chega ao canal acompanhado da saída do comando.|```yaml
+actions:
+  'describe-created-resource':
+    enabled: true
+    displayName: "Describe failed resource"
+    command: "kubectl describe {{ .Event.TypeMeta.Kind | lower }} {{ .Event.Name }} -n {{ .Event.Namespace }}"
+    bindings:
+      sources:
+        - k8s-err-events
+      executors:
+        - k8s-read-only
+```|Vincular uma `action` automatizada que executa comandos mutáveis (como `kubectl delete pod`) a um source de eventos amplo pode criar loops infinitos de deleção e recriação de Pods no cluster.|Restrinja `actions` automatizadas a comandos puramente de diagnóstico somente leitura (`describe`, `logs`, `get`, `top`) e valide o template Go antes de ativar em produção.|https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/;https://github.com/kubeshop/botkube
+1178|botkube-slack-socket-mode-seguranca-sem-ingress-publico|Botkube: Conexão Segura com Slack via Socket Mode sem Expor Webhook Público|A integração moderna do Botkube com o Slack (`socketSlack`) utiliza o **Slack Socket Mode** via WebSockets de saída iniciados de dentro do cluster, eliminando a necessidade de expor um `Ingress` ou `LoadBalancer` público na internet para receber comandos do chat.|Expor um endpoint HTTP do agente de cluster na internet pública apenas para receber callbacks interativos do Slack exige gerenciar certificados TLS públicos, WAF e validação de assinatura na borda de cada cluster privado.|Com `socketSlack`, o pod do Botkube estabelece uma conexão WebSocket autenticada de saída para a API do Slack usando um App-Level Token (`xapp-...`) e um Bot Token (`xoxb-...`). Assim, mesmo clusters em sub-redes privadas ou atrás de NAT recebem comandos `@Botkube` e interações de botões de forma bidirecional.|```bash
+# Verificar nos logs do Botkube a conexao ativa do SocketSlack:
+kubectl logs -n botkube deployment/botkube | grep -i "slack"
+```|Reutilizar o mesmo App-Level Token (`xapp-...`) do Slack Socket Mode simultaneamente em múltiplos clusters sem designar o nome do cluster nos comandos faz com que as mensagens sejam distribuídas de forma imprevisível entre os agentes conectados.|Configure um App/Token dedicado por cluster (ou utilize o roteamento multi-cluster explícito suportado pela plataforma escolhida) e armazene `appToken` e `botToken` em `Secrets` Kubernetes protegidos.|https://github.com/kubeshop/botkube;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/
+1179|botkube-multi-cluster-discord-mattermost-webhooks-identificacao|Botkube: Operação Multi-Cluster em Discord, Mattermost, Elasticsearch e Webhooks|O Botkube suporta operação multi-cluster nas integrações de bots com Discord e Mattermost e nos sinks de Elasticsearch e Webhook, identificando claramente o `clusterName` em cada evento emitido e permitindo direcionar comandos de executor ao cluster desejado via flag `--cluster-name`.|Organizações que operam clusters separados para `dev`, `staging` e `prod` precisam saber instantaneamente de qual cluster partiu uma notificação de erro e impedir que um comando de debugging pensado para `staging` seja executado em `prod`.|Configurando `settings.clusterName` nos valores de instalação de cada cluster (por exemplo, `eks-prod-sa-east-1`), todas as mensagens e payloads JSON enviados pelo Botkube passam a incluir o identificador do cluster, e os executores validam se o `--cluster-name` informado no comando corresponde àquela instância antes de agir.|```yaml
+settings:
+  clusterName: eks-prod-sa-east-1
+```|Deixar `settings.clusterName` com o valor genérico `default` ou `not-configured` em vários clusters que publicam no mesmo canal de Discord/Mattermost ou no mesmo índice do Elasticsearch torna impossível distinguir a origem dos alertas.|Defina sempre um `settings.clusterName` único e descritivo em cada cluster e valide sua presença nos cabeçalhos das notificações.|https://github.com/kubeshop/botkube;https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/
+1180|botkube-alias-comandos-atalhos-chatops-produtividade-oncall|Botkube: Configuração de Aliases de Comandos (aliases) para Produtividade no ChatOps|O Botkube permite definir `aliases` customizados na configuração do agente (como `k` para `kubectl`, `kgp` para `kubectl get pods` ou `hl` para `helm list`), reduzindo a digitação manual ao executar comandos pelo Slack, Discord ou Mattermost, inclusive em dispositivos móveis.|Digitar comandos longos como `@Botkube kubectl get pods --all-namespaces` em um teclado de celular durante um acionamento de sobreaviso é lento e propenso a erros de autocorreção.|Na seção `aliases` dos valores do Botkube, cada atalho mapeia um prefixo curto (por exemplo, `p`) para o comando completo do executor (`kubectl get pods`) e exibe um `displayName` amigável, funcionando de forma transparente com as mesmas regras de RBAC do executor subjacente.|```yaml
+aliases:
+  k:
+    command: kubectl
+    displayName: "Kubectl alias"
+  kgp:
+    command: kubectl get pods
+    displayName: "Get pods"
+  kdp:
+    command: kubectl describe pod
+    displayName: "Describe pod"
+```|Criar aliases curtos para subcomandos destrutivos (como `kd` para `kubectl delete`) aumenta drasticamente o risco de exclusão acidental por erro de digitação no chat.|Crie aliases apenas para comandos de leitura e inspeção (`get`, `describe`, `logs`, `top`) e liste os atalhos configurados no canal com `@Botkube list aliases`.|https://raw.githubusercontent.com/kubeshop/botkube/main/README.md;https://docs.botkube.io/plugins/;https://github.com/kubeshop/botkube

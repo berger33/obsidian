@@ -1,0 +1,124 @@
+0141|authelia-arquitetura-portal-autenticacao-autorizacao-forwardauth-oidc|Authelia: arquitetura do servidor open-source de autenticação, 2FA, controle de acesso (`ForwardAuth`) e provedor OpenID Connect 1.0|O **Authelia** (`authelia/authelia`, escrito em Go com selo **OpenSSF Best Practices Gold** e proveniência **SLSA Nível 3**) é um servidor open-source de autenticação e autorização que atua em conjunto com proxies reversos (**Traefik**, **NGINX**, **Caddy**, **HAProxy**, **Envoy**) via protocolo **ForwardAuth / AuthRequest**, além de funcionar como **Provedor OpenID Connect 1.0 Certificado**.|Muitas ferramentas internas de infraestrutura e observabilidade (ou painéis legados) não possuem suporte a OIDC/SAML nem autenticação de dois fatores nativa; colocá-las atrás de um proxy reverso integrado ao Authelia adiciona SSO e 2FA (WebAuthn/TOTP) instantaneamente sem tocar no código da aplicação.|Em cada requisição recebida pelo proxy reverso, o proxy faz uma sub-requisição leve para o endpoint `/api/authz/forward-auth` (ou `/api/authz/auth-request` / `/api/authz/ext-authz`) do Authelia: se a sessão e a regra de `access_control` permitirem, o Authelia responde HTTP `200 OK` injetando cabeçalhos confiáveis de identidade (`Remote-User`, `Remote-Groups`, `Remote-Name`, `Remote-Email`); caso contrário, redireciona o navegador para o portal de login e 2FA.|```bash
+# Validando o arquivo de configuração do Authelia antes de iniciar o container ou serviço:
+authelia validate-config --config /config/configuration.yml
+```|Garanta que o proxy reverso **remova/sobrescreva** quaisquer cabeçalhos `Remote-User` e `Remote-Groups` enviados pelo cliente externo antes de repassar os cabeçalhos assinados pelo Authelia para o backend, evitando spoofing de cabeçalho!|Execute `authelia --version` e `authelia validate-config -c configuration.yml`.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia
+0142|authelia-access-control-policies-deny-bypass-one-factor-two-factor|Authelia `access_control`: políticas `deny`, `bypass`, `one_factor` e `two_factor` e avaliação sequencial *first-match*|Conforme documentado na página oficial *Access Control* (`authelia.com/configuration/security/access-control/`), o motor de autorização de proxy do Authelia avalia uma lista ordenada de **`rules`** (onde a **primeira regra que casar com todos os critérios vence**) e aplica uma das quatro políticas: **`deny`** (bloqueia o acesso), **`bypass`** (permite acesso sem autenticação), **`one_factor`** (exige usuário/senha) ou **`two_factor`** (exige usuário/senha + segundo fator WebAuthn/TOTP/Duo).|Colocar uma regra ampla (`domain: "*.example.com"`, `policy: one_factor`) no topo da lista `rules:` faz com que regras mais específicas declaradas abaixo (como `domain: "admin.example.com"`, `policy: two_factor`) **nunca sejam alcançadas**, pois o Authelia avalia em ordem sequencial estrita!|Por segurança, a documentação oficial recomenda fortemente definir sempre **`default_policy: 'deny'`** (aplicada quando nenhuma regra casa com a requisição) e ordenar as regras da mais específica (rotas `/api/webhook` ou subdomínios administrativos restritos a grupos) para a mais genérica.|```yaml
+access_control:
+  default_policy: 'deny'
+  networks:
+    - name: 'internal_vpn'
+      networks:
+        - '10.10.0.0/16'
+  rules:
+    - domain: 'admin.example.com'
+      policy: 'two_factor'
+      subject:
+        - 'group:platform-admins'
+    - domain: 'grafana.example.com'
+      policy: 'one_factor'
+      networks:
+        - 'internal_vpn'
+    - domain: 'grafana.example.com'
+      policy: 'two_factor'
+```|Observe no exemplo acima como o mesmo domínio `grafana.example.com` aparece em duas regras seguidas: quem acessa de dentro da VPN (`internal_vpn`) precisa apenas de `one_factor`, enquanto quem acessa da internet cai na regra seguinte exigindo `two_factor`!|Verifique a ordem e o casamento das suas regras com a ferramenta CLI `authelia access-control check-policy`.|https://www.authelia.com/configuration/security/access-control/;https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://github.com/authelia/authelia
+0143|authelia-criterios-regras-domain-regex-resources-subject-methods-query|Authelia Critérios Granulares de Regra: `domain`, `domain_regex`, `resources`, `subject` (`AND`/`OR`), `methods` e `query`|Cada regra em `access_control.rules` do Authelia pode combinar até sete critérios de filtragem da requisição: **`domain`**, **`domain_regex`**, **`resources`** (expressões regulares sobre o caminho da URL), **`subject`** (usuários `user:alice` ou grupos `group:devs`), **`networks`**, **`methods`** (verbos HTTP como `GET`, `POST`, `DELETE`) e **`query`** (operadores `present`, `absent`, `pattern`, `not pattern` sobre query strings).|No critério `subject`, entender a diferença entre lista simples e lista aninhada de listas evita falhas lógicas: múltiplos itens em listas externas operam como **`OR`**, enquanto múltiplos itens dentro da mesma sub-lista interna operam como **`AND`**!|Por exemplo, `subject: [['group:devs', 'group:oncall'], ['group:secops']]` exige que o usuário pertença simultaneamente a `devs` **E** `oncall`, **OU** pertença ao grupo `secops`.|```yaml
+access_control:
+  default_policy: 'deny'
+  rules:
+    - domain: 'api.example.com'
+      policy: 'two_factor'
+      methods:
+        - 'DELETE'
+        - 'PUT'
+      resources:
+        - '^/v1/production(/.*)?$'
+      subject:
+        - ['group:sre', 'group:oncall']
+```|Conforme nota importante na documentação oficial de *Access Control*, os antigos wildcards `{user}.` e `{group}.` em `domain` estão depreciados em favor de **`domain_regex`** com grupos nomeados (`^(?P<User>[a-z0-9-]+)\.dev\.example\.com$`), e nunca devem ser combinados com a política `bypass`.|Simule requisições com método, caminho e usuário via `authelia access-control check-policy --config configuration.yml --url https://api.example.com/v1/production/db --method DELETE --username alice --groups sre,oncall`.|https://www.authelia.com/configuration/security/access-control/;https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://github.com/authelia/authelia
+0144|authelia-teste-politicas-cli-access-control-check-policy-ci|Authelia `authelia access-control check-policy`: validação determinística de regras de autorização na linha de comando e CI/CD|O subcomando **`authelia access-control check-policy`** permite testar a matriz de regras de `access_control` do arquivo `configuration.yml` diretamente na CLI sem subir o servidor, simulando `--url`, `--method`, `--ip`, `--username` e `--groups` e exibindo qual regra casou (ou *potential match*) e qual política final (`deny`, `bypass`, `one_factor`, `two_factor`) foi aplicada.|Editar expressões regulares em `resources` ou `domain_regex` em um arquivo YAML de 300 linhas sem testar casos de borda pode abrir acidentalmente um endpoint administrativo para `bypass` ou `one_factor`.|Adicionando a flag `--verbose`, a CLI imprime uma tabela mostrando regra por regra (`#1`, `#2`, `#3`...) se cada critério (`Domain`, `Resource`, `Method`, `Network`, `Subject`) resultou em `hit`, `miss` ou `may`, facilitando depurar exatamente por que uma regra casou ou não.|```bash
+# Testando na CLI qual política será aplicada para uma requisição específica:
+authelia access-control check-policy \
+  --config /etc/authelia/configuration.yml \
+  --url "https://admin.example.com/settings" \
+  --method "GET" \
+  --username "ana" \
+  --groups "platform-admins" \
+  --ip "203.0.113.10" \
+  --verbose
+```|Inclua um script no seu pipeline de CI/CD executando `authelia validate-config` e uma bateria de asserções com `authelia access-control check-policy` antes de aplicar mudanças via GitOps.|Execute o comando acima e verifique a linha final `Applied policy: two_factor`.|https://www.authelia.com/configuration/security/access-control/;https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://github.com/authelia/authelia
+0145|authelia-backends-autenticacao-ldap-active-directory-file-argon2id|Authelia Backends de Autenticação (`authentication_backend`): integração com `LDAP` (Active Directory / OpenLDAP / FreeIPA) e `file` (`Argon2id`)|O Authelia suporta dois provedores de diretório de usuários em `authentication_backend`: **`ldap`** (integrando-se a Microsoft Active Directory, OpenLDAP, FreeIPA ou LLDAP com pooling TLS, filtros de busca de usuários/grupos e redefinição de senha via Bind) e **`file`** (banco de dados em arquivo YAML local com senhas hasheadas em **Argon2id** ou **SHA512**).|Para homelabs, ambientes de borda isolados ou equipes pequenas que não desejam manter um cluster LDAP, o backend `file` entrega autenticação completa com grupos e e-mails em um único arquivo YAML auditável.|Para gerar hashes de senha seguros compatíveis com o backend `file`, utilize o comando embutido **`authelia crypto hash generate argon2`** (calibrando memória, iterações e paralelismo).|```bash
+# Gerando um hash Argon2id seguro para uso no arquivo users_database.yml do Authelia:
+authelia crypto hash generate argon2 --password 'MinhaSenhaForteDeTeste!2026'
+```|Se você habilitar `watch: true` no bloco `authentication_backend.file`, o Authelia recarrega automaticamente o arquivo `users_database.yml` sempre que novos usuários ou grupos são adicionados, sem precisar reiniciar o processo.|Valide o hash gerado com `authelia crypto hash validate` ou testando login no portal.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia
+0146|authelia-mfa-webauthn-passkeys-totp-duo-push-configuracao|Authelia Segundo Fator (`2FA`): configuração de `WebAuthn` (FIDO2 / YubiKey / Passkeys), `TOTP` e notificações `Duo Push`|O Authelia oferece três métodos nativos de segundo fator para satisfazer políticas `two_factor`: **WebAuthn (FIDO2)** (chaves de segurança de hardware resistentes a phishing, como YubiKey, e autenticadores de plataforma), **TOTP (`RFC 6238`)** (com configuração de `issuer`, `algorithm: SHA1/SHA256/SHA512`, `digits: 6/8` e `period: 30`) e **Duo Push** (notificações push via Duo Auth API).|Ataques modernos de phishing com proxy reverso em tempo real (*Adversary-in-the-Middle — AitM*, como Evilginx) conseguem capturar códigos TOTP digitados pelo usuário, mas **são neutralizados pelo WebAuthn**, pois o navegador vincula criptograficamente a assinatura FIDO2 ao domínio real (`rp_id`).|No `configuration.yml`, você pode habilitar `webauthn` e `totp` simultaneamente ou restringir dispositivos de alta segurança desativando métodos menos resistentes conforme a política da organização.|```yaml
+totp:
+  disable: false
+  issuer: 'AutheliaCorp'
+  algorithm: 'SHA1'
+  digits: 6
+  period: 30
+  skew: 1
+
+webauthn:
+  disable: false
+  display_name: 'Authelia SSO'
+  attestation_conveyance_preference: 'indirect'
+  timeout: '60s'
+```|Ao configurar cookies de sessão e WebAuthn para múltiplos subdomínios (`app1.example.com`, `app2.example.com`), defina o `domain` da sessão como `example.com` para que o escopo do `rp_id` e do cookie cubra todos os subdomínios protegidos.|Cadastre uma chave WebAuthn ou aplicativo TOTP no portal do Authelia e verifique o registro salvo no banco de storage.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia
+0147|authelia-session-redis-sentinel-cluster-storage-postgres-encryption-key|Authelia Sessões e Persistência de Produção: `session.redis` (HA Sentinel/Cluster) e `storage.postgres` com `encryption_key`|Para operar o Authelia com múltiplas réplicas em alta disponibilidade, a arquitetura separa o **armazenamento de sessões voláteis (`session`)** — suportado em **Redis** (standalone, Redis Sentinel ou Redis Cluster) — do **armazenamento persistente de estado (`storage`)** — suportado em **PostgreSQL**, **MySQL/MariaDB** ou `local` (SQLite para instância única), protegido por uma **`encryption_key`** obrigatória.|Como o `storage` guarda os segredos de dispositivos TOTP, chaves públicas/metadados WebAuthn, preferências de 2FA e logs de tentativas de login, armazenar esses segredos em texto claro no banco de dados permitiria que um vazamento de backup comprometesse o 2FA de todos os usuários.|Por isso, o Authelia exige a configuração de **`storage.encryption_key`** (mínimo de 20 caracteres), usando-a para cifrar criptograficamente no banco todas as colunas sensíveis de segundo fator e tokens OAuth2/OIDC!|```yaml
+session:
+  secret: '${AUTHELIA_SESSION_SECRET}'
+  cookies:
+    - domain: 'example.com'
+      authelia_url: 'https://auth.example.com'
+      expiration: '1h'
+      inactivity: '15m'
+  redis:
+    host: 'redis-primary.internal'
+    port: 6379
+
+storage:
+  encryption_key: '${AUTHELIA_STORAGE_ENCRYPTION_KEY}'
+  postgres:
+    address: 'tcp://pg-primary.internal:5432'
+    database: 'authelia'
+    username: 'authelia'
+```|Se precisar rotacionar a `storage.encryption_key` em um banco existente, utilize o subcomando dedicado **`authelia storage encryption change-key`** para recifrar todas as colunas com segurança.|Execute `authelia storage schema-info --config configuration.yml` para verificar a versão do schema e o status de criptografia do banco.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia
+0148|authelia-regulation-protecao-forca-bruta-max-retries-find-time-ban-time|Authelia `regulation`: proteção integrada contra ataques de força bruta com `max_retries`, `find_time` e `ban_time`|O subsistema **`regulation`** do Authelia monitora todas as tentativas de autenticação malsucedidas registradas no banco de `storage` e bloqueia temporariamente contas (e/ou endereços IP conforme os modos configurados) que excederem **`max_retries`** dentro da janela **`find_time`**, mantendo o bloqueio pelo período **`ban_time`**.|Sem limitação de taxa e banimento temporário no próprio motor de autenticação, um invasor distribuído pode testar milhares de senhas por minuto contra o backend LDAP ou esgotar a CPU de hashing Argon2id.|Configurando `max_retries: 3`, `find_time: '2m'` e `ban_time: '5m'`, se três tentativas de senha falharem em menos de 2 minutos, o Authelia rejeita novas tentativas pelos próximos 5 minutos mesmo que a senha correta seja enviada durante o banimento.|```yaml
+regulation:
+  max_retries: 3
+  find_time: '2m'
+  ban_time: '5m'
+```|Caso um colaborador legítimo bloqueie sua própria conta acidentalmente digitando a senha errada 3 vezes, o administrador pode listar e remover o banimento imediatamente via CLI com **`authelia storage bans user list`** e **`authelia storage bans user revoke`**!|Execute `authelia storage bans user list --config configuration.yml` para auditar banimentos ativos.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia
+0149|authelia-openid-connect-provider-clients-authorization-policies-pkce|Authelia como Provedor OpenID Connect 1.0 (`identity_providers.oidc`): proteção de aplicações nativas OIDC (Grafana, Argo CD, GitLab)|Além do modo ForwardAuth no proxy reverso, o Authelia inclui um **Provedor OpenID Connect 1.0 Certificado (`identity_providers.oidc`)** com suporte a *Authorization Code Flow*, **PKCE (`require_pkce` / `S256`)**, *Pushed Authorization Requests (PAR)*, *Device Authorization Grant* e **`authorization_policies`** específicas para OIDC.|Conforme o alerta importante no topo da documentação oficial de *Access Control* do Authelia, a seção `access_control:` **não se aplica a fluxos OpenID Connect 1.0**! Para restringir quais grupos podem fazer login via OIDC em um `client_id` específico (ou exigir `one_factor` vs `two_factor`), você configura `authorization_policy` diretamente no cliente OIDC e em `identity_providers.oidc.authorization_policies`.|Além disso, o `client_secret` cadastrado no `configuration.yml` para cada cliente OIDC deve ser sempre um **hash criptográfico** (gerado com `authelia crypto hash generate pbkdf2`), nunca o segredo em texto claro.|```yaml
+identity_providers:
+  oidc:
+    hmac_secret: '${AUTHELIA_OIDC_HMAC_SECRET}'
+    jwks:
+      - key_id: 'main-rs256'
+        algorithm: 'RS256'
+        use: 'sig'
+        key: ${AUTHELIA_OIDC_JWKS_KEY}
+    clients:
+      - client_id: 'argocd'
+        client_name: 'Argo CD Production'
+        client_secret: '$pbkdf2-sha512$310000$...'
+        public: false
+        authorization_policy: 'two_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://argocd.example.com/auth/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'groups'
+          - 'email'
+```|Use `authelia crypto pair rsa generate` para gerar os pares de chaves JWKS e `authelia crypto hash generate pbkdf2 --variant sha512` para gerar o hash do `client_secret`.|Consulte `https://auth.example.com/.well-known/openid-configuration` para verificar a descoberta OIDC do Authelia.|https://www.authelia.com/configuration/security/access-control/;https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://github.com/authelia/authelia
+0150|authelia-gestao-segredos-variaveis-ambiente-file-filters-templates-k8s|Authelia Gestão Segura de Segredos (`_FILE` e Templates): injeção de credenciais via arquivos Kubernetes Secrets sem expor texto claro|Para evitar gravar chaves privadas JWKS, senhas de banco/LDAP e segredos de sessão dentro do arquivo `configuration.yml`, o Authelia suporta duas abordagens seguras: 1) variáveis de ambiente terminadas no sufixo **`_FILE`** (ex.: `AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/jwt_secret`), que leem o valor diretamente de um arquivo montado de um *Kubernetes Secret* ou *Docker Secret*; e 2) **Configuration Templates** (`X_AUTHELIA_CONFIG_FILTERS=template`).|Passar segredos diretamente em variáveis de ambiente normais (`AUTHELIA_SESSION_SECRET=...`) expõe os valores para qualquer processo ou dump de `kubectl describe pod` / `/proc/<pid>/environ`; usar o sufixo `_FILE` lê o segredo diretamente de um volume `tmpfs` em memória com permissão `0400`.|Com `X_AUTHELIA_CONFIG_FILTERS=template`, você também pode usar funções de template Go dentro do `configuration.yml` (como `{{ secret "/run/secrets/ldap_password" }}` ou `{{ env "HOSTNAME" }}`).|```bash
+# Iniciando o Authelia com filtro de templates habilitado e segredos montados em arquivos somente-leitura:
+export X_AUTHELIA_CONFIG_FILTERS="template"
+export AUTHELIA_SESSION_SECRET_FILE="/run/secrets/authelia_session_secret"
+export AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE="/run/secrets/authelia_storage_key"
+authelia --config /config/configuration.yml
+```|Nunca misture para a mesma chave de configuração a definição no YAML, a variável de ambiente normal e a variável `_FILE` ao mesmo tempo: defina os segredos exclusivamente via `_FILE` ou template `secret`.|Execute `authelia validate-config --config /config/configuration.yml` com `X_AUTHELIA_CONFIG_FILTERS=template` para validar a expansão dos templates.|https://raw.githubusercontent.com/authelia/authelia/master/README.md;https://www.authelia.com/configuration/security/access-control/;https://github.com/authelia/authelia

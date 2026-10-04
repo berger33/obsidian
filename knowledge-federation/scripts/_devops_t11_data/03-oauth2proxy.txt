@@ -1,0 +1,199 @@
+=== NOTE: 1021 | oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2 | OAuth2 Proxy: proxy reverso e middleware de autenticação OAuth2/OIDC (projeto CNCF Sandbox) ===
+ONE_LINER: O OAuth2 Proxy (`oauth2-proxy/oauth2-proxy`, projeto CNCF Sandbox sob licença MIT) é um proxy reverso standalone e componente de middleware que protege aplicações web e serviços internos com autenticação OAuth2 e OpenID Connect (OIDC), extraindo informações de identidade e grupos do usuário e encaminhando-as como cabeçalhos HTTP para as aplicações upstream.
+IMPORTANCE: Muitas ferramentas críticas de DevOps e observabilidade (como dashboards internos, Prometheus UI, Alertmanager, Jaeger UI ou aplicações legadas) não possuem suporte nativo a OAuth2/OIDC. O OAuth2 Proxy adiciona uma camada padronizada de Single Sign-On e controle de acesso por grupos na frente de qualquer serviço HTTP sem modificar uma linha de código da aplicação protegida.
+HOW_IT_WORKS: Conforme descreve o README oficial (`oauth2-proxy/oauth2-proxy`), a ferramenta opera em dois modos arquiteturais: (1) **Standalone Reverse Proxy**: intercepta diretamente todas as requisições destinadas à aplicação, redireciona usuários não autenticados para o provedor OAuth2/OIDC (como Keycloak, Dex, Google, Microsoft Entra ID, GitHub ou `login.gov`) e, após validar o token, encaminha a requisição ao upstream anexando cabeçalhos de identidade; ou (2) **Middleware (ext_authz / auth_request)**: integra-se a proxies reversos e Ingress Controllers existentes (como NGINX Ingress `auth-url`, Envoy `ext_authz` ou Traefik `ForwardAuth`) para autenticar múltiplas aplicações de maneira centralizada.
+EXAMPLE:
+```bash
+# Executar o OAuth2 Proxy protegendo um serviço upstream local (http://127.0.0.1:8080) usando um provedor OIDC
+oauth2-proxy \
+  --provider=oidc \
+  --oidc-issuer-url=https://dex.exemplo.com/dex \
+  --client-id=meu-portal \
+  --client-secret="${OAUTH2_PROXY_CLIENT_SECRET}" \
+  --cookie-secret="${OAUTH2_PROXY_COOKIE_SECRET}" \
+  --email-domain="exemplo.com" \
+  --upstream=http://127.0.0.1:8080/ \
+  --http-address=0.0.0.0:4180
+```
+TRADE_OFFS: Quando o OAuth2 Proxy é usado como proxy reverso ou middleware injetando cabeçalhos HTTP de identidade (como `X-Forwarded-User`, `X-Forwarded-Email` e `X-Forwarded-Groups`), a aplicação upstream nunca deve ser acessível diretamente pela rede externa sem passar pelo proxy; caso contrário, um atacante poderia forjar esses cabeçalhos HTTP diretamente.
+VERIFY: Invoque `oauth2-proxy --version` e faça uma requisição sem cookie de sessão (`curl -i http://localhost:4180/`) para confirmar a resposta de redirecionamento (`302 Found` ou tela de sign-in) exigindo autenticação OAuth2/OIDC.
+LINKS: [[oauth2proxy-precedencia-configuracao-cli-env-toml-config-test]] | [[oauth2proxy-geracao-cookie-secret-aes-sessoes]] | [[dex-arquitetura-ecossistema-argocd-oauth2proxy-clientes]]
+SOURCES: https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1022 | oauth2proxy-precedencia-configuracao-cli-env-toml-config-test | Configuração do OAuth2 Proxy: ordem de precedência (CLI > variáveis de ambiente > arquivo TOML) e validação com --config-test ===
+ONE_LINER: O `oauth2-proxy` pode ser configurado via **opções de linha de comando**, **variáveis de ambiente** ou **arquivo de configuração (`--config`)**, seguindo ordem decrescente de precedência (CLI sobrescreve variáveis de ambiente, que por sua vez sobrescrevem o arquivo de configuração), e oferece a flag **`--config-test`** para validar a configuração em pipelines de CI/CD.
+IMPORTANCE: Em implantações Kubernetes e GitOps, é comum manter parâmetros estruturais (como `upstreams`, `provider` e `email_domains`) em um arquivo de configuração montado via `ConfigMap` (`--config=/etc/oauth2-proxy.cfg`) enquanto segredos (`client_secret`, `cookie_secret`) são injetados via variáveis de ambiente (`OAUTH2_PROXY_CLIENT_SECRET`). Compreender a precedência e as regras de pluralização no arquivo evita que configurações sejam silenciosamente ignoradas.
+HOW_IT_WORKS: Conforme documenta a página oficial *Configuration Overview* (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) qualquer argumento de linha de comando pode ser especificado no arquivo de configuração substituindo hífens (`-`) por sublinhados (`_`); (2) se um argumento de CLI aceita múltiplos valores (como `--allowed-group` ou `--oidc-extra-audience`), a chave correspondente no arquivo de configuração deve ser escrita **no plural** (adicionando `s` no final, como `allowed_groups` ou `oidc_extra_audiences`); e (3) a flag **`--config-test`** testa a validade da configuração e encerra o processo imediatamente, sendo ideal para etapas de linting em CI/CD.
+EXAMPLE:
+```bash
+# Validar um arquivo de configuração do OAuth2 Proxy em um pipeline de CI/CD usando --config-test
+oauth2-proxy --config=/etc/oauth2-proxy.cfg --config-test
+```
+TRADE_OFFS: Se você definir uma flag na linha de comando do container no Deployment Kubernetes (por exemplo, `--email-domain=*`), qualquer tentativa de alterar esse valor apenas via variável de ambiente (`OAUTH2_PROXY_EMAIL_DOMAINS`) ou no arquivo `oauth2-proxy.cfg` não terá efeito, pois a flag de CLI tem a maior precedência.
+VERIFY: Execute `oauth2-proxy --config=./oauth2-proxy.cfg --config-test` antes do deploy para garantir código de saída `0` e ausência de chaves inválidas ou parâmetros obrigatórios faltantes.
+LINKS: [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[oauth2proxy-geracao-cookie-secret-aes-sessoes]] | [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1023 | oauth2proxy-geracao-cookie-secret-aes-sessoes | Geração segura do Cookie Secret no OAuth2 Proxy para criptografia AES de sessões ===
+ONE_LINER: O OAuth2 Proxy exige um **`--cookie-secret`** criptograficamente forte (32 bytes codificados em Base64 URL-safe, ou 16/24/32 bytes para cifras AES-128/192/256) para assinar e criptografar os cookies de sessão dos usuários autenticados.
+IMPORTANCE: Como o OAuth2 Proxy pode armazenar tokens OAuth2/OIDC diretamente em cookies criptografados no navegador do cliente (modo stateless sem Redis) ou identificadores de sessão para o backend Redis, um `cookie-secret` fraco, mal formatado (com quebras de linha ou caracteres Base64 não URL-safe `+` e `/`) ou divergente entre réplicas causa falha de inicialização ou invalidação de sessões.
+HOW_IT_WORKS: Na seção *Generating a Cookie Secret* da documentação oficial (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`), o projeto fornece receitas exatas para gerar um segredo de 32 bytes codificado em Base64 URL-safe (substituindo `+` por `-` e `/` por `_`) usando Python (`base64.urlsafe_b64encode(os.urandom(32))`), Bash (`dd if=/dev/urandom bs=32 count=1`), OpenSSL (`openssl rand -base64 32 | tr -- '+/' '-_'`), PowerShell ou Terraform (`random_password` com `length = 32` e `override_special = "-_"`).
+EXAMPLE:
+```bash
+# Gerar um cookie-secret de 32 bytes compatível com Base64 URL-safe usando OpenSSL ou Python conforme a documentação oficial
+openssl rand -base64 32 | tr -- '+/' '-_'
+
+python3 -c 'import os,base64; print(base64.urlsafe_b64encode(os.urandom(32)).decode())'
+```
+TRADE_OFFS: Quando o OAuth2 Proxy roda com múltiplas réplicas atrás de um balanceador de carga sem *sticky sessions*, todas as réplicas devem compartilhar exatamente o mesmo `cookie-secret` (e, quando os tokens OIDC excedem o limite de 4 KB dos cookies de navegador, também um armazenamento de sessão compartilhado como Redis).
+VERIFY: Gere o segredo com o comando oficial, injete-o via `OAUTH2_PROXY_COOKIE_SECRET` e execute `oauth2-proxy --config-test` para confirmar que o tamanho do segredo AES é aceito sem erros.
+LINKS: [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[oauth2proxy-precedencia-configuracao-cli-env-toml-config-test]] | [[externalsecrets-geradores-dinamicos-password-uuid-ecr-sts]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1024 | oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks | Configuração OIDC no OAuth2 Proxy: claims customizadas (aud, email, groups), --allowed-group, PKCE (S256) e validação JWKS ===
+ONE_LINER: Ao operar com provedores OpenID Connect, o OAuth2 Proxy permite restringir o login a grupos específicos (`--allowed-group`), usar desafios **PKCE (`--code-challenge-method=S256`)**, mapear claims customizadas (`--oidc-email-claim`, `--oidc-groups-claim`, `--oidc-audience-claim`), adicionar audiências extras (`--oidc-extra-audience`) e restringir algoritmos de assinatura JWT (`--oidc-enabled-signing-alg`).
+IMPORTANCE: Nem todo provedor OIDC utiliza os mesmos nomes de claims ou emite tokens apenas para um único `client_id`. Além disso, autenticar um usuário no IdP não significa que ele deva ter acesso a um painel crítico de produção: combinar `--allowed-group` com `--code-challenge-method=S256` garante autorização por grupo na borda e proteção contra interceptação de código de autorização.
+HOW_IT_WORKS: Conforme a tabela *General Provider Options* da documentação oficial (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) **`--allowed-group`** (`allowed_groups` no TOML) restringe o login aos membros dos grupos listados e, caso `scope` não tenha sido definido explicitamente no provedor OIDC genérico, adiciona implicitamente o escopo `groups`; (2) **`--code-challenge-method=S256`** ativa PKCE no fluxo OAuth2; (3) **`--oidc-issuer-url`** define o issuer para descoberta automática (ou pode-se usar `--oidc-jwks-url` / `--oidc-public-key-file` quando a descoberta OIDC está desativada); (4) **`--oidc-groups-claim`** (padrão `"groups"`), **`--oidc-email-claim`** (padrão `"email"`) e **`--oidc-audience-claim`** (padrão `"aud"`) selecionam quais claims do token contêm cada dado; e (5) **`--client-secret-file`** permite ler o segredo do cliente de um arquivo montado (que deve conter apenas o segredo, sem quebra de linha final).
+EXAMPLE:
+```toml
+# Trecho de arquivo oauth2-proxy.cfg configurando provedor OIDC com PKCE S256 e restrição de grupos
+provider = "oidc"
+oidc_issuer_url = "https://auth.exemplo.com/realms/plataforma"
+client_id = "painel-sre"
+client_secret_file = "/var/run/secrets/oauth2-proxy/client-secret"
+code_challenge_method = "S256"
+oidc_groups_claim = "groups"
+allowed_groups = ["sre-prod", "platform-admins"]
+```
+TRADE_OFFS: Preste atenção especial ao requisito documentado para `--client-secret-file`: o arquivo deve conter apenas o segredo **sem quebra de linha no final** (*with no trailing newline*); se você criar o arquivo com `echo "segredo" > file` em vez de `echo -n "segredo" > file`, o `\n` será lido como parte da senha e causará erro `invalid_client` no provedor OIDC.
+VERIFY: Verifique que o arquivo de segredo não possui newline (`xxd /var/run/secrets/oauth2-proxy/client-secret`) e teste o login com um usuário fora de `allowed_groups` para confirmar o bloqueio HTTP `403 Forbidden`.
+LINKS: [[oauth2proxy-precedencia-configuracao-cli-env-toml-config-test]] | [[oauth2proxy-flags-seguranca-oidc-nonce-issuer-ca-files]] | [[keycloak-gerenciamento-identidade-acesso-oidc-saml-cncf]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1025 | oauth2proxy-flags-seguranca-oidc-nonce-issuer-ca-files | Segurança de validação OIDC no OAuth2 Proxy: verificação de nonce, email verificado, issuer multi-tenant e CAs privadas ===
+ONE_LINER: O OAuth2 Proxy expõe controles granulares para a validação criptográfica e semântica de ID Tokens OIDC, incluindo `--insecure-oidc-skip-nonce`, `--insecure-oidc-allow-unverified-email`, `--insecure-oidc-skip-issuer-verification`, `--provider-ca-file` e `--backend-logout-url`.
+IMPORTANCE: Em ambientes corporativos com autoridades certificadoras (CAs) privadas internas ou provedores multi-tenant (como Azure AD / Entra ID multi-tenant), a validação TLS ou a comparação estrita do campo `iss` pode falhar. Por outro lado, habilitar flags `--insecure-oidc-*` sem entender suas implicações reduz garantias importantes do protocolo OpenID Connect.
+HOW_IT_WORKS: Segundo a tabela *General Provider Options* (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) **`--provider-ca-file`** (`provider_ca_files` no TOML) especifica caminhos para certificados CA em formato PEM confiáveis ao conectar-se ao provedor OIDC interno (substituindo o bundle padrão do Go); (2) **`--insecure-oidc-allow-unverified-email`** (padrão `false`) impede que o login falhe quando a claim `email_verified` do ID Token é `false`; (3) **`--insecure-oidc-skip-issuer-verification`** (padrão `false`) permite que a URL `iss` do token difira da esperada (necessário apenas em cenários específicos de compatibilidade multi-tenant); (4) **`--insecure-oidc-skip-nonce`** (cujo padrão histórico é `true`, podendo ser definido como `false` para exigir verificação estrita da claim `nonce`); e (5) **`--backend-logout-url`** permite configurar a URL de logout no provedor, substituindo o placeholder `{id_token}` pelo `id_token` real da sessão do usuário.
+EXAMPLE:
+```toml
+# Configurar CA privada para o provedor OIDC, exigir verificação estrita de nonce e habilitar logout federado com {id_token}
+provider = "oidc"
+oidc_issuer_url = "https://dex.interno.exemplo.com/dex"
+provider_ca_files = ["/etc/ssl/certs/ca-corporativa.pem"]
+insecure_oidc_skip_nonce = false
+insecure_oidc_allow_unverified_email = false
+backend_logout_url = "https://auth.interno.exemplo.com/realms/corp/protocol/openid-connect/logout?id_token_hint={id_token}"
+```
+TRADE_OFFS: Nunca utilize `--insecure-oidc-allow-unverified-email=true` em provedores públicos ou quando a autorização na aplicação upstream é baseada no endereço de e-mail ou domínio de e-mail, pois um usuário poderia cadastrar uma conta com um e-mail ainda não verificado de outro domínio e obter acesso indevido.
+VERIFY: Execute `oauth2-proxy --config=/etc/oauth2-proxy.cfg --config-test` e verifique nos logs do proxy a negociação TLS bem-sucedida usando o certificado listado em `provider_ca_files`.
+LINKS: [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]] | [[oauth2proxy-imagens-distroless-alpine-arquiteturas-seguranca]] | [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1026 | oauth2proxy-imagens-distroless-alpine-arquiteturas-seguranca | Imagens de container e segurança do OAuth2 Proxy: migração para Distroless (v7.6.0+), tags -alpine e histórico de segurança ===
+ONE_LINER: Desde a versão **`v7.6.0`**, a imagem de container padrão do OAuth2 Proxy (`quay.io/oauth2-proxy/oauth2-proxy`) utiliza **`GoogleContainerTools/distroless`** como base em vez de Alpine Linux para reduzir dependências instaladas e superfície de ataque, mantendo imagens sufixadas com **`-alpine`** para depuração e arquiteturas específicas como `armv6`.
+IMPORTANCE: Como o OAuth2 Proxy fica exposto diretamente na borda da rede recebendo tráfego não autenticado da internet antes mesmo das aplicações internas, minimizar binários, pacotes de sistema e shells dentro da imagem do container é uma defesa em profundidade essencial contra exploração de vulnerabilidades.
+HOW_IT_WORKS: Conforme documenta a seção *Releases / Images* do README oficial (`oauth2-proxy/oauth2-proxy`): (1) binários compilados são publicados no GitHub para todas as principais arquiteturas, incluindo arquiteturas corporativas como `ppc64le` e `s390x`; (2) a partir da `v7.6.0`, a imagem padrão `quay.io/oauth2-proxy/oauth2-proxy:v7.x.y` é baseada em `distroless` (menor e sem shell/apk), enquanto `quay.io/oauth2-proxy/oauth2-proxy:v7.x.y-alpine` continua disponível para quem precisa de ferramentas de debug ou suporte a `armv6`; (3) imagens *nightly* (`quay.io/oauth2-proxy/oauth2-proxy-nightly`) são construídas da branch `master` apenas para testes e **não** devem ser usadas em produção; e (4) o projeto alerta fortemente contra o uso de versões antigas (`v6.0.0` e anteriores) devido à vulnerabilidade histórica de *open redirect* (`GHSA-5m6c-jp6f-2vcv`).
+EXAMPLE:
+```yaml
+# Especificação de container Kubernetes usando a imagem oficial Distroless do OAuth2 Proxy com SecurityContext restritivo
+containers:
+  - name: oauth2-proxy
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
+    args:
+      - --config=/etc/oauth2-proxy/oauth2-proxy.cfg
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      capabilities:
+        drop: ["ALL"]
+```
+TRADE_OFFS: Como a imagem padrão pós-`v7.6.0` é `distroless`, scripts de inicialização ou healthchecks baseados em `sh`/`wget`/`curl` dentro do próprio container falharão; utilize sempre probes HTTP nativas do kubelet (`httpGet` em `/ping`) nas especificações `livenessProbe` e `readinessProbe`.
+VERIFY: Inspecione a imagem com `docker inspect quay.io/oauth2-proxy/oauth2-proxy:v7.15.0` e valide que a probe HTTP do Kubernetes responde `200 OK` no endpoint `/ping` do OAuth2 Proxy.
+LINKS: [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[oauth2proxy-flags-seguranca-oidc-nonce-issuer-ca-files]] | [[polaris-motor-politicas-validacao-remediacao-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1027 | oauth2proxy-integracao-ingress-nginx-ext-authz-headers | OAuth2 Proxy como Middleware de Ingress (NGINX auth-url / Envoy ext_authz) e repasse de cabeçalhos de identidade ===
+ONE_LINER: Em clusters Kubernetes, o OAuth2 Proxy pode operar em modo middleware integrado ao NGINX Ingress Controller (`auth-url` / `auth-signin`) ou Envoy/Traefik, validando sessões no endpoint `/oauth2/auth` e injetando cabeçalhos de identidade do usuário para múltiplos serviços upstream sem duplicar instâncias do proxy.
+IMPORTANCE: Implantar um sidecar do OAuth2 Proxy dentro de cada pod de aplicação multiplica o consumo de memória e exige criar um `client_id` OIDC separado para cada microsserviço. No modo middleware centralizado integrado ao Ingress Controller, uma única implantação do OAuth2 Proxy protege dezenas de subdomínios internos com Single Sign-On compartilhado.
+HOW_IT_WORKS: Conforme descreve o README oficial sobre o modo middleware e extração de detalhes do usuário: (1) o Ingress Controller intercepta a requisição do cliente e faz uma sub-requisição interna para o endpoint `/oauth2/auth` do OAuth2 Proxy; (2) se a sessão for válida, o OAuth2 Proxy responde `202 Accepted` incluindo cabeçalhos com os dados extraídos do provedor (como username preferencial, e-mail, grupos e access/ID token, quando configurado); (3) o Ingress Controller copia esses cabeçalhos para a requisição enviada à aplicação upstream; e (4) se o usuário não estiver autenticado, o OAuth2 Proxy retorna `401 Unauthorized` e o Ingress redireciona o navegador para `/oauth2/start?rd=...`.
+EXAMPLE:
+```yaml
+# Anotações em um Ingress NGINX delegando autenticação ao serviço central do OAuth2 Proxy
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-interno
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://auth-proxy.exemplo.com/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://auth-proxy.exemplo.com/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User,X-Auth-Request-Email,X-Auth-Request-Groups"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: prometheus.exemplo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-server
+                port:
+                  number: 9090
+```
+TRADE_OFFS: Para que uma única instância central do OAuth2 Proxy em `auth-proxy.exemplo.com` autentique subdomínios irmãos (como `prometheus.exemplo.com` e `alertmanager.exemplo.com`), o domínio do cookie (`--cookie-domain=.exemplo.com`) e a lista de domínios permitidos para redirecionamento (`--whitelist-domain=.exemplo.com`) devem ser configurados explicitamente, evitando tanto loops de login quanto redirecionamentos abertos.
+VERIFY: Faça uma requisição `curl -i https://prometheus.exemplo.com` sem cookie para confirmar o redirecionamento `302` para `https://auth-proxy.exemplo.com/oauth2/start` e, após autenticar, confirme a presença dos cabeçalhos `X-Auth-Request-*` no upstream.
+LINKS: [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]] | [[dex-arquitetura-ecossistema-argocd-oauth2proxy-clientes]]
+SOURCES: https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1028 | oauth2proxy-provedores-especializados-entra-github-google-logingov | Provedores especializados no OAuth2 Proxy: Google, Microsoft Entra ID, GitHub, login.gov e JWT Signing Keys ===
+ONE_LINER: Além do cliente OIDC genérico, o OAuth2 Proxy inclui implementações especializadas de provedores para **Google**, **Microsoft Entra ID**, **GitHub**, **GitLab** e **login.gov**, capazes de consultar APIs específicas de cada plataforma para extrair nomes de usuário preferenciais, organizações, equipes e grupos, além de suportar assinatura de requisições com chave privada JWT (`--jwt-key` / `--jwt-key-file`).
+IMPORTANCE: Alguns provedores OAuth2 (como o GitHub, que usa OAuth2 puro em vez de OIDC completo para login de aplicativos, ou o `login.gov`, que exige asserções JWT assinadas por chave privada PEM) não fornecem grupos ou identidade completa apenas pelo endpoint OIDC padrão. Os provedores especializados do OAuth2 Proxy encapsulam essas chamadas extras de API automaticamente.
+HOW_IT_WORKS: Conforme explicam o README oficial e a referência *General Provider Options* (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) o flag `--provider` seleciona o provedor (`google` por padrão, `oidc`, `entra-id`/`azure`, `github`, `gitlab`, `login.gov` etc.); (2) implementações especializadas consultam endpoints de perfil (`--profile-url`), resgate de token (`--redeem-url`) e APIs de membros/equipes para enriquecer os cabeçalhos HTTP de grupos e username; e (3) para provedores governamentais de alta segurança como o **`login.gov`**, o OAuth2 Proxy suporta `--jwt-key` (ou `--jwt-key-file=/etc/ssl/private/jwt_signing_key.pem`) e `--pubjwk-url` para assinar requisições de autenticação com uma chave privada PEM.
+EXAMPLE:
+```toml
+# Configuração do OAuth2 Proxy usando provedor especializado e customizando o nome exibido na página de login
+provider = "github"
+provider_display_name = "GitHub Engenharia Corporativa"
+client_id = "Iv1.1234567890abcdef"
+client_secret_file = "/etc/oauth2-proxy/github-client-secret"
+email_domains = ["*"]
+```
+TRADE_OFFS: Ao utilizar o provedor padrão `--provider=google` sem sobrescrevê-lo explicitamente quando você na verdade deseja conectar ao Keycloak ou Dex, o OAuth2 Proxy tentará autenticar contra os endpoints do Google; sempre declare `provider = "oidc"` ao integrar com provedores OpenID Connect autogerenciados.
+VERIFY: Verifique o valor de `provider` e `provider_display_name` executando `oauth2-proxy --config=/etc/oauth2-proxy.cfg --config-test` e inspecionando a página HTML de login renderizada em `/oauth2/sign_in`.
+LINKS: [[oauth2proxy-proxy-reverso-middleware-autenticacao-oidc-oauth2]] | [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]] | [[dex-conectores-upstream-ldap-github-oidc-matriz-suporte]]
+SOURCES: https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1029 | oauth2proxy-controle-fluxo-login-prompt-acr-values-approval | Controle do fluxo de autenticação no OAuth2 Proxy: --prompt, --approval-prompt, --acr-values e --auth-request-response-mode ===
+ONE_LINER: O OAuth2 Proxy permite ajustar os parâmetros enviados na requisição OAuth2/OIDC de autorização por meio das opções **`--prompt`**, **`--approval-prompt`**, **`--acr-values`** (Authentication Context Class Reference) e **`--auth-request-response-mode`**.
+IMPORTANCE: Em sistemas críticos, a plataforma pode exigir que o provedor de identidade aplique um nível específico de autenticação multifator (`acr_values`), force o usuário a reautenticar-se ou selecionar a conta (`prompt=login` ou `select_account`), ou evite que o parâmetro legado `approval_prompt=force` cause erros em provedores OIDC estritos.
+HOW_IT_WORKS: De acordo com a tabela *General Provider Options* da documentação oficial (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) **`--approval-prompt`** (`approval_prompt` no TOML) tem valor padrão `"force"`, que instrui provedores OAuth2 tradicionais a solicitar consentimento/refresh token; (2) **`--prompt`** (`prompt` no TOML, padrão `""`) implementa o parâmetro padrão do OpenID Connect Core 1.0 (`none`, `login`, `consent`, `select_account`) e, **quando `--prompt` está presente, `--approval-prompt` é automaticamente ignorado**; (3) **`--acr-values`** (`acr_values`) solicita níveis específicos de garantia de autenticação ao IdP; e (4) **`--auth-request-response-mode`** define o modo de resposta solicitado durante a requisição de autenticação.
+EXAMPLE:
+```toml
+# Configurar o parâmetro OIDC prompt (que substitui automaticamente approval_prompt) e solicitar nível ACR de MFA
+provider = "oidc"
+oidc_issuer_url = "https://auth.exemplo.com/realms/corp"
+prompt = "select_account"
+acr_values = "phr"
+```
+TRADE_OFFS: Alguns provedores OIDC rejeitam requisições de autorização que contenham simultaneamente `prompt` e `approval_prompt` ou não reconhecem `approval_prompt=force`; definir `prompt = "login"` ou `prompt = "consent"` no OAuth2 Proxy resolve essa incompatibilidade porque suprime o envio de `approval_prompt`.
+VERIFY: Inspecione a URL de redirecionamento gerada por `/oauth2/start` (`curl -sI http://localhost:4180/oauth2/start | grep -i location`) para confirmar a presença de `prompt=` e `acr_values=` na query string enviada ao IdP.
+LINKS: [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]] | [[oauth2proxy-precedencia-configuracao-cli-env-toml-config-test]] | [[keycloak-padroes-modernos-seguranca-dpop-token-exchange-mcp]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy
+
+=== NOTE: 1030 | oauth2proxy-verificacao-assinatura-jwks-chaves-publicas-algoritmos | Verificação de assinatura JWT no OAuth2 Proxy: --oidc-enabled-signing-alg, --oidc-jwks-url e --oidc-public-key-file ===
+ONE_LINER: O OAuth2 Proxy restringe os algoritmos criptográficos aceitos na verificação de tokens JWT via **`--oidc-enabled-signing-alg`** (calculando a interseção com os algoritmos descobertos no provedor) e suporta verificação offline sem OIDC discovery por meio de **`--oidc-jwks-url`** ou arquivos PEM locais em **`--oidc-public-key-file`**.
+IMPORTANCE: Restringir explicitamente os algoritmos de assinatura permitidos (por exemplo, exigindo apenas `RS256` ou `ES256`) previne ataques de downgrade de algoritmo, enquanto o suporte a chaves públicas PEM locais ou JWKS explícito viabiliza a operação do OAuth2 Proxy mesmo diante de emissores OIDC que não expõem um endpoint público `.well-known/openid-configuration`.
+HOW_IT_WORKS: Conforme especifica a tabela *General Provider Options* (`oauth2-proxy.github.io/oauth2-proxy/configuration/overview/`): (1) **`--oidc-enabled-signing-alg`** (`oidc_enabled_signing_algs` no TOML) define a lista de algoritmos de assinatura JWT permitidos; quando a descoberta OIDC está habilitada, o conjunto efetivo de algoritmos aceitos é a **interseção** entre essa lista configurada e os algoritmos suportados anunciados pelo provedor; (2) **`--oidc-jwks-url`** (`oidc_jwks_url`) fornece a URI JWKS para verificação de tokens, sendo obrigatória se a descoberta OIDC estiver desabilitada e arquivos de chave pública não forem fornecidos; e (3) **`--oidc-public-key-file`** (`oidc_public_key_files`, que pode ser repetido múltiplas vezes) aponta para arquivos de chave pública em formato PEM no disco para validar a assinatura dos JWTs quando nem OIDC discovery nem JWKS URL são utilizados.
+EXAMPLE:
+```toml
+# Restringir algoritmos de assinatura JWT aceitos no OAuth2 Proxy a RS256 e ES256
+provider = "oidc"
+oidc_issuer_url = "https://auth.exemplo.com/realms/corp"
+oidc_enabled_signing_algs = ["RS256", "ES256"]
+```
+TRADE_OFFS: Se a interseção entre `oidc_enabled_signing_algs` e o campo `id_token_signing_alg_values_supported` retornado pelo discovery endpoint do provedor for vazia, ou se você usar `oidc_public_key_files` estáticos e o IdP rotacionar suas chaves de assinatura sem atualizar o volume montado no pod, todas as validações de login falharão.
+VERIFY: Execute `oauth2-proxy --config=/etc/oauth2-proxy.cfg --config-test` e confira no documento `.well-known/openid-configuration` do seu IdP que o algoritmo configurado consta em `id_token_signing_alg_values_supported`.
+LINKS: [[oauth2proxy-opcoes-provedor-oidc-claims-grupos-pkce-jwks]] | [[oauth2proxy-flags-seguranca-oidc-nonce-issuer-ca-files]] | [[dex-id-tokens-jwt-claims-padrao-consumidores-sts]]
+SOURCES: https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/ | https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/master/README.md | https://github.com/oauth2-proxy/oauth2-proxy

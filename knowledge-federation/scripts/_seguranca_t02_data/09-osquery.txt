@@ -1,0 +1,108 @@
+0181|osquery-arquitetura-sistema-operacional-banco-relacional-sql-sqlite|osquery: arquitetura do framework que expõe o sistema operacional (`Linux`, `macOS`, `Windows`) como um banco relacional SQL|O **osquery** (`osquery/osquery`, projeto da Linux Foundation licenciado sob Apache 2.0 / GPL-2.0) é um framework de instrumentação, monitoramento de segurança e analytics de sistema operacional de alta performance que expõe o estado do **Linux**, **macOS** e **Windows** como um **banco de dados relacional consultável via SQL (motor SQLite embutido com tabelas virtuais)**.|Investigar um incidente ou auditar 5.000 máquinas escrevendo scripts bash diferentes para `ps`, `netstat`/`ss`, `lsof`, `lsmod`, `crontab` no Linux, `Get-Process` no Windows e `launchctl` no macOS é frágil e difícil de parsear.|No osquery, conceitos do sistema operacional são abstraídos em mais de 270 **tabelas virtuais SQL** (`processes`, `listening_ports`, `process_open_sockets`, `users`, `logged_in_users`, `kernel_modules`, `crontab`, `launchd`, `systemd_units`, `hash`, `file`), geradas sob demanda no momento do `SELECT` com `JOIN` nativo entre tabelas!|```sql
+-- Identificando processos em execução cujo binário original foi deletado do disco (técnica clássica de malware):
+SELECT pid, name, path, cmdline, uid
+FROM processes
+WHERE on_disk = 0;
+
+-- Cruzando portas TCP/UDP abertas em 0.0.0.0 com o nome e caminho do processo responsável:
+SELECT DISTINCT p.pid, p.name, p.path, lp.port, lp.protocol
+FROM listening_ports AS lp
+JOIN processes AS p USING (pid)
+WHERE lp.address = '0.0.0.0';
+```|Como as tabelas do osquery são *virtual tables* geradas em tempo real via chamadas de API do kernel/SO (e não dados duplicados em disco), evite fazer `SELECT * FROM file;` ou `SELECT * FROM hash;` sem cláusula `WHERE path = ...` ou `WHERE directory = ...`!|Execute `osqueryi --version` e rode as queries acima no shell interativo `osqueryi`.|https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://github.com/osquery/osquery
+0182|osquery-osqueryi-vs-osqueryd-shell-interativo-daemon-agendamento|osquery `osqueryi` vs `osqueryd`: exploração interativa ad-hoc versus monitoramento contínuo agendado por daemon|O pacote do osquery entrega dois executáveis complementares que compartilham o mesmo motor SQL: **`osqueryi`** (o shell interativo standalone para investigação forense ad-hoc, prototipagem de queries e auditoria imediata sem estado) e **`osqueryd`** (o serviço/daemon de monitoramento contínuo de host que executa um cronograma de queries — **`schedule`** — e grava logs de mudanças de estado ao longo do tempo).|Durante uma resposta a incidente em uma máquina suspeita, o analista quer rodar `osqueryi --json "SELECT ..."` imediatamente sem configurar serviço; já para monitorar continuamente 10.000 servidores e laptops, o `osqueryd` roda em background sob controle de recursos (*watchdog*).|No `osqueryi`, comandos meta iniciados por ponto — como `.tables` (lista todas as tabelas da plataforma atual), `.schema <tabela>` (mostra todas as colunas e tipos) e `.mode line`/`pretty`/`json` — permitem descobrir o schema do SO instantaneamente.|```bash
+# Executando uma consulta única em formato JSON via osqueryi para automação ou triagem rápida:
+osqueryi --json "SELECT uid, username, description, shell FROM users WHERE uid >= 1000;"
+```|O `osqueryi` não lê o arquivo `/etc/osquery/osquery.conf` nem se comunica com servidores remotos por padrão, sendo 100% seguro para testar queries localmente antes de adicioná-las ao `schedule` do `osqueryd`.|Execute `osqueryi ".schema processes"` para inspecionar a definição completa da tabela `processes`.|https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://github.com/osquery/osquery
+0183|osquery-differential-logs-added-removed-vs-snapshot-queries-rocksdb|osquery Logs Diferenciais (`added` / `removed` via RocksDB) vs `snapshot: true`: como o `osqueryd` detecta mudanças de estado sem inundar o SIEM|Conforme explicado na documentação oficial do `osqueryd` (`osquery.readthedocs.io/en/stable/introduction/using-osqueryd/`), o comportamento padrão de uma query agendada no `schedule` é gerar **Logs Diferenciais (*Differential Logs*)**: na primeira execução, o `osqueryd` armazena o resultado no banco embarcado **RocksDB** local; nas execuções seguintes (a cada `interval` segundos), ele compara o resultado novo com o anterior e **só emite log se uma linha foi adicionada (`"action": "added"`) ou removida (`"action": "removed"`)**!|Se 10.000 servidores enviassem a lista completa de todos os 200 processos e 50 módulos de kernel a cada 60 segundos para o SIEM, o volume de rede e indexação seria proibitivo; com logs diferenciais, se nada mudou no host, **zero bytes são logados**.|Quando você realmente precisa do retrato completo do estado atual (por exemplo, um inventário diário de pacotes instalados a cada 86.400s), basta adicionar **`"snapshot": true`** na definição da query: ela emitirá um evento `"action": "snapshot"` com todas as linhas atuais sem calcular diff.|```json
+{
+  "schedule": {
+    "kernel_modules_diff": {
+      "query": "SELECT name, size, status FROM kernel_modules;",
+      "interval": 300,
+      "description": "Emite alerta diferencial (added/removed) apenas quando um módulo de kernel muda."
+    },
+    "daily_installed_packages_snapshot": {
+      "query": "SELECT name, version, arch FROM deb_packages;",
+      "interval": 86400,
+      "snapshot": true
+    }
+  }
+}
+```|Evite incluir colunas altamente voláteis que mudam a cada segundo (como `system_time`, `resident_size` ou tempo de CPU) em queries diferenciais normais, pois isso faria toda linha parecer "removida e adicionada" em todo ciclo!|Valide o arquivo de configuração executando `osqueryd --config_path /etc/osquery/osquery.conf --config_check`.|https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://github.com/osquery/osquery
+0184|osquery-query-packs-organizacao-modular-discovery-queries-platform-version|osquery `Query Packs`: agrupamento modular de queries de detecção com filtros `platform`, `version`, `shard` e `discovery`|No `osqueryd`, os **Query Packs** permitem organizar dezenas de queries temáticas (como `incident-response`, `it-compliance`, `ossec-rootkit`, `vuln-management`, `hardware-monitoring`) em arquivos JSON separados, aplicando filtros condicionais de **`platform`** (`linux`, `darwin`, `windows`, `posix`), **`version`** mínima do osquery, **`shard`** (amostragem percentual `1–100`) e **`discovery`** (queries SQL de pré-condição)!|Você não quer executar queries de pacotes Debian (`deb_packages`) em um servidor RedHat/AlmaLinux ou em um MacBook, nem rodar uma query de auditoria de containers Docker em máquinas que nem possuem o daemon `dockerd` instalado.|No bloco **`discovery`** de um Pack, você define uma lista de queries SQL; o `osqueryd` só executa as queries daquele Pack nos hosts onde **todas** as queries de `discovery` retornarem pelo menos uma linha (ex.: `SELECT pid FROM processes WHERE name = 'dockerd';`)!|```json
+{
+  "platform": "linux",
+  "shard": 100,
+  "discovery": [
+    "SELECT pid FROM processes WHERE name = 'containerd' OR name = 'dockerd' LIMIT 1;"
+  ],
+  "queries": {
+    "running_containers_audit": {
+      "query": "SELECT id, name, image, privileged, security_options FROM docker_containers;",
+      "interval": 600
+    }
+  }
+}
+```|Use o parâmetro **`"shard": 10`** ao implantar uma query nova em uma frota grande para testá-la inicialmente em apenas 10% das máquinas e medir seu impacto de CPU/memória na tabela `osquery_schedule`.|Audite o custo de performance de cada query agendada consultando `SELECT name, executions, wall_time, user_time, system_time, average_memory FROM osquery_schedule;`.|https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://github.com/osquery/osquery
+0185|osquery-evented-tables-file-integrity-monitoring-fim-process-socket-events|osquery Evented Tables e File Integrity Monitoring (`FIM`): captura em tempo real via `auditd`/`ebpf`/`inotify`/`EndpointSecurity`|Além de fazer polling periódico no momento do `SELECT`, o `osqueryd` possui um **Event Publisher/Subscriber Framework** que escuta APIs de eventos do kernel em tempo real (`inotify`/`auditd`/`eBPF` no Linux, `EndpointSecurity`/`FSEvents` no macOS, `ETW` no Windows) e grava os eventos no RocksDB para consulta nas tabelas **`file_events`**, **`process_events`**, **`socket_events`** e **`user_events`**!|Se um invasor criar um binário temporário, executá-lo por 2 segundos e apagá-lo imediatamente, uma query tradicional que faz polling na tabela `processes` a cada 5 minutos nunca verá o processo; já as tabelas baseadas em eventos (`process_events` e `file_events`) capturam a execução e a alteração do arquivo no exato instante em que ocorreram.|Para habilitar **File Integrity Monitoring (FIM)** em diretórios críticos (atendendo requisitos PCI-DSS 11.5), basta declarar a seção `file_paths` no `osquery.conf` e agendar uma query sobre `file_events` (que já calcula automaticamente os hashes `md5`, `sha1` e `sha256` do arquivo modificado).|```json
+{
+  "file_paths": {
+    "system_binaries": [
+      "/bin/%%",
+      "/sbin/%%",
+      "/usr/bin/%%",
+      "/usr/sbin/%%"
+    ],
+    "critical_configs": [
+      "/etc/passwd",
+      "/etc/shadow",
+      "/etc/sudoers",
+      "/etc/ssh/sshd_config"
+    ]
+  },
+  "schedule": {
+    "fim_events": {
+      "query": "SELECT target_path, action, uid, sha256, time FROM file_events;",
+      "interval": 60
+    }
+  }
+}
+```|Na sintaxe de `file_paths` do osquery, um único `%` casa arquivos e pastas em um nível, enquanto **`%%`** casa recursivamente todos os subdiretórios abaixo daquele caminho; use `exclude_paths` para excluir diretórios ruidosos de cache/logs.|Verifique se os coletores de eventos estão ativos consultando `SELECT name, publisher, type, subscriptions, events, active FROM osquery_events;`.|https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://github.com/osquery/osquery
+0186|osquery-watchdog-protecao-recursos-cpu-memoria-denylist-queries|osquery Resource Watchdog e Auto-Denylist: garantia de que o agente nunca degrade a CPU ou a memória do host de produção|Para garantir que uma query SQL pesada nunca comprometa a estabilidade de um servidor de produção, o `osqueryd` executa por padrão um processo **Watchdog** pai que monitora continuamente um processo **Worker** filho: se o Worker ultrapassar os limites estritos de memória RAM (`--watchdog_memory_limit`, ex.: `200` MB) ou utilização sustentada de CPU (`--watchdog_utilization_limit`), o Watchdog mata o Worker instantaneamente!|Em agentes de segurança tradicionais (EDR/AV), um bug ou loop em uma regra pode consumir 100% de CPU e derrubar a aplicação de negócio; no osquery, o Watchdog isola e interrompe a query infratora.|Mais importante ainda: antes de executar qualquer query agendada, o Worker grava no RocksDB qual query está prestes a rodar; se o Watchdog matar o Worker durante a execução daquela query, o novo Worker **coloca aquela query específica em *denylist* (quarentena) por 24 horas**, impedindo loops de crash!|```bash
+# Iniciando o osqueryd com limites estritos do Watchdog (nível normal ou restrito):
+osqueryd \
+  --config_path=/etc/osquery/osquery.conf \
+  --watchdog_level=0 \
+  --watchdog_memory_limit=250 \
+  --watchdog_utilization_limit=90
+```|Monitore regularmente na sua frota a coluna `denylisted` da tabela **`osquery_schedule`** (`SELECT name, denylisted FROM osquery_schedule WHERE denylisted = 1;`) para identificar quais queries foram colocadas em quarentena pelo Watchdog e otimizá-las.|Execute `SELECT * FROM osquery_schedule;` para verificar que `denylisted = 0` em todas as suas queries.|https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://github.com/osquery/osquery
+0187|osquery-auditoria-containers-docker-namespaces-systemd-linux-secops|osquery para Segurança de Containers e Servidores Linux: tabelas `docker_containers`, `docker_images`, `process_namespaces` e `iptables`|Em servidores Linux e nós de clusters de containers, o osquery fornece tabelas nativas para auditar o runtime de containers e o isolamento do kernel: **`docker_containers`**, **`docker_container_mounts`**, **`docker_container_ports`**, **`docker_images`**, **`process_namespaces`** (identificando os namespaces `mnt`, `net`, `pid`, `user`, `ipc`, `uts`, `cgroup` de cada processo), **`systemd_units`**, **`sudoers`** e **`iptables`**.|Um container mal configurado montando o socket `/var/run/docker.sock` ou o diretório raiz `/` do host com `privileged = 1` permite escape trivial para o sistema operacional hospedeiro.|Com uma simples query SQL fazendo `JOIN` entre `docker_containers` e `docker_container_mounts`, o `osqueryd` detecta em toda a frota qualquer container privilegiado ou que monte caminhos sensíveis do host.|```sql
+-- Detectando containers em execução em modo privilegiado ou montando o docker.sock do host:
+SELECT c.id, c.name, c.image, c.privileged, m.source, m.destination, m.rw
+FROM docker_containers AS c
+JOIN docker_container_mounts AS m USING (id)
+WHERE c.privileged = 1 OR m.source LIKE '%docker.sock%';
+```|A tabela `processes` do Linux também inclui a coluna `cgroup_path`, permitindo identificar diretamente a qual Pod Kubernetes ou container um processo suspeito pertence mesmo sem consultar o daemon do Docker.|Execute `osqueryi "SELECT pid, name, cgroup_path FROM processes LIMIT 10;"` para inspecionar os cgroups dos processos ativos.|https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://github.com/osquery/osquery
+0188|osquery-gerenciamento-frota-tls-enrollment-fleet-osctrl-zentral|osquery Gerenciamento Centralizado de Frota (`TLS Enrollment`, `Fleet`, `osctrl` e `Zentral`): distribuição remota de configuração e Live Queries|Conforme listado na seção *Osquery fleet managers* do README oficial, o `osqueryd` possui plugins nativos de cliente **TLS (`--config_plugin=tls`, `--logger_plugin=tls`, `--distributed_plugin=tls`)** para conectar-se a servidores de gerenciamento de frota open-source como **[Fleet](https://github.com/fleetdm/fleet)**, **[osctrl](https://github.com/jmpsec/osctrl)** e **[Zentral](https://github.com/zentralopensource/zentral)**.|Gerenciar arquivos `/etc/osquery/osquery.conf` estáticos em 5.000 notebooks e servidores impede rodar uma query emergencial em tempo real (*Live Query*) quando uma nova vulnerabilidade 0-day é anunciada.|Com o protocolo TLS do osquery: 1) o agente autentica-se no servidor Fleet/osctrl usando `--enroll_secret_path` e recebe um `node_key` exclusivo; 2) baixa periodicamente a configuração e os Query Packs atualizados (`config_tls_endpoint`); 3) envia os logs de resultados e status (`logger_tls_endpoint`); e 4) busca e responde a **consultas distribuídas sob demanda (*Live Queries*)** em segundos (`distributed_tls_read_endpoint` / `write_endpoint`)!|```bash
+# Exemplo de flags no /etc/osquery/osquery.flags para conexão mútua/TLS com um servidor Fleet ou osctrl:
+--tls_hostname=fleet.internal.corp
+--tls_server_certs=/etc/osquery/certs/ca.crt
+--enroll_secret_path=/etc/osquery/enroll_secret.txt
+--config_plugin=tls
+--logger_plugin=tls
+--distributed_plugin=tls
+--disable_distributed=false
+--distributed_interval=10
+```|Proteja o arquivo `/etc/osquery/enroll_secret.txt` e o banco RocksDB (`/var/osquery/osquery.db`, onde o `node_key` é persistido) com permissão `0600` restrita ao usuário `root`.|Verifique na tabela `osquery_info` e nos logs de status do agente que o TLS enrollment foi concluído com sucesso.|https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://github.com/osquery/osquery
+0189|osquery-integracao-yara-tabelas-yara-yara-events-varredura-memoria-arquivos|osquery + `YARA` (`yara` e `yara_events`): busca de assinaturas de malware sob demanda e acoplada ao File Integrity Monitoring|O osquery integra nativamente o motor **[YARA](https://virustotal.github.io/yara/)** (a ferramenta padrão de pesquisa e classificação de malware por padrões binários e textuais) através da tabela sob demanda **`yara`** e da tabela orientada a eventos **`yara_events`** (que dispara regras YARA automaticamente sempre que o File Integrity Monitoring detecta um arquivo novo ou modificado)!|Hashes SHA-256 mudam completamente se o invasor alterar um único byte do binário; regras YARA detectam famílias inteiras de web shells, *cryptominers*, *infostealers* e *backdoors* pelas suas strings, sequências de opcodes e estrutura ELF/PE/Mach-O.|Configurando a seção `yara` no `osquery.conf` (mapeando grupos de assinaturas `.yar` aos caminhos monitorados em `file_paths`), qualquer arquivo gravado em `/tmp`, `/var/www` ou `/usr/local/bin` é escaneado instantaneamente contra suas regras YARA e registrado em `yara_events`.|```sql
+-- Escaneando um binário suspeito sob demanda contra uma regra YARA inline ou arquivo de regras via osqueryi:
+SELECT path, matches, count, siggroup, sigfile
+FROM yara
+WHERE path = '/tmp/suspicious_binary'
+  AND sigfile = '/etc/osquery/yara/linux_malware.yar';
+```|Restrinja as regras YARA acopladas ao FIM (`yara_events`) a diretórios de executáveis, uploads web e pastas temporárias, evitando varrer arquivos de banco de dados de múltiplos gigabytes a cada escrita.|Teste a tabela `yara` no `osqueryi` passando `sigrule` inline contra um arquivo de teste inofensivo.|https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://github.com/osquery/osquery
+0190|osquery-extensoes-thrift-sdk-go-python-logger-plugins-aws-kinesis-kafka|osquery Extensions (`Thrift` API) e Logger Plugins (`filesystem`, `syslog`, `aws_kinesis`, `aws_firehose`, `kafka_producer`)|Conforme destacado no README oficial, a arquitetura do osquery permite criar **Extensões externas (`*.ext`)** em Go, Python ou C++ comunicando-se com o `osqueryd` via socket local **Apache Thrift**, além de enviar os logs diretamente para **`filesystem`**, **`syslog`**, **`aws_kinesis`**, **`aws_firehose`**, **`aws_s3`** ou **`kafka_producer`** sem precisar de agente coletor intermediário.|Quando sua equipe precisa expor como tabela SQL um subsistema interno proprietário (ou executar ações controladas) sem recompilar o binário oficial do osquery, o SDK de Extensões (ex.: `osquery-go`) permite registrar novas tabelas virtuais em poucos minutos.|Por segurança, o `osqueryd` verifica que todo binário de extensão carregado via `--extensions_autoload` pertença ao usuário `root` e não tenha permissão de escrita para outros usuários (evitando sequestro de extensão por usuários locais).|```bash
+# Listando os plugins de logger e config compilados no binário osqueryi/osqueryd:
+osqueryi "SELECT name, type, active FROM osquery_registry WHERE registry = 'logger';"
+```|Ao usar `filesystem` logger (`--logger_path=/var/log/osquery`), o osquery grava `osqueryd.results.log` (JSON linha-a-linha pronto para Vector, Fluent Bit ou Wazuh) e `osqueryd.snapshots.log`.|Inspecione as últimas linhas de `/var/log/osquery/osqueryd.results.log` com `jq .` para validar o schema de saída.|https://raw.githubusercontent.com/osquery/osquery/master/README.md;https://osquery.readthedocs.io/en/stable/introduction/using-osqueryd/;https://github.com/osquery/osquery

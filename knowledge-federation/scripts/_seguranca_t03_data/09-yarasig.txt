@@ -1,0 +1,138 @@
+0281|yarasig-arquitetura-virustotal-yara-yara-x-anatomia-regras-meta-strings-condition|VirusTotal YARA e YARA-X: arquitetura do motor de *Pattern Matching* para pesquisa de malware e anatomia de regras (`meta`, `strings`, `condition`)|Conforme documentado no README oficial (`VirusTotal/yara`, licenciado sob BSD-3-Clause) e no guia *Writing YARA rules* (`yara.readthedocs.io/en/stable/writingrules.html`), o **YARA** (e seu sucessor moderno reescrito em Rust pelo VirusTotal, o **YARA-X**) é a ferramenta padrão mundial para identificar e classificar amostras de malware e artefatos forenses em arquivos e memória de processos com base em padrões textuais, hexadecimais e expressões booleanas.|Indicadores simples como hashes SHA-256 identificam apenas um arquivo exato bit-a-bit; já uma regra YARA descreve a estrutura genética de uma família inteira de malware, permanecendo eficaz mesmo quando o invasor recompila o binário ou altera strings secundárias.|Toda regra YARA inicia com `rule <identificador>` (opcionalmente precedida por modificadores **`private`** ou **`global`** e seguida por `: tag1 tag2`) e divide-se em três seções: **`meta:`** (metadados chave-valor como `author`, `description`, `reference`, `date`, `hash`), **`strings:`** (definição dos padrões `$a`, `$b` a buscar) e **`condition:`** (a expressão lógica booleana obrigatória que determina o disparo da regra)!|```yara
+rule Detect_Linux_Dropper_Example : linux dropper
+{
+    meta:
+        author = "Equipe DFIR / Threat Intel"
+        description = "Detecta strings características e magic bytes ELF de dropper customizado"
+        severity = "High"
+
+    strings:
+        $elf_magic = { 7F 45 4C 46 }
+        $cmd_memfd = "memfd_create" ascii fullword
+        $c2_marker = "X-Beacon-Session-ID:" ascii nocase
+
+    condition:
+        $elf_magic at 0 and filesize < 5MB and ($cmd_memfd and $c2_marker)
+}
+```|Conforme nota oficial no README do `VirusTotal/yara`, a implementação clássica em C entrou em modo de manutenção em favor do **YARA-X** (`VirusTotal/yara-x`, escrito em Rust), que mantém compatibilidade com a linguagem de regras YARA trazendo segurança de memória, mensagens de erro superiores e compilação mais rápida!|Execute `yara -v` (ou `yr --version` no YARA-X) e teste a regra acima contra um binário com `yara rule.yar /bin/ls`.|https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://yara.readthedocs.io/en/stable/writingrules.html;https://github.com/VirusTotal/yara
+0282|yarasig-hexadecimal-strings-wildcards-not-jumps-alternatives|YARA Hexadecimal Strings (`{ ... }`): uso de *nibble wildcards* (`?`), operador *not* (`~`), *jumps* (`[X-Y]`) e alternativas (`( A | B )`)|Conforme detalhado na seção *Hexadecimal strings* da documentação oficial (`yara.readthedocs.io/en/stable/writingrules.html`), as strings hexadecimais do YARA (`$hex = { ... }`) permitem casar sequências brutas de bytes e sequências de opcodes de assembly usando quatro construções flexíveis: **1. Wildcards por nibble (`?`)**, **2. Operador de negação (`~`, introduzido no YARA 4.3.0)**, **3. Jumps de comprimento variável (`[X-Y]`)** e **4. Alternativas (`( A | B | C )`)**!|Quando um compilador gera código de máquina para a mesma função de descriptografia de um malware, os registradores ou deslocamentos de memória (*offsets* de 4 bytes) mudam a cada build, enquanto os opcodes das instruções permanecem os mesmos.|Usando *nibble wildcards* (`E2 34 ?? C8 A? FB`), negação de byte/nibble (`~00` para casar qualquer byte exceto zero!) e *jumps* limitados (`F4 23 [4-8] 62 B4`), sua assinatura de opcodes ignora os offsets variáveis do compilador e captura todas as variantes da família!|```yara
+rule Opcode_Decryption_Loop_Example
+{
+    strings:
+        // Casa opcodes com wildcard de nibble (?), byte não-nulo (~00), salto de 4 a 6 bytes e alternativas:
+        $decrypt_stub = { 48 31 ?? ~00 ( 8A 04 08 | 8A 1C 08 ) [4-6] 48 FF C1 75 ?? }
+
+    condition:
+        $decrypt_stub
+}
+```|Para performance máxima do motor Aho-Corasick (que extrai um *atom* de até 4 bytes fixos de cada padrão para busca rápida), comece ou inclua sempre uma sequência de pelo menos 3 a 4 bytes fixos contíguos sem wildcards nem jumps na sua string hexadecimal!|Compile a regra e verifique avisos de performance de átomos curtos com `yara -w rule.yar sample.bin` (ou `yr check` no YARA-X).|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0283|yarasig-text-strings-modificadores-nocase-wide-ascii-xor-base64-fullword|YARA Text Strings e Modificadores de Ofuscação: `nocase`, `wide`, `ascii`, `fullword`, `xor(min-max)`, `base64` e `base64wide`|Na seção *Text strings* de `writingrules.html`, o YARA fornece modificadores nativos que encontram strings textuais mesmo quando o autor do malware tenta escondê-las com codificações diferentes: **`ascii`** (padrão, 1 byte por caractere), **`wide`** (UTF-16LE, 2 bytes por caractere com `0x00` intercalado, padrão da API Win32), **`nocase`** (case-insensitive), **`fullword`** (delimitada por caracteres não-alfanuméricos), **`xor`** (busca a string cifrada com todas as 255 chaves XOR de 1 byte!) e **`base64` / `base64wide`** (busca todas as 3 permutações de alinhamento Base64 da string, inclusive com alfabeto customizado)!|Autores de malware raramente deixam a URL do servidor C2 ou `"powershell.exe"` em ASCII limpo no binário: eles aplicam um XOR de 1 byte sobre as strings ou as codificam em Base64 (ou Base64 de uma string UTF-16LE `wide`, como faz o `powershell -EncodedCommand`).|Adicionando simplesmente **`xor(0x01-0xff)`** ou **`base64` / `base64wide`** ao final da definição da string, o compilador do YARA gera automaticamente todas as variações em tempo de compilação e encontra a string ofuscada sem precisar descriptografar o binário antes!|```yara
+rule Detect_Obfuscated_PowerShell_And_XOR_Strings
+{
+    strings:
+        $ps_cmd = "Invoke-Expression" ascii wide nocase base64 base64wide
+        $c2_xor = "http://c2.malicious.example/gate.php" ascii wide xor(0x01-0xff)
+        $api_name = "VirtualAllocEx" ascii fullword
+
+    condition:
+        $api_name and ($ps_cmd or $c2_xor)
+}
+```|Ao usar o modificador **`xor`**, especifique o intervalo **`xor(0x01-0xff)`** quando você não quiser que a regra case com a string em texto plano (`0x00`), ou use `xor` simples para casar tanto em texto plano (`0x00`) quanto com chaves `0x01..0xff`.|Para saber exatamente qual chave XOR foi encontrada no arquivo durante o match, passe a flag **`-s` (`--print-strings`)** e **`-X` (`--print-xor-key`)** na CLI do `yara`!|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0284|yarasig-conditions-contadores-offsets-at-in-filesize-entrypoint-uint|YARA Expressões em `condition`: contadores (`#a`), offsets (`@a[i]`), `at`, `in`, `of them`, `filesize` e leitura de inteiros (`uint16`, `uint32`)|A seção **`condition:`** do YARA é uma linguagem de expressões completa que permite combinar operadores booleanos (`and`, `or`, `not`), operadores relacionais e bit-a-bit, **contagem de ocorrências de uma string (`#a > 5`)**, **offset exato da i-ésima ocorrência (`@a[1] < 1024`)**, comprimento do match (`!a[1]`), operadores de posição (`$a at 0`, `$a in (0..4096)`), conjuntos (`2 of ($s*)`, `all of them`, `any of ($a, $b, $c)`) e leitura direta de inteiros little-endian/big-endian do arquivo (**`uint16(0) == 0x5A4D`**, **`uint32(uint32(0x3C)) == 0x00004550`**)!|Verificar `uint16(0) == 0x5A4D` (assinatura `"MZ"` de um executável Windows PE) e `filesize < 10MB` antes de avaliar expressões complexas ou módulos pesados permite descartar 99% dos arquivos irrelevantes (como vídeos, imagens ou logs de gigabytes) em nanosegundos!|Você também pode usar laços **`for any i in (1..#a) : (@a[i] < @b[1])`** para verificar a ordem relativa em que duas strings ou estruturas aparecem dentro do binário.|```yara
+rule Fast_PE_Header_And_String_Count_Check
+{
+    strings:
+        $s1 = "CreateRemoteThread" ascii fullword
+        $s2 = "WriteProcessMemory" ascii fullword
+        $s3 = "OpenProcess" ascii fullword
+        $nop_sled = { 90 90 90 90 90 90 90 90 }
+
+    condition:
+        // Verifica magic MZ (0x5A4D) no offset 0, assinatura PE\0\0 (0x00004550) no offset apontado por 0x3C:
+        uint16(0) == 0x5A4D and
+        uint32(uint32(0x3C)) == 0x00004550 and
+        filesize < 8MB and
+        (all of ($s*) or #nop_sled > 10)
+}
+```|Lembre-se de que os inteiros `uint16(offset)` e `uint32(offset)` no YARA são **little-endian** por padrão: por isso os bytes ASCII `"MZ"` (`0x4D`, `0x5A`) são lidos como **`0x5A4D`**! Para leitura big-endian (ex.: cabeçalho ELF ou classes Java `0xCAFEBABE`), use **`uint32be(0)`**.|Teste a condição acima contra binários PE e arquivos de texto confirmando a filtragem instantânea pelo cabeçalho.|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0285|yarasig-modulos-pe-elf-math-hash-cuckoo-dotnet-inspecao-estrutural|YARA Módulos Embutidos (`import "pe"`, `"elf"`, `"math"`, `"hash"`, `"dotnet"`): inspeção de imports, seções, entropia, imphash e assinaturas Authenticode|Por meio da diretiva **`import "<modulo>"`** no topo do arquivo `.yar`, o YARA estende a seção `condition:` com parsers profundos de formatos executáveis e cálculos matemáticos: **`pe`** (seções, *Import Address Table*, `pe.imphash()`, exports, timestamps, recursos e certificados Authenticode `pe.signatures`), **`elf`** (seções, segmentos, símbolos e `elf.telfhash()`), **`dotnet`** (assemblies C#/.NET, streams e GUIDs), **`math`** (`math.entropy(offset, size)` para detectar binários empacotados/cifrados!) e **`hash`** (`hash.sha256(offset, size)`).|Empacotadores (*packers* como UPX modificado, Themida ou crypters de ransomware) comprimem ou cifram o código malicioso dentro de uma seção PE com **alta entropia de Shannon (>= 7.2)** e permissão simultânea de escrita e execução (`IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE`), escondendo todas as strings originais.|Combinando `import "pe"` com `import "math"`, uma regra YARA detecta binários empacotados ou verifica o **`pe.imphash()`** (hash da tabela de funções importadas da API do Windows) sem depender de nenhuma string de texto!|```yara
+import "pe"
+import "math"
+
+rule Detect_Packed_PE_With_High_Entropy_RWX_Section
+{
+    condition:
+        pe.is_pe and
+        for any section in pe.sections : (
+            (section.characteristics & pe.SECTION_MEM_EXECUTE) != 0 and
+            (section.characteristics & pe.SECTION_MEM_WRITE) != 0 and
+            math.entropy(section.raw_data_offset, section.raw_data_size) >= 7.2
+        )
+}
+```|O cálculo de `math.entropy(...)` e `hash.sha256(...)` percorre os bytes do arquivo no momento da avaliação da `condition`; portanto, coloque sempre checagens rápidas (como `pe.is_pe`, `filesize < 10MB` ou presença de strings) **à esquerda do `and`** para aproveitar o *short-circuit evaluation*!|Execute `yara -D rule.yar sample.exe` (`--print-module-data`) para despejar todos os campos extraídos pelos módulos `pe`/`elf` sobre um arquivo.|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0286|yarasig-private-rules-global-rules-tags-anonymous-strings-modularizacao|YARA Organização Modular de Rulesets: `private rule`, `global rule`, Strings Anônimas (`$`) e `include`|Conforme documentado em `writingrules.html`, para organizar grandes repositórios corporativos de milhares de regras sem duplicação de código, o YARA oferece **`private rule`** (regras auxiliares que nunca são reportadas na saída por conta própria, mas podem ser referenciadas na `condition` de outras regras!), **`global rule`** (regras de pré-condição global que devem ser satisfeitas para que qualquer outra regra do arquivo seja avaliada) e **Strings Anônimas (`$ = "..."` referenciadas via `any of them`)**!|Se você tem 50 regras para diferentes famílias de Web Shells em PHP e todas precisam verificar primeiro se o arquivo começa com `<?php` e tem menos de 2 MB, repetir essa lógica ou encadear regras com clareza evita erros de manutenção.|Criando uma **`private rule Is_PHP_File`** (ou usando `private global rule`), todas as suas regras de detecção referenciam `Is_PHP_File and ...` na `condition:`, mantendo a saída do scanner limpa apenas com o nome da regra final que disparou!|```yara
+private rule Is_Small_ELF_Binary
+{
+    condition:
+        uint32be(0) == 0x7F454C46 and filesize < 10MB
+}
+
+rule Linux_Backdoor_ReverseShell : linux backdoor
+{
+    strings:
+        $ = "/bin/sh -i" ascii
+        $ = "socket" ascii fullword
+        $ = "dup2" ascii fullword
+        $ = "connect" ascii fullword
+
+    condition:
+        Is_Small_ELF_Binary and all of them
+}
+```|Na CLI do `yara`, você pode filtrar a execução para reportar apenas regras que possuam uma **tag** específica (`rule Nome : tag1 tag2`) usando a flag **`-t <tag>` (`--tag=<tag>`)**, por exemplo `yara -t ransomware rules.yar /scan/dir`.|Teste criar uma `private rule` e confirme que ela não aparece na saída de `yara rules.yar sample`, mas habilita a regra dependente.|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0287|yarasig-compilacao-binaria-yarac-external-variables-d-varredura-processos-pid|YARA Execução Avançada na CLI: pré-compilação com `yarac`, variáveis externas (`-d var=valor`) e varredura de Memória de Processos (`yara rules.yar <PID>`)|O YARA suporta três recursos operacionais cruciais para resposta a incidentes em campo: **1. Varredura direta da memória RAM de um processo em execução** passando o **`PID`** como alvo (`yara rules.yar 4128`), **2. Pré-compilação de milhares de regras em um único arquivo binário rápido (`yarac`)** e **3. Variáveis Externas (`-d ext_var=...`)** injetadas em tempo de execução!|Malwares *fileless* ou payloads injetados na memória de um processo legítimo (como `nginx`, `python` ou `svchost.exe`) nunca tocam o disco; varrer apenas o sistema de arquivos não os encontra, mas apontar o YARA para o `PID` do processo varre todos os segmentos de memória virtual mapeados daquele processo!|Além disso, quando você usa **`yarac`** para pré-compilar seu ruleset (carregado depois com **`yara -C compiled.yarc alvo`**), você elimina o tempo de parsing e compilação do autômato Aho-Corasick em cada host e evita expor o código-fonte em texto claro de regras confidenciais de Threat Intelligence.|```bash
+# 1. Pré-compilando um conjunto de regras com yarac e executando com yara -C (-r recursivo, -s mostra strings):
+yarac ./regras-corporativas.yar ./regras.yarc
+yara -C -r -s ./regras.yarc /var/www/html
+
+# 2. Escaneando a memória virtual de todos os processos em execução no host Linux:
+for pid in $(ls /proc | grep -E '^[0-9]+$'); do
+  sudo yara -C ./regras.yarc "$pid" 2>/dev/null
+done
+```|Atenção: arquivos binários gerados pelo `yarac` são vinculados à versão específica do YARA; sempre recompile o arquivo `.yarc` quando atualizar a versão do binário `yara` (ou use `yr compile` no YARA-X).|Teste compilar uma regra com `yarac` e executá-la com `yara -C` sobre um arquivo e sobre o PID do shell atual (`$$`).|https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://yara.readthedocs.io/en/stable/writingrules.html;https://github.com/VirusTotal/yara
+0288|yarasig-otimizacao-performance-atoms-aho-corasick-regex-bounded-profiling|YARA Engenharia de Performance: escolha de *Atoms* para o motor Aho-Corasick, perigos de Regex abertas (`.*`) e `short-circuit`|Para que um ruleset com 5.000 regras YARA consiga varrer gigabytes de disco ou memória em poucos segundos sem travar a CPU, o autor de regras precisa compreender como funciona o motor interno de duas fases do YARA: **Fase 1 — busca simultânea de *Atoms* (substrings curtas de até 4 bytes extraídas de cada padrão) pelo autômato Aho-Corasick**, seguida pela **Fase 2 — verificação completa do padrão e avaliação do bytecode da `condition`**.|Se você escrever uma expressão regular que começa com quantificador aberto (`/http:\/\/.*\/gate\.php/`) ou uma string curta muito comum (`$a = "00"` ou `{ 00 00 00 00 }`), o YARA não conseguirá extrair um átomo seletivo de 4 bytes: o Aho-Corasick acionará o verificador de regex milhões de vezes por arquivo (*"rule is slowing down scanning"*), derrubando a performance em 1.000x!|Siga três regras de ouro de performance YARA: 1) nunca use `.*` ou `.+` ilimitados em regexes — use quantificadores limitados como `.{1,64}` e ancore em literais específicos; 2) evite strings de menos de 4 bytes ou sequências repetitivas (`00 00 00 00`, `FF FF FF FF`); e 3) use `yr check` (YARA-X) ou `yara` com avisos habilitados para detectar regras lentas no CI!|```yara
+rule High_Performance_Regex_Design
+{
+    strings:
+        // RUIM (sem átomo de 4 bytes seletivo e .* ilimitado): /https?:\/\/.*\/login\.php/
+        // BOM (átomo literal "/api/v2/beacon" de alta seletividade e quantificador limitado):
+        $fast_uri = /\/api\/v2\/beacon\/[a-f0-9]{16,32}\/status/ ascii
+
+    condition:
+        filesize < 5MB and $fast_uri
+}
+```|Se você realmente precisar verificar se um byte ou sequência comum como `{ 00 00 00 00 }` está em uma posição específica (ex.: offset `0x40`), **não defina uma string na seção `strings:`**: use **`uint32(0x40) == 0x00000000`** diretamente na seção `condition:`, o que não polui o autômato Aho-Corasick!|Audite a qualidade e velocidade das suas regras com `yara -w` ou `yr check` antes de promovê-las para os agentes de endpoint.|https://yara.readthedocs.io/en/stable/writingrules.html;https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://github.com/VirusTotal/yara
+0289|yarasig-automacao-python-yara-python-yara-x-callbacks-timeout|YARA Automação em Python (`yara-python` e `yara_x`): compilação em memória, callbacks de `matches` e proteção por `timeout`|Conforme destacado no README oficial (*"can be used through its command-line interface or from your own Python scripts with the yara-python extension"*), os bindings oficiais **`yara-python`** (e **`yara-x`** para Python) permitem embutir o motor YARA diretamente em pipelines de triagem de uploads web, sandboxes de malware, workers Celery e lambdas serverless.|Invocar um subprocesso `os.system("yara ...")` para cada arquivo enviado por usuários em uma API de upload tem alto custo de criação de processo; com `yara.compile(...)` em memória na inicialização do worker Python, cada `rules.match(data=buffer, timeout=10)` executa em microssegundos direto sobre o buffer em RAM sem gravar o arquivo suspeito no disco!|Sempre passe o parâmetro **`timeout=`** (em segundos, ex.: `timeout=15`) na chamada `rules.match(...)` ao escanear arquivos enviados por usuários externos para garantir que um arquivo construído maliciosamente nunca prenda o worker por tempo excessivo.|```python
+import yara
+
+# Compilando regras uma única vez na inicialização do worker e escaneando buffers em memória com timeout:
+RULES = yara.compile(source="""
+rule Detect_WebShell_Upload {
+    strings:
+        $php = "<?php" ascii nocase
+        $eval = "eval(base64_decode(" ascii nocase
+        $sys = "shell_exec(" ascii nocase
+    condition:
+        $php and ($eval or $sys)
+}
+""")
+
+def scan_uploaded_bytes(payload: bytes) -> list[str]:
+    matches = RULES.match(data=payload, timeout=10)
+    return [m.rule for m in matches]
+```|Quando usar `fast=True` em `rules.match(data=payload, fast=True)` (equivalente à flag `-f` da CLI), o YARA para de buscar novas ocorrências da mesma string assim que encontra a primeira (útil quando suas regras não usam o operador de contagem `#a`).|Execute um teste unitário em Python validando `scan_uploaded_bytes(b"<?php eval(base64_decode('...'));")`.|https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://yara.readthedocs.io/en/stable/writingrules.html;https://github.com/VirusTotal/yara
+0290|yarasig-ecossistema-yarahq-yara-forge-yargen-yara-ci-integracoes|YARA no Ecossistema DFIR/SOC: integração com `Velociraptor`, `osquery`, `ClamAV`, `LimaCharlie` e curadoria com `YARA-CI` / `YARA Forge`|Conforme demonstra a extensa lista *Who's using YARA* no README oficial (`VirusTotal/yara`), o YARA é a linguagem universal de detecção de artefatos suportada nativamente por **Rapid7 Velociraptor** (plugin VQL `yara()`), **osquery** (tabelas `yara` e `yara_events`), **Wazuh**, **ClamAV**, **Cuckoo/CAPE Sandbox**, **Radare2**, **x64dbg**, **LimaCharlie**, **Nextron Thor/Loki** e **MISP**.|Manter regras YARA escritas manualmente sem testá-las contra um corpus grande de arquivos limpos (*goodware*, como binários padrão do Windows/Linux) é a causa número um de falsos positivos que disparam alertas em massa na frota.|Conforme recomenda o README oficial, utilize integração contínua para suas regras (como **YARA-CI**, `yr check` / `yr fmt` do YARA-X e coleções curadas e testadas como o **YARA Forge** da Nextron / YARAHQ), validando cada nova regra contra um diretório de binários legítimos antes de distribuí-la para o Velociraptor ou osquery!|```bash
+# Pipeline local de validação de regras YARA: 1) zero hits na pasta de goodware legítimo, 2) hit positivo na amostra de teste:
+yara -r ./minhas-regras.yar ./corpus-goodware-limpo/ | tee hits-falso-positivo.txt
+test ! -s hits-falso-positivo.txt
+yara ./minhas-regras.yar ./corpus-malware-teste/sample1.bin
+```|Inclua sempre nos metadados (`meta:`) de cada regra corporativa os campos `author`, `date`, `reference` (link do relatório/ticket de incidente) e `hash` (SHA-256 da amostra original que motivou a regra) para preservar a memória institucional do SOC.|Execute o comando de validação contra `/bin` e `/usr/bin` locais para confirmar taxa zero de falsos positivos.|https://raw.githubusercontent.com/VirusTotal/yara/master/README.md;https://yara.readthedocs.io/en/stable/writingrules.html;https://github.com/VirusTotal/yara

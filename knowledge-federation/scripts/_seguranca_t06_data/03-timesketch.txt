@@ -1,0 +1,111 @@
+TOPIC: Google Timesketch & Plaso (log2timeline) — Análise Colaborativa de Super-Timelines Forenses, DFIQ, Analyzers e Sigma
+SOURCES: https://raw.githubusercontent.com/google/timesketch/master/README.md | https://timesketch.org/guides/user/sketch-overview/ | https://timesketch.org/guides/admin/install/
+
+===NOTE===
+0521|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch|Google Timesketch: Arquitetura de Análise Colaborativa de *Super-Timelines* Forenses (Python/Flask, Celery, PostgreSQL e OpenSearch)|**Timesketch** (`google/timesketch`, Apache-2.0) é a plataforma open-source desenvolvida no Google para análise colaborativa de linhas do tempo forenses (*Super-Timelines*), permitindo que múltiplos investigadores DFIR correlacionem milhões de eventos de dezenas de máquinas simultaneamente.|Em um incidente complexo envolvendo movimentação lateral por 15 servidores Windows e Linux, analisar logs isolados em planilhas é inviável; o Timesketch unifica todos os artefatos temporais em um único **Sketch** indexado em **OpenSearch**, suportando anotações, estrelas, etiquetas, grafos, regras Sigma e *Stories*.|A arquitetura do Timesketch combina uma aplicação web e API REST em Python/Flask (com frontend Vue.js), um banco relacional **PostgreSQL** (que armazena usuários, ACLs de sketches, metadados de timelines, views salvas e *Stories*), um cluster **OpenSearch** (onde cada timeline ou conjunto de timelines reside como índice de busca rápida) e workers **Celery/Redis** (que processam a ingestão assíncrona de arquivos Plaso/JSONL/CSV e executam os *Analyzers*).|```bash
+# Verificar o status dos servicos e listar todos os sketches e timelines via CLI administrativa tsctl
+tsctl version
+tsctl list-sketches
+```|Para arquivar um sketch concluído (`Archive`) e fechar os índices OpenSearch correspondentes liberando memória RAM do cluster, **todas** as timelines associadas devem estar no estado `ready` (nenhuma pode estar em `processing` ou `fail`) e o sketch não pode ter as labels `protected` ou `preserved`.|Caso uma timeline fique travada em processamento, diagnostique com `tsctl timeline-status <TIMELINE_ID>` antes de gerenciar o ciclo de vida do sketch.|timesketch-ingestao-plaso-log2timeline-jsonl-csv-timesketch-importer, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, velociraptor-arquitetura-dfir-vql-velociraptor-query-language
+
+===NOTE===
+0522|timesketch-ingestao-plaso-log2timeline-jsonl-csv-timesketch-importer|Timesketch: Geração de *Super-Timelines* com **Plaso (`log2timeline.py`)** e Ingestão via `timesketch_importer` (Plaso, JSONL e CSV)|O Timesketch ingere linhas do tempo geradas pelo framework **Plaso (`log2timeline`)** (arquivos `.plaso`) ou eventos estruturados em **JSONL** (JSON Lines) e **CSV**, tanto pela interface web quanto programaticamente via CLI e biblioteca **`timesketch-import-client`** (`timesketch_importer`).|O `log2timeline.py` extrai carimbos de tempo de centenas de fontes forenses de uma imagem de disco ou coleta de triagem (MFT `$Standard_Information`/`$File_Name`, Windows Event Logs `.evtx`, Prefetch, Amcache, Shimcache, Registry Hives, histórico de navegadores, `syslog`/`journald`/`auditd` e metadados de arquivos), normalizando tudo para UTC.|Para ingestão em JSONL ou CSV, cada evento enviado ao Timesketch deve conter no mínimo três campos obrigatórios: **`message`** (resumo textual do evento), **`datetime`** (string ISO 8601 com fuso horário, ex.: `2026-10-03T14:22:10.123456+00:00`) e **`timestamp_desc`** (o significado semântico daquele carimbo de tempo, ex.: `File Creation Time`, `Last Connection Time` ou `Event Logged`).|```bash
+# Extrair super-timeline forense de uma imagem de disco com log2timeline e enviar ao Timesketch via CLI
+log2timeline.py --storage-file /cases/host01.plaso /cases/host01-disk.raw
+
+timesketch_importer --host https://timesketch.dfir.internal.corp \
+  --sketch_id 42 \
+  --timeline_name "wkst-fin-09-super-timeline" \
+  /cases/host01.plaso
+```|Omitir o fuso horário em `datetime` ao importar arquivos CSV/JSONL customizados ou misturar horários locais de servidores em fusos diferentes sem normalizar para **UTC (`+00:00` / `Z`)** corrompe a correlação cronológica entre múltiplas máquinas no mesmo sketch.|Valide um arquivo JSONL antes do upload com `head -n 5 events.jsonl | jq -e '.message and .datetime and .timestamp_desc'`.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, velociraptor-coleta-offline-collector-triage-artefatos-ntfs-mft-usn
+
+===NOTE===
+0523|timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query|Timesketch: Sintaxe de Busca OpenSearch Query String, Filtros de Tipo de Dados (`data_type`), *Context Queries* e *Saved Views*|Na aba **Explore** do Timesketch, o analista filtra dezenas de milhões de eventos combinando expressões **OpenSearch Query String** (operadores booleanos `AND`/`OR`/`NOT`, curingas, expressões regulares `/.../` e faixas numéricas), filtros de intervalo de tempo (*Timefilter*), etiquetas (`__ts_star`, `__ts_comment`) e **Saved Views**.|O campo **`data_type`** atribuído pelos parsers do Plaso é a âncora mais poderosa para buscas cirúrgicas: por exemplo, `data_type:"windows:evtx:record"` filtra apenas logs de eventos do Windows, `data_type:"windows:registry:key_value"` filtra chaves de Registro e `data_type:"fs:stat"` filtra metadados de sistema de arquivos.|Quando o investigador encontra um evento suspeito (ex.: o download de um script PowerShell às `14:05:12Z`), clicar no ícone de **Context Query** ao lado do evento abre instantaneamente uma janela temporal simétrica (ex.: `± 5 minutos` antes e depois daquele segundo exato) mostrando tudo o que aconteceu no sistema imediatamente antes e imediatamente após o evento pivô.|```text
+# Buscar logins RDP bem-sucedidos (Event ID 4624 LogonType 10) ou criacao de servicos (7045) no Windows
+data_type:"windows:evtx:record" AND ((event_identifier:4624 AND xml_string:*LogonType\>10*) OR event_identifier:7045)
+```|Buscas que iniciam com curinga à esquerda (`*mimikatz*`) em campos não-tokenizados exigem varredura cara em índices grandes do OpenSearch; restrinja sempre primeiro pelo `data_type` e por um intervalo de tempo (*Timerange*) antes de usar expressões regulares complexas.|Salve as queries recorrentes de triagem como **Saved Views** no sketch para que toda a equipe de resposta a incidentes acesse os mesmos recortes com um clique.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-ingestao-plaso-log2timeline-jsonl-csv-timesketch-importer, timesketch-investigacao-guiada-dfiq-questions-facets-approaches
+
+===NOTE===
+0524|timesketch-analisadores-automaticos-analyzers-chain-tagger-similarity|Timesketch: Execução de **Analyzers** Automatizados em Background (Taggers, Chain Analyzer, Account Finder, Domain/Hash Enrichment)|Assim que uma nova timeline termina de ser indexada no Timesketch, os workers Celery podem executar dezenas de **Analyzers** automatizados sobre os eventos para marcar anomalias, extrair atributos do sistema, encadear eventos relacionados e consultar bases de inteligência.|Em vez de o analista buscar manualmente cada técnica conhecida em uma timeline de 10 milhões de linhas, os *Analyzers* pré-classificam os eventos adicionando estrelas, comentários explicativos, tags (ex.: `logon-type-10`, `suspicious-execution`) e atributos de resumo do host.|Os principais *Analyzers* incluem: **Tagger** (aplica tags baseadas em queries YAML pré-definidas), **Chain Analyzer** (rastreia cadeias de eventos conectados, como um arquivo baixado pelo navegador Chrome que posteriormente é executado como binário no `Prefetch`), **Account Finder** / **Feature Extraction** (extrai contas de usuário, IPs e domínios observados na máquina), **NTFS Timestomp Analyzer** (compara `$Standard_Information` vs `$File_Name` na MFT para detectar adulteração de datas *timestomping*) e conectores de CTI (MISP, OpenCTI, VirusTotal, Yeti).|```python
+from timesketch_api_client import config
+
+ts = config.get_client()
+sketch = ts.get_sketch(42)
+timeline = sketch.get_timeline(timeline_id=7)
+
+# Disparar os analyzers de deteccao de Timestomping NTFS e regras Sigma sobre a timeline
+sessions = timeline.run_analyzers(analyzer_names=["ntfs_timestomp", "sigma"])
+for s in sessions:
+    print(s.status_string)
+```|Executar todos os *Analyzers* externos de enriquecimento simultaneamente em dezenas de timelines pode esgotar cotas de API externas; configure `AUTO_SKETCH_ANALYZERS` no `/etc/timesketch/timesketch.conf` apenas para os analisadores locais rápidos (Tagger, Feature Extraction, Timestomp, Sigma).|Verifique na aba *Analyzers* do sketch os resultados consolidados e filtre por `tag:*` na aba *Explore* para inspecionar os eventos marcados.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-deteccao-ameacas-regras-sigma-tsctl-sigma-analyzer, timesketch-aba-intelligence-iocs-integracao-yeti-misp-opencti
+
+===NOTE===
+0525|timesketch-deteccao-ameacas-regras-sigma-tsctl-sigma-analyzer|Timesketch: Caça a Ameaças (*Threat Hunting*) Retroativa em Timelines com Regras **Sigma** e `tsctl`|O Timesketch integra nativamente o padrão aberto **Sigma** (*Generic Signature Format for SIEM Systems*), permitindo traduzir regras Sigma de detecção de ameaças para queries OpenSearch compatíveis com os campos do Plaso e executá-las retroativamente sobre qualquer timeline forense.|Quando uma nova técnica de ataque ou CVE zero-day é divulgada hoje com uma regra Sigma correspondente, a equipe DFIR pode rodar o **Sigma Analyzer** sobre timelines de incidentes passados para verificar se o atacante utilizou aquela técnica semanas atrás.|As regras Sigma são gerenciadas pela CLI administrativa (`tsctl list-sigma-rules`, `tsctl import-sigma-rules`) ou na interface web, e o *Sigma Analyzer* varre a timeline marcando cada evento correspondente com a tag `sigma:<rule_id>` e anexando os metadados da regra (título, severidade, referências MITRE ATT&CK).|```bash
+# Listar regras Sigma instaladas e validar o mapeamento de uma regra no servidor Timesketch via tsctl
+tsctl list-sigma-rules | head -n 20
+```|Regras Sigma escritas originalmente para campos proprietários do Sysmon no Splunk precisam que o arquivo de mapeamento Sigma do Timesketch (`/etc/timesketch/sigma_config.yaml`) traduza os nomes dos campos para o esquema gerado pelos parsers do Plaso/JSONL.|Execute o *Sigma Analyzer* sobre uma timeline de teste contendo eventos Windows `.evtx` suspeitos e filtre por `tag:sigma*` na aba *Explore*.|timesketch-analisadores-automaticos-analyzers-chain-tagger-similarity, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, velociraptor-caca-ameacas-regras-sigma-hayabusa-evtx-windows
+
+===NOTE===
+0526|timesketch-investigacao-guiada-dfiq-questions-facets-approaches|Timesketch: Investigação Guiada com **DFIQ** (*Digital Forensics Investigative Questions* — Scenarios, Facets, Questions e Approaches)|O Timesketch implementa nativamente o framework open-source **DFIQ** (*Digital Forensics Investigative Questions*, `google/dfiq`), um catálogo estruturado em YAML que decompõe cenários forenses complexos em perguntas investigativas padronizadas e consultas prontas.|Padroniza o raciocínio investigativo entre analistas juniores e seniores: em vez de encarar uma tela em branco, o analista seleciona o cenário DFIQ (ex.: *Compromised Windows Host* ou *Data Exfiltration*), e o Timesketch apresenta a árvore de perguntas que devem ser respondidas.|A hierarquia do DFIQ organiza-se em quatro níveis: **Scenarios** (o tipo de incidente de alto nível), **Facets** (agrupamentos temáticos como *Initial Access*, *Persistence*, *Lateral Movement*), **Questions** (perguntas objetivas como *"Quais extensões de navegador foram instaladas no sistema?"* ou *"Houve execução de tarefas agendadas anômalas?"*) e **Approaches** (os passos exatos, artefatos necessários e queries Timesketch/Plaso que respondem àquela pergunta automaticamente).|```yaml
+# Estrutura resumida de uma Question e Approach no formato YAML do DFIQ integrado ao Timesketch
+id: Q1024
+display_name: "Were any new Windows Services installed on the system?"
+type: question
+description: "Attackers frequently install malicious services for persistence or privilege escalation."
+approaches:
+  - name: "Search Windows System Event Log for Event ID 7045 and Security Log for 4697"
+    processors:
+      - name: timesketch
+        analysis:
+          - type: query
+            value: 'data_type:"windows:evtx:record" AND (event_identifier:7045 OR event_identifier:4697)'
+```|Para habilitar o catálogo DFIQ no Timesketch, configure `DFIQ_ENABLED = True` e aponte `DFIQ_PATH` em `/etc/timesketch/timesketch.conf` para o diretório contendo os templates YAML oficiais e internos do seu CSIRT.|Verifique no painel lateral esquerdo do Sketch a renderização das árvores de perguntas DFIQ e clique em uma pergunta para executar a query associada.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, timesketch-narrativa-forense-stories-grafos-relatorios-markdown
+
+===NOTE===
+0527|timesketch-aba-intelligence-iocs-integracao-yeti-misp-opencti|Timesketch: Aba **Intelligence**, Marcação de IOCs na Timeline e Integração com Plataformas de CTI (Yeti, MISP e OpenCTI)|A aba **Intelligence** de um Sketch no Timesketch funciona como um repositório centralizado de Indicadores de Comprometimento (IPs, domínios, hashes SHA-256, caminhos de arquivos, mutexes, contas comprometidas) descobertos durante a análise da timeline ou importados de plataformas externas de CTI.|Quando um analista descobre um endereço IP de C2 em um log de firewall na Timeline 1 e o adiciona à aba *Intelligence* do Sketch, ele pode clicar no ícone de lupa ao lado do indicador para buscar instantaneamente aquele mesmo IOC em todas as outras 20 timelines do Sketch e rotular todos os eventos correspondentes com a tag `ioc`.|Além da adição manual direto da linha do evento, o analyzer de inteligência conecta-se a plataformas como **Yeti**, **MISP** e **OpenCTI** para cruzar automaticamente todos os hashes, domínios e IPs extraídos das timelines do Sketch contra o grafo corporativo de Threat Intelligence.|```python
+# Adicionar um indicador descoberto na investigacao diretamente aos atributos de Intelligence do Sketch via API
+sketch.add_attribute(
+    name="intelligence",
+    values=[{
+        "ioc": "198.51.100.214",
+        "type": "ipv4",
+        "externalURI": "https://opencti.soc.internal.corp/dashboard/observations/indicators",
+        "tags": ["c2-cobaltstrike", "confirmed-exfil"]
+    }],
+    ontology="intelligence"
+)
+```|Sempre preencha as `tags` semânticas ao adicionar um IOC na aba *Intelligence* do Sketch (ex.: `ransomware-dropper`, `lateral-movement-source`), pois essas tags são propagadas para os eventos da timeline facilitando a filtragem por fase do ataque.|Adicione um IOC na aba *Intelligence* e acione a busca cruzada para confirmar a marcação automática dos eventos correspondentes nas timelines.|timesketch-analisadores-automaticos-analyzers-chain-tagger-similarity, opencti-arquitetura-stix21-knowledge-graph-graphql-filigran, mispsoc-arquitetura-threat-intelligence-events-attributes-objects-galaxies
+
+===NOTE===
+0528|timesketch-narrativa-forense-stories-grafos-relatorios-markdown|Timesketch: Construção de Relatórios Forenses Reprodutíveis com **Stories**, Agregações Gráficas e Grafos de Relacionamento|A aba **Stories** do Timesketch permite redigir o laudo ou relatório técnico final da investigação em Markdown rico enquanto incorpora blocos dinâmicos ao vivo de **Saved Views**, gráficos de agregação e eventos estrelados diretamente dentro do documento.|Em vez de tirar capturas de tela estáticas de logs (que outros peritos não conseguem expandir nem verificar), uma *Story* no Timesketch incorpora a própria tabela de eventos (`Saved View`): qualquer revisor que leia a *Story* vê a explicação do perito seguida pelos eventos reais clicáveis da timeline.|Complementarmente, o plugin de **Graph** do Timesketch gera grafos interativos (Cytoscape) conectando usuários, computadores, processos e serviços (por exemplo, visualizando graficamente todos os saltos de logon Windows `4624` e sessões SMB/RDP entre as máquinas do Sketch).|```python
+# Criar programaticamente uma Story forense estruturada incorporando uma Saved View existente no Sketch
+story = sketch.create_story(title="Laudo Forense Preliminar — Incidente #2026-104")
+story.add_text("## 1. Acesso Inicial e Execucao Remota\nO atacante autenticou via VPN e executou o servico abaixo:")
+views = sketch.list_views()
+if views:
+    story.add_view(views[0])
+```|Antes de incorporar uma `Saved View` dentro de uma *Story* executiva, certifique-se de salvar a View com um conjunto enxuto de colunas relevantes (`datetime`, `timestamp_desc`, `hostname`, `message`) e um filtro de tempo fechado para que a tabela renderizada na *Story* seja clara e direta.|Exporte a *Story* criada ou abra a aba *Stories* no navegador para validar a renderização combinada do texto Markdown e dos blocos de eventos.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, timesketch-automacao-python-timesketch-api-client-notebooks-jupyter
+
+===NOTE===
+0529|timesketch-automacao-python-timesketch-api-client-notebooks-jupyter|Timesketch: Ciência de Dados Forense com **`timesketch-api-client`**, DataFrames `pandas` e Container Jupyter Notebook (`picatrix`)|O pacote oficial **`timesketch-api-client`** (junto aos utilitários `picatrix` em containers JupyterLab integrados ao Timesketch) permite consultar qualquer Sketch programaticamente em Python e retornar os eventos diretamente como um **`pandas.DataFrame`** para análise estatística avançada.|Detectar um *beaconing* de Comando e Controle com jitter aleatório (ex.: conexões a cada `300s ± 25%`) ou calcular o desvio padrão de bytes transferidos por hora exige funções estatísticas (`diff()`, `describe()`, FFT/autocorrelação) que são triviais em um DataFrame `pandas` mas difíceis em buscas textuais puras.|O método `sketch.explore(query_string=..., return_fields=..., as_pandas=True)` executa a busca no OpenSearch e devolve o DataFrame tipado, permitindo também rotular, estrelar ou comentar eventos em lote de volta no Sketch após o processamento estatístico.|```python
+from timesketch_api_client import config
+
+ts = config.get_client()
+sketch = ts.get_sketch(42)
+
+# Extrair eventos de rede como pandas DataFrame para analise estatistica de periodicidade de beaconing
+df = sketch.explore(
+    query_string='data_type:"zeek:conn" AND id_resp_p:443',
+    return_fields="datetime,id_orig_h,id_resp_h,orig_bytes,resp_bytes",
+    max_entries=10000,
+    as_pandas=True
+)
+print(df["id_resp_h"].value_counts().head(10))
+```|Ao consultar timelines com milhões de linhas via `sketch.explore(..., as_pandas=True)`, passe sempre `return_fields` listando apenas as colunas necessárias e defina um `query_string` seletivo para evitar estourar a memória RAM do kernel Jupyter.|Execute o script Python acima contra um sketch de homologação e confirme que `type(df)` é `pandas.core.frame.DataFrame` com as colunas solicitadas.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-linguagem-busca-opensearch-dsl-saved-views-context-query, zeeknsm-logs-estruturados-conn-dns-http-ssl-files-x509-tsv-json
+
+===NOTE===
+0530|timesketch-governanca-acls-protecao-delecao-arquivamento-tsctl|Timesketch: Governança de Acesso (ACLs de Sketch), Rótulos de Preservação Legal (`protected` / `preserved`), Arquivamento e `tsctl`|Como linhas do tempo forenses contêm evidências críticas que podem ser submetidas a processos judiciais ou auditorias regulatórias, o Timesketch implementa controles granulares de ACL por Sketch, rótulos de bloqueio contra exclusão (**`protected`** e **`preserved`**) e arquivamento reversível.|Um erro operacional ou tentativa maliciosa de apagar um Sketch (`Soft Delete` ou `Hard Delete`) destruiria anotações de semanas de trabalho investigativo; aplicar a label `protected` ou `preserved` impede que **qualquer usuário (inclusive administradores)** delete ou arquive o Sketch enquanto a label estiver ativa.|Quando um caso é encerrado mas precisa ser retido a baixo custo, a operação **Archive** marca o Sketch e suas timelines como `archived` e **fecha os índices correspondentes no OpenSearch** (desde que o índice não seja compartilhado com outro sketch ativo), liberando memória RAM do cluster OpenSearch até que um analista clique em **Unarchive** para reabrir o índice instantaneamente.|```bash
+# Inspecionar o status de uma timeline especifica e listar usuarios/ACLs via tsctl no servidor Timesketch
+tsctl timeline-status 7
+tsctl list-users
+```|Conforme documentado no guia oficial do Timesketch, o sistema verifica em todo o cluster se um índice OpenSearch é compartilhado por mais de um Sketch ativo antes de fechá-lo no *Soft Delete* ou *Archive* ou apagá-lo no *Hard Delete*, garantindo integridade de dados entre investigações.|Aplique a label `protected` a um Sketch de teste e tente deletá-lo, confirmando que a plataforma bloqueia a operação até que a label de proteção seja explicitamente removida.|timesketch-arquitetura-analise-colaborativa-timelines-forenses-opensearch, timesketch-narrativa-forense-stories-grafos-relatorios-markdown, thehive-multi-tenancy-organizacoes-rbac-auditoria-webhooks

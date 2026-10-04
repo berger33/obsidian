@@ -1,0 +1,169 @@
+=== NOTE: 711 | firecracker-microvms-kvm-isolamento-serverless-multitenant | AWS Firecracker: tecnologia de virtualização de microVMs sobre KVM para workloads serverless e multi-tenant ===
+ONE_LINER: O Firecracker (criado na AWS para acelerar serviços como AWS Lambda e AWS Fargate e aberto sob licença Apache-2.0) é um Virtual Machine Monitor (VMM) minimalista que usa o Linux KVM para criar e gerenciar microVMs seguras e de baixíssimo overhead.
+IMPORTANCE: Executar funções serverless e containers de múltiplos clientes diferentes no mesmo servidor físico exige a barreira de isolamento de hardware das máquinas virtuais, mas hipervisores tradicionais possuem milhões de linhas de código de emulação de dispositivos legados (BIOS, PCI antigo, USB, placa de som), alto consumo de memória e inicialização lenta. Segundo o README oficial do Firecracker, seu design minimalista exclui dispositivos e funcionalidades desnecessárias para reduzir o footprint de memória, diminuir a superfície de ataque, acelerar o boot e elevar a densidade de hardware.
+HOW_IT_WORKS: O componente principal do Firecracker é um único processo Virtual Machine Monitor (VMM) escrito em Rust que interage com o módulo Kernel Virtual Machine (`KVM`) do kernel Linux hospedeiro para instanciar microVMs. Ao iniciar, o processo Firecracker expõe um endpoint de API HTTP sobre um socket UNIX local no host (especificado no formato OpenAPI em `src/firecracker/swagger/firecracker.yaml`), pelo qual o plano de controle configura vCPUs, memória, rede, blocos, limitadores de taxa e inicia a microVM. Além do uso direto em plataformas FaaS, o Firecracker integra-se a runtimes de containers como **Kata Containers** e **Flintlock**.
+EXAMPLE:
+```bash
+# Clonar e compilar o binário do Firecracker a partir do código-fonte usando o container oficial devtool
+git clone https://github.com/firecracker-microvm/firecracker
+cd firecracker
+tools/devtool build
+toolchain="$(uname -m)-unknown-linux-musl"
+ls -lh "build/cargo_target/${toolchain}/debug/firecracker"
+```
+TRADE_OFFS: Conforme ressalta a seção `Getting Started` do README oficial, a segurança geral das microVMs Firecracker em computação multi-tenant depende criticamente de um sistema operacional Linux hospedeiro bem configurado (seguindo o guia `docs/prod-host-setup.md`) e do uso do processo `jailer` em produção; além disso, o minimalismo intencional significa que o Firecracker não suporta sistemas operacionais convidados arbitrários que dependam de emulação de BIOS/UEFI legado ou placas gráficas virtuais.
+VERIFY: Verifique a presença e as permissões do dispositivo `/dev/kvm` no host Linux e execute `firecracker --version` no binário compilado ou baixado da página de releases.
+LINKS: [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[firecracker-jailer-isolamento-cgroups-namespaces-seccomp]] | [[kata-hipervisores-configuracao-runtime-agent]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 712 | firecracker-api-openapi-configuracao-vcpu-memoria-boot | AWS Firecracker: configuração da microVM via API OpenAPI (vCPUs, memória, CPU templates e boot) ===
+ONE_LINER: O processo VMM do Firecracker é controlado por um endpoint de API REST (especificado em OpenAPI) que configura o número de vCPUs (padrão `1`), tamanho de memória (padrão `128 MiB`), CPU templates, imagem de kernel, rootfs e argumentos de boot.
+IMPORTANCE: Em plataformas de computação serverless que criam centenas de microVMs por minuto, passar dezenas de flags complexas de linha de comando ou arquivos XML estáticos dificulta a automação programática e a modificação a quente de recursos. De acordo com a seção `Features & Capabilities` do README oficial do Firecracker, toda a configuração pré-boot e o controle em tempo de execução ocorrem por chamadas estruturadas à API do VMM.
+HOW_IT_WORKS: Após iniciar o processo `firecracker --api-sock /tmp/firecracker.socket`, o orquestrador no host envia requisições HTTP `PUT`/`PATCH` em JSON para o socket UNIX: (1) `/machine-config` define o número de vCPUs (o padrão é `1`) e o tamanho da memória RAM (o padrão é `128 MiB`), além de permitir aplicar um **CPU template** (`docs/cpu_templates/cpu-templates.md`) para mascarar recursos da CPU e garantir compatibilidade de instruções entre gerações de processadores; (2) `/boot-source` define o caminho da imagem do kernel Linux guest e os argumentos de linha de comando de boot (`boot_args`); (3) `/drives/*` anexa o sistema de arquivos raiz (`rootfs`); e (4) `/actions` com `InstanceStart` dá a partida na microVM (e, em `x86_64`, permite acionar a parada da microVM).
+EXAMPLE:
+```bash
+# Configurar machine-config (2 vCPUs e 256 MiB de RAM) e dar partida na microVM via socket UNIX da API
+curl --unix-socket /tmp/firecracker.socket -i -X PUT "http://localhost/machine-config" \
+  -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"vcpu_count": 2, "mem_size_mib": 256}'
+
+curl --unix-socket /tmp/firecracker.socket -i -X PUT "http://localhost/actions" \
+  -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"action_type": "InstanceStart"}'
+```
+TRADE_OFFS: Conforme documentado na lista de capacidades da API no README oficial do Firecracker, a ação de parar a microVM via API (`Stop the microVM` / `SendCtrlAltDel`) é suportada apenas na arquitetura `x86_64`; em outras arquiteturas suportadas (como `aarch64`), o encerramento gracioso do convidado deve ser coordenado por dentro do sistema operacional guest (ex.: via `vsock` ou agente interno) antes de encerrar o processo VMM.
+VERIFY: Consulte `GET http://localhost/machine-config` através do `--unix-socket` do Firecracker para confirmar que `vcpu_count` e `mem_size_mib` foram aplicados antes de disparar `InstanceStart`.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-dispositivos-bloco-rede-rate-limiters-rescan]] | [[firecracker-jailer-isolamento-cgroups-namespaces-seccomp]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 713 | firecracker-dispositivos-bloco-rede-rate-limiters-rescan | AWS Firecracker: dispositivos de bloco, interfaces de rede, re-scan dinâmico de disco e Rate Limiters virtio ===
+ONE_LINER: A API do Firecracker permite anexar interfaces de rede e discos somente-leitura ou leitura-escrita baseados em arquivos, trocar o arquivo subjacente, disparar re-scan de tamanho de bloco a quente e aplicar Rate Limiters por largura de banda e IOPS.
+IMPORTANCE: Em um servidor bare-metal que hospeda centenas de microVMs de diferentes tenants, uma única microVM que execute um loop intensivo de gravação em disco ou inundação de pacotes de rede poderia saturar o barramento NVMe ou a placa de rede física do host (noisy neighbor). Segundo a seção `Features & Capabilities` do README oficial do Firecracker, os **rate limiters** embutidos nos dispositivos `virtio` garantem isolamento previsível de I/O sem depender de controladores externos complexos.
+HOW_IT_WORKS: Por meio da API do Firecracker, o host pode: (1) adicionar uma ou mais interfaces de rede virtuais (`virtio-net` conectadas a dispositivos TAP no host); (2) adicionar um ou mais discos (`virtio-block`) em modo leitura-escrita (`read-write`) ou somente-leitura (`read-only`), cada um representado por um dispositivo de bloco apoiado em arquivo no host; (3) alterar o arquivo subjacente (`backing file`) de um dispositivo de bloco antes ou depois do boot do guest; (4) disparar um **re-scan de dispositivo de bloco** enquanto o guest está rodando, permitindo que o SO convidado detecte aumentos de tamanho no arquivo de imagem a quente; e (5) configurar **rate limiters** (baseados em token buckets) para dispositivos virtio, limitando bytes por segundo (largura de banda), operações por segundo (IOPS/pacotes) ou ambos.
+EXAMPLE:
+```bash
+# Anexar o disco raiz com Rate Limiter de largura de banda e IOPS via API do Firecracker
+curl --unix-socket /tmp/firecracker.socket -i -X PUT "http://localhost/drives/rootfs" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "drive_id": "rootfs",
+    "path_on_host": "/srv/vm/rootfs.ext4",
+    "is_root_device": true,
+    "is_read_only": false,
+    "rate_limiter": {
+      "bandwidth": { "size": 10485760, "refill_time": 1000 },
+      "ops": { "size": 500, "refill_time": 1000 }
+    }
+  }'
+```
+TRADE_OFFS: Como cada disco no Firecracker é representado por um dispositivo de bloco apoiado em arquivo (`file-backed block device`) via `virtio-block` (ou `pmem`), compartilhar diretórios dinâmicos de árvore de arquivos do host diretamente com o guest não utiliza `virtio-fs` nativo no Firecracker; para injetar novos pacotes ou expandir armazenamento com a microVM ativa, utiliza-se a troca do `backing file` ou o redimensionamento do arquivo seguido de `PATCH /drives/<id>` para acionar o re-scan.
+VERIFY: Após redimensionar o arquivo de imagem no host e enviar `PATCH` para `/drives/rootfs` no socket da API, execute `lsblk` dentro do guest Linux para confirmar que o novo tamanho do dispositivo de bloco foi reconhecido sem reboot.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[firecracker-vsock-entropy-pmem-metadata-hotplug]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 714 | firecracker-vsock-entropy-pmem-metadata-hotplug | AWS Firecracker: dispositivos vsock, entropia, pmem, serviço de metadados MMDS e hotplug de memória/PCI ===
+ONE_LINER: O Firecracker suporta comunicação host-guest via socket `vsock`, dispositivo de entropia (`virtio-rng`), memória persistente (`pmem`), serviço de metadados guest-facing (`MMDS` em Beta), hotplug de memória (`virtio-mem`) e hotplug PCI em Developer Preview.
+IMPORTANCE: MicroVMs isoladas para funções serverless frequentemente precisam se comunicar com agentes no host sem passar pela pilha TCP/IP de rede do cliente (`vsock`), inicializar geradores criptográficos instantaneamente no boot (`entropy device`), receber credenciais temporárias de IAM (`metadata service`) ou escalar memória verticalmente sob demanda (`memory hotplugging`). O README oficial do Firecracker lista cada uma dessas capacidades.
+HOW_IT_WORKS: Através da API do VMM, o administrador pode habilitar: (1) um socket **`vsock`** (`docs/vsock.md`), criando um canal de comunicação direto por Context ID (CID) e porta entre processos dentro da microVM e um socket UNIX no host; (2) um **dispositivo de entropia** (`docs/entropy.md`) que alimenta o pool de números aleatórios do kernel guest a partir do host; (3) um dispositivo **`pmem`** (`docs/pmem.md`) para mapeamento eficiente de armazenamento; (4) `[BETA]` a árvore de dados do **serviço de metadados voltado ao guest** (MMDS, disponível ao convidado apenas se este recurso for explicitamente configurado); (5) configuração e gerenciamento de **memory hotplugging** (`docs/memory-hotplug.md`); e (6) `[Developer Preview]` **hot-plug e hot-unplug** de dispositivos virtio PCI com a VM em execução (`docs/device-hotplug.md`).
+EXAMPLE:
+```bash
+# Configurar um dispositivo vsock (guest CID 3) na microVM via API do Firecracker
+curl --unix-socket /tmp/firecracker.socket -i -X PUT "http://localhost/vsock" \
+  -H "Content-Type: application/json" \
+  -d '{"guest_cid": 3, "uds_path": "./v.sock"}'
+```
+TRADE_OFFS: Recursos marcados como `[BETA]` (como o serviço de metadados guest-facing) ou `[Developer Preview]` (como o hot-plug e hot-unplug de dispositivos virtio PCI com a VM em execução) podem sofrer evolução de contrato de API entre releases trimestrais e exigem versões de kernel guest compatíveis com os respectivos drivers (`virtio-mem`, PCI hotplug).
+VERIFY: Com o dispositivo `vsock` configurado antes do boot, inicie um ouvinte dentro da microVM e conecte-se a partir do host usando o socket UNIX `uds_path` para validar a troca bidirecional de bytes fora da rede TCP/IP.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[firecracker-dispositivos-bloco-rede-rate-limiters-rescan]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 715 | firecracker-jailer-isolamento-cgroups-namespaces-seccomp | AWS Firecracker: defesa em profundidade em produção com o processo Jailer e filtros seccomp por thread ===
+ONE_LINER: Para cenários de produção multi-tenant, o Firecracker fornece o binário `jailer` (que aplica barreiras de isolamento via cgroups, namespaces e `chroot` e descarta privilégios antes de executar o VMM) combinado a filtros `seccomp` específicos por thread.
+IMPORTANCE: Embora o KVM isole o código do guest usando virtualização de hardware, o processo VMM do Firecracker roda no espaço de usuário do host; na hipótese extrema de um atacante explorar um bug de emulação virtio para ganhar execução de código dentro do processo VMM, ele ainda precisa ser contido sem acesso ao sistema de arquivos do host ou a outras microVMs. Segundo a seção `Built-in Capabilities` do README oficial do Firecracker, os filtros seccomp por thread e o processo `jailer` formam essa barreira secundária de defesa em profundidade.
+HOW_IT_WORKS: Em produção, em vez de invocar o binário `firecracker` diretamente como `root`, o orquestrador invoca o binário **`jailer`** (`docs/jailer.md`). O `jailer` cria um diretório de jaula isolado para aquela microVM específica, configura os limites de recursos em `cgroups` e o isolamento de `namespaces` (como `net` e `pid`), cria apenas os nós de dispositivo essenciais (`/dev/kvm`, `/dev/net/tun`), executa `chroot` / `pivot_root` para dentro da jaula, reduz seus privilégios mudando para um `uid`/`gid` não privilegiado exclusivo daquela microVM e, por fim, faz `exec` no binário `firecracker`. Dentro do `firecracker`, filtros `seccomp-bpf` avançados e **específicos para cada thread** (thread de VMM, thread de API, threads de vCPU) bloqueiam imediatamente qualquer chamada de sistema que não faça parte da lista mínima estrita daquela thread.
+EXAMPLE:
+```bash
+# Iniciar uma microVM Firecracker em produção encapsulada pelo processo jailer com UID/GID não privilegiado
+sudo jailer --id vm-prod-001 \
+  --exec-file /usr/local/bin/firecracker \
+  --uid 10001 --gid 10001 \
+  --chroot-base-dir /srv/jailer
+```
+TRADE_OFFS: Como o `jailer` confina o processo `firecracker` dentro de um diretório `chroot` estrito (`/srv/jailer/firecracker/<id>/root`), o processo VMM não consegue enxergar caminhos arbitrários do host; por isso, a imagem de kernel guest, o arquivo de disco `rootfs` e os arquivos de log/métricas precisam ser vinculados (`hardlink` ou copiados) para dentro da árvore da jaula com permissões do `--uid`/`--gid` antes do boot.
+VERIFY: Inspecione `/proc/<pid-do-firecracker>/status` e `/proc/<pid-do-firecracker>/root` no host enquanto a microVM roda sob o `jailer` para confirmar que o `Uid` efetivo é `10001`, que o `Seccomp` está em modo `2` (filter) e que a raiz está confinada ao diretório da jaula.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[gvisor-arquitetura-sentry-gofer-application-kernel]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 716 | firecracker-demand-fault-paging-oversubscription-cpu-memoria | AWS Firecracker: paginação sob demanda (demand fault paging) e oversubscription de CPU e memória ===
+ONE_LINER: O Firecracker habilita por padrão paginação sob demanda (`demand fault paging`) e oversubscription de CPU, alocando páginas físicas de memória no host apenas à medida que o guest efetivamente as acessa.
+IMPORTANCE: Em plataformas de funções serverless (como AWS Lambda) ou runners de CI efêmeros, milhares de microVMs podem ser configuradas com 512 MiB ou 1 GiB de RAM para absorver picos eventuais, mas consomem apenas 40 MiB na maior parte do tempo e ficam ociosas aguardando requisições. De acordo com a seção `Built-in Capabilities` do README oficial do Firecracker, habilitar demand fault paging e CPU oversubscription por padrão maximiza a taxa de utilização do hardware físico.
+HOW_IT_WORKS: Quando uma microVM é configurada com `mem_size_mib: 1024`, o Firecracker cria o mapeamento de memória virtual anônima (`mmap`), mas não pré-aloca nem trava imediatamente 1 GiB de páginas físicas de RAM no host. Graças ao **demand fault paging**, as páginas físicas do host só são materializadas pelo kernel Linux quando o kernel ou a aplicação convidada dentro da microVM toca naquela região de memória pela primeira vez (gerando um page fault tratado pelo KVM/host). Da mesma forma, como cada vCPU da microVM é apenas uma thread POSIX gerenciada pelo escalonador CFS do kernel Linux hospedeiro, o operador pode alocar mais vCPUs totais entre as microVMs ativas do que o número de cores físicos do servidor (**CPU oversubscription**).
+EXAMPLE:
+```bash
+# Comparar a memória virtual reservada (VSZ) versus a memória física residente real (RSS) de um processo Firecracker
+ps -o pid,comm,vsz,rss -C firecracker
+```
+TRADE_OFFS: Quando se utiliza oversubscription agressivo de memória com demand fault paging em um host sem controle de admissão de capacidade, se dezenas de microVMs decidirem alocar toda a sua memória máxima simultaneamente durante um pico de tráfego, a memória física do host pode se esgotar e acionar o OOM Killer do kernel hospedeiro (ou exigir swap/ballooning coordenado pelo agente de nó).
+VERIFY: Inicie uma microVM Firecracker configurada com `512 MiB` de RAM rodando um workload mínimo e verifique na coluna `RSS` do comando `ps` no host que o consumo físico real de memória é uma fração reduzida dos 512 MiB configurados.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[firecracker-especificacao-performance-logging-metricas]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 717 | firecracker-plataformas-testadas-intel-amd-graviton-kernels | AWS Firecracker: matriz de plataformas bare-metal testadas (Intel, AMD, ARM Graviton) e requisitos de kernel ===
+ONE_LINER: O projeto Firecracker testa continuamente todas as combinações de instâncias bare-metal Intel (Cascade Lake a Granite Rapids), AMD (Milan e Genoa) e ARM (Graviton 2 a Graviton 5) com kernels host/guest Linux `5.10`, `6.1` e `6.18` e rootfs Ubuntu 24.04.
+IMPORTANCE: Como um VMM depende diretamente do comportamento de virtualização assistida por hardware (Intel VT-x, AMD-V, ARMv8/v9 Virtualization Extensions) e da ABI do módulo KVM no kernel Linux hospedeiro, escolher uma combinação de CPU e versão de kernel host incompatível pode causar instabilidade ou degradação severa. A tabela `Tested platforms` e a seção `Known issues and Limitations` do README oficial do Firecracker documentam exatamente o que é validado em CI e suas restrições conhecidas.
+HOW_IT_WORKS: A matriz oficial de testes contínuos do Firecracker valida instâncias EC2 `.metal` de três famílias de arquiteturas: (1) **Intel**: `m5n.metal` (Cascade Lake), `m6i.metal` (Ice Lake), `m7i.metal-24xl/48xl` (Sapphire Rapids) e `m8i.metal-48xl/96xl` (Granite Rapids); (2) **AMD**: `m6a.metal` (Milan) e `m7a.metal-48xl` (Genoa); e (3) **ARM64 AWS Graviton**: `m6g.metal` (Graviton 2), `m7g.metal` (Graviton 3), `m8g.metal-24xl/48xl` (Graviton 4) e `m9g.metal-48xl` (Graviton 5), combinadas com Host OS Amazon Linux 2 (`linux_5.10`) e Amazon Linux 2023 (`linux_6.1` e `linux_6.18`), Guest Rootfs `ubuntu 24.04` e Guest Kernels `5.10` e `6.1`.
+EXAMPLE:
+```bash
+# Verificar no servidor bare-metal o modelo da CPU, arquitetura e versão do kernel host para alinhamento com a matriz
+uname -m -r
+lscpu | grep -E "Architecture|Model name|Virtualization"
+```
+TRADE_OFFS: O README oficial destaca duas restrições técnicas importantes: (1) instâncias Intel de 8ª geração (`*8i`, Granite Rapids, como `m8i.metal-48xl` e `m8i.metal-96xl`) são suportadas **exclusivamente** usando um kernel host `6.1` ou `6.18`, devido ao suporte deficiente a CPUs Granite Rapids no kernel `5.10`; e (2) na arquitetura `aarch64` (ARM64), o dispositivo de relógio de tempo real `pl031` RTC não suporta interrupções, de modo que programas convidados que dependem de alarme RTC (como `hwclock`) não funcionarão.
+VERIFY: Em servidores Intel Granite Rapids (`m8i.metal`) ou ARM64 (`aarch64`), valide com `uname -r` que o kernel do host é `6.1` ou `6.18` e evite depender de interrupções de alarme RTC em workloads `aarch64`.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-especificacao-performance-logging-metricas]] | [[kata-requisitos-hardware-arquiteturas-kata-runtime-check]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 718 | firecracker-especificacao-performance-logging-metricas | AWS Firecracker: especificação de performance verificada em CI e sistema de logging e métricas via API ===
+ONE_LINER: O Firecracker mantém compromissos formais de performance e footprint documentados em `SPECIFICATION.md` (verificados continuamente no pipeline de CI) e expõe configuração de logs e métricas operacionais via API (`/logger` e `/metrics`).
+IMPORTANCE: Em infraestruturas de alta densidade, qualquer regressão acidental de código que aumente o consumo de memória base do VMM em alguns megabytes ou adicione dezenas de milissegundos ao tempo de boot da microVM impacta diretamente a economia de toda a frota serverless; além disso, o operador precisa coletar telemetria de emulação, I/O e erros sem instalar agentes pesados dentro da microVM. O README oficial do Firecracker detalha o documento `SPECIFICATION.md` e o sistema de logging/métricas.
+HOW_IT_WORKS: Por meio dos endpoints `/logger` e `/metrics` na API do Firecracker, o plano de controle no host configura arquivos (ou named pipes / FIFOs pré-criados dentro da jaula do `jailer`) onde o VMM grava logs estruturados e despeja periodicamente contadores JSON detalhados sobre chamadas de API, falhas de página, pacotes e bytes de `virtio-net`, operações de `virtio-block`, sinais e eventos de vCPU. Paralelamente, todas as características de desempenho prometidas pelo projeto em `SPECIFICATION.md` (tempo de inicialização até o código de usuário, overhead de memória por microVM e performance de rede/bloco) são impostas automaticamente por testes de integração contínua a cada mudança.
+EXAMPLE:
+```bash
+# Configurar o subsistema de métricas e logs de uma microVM Firecracker via API apontando para FIFOs/arquivos locais
+curl --unix-socket /tmp/firecracker.socket -i -X PUT "http://localhost/metrics" \
+  -H "Content-Type: application/json" \
+  -d '{"metrics_path": "/tmp/fc-metrics.fifo"}'
+```
+TRADE_OFFS: Quando `/logger` ou `/metrics` são configurados apontando para um named pipe (FIFO) no host a fim de fazer streaming em tempo real sem gravar em disco, o processo leitor no host deve consumir continuamente os dados do FIFO; se o leitor travar ou fechar o pipe, o buffer do pipe encherá, podendo descartar métricas ou afetar o registro de logs da microVM.
+VERIFY: Configure `/metrics` apontando para um arquivo local na microVM de teste e inspecione o JSON emitido para verificar os contadores de `block`, `net`, `vcpu` e `api_server`.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-api-openapi-configuracao-vcpu-memoria-boot]] | [[firecracker-demand-fault-paging-oversubscription-cpu-memoria]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/SPECIFICATION.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 719 | firecracker-integracao-container-runtimes-kata-flintlock | AWS Firecracker: integração com runtimes de containers e microVMs (Kata Containers e Flintlock) ===
+ONE_LINER: O Firecracker integra-se a projetos do ecossistema de containers e Kubernetes como o Kata Containers (via hipervisor `fc`) e o Flintlock (gerenciamento de ciclo de vida de microVMs apoiadas em imagens OCI/containerd).
+IMPORTANCE: Embora o binário `firecracker` forneça o VMM de baixo nível ideal para criar uma microVM a partir de um arquivo de kernel e um disco ext4 bruto, equipes que operam plataformas Kubernetes ou GitOps desejam empacotar suas cargas como imagens de container OCI padrão em registries e agendá-las via `kubectl`. Segundo a seção `Overview` do README oficial do Firecracker, integrações como Kata Containers e Flintlock fazem exatamente essa ponte.
+HOW_IT_WORKS: Quando integrado ao **Kata Containers**, o `containerd-shim-kata-v2` (configurado com `configuration-fc.toml`) traduz a especificação do Pod Kubernetes em chamadas para a API do Firecracker e do `jailer`, montando as camadas da imagem OCI do container como dispositivos de bloco mapeados por `devmapper` (já que o Firecracker usa `virtio-block` em vez de `virtio-fs` baseado em PCI) e comunicando-se com o `kata-agent` via `vsock`. Já com o **Flintlock** (`liquidmetal-dev/flintlock`), o Firecracker é utilizado em conjunto com o `containerd` para provisionar e gerenciar microVMs leves cujos discos e kernels são distribuídos como artefatos OCI, viabilizando inclusive provisionamento rápido de nós Kubernetes (Cluster API Provider MicroVM).
+EXAMPLE:
+```bash
+# Verificar no arquivo de configuração do Kata para Firecracker (configuration-fc.toml) o binário VMM e jailer
+grep -E "^(path|jailer_path|valid_jailer_paths)" /opt/kata/share/defaults/kata-containers/configuration-fc.toml
+```
+TRADE_OFFS: Ao usar o Firecracker como hipervisor por trás do Kata Containers (`kata-fc`), como o design minimalista do Firecracker omite compartilhamento de diretórios via `virtio-fs`, o `containerd` no nó precisa estar configurado com um snapshotter baseado em dispositivo de bloco (como `devmapper` ou `nydus`/block) em vez do `overlayfs` padrão de diretórios para conseguir anexar o `rootfs` do container à microVM via `virtio-block`.
+VERIFY: No nó configurado para `kata-fc`, confirme que o snapshotter `devmapper` do `containerd` está ativo (`ctr plugins ls | grep devmapper`) e teste a criação de um Pod com `runtimeClassName: kata-fc`.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[kata-containers-isolamento-vms-leves-arquitetura]] | [[kata-hipervisores-configuracao-runtime-agent]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md | https://github.com/firecracker-microvm/firecracker
+
+=== NOTE: 720 | firecracker-cadencia-releases-politica-seguranca-prod-host-setup | AWS Firecracker: cadência de releases, configuração segura do host (prod-host-setup) e política de segurança ===
+ONE_LINER: O Firecracker publica novas versões a cada dois ou três meses segundo `docs/RELEASE_POLICY.md`, documenta o endurecimento obrigatório do host Linux em `docs/prod-host-setup.md` e trata divulgações de vulnerabilidades sob prioridade máxima (`SECURITY.md`).
+IMPORTANCE: Em uma infraestrutura multi-tenant serverless, rodar uma versão antiga do VMM ou deixar mitigações de canais laterais de CPU (side-channels como Spectre/Meltdown/MDS/L1TF), swap ou configurações de rede mal ajustadas no kernel Linux hospedeiro compromete as garantias de isolamento das microVMs. O README oficial do Firecracker enfatiza a leitura obrigatória de `docs/prod-host-setup.md`, `docs/RELEASE_POLICY.md` e `SECURITY.md`.
+HOW_IT_WORKS: As releases oficiais do Firecracker são publicadas na página de Releases do GitHub tipicamente a cada **dois ou três meses**, acompanhadas de histórico detalhado no `CHANGELOG.md` e regidas pela política de suporte em `docs/RELEASE_POLICY.md`. Para ambientes de produção, o documento `docs/prod-host-setup.md` estabelece as configurações de kernel e sistema operacional hospedeiro necessárias para atingir o patamar de computação multi-tenant segura (incluindo desativação de swap para evitar vazamento de páginas de memória entre tenants em disco, ajustes de SMT/mitigações de vulnerabilidades de execução especulativa de CPU, limites de descritores e regras de iptables/conntrack).
+EXAMPLE:
+```bash
+# Verificar no host Linux de produção se o swap está desativado e inspecionar mitigações de vulnerabilidades de CPU
+swapon --show
+grep . /sys/devices/system/cpu/vulnerabilities/*
+```
+TRADE_OFFS: Aplicar todas as mitigações mais estritas de hardware/CPU para isolamento multi-tenant hostil (como desabilitar Simultaneous Multithreading — SMT/Hyper-Threading — ou ativar barreiras de agendamento de core contra ataques de canal lateral L1TF/MDS) reduz a capacidade bruta de threads lógicas do servidor físico, exigindo pesar o perfil de ameaça das cargas executadas (código interno confiável versus código arbitrário de terceiros).
+VERIFY: Audite os nós bare-metal que executam o Firecracker contra a checklist oficial em `docs/prod-host-setup.md` e valide a versão do binário `firecracker` em relação à release suportada mais recente.
+LINKS: [[firecracker-microvms-kvm-isolamento-serverless-multitenant]] | [[firecracker-jailer-isolamento-cgroups-namespaces-seccomp]] | [[firecracker-plataformas-testadas-intel-amd-graviton-kernels]]
+SOURCES: https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/README.md | https://github.com/firecracker-microvm/firecracker/blob/main/docs/prod-host-setup.md | https://github.com/firecracker-microvm/firecracker

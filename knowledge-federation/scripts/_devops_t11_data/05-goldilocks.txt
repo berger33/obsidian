@@ -1,0 +1,190 @@
+=== NOTE: 1041 | goldilocks-dimensionamento-requests-limits-vpa-kubernetes | Fairwinds Goldilocks: utilitário Kubernetes para dimensionamento (right-sizing) de resource requests e limits via VPA ===
+ONE_LINER: O Fairwinds Goldilocks (`FairwindsOps/goldilocks`, Apache-2.0) é um controlador e dashboard para Kubernetes que cria e gerencia objetos **VerticalPodAutoscaler (VPA)** em modo de recomendação (`updateMode: "Off"`) para ajudar equipes a identificar o ponto ideal (*"Just Right"*) de `requests` e `limits` de CPU e memória de seus workloads.
+IMPORTANCE: Definir `requests` e `limits` de CPU e memória no Kubernetes por adivinhação leva a dois extremos custosos: superdimensionamento (desperdício de capacidade de nós e fatura de nuvem inflada) ou subdimensionamento (estrangulamento de CPU — *CPU throttling* — e mortes por falta de memória — `OOMKilled`). O Goldilocks automatiza a coleta de recomendações baseadas no consumo histórico real sem alterar os pods em produção.
+HOW_IT_WORKS: Conforme explicam o README oficial e o guia de instalação (`goldilocks.docs.fairwinds.com/installation/`), quando um namespace é habilitado no Goldilocks, o controlador monitora qualquer controlador de workload que possua um template de PodSpec (`spec.template.spec.containers[]`, incluindo `Deployments`, `DaemonSets` e `StatefulSets`) e cria automaticamente um objeto `VerticalPodAutoscaler` para cada workload. O componente **VPA Recommender** (que consome dados do `metrics-server` e, opcionalmente, histórico do Prometheus) calcula as faixas recomendadas de recursos, e o **Goldilocks Dashboard** consulta esses objetos VPA para exibir comparações visuais entre os valores atuais e as sugestões para classes QoS *Guaranteed* e *Burstable*.
+EXAMPLE:
+```bash
+# Instalar o Goldilocks via Helm chart oficial e habilitar um namespace para geração automática de VPAs
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm repo update
+kubectl create namespace goldilocks
+helm install goldilocks --namespace goldilocks fairwinds-stable/goldilocks
+
+# Habilitar o monitoramento do Goldilocks em um namespace de aplicação
+kubectl label ns minha-app goldilocks.fairwinds.com/enabled=true
+```
+TRADE_OFFS: O Goldilocks não coleta métricas diretamente dos nós por conta própria: ele exige que o **`metrics-server`** e o **VPA Recommender** estejam instalados e operacionais no cluster para que os objetos `VerticalPodAutoscaler` gerados recebam dados de recomendação.
+VERIFY: Após aplicar a label `goldilocks.fairwinds.com/enabled=true` no namespace, execute `kubectl -n minha-app get vpa` para confirmar que o controlador do Goldilocks criou automaticamente um objeto VPA para cada Deployment/StatefulSet/DaemonSet.
+LINKS: [[goldilocks-requisitos-vpa-recommender-metrics-server-gke]] | [[goldilocks-controlador-flags-labels-namespaces-metricas]] | [[opencost-eficiencia-recursos-rightsizing-buffer-multiplier]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/installation/ | https://goldilocks.docs.fairwinds.com/advanced/
+
+=== NOTE: 1042 | goldilocks-requisitos-vpa-recommender-metrics-server-gke | Requisitos de infraestrutura do Goldilocks: VPA Recommender isolado (sem webhook), metrics-server, Prometheus e GKE ===
+ONE_LINER: Para operar com segurança, o Goldilocks requer apenas o componente **Recommender** do Vertical Pod Autoscaler (dispensando o *VPA Updater* e o *Admission Webhook*), o **`metrics-server`** (com suporte opcional ao Prometheus para maior precisão histórica) e, em clusters GKE Standard, a ativação explícita de `--enable-vertical-pod-autoscaling`.
+IMPORTANCE: Uma instalação completa padrão do Vertical Pod Autoscaler inclui três binários: `recommender`, `updater` e `admission-controller`. Instalar o webhook de admissão do VPA sem planejamento adequado pode causar mutações ou reinicializações inesperadas em clusters produtivos. Saber que o Goldilocks precisa **apenas do `recommender`** permite adotar a ferramenta com risco zero de impacto nos workloads.
+HOW_IT_WORKS: Conforme destaca a seção *Important Note about VPA* do guia oficial de instalação (`goldilocks.docs.fairwinds.com/installation/`): (1) se você instalar o VPA através do chart do Goldilocks (habilitando o sub-chart `vpa.enabled=true`) ou do Fairwinds VPA Helm Chart, **apenas o VPA Recommender será instalado**, omitindo o updater e o admission webhook; (2) o VPA Recommender exige o `metrics-server`, mas suporta opcionalmente o **Prometheus** como backend de dados para recomendações baseadas em janelas históricas mais longas; e (3) no **Google Kubernetes Engine (GKE)**, o VPA já vem habilitado por padrão em clusters Autopilot, mas em clusters GKE Standard deve ser habilitado via `gcloud container clusters update [CLUSTER-NAME] --enable-vertical-pod-autoscaling` (observando que o VPA gerenciado do GKE não suporta usar o Prometheus como backend de dados).
+EXAMPLE:
+```bash
+# Habilitar o Vertical Pod Autoscaler nativo em um cluster GKE Standard antes de instalar o Goldilocks
+gcloud container clusters update meu-cluster-prod \
+  --enable-vertical-pod-autoscaling \
+  --region us-central1
+```
+TRADE_OFFS: Ao utilizar o VPA gerenciado pelo plano de controle do GKE (`--enable-vertical-pod-autoscaling`), você economiza recursos de executar o pod do VPA Recommender dentro do seu cluster, porém perde a opção de conectar o VPA Recommender a uma instância customizada do Prometheus.
+VERIFY: Verifique a presença das CRDs do VPA no cluster com `kubectl get crd verticalpodautoscalers.autoscaling.k8s.io` e confirme que `kubectl top pods -A` (via `metrics-server`) retorna métricas válidas.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[goldilocks-modos-atualizacao-vpa-update-mode-resource-policy]] | [[goldilocks-controlador-flags-labels-namespaces-metricas]]
+SOURCES: https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/advanced/
+
+=== NOTE: 1043 | goldilocks-controlador-flags-labels-namespaces-metricas | Controlador do Goldilocks: precedência de labels sobre flags de CLI, --on-by-default, --ignore-controller-kind e métricas Prometheus ===
+ONE_LINER: O comando `goldilocks controller` gerencia dinamicamente os objetos VPA no cluster seguindo flags como `--on-by-default`, `--include-namespaces`, `--exclude-namespaces` e `--ignore-controller-kind` (com labels de namespace tendo sempre precedência sobre flags de CLI) e expõe métricas Prometheus e `/healthz` na porta `--metrics-port` (padrão `8080`).
+IMPORTANCE: Em clusters com dezenas de namespaces de equipes, rotular manualmente cada novo namespace pode ser substituído por `--on-by-default` combinado com `--exclude-namespaces=kube-system,monitoring` e `--ignore-controller-kind=Job,CronJob`, evitando criar VPAs inúteis para jobs efêmeros.
+HOW_IT_WORKS: Conforme a documentação *Advanced Usage* (`goldilocks.docs.fairwinds.com/advanced/`): (1) quando especificadas, **labels nos recursos têm sempre precedência sobre as flags de linha de comando**; (2) **`--on-by-default`** cria VPAs em todos os namespaces do cluster, exceto os listados em **`--exclude-namespaces`** ou rotulados com `goldilocks.fairwinds.com/enabled=false`; (3) **`--include-namespaces`** adiciona namespaces específicos além dos rotulados; (4) **`--ignore-controller-kind`** recebe uma lista separada por vírgulas de tipos de controladores a ignorar na criação automática de VPAs (ex.: `--ignore-controller-kind=Job,CronJob`); e (5) na porta `--metrics-port` (padrão `8080`), o controlador serve `/healthz` e `/metrics` com as métricas **`goldilocks_controller_events_processed_total{resource, event_type}`** e **`goldilocks_controller_process_errors_total{resource}`**.
+EXAMPLE:
+```yaml
+# Argumentos do controlador Goldilocks habilitando todos os namespaces por padrão, exceto sistema, e ignorando Jobs/CronJobs
+args:
+  - controller
+  - --on-by-default
+  - --exclude-namespaces=kube-system,kube-public,kube-node-lease,goldilocks
+  - --ignore-controller-kind=Job,CronJob
+  - --metrics-port=8080
+```
+TRADE_OFFS: Mesmo que um namespace esteja listado em `--exclude-namespaces`, se alguém adicionar a label explícita `goldilocks.fairwinds.com/enabled=true` naquele namespace, o Goldilocks criará os VPAs nele porque as labels têm precedência sobre as flags de CLI.
+VERIFY: Consulte `curl -s http://localhost:8080/metrics | grep goldilocks_controller_` no pod do controlador para monitorar o total de eventos processados (`pod` / `namespace`) e verificar que `goldilocks_controller_process_errors_total` permanece em `0`.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[goldilocks-modos-atualizacao-vpa-update-mode-resource-policy]] | [[goldilocks-cli-dashboard-summary-exclusao-containers-sidecars]]
+SOURCES: https://goldilocks.docs.fairwinds.com/advanced/ | https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md
+
+=== NOTE: 1044 | goldilocks-modos-atualizacao-vpa-update-mode-resource-policy | Configuração avançada de VPA no Goldilocks: vpa-update-mode e vpa-resource-policy por namespace ou workload ===
+ONE_LINER: Embora o Goldilocks crie VPAs com `updateMode: "Off"` por padrão (apenas recomendação), usuários avançados podem sobrescrever o modo de atualização (`goldilocks.fairwinds.com/vpa-update-mode`) em nível de namespace ou de workload individual e definir políticas de recursos por container (`goldilocks.fairwinds.com/vpa-resource-policy`) com `minAllowed`, `maxAllowed` e `controlledValues`.
+IMPORTANCE: Em alguns ambientes não críticos ou workloads elásticos onde o VPA Updater e o Admission Webhook estão deliberadamente instalados, a equipe pode querer que o Goldilocks configure `updateMode: "Auto"` ou `"Initial"` para um workload específico, impondo tetos (`maxAllowed`), pisos (`minAllowed`) e desabilitando o auto-scaling em containers sidecar como `istio-proxy`.
+HOW_IT_WORKS: Conforme documentado nas seções *VPA Update Mode*, *VPA Resource Policy* e *Workload Specifications* (`goldilocks.docs.fairwinds.com/advanced/`): (1) a label `goldilocks.fairwinds.com/vpa-update-mode="auto"` (ou `"off"`, `"initial"`, `"recreate"`) no namespace altera o modo dos VPAs daquele namespace; (2) a anotação **`goldilocks.fairwinds.com/vpa-update-mode=<mode>`** em um workload específico controla o `updateMode` daquele workload individualmente, independentemente da label do namespace; e (3) a anotação **`goldilocks.fairwinds.com/vpa-resource-policy`** recebe um objeto JSON definindo `containerPolicies` — onde cada item pode fixar `containerName`, `minAllowed` (`cpu`, `memory`), `maxAllowed`, `mode: "Off"` e `controlledValues` (`RequestsAndLimits` por padrão, ou `RequestsOnly`).
+EXAMPLE:
+```yaml
+# Definir vpa-resource-policy via anotação JSON no Namespace para limitar CPU/memória e ignorar o sidecar istio-proxy
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pagamentos
+  labels:
+    goldilocks.fairwinds.com/enabled: "true"
+  annotations:
+    goldilocks.fairwinds.com/vpa-resource-policy: >
+      {
+        "containerPolicies": [
+          {
+            "containerName": "nginx",
+            "minAllowed": { "cpu": "250m", "memory": "100Mi" },
+            "maxAllowed": { "cpu": "2000m", "memory": "2048Mi" },
+            "controlledValues": "RequestsOnly"
+          },
+          {
+            "containerName": "istio-proxy",
+            "mode": "Off"
+          }
+        ]
+      }
+```
+TRADE_OFFS: A documentação oficial adverte explicitamente que alterar `vpa-update-mode` para diferente de `"off"` é para uso avançado e **não é recomendado nem o padrão**, pois o auto-scaling vertical ativo requer o VPA Updater e o Admission Webhook e pode causar evicção/recriação de pods e conflito caso o mesmo workload utilize um HorizontalPodAutoscaler (HPA) baseado em CPU ou memória.
+VERIFY: Inspecione o objeto VPA gerado pelo controlador (`kubectl -n pagamentos get vpa -o yaml`) para confirmar que `spec.updatePolicy.updateMode` e `spec.resourcePolicy.containerPolicies` refletem exatamente as anotações configuradas.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[goldilocks-controlador-flags-labels-namespaces-metricas]] | [[goldilocks-cli-dashboard-summary-exclusao-containers-sidecars]]
+SOURCES: https://goldilocks.docs.fairwinds.com/advanced/ | https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md
+
+=== NOTE: 1045 | goldilocks-cli-dashboard-summary-exclusao-containers-sidecars | Comandos da CLI do Goldilocks (dashboard, summary, create-vpas, delete-vpas) e exclusão de containers sidecar (--exclude-containers) ===
+ONE_LINER: A CLI do Goldilocks fornece os subcomandos `controller`, `dashboard` (servidor web na porta `8080`), `summary` (exportação das recomendações em JSON), `create-vpas`, `delete-vpas`, `version` e `completion`, permitindo ocultar recomendações de sidecars (como Istio e Linkerd) via **`--exclude-containers`**.
+IMPORTANCE: Em malhas de serviço como Istio ou Linkerd, todo pod possui um container `istio-proxy` ou `linkerd-proxy` injetado automaticamente. Ocultar esses sidecars do relatório do Goldilocks (`--exclude-containers=istio-proxy,linkerd-proxy`) mantém o dashboard e o JSON do `goldilocks summary` focados nos containers da aplicação que a equipe de desenvolvimento controla diretamente.
+HOW_IT_WORKS: Conforme explica a página *Advanced Usage* (`goldilocks.docs.fairwinds.com/advanced/`): (1) embora os subcomandos imperativos `goldilocks create-vpas -n <ns>` e `goldilocks delete-vpas -n <ns>` existam na CLI, a documentação **não recomenda** usar a CLI para gerenciar VPAs em produção porque ela opera em apenas um namespace por execução e não limpa VPAs órfãos automaticamente (papel que cabe ao `goldilocks controller`); (2) em contrapartida, o comando **`goldilocks summary`** continua muito útil por consultar todos os objetos VPA rotulados pela ferramenta em todos os namespaces e consolidar as sugestões em um objeto **JSON** para automação ou relatórios; e (3) tanto `goldilocks dashboard` quanto `goldilocks summary` aceitam `--exclude-containers` com uma lista de nomes de containers separados por vírgula.
+EXAMPLE:
+```bash
+# Exportar o resumo JSON de todas as recomendações VPA do cluster ocultando sidecars do Istio e Linkerd
+goldilocks summary --exclude-containers=istio-proxy,linkerd-proxy,vault-agent > recomendacoes-vpa.json
+
+# Acessar o dashboard do Goldilocks instalado no cluster via port-forward
+kubectl -n goldilocks port-forward svc/goldilocks-dashboard 8080:80
+```
+TRADE_OFFS: O argumento `--exclude-containers` nos comandos `dashboard` e `summary` apenas filtra a visualização e a saída JSON gerada; para impedir que o próprio VPA calcule políticas sobre um container específico no objeto `VerticalPodAutoscaler`, combine-o com `mode: "Off"` em `vpa-resource-policy`.
+VERIFY: Execute `goldilocks summary --exclude-containers=istio-proxy | jq .` e confirme que os objetos dos workloads retornam apenas as recomendações de CPU e memória dos containers de aplicação.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[goldilocks-modos-atualizacao-vpa-update-mode-resource-policy]] | [[linkerd-rust-micro-proxy-architecture]]
+SOURCES: https://goldilocks.docs.fairwinds.com/advanced/ | https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md
+
+=== NOTE: 1046 | goldilocks-migracao-registro-imagens-imutaveis-assinadas-v4-15 | Migração de registro e segurança de imagens no Goldilocks (v4.15.0+): Artifact Registry, tags imutáveis e assinatura ===
+ONE_LINER: A partir da versão **`v4.15.0`**, as imagens oficiais do Goldilocks migraram do registro depreciado `quay.io/fairwinds/goldilocks` para **`us-docker.pkg.dev/fairwinds-ops/oss/goldilocks`**, passando a ser criptograficamente assinadas, com tags imutáveis (`v<major>.<minor>.<patch>`) e sem tags flutuantes (`latest`, `v4`, `v4.14`).
+IMPORTANCE: Em ambientes corporativos que espelham imagens ou fixam repositórios em políticas de admissão (Kyverno, OPA Gatekeeper ou Popeye), continuar apontando para `quay.io/fairwinds/goldilocks` ou para tags flutuantes como `:latest` ou `:v4` resultará em imagens desatualizadas sem correções de CVE ou falha de `ImagePullBackOff` em novas versões.
+HOW_IT_WORKS: Conforme o aviso oficial no README do repositório (`FairwindsOps/goldilocks`), na transição `v4.14.19 → v4.15.0` a Fairwinds implementou três mudanças de segurança na cadeia de suprimentos: (1) mudança do endereço de registro para `us-docker.pkg.dev/fairwinds-ops/oss/goldilocks`; (2) eliminação de todas as tags flutuantes (`v4`, `v4.14`, `latest`); e (3) imutabilidade e assinatura das imagens publicadas, exigindo que os manifestos e valores Helm especifiquem a versão semântica completa (`us-docker.pkg.dev/fairwinds-ops/oss/goldilocks:v<major>.<minor>.<patch>`) ou o digest SHA256 (`@sha256:<digest>`).
+EXAMPLE:
+```yaml
+# Configuração de imagem atualizada do Goldilocks (v4.15.0+) usando o novo registro oficial com tag semântica completa
+image:
+  repository: us-docker.pkg.dev/fairwinds-ops/oss/goldilocks
+  tag: v4.15.0
+  pullPolicy: IfNotPresent
+```
+TRADE_OFFS: Como tags flutuantes (`v4`, `latest`) foram removidas em prol da reprodutibilidade e segurança da cadeia de suprimentos, atualizações de versão exigem atualizar explicitamente a tag `v<major>.<minor>.<patch>` ou o digest no seu repositório GitOps (por exemplo, automatizando PRs com Renovate ou Dependabot).
+VERIFY: Audite seus manifestos e charts com `grep -rn "quay.io/fairwinds/goldilocks" .` para garantir que todas as referências foram migradas para `us-docker.pkg.dev/fairwinds-ops/oss/goldilocks`.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[polaris-migracao-registro-imagens-assinadas-imutaveis-v10-2]] | [[pluto-migracao-registro-verificacao-cosign-checksums-v5-24]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/installation/ | https://goldilocks.docs.fairwinds.com/advanced/
+
+=== NOTE: 1047 | goldilocks-interpretacao-qos-guaranteed-burstable-dashboard | Interpretação das recomendações do Goldilocks Dashboard: classes de QoS Guaranteed versus Burstable no Kubernetes ===
+ONE_LINER: O dashboard do Goldilocks apresenta as métricas do VPA Recommender traduzidas em recomendações práticas de `requests` e `limits` de CPU e memória para duas classes de Qualidade de Serviço (QoS) do Kubernetes: **Guaranteed** (`requests == limits`) e **Burstable** (`requests < limits`).
+IMPORTANCE: O objeto bruto `VerticalPodAutoscaler` no Kubernetes expõe quatro números estatísticos no seu `status.recommendation.containerRecommendations` (`target`, `lowerBound`, `upperBound` e `uncappedTarget`), que muitos desenvolvedores têm dificuldade de converter em blocos YAML `resources:` adequados ao perfil de risco de cada aplicação.
+HOW_IT_WORKS: Quando o usuário acessa o Goldilocks Dashboard (`kubectl -n goldilocks port-forward svc/goldilocks-dashboard 8080:80`) ou gera o relatório, o Goldilocks lê os valores atuais de `resources.requests` e `resources.limits` de cada container do workload e os compara com os cálculos do VPA Recommender: (1) na opção **Guaranteed QoS**, sugere definir `requests` e `limits` iguais ao valor alvo (`target`) do VPA, garantindo que o pod tenha prioridade máxima no kubelet e menor probabilidade de evicção sob pressão de memória no nó; e (2) na opção **Burstable QoS**, sugere `requests` baseados no consumo típico (`lowerBound`/`target`) e `limits` baseados no pico (`upperBound`), permitindo maior densidade de agendamento no cluster com margem para picos transitórios.
+EXAMPLE:
+```yaml
+# Exemplo de bloco resources ajustado para classe QoS Guaranteed (requests == limits) a partir da recomendação do Goldilocks
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+```
+TRADE_OFFS: Para workloads com picos agudos de CPU no boot (como aplicações Java/Spring ou JVM em geral), copiar cegamente um `limit` de CPU estreito pode tornar a inicialização da aplicação muito lenta por *CPU throttling*; nesses casos, avalie manter `requests` de CPU dimensionados pelo Goldilocks e usar `limits` de CPU mais folgados (classe *Burstable*) ou focar a garantia rígida (`requests == limits`) na memória.
+VERIFY: Inspecione o objeto VPA bruto com `kubectl -n minha-app get vpa <nome> -o jsonpath='{.status.recommendation.containerRecommendations}' | jq .` e compare os campos `lowerBound`, `target` e `upperBound` com os fragmentos YAML exibidos no Goldilocks Dashboard.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[goldilocks-cli-dashboard-summary-exclusao-containers-sidecars]] | [[polaris-motor-politicas-validacao-remediacao-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/installation/ | https://goldilocks.docs.fairwinds.com/advanced/
+
+=== NOTE: 1048 | goldilocks-instalacao-manifestos-separados-controller-dashboard | Instalação do Goldilocks via manifestos Kubernetes separados (controller e dashboard) e RBAC ===
+ONE_LINER: Além da instalação preferencial via Helm (`fairwinds-stable/goldilocks`), o Goldilocks disponibiliza coleções separadas de manifestos YAML em `hack/manifests/controller` e `hack/manifests/dashboard` para implantar o controlador e o servidor web de forma independente no cluster.
+IMPORTANCE: Ambientes que não utilizam Helm diretamente ou que preferem compor overlays Kustomize a partir de manifestos puros podem controlar separadamente o ciclo de vida, as réplicas, as NetworkPolicies e as contas de serviço (`ServiceAccount` / `ClusterRole`) do controlador e do dashboard.
+HOW_IT_WORKS: Conforme o *Method 2 - Manifests* na documentação oficial de instalação (`goldilocks.docs.fairwinds.com/installation/`), o repositório `FairwindsOps/goldilocks` organiza em `hack/manifests/controller` os recursos necessários para o loop de reconciliação (Deployment do `goldilocks controller`, `ServiceAccount` e permissões RBAC para observar namespaces, workloads e criar/atualizar/deletar objetos `VerticalPodAutoscaler`), e em `hack/manifests/dashboard` o Deployment e o Service `ClusterIP` (`goldilocks-dashboard`) que lê os objetos VPA em modo somente-leitura para renderizar a interface web na porta `8080`.
+EXAMPLE:
+```bash
+# Instalar os componentes controller e dashboard do Goldilocks a partir dos manifestos YAML oficiais
+git clone https://github.com/FairwindsOps/goldilocks.git
+cd goldilocks
+kubectl create namespace goldilocks
+kubectl -n goldilocks apply -f hack/manifests/controller
+kubectl -n goldilocks apply -f hack/manifests/dashboard
+```
+TRADE_OFFS: Como o serviço `goldilocks-dashboard` expõe informações sobre todos os namespaces, workloads e configurações de recursos do cluster sem autenticação embutida por padrão, a instalação padrão cria apenas um Service do tipo `ClusterIP` (acessível via `kubectl port-forward`); caso deseje expô-lo via Ingress, proteja-o obrigatoriamente com um proxy autenticador como o **OAuth2 Proxy**.
+VERIFY: Verifique os pods e serviços criados com `kubectl -n goldilocks get deploy,pods,svc` e confirme que ambos os Deployments (`goldilocks-controller` e `goldilocks-dashboard`) estão `Available`.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[oauth2proxy-integracao-ingress-nginx-ext-authz-headers]] | [[kustomize-template-free-kubernetes-configuration]]
+SOURCES: https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/advanced/
+
+=== NOTE: 1049 | goldilocks-exclusao-containers-por-workload-anotacoes-granulares | Exclusão granular de containers e desativação por workload individual no Goldilocks ===
+ONE_LINER: O Goldilocks permite excluir containers específicos de um workload individual ou desabilitar a geração de VPA para um Deployment específico dentro de um namespace habilitado, combinando anotações/labels em nível de workload com as flags globais do dashboard.
+IMPORTANCE: Quando um namespace inteiro está habilitado com `goldilocks.fairwinds.com/enabled=true` (ou `--on-by-default`), pode existir um workload específico naquele namespace que já possui um VPA customizado gerenciado manualmente pela equipe, ou um container init/sidecar específico cujas métricas distorcem o sumário daquele Deployment.
+HOW_IT_WORKS: Conforme a documentação *Advanced Usage* (`goldilocks.docs.fairwinds.com/advanced/`), o Goldilocks respeita a hierarquia de configuração onde labels e anotações mais específicas sobrescrevem o comportamento geral do namespace ou das flags de CLI: (1) pode-se controlar o comportamento ou excluir workloads individuais dentro de um namespace monitorado; e (2) na seção *Container Exclusions*, além da flag global `--exclude-containers` nos comandos `dashboard` e `summary`, containers podem ser excluídos para workloads individuais via anotação no próprio recurso, evitando que containers auxiliares poluam as recomendações de CPU e memória da aplicação principal.
+EXAMPLE:
+```bash
+# Executar o servidor do dashboard do Goldilocks excluindo globalmente containers sidecar de malha e observabilidade
+goldilocks dashboard \
+  --exclude-containers="istio-proxy,linkerd-proxy,datadog-agent,fluent-bit"
+```
+TRADE_OFFS: Se um workload já possuir um objeto `VerticalPodAutoscaler` criado manualmente por fora do Goldilocks (sem as labels de propriedade do Goldilocks), o `goldilocks summary` e o `goldilocks dashboard` consultarão apenas os objetos VPA que possuem as labels gerenciadas pela ferramenta.
+VERIFY: Verifique as labels aplicadas nos objetos VPA gerados pelo controlador com `kubectl get vpa -A --show-labels` para identificar os recursos gerenciados pelo Goldilocks.
+LINKS: [[goldilocks-cli-dashboard-summary-exclusao-containers-sidecars]] | [[goldilocks-controlador-flags-labels-namespaces-metricas]] | [[goldilocks-modos-atualizacao-vpa-update-mode-resource-policy]]
+SOURCES: https://goldilocks.docs.fairwinds.com/advanced/ | https://goldilocks.docs.fairwinds.com/installation/ | https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md
+
+=== NOTE: 1050 | goldilocks-integracao-ecossistema-fairwinds-polaris-pluto-finops | Integração do Goldilocks com Polaris e Pluto em fluxos contínuos de governança e FinOps no Kubernetes ===
+ONE_LINER: Dentro do ecossistema open-source da Fairwinds, o **Goldilocks** (dimensionamento de CPU/memória baseado em uso real via VPA) complementa diretamente o **Polaris** (que audita e cobra a presença de `cpuRequestsMissing`, `memoryRequestsMissing`, `cpuLimitsMissing` e `memoryLimitsMissing`) e o **Pluto** (detecção de `apiVersions` depreciadas).
+IMPORTANCE: Exigir via política de admissão (Polaris, Kyverno ou Gatekeeper) que todo container declare `resources.requests` e `resources.limits` impede que pods subam sem limites, mas faz com que desenvolvedores copiem e colem valores arbitrários (`cpu: 1000m, memory: 2Gi`) apenas para passar no gate de CI. O Goldilocks fecha o ciclo fornecendo os números reais baseados na telemetria do VPA para calibrar esses manifestos.
+HOW_IT_WORKS: Conforme descreve o README oficial (`FairwindsOps/goldilocks`), as ferramentas atuam em etapas complementares do ciclo de vida: (1) no CI/CD e na admissão do cluster, o **Polaris** valida se os manifestos declaram requests/limits e boas práticas de segurança, e o **Pluto** garante que nenhuma API depreciada (incluindo versões antigas de `autoscaling`) seja implantada; (2) no cluster em execução, o **Goldilocks** cria os VPAs em modo `Off` e coleta o perfil real de consumo; e (3) periodicamente, a equipe extrai o relatório JSON via `goldilocks summary` (ou visualiza o dashboard) e atualiza os valores de `requests` e `limits` no repositório GitOps.
+EXAMPLE:
+```bash
+# Extrair via jq os containers cujos requests atuais diferem das recomendações target do VPA no Goldilocks summary
+goldilocks summary | jq '.Namespaces | to_entries[] | {namespace: .key, workloads: .value.workloads}'
+```
+TRADE_OFFS: As recomendações do VPA recém-criadas nos primeiros minutos após o deploy refletem apenas o consumo imediato de inicialização; aguarde pelo menos 24 horas (ou um ciclo completo de pico de tráfego de negócio, preferencialmente com histórico do Prometheus integrado ao VPA Recommender) antes de reduzir `limits` de memória em produção com base no Goldilocks.
+VERIFY: Compare a saída JSON de `goldilocks summary` com o relatório de auditoria do Polaris (`polaris audit --format=pretty`) para confirmar que todos os containers possuem requests/limits definidos e alinhados ao consumo observado.
+LINKS: [[goldilocks-dimensionamento-requests-limits-vpa-kubernetes]] | [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[pluto-deteccao-apiversions-depreciadas-removidas-kubernetes]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/goldilocks/master/README.md | https://goldilocks.docs.fairwinds.com/advanced/ | https://goldilocks.docs.fairwinds.com/installation/

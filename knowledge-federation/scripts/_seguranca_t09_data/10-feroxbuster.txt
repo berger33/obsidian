@@ -1,0 +1,116 @@
+TOPIC: Feroxbuster (epi052/feroxbuster) — Descoberta Recursiva Forçada de Conteúdo Web em Rust, Auto-Tune/Auto-Bail, Filtros de Similaridade, Extração de Links e Estado
+SOURCES: https://raw.githubusercontent.com/epi052/feroxbuster/main/README.md | https://raw.githubusercontent.com/epi052/feroxbuster/main/ferox-config.toml.example | https://epi052.github.io/feroxbuster-docs/overview/
+
+===NOTE===
+0891|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing|**Feroxbuster (`epi052/feroxbuster`)**: Arquitetura de **Descoberta Recursiva de Conteúdo Web (*Forced Browsing*)** em Rust (`tokio`)|**Feroxbuster** (`epi052/feroxbuster`, licença MIT, escrito em Rust assíncrono por Ben Risher / `@epi052`) é uma ferramenta de alta performance projetada especificamente para **Forced Browsing (Enumeração Recursiva de Diretórios e Arquivos Web)**.|Enquanto enumeradores tradicionais exigem que você rode um novo comando manualmente para cada subdiretório encontrado (ou têm recursão sequencial lenta), o Feroxbuster gerencia uma fila concorrente de diretórios controlando simultaneamente **quantos diretórios são varridos em paralelo (`--scan-limit` / `-L`)** e **quantas threads assíncronas operam dentro de cada diretório (`--threads` / `-t`, padrão `50`)**, até a profundidade máxima **`--depth` (`-d`, padrão `4`)**!|Além disso, durante a própria varredura de wordlist, o Feroxbuster faz **Parsing Ativo do Corpo das Respostas (`--extract-links`, ativo por padrão!)** procurando novos caminhos referenciados no HTML, JavaScript e `robots.txt` para adicioná-los automaticamente à árvore de recursão!|```bash
+# Verificar a versao do Feroxbuster e executar descoberta recursiva com multiplas extensoes (-x) e limite de 4 scans simultaneos (-L 4)
+feroxbuster --version
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
+  -x php,json,txt,bak \
+  -t 30 -L 4 -d 3 \
+  -o /cases/pentest/ferox_recursive.txt
+```|Atenção ao alerta oficial de segurança no topo do `README.md` do projeto: o domínio `feroxbuster.com` **não** pertence aos autores do projeto; baixe o Feroxbuster **exclusivamente** do repositório oficial no GitHub (`https://github.com/epi052/feroxbuster/releases`), `crates.io` ou repositórios oficiais da distribuição!|Use `-n` (`--no-recursion`) quando quiser desativar a recursão e enumerar apenas o nível atual da URL informada.|feroxbuster-protecao-inteligente-auto-tune-auto-bail-rate-limit, feroxbuster-filtragem-precisa-status-size-words-lines-regex-similar, gobuster-enumeracao-diretorios-arquivos-dir-extensoes-status-exclude-length
+
+===NOTE===
+0892|feroxbuster-protecao-inteligente-auto-tune-auto-bail-rate-limit|Feroxbuster: Adaptação Inteligente de Taxa (**`--auto-tune`**), Aborto Automático de Erros (**`--auto-bail`**) e Limite Explícito (**`--rate-limit`**)|Em uma varredura recursiva onde 4 diretórios são descobertos ao mesmo tempo, o volume de requisições pode acionar o *Rate Limiting* (`HTTP 429 Too Many Requests` / `403 Forbidden`) do WAF ou sobrecarregar o servidor web.|O Feroxbuster resolve esse problema em tempo real com duas políticas autônomas documentadas em `ferox-config.toml.example`: **(1) `--auto-tune`** (monitora a taxa de erros HTTP `429`/`403` e timeouts e **reduz ou aumenta dinamicamente a taxa de requisições em tempo de execução** para manter a velocidade máxima suportada pelo alvo sem ser bloqueado!) e **(2) `--auto-bail`** (aborta automaticamente a varredura de um diretório ou host se detectar uma enxurrada contínua de erros de conexão/5xx/403)!|Quando o ROE exige um teto rígido e determinístico de requisições por segundo (por exemplo, no máximo 100 requisições/s por scan), passe **`--rate-limit 100`** combinado com **`--scan-limit 2`** (`-L 2`).|```bash
+# Executar o Feroxbuster com ajuste dinamico de velocidade (--auto-tune) ou teto fixo de taxa (--rate-limit)
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt \
+  --auto-tune \
+  --scan-limit 2 \
+  --timeout 7 \
+  -o /cases/pentest/ferox_autotuned.txt
+```|Mesmo durante uma varredura em andamento no terminal, você não precisa matar o Feroxbuster com `Ctrl+C` se quiser alterar filtros ou pausar um subdiretório ruidoso: pressione **`Enter`** durante a execução para abrir o **Menu Interativo em Tempo Real**, onde você pode cancelar diretórios específicos, adicionar novos filtros de tamanho ou ajustar o limite de taxa ao vivo!|Monitore na barra de progresso de cada diretório a taxa efetiva `req/sec` ajustada pelo `--auto-tune`.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, feroxbuster-filtragem-precisa-status-size-words-lines-regex-similar, gobuster-controle-taxa-delay-timeout-user-agent-evasao-waf-deteccao
+
+===NOTE===
+0893|feroxbuster-filtragem-precisa-status-size-words-lines-regex-similar|Feroxbuster: Filtros Multi-Dimensionais (`-C`, `-S`, `-W`, `-N`, `-X`) e **Filtro de Similaridade Fuzzy (`--filter-similar-to`)** contra *Soft-404 Dinâmicos*|Assim como o `ffuf`, o Feroxbuster permite filtrar respostas indesejadas por cinco dimensões clássicas: **`-C` / `--filter-status`** (código HTTP, ex.: `-C 404,400`), **`-S` / `--filter-size`** (tamanho em bytes), **`-W` / `--filter-words`** (contagem de palavras), **`-N` / `--filter-lines`** (contagem de linhas) e **`-X` / `--filter-regex`** (expressão regular no corpo ou cabeçalhos)!|Mas e quando uma página "Soft 404" muda simultaneamente o tamanho em bytes, o número de palavras e o número de linhas a cada requisição (porque inclui um feed de notícias aleatório ou stack trace dinâmico)?|O Feroxbuster resolve isso com a flag exclusiva **`--filter-similar-to <URL_EXEMPLO_DE_ERRO>`** (`filter_similar` no `ferox-config.toml`): ele busca a página de erro informada, calcula o **hash de similaridade (*Fuzzy Hash / SimHash*)** da estrutura da página e **descarta automaticamente qualquer resposta cujo conteúdo seja estruturalmente similar àquela página Soft-404**!|```bash
+# Filtrar paginas Soft-404 dinamicas usando comparacao de similaridade fuzzy (--filter-similar-to) e regex (-X)
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/common.txt \
+  --filter-similar-to https://app.internal.corp/caminho-inexistente-padrao-404 \
+  --filter-status 404,429 \
+  --filter-regex "Rota nao encontrada no gateway" \
+  -o /cases/pentest/ferox_clean.txt
+```|Antes de iniciar cada diretório, o próprio Feroxbuster já realiza testes automáticos de *Wildcard* com UUIDs aleatórios e cria filtros `-S` / `-W` automaticamente; só passe `--dont-filter` (`-D`) se você quiser desativar explicitamente esse filtro automático de wildcard.|Teste `--filter-similar-to` contra SPAs em React/Vue/Angular ou portais corporativos que renderizam páginas de erro dinâmicas.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, ffuf-filtragem-calibracao-automatica-ac-status-size-words-lines-regex, nikto-tratamento-soft-404-no404-db-404-strings-falso-positivo
+
+===NOTE===
+0894|feroxbuster-coleta-inteligente-palavras-backups-extensoes-links|Feroxbuster: Geração Dinâmica de Wordlist a partir do Alvo (**`--collect-words` (`-g`)**, **`--collect-backups` (`-B`)**, **`--collect-extensions` (`-E`)** e `--extract-links`)|Três flags do Feroxbuster transformam o scanner de um testador de dicionário estático em um motor adaptativo que aprende o vocabulário do próprio site alvo em tempo de execução: **`-g` / `--collect-words`**, **`-B` / `--collect-backups`** e **`-E` / `--collect-extensions`**!|Com **`-g` (`--collect-words`)**, o Feroxbuster extrai substantivos, identificadores e jargões específicos do negócio encontrados dentro do texto e metadados das páginas respondidas pelo servidor e **os adiciona dinamicamente à wordlist em memória**! Com **`-B` (`--collect-backups`)**, toda vez que o Feroxbuster encontra um arquivo real (ex.: `config.php` ou `login.jsp`), ele testa automaticamente variações de backup daquele arquivo exato (`config.php.bak`, `config.php~`, `config.php.old`, `.config.php.swp`, `config.bak`)!|E com **`-E` (`--collect-extensions`)**, o Feroxbuster descobre quais extensões de arquivo o servidor realmente utiliza na prática (ignorando imagens/fontes listadas em `--dont-collect png,jpg,gif,css,woff2`) e passa a anexá-las automaticamente!|```bash
+# Executar o Feroxbuster aprendendo palavras do proprio alvo (-g), testando backups de cada arquivo achado (-B) e coletando extensoes (-E)
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt \
+  --collect-words \
+  --collect-backups \
+  --collect-extensions \
+  --dont-collect png,jpg,jpeg,gif,svg,css,woff,woff2,ico \
+  -o /cases/pentest/ferox_smart_collection.txt
+```|Por que **`-B` (`--collect-backups`)** é muito mais eficiente do que passar `-x bak,old,swp,orig` para toda a wordlist? Porque `-x bak,old,swp` multiplica a wordlist inteira de 30.000 palavras por 4 (`120.000` requisições), enquanto `-B` testa `.bak`/`.old`/`.swp` **apenas para os 15 arquivos que realmente foram encontrados** (`60` requisições cirúrgicas)!|Verifique na saída do Feroxbuster os arquivos de backup (`.bak`, `~`, `.swp`) descobertos automaticamente pelo `-B`.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, gobuster-padroes-arquivos-patterns-p-wordlists-dinamicas-backups, wpscan-descoberta-backups-config-exports-db-timthumbs-medias
+
+===NOTE===
+0895|feroxbuster-gerenciamento-estado-state-file-resume-from-time-limit|Feroxbuster: Persistência de Estado (**`ferox-*.state`**), Retomada Exata (**`--resume-from`**) e Orçamento de Tempo (**`--time-limit`**)|Varreduras recursivas profundas sobre grandes portais corporativos podem descobrir dezenas de subdiretórios: se a conexão VPN cair ou se a janela de manutenção autorizada do cliente encerrar às 06:00 da manhã, perder horas de enumeração recursiva seria frustrante.|Por padrão, sempre que uma varredura do Feroxbuster é interrompida com `Ctrl+C` ou atinge o limite de tempo configurado por **`--time-limit` (ex.: `--time-limit 30m`)**, o Feroxbuster serializa em disco um arquivo **`ferox-<slug>-<timestamp>.state`** contendo todas as árvores de diretórios já concluídas, os filtros calibrados, as palavras coletadas e a posição exata em cada diretório em andamento!|Para retomar a varredura exatamente de onde ela parou, basta executar **`feroxbuster --resume-from ferox-https_app_internal_corp-*.state`**!|```bash
+# Executar varredura com orcamento estrito de tempo de 15 minutos (--time-limit 15m) e retomar depois a partir do arquivo .state
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt \
+  --time-limit 15m \
+  -o /cases/pentest/ferox_window1.txt
+```|Se você estiver rodando o Feroxbuster em scripts efêmeros rápidos onde não deseja que arquivos `.state` sejam criados em caso de interrupção, você pode desabilitar esse comportamento definindo `save_state = false` no `ferox-config.toml`.|Inspecione um arquivo `.state` gerado (que é um documento JSON estruturado!) com `jq . ferox-*.state | head -n 40`.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, feroxbuster-configuracao-persistente-ferox-config-toml-escopo, masscan-arquivos-configuracao-pausa-retomada-paused-conf-echo
+
+===NOTE===
+0896|feroxbuster-encaminhamento-seletivo-replay-proxy-replay-codes-burp-mitmproxy|Feroxbuster: **`--replay-proxy`** e **`--replay-codes`** — Como Enviar Apenas os Achados Válidos (`200`, `301`, `403`) para o **`mitmproxy` / ZAP / Burp**|Quando você passa `--proxy http://127.0.0.1:8080` para um fuzzer de diretórios que dispara 100.000 requisições (das quais 99.950 retornam `404 Not Found`), o histórico do seu `mitmproxy`, OWASP ZAP ou Burp Suite fica poluído com 99.950 linhas de lixo `404` e consome gigabytes de RAM!|O Feroxbuster resolve esse problema operacional com duas flags brilhantes: **`--replay-proxy <URL_DO_PROXY>` (`-P`)** e **`--replay-codes <STATUS_CODES>` (`-R`)**!|Quando você usa `--replay-proxy http://127.0.0.1:8080 --replay-codes 200,301,302,401,403` (sem usar `--proxy`), o Feroxbuster faz as 100.000 requisições de força bruta **diretamente na velocidade máxima do Rust** (sem passar pelo proxy!) e, **apenas quando encontra uma resposta positiva que passou pelos filtros e bate com `--replay-codes`, ele reenvia aquela única requisição válida através do `--replay-proxy`**!|```bash
+# Varrer na velocidade nativa do Rust e reenviar APENAS os caminhos encontrados (200, 301, 302, 403) para o mitmproxy na porta 8080!
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/raft-medium-words.txt \
+  --replay-proxy http://127.0.0.1:8080 \
+  --replay-codes 200,301,302,401,403 \
+  -o /cases/pentest/ferox_replayed.txt
+```|O resultado no seu `mitmproxy` / OWASP ZAP / Burp Suite é mágico: em vez de 100.000 requisições `404` lentas, a aba de histórico do proxy recebe em segundos apenas as **35 rotas reais descobertas**, já organizadas na árvore de site (*Site Map*) e prontas para inspeção manual!|Verifique no `mitmproxy` (`127.0.0.1:8080`) que apenas os códigos listados em `--replay-codes` foram recebidos.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, mitmproxy-arquitetura-tres-interfaces-mitmproxy-mitmdump-mitmweb, arjun-exportacao-resultados-json-txt-proxy-burp-zap-mitmproxy
+
+===NOTE===
+0897|feroxbuster-autenticacao-mtls-request-file-headers-cookies-queries|Feroxbuster: Auditoria Autenticada via **`--request-file` (Raw HTTP)**, Certificados **mTLS (`--client-cert`, `--client-key`)**, `-H`, `-b` e `-Q`|Para auditar aplicações protegidas por autenticação complexa, o Feroxbuster suporta carregar diretamente um arquivo contendo uma **Requisição HTTP Bruta (`--request-file <arquivo.raw>`)** exportada do `mitmproxy`, ZAP ou Burp Suite: herdando automaticamente método HTTP, cabeçalhos, cookies e corpo da requisição!|Para ambientes Zero Trust e APIs financeiras com **mTLS**, conforme documentado em `ferox-config.toml.example`, o Feroxbuster possui suporte nativo a certificados de cliente via **`--client-cert <cert.pem>`** e **`--client-key <key.pem>`**, além de **`--server-certs <ca_interna.pem>`** para confiar na Autoridade Certificadora privada da empresa sem precisar desligar a verificação TLS com `-k` (`--insecure`)!|Você também pode adicionar cabeçalhos (`-H "Authorization: Bearer ..."`), cookies (`-b "session=..."`) e parâmetros fixos de Query String em todas as requisições com **`-Q` / `--query "token=abc"`**!|```bash
+# Executar o Feroxbuster autenticado com certificado mTLS (--client-cert/--client-key) e validando contra a CA interna (--server-certs)
+feroxbuster -u https://mtls-portal.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt \
+  --client-cert /cases/pentest/client.crt \
+  --client-key /cases/pentest/client.key \
+  --server-certs /etc/secops/corp-root-ca.pem \
+  -H "Accept: application/json" \
+  -o /cases/pentest/ferox_mtls_api.txt
+```|Ao realizar uma varredura recursiva autenticada (com `-b` cookies ou `--request-file`), utilize sempre **`--url-denylist`** ou **`--dont-scan` (`--regex-denylist "/(logout|signout|delete).*"`)** para garantir que o Feroxbuster nunca acesse rotas que destruam a sessão autenticada!|Confira com `--regex-denylist` que qualquer link `/logout` extraído do HTML pelo `--extract-links` é sumariamente ignorado.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, feroxbuster-configuracao-persistente-ferox-config-toml-escopo, gobuster-autenticacao-mtls-certificados-p12-pem-cookies-headers-proxies
+
+===NOTE===
+0898|feroxbuster-configuracao-persistente-ferox-config-toml-escopo|Feroxbuster: Padronização Corporativa com **`ferox-config.toml`**, Controle de Fronteira (**`--scope`**) e Bloqueio (**`--dont-scan`**)|Conforme detalhado no arquivo oficial `ferox-config.toml.example`, o Feroxbuster procura automaticamente na inicialização um arquivo de configuração chamado **`ferox-config.toml`** (em `/etc/feroxbuster/`, `~/.config/feroxbuster/` ou no mesmo diretório do binário) para aplicar padrões de equipe sem precisar redigitar flags.|Duas opções de governança de escopo no `ferox-config.toml` e na CLI são fundamentais porque o `--extract-links` analisa links encontrados no HTML/JS: **`--scope <dominios>`** (define quais domínios e seus subdomínios implícitos podem ser seguidos quando o Feroxbuster encontra links ou redirecionamentos `-r`) e **`--dont-scan <urls_ou_regex>`** (`url_denylist` e `regex_denylist` no TOML, que bloqueiam URLs ou padrões regex proibidos pelo ROE)!|Além disso, você pode passar **múltiplas wordlists** na configuração (`wordlist = ["/caminho/lista1.txt", "/caminho/lista2.txt"]`), e o Feroxbuster mescla e deduplica todas as palavras em memória automaticamente!|```toml
+# ~/.config/feroxbuster/ferox-config.toml — Perfil padrao endurecido para pentests autorizados
+threads = 25
+scan_limit = 3
+timeout = 7
+auto_tune = true
+collect_backups = true
+dont_collect = ["png", "gif", "jpg", "jpeg", "svg", "css", "woff", "woff2", "ico"]
+regex_denylist = ["/logout.*", "/signout.*", "/delete.*"]
+replay_proxy = "http://127.0.0.1:8080"
+replay_codes = [200, 201, 301, 302, 401, 403]
+```|Note no comentário oficial do `ferox-config.toml.example`: qualquer domínio fornecido em `scope = ["exemplo.com.br"]` autoriza implicitamente também subdomínios dele (`api.exemplo.com.br`), enquanto bloqueia links para domínios externos de terceiros.|Execute `feroxbuster -u https://app.internal.corp -v` e verifique no cabeçalho de inicialização o carregamento das opções do `ferox-config.toml`.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, feroxbuster-encaminhamento-seletivo-replay-proxy-replay-codes-burp-mitmproxy, rustscan-arquivo-configuracao-persistente-rustscan-toml-perfis
+
+===NOTE===
+0899|feroxbuster-pipelines-stdin-silent-json-encadeamento-httpx-nuclei|Feroxbuster em Pipelines Unix: Leitura de Alvos via **`--stdin`**, Modo **`--silent` (`-q`)**, Saída **JSON Lines (`--json`)** e `--parallel`|O Feroxbuster foi projetado para se comportar como um cidadão de primeira classe em pipelines Unix: passando a flag **`--stdin`**, ele lê uma lista de URLs diretamente da entrada padrão (por exemplo, vinda do **`httpx`** ou **`katana`**) e com **`--parallel <N>`** controla quantos hosts da entrada `stdin` são varridos simultaneamente!|Quando você adiciona a flag **`--silent` (`-q`)**, o Feroxbuster desativa barras de progresso e banners e imprime em `stdout` **exclusivamente as URLs descobertas (uma URL limpa por linha)** — permitindo canalizar a saída diretamente via pipe para outra ferramenta (`| nuclei`, `| arjun`, `| dalfox`)!|E para armazenamento estruturado e análise com `jq`, adicionar **`--json`** junto com **`-o resultados.jsonl`** grava cada resposta descoberta como um objeto JSON rico contendo `url`, `path`, `status`, `content_length`, `line_count`, `word_count`, `headers` e `extension`!|```bash
+# Pipeline Unix: ler URLs vivas do httpx via --stdin, rodar ate 4 hosts em paralelo (--parallel 4) e gravar JSONL estruturado
+cat /cases/easm/live_web_assets.txt \
+  | feroxbuster --stdin \
+    --parallel 4 \
+    --scan-limit 2 \
+    --threads 20 \
+    --depth 2 \
+    --silent \
+    --json -o /cases/easm/ferox_all_hosts.jsonl
+```|Veja como combinar `--parallel 4` + `--scan-limit 2` + `--threads 20` dá controle matemático total da concorrência máxima de rede: no máximo `4 hosts × 2 diretórios × 20 threads = 160` requisições em voo simultaneamente.|Filtre no arquivo `ferox_all_hosts.jsonl` rotas administrativas ou arquivos de configuração expostos com `jq -r 'select(.status == 200) | .url' /cases/easm/ferox_all_hosts.jsonl`.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, httpx-integracao-pipeline-subfinder-naabu-katana-nuclei, arjun-integracao-pipeline-katana-arjun-dalfox-sqlmap-nuclei
+
+===NOTE===
+0900|feroxbuster-comparacao-feroxbuster-vs-ffuf-vs-gobuster-vs-katana|Decisão Arquitetural de Descoberta Web: Quando Usar **Feroxbuster** vs **`ffuf`** vs **Gobuster** vs **Katana** em Pentests e EASM|Como o nosso lote de segurança cobre **Feroxbuster**, **`ffuf`**, **Gobuster** e **Katana**, saber escolher a ferramenta exata (ou a combinação delas) para cada tarefa de descoberta web é uma competência essencial de engenharia de AppSec e Red Team.|Compare a especialidade arquitetural de cada uma: **(1) Katana (`projectdiscovery/katana`)**: é um **Crawler / Spider** (navega por links existentes e faz parsing profundo de arquivos JavaScript/DOM Headless, sem fazer força bruta de dicionário); **(2) Feroxbuster (`epi052/feroxbuster`)**: é o especialista em **Descoberta Recursiva Forçada de Diretórios/Arquivos** (combina wordlist + extração de links + `--collect-words`/`--collect-backups` + `--filter-similar-to` + `--replay-proxy`); **(3) `ffuf` (`ffuf/ffuf`)**: é o **Fuzzer HTTP Paramétrico Mais Flexível** (suporta múltiplas wordlists em modos `sniper`/`pitchfork`/`clusterbomb` em qualquer posição da requisição crua); e **(4) Gobuster (`OJ/gobuster`)**: é o enumerador multi-protocolo em Go com modos dedicados para **`dns`, `vhost`, `s3`, `gcs` e `tftp`**!|Em um pentest web completo, o fluxo de ouro começa com **`katana`** (mapeia tudo que está linkado no HTML/JS), segue com **`feroxbuster`** (descobre recursivamente diretórios e backups não-linkados e os envia via `--replay-proxy` para o `mitmproxy`), usa **`arjun`** (descobre parâmetros ocultos nas rotas) e usa **`ffuf`** para fuzzing combinatório de parâmetros!|```bash
+# Fluxo integrado: Feroxbuster descobre rotas ocultas recursivamente e alimenta o Arjun para descobrir parametros ocultos nelas!
+feroxbuster -u https://app.internal.corp \
+  -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt \
+  --collect-backups \
+  --silent -o /cases/pentest/ferox_discovered_urls.txt
+
+arjun -i /cases/pentest/ferox_discovered_urls.txt -w small -oJ /cases/pentest/ferox_arjun_params.json
+```|Adote também a flag **`--unique`** do Feroxbuster (`unique = true` no `ferox-config.toml`) quando auditar aplicações que possuem dezenas de subpastas espelhadas retornando páginas idênticas: o `--unique` deduplica respostas idênticas para manter o relatório enxuto.|Verifique os resultados consolidados no `mitmproxy` e no relatório JSON do Arjun.|feroxbuster-arquitetura-descoberta-recursiva-rust-tokio-forced-browsing, ffuf-arquitetura-fuzzer-web-marcador-fuzz-wordlists-multiplas, gobuster-arquitetura-concorrencia-go-subcomandos-dir-dns-vhost-s3-gcs-fuzz

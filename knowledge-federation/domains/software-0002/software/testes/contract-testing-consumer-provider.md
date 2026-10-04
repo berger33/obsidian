@@ -8,8 +8,9 @@ confianca: alta
 ultima_verificacao: 2026-10-01
 validade: estavel
 status: candidata
-revisao_humana: pendente
-revisor: ""
+revisao_humana: aprovada
+revisor: usuario-da-sessao
+data_revisao_humana: 2026-10-02
 fontes: ["https://docs.pact.io/", "https://docs.pact.io/implementation_guides/python/docs/consumer", "https://docs.pact.io/implementation_guides/javascript/readme"]
 tags: [dominio/software, subdominio/testes, qualidade/candidata]
 aliases: [Consumer-driven contract testing, Teste de contrato]

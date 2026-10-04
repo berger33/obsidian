@@ -1,0 +1,147 @@
+SOURCES: https://raw.githubusercontent.com/gravitational/teleport/master/README.md | https://goteleport.com/docs/reference/architecture/
+
+===NOTE===
+1371|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos|Arquitetura do **Gravitational Teleport (`gravitational/teleport`)**: Acesso **Zero-Trust Baseado em Identidade** e **Certificados de Curta Duração** (Sem Chaves Estáticas!)|Por que chaves SSH estáticas (`~/.ssh/authorized_keys`), arquivos `kubeconfig` de longa duração, senhas de banco de dados compartilhadas e VPNs tradicionais que colocam o notebook do desenvolvedor dentro da sub-rede inteira de produção são os alvos favoritos de invasores para movimentação lateral?|Porque credenciais estáticas nunca expiram sozinhas, são copiadas para notebooks sem controle e não vinculam criptograficamente cada comando executado à identidade real do usuário no SSO!|O **Gravitational Teleport** substitui chaves estáticas, `authorized_keys`, senhas compartilhadas e bastions legados por uma **Plataforma Unificada de Acesso Zero-Trust Baseada em Certificados de Curta Duração (ex.: TTL de 4 a 12 horas)**: **(1) `Teleport Auth Service`** — a Autoridade Certificadora (CA de SSH e X.509 mTLS) e motor de políticas RBAC/ABAC e auditoria do cluster; **(2) `Teleport Proxy Service`** — o gateway stateless de borda que autentica os usuários via **OIDC / SAML / Passkeys FIDO2** e roteia conexões sobre TLS via *ALPN Routing* e *Reverse Tunnels*; e **(3) `Teleport Agents`** (SSH Node, Kubernetes Service, Database Service, Application Service, Windows Desktop Service e MCP)!|```bash
+# Fazer login no cluster Teleport via SSO + WebAuthn (recebendo certificado efemero de 8h) e listar servidores, clusters K8s e bancos disponiveis
+tsh login --proxy=teleport.exemplo.br:443 --auth=sso-corporativo
+tsh status
+tsh ls
+tsh kube ls
+tsh db ls
+```|Repare no que acontece quando você executa **`tsh login`**: o usuário se autentica no IdP corporativo (Authentik, Kanidm, Okta, Entra ID) com MFA/Passkey, e o `Teleport Auth Service` emite um **Certificado SSH e um Certificado X.509 mTLS efêmeros que expiram automaticamente ao fim do expediente (`TTL = 8h`)**! Quando o expediente acaba, o certificado expira sozinho sem precisar revogar chaves em milhares de servidores!|Como o **Teleport Proxy Service** suporta multiplexação **`TLS ALPN Routing`**, todas as conexões de clientes (`tsh ssh`, `kubectl`, `psql`, `mysql`, Web UI e túneis reversos de agentes) podem trafegar por **uma única porta pública TCP `:443`**!|teleport-acesso-ssh-certificados-openssh-gravacao-sessao-ebpf, teleport-acesso-kubernetes-databases-mtls-impersonation-sem-senhas, rustls-autenticacao-mutua-mtls-webpkiclientverifier-zero-trust
+
+===NOTE===
+1372|teleport-acesso-ssh-certificados-openssh-gravacao-sessao-ebpf|Acesso SSH com **Gravação Completa de Sessão Interativa** e **Auditoria Enriquecida por eBPF (`enhanced_recording`)** no Teleport|O que acontece se um engenheiro ou terceiro autorizado acessar um servidor Linux via SSH e, em vez de digitar comandos em texto claro no terminal (que apareceriam na gravação de tela TTY), ele executar um script obscuro `curl ... | bash`, rodar um binário codificado em Base64 ou abrir um sub-shell que limpa o histórico?|Um gravador de terminal comum veria apenas `./script.sh` na tela, sem saber quais binários foram executados por baixo nem quais conexões de rede o script abriu!|O **Teleport SSH Service** resolve ambos os problemas: além de gravar a **sessão interativa completa de terminal TTY** (que pode ser assistida como um vídeo no navegador ou via `tsh play <session-id>`!), ele inclui a **Gravação Aprimorada Baseada em eBPF (`enhanced_recording: enabled: true`)**! Usando programas **eBPF** acoplados aos *tracepoints* do Kernel Linux ligados ao `cgroup` da sessão SSH, o Teleport registra no log de auditoria estruturado **cada chamada `execve` (`session.command`), cada arquivo aberto (`session.disk`) e cada conexão TCP de rede (`session.network`)** disparada dentro daquela sessão SSH!|```yaml
+# Habilitar no /etc/teleport.yaml do agente SSH a gravacao de sessao e o rastreamento de execucao/rede via eBPF (enhanced_recording)
+version: v3
+ssh_service:
+  enabled: "yes"
+  labels:
+    env: producao
+    tier: backend
+  enhanced_recording:
+    enabled: true
+    command_buffer_size: 8
+    disk_buffer_size: 128
+    network_buffer_size: 8
+```|E se você tiver servidores Linux ou equipamentos onde não deseja instalar o agente `teleport`, mas que já rodam o **`sshd` padrão do OpenSSH**? O Teleport também suporta nodes **OpenSSH Agentless**: basta configurar **`TrustedUserCAKeys`** no `/etc/ssh/sshd_config` apontando para a chave pública da CA de usuários do Teleport (`tctl auth export --type=user`)!|Para operações de altíssima criticidade em produção, o Teleport permite inclusive configurar políticas de **`Moderated Sessions` (*Four-Eyes Principle*)**: a sessão SSH do engenheiro só destrava o teclado quando um segundo revisor autorizado entra ao vivo na mesma sessão com sua chave FIDO2 WebAuthn para acompanhar a operação!|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn, teleport-auditoria-eventos-gravacao-s3-dynamodb-integracao-siem
+
+===NOTE===
+1373|teleport-acesso-kubernetes-databases-mtls-impersonation-sem-senhas|Acesso Zero-Trust a **Clusters Kubernetes (`tsh kube login`)** e **Bancos de Dados (`tsh db connect` — PostgreSQL, MySQL, MongoDB, Redis)** sem Senhas Compartilhadas|Como eliminar de vez os dois artefatos mais vazados em equipes de Cloud e Dados: **(1) Arquivos `kubeconfig` estáticos com privilégios `cluster-admin`** salvos em notebooks e **(2) Senhas compartilhadas de bancos de dados de produção (`postgres`, `mysql`, `mongodb`, `redis`, `RDS IAM`)** coladas em clientes como DBeaver, DataGrip ou `psql`?|Com o **Teleport Kubernetes Service** e o **Teleport Database Service**!|No **Kubernetes**: o agente Teleport roda como um Pod dentro do cluster K8s e abre um túnel reverso de saída para o Proxy. Quando o engenheiro roda `tsh kube login cluster-prod` e executa `kubectl get pods`, o `kubectl` fala mTLS com o Teleport, que valida o RBAC, **registra no log de auditoria exatamente qual requisição `kubectl` (e todo comando `kubectl exec -it`!) foi executada** e repassa a chamada para o API Server do Kubernetes usando **Kubernetes Impersonation (`Impersonate-User` / `Impersonate-Group`)**! Nos **Bancos de Dados**: o engenheiro roda `tsh db connect --db-user=leitura_bi --db-name=vendas pg-producao` (ou `tsh proxy db` para conectar o DBeaver/DataGrip local!). O **Teleport Database Service** autentica no PostgreSQL/MySQL/RDS usando **mTLS de curta duração ou IAM Token efêmero**, sem que o usuário jamais veja ou possua uma senha do banco, e **audita cada query SQL executada (`db.session.query`)**!|```bash
+# Autenticar no cluster Kubernetes e abrir um proxy local mTLS autenticado para um banco PostgreSQL sem usar nenhuma senha de banco
+tsh kube login k8s-producao-sp
+kubectl get pods -n pagamentos
+tsh db login pg-pagamentos-ro --db-user=analista_ro --db-name=pagamentos
+tsh db connect pg-pagamentos-ro
+```|Olhe o ganho de segurança e conformidade PCI-DSS / LGPD no **Teleport Database Service**: como o protocolo nativo do PostgreSQL, MySQL, MariaDB, MongoDB, Redis, ClickHouse e SQL Server é interpretado pelo agente do Teleport no caminho, o log de auditoria registra **cada instrução `SELECT`, `UPDATE` ou `DROP` executada, vinculada nominalmente ao e-mail do funcionário no SSO**, mesmo que 20 analistas usem o mesmo role lógico `analista_ro` dentro do banco!|Ative sempre `per_session_mfa: true` no role de acesso aos bancos e clusters Kubernetes de produção para exigir um toque físico na YubiKey/Passkey no momento exato de abrir a conexão.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn, kanidm-autenticacao-passkeys-webauthn-fido2-attested-credenciais
+
+===NOTE===
+1374|teleport-acesso-web-apps-jwt-headers-windows-desktop-rdp-mcp|Acesso Seguro a **Aplicações Web Internas (`Application Service` + JWT)**, **Windows Desktops (`RDP` Sem Senha via Smartcard Virtual)** e **Servidores MCP (IA)** no Teleport|Como proteger painéis web internos (Grafana, ArgoCD, Prometheus, Jenkins, Kibana, APIs internas), servidores **Windows Desktop / Active Directory (`RDP`)** e até servidores **MCP (*Model Context Protocol* para Agentes de IA)** sem expô-los na Internet e sem distribuir senhas de domínio Windows?|O Teleport inclui três serviços especializados: **(1) `Teleport Application Service`** — publica aplicações HTTP/HTTPS e TCP internas através de um túnel reverso autenticado e injeta automaticamente em cada requisição HTTP um cabeçalho **`Teleport-Jwt-Assertion`** assinado criptograficamente com o usuário e seus papéis!;|Na camada complementar de operação e execução técnica: **(2) `Teleport Windows Desktop Service`** — como o protocolo RDP tradicional não suportava certificados efêmeros simples, o Teleport implementa em Rust a emulação de protocolo de **Smartcard Virtual sobre RDP**: no login RDP pelo navegador, o Teleport gera um certificado X.509 de curta duração e simula a inserção de um Smartcard físico no Windows via Kerberos PKINIT, **fazendo login no Windows Server sem digitar nem conhecer a senha do Active Directory**!; e **(3) `MCP Access`** — governa e audita o acesso de LLMs/Agentes de IA a ferramentas MCP internas!|```yaml
+# Publicar um painel interno (ex.: Grafana local) via Teleport Application Service injetando JWT de identidade e protegendo com RBAC
+version: v3
+app_service:
+  enabled: "yes"
+  apps:
+    - name: "grafana-interno"
+      uri: "http://127.0.0.1:3000"
+      public_addr: "grafana.teleport.exemplo.br"
+      labels:
+        env: "producao"
+      rewrite:
+        headers:
+          - "X-WEBAUTH-USER: {{internal.logins}}"
+```|Veja como a diretiva `rewrite.headers` (junto com o `Teleport-Jwt-Assertion` validado via JWKS do Teleport) permite autenticar automaticamente o usuário em aplicações internas como **Grafana**, **Kubernetes Dashboard** ou **Jenkins** no instante em que ele passa pelo proxy do Teleport!|No **Windows Desktop Service**, além de eliminar o envio de senhas NTLM/Kerberos pela rede (imunizando contra *Pass-the-Hash*!), o Teleport grava a sessão gráfica RDP completa e permite controlar por RBAC se a área de transferência (*Clipboard copy/paste*) e o compartilhamento de pastas estão liberados ou bloqueados!|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn, authentik-outposts-proxy-forwardauth-ldap-radius-arquitetura-distribuida
+
+===NOTE===
+1375|teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn|Controle de Acesso **RBAC + ABAC (`labels`)**, **Per-Session MFA (FIDO2 WebAuthn)** e Restrição de IP/Dispositivo em Roles do Teleport|Como escrever uma política de acesso (`role`) no **Teleport** que garanta: *"Membros do grupo `sre-oncall` do SSO só podem acessar servidores rotulados com `env: producao` se: (1) tocarem fisicamente em sua chave FIDO2/Passkey a cada nova sessão SSH/K8s (`require_session_mfa`), (2) tiverem uma sessão máxima de 4 horas e (3) nunca puderem acessar recursos rotulados com `pci: restrito`"*?|No Teleport, os recursos (`node_labels`, `kube_labels`, `db_labels`, `app_labels`) são combinados com variáveis dinâmicas vindas do IdP OIDC/SAML (`{{external.groups}}`, `{{external.email}}`) dentro de um recurso declarativo **`kind: role` (`v7`)** contendo blocos explícitos **`allow`** e **`deny`**!|Regra de ouro de avaliação do Teleport: **as regras `deny` têm precedência absoluta sobre qualquer regra `allow`**! E dentro de `options`, você ativa travas como **`require_session_mfa: true`** (que exige presença física WebAuthn/TOTP no momento de cada `tsh ssh` ou `kubectl exec`, impedindo que um malware roube o certificado da memória da estação e abra uma sessão oculta!), **`max_session_ttl: 4h`**, **`client_idle_timeout: 15m`** e **`pin_source_ip: true`**!|```yaml
+# Role declarativa (kind: role v7) no Teleport com ABAC por labels, Per-Session MFA obrigatorio, Pinning de IP e bloqueio explicito (deny)
+kind: role
+version: v7
+metadata:
+  name: sre-producao
+spec:
+  options:
+    max_session_ttl: 4h0m0s
+    client_idle_timeout: 15m0s
+    require_session_mfa: true
+    pin_source_ip: true
+    record_session:
+      default: strict
+  allow:
+    logins: ['ubuntu', '{{internal.logins}}']
+    node_labels:
+      'env': 'producao'
+    kubernetes_labels:
+      'env': 'producao'
+    kubernetes_groups: ['system:masters']
+  deny:
+    node_labels:
+      'pci': 'restrito'
+```|Olhe três opções de segurança excepcionais no bloco `spec.options` acima: **(1) `record_session: default: strict`** (se por qualquer falha de rede/disco o servidor de auditoria não conseguir gravar a sessão em tempo real, a sessão SSH é encerrada imediatamente — *Fail-Closed Audit*!); **(2) `pin_source_ip: true`** (vincula o certificado emitido ao endereço IP exato do cliente no momento do login, tornando o certificado inútil se exfiltrado para outra rede!); e **(3) `require_session_mfa: true`**!|Aplique e versione todas as suas roles via GitOps usando **`tctl create -f role-sre.yaml`** ou através do provedor oficial **Terraform do Teleport**.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-fluxos-just-in-time-access-requests-chatops-slack-jira, kanidm-autenticacao-passkeys-webauthn-fido2-attested-credenciais
+
+===NOTE===
+1376|teleport-fluxos-just-in-time-access-requests-chatops-slack-jira|Privilégio Zero Permanente (**Zero Standing Privilege — ZSP**) com **Just-In-Time (JIT) Access Requests** no Teleport: Aprovação via Slack, Mattermost, PagerDuty ou Jira|Por que manter permissões permanentes de `root` ou `cluster-admin` em produção para todos os desenvolvedores 24 horas por dia, 365 dias por ano, viola o princípio moderno de **Zero Standing Privilege (ZSP)**?|Porque 99% do tempo o desenvolvedor está apenas escrevendo código ou olhando métricas e não precisa de acesso mutável à produção; se a conta dele for comprometida numa sexta-feira à noite, o invasor já herda privilégios de produção imediatamente!|O **Teleport Access Requests (Just-In-Time Privilege Elevation)** resolve isso de forma nativa: no dia a dia, o desenvolvedor tem apenas a role básica `dev-leitura` (que permite pedir elevação via **`request: roles: ['sre-producao']`** ou pedir acesso a um recurso específico *Resource Access Request*!). Quando surge um incidente, o desenvolvedor executa **`tsh request create --roles=sre-producao --reason="Incidente #4821 latencia no banco"`**: o plugin oficial do Teleport envia um card interativo no **Slack / Mattermost / MS Teams / Jira / PagerDuty** (ou no Web UI), o líder de plantão aprova com 1 clique, e o desenvolvedor recebe um certificado elevado **válido apenas durante a janela do chamado**!|```bash
+# Solicitar elevacao temporaria Just-In-Time (JIT) para a role sre-producao informando justificativa de auditoria e assumir a role apos aprovacao
+tsh request create --roles=sre-producao --reason="Investigacao chamado INC-4821"
+tsh request ls
+tsh login --request-id=<REQUEST_UUID>
+```|Mais inteligente ainda: você pode integrar o plugin do Teleport ao **PagerDuty / Opsgenie** para **Auto-Aprovação Condicional de Plantão (*On-Call Auto-Approval*)** — se o engenheiro que abriu o `Access Request` for exatamente o plantonista escalado no PagerDuty naquele horário e houver um incidente ativo aberto, o próprio plugin aprova o acesso temporário em segundos e registra o número do incidente no log de auditoria!|Configure na role de revisão que **um usuário nunca pode aprovar o seu próprio Access Request** e exija `min_approvals: 2` para papéis críticos de banco de dados ou infraestrutura core.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn, teleport-identidade-maquina-machine-id-tbot-cicd-renovacao-automatica
+
+===NOTE===
+1377|teleport-identidade-maquina-machine-id-tbot-cicd-renovacao-automatica|Identidade de Máquina e Automação CI/CD com **Teleport Machine ID (`tbot`)**: Aposentando Segredos de Longa Duração no GitHub Actions, GitLab CI e Ansible|Nós já vimos como o `tsh login` elimina chaves estáticas para **usuários humanos**. Mas e os **robôs, pipelines de CI/CD (GitHub Actions, GitLab CI, Jenkins), playbooks do Ansible e microsserviços** que precisam fazer deploy via SSH, rodar `helm upgrade` no Kubernetes ou executar migrações de schema no PostgreSQL sem intervenção humana?|Colocar uma chave SSH privada sem senha (`id_ed25519`) ou um `kubeconfig` eterno nos *Secrets* do GitHub/GitLab cria um risco enorme de vazamento!|A solução oficial da arquitetura do Teleport é o **Teleport Machine ID (`tbot`)**! O binário **`tbot`** autentica o workload ou pipeline no cluster Teleport usando **Join Tokens criptográficos sem segredo estático** — como o token **OIDC do GitHub Actions / GitLab CI**, o **AWS IAM Role / Instance Identity Document**, o **GCP/Azure Workload Identity**, o **Kubernetes ServiceAccount JWT** ou o **TPM 2.0 de hardware**! Após validar a identidade da máquina/pipeline, o `tbot` gera e renova continuamente em disco/memória certificados efêmeros de curta duração (ex.: TTL de 20 minutos!) prontos para o `ssh`, `ansible`, `kubectl` ou cliente de banco de dados!|```bash
+# Executar o agente tbot (Teleport Machine ID) em modo one-shot dentro de um job de CI/CD para gerar certificados efemeros de deploy K8s/SSH
+tbot start \
+  --auth-server=teleport.exemplo.br:443 \
+  --token=github-actions-join-token \
+  --join-method=github \
+  --destination-dir=/tmp/tbot-creds \
+  --oneshot
+```|Veja o poder do **`--join-method=github` (ou `gitlab`, `kubernetes`, `iam`, `tpm`)** com `--oneshot` no comando acima: você **não precisa armazenar nenhum segredo ou chave privada nos Secrets do GitHub**! O Teleport valida criptograficamente o token OIDC emitido pelo GitHub Actions (checando repositório, branch `refs/heads/main` e ambiente!), emite um certificado que vive apenas pelos 15 minutos daquele deploy e audita todas as ações executadas pelo pipeline!|Para servidores de automação permanentes (como um control node do Ansible ou Prometheus), o `tbot` roda como um serviço `systemd` contínuo renovando os certificados em `/opt/machine-id` a cada 20 minutos em background.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-acesso-kubernetes-databases-mtls-impersonation-sem-senhas, tpm2-arquitetura-trusted-platform-module-tss-hierarquias-pcrs
+
+===NOTE===
+1378|teleport-ingresso-seguro-nos-join-tokens-cloud-iam-tpm-node-joining|Ingresso Seguro de Agentes (**Node Joining**) no Teleport: Eliminando Tokens Estáticos com **Cloud Auto-Joining (AWS IAM, GCP, Azure, Kubernetes)** e **TPM Joining**|Quando você provisiona automaticamente 50 novas máquinas virtuais na AWS/GCP/Azure via Auto-Scaling Group ou Terraform, ou sobe novos clusters Kubernetes, como esses novos agentes (`teleport`) se registram no `Teleport Auth Service` **sem que você precise embutir um token secreto estático no script `user-data` / `cloud-init` ou na imagem da VM**?|Se você usar um token estático no `cloud-init`, qualquer pessoa com permissão de leitura nos metadados da instância na nuvem poderia ler o token e registrar uma máquina falsa (*Rogue Node*) no seu cluster!|Conforme detalhado na arquitetura oficial do Teleport, você deve usar **Dynamic / Secretless Join Methods (`kind: provision_token`)**: **(1) `join_method: iam` (AWS)** — o Auth Service desafia o novo nó a assinar uma requisição `sts:GetCallerIdentity` com sua role IAM da AWS e verifica se a `Account ID` e a `IAM Role` batem com a regra permitida no `provision_token`!; **(2) `join_method: gcp` / `azure`** — valida o token de identidade assinado pelo hipervisor da nuvem; **(3) `join_method: kubernetes`** — valida o JWT da ServiceAccount via `TokenReview`; e **(4) `join_method: tpm`** — para servidores bare-metal on-premises, valida a **Endorsement Key (`EK`) do chip físico TPM 2.0** da placa-mãe!|```yaml
+# Criar um provision_token sem segredo (join_method: iam) que permite apenas instancias da conta AWS 123456789012 ingressarem no cluster Teleport
+kind: token
+version: v2
+metadata:
+  name: aws-auto-join-token
+spec:
+  roles: [Node, Db]
+  join_method: iam
+  allow:
+    - aws_account: "123456789012"
+      aws_arn: "arn:aws:iam::123456789012:role/TeleportAgentRole-*"
+```|Repare que o `provision_token` com `join_method: iam` acima (`name: aws-auto-join-token`) **não é um segredo**: mesmo que alguém descubra o nome `aws-auto-join-token`, ele é 100% inútil fora de uma instância real da conta AWS `123456789012` rodando com a role `TeleportAgentRole-*`!|Além disso, como os agentes Teleport se conectam ao `Teleport Proxy Service` através de **Túneis Reversos de Saída (`Reverse Tunnels` sobre a porta TCP `:443`)**, seus servidores de produção, bancos de dados e clusters Kubernetes **não precisam ter nenhuma porta de entrada aberta no Security Group / Firewall (`Zero Inbound Ports`)**!|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-identidade-maquina-machine-id-tbot-cicd-renovacao-automatica, tpm2-arquitetura-trusted-platform-module-tss-hierarquias-pcrs
+
+===NOTE===
+1379|teleport-auditoria-eventos-gravacao-s3-dynamodb-integracao-siem|Arquitetura de Alta Disponibilidade, **Armazenamento de Auditoria e Gravações (S3 / GCS / MinIO)** e Exportação de Eventos para **SIEM (`event-handler`)** no Teleport|Como implantar o **Plano de Controle do Teleport (`Auth Service` + `Proxy Service`)** em Alta Disponibilidade (HA) suportando milhares de servidores e garantindo que os logs de auditoria e as gravações de sessões SSH/K8s/RDP sejam armazenados de forma **imutável e à prova de adulteração**?|Conforme a referência de arquitetura oficial do Teleport: **(1) O `Teleport Proxy Service` é 100% stateless** e escala horizontalmente atrás de um Load Balancer L4;|Na camada complementar de operação e execução técnica: **(2) O `Teleport Auth Service`** escala em múltiplas réplicas quando conectado a um backend de estado transacional HA (**AWS DynamoDB, Google Cloud Firestore, CockroachDB ou PostgreSQL HA**) e um Object Storage (**Amazon S3, Google Cloud Storage ou MinIO**) para armazenar as gravações de sessão (`audit_sessions_uri: 's3://bucket-gravacoes-teleport'`)!; e **(3) Exportação para SIEM**: o plugin oficial **`teleport-event-handler`** consome o fluxo de eventos da API gRPC do Auth Service com mTLS e envia os logs JSON em tempo real para **OpenSearch, Elasticsearch, Splunk, Wazuh ou Fluentd**!|```yaml
+# Configurar na secao teleport.storage do /etc/teleport.yaml do Auth Service o backend HA e o armazenamento de gravacoes de sessao em S3
+version: v3
+teleport:
+  nodename: auth-ha-01
+  storage:
+    type: dynamodb
+    region: sa-east-1
+    table_name: teleport-cluster-state
+    audit_events_uri:
+      - 'dynamodb://teleport-audit-events'
+      - 'stdout://'
+    audit_sessions_uri: 's3://empresa-teleport-session-recordings?region=sa-east-1'
+```|Habilite no bucket S3 / MinIO apontado por **`audit_sessions_uri`** o recurso **S3 Object Lock em modo `COMPLIANCE` (WORM — *Write Once, Read Many*)** com criptografia KMS: assim, uma vez que uma gravação de sessão SSH ou Kubernetes é enviada para o bucket, **nem mesmo um administrador root da conta AWS consegue apagar ou editar a gravação antes do prazo de retenção regulatório expirar**!|Você também pode consultar os eventos de auditoria diretamente pela linha de comando administrativa com `tctl audit` ou reproduzir sessões gravadas com `tsh play <session-id>`.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-acesso-ssh-certificados-openssh-gravacao-sessao-ebpf, arkime-seguranca-viewer-tls-reverse-proxy-headers-passwordsecret
+
+===NOTE===
+1380|teleport-federacao-trusted-clusters-leaf-root-isolamento-multi-tenant|Federação Multi-Cluster e Multi-Cloud com **Trusted Clusters (`Root Cluster` e `Leaf Clusters`)** no Teleport|E quando uma corporação global, holding de várias empresas ou provedor de serviços gerenciados (MSP) possui **dezenas de ambientes isolados (múltiplas contas AWS/GCP, datacenters regionais ou redes de clientes distintos)** onde cada ambiente deve ter sua própria Autoridade Certificadora independente e continuar funcionando mesmo se a conexão WAN com a matriz cair, mas a equipe central de SRE precisa acessar todos eles com **um único `tsh login` no SSO da matriz**?|A arquitetura do Teleport resolve isso com **Trusted Clusters (`Root Cluster` e `Leaf Clusters`)**!|Funciona assim: cada datacenter ou cliente roda o seu próprio cluster Teleport completo e autônomo (**`Leaf Cluster`**, com seu próprio `Auth Service` e `Proxy Service`). O `Leaf Cluster` estabelece um túnel reverso de saída para o **`Root Cluster`** da matriz e define um **`role_map`** explícito (ex.: mapeando a role `sre-global` do Root Cluster para a role local `admin-filial` do Leaf Cluster)! Com isso, o engenheiro faz `tsh login` uma única vez no `Root Cluster` e alterna entre qualquer filial ou cliente com **`tsh login <nome-leaf-cluster>`** (ou `tsh proxy ssh -J`!), enquanto **o dono do `Leaf Cluster` mantém soberania total para alterar o `role_map` ou desligar a confiança a qualquer instante**!|```yaml
+# Recurso kind: trusted_cluster aplicado no Leaf Cluster estabelecendo federacao e mapeamento de roles (role_map) com o Root Cluster
+kind: trusted_cluster
+version: v2
+metadata:
+  name: matriz-root.exemplo.br
+spec:
+  enabled: true
+  token: token-federacao-trusted-cluster
+  tunnel_addr: matriz-root.exemplo.br:3024
+  web_proxy_addr: matriz-root.exemplo.br:443
+  role_map:
+    - remote: "sre-global"
+      local: ["sre-producao"]
+```|Qual é a grande vantagem de segurança de um **`Trusted Cluster` (`Leaf Cluster`)** em relação a simplesmente conectar todos os agentes de todas as filiais a um único `Root Cluster` gigante? **Isolamento de Domínio de Falha e Soberania de Auditoria**: cada `Leaf Cluster` possui suas próprias chaves de Autoridade Certificadora (`Host CA` e `User CA`) e grava localmente suas próprias sessões de auditoria — se o link WAN entre a filial industrial e a matriz cair, os operadores locais da filial continuam autenticando diretamente no `Leaf Cluster` local sem interrupção!|Use `tsh clusters` após o login para listar o `Root Cluster` e todos os `Leaf Clusters` conectados e verificar o status de conectividade de cada um.|teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos, teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn, freeipa-trust-active-directory-cross-forest-idviews-kerberos-samba

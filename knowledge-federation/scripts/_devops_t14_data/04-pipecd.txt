@@ -1,0 +1,97 @@
+1331|pipecd-arquitetura-control-plane-piped-stateless-gitops|PipeCD: Arquitetura GitOps Unificada com Control Plane Central e Agentes Piped Stateless|O **PipeCD** (`pipe-cd/pipecd`, projeto **CNCF Sandbox**) é uma plataforma de entrega contínua (CD) estilo GitOps que oferece uma experiência unificada de implantação e análise progressiva para múltiplas plataformas (`KUBERNETES`, `TERRAFORM`, `CLOUDRUN`, `LAMBDA` e `ECS`) sem expor credenciais de cluster para fora da rede de destino.|Ferramentas de CD que operam exclusivamente para Kubernetes obrigam equipes a manter pipelines totalmente diferentes no Jenkins/GitHub Actions para módulos Terraform, funções AWS Lambda e serviços Cloud Run.|A arquitetura do PipeCD separa o **Control Plane** (centralizado, responsável pela UI web, autenticação SSO/RBAC, armazenamento de metadados, métricas de insights e API gRPC) do **`piped`** (um único binário stateless executado como agente dentro do cluster ou VPC de destino que faz pull outbound para o Control Plane e aplica os manifestos do Git localmente).|```bash
+# Verificar o Deployment do agente stateless piped no cluster Kubernetes:
+kubectl -n pipecd get pods -l app.kubernetes.io/name=piped
+```|Acreditar que o Control Plane do PipeCD precisa de acesso de rede direto à API privada do cluster Kubernetes ou às chaves IAM da AWS é incorreto: é o agente `piped` que inicia a conexão gRPC de saída para o Control Plane.|Mantenha todas as credenciais de nuvem e do Kubernetes restritas ao ambiente local onde o agente `piped` executa.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1332|pipecd-application-configuration-app-pipecd-yaml-sem-crds|PipeCD: Contrato Declarativo app.pipecd.yaml sem Alteração de Manifestos ou CRDs no Cluster|No PipeCD, cada aplicação reside em um **Application Directory** dentro do repositório Git contendo seus manifestos nativos intactos e um único arquivo declarativo de configuração de pipeline chamado por padrão `app.pipecd.yaml`.|Muitos controladores de entrega progressiva exigem substituir o recurso nativo `kind: Deployment` do Kubernetes por uma CRD proprietária (como `Rollout`) ou instalar dezenas de CRDs no cluster.|O PipeCD trabalha diretamente com os manifestos padrão do Kubernetes (YAML puro, Helm ou Kustomize), módulos Terraform ou definições Cloud Run/ECS: o arquivo `app.pipecd.yaml` define apenas o tipo (`kind: KubernetesApp`, `TerraformApp`, etc.), os estágios do pipeline (`stages`) e os gatilhos de sincronização.|```yaml
+apiVersion: pipecd.dev/v1beta1
+kind: KubernetesApp
+spec:
+  name: payment-api
+  labels:
+    env: production
+  pipeline:
+    stages:
+      - name: K8S_CANARY_ROLLOUT
+        with:
+          replicas: 10%
+      - name: K8S_PRIMARY_ROLLOUT
+      - name: K8S_CANARY_CLEAN
+```|Colocar múltiplas aplicações independentes misturadas na mesma pasta do Git sem separar um **Application Directory** por aplicação causa conflito na detecção de alterações por commit.|Mantenha exatamente um diretório Git por aplicação contendo seu próprio `app.pipecd.yaml` e seus respectivos manifestos.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1333|pipecd-sync-strategies-quick-sync-pipeline-sync-auto|PipeCD: Estratégias de Sincronização (Quick Sync, Pipeline Sync e Auto Sync)|O PipeCD suporta três estratégias de sincronização (**Sync Strategy**) ao aplicar o estado desejado do Git sobre o estado em execução: **Quick Sync**, **Pipeline Sync** e **Sync (Auto)**.|Nem toda mudança em um repositório Git exige rodar um rollout canário de 30 minutos: atualizar apenas um `ConfigMap` de documentação ou escalar réplicas em desenvolvimento pode ser feito com aplicação direta imediata (`Quick Sync`).|No **Quick Sync**, o PipeCD gera um pipeline de estágio único (`K8S_SYNC`, `TERRAFORM_PLAN_AND_APPLY`, etc.) para igualar rapidamente o estado ao Git; no **Pipeline Sync**, executa todos os estágios progressivos declarados em `spec.pipeline.stages` no `app.pipecd.yaml`; e no modo **Sync**, o agente `piped` decide automaticamente entre Quick Sync e Pipeline Sync com base nas regras de `planner` (por exemplo, se a tag da imagem mudou).|```yaml
+apiVersion: pipecd.dev/v1beta1
+kind: KubernetesApp
+spec:
+  planner:
+    alwaysUsePipeline: false
+```|Deixar o planner executar `Quick Sync` em mudanças de imagem de produção por erro de configuração aplica 100% do tráfego na nova versão sem passar pelos estágios de canário e análise.|Para aplicações críticas de produção, configure `spec.pipeline.stages` e valide no plano do deployment na UI se o `Pipeline Sync` foi selecionado.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1334|pipecd-platform-providers-kubernetes-terraform-ecs-cloudrun-lambda|PipeCD: Platform Providers Multi-Cloud (Kubernetes, Terraform, AWS ECS, GCP Cloud Run e Lambda)|No modelo conceitual do PipeCD, o **Platform Provider** (anteriormente chamado de Cloud Provider na configuração do `piped`) define em qual plataforma e ambiente uma aplicação deve ser implantada, suportando nativamente **`KUBERNETES`**, **`TERRAFORM`**, **`ECS`**, **`CLOUDRUN`** e **`LAMBDA`**.|Em arquiteturas modernas, um mesmo produto frequentemente combina microsserviços no EKS/GKE (`KUBERNETES`), infraestrutura de banco e filas no `TERRAFORM` e workers serverless no `CLOUDRUN` ou `LAMBDA`.|Um único agente `piped` pode declarar múltiplos `platformProviders` em seu arquivo de configuração, permitindo que a mesma interface web, o mesmo modelo de aprovação manual (`WAIT_APPROVAL`) e o mesmo fluxo de Pull Request gerenciem todos os cinco tipos de workload.|```yaml
+apiVersion: pipecd.dev/v1beta1
+kind: Piped
+spec:
+  projectID: prod-project
+  pipedID: piped-multi-platform
+  platformProviders:
+    - name: k8s-prod
+      type: KUBERNETES
+    - name: infra-tf
+      type: TERRAFORM
+    - name: serverless-run
+      type: CLOUDRUN
+```|Renomear o campo `name` de um `platformProvider` na configuração do `piped` sem atualizar as aplicações vinculadas a ele no Control Plane faz com que novos deployments daquelas aplicações fiquem sem executor disponível.|Mantenha os nomes dos `platformProviders` estáveis e associe cada aplicação ao provider correspondente do seu ambiente.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1335|pipecd-automated-deployment-analysis-ada-prometheus-datadog-rollback|PipeCD: Análise Automatizada de Deploy (ADA) com Analysis Providers e Auto-Rollback|O PipeCD inclui **Automated Deployment Analysis (ADA)** diretamente como um estágio (`ANALYSIS`) do pipeline de deploy, consultando **Analysis Providers** externos como **Prometheus**, **Datadog**, **Google Cloud Monitoring (Stackdriver)** e **AWS CloudWatch**, além de logs e requisições HTTP.|Fazer rollout canário de 10% do tráfego usando apenas uma pausa fixa (`WAIT`) sem avaliar automaticamente a taxa de erro 5xx ou a latência p99 exige que um engenheiro fique olhando gráficos manualmente durante cada deploy.|No estágio `ANALYSIS` do `app.pipecd.yaml`, declara-se a query de métricas (por exemplo, PromQL no Prometheus) e o limiar esperado; se a métrica violar o limiar durante a janela de observação do canário, o `piped` aborta o pipeline imediatamente e executa o **auto-rollback** automático para o estado anterior estável.|```yaml
+pipeline:
+  stages:
+    - name: K8S_CANARY_ROLLOUT
+      with:
+        replicas: 10%
+    - name: ANALYSIS
+      with:
+        duration: 10m
+        metrics:
+          - provider: prometheus-prod
+            query: 'sum(rate(http_requests_total{status=~"5.."}[1m])) < 0.01'
+            expected:
+              max: 0.01
+            interval: 1m
+```|Configurar uma janela `duration` curta demais (como `30s`) no estágio `ANALYSIS` quando o intervalo de scrape do Prometheus é de `30s` ou `60s` avalia pontos de dados insuficientes e deixa regressões passarem.|Defina `duration` de pelo menos 5 a 10 minutos no estágio `ANALYSIS` para capturar múltiplos ciclos de coleta sob tráfego real.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1336|pipecd-projects-rbac-roles-viewer-editor-admin-multitenancy|PipeCD: Governança Multi-Tenant com Projects e Papéis RBAC (Viewer, Editor e Admin)|No Control Plane do PipeCD, as aplicações e agentes `piped` são organizados logicamente em **Projects**, cada qual com controle de acesso baseado em três papéis predefinidos mapeados a equipes do GitHub/SSO: **`Viewer`**, **`Editor`** e **`Admin`**.|Em empresas com dezenas de squads e múltiplos clusters de nuvem, misturar todos os agentes `piped` sem isolamento por projeto permitiria que uma equipe disparasse ou cancelasse deploys de outra unidade de negócios.|O papel **`Viewer`** possui permissão estritamente de leitura para visualizar a lista e os detalhes de aplicações e deployments; o **`Editor`** adiciona permissões operacionais para acionar sincronizações manuais, aprovar estágios `WAIT_APPROVAL` e cancelar deployments; e o **`Admin`** gerencia as configurações do Project, chaves de API e registro de agentes `piped`.|```yaml
+# Estrutura logica de permissoes de um Project no Control Plane do PipeCD:
+# Viewer -> leitura de Applications, Deployments e Delivery Insights
+# Editor -> Viewer + trigger/cancel/approve deployments
+# Admin  -> Editor + gerenciar chaves de Piped, SSO teams e Project settings
+```|Mapear todos os desenvolvedores da organização diretamente ao grupo `Admin` do Project permite que qualquer usuário desative agentes `piped` ou altere provedores de plataforma.|Conceda `Editor` para os engenheiros da squad responsável pelas aplicações do Project, `Viewer` para equipes transversais/auditoria e `Admin` apenas para a engenharia de plataforma.|https://pipecd.dev/docs-v0.58.x/concepts/;https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://github.com/pipe-cd/pipecd
+1337|pipecd-entrega-progressiva-canary-bluegreen-traffic-routing|PipeCD: Entrega Progressiva (Canary e Blue/Green) em Kubernetes, Cloud Run e Lambda|O PipeCD implementa pipelines declarativos de **Canary** e **Blue/Green** com divisão percentual de tráfego tanto em Kubernetes (via Services nativos, Istio, SMI ou Ingress) quanto em plataformas serverless gerenciadas como **GCP Cloud Run** e **AWS Lambda**.|Executar Blue/Green ou Canary em Cloud Run ou Lambda manualmente requer calcular pesos de revisões/aliases e reverter rotas manualmente caso a nova revisão apresente erros.|No `app.pipecd.yaml`, combinam-se estágios de rollout de variante (`K8S_CANARY_ROLLOUT` ou `CLOUDRUN_PROMOTE`) com estágios de roteamento percentual de tráfego (`K8S_TRAFFIC_ROUTING`), espera (`WAIT`), aprovação humana (`WAIT_APPROVAL`) e limpeza automática da variante canário.|```yaml
+apiVersion: pipecd.dev/v1beta1
+kind: CloudRunApp
+spec:
+  name: checkout-serverless
+  pipeline:
+    stages:
+      - name: CLOUDRUN_PROMOTE
+        with:
+          percentage: 20
+      - name: WAIT
+        with:
+          duration: 5m
+      - name: CLOUDRUN_PROMOTE
+        with:
+          percentage: 100
+```|Usar `K8S_TRAFFIC_ROUTING` baseado em Service nativo do Kubernetes esperando controle percentual exato de 1% quando o Deployment tem apenas 2 réplicas não tem granularidade de Pods suficiente (sem um service mesh/Ingress L7).|Para controle fino de porcentagem de tráfego com poucas réplicas no Kubernetes, utilize o roteamento de tráfego do PipeCD integrado ao Istio ou Ingress.|https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://pipecd.dev/docs-v0.58.x/concepts/;https://github.com/pipe-cd/pipecd
+1338|pipecd-drift-detection-reconciliacao-estado-git-vs-cluster|PipeCD: Detecção Contínua de Configuration Drift e Visibilidade da Árvore de Recursos em Tempo Real|Os agentes `piped` monitoram continuamente os recursos em execução nos clusters e provedores de plataforma, comparando-os com o estado declarado no commit mais recente do Git para detectar e exibir **Configuration Drift** (desvio de configuração) em tempo real na interface do PipeCD.|Quando alguém executa um `kubectl edit`, `kubectl scale` ou altera um recurso manualmente no console da nuvem durante um incidente, a mudança manual diverge silenciosamente do repositório Git.|O `piped` calcula o diff estrutural entre o manifesto renderizado do Git e o estado vivo no cluster, sinaliza a aplicação como `OUT_OF_SYNC` na UI (mostrando exatamente quais linhas divergiram) e permite reconciliar ou acionar notificações para Slack/Webhook.|```bash
+# Verificar no repositorio Git o estado desejado que o piped compara contra o cluster:
+git log -n 1 --oneline -- apps/payment-api/
+```|Ignorar alertas de `OUT_OF_SYNC` por dias faz com que o próximo deploy legítimo via Git sobrescreva abruptamente ajustes manuais emergenciais (como um aumento manual de limite de memória) que nunca foram portados para o Git.|Toda alteração emergencial feita no cluster deve ser imediatamente refletida em um Pull Request no repositório Git monitorado pelo PipeCD.|https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://pipecd.dev/docs-v0.58.x/concepts/;https://github.com/pipe-cd/pipecd
+1339|pipecd-integracao-ci-pipectl-event-watcher-image-update|PipeCD: Integração entre Pipelines de CI e PipeCD via pipectl e Event Watcher|O PipeCD separa claramente as responsabilidades de **CI** (testar código e construir/publicar o artefato OCI) e **CD** (implantar o artefato via GitOps), integrando os dois mundos através da CLI **`pipectl`** e do mecanismo de **Event Watcher**.|Dar permissão de escrita irrestrita (SSH key ou Personal Access Token) em dezenas de pipelines de CI apenas para que o job de build faça `git commit` e `git push` da nova tag de imagem no repositório de manifestos cria conflitos de `git push` concorrentes.|Em vez de o runner de CI fazer `git push` diretamente, o job de CI executa `pipectl event register` emitindo um evento com a nova tag/digest da imagem para o Control Plane do PipeCD; o `piped` (com Event Watcher configurado) detecta o evento, atualiza automaticamente o manifesto no repositório Git de forma serializada e dispara o pipeline de deploy.|```bash
+pipectl event register \
+  --address=https://pipecd.internal.corp \
+  --api-key="$PIPECTL_API_KEY" \
+  --name=image-pushed \
+  --data="ghcr.io/org/payment-api:v1.9.2" \
+  --labels="app=payment-api,env=staging"
+```|Usar uma chave de API (`--api-key`) com permissão de leitura/escrita total no Control Plane dentro do pipeline de CI viola o princípio do menor privilégio.|Gere uma API Key no PipeCD com papel restrito exclusivamente para registro de eventos (`EVENT_REGISTRAR`) para uso pelo `pipectl` nos runners de CI.|https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://pipecd.dev/docs-v0.58.x/concepts/;https://github.com/pipe-cd/pipecd
+1340|pipecd-delivery-insights-metricas-dora-lead-time-mttr-cfr|PipeCD: Delivery Insights e Medição Nativa de Métricas DORA (Deployment Frequency, Lead Time, MTTR e CFR)|O Control Plane do PipeCD inclui um painel nativo de **Delivery Insights** que calcula automaticamente as quatro métricas **DORA** (**Deployment Frequency**, **Lead Time for Changes**, **Mean Time to Restore — MTTR** e **Change Failure Rate — CFR**) para todas as aplicações gerenciadas.|Coletar métricas DORA com planilhas ou scripts externos que tentam correlacionar commits do GitHub com jobs de CI falha porque o CI não sabe se o deploy em produção realmente concluiu com sucesso ou sofreu rollback automático.|Como o PipeCD controla todo o ciclo de vida do deployment (do commit no Git até a conclusão dos estágios de rollout ou rollback por falha no `ANALYSIS`), ele registra com precisão a frequência de entregas, a taxa de falha de mudanças e o tempo de recuperação por projeto e aplicação.|```bash
+# Exemplo de consulta via pipectl para listar deployments recentes e seus status:
+pipectl deployment list \
+  --address=https://pipecd.internal.corp \
+  --api-key="$PIPECTL_API_KEY"
+```|Avaliar métricas de Deployment Frequency somando deploys de ambientes efêmeros de desenvolvimento (`dev`) junto com deploys de produção (`prod`) distorce os indicadores reais de entrega de valor.|Padronize labels de ambiente (`env: production`, `env: staging`) nos arquivos `app.pipecd.yaml` para filtrar os Delivery Insights por ambiente produtivo.|https://raw.githubusercontent.com/pipe-cd/pipecd/master/README.md;https://pipecd.dev/docs-v0.58.x/concepts/;https://github.com/pipe-cd/pipecd

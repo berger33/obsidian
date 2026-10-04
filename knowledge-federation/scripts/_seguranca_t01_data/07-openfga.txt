@@ -1,0 +1,138 @@
+0061|openfga-arquitetura-cncf-google-zanzibar-rebac-abac-engine|OpenFGA: arquitetura CNCF Incubating do motor de autorização ReBAC/ABAC de alta performance inspirado no Google Zanzibar|O **OpenFGA** (projeto **CNCF Incubating** criado originalmente pela Auth0/Okta sob licença Apache 2.0 e publicado com proveniência **SLSA Nível 3**) é um motor de autorização e permissões de granularidade fina (*Fine-Grained Authorization — FGA*) inspirado no artigo **Google Zanzibar**, combinando **ReBAC (*Relationship-Based Access Control*)**, **RBAC** e **ABAC** (via *Contextual Tuples* e *Conditions* CEL).|Sistemas RBAC tradicionais baseados apenas em listas de papéis estáticos no token JWT (`role: editor`) quebram rapidamente quando a aplicação precisa responder se a usuária `anne` pode editar o `document:roadmap` porque ela pertence ao time `engineering`, que tem permissão na pasta `folder:product`, que é pai do documento.|No OpenFGA, a aplicação consulta APIs HTTP ou gRPC ultra-rápidas (`Check`, `ListObjects`, `ListUsers`, `Expand`) contra um **Store** apoiado por **PostgreSQL**, **MySQL** ou **SQLite** (ou *In-Memory* para testes locais), onde o estado de autorização é determinado pela combinação de um **Authorization Model** imutável com **Relationship Tuples** dinâmicas.|```bash
+# Subindo o OpenFGA localmente em Docker para desenvolvimento e criando um Store via API HTTP:
+docker run -d --name openfga -p 8080:8080 -p 3000:3000 openfga/openfga run
+
+curl -sS -X POST 'http://localhost:8080/stores' \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "openfga-demo"}'
+```|Conforme alertado no README oficial do OpenFGA, o storage padrão **in-memory** do comando `openfga run` é efêmero e destinado exclusivamente a avaliação local/testes; em produção, configure sempre PostgreSQL ou MySQL com réplicas de leitura.|Execute `curl -sS http://localhost:8080/healthz` para verificar a saúde do servidor OpenFGA.|https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://openfga.dev/docs/concepts;https://github.com/openfga/openfga
+0062|openfga-conceitos-fundamentais-store-type-object-user-relation-tuple|OpenFGA Conceitos Fundamentais: `Store`, `Type`, `Object`, `User` (`userset` e wildcard `*`), `Relation` e `Relationship Tuple`|Conforme a documentação oficial de conceitos do OpenFGA (`openfga.dev/docs/concepts`), todo o modelo de dados gira em torno de seis conceitos: **Store** (contêiner isolado de modelos e tuplas), **Type** (classe de objetos como `document` ou `folder`), **Object** (`type:id`, ex.: `document:roadmap`), **User** (sujeito que pode ser um usuário `user:anne`, outro objeto, um conjunto **`userset`** `organization:acme#member` ou todo mundo `user:*`), **Relation** e **Relationship Tuple** (`{user, relation, object}`).|Compreender que um `User` em uma tupla do OpenFGA não precisa ser apenas uma pessoa física — podendo ser um **userset** (`team:secops#member`) ou outro objeto (`folder:root`) — é o que permite modelar hierarquias inteiras de grupos e pastas sem duplicar linhas no banco.|Uma **Relationship Tuple** é o fato elementar persistido no Store, composto por `{ user: "user:anne", relation: "editor", object: "document:new-roadmap" }`. As tuplas não podem ser compartilhadas entre Stores diferentes; por isso, recomenda-se manter todos os dados que afetam uma decisão de autorização em um mesmo Store por ambiente (`dev`, `prod`).|```json
+{
+  "writes": {
+    "tuple_keys": [
+      {
+        "user": "user:anne",
+        "relation": "editor",
+        "object": "document:new-roadmap"
+      },
+      {
+        "user": "organization:acme#member",
+        "relation": "viewer",
+        "object": "document:new-roadmap"
+      }
+    ]
+  }
+}
+```|Use a sintaxe de *type-bound public access* (`user:*`) com extrema cautela, restringindo-a nas definições de tipo apenas a relações de leitura (como `viewer: [user, user:*]`).|Liste as tuplas gravadas em um Store usando a CLI oficial (`fga tuple read`) ou o endpoint `POST /stores/{store_id}/read`.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0063|openfga-configuration-language-dsl-schema-1-1-operadores-or-and-but-not-from|OpenFGA Configuration Language (DSL `schema 1.1`): relações diretas, herança hierárquica (`from`) e operadores `or`, `and` e `but not`|O OpenFGA oferece uma **DSL declarativa (`model schema 1.1`)** — suportada na extensão VS Code e na CLI `fga` e compilada para o formato JSON da API — onde cada `type` declara suas `relations` usando restrições explícitas de tipo (`[user, team#member]`), operadores de conjunto (**`or`** união, **`and`** interseção, **`but not`** exclusão) e travessia de grafo (**`from`**).|Imagine precisar expressar duas regras reais de segurança: 1) "quem é `viewer` da pasta pai (`parent`) é automaticamente `viewer` do documento (`viewer from parent`)"; e 2) "um usuário pode ver o documento se for `viewer`, **exceto se** estiver na relação `blocked` (`viewer but not blocked`)".|Na DSL `schema 1.1` do OpenFGA, essas duas regras escrevem-se em três linhas legíveis por humanos e auditáveis em Pull Requests, sendo versionadas de forma imutável (cada `POST /stores/{store_id}/authorization-models` gera um novo `authorization_model_id` ULID imutável)!|```text
+model
+  schema 1.1
+
+type user
+
+type folder
+  relations
+    define viewer: [user]
+
+type document
+  relations
+    define parent: [folder]
+    define blocked: [user]
+    define editor: [user]
+    define viewer: ([user] or editor or viewer from parent) but not blocked
+```|Em produção, fixe sempre o **`authorization_model_id`** explícito nas chamadas da aplicação (`Check`, `ListObjects`), para que a criação de um modelo novo em teste não altere o comportamento das instâncias em execução antes do rollout.|Valide e converta um arquivo `.fga` para JSON usando a CLI oficial: `fga model transform --file model.fga`.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0064|openfga-abac-conditions-cel-contextual-tuples-atributos-tempo-execucao|OpenFGA ABAC Híbrido: combinação de grafos ReBAC com `Conditions` (Google CEL) e `Contextual Tuples`|Para unir o poder de relacionamentos (**ReBAC**) com regras baseadas em atributos dinâmicos de contexto (**ABAC** — como janelas de horário, endereço IP, departamento ou limite financeiro), o OpenFGA suporta **Conditional Relationship Tuples** escritas em **Google CEL (*Common Expression Language*)** e **Contextual Tuples** enviadas em memória junto com a requisição `Check`.|Às vezes uma permissão de acesso temporário de suporte (`support_agent`) só deve valer se `current_time < grant_expiration` e se o IP de origem pertencer à VPN corporativa — dados que mudam a cada requisição.|No modelo `.fga`, você define um bloco `condition non_expired_grant(current_time: timestamp, expires_at: timestamp) { current_time < expires_at }` e declara `define viewer: [user with non_expired_grant]`. Ao gravar a tupla, você anexa o parâmetro `expires_at`, e na chamada `Check` a aplicação passa `context: {"current_time": "2026-10-03T18:00:00Z"}`!|```text
+model
+  schema 1.1
+
+type user
+
+type document
+  relations
+    define viewer: [user with non_expired_grant]
+
+condition non_expired_grant(current_time: timestamp, expires_at: timestamp) {
+  current_time < expires_at
+}
+```|Já as **Contextual Tuples** (`contextual_tuples` enviadas dentro do payload do `Check`) não são gravadas no banco: elas permitem enviar fatos já presentes no JWT da requisição (como a organização do usuário) sem precisar sincronizá-los previamente no Store.|Teste expressões `condition` CEL usando testes declarativos `.fga.yaml` com `fga model test`.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0065|openfga-queries-check-batchcheck-listobjects-listusers-expand|OpenFGA APIs de Consulta: diferenças e casos de uso entre `Check`, `BatchCheck`, `ListObjects`, `ListUsers` e `Expand`|O OpenFGA expõe cinco operações principais de consulta sobre o grafo de autorização: **`Check`** ("o usuário U tem a relação R com o objeto O?"), **`BatchCheck`** (avalia múltiplas checagens em uma única chamada de rede com deduplicação de subgrafos), **`ListObjects`** ("quais objetos do tipo T o usuário U pode acessar?"), **`ListUsers`** ("quais usuários têm a relação R no objeto O?") e **`Expand`** (retorna a árvore de resolução).|Para renderizar uma página de listagem com 50 itens filtrados por permissão ou mostrar ícones de ações habilitadas, fazer 50 chamadas `Check` sequenciais criaria latência de rede; usar `BatchCheck` ou `ListObjects` resolve isso em uma única chamada.|Cada API responde a uma pergunta arquitetural distinta: use **`Check`** no middleware de autorização de um endpoint específico; use **`BatchCheck`** para verificar permissões em uma lista paginada já buscada do banco; use **`ListObjects`** quando o conjunto de objetos acessíveis pelo usuário for pequeno/médio; e use **`ListUsers`** para auditorias de governança ("quem tem acesso a este cofre?").|```bash
+# Executando uma verificação Check na API HTTP do OpenFGA:
+curl -sS -X POST "http://localhost:8080/stores/${STORE_ID}/check" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "authorization_model_id": "'"${MODEL_ID}"'",
+    "tuple_key": {
+      "user": "user:anne",
+      "relation": "viewer",
+      "object": "document:new-roadmap"
+    }
+  }'
+```|A resposta `{"allowed": true}` do `Check` pode ser cacheada em memória no próprio servidor OpenFGA configurando `--check-query-cache-enabled=true` e `--check-query-cache-ttl`.|Execute `fga query check --store-id=${STORE_ID} user:anne viewer document:new-roadmap` para validar a decisão pela CLI.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0066|openfga-testes-unitarios-modelos-fga-model-test-ci-cd|OpenFGA Testes Automatizados de Modelos (`fga model test`): validação declarativa de `.fga.yaml` em pipelines de CI/CD|A CLI oficial do OpenFGA (`openfga/cli`, binário **`fga`**) inclui um executor nativo de testes automatizados (**`fga model test --tests <arquivo.fga.yaml>`**) que valida um modelo de autorização `.fga` em memória contra cenários de tuplas e asserções de `check`, `list_objects` e `list_users` sem precisar subir um servidor ou banco de dados.|Uma alteração sutil em uma expressão `or` / `but not` do modelo de autorização pode conceder acesso indevido a documentos confidenciais; testar o modelo como código no CI bloqueia regressões de segurança antes do deploy.|Em um arquivo `.fga.yaml`, você referencia `model_file: ./model.fga`, define um conjunto de `tuples` de cenário e declara múltiplos `tests` com asserções booleanas explícitas (`assertions: { viewer: true, editor: false }`).|```yaml
+name: "Testes do modelo de documentos"
+model_file: ./model.fga
+tuples:
+  - user: user:anne
+    relation: editor
+    object: document:roadmap
+  - user: user:bob
+    relation: viewer
+    object: document:roadmap
+  - user: user:bob
+    relation: blocked
+    object: document:roadmap
+tests:
+  - name: "Editor pode editar e visualizar; usuário bloqueado não pode visualizar"
+    check:
+      - user: user:anne
+        object: document:roadmap
+        assertions:
+          editor: true
+          viewer: true
+      - user: user:bob
+        object: document:roadmap
+        assertions:
+          viewer: false
+```|Como `fga model test` executa 100% em memória no processo da CLI em milissegundos, inclua-o como etapa obrigatória em todo Pull Request que modifique arquivos `.fga`.|Execute `fga model test --tests ./model.fga.yaml` e verifique que todos os testes passam com exit code `0`.|https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://openfga.dev/docs/concepts;https://github.com/openfga/openfga
+0067|openfga-modular-models-fga-mod-divisao-dominios-equipes|OpenFGA Modular Models (`fga.mod`): divisão de modelos de autorização complexos em módulos por equipe e domínio|Em organizações grandes onde múltiplas equipes de produto compartilham o mesmo Store do OpenFGA, o recurso **Modular Models (`fga.mod`)** (suportado a partir do `schema 1.2`) permite dividir um modelo de autorização monolítico em múltiplos arquivos `.fga` por domínio (`core.fga`, `billing.fga`, `projects.fga`) e usar `extend type` para adicionar relações de forma segura.|Se 10 equipes editarem um único arquivo `model.fga` de 1.500 linhas simultaneamente, conflitos de merge serão constantes e ficará difícil aplicar regras de `CODEOWNERS` no GitHub por área de negócio.|Com um arquivo manifesto `fga.mod` listando os módulos (`contents: [core.fga, billing.fga, wiki.fga]`), cada equipe mantém seu próprio arquivo `.fga` e pode estender tipos compartilhados (como `extend type organization`) sem tocar nos arquivos das demais equipes.|```yaml
+# Arquivo fga.mod declarando os módulos que compõem o modelo unificado:
+schema: '1.2'
+contents:
+  - core.fga
+  - billing.fga
+  - documents.fga
+```|Use o comando `fga model validate --file fga.mod` e `fga model test --tests tests.fga.yaml` para compilar e testar todos os módulos integrados antes de publicar a nova versão do modelo no Store.|Execute `fga model transform --file fga.mod` para inspecionar o JSON consolidado resultante da compilação dos módulos.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0068|openfga-armazenamento-producao-postgres-mysql-migrations-read-replicas|OpenFGA em Produção (`openfga migrate` e Storage Engines): operação com PostgreSQL/MySQL, conexões e Unix Domain Socket|Para rodar o OpenFGA em produção com alta disponibilidade e persistência durável, o servidor suporta os motores de banco de dados **`postgres`** e **`mysql`** (além de `sqlite` em beta), exigindo a execução prévia de migrações de schema com o comando **`openfga migrate`** antes de iniciar as réplicas do servidor.|Rodar o binário `openfga run` sem configurar `--datastore-engine` utiliza o engine `memory`, que perde 100% dos Stores, modelos e tuplas assim que o Pod reinicia.|Em um cluster Kubernetes (usando o Helm chart oficial no Artifact HUB `openfga/openfga`), um Job `initContainer` ou hook de pre-upgrade executa `openfga migrate --datastore-engine postgres --datastore-uri ...`, e os Pods do Deployment rodam `openfga run` com pool de conexões ajustado (`--datastore-max-open-conns`).|```bash
+# 1. Executando as migrações de banco de dados no PostgreSQL antes de subir o servidor:
+openfga migrate \
+  --datastore-engine postgres \
+  --datastore-uri "postgres://fga_user:secret@pg-primary.internal:5432/openfga?sslmode=require"
+
+# 2. Iniciando o servidor OpenFGA conectado ao PostgreSQL com autenticação Preshared Key:
+openfga run \
+  --datastore-engine postgres \
+  --datastore-uri "postgres://fga_user:secret@pg-primary.internal:5432/openfga?sslmode=require" \
+  --authn-method preshared \
+  --authn-preshared-keys "${OPENFGA_API_TOKEN}"
+```|Conforme documentado na nota oficial da seção *Docker* do README do OpenFGA: quando o servidor HTTP está habilitado, ele tenta conectar-se internamente ao servidor gRPC via **Unix Domain Socket (UDS)** em `/tmp`; por isso, se você rodar o container com filesystem raiz somente-leitura (`--read-only` / `readOnlyRootFilesystem: true`), adicione obrigatoriamente um volume `--tmpfs /tmp` (`emptyDir` em `/tmp`)!|Verifique o status de prontidão do servidor e do datastore consultando a probe gRPC ou HTTP do OpenFGA.|https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://openfga.dev/docs/concepts;https://github.com/openfga/openfga
+0069|openfga-performance-caching-consistency-higher-consistency-minimize-latency|OpenFGA Consistência e Cache (`ConsistencyPreference`): equilíbrio entre `MINIMIZE_LATENCY` e `HIGHER_CONSISTENCY` (*Zookie* / Problema do Novo Inimigo)|Nas chamadas de leitura e verificação (`Check`, `ListObjects`, `ListUsers`), o OpenFGA permite habilitar o cache de queries e de iteradores no servidor e controlar por requisição o parâmetro **`consistency`**: **`MINIMIZE_LATENCY`** (usa o cache em memória para máxima velocidade) versus **`HIGHER_CONSISTENCY`** (ignora caches potencialmente obsoletos para ler diretamente do datastore após uma revogação crítica).|No clássico *New Enemy Problem* descrito no artigo do Google Zanzibar: se Alice remove Bob do grupo de acesso a um documento e, um milissegundo depois, atualiza o documento com um segredo, um cache de permissão com TTL de 10 segundos não pode continuar respondendo que Bob ainda tem acesso.|Configurando o cache do servidor (`--check-query-cache-enabled=true`) para absorver 95% das leituras repetitivas com `MINIMIZE_LATENCY`, a aplicação pode passar `"consistency": "HIGHER_CONSISTENCY"` seletivamente nas requisições imediatamente posteriores a uma alteração de permissões ou em ações destrutivas.|```json
+{
+  "authorization_model_id": "01HV8G...",
+  "tuple_key": {
+    "user": "user:bob",
+    "relation": "viewer",
+    "object": "document:confidential-q4"
+  },
+  "consistency": "HIGHER_CONSISTENCY"
+}
+```|Monitore a taxa de acerto de cache (*cache hit ratio*) e a latência P95/P99 nas métricas Prometheus expostas pelo OpenFGA (`--metrics-enabled=true` na porta `2112`) para calibrar o TTL do cache.|Consulte `http://localhost:2112/metrics` para inspecionar as métricas internas de avaliação e cache do OpenFGA.|https://openfga.dev/docs/concepts;https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://github.com/openfga/openfga
+0070|openfga-automacao-terraform-provider-sdks-embedded-go-library|OpenFGA Ecossistema e Automação: Terraform Provider (`openfga/openfga`), SDKs oficiais e uso embarcado como biblioteca Go|Conforme destacado no README oficial, o OpenFGA oferece um **Terraform Provider oficial (`openfga/terraform-provider-openfga`)** para provisionar Stores, Authorization Models e Relationship Tuples como código, **SDKs oficiais** para Go, Python, Node.js/TypeScript, Java e .NET, e a capacidade de ser **embarcado diretamente como biblioteca Go** (`github.com/openfga/openfga/pkg/server`).|Gerenciar Stores e publicar novas versões do modelo `.fga` manualmente via `curl` em múltiplos ambientes (`dev`, `staging`, `prod`) causa deriva de configuração entre o código da aplicação e o schema de autorização.|Com o Terraform Provider do OpenFGA (ou em testes de integração que instanciam `server.NewServerWithOpts` em memória dentro do binário Go), todo o ciclo de vida do modelo de autorização acompanha exatamente o pipeline GitOps da infraestrutura.|```hcl
+resource "openfga_store" "prod" {
+  name = "payments-prod"
+}
+
+resource "openfga_authorization_model" "prod_model" {
+  store_id   = openfga_store.prod.id
+  model_json = data.openfga_authorization_model_document.model.result
+}
+```|Ao usar os SDKs oficiais do OpenFGA em microsserviços de alta vazão, prefira reutilizar uma única instância de cliente (`OpenFgaClient`) com pool de conexões HTTP/2 ou gRPC ativo.|Verifique o estado do modelo aplicado no Store com `fga model get --store-id=${STORE_ID}`.|https://raw.githubusercontent.com/openfga/openfga/main/README.md;https://openfga.dev/docs/concepts;https://github.com/openfga/openfga

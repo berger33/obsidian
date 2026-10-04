@@ -1,0 +1,126 @@
+0041|zaproxy-arquitetura-zed-attack-proxy-dast-passive-active-scanner|OWASP ZAP (Zed Attack Proxy): arquitetura de proxy interceptador, `Passive Scanner` e `Active Scanner` para DAST|O **Zed Attack Proxy (ZAP)** (licenciado sob Apache 2.0) é o scanner open-source de segurança de aplicações web e APIs (**DAST — *Dynamic Application Security Testing***) mais utilizado do mundo, combinando um proxy de interceptação HTTP/HTTPS/WebSockets, crawlers automatizados (`Spider` / `Ajax Spider`), um **Passive Scanner** não-intrusivo e um **Active Scanner** de ataques simulados.|Testes estáticos de código (SAST) não enxergam cabeçalhos HTTP ausentes configurados no proxy reverso (`Content-Security-Policy`, `Strict-Transport-Security`), cookies sem `HttpOnly`/`Secure`, falhas de CORS ou vulnerabilidades de roteamento em tempo de execução.|No ZAP: 1) todo tráfego que passa pelo proxy ou que é descoberto pelos spiders é inspecionado automaticamente em background pelo **Passive Scanner** (que analisa apenas as requisições e respostas existentes, sem enviar nenhum pacote extra nem alterar dados); e 2) o **Active Scanner** envia requisições maliciosas controladas (SQLi, XSS, Path Traversal, Command Injection) contra os alvos autorizados no **Context**.|```bash
+# Executando o ZAP em modo headless com o Automation Framework via container oficial:
+docker run --rm -v "$(pwd):/zap/wrk/:rw" \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap.sh -cmd -autorun /zap/wrk/zap-plan.yaml
+```|Execute o **Active Scanner** apenas contra ambientes de homologação/staging ou alvos onde você possui permissão explícita para testes intrusivos, pois ele submete formulários e injeta payloads reais.|Execute `zap.sh -version` ou suba o container `ghcr.io/zaproxy/zaproxy:stable` para validar o ambiente de execução.|https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://www.zaproxy.org/docs/automate/automation-framework/;https://github.com/zaproxy/zaproxy
+0042|zaproxy-automation-framework-yaml-env-jobs-substituicao-packaged-scans|ZAP Automation Framework (`zap.sh -cmd -autorun`): controle declarativo em arquivo YAML único para CI/CD|Conforme a documentação oficial do ZAP, o **Automation Framework** controla todo o ciclo de vida do ZAP através de **um único arquivo YAML** (`env:` + `jobs:`), substituindo progressivamente as opções legadas de linha de comando e os antigos scripts Python de *Packaged Scans* (`zap-baseline.py`, `zap-full-scan.py`, `zap-api-scan.py`) sem acoplamento a uma tecnologia específica de container.|Os antigos scripts empacotados em Docker eram difíceis de depurar localmente fora do container e limitados quando a equipe precisava encadear autenticação complexa, importação de múltiplos schemas, filtros de alerta e assertions de qualidade.|No plano YAML do Automation Framework: a seção **`env:`** declara os `contexts` (URLs incluídas/excluídas, autenticação, gerenciamento de sessão, tecnologia do alvo) e `parameters` (`failOnError`, `progressToStdout`), enquanto a lista ordenada **`jobs:`** executa cada etapa (`passiveScan-config`, `openapi`, `spider`, `spiderAjax`, `passiveScan-wait`, `activeScan`, `report`, `exitStatus`).|```yaml
+env:
+  contexts:
+    - name: "staging-api"
+      urls:
+        - "https://staging.example.com"
+      includePaths:
+        - "https://staging.example.com/.*"
+  parameters:
+    failOnError: true
+    progressToStdout: true
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+  - type: spider
+    parameters:
+      maxDuration: 2
+  - type: passiveScan-wait
+  - type: report
+    parameters:
+      template: "sarif-json"
+      reportDir: "/zap/wrk"
+      reportFile: "zap-report.sarif"
+```|Você pode gerar um template YAML inicial diretamente pela CLI com `zap.sh -cmd -autogenmin zap-min.yaml` ou `zap.sh -cmd -autogenmax zap-max.yaml`.|Execute `zap.sh -cmd -autorun zap-plan.yaml` e verifique o relatório gerado no diretório configurado.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0043|zaproxy-descoberta-superficie-spider-spiderajax-spiderclient-spas|ZAP Crawling e Descoberta (`spider`, `spiderAjax` e `spiderClient`): mapeamento de aplicações tradicionais e SPAs modernas|No Automation Framework do ZAP, três jobs complementares constroem a árvore de endpoints (*Sites Tree*) da aplicação antes da varredura: **`spider`** (crawler HTTP tradicional ultra-rápido que analisa HTML/links), **`spiderAjax`** (crawler baseado em navegador real headless via Selenium/Firefox/Chrome que clica em elementos DOM) e **`spiderClient`** (integração moderna client-side).|Em Single-Page Applications (React, Vue, Angular), um crawler HTTP tradicional (`spider`) recebe apenas um `<div id="root"></div>` e um bundle `.js`, não descobrindo nenhuma rota renderizada dinamicamente via JavaScript no navegador.|Combinar o job `spider` (com `maxDuration: 2` minutos para mapear rapidamente links estáticos, `robots.txt` e `sitemap.xml`) seguido do job `spiderAjax` (para exercitar eventos JavaScript e chamadas `fetch`/`XHR`) garante cobertura completa tanto de páginas SSR quanto de componentes SPA.|```yaml
+jobs:
+  - type: spider
+    parameters:
+      context: "staging-web"
+      maxDuration: 2
+  - type: spiderAjax
+    parameters:
+      context: "staging-web"
+      maxDuration: 5
+      browserId: "firefox-headless"
+```|Defina sempre `excludePaths` no `context` (por exemplo rotas `/logout` ou `/signout`) antes de rodar o `spider` ou `spiderAjax` autenticado, para evitar que o crawler clique no botão de logout no primeiro segundo e invalide a própria sessão!|Adicione um teste `stats` no job `spider` validando que `stats.spider.urls.added` encontrou pelo menos o número mínimo esperado de URLs.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0044|zaproxy-importacao-schemas-apis-openapi-graphql-soap-postman|ZAP Segurança de APIs (`openapi`, `graphql`, `soap` e `postman`): importação de contratos para DAST de APIs REST e GraphQL|Para testar APIs que não possuem interface HTML navegável por um spider, o Automation Framework do ZAP oferece jobs dedicados de importação de esquemas: **`openapi`** (arquivos ou URLs OpenAPI/Swagger v2 e v3), **`graphql`** (introspecção de endpoint ou arquivo `.graphql`), **`soap`** (arquivos WSDL) e **`postman`** (coleções Postman).|Se você apontar apenas um spider HTML para um microserviço REST ou GraphQL que retorna JSON, o spider não descobrirá os endpoints `POST /v1/orders`, os parâmetros de query nem os tipos de payload esperados.|Quando o job `openapi` importa a especificação (`apiFile` ou `apiUrl` com `targetUrl`), o ZAP popula automaticamente a *Sites Tree* com todos os caminhos, verbos HTTP e exemplos de parâmetros definidos no contrato, permitindo que o `activeScan` subsequente injete payloads de teste diretamente nos campos das requisições da API.|```yaml
+jobs:
+  - type: openapi
+    parameters:
+      apiFile: "/zap/wrk/openapi.yaml"
+      targetUrl: "https://api-staging.example.com"
+      context: "staging-api"
+  - type: graphql
+    parameters:
+      endpoint: "https://api-staging.example.com/graphql"
+```|Para endpoints GraphQL onde a introspecção está desabilitada em staging/produção por hardening, forneça o arquivo de schema local via parâmetro `schemaFile` no job `graphql`.|Verifique nos logs de execução do job `openapi` a quantidade de URLs importadas para a *Sites Tree* antes do início do `activeScan`.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0045|zaproxy-autenticacao-browser-auth-autodetect-replacer-bearer-tokens|ZAP Autenticação no Automation Framework: `browser` auth, `autodetect` de sessão e injeção de tokens com o job `replacer`|O ZAP Automation Framework suporta dois caminhos principais para realizar varreduras autenticadas: 1) configurar **`authentication`** no `context` (incluindo **`browser` authentication**, **`client` script authentication** e **`autodetect`** de gerenciamento/verificação de sessão fornecidos pelo add-on *Authentication Helper*); ou 2) injetar um cabeçalho `Authorization: Bearer <JWT>` ou cookie via job **`replacer`**.|Sem autenticação configurada, qualquer scanner DAST testa apenas a tela de login pública e recebe HTTP `401 Unauthorized` em todas as rotas protegidas onde reside 95% da lógica de negócio da aplicação.|Para APIs stateless protegidas por JWT ou API Key em pipelines de CI, o job **`replacer`** é o método mais direto e determinístico: ele adiciona ou substitui o cabeçalho `Authorization` em todas as requisições enviadas pelo ZAP ao alvo. Já para aplicações web com login OIDC/MFA/SPA, o modo `browser` authentication com `autodetect` realiza o login real em navegador headless e extrai os tokens/cookies de sessão automaticamente.|```yaml
+jobs:
+  - type: replacer
+    parameters:
+      deleteAllRules: true
+    rules:
+      - description: "Injeta token JWT de teste nas chamadas de API"
+        matchType: "REQ_HEADER"
+        matchString: "Authorization"
+        replacement: "Bearer ${ZAP_AUTH_TOKEN}"
+```|Como o Automation Framework interpola variáveis de ambiente no formato `${VAR}`, nunca grave tokens ou senhas em texto claro dentro do YAML versionado: injete `${ZAP_AUTH_TOKEN}` a partir do cofre de segredos do CI.|Configure uma URL de verificação (`verification.pollUrl`) no contexto para que o ZAP confirme continuamente que as requisições autenticadas estão retornando HTTP `200`.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0046|zaproxy-passive-scan-config-passive-scan-wait-fila-assincrona|ZAP `passiveScan-config` e `passiveScan-wait`: ajuste de regras passivas e sincronização obrigatória da fila de análise|No ZAP, o scanner passivo roda em uma thread assíncrona em background analisando as mensagens HTTP à medida que o `spider`, o `openapi` ou o `requestor` geram tráfego; por isso, o Automation Framework fornece o job **`passiveScan-config`** (no início do plano) e o job **`passiveScan-wait`** (antes de gerar o relatório).|Se o plano YAML executar o `spider` e pular imediatamente para o job `report` sem incluir `passiveScan-wait`, o ZAP encerrará o processo e gerará o relatório enquanto dezenas de respostas HTTP ainda estavam na fila de processamento do scanner passivo!|No `passiveScan-config`, você define parâmetros como `maxAlertsPerRule: 10`, `scanOnlyInScope: true` e `maxBodySizeInBytesToScan`, além de poder ajustar o limiar (`LOW`, `MEDIUM`, `HIGH`, `OFF`) de regras específicas por `id`. Logo após os jobs de descoberta, o job **`passiveScan-wait`** bloqueia o plano até que a fila do scanner passivo chegue a zero.|```yaml
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+    rules:
+      - id: 10021
+        name: "X-Content-Type-Options Header Missing"
+        threshold: "LOW"
+  - type: spider
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+```|Mantenha `scanOnlyInScope: true` no `passiveScan-config` para evitar que chamadas para CDNs de terceiros (Google Fonts, Analytics) poluam o relatório de segurança da sua aplicação.|Verifique na saída do job `passiveScan-wait` que a fila de registros pendentes chegou a `0` antes do job `report`.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0047|zaproxy-active-scan-policy-strength-threshold-technologies-tuning|ZAP `activeScan`, `activeScan-policy` e `activeScan-config`: sintonia de *Attack Strength*, *Alert Threshold* e tecnologias do alvo|Para controlar a duração e a agressividade dos testes intrusivos no Automation Framework, o ZAP separa os jobs **`activeScan-policy`** (que define uma política reutilizável com `defaultStrength` e `defaultThreshold`), **`activeScan-config`** (limites de threads, hosts e tempo) e **`activeScan`** (execução do scan ativo sobre um `context`).|Habilitar todas as regras de injeção de SQL para MySQL, Oracle, MSSQL, DB2, SQLite e PostgreSQL com força `INSANE` quando seu microserviço usa apenas PostgreSQL multiplica por 10 o tempo de varredura sem ganho de segurança.|Declarando apenas as tecnologias reais do serviço no bloco `technology` do `context` (ex.: `OS.Linux`, `Db.PostgreSQL`, `Language.Java.Spring`) e definindo `defaultStrength: MEDIUM` e `defaultThreshold: MEDIUM` na `activeScan-policy`, o ZAP executa exclusivamente os vetores de ataque pertinentes à sua stack.|```yaml
+jobs:
+  - type: activeScan-policy
+    parameters:
+      name: "api-fast-policy"
+      defaultStrength: "MEDIUM"
+      defaultThreshold: "MEDIUM"
+  - type: activeScan
+    parameters:
+      context: "staging-api"
+      policy: "api-fast-policy"
+      maxRuleDurationInMins: 5
+      maxScanDurationInMins: 20
+```|Defina sempre `maxRuleDurationInMins` (ex.: `5`) e `maxScanDurationInMins` (ex.: `20`) no job `activeScan` para garantir que um endpoint lento nunca estoure o timeout global do pipeline de CI/CD.|Audite no log final de progresso do `activeScan` o tempo gasto por cada regra (`Plugin`) executada.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0048|zaproxy-alert-filter-triagem-falsos-positivos-rebaixamento-risco|ZAP `alertFilter`: supressão e reklasificação declarativa de falsos positivos por `ruleId`, `url` e `parameter`|O job **`alertFilter`** (fornecido pelo add-on *Alert Filters* no Automation Framework) permite reclassificar o nível de risco (`newRisk`: `False Positive`, `Info`, `Low`, `Medium`, `High`) de alertas específicos que correspondam a uma combinação exata de `ruleId`, `context`, `url` (literal ou regex), `parameter` e `evidence`.|Em vez de desligar uma regra inteira de XSS ou CSP para toda a aplicação só porque um endpoint específico de legado tem um comportamento aceito pela equipe de arquitetura, o `alertFilter` marca como `False Positive` apenas aquele `ruleId` naquela `url` e `parameter` exatos.|O job `alertFilter` deve ser declarado no plano YAML **antes** dos jobs de varredura e relatório; assim, sempre que o scanner passivo ou ativo emitir um alerta que case com os critérios do filtro, seu risco é ajustado automaticamente antes do `report` e do `exitStatus`.|```yaml
+jobs:
+  - type: alertFilter
+    alertFilters:
+      - ruleId: 10038
+        newRisk: "False Positive"
+        context: "staging-api"
+        url: "https://staging\\.example\\.com/api/v1/healthz.*"
+        urlIsRegex: true
+```|Prefira sempre usar `urlIsRegex: true` ancorado no caminho específico da rota e documente o motivo da exceção em comentário no YAML versionado.|Verifique no relatório gerado que o alerta filtrado aparece classificado sob `False Positive` (ou não aciona falha no `exitStatus`).|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0049|zaproxy-job-tests-assertions-exitstatus-report-sarif-quality-gates|ZAP Quality Gates em CI/CD: *Job Tests* (`alert`, `stats`, `url`), geração de relatórios (`report`) e `exitStatus`|O Automation Framework do ZAP oferece dois mecanismos complementares para atuar como *Quality Gate* automatizado em pipelines DevSecOps: **Job Tests** (asserções anexadas a qualquer job, como `alert`, `stats`, `url`, `monitor`) e o job dedicado **`exitStatus`** (que define o código de saída do processo ZAP com base na severidade máxima encontrada, como `errorLevel: Medium`).|Rodar uma varredura DAST no CI que gera um arquivo HTML mas sempre termina com código de saída `0` (`SUCCESS`) mesmo quando descobre um SQL Injection de risco `High` faz com que deploys vulneráveis avancem para produção sem bloqueio.|Combinando o job **`report`** (exportando `template: "sarif-json"` ou `"traditional-html-plus"`) com o job **`exitStatus`** no final do plano YAML (`errorLevel: "High"`, `warnLevel: "Medium"`, `okExitValue: 0`, `errorExitValue: 1`), a pipeline falha deterministicamente sempre que um alerta acima do limiar permitido for detectado.|```yaml
+jobs:
+  - type: report
+    parameters:
+      template: "sarif-json"
+      reportDir: "/zap/wrk"
+      reportFile: "zap-results.sarif"
+  - type: exitStatus
+    parameters:
+      errorLevel: "High"
+      warnLevel: "Medium"
+      okExitValue: 0
+      errorExitValue: 1
+```|Coloque o job `exitStatus` sempre como o **último** job da lista `jobs:`, logo após o job `report`, garantindo que todos os relatórios sejam gravados em disco antes que o ZAP encerre com o código de saída configurado.|Execute o plano e verifique `echo $?` e o arquivo `zap-results.sarif` gerado.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy
+0050|zaproxy-requestor-sequence-har-import-prune-fluxos-multi-step|ZAP Fluxos Multi-Step e Customizados: jobs `requestor`, `sequence-import` (arquivos HAR), `sequence-activeScan` e `prune`|Conforme listado na visão geral oficial do Automation Framework, o ZAP inclui jobs avançados para guiar o scanner por fluxos de negócio de múltiplas etapas: **`requestor`** (envia requisições HTTP específicas para semear a árvore), **`sequence-import`** e **`sequence-activeScan`** (importam um fluxo multi-step a partir de um arquivo **HAR** e executam scan ativo respeitando a sequência exata de passos) e **`prune`** (remove nós indesejados da *Sites Tree*).|Em um fluxo de checkout de e-commerce (`Passo 1: Criar Carrinho -> Passo 2: Informar Endereço -> Passo 3: Confirmar Pedido`), testar o endpoint do Passo 3 isoladamente fora de ordem retorna apenas erro de estado inválido, nunca exercitando a lógica interna.|Com `sequence-import` (a partir de um arquivo `.har` gravado pelos testes E2E do Playwright/Cypress) seguido de `sequence-activeScan`, o ZAP reproduz a sequência completa em ordem enquanto injeta payloads em cada passo. E com o job `prune`, você remove rotas estáticas redundantes da árvore antes do `activeScan`.|```yaml
+jobs:
+  - type: requestor
+    requests:
+      - url: "https://staging.example.com/api/v1/seed-state"
+        method: "POST"
+        responseCode: 200
+```|Reaproveitar arquivos `.har` gerados pela suíte de testes E2E funcional existente para alimentar o ZAP garante que o DAST cubra 100% dos fluxos reais de usuário.|Verifique na saída do job `requestor` se todas as requisições retornaram o `responseCode` esperado.|https://www.zaproxy.org/docs/automate/automation-framework/;https://raw.githubusercontent.com/zaproxy/zaproxy/main/README.md;https://github.com/zaproxy/zaproxy

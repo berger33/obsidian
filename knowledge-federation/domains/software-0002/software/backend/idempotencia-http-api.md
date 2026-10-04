@@ -8,8 +8,9 @@ confianca: alta
 ultima_verificacao: 2026-10-01
 validade: estavel
 status: candidata
-revisao_humana: pendente
-revisor: ""
+revisao_humana: aprovada
+revisor: usuario-da-sessao
+data_revisao_humana: 2026-10-02
 fontes: ["https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2", "https://docs.stripe.com/api/idempotent_requests"]
 tags: [dominio/software, subdominio/backend, qualidade/candidata]
 aliases: [Idempotência em APIs]

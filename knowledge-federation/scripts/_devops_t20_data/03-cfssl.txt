@@ -1,0 +1,118 @@
+1921|cfssl-arquitetura-toolkit-pki-tls-cloudflare-cfssljson-multirootca|CFSSL: arquitetura do toolkit de PKI e TLS da Cloudflare (`cfssl`, `cfssljson`, `mkbundle`, `multirootca` e `cfssl-scan`)|O **CFSSL** é o "canivete suíço" open-source de PKI e TLS desenvolvido pela **Cloudflare** em Go, funcionando tanto como uma suíte de utilitários de linha de comando quanto como um servidor de API HTTP para geração de chaves, assinatura de CSRs, empacotamento de cadeias de certificados (*bundling*) e resposta OCSP.|Automatizar a criação de uma Autoridade Certificadora (CA) raiz, CAs intermediárias e dezenas de certificados de servidor/cliente usando o comando `openssl ca` tradicional exige manter arquivos `openssl.cnf` crípticos, diretórios `newcerts/` e arquivos `index.txt`/`serial` difíceis de versionar.|No CFSSL, toda a entrada e saída utiliza **JSON estruturado**: 1) o binário principal **`cfssl`** executa operações (`genkey`, `gencert`, `sign`, `bundle`, `serve`, `selfsign`, `print-defaults`); 2) o utilitário **`cfssljson`** lê o JSON emitido pelo `cfssl` no `stdout` e grava no disco os arquivos `.pem` (certificado), `-key.pem` (chave privada) e `.csr`; 3) o **`multirootca`** serve múltiplas chaves de assinatura; e 4) o **`mkbundle`** / **`cfssl-bundle`** constrói pools de certificados.|```bash
+# Imprimindo os templates JSON padrão de configuração e CSR do CFSSL:
+cfssl print-defaults config > ca-config.json
+cfssl print-defaults csr > ca-csr.json
+cfssl version
+```|Conforme documentado no README oficial do CFSSL, determinadas distribuições Linux baseadas em RHEL removem certas curvas/algoritmos do pacote Go dos repositórios oficiais da distro; nesses sistemas, instale a distribuição oficial do Go (`golang.org/dl`) para compilar o CFSSL.|Execute `cfssl version` e `cfssl print-defaults config` para validar a instalação dos binários `cfssl` e `cfssljson`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl
+1922|cfssl-inicializacao-root-ca-intermediate-ca-genkey-initca-ca-constraint|CFSSL Inicialização de Root CA e Intermediate CA: uso de `cfssl gencert -initca`, `cfssljson -bare` e `ca_constraint`|Para construir uma hierarquia de PKI de duas camadas (Root CA offline + Intermediate CA emissora) com o CFSSL, utiliza-se **`cfssl gencert -initca`** (ou `cfssl genkey -initca`) em conjunto com **`cfssljson -bare`** e a restrição de caminho **`ca_constraint`** (`is_ca` e `max_path_len`) no perfil de assinatura.|Assinar certificados de serviços finais diretamente com a chave da Root CA obriga a manter a chave raiz online; criar uma CA intermediária com `max_path_len: 0` garante criptograficamente que a intermediária possa emitir apenas certificados folha (*leaf certificates*) e nunca outra sub-CA.|Na especificação oficial (`doc/cmd/cfssl.txt`), para emitir uma CA intermediária que não pode delegar novas CAs (`pathlen = 0`), o perfil de assinatura deve conter `"ca_constraint": {"is_ca": true, "max_path_len": 0, "max_path_len_zero": true}` — o campo booleano extra `max_path_len_zero: true` é obrigatório em Go/CFSSL para distinguir o valor `0` explícito de um campo omitido!|```bash
+# Gerando o par de chaves e certificado autoassinado da Root CA (ca.pem e ca-key.pem):
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+# Assinando o CSR da Intermediate CA com a Root CA usando o perfil intermediate_ca:
+cfssl gencert -ca ca.pem -ca-key ca-key.pem \
+  -config ca-config.json -profile intermediate_ca \
+  intermediate-csr.json | cfssljson -bare intermediate_ca
+```|Preste muita atenção ao detalhe documentado em `doc/cmd/cfssl.txt`: se você definir `"max_path_len": 0` mas esquecer de adicionar `"max_path_len_zero": true` em `ca_constraint`, o certificado intermediário será emitido **sem nenhuma restrição de pathlen**.|Inspecione o certificado gerado com `cfssl-certinfo -cert intermediate_ca.pem` e confirme `Basic Constraints: CA:TRUE, pathlen:0`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://github.com/cloudflare/cfssl
+1923|cfssl-signing-profiles-usages-expiry-server-client-peer-kubernetes|CFSSL Signing Profiles (`signing.profiles`): configuração de `usages`, `expiry`, `backdate` e `name_whitelist` para mTLS e Kubernetes|No arquivo de configuração JSON do CFSSL (`-config ca-config.json`), o dicionário **`signing`** define um perfil `default` e múltiplos **`profiles`** nomeados (ex.: `server`, `client`, `peer`), controlando `expiry`, `usages` (*Key Usage* e *Extended Key Usage*), `backdate`, `issuer_urls`, `ocsp_url`, `crl_url` e `name_whitelist`.|Em um cluster etcd ou Kubernetes, um certificado de cliente (`client auth`) não deve poder atuar como servidor TLS (`server auth`), enquanto um nó peer do etcd precisa de ambos (`server auth` e `client auth`) além de `signing` e `key encipherment`.|Na referência oficial (`doc/cmd/cfssl.txt`), `expiry` usa a sintaxe de duração do pacote `time` do Go (onde a maior unidade aceita é hora, ex.: `"8760h"` para 1 ano ou `"720h"` para 30 dias), `backdate` (ex.: `"5m"`) retroage o campo `NotBefore` para evitar falhas de validação por leve *clock skew* entre servidores, e `name_whitelist` aplica uma expressão regular sobre os SANs permitidos.|```json
+{
+  "signing": {
+    "default": {
+      "expiry": "8760h"
+    },
+    "profiles": {
+      "server": {
+        "usages": ["signing", "key encipherment", "server auth"],
+        "expiry": "2160h",
+        "backdate": "5m"
+      },
+      "client": {
+        "usages": ["signing", "key encipherment", "client auth"],
+        "expiry": "2160h"
+      },
+      "peer": {
+        "usages": ["signing", "key encipherment", "server auth", "client auth"],
+        "expiry": "2160h"
+      }
+    }
+  }
+}
+```|Lembre-se de que `time.ParseDuration` do Go não aceita a unidade `"d"` (dias) nem `"y"` (anos): especifique sempre `expiry` em horas (`"720h"` = 30 dias, `"8760h"` = 365 dias).|Emita um certificado passando `-profile=server` no `cfssl gencert` e verifique os *Extended Key Usages* resultantes com `cfssl-certinfo -cert server.pem`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://github.com/cloudflare/cfssl
+1924|cfssl-gencert-csr-json-san-hosts-ecdsa-rsa-override-hostname|CFSSL Emissão de Certificados (`cfssl gencert` e `cfssl sign`): definição de SANs (`hosts`), algoritmos `ecdsa`/`rsa` e `-hostname`|O comando **`cfssl gencert`** gera em um único passo uma nova chave privada, um CSR e o certificado assinado pela CA local (`-ca` / `-ca-key`) ou remota (`-remote`), lendo os parâmetros de algoritmo (`key.algo`: `ecdsa` ou `rsa`, `key.size`: `256`, `384`, `2048`, `4096`), `CN`, `names` e `hosts` (SANs DNS, IP, URI e e-mail) de um arquivo JSON.|Certificados TLS modernos exigem que todos os nomes DNS e endereços IP do serviço constem na extensão *Subject Alternative Name (SAN)*; depender apenas do campo *Common Name (CN)* é rejeitado por navegadores e clientes Go/gRPC atuais.|No arquivo `csr.json`, a lista `"hosts"` define todos os SANs do certificado. Além disso, passar a flag `-hostname="api.corp.internal,10.0.0.10,127.0.0.1"` na linha de comando do `cfssl gencert` ou `cfssl sign` sobrescreve dinamicamente a lista de SANs do JSON, permitindo reutilizar o mesmo template JSON em scripts de automação.|```bash
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=server \
+  -hostname="kube-apiserver,10.96.0.1,127.0.0.1,kubernetes.default.svc" \
+  apiserver-csr.json | cfssljson -bare apiserver
+```|Para menor tamanho de handshake e menor custo de CPU, prefira chaves `"algo": "ecdsa"` com `"size": 256` (curva P-256) em vez de chaves RSA de 2048/4096 bits, a menos que um cliente legado específico exija RSA.|Execute `cfssl-certinfo -cert apiserver.pem` para inspecionar a lista `sans` e o algoritmo de chave pública do certificado gerado.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl
+1925|cfssl-serve-api-server-auth-keys-remote-signers-failover|CFSSL API Server (`cfssl serve`), `auth_keys` e `remotes`: assinatura remota autenticada por HMAC e failover de CAs|O subcomando **`cfssl serve`** inicia um servidor HTTP REST de Autoridade Certificadora que protege os endpoints de assinatura com autenticação HMAC (**`auth_keys`** do tipo `standard`) e permite que instâncias locais do `cfssl` encaminhem pedidos para servidores CA remotos com failover automático (**`remotes`** e **`auth_remote`**).|Copiar o arquivo da chave privada da CA (`ca-key.pem`) para cada servidor web ou worker node que precisa emitir um certificado viola a segurança elementar de qualquer PKI.|Conforme detalhado em `doc/cmd/cfssl.txt`, a chave privada permanece exclusivamente no servidor central rodando `cfssl serve`. Nos servidores de aplicação, o `cfssl` local configura `"remotes": {"prod_ca": "ca1.example.org:8888, ca2.example.org:8888"}` e `"auth_keys"` com a chave hexadecimal compartilhada: cada requisição `cfssl gencert -remote=...` gera um token autenticado e tenta `ca1` primeiro, fazendo failover automático para `ca2` se `ca1` estiver indisponível.|```json
+{
+  "signing": {
+    "default": {
+      "usages": ["signing", "key encipherment", "client auth"],
+      "expiry": "720h",
+      "auth_remote": {
+        "remote": "caserver",
+        "auth_key": "primary"
+      }
+    }
+  },
+  "auth_keys": {
+    "primary": {
+      "type": "standard",
+      "key": "0123456789ABCDEF0123456789ABCDEF"
+    }
+  },
+  "remotes": {
+    "caserver": "ca1.corp.internal:8888,ca2.corp.internal:8888"
+  }
+}
+```|Nunca exponha o endpoint `/api/v1/cfssl/sign` de um `cfssl serve` na rede sem configurar `auth_keys` nos perfis de assinatura (ou use exclusivamente os endpoints autenticados `/api/v1/cfssl/authsign`).|Inicie um servidor local de teste com `cfssl serve -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -port=8888` e consulte `curl -s http://127.0.0.1:8888/api/v1/cfssl/info -d '{"label":"default"}'`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://github.com/cloudflare/cfssl
+1926|cfssl-bundle-flavors-optimal-ubiquitous-force-cfssl-trust|CFSSL Certificate Bundling (`cfssl bundle` e `mkbundle`): montagem de cadeias TLS nos modos `optimal`, `ubiquitous` e `force`|O subcomando **`cfssl bundle`** (apoiado pelo repositório de metadados `cfssl_trust` e pelo utilitário `mkbundle`) recebe um certificado folha (`-cert`) ou domínio remoto (`-domain`) e monta automaticamente a cadeia completa de certificados intermediários (*certificate bundle*) em três sabores (`-flavor`): **`optimal`**, **`ubiquitous`** e **`force`**.|Servidores TLS mal configurados frequentemente enviam apenas o certificado folha sem os certificados intermediários (causando erro `x509: certificate signed by unknown authority` em clientes CLI/Go/Python que não fazem *AIA chasing*) ou enviam cadeias longas com algoritmos legados.|Os três valores de `-flavor` atendem cenários distintos: 1) **`optimal`** constrói a cadeia mais curta possível priorizando os algoritmos criptográficos mais modernos; 2) **`ubiquitous`** constrói a cadeia com maior compatibilidade ampla entre diferentes navegadores e sistemas operacionais; e 3) **`force`** valida e preserva um bundle idêntico ao arquivo de entrada.|```bash
+# Construindo e verificando o bundle ótimo de um certificado local ou de um domínio remoto:
+cfssl bundle -ca-bundle ca-bundle.crt \
+  -int-bundle int-bundle.crt \
+  -flavor optimal \
+  -cert leaf.pem
+```|O JSON retornado por `cfssl bundle` inclui diagnósticos ricos no objeto `status` (`rebundled`, `expiring_SKIs`, `untrusted_root_stores`, `ocsp_support`, `crl_support`), alertando se algum intermediário da cadeia está próximo de expirar.|Execute `cfssl bundle -cert server.pem` (com os bundles de root/intermediárias informados) e verifique se `status.code` é `0`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl
+1927|cfssl-multirootca-servidor-ca-multiplas-chaves-labels|CFSSL `multirootca`: operação de servidor de Autoridade Certificadora com múltiplas chaves e perfis isolados por `label`|O binário **`multirootca`** do pacote CFSSL é um servidor de Autoridade Certificadora dedicado capaz de carregar e operar **múltiplas chaves de assinatura independentes** (por exemplo, uma CA para o cluster Kubernetes de produção, outra CA para o etcd e uma terceira CA para clientes VPN) diferenciadas por **`label`** em um arquivo de configuração `.ini`.|Enquanto `cfssl serve` opera com uma única CA local por processo, manter 10 processos separados para 10 CAs intermediárias diferentes aumenta o overhead operacional.|No arquivo de configuração do `multirootca`, cada seção `[label_name]` define `private = file://...` (ou PKCS#11), `certificate = ...` e `config = ca-config.json`. Os clientes `cfssl` enviam requisições autenticadas especificando o `label` desejado para assinar o certificado com a CA correspondente.|```ini
+[kube_ca]
+private = file:///etc/cfssl/kube-ca-key.pem
+certificate = /etc/cfssl/kube-ca.pem
+config = /etc/cfssl/ca-config.json
+
+[etcd_ca]
+private = file:///etc/cfssl/etcd-ca-key.pem
+certificate = /etc/cfssl/etcd-ca.pem
+config = /etc/cfssl/ca-config.json
+```|Proteja as chaves privadas referenciadas pelo `multirootca` com permissões `0400` restritas ao usuário de serviço do processo e exija autenticação `auth_keys` em todos os perfis.|Inicie `multirootca -roots roots.ini -l default_label` e consulte o certificado público de cada label via endpoint `/api/v1/cfssl/info`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl
+1928|cfssl-certinfo-scan-inspecao-certificados-auditoria-tls-hosts|CFSSL Inspeção e Diagnóstico (`cfssl certinfo` e `cfssl scan`): auditoria JSON de certificados X.509 e postura TLS de servidores|O CFSSL inclui dois subcomandos de diagnóstico para automação e segurança: **`cfssl certinfo`** (ou o binário `cfssl-certinfo`), que converte qualquer certificado X.509 local (`-cert`) ou remoto (`-domain`) em um documento JSON legível, e **`cfssl scan`** (`cfssl-scan`), que varre um host remoto avaliando sua postura de segurança TLS.|Fazer parsing de texto da saída humana de `openssl x509 -in cert.pem -text -noout` com `grep`/`awk` em scripts de monitoramento de expiração é frágil; já a saída JSON nativa do `cfssl certinfo` integra-se diretamente com `jq`.|Com `cfssl certinfo -cert server.pem | jq -r '.not_after, .sans'`, um script de verificação extrai com precisão a data ISO-8601 de expiração (`not_after`), os SANs (`sans`), o Serial Number, o AKI/SKI e o emissor. Já `cfssl scan -family=Connectivity,TLSSession,Certificate <host>` executa scanners modulares contra o endpoint TLS.|```bash
+# Extraindo a data de expiração e os SANs de um certificado em JSON estruturado:
+cfssl certinfo -cert ca.pem | jq '{subject: .subject.common_name, not_after: .not_after, sans: .sans}'
+
+# Listando as famílias de scanners TLS disponíveis no cfssl scan:
+cfssl scan -list
+```|Ao usar `cfssl certinfo -domain api.corp.internal:443`, é possível passar a flag `-ip <endereco_ip>` para inspecionar o certificado retornado por uma réplica específica atrás de um balanceador ou DNS round-robin.|Execute `cfssl certinfo -cert ca.pem` e valide os campos `not_before`, `not_after` e `serial_number`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl
+1929|cfssl-ocsp-responder-certdb-revogacao-ocspserve-ocspsign|CFSSL OCSP e Banco de Certificados (`certdb`): rastreamento de certificados emitidos, revogação e servidor `ocspserve`|Para ambientes que exigem revogação ativa e verificação de status de certificados via **OCSP (*Online Certificate Status Protocol*)** ou **CRL**, o CFSSL integra-se a um banco de dados relacional (`-db-config`, suportando SQLite, PostgreSQL e MySQL via migrações `goose`) e fornece os subcomandos **`ocspPolicy`**, **`ocspsign`**, **`ocsprefresh`**, **`ocspdump`** e **`ocspserve`**.|Sem um banco de dados (`certdb`) configurado no `cfssl serve`, a CA assina certificados de forma *stateless* sem manter inventário dos números de série emitidos, o que impede revogar um certificado específico ou pré-gerar respostas OCSP assinadas.|Com `-db-config=db-config.json`, cada certificado emitido é registrado na tabela `certificates`. Quando um certificado é revogado via `cfssl revoke`, o comando `cfssl ocsprefresh` recalcula e assina as respostas OCSP (usando um certificado com extensão `ocsp signing` e `ocsp_no_check: true`) e o `cfssl ocspserve` responde às consultas RFC 2560 dos clientes.|```bash
+# Gerando e servindo respostas OCSP a partir do banco de certificados do CFSSL:
+cfssl ocsprefresh -db-config=db-config.json \
+  -responder=ocsp.pem -responder-key=ocsp-key.pem -ca=ca.pem
+cfssl ocspdump -db-config=db-config.json > ocsp-responses.txt
+cfssl ocspserve -port=8889 -responses=ocsp-responses.txt
+```|Conforme documentado em `doc/cmd/cfssl.txt`, o perfil que emite o certificado do próprio *OCSP Responder* deve incluir `"usages": ["digital signature", "ocsp signing"]` e `"ocsp_no_check": true` (extensão `id-pkix-ocsp-nocheck` da RFC 2560).|Verifique no perfil do OCSP Responder a presença de `ocsp signing` e `ocsp_no_check: true` usando `cfssl certinfo`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://github.com/cloudflare/cfssl
+1930|cfssl-bootstrap-pki-kubernetes-etcd-front-proxy-service-account|CFSSL para Kubernetes "The Hard Way": automação completa das CAs de cluster (`kubernetes-ca`, `etcd-ca` e `front-proxy-ca`)|O par `cfssl` + `cfssljson` é a ferramenta padrão consagrada (inclusive no guia *Kubernetes The Hard Way*) para provisionar as três hierarquias de PKI exigidas por um control plane Kubernetes: **`kubernetes-ca`** (API Server, Kubelets, Controller Manager, Scheduler), **`etcd-ca`** (peers e clientes do etcd) e **`front-proxy-ca`** (aggregation layer).|Misturar os certificados de peer do `etcd` e do `front-proxy` na mesma CA geral do cluster permitiria que qualquer componente com certificado de cliente ou proxy forjasse identidades na camada de agregação da API.|Em um script reprodutível com CFSSL, você gera três CAs independentes (`ca`, `etcd-ca`, `front-proxy-ca`), emite os certificados dos nós kubelet com `CN: system:node:<nodeName>` e `O: system:nodes` (para o autorizador `Node`), e emite o certificado do `admin` com `O: system:masters`.|```json
+{
+  "CN": "system:node:worker-1",
+  "key": {
+    "algo": "ecdsa",
+    "size": 256
+  },
+  "names": [
+    {
+      "O": "system:nodes",
+      "OU": "Kubernetes The Hard Way"
+    }
+  ]
+}
+```|No Kubernetes, o campo `"O"` (*Organization*) no array `"names"` do JSON do CFSSL mapeia diretamente para os **Groups RBAC** do usuário autenticado via mTLS; portanto, restrinja estritamente quem recebe certificados com `"O": "system:masters"`.|Valide o `Subject` (`CN` e `O`) e os `SANs` de cada certificado do control plane executando `cfssl certinfo -cert <arquivo>.pem`.|https://raw.githubusercontent.com/cloudflare/cfssl/master/README.md;https://raw.githubusercontent.com/cloudflare/cfssl/master/doc/cmd/cfssl.txt;https://github.com/cloudflare/cfssl

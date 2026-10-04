@@ -1,0 +1,230 @@
+=== NOTE: 1081 | kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf | KubeVela: plataforma CNCF de entrega e gerenciamento de aplicações multi-cloud baseada em Open Application Model (OAM) e CUE ===
+ONE_LINER: O KubeVela (`kubevela/kubevela`, projeto CNCF sob licença Apache-2.0) é um plano de controle moderno de entrega e gerenciamento de aplicações que implementa o **Open Application Model (OAM)** e módulos programáveis em **CUE** (`cuelang.org`) sobre o Kubernetes para orquestrar deploys em ambientes híbridos e multi-cloud.
+IMPORTANCE: Em organizações onde desenvolvedores precisam entregar aplicações compostas por containers, Helm charts e recursos de nuvem (como bancos RDS via Terraform) através de múltiplos clusters de teste, staging e produção, escrever scripts ad-hoc de CI/CD ou manter dezenas de CRDs desconexas gera alto custo cognitivo. O KubeVela unifica o plano de entrega no conceito de **Deployment as Code** (`render, orchestrate, deploy`).
+HOW_IT_WORKS: Conforme descrevem o README oficial (`kubevela/kubevela`) e a página de introdução (`kubevela.io/docs/`), o KubeVela opera como um plano de controle extremamente enxuto (capaz de rodar com apenas **1 pod consumindo `0.5 CPU` e `1 GB` de RAM** para gerenciar milhares de entregas de aplicações). Todas as capacidades de infraestrutura e etapas de entrega são encapsuladas como blocos de construção estilo LEGO escritos em **CUE** e expostos aos desenvolvedores por meio de uma única CRD central — `Application` (`core.oam.dev/v1beta1`) — composta por quatro seções declarativas: **`components`**, **`traits`**, **`policies`** e **`workflow`**.
+EXAMPLE:
+```bash
+# Instalar a CLI vela, inicializar um ambiente e implantar uma Application declarativa do KubeVela
+vela env init prod --namespace prod
+vela up -f https://kubevela.io/example/applications/first-app.yaml
+vela status first-vela-app
+```
+TRADE_OFFS: O KubeVela não substitui o seu servidor de Integração Contínua (GitHub Actions, GitLab CI, Jenkins); ele atua **downstream do processo de CI**, assumindo a etapa de Continuous Delivery (CD) e podendo trabalhar em conjunto tanto com fluxos imperativos via CLI/API quanto com fluxos GitOps.
+VERIFY: Verifique a saúde do controlador no cluster com `kubectl -n vela-system get pods` e liste as definições disponíveis com `vela components` e `vela traits`.
+LINKS: [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli]] | [[kubevela-comparacao-cicd-gitops-paas-helm-posicionamento]]
+SOURCES: https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/ | https://kubevela.io/docs/quick-start/
+
+=== NOTE: 1082 | kubevela-anatomia-crd-application-components-traits-policies-workflow | Anatomia do recurso Application (core.oam.dev/v1beta1) no KubeVela: Components, Traits, Policies e Workflow ===
+ONE_LINER: Na especificação `core.oam.dev/v1beta1` do KubeVela, um objeto **`Application`** modela todo o plano de entrega combinando **`components`** (o que executar, como `webservice`, Helm chart ou módulo cloud), **`traits`** (comportamentos operacionais anexados, como `scaler` ou ingress), **`policies`** (`topology` e `override` por ambiente) e **`workflow`** (a sequência de passos de entrega).
+IMPORTANCE: Nos manifestos tradicionais do Kubernetes, a definição do container (`Deployment`), o escalonamento (`HPA`), a exposição de rede (`Service`/`Ingress`) e a promoção entre ambientes ficam espalhados em múltiplos arquivos YAML e ferramentas externas. O modelo OAM do KubeVela reúne a intenção completa da aplicação em um único artefato coeso e validado.
+HOW_IT_WORKS: Conforme demonstra o manifesto oficial do *Quick Start* (`kubevela.io/docs/quick-start/`): (1) **`spec.components`** declara os componentes da aplicação (por exemplo, `name: express-server`, `type: webservice`, com `properties.image: oamdev/hello-world` e `ports`) e anexa **`traits`** operacionais (como `type: scaler` com `properties: { replicas: 1 }`); (2) **`spec.policies`** define onde e como implantar — usando políticas do tipo **`topology`** (ex.: `target-default` apontando para `clusters: ["local"], namespace: "default"`, e `target-prod` apontando para `namespace: "prod"`) e políticas do tipo **`override`** (ex.: `deploy-ha` sobrescrevendo o trait `scaler` para `replicas: 2` em produção); e (3) **`spec.workflow.steps`** orquestra a ordem exata de execução (ex.: `deploy2default` → `manual-approval` do tipo `suspend` → `deploy2prod` aplicando `["target-prod", "deploy-ha"]`).
+EXAMPLE:
+```yaml
+# Exemplo oficial de Application (core.oam.dev/v1beta1) com component, trait scaler, policies topology/override e workflow com suspend
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: first-vela-app
+spec:
+  components:
+    - name: express-server
+      type: webservice
+      properties:
+        image: oamdev/hello-world
+        ports:
+          - port: 8000
+            expose: true
+      traits:
+        - type: scaler
+          properties:
+            replicas: 1
+  policies:
+    - name: target-default
+      type: topology
+      properties:
+        clusters: ["local"]
+        namespace: "default"
+    - name: target-prod
+      type: topology
+      properties:
+        clusters: ["local"]
+        namespace: "prod"
+    - name: deploy-ha
+      type: override
+      properties:
+        components:
+          - type: webservice
+            traits:
+              - type: scaler
+                properties:
+                  replicas: 2
+  workflow:
+    steps:
+      - name: deploy2default
+        type: deploy
+        properties:
+          policies: ["target-default"]
+      - name: manual-approval
+        type: suspend
+      - name: deploy2prod
+        type: deploy
+        properties:
+          policies: ["target-prod", "deploy-ha"]
+```
+TRADE_OFFS: Conforme observa o comentário no exemplo oficial, o namespace de destino referenciado em uma política `topology` (como `namespace: "prod"` em `target-prod`) deve ser criado previamente (por exemplo, com `vela env init prod --namespace prod` ou via step dedicado) antes que a etapa de deploy para aquele destino seja executada.
+VERIFY: Aplique o manifesto com `vela up -f first-app.yaml` e execute `vela status first-vela-app` para inspecionar o estado de cada componente, trait e passo do workflow.
+LINKS: [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]] | [[kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli]] | [[kubevela-extensibilidade-modulos-cue-definitions-addons]]
+SOURCES: https://kubevela.io/docs/quick-start/ | https://kubevela.io/docs/ | https://raw.githubusercontent.com/kubevela/kubevela/master/README.md
+
+=== NOTE: 1083 | kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli | Operação de Workflows e CLI do KubeVela: vela up, status, workflowSuspending, workflow resume, port-forward, exec e logs ===
+ONE_LINER: A CLI **`vela`** gerencia todo o ciclo de vida operacional de uma `Application` — desde o deploy (`vela up -f`), inspeção de saúde e endpoints (`vela status`), acesso direto (`vela port-forward`, `vela exec`, `vela logs`), até a aprovação manual de workflows pausados (`workflowSuspending` → `vela workflow resume`) e remoção (`vela delete`).
+IMPORTANCE: Ao promover uma nova versão entre `default` (teste/staging) e `prod`, a equipe precisa validar o serviço no primeiro ambiente, inspecionar seus logs e testar o endpoint HTTP antes de autorizar o rollout em produção com alta disponibilidade (`replicas: 2`). O passo `type: suspend` combinado com a CLI `vela` torna esse gate nativo no controlador.
+HOW_IT_WORKS: Conforme o passo a passo do guia *Deploy First Application* (`kubevela.io/docs/quick-start/`): (1) após executar `vela up -f first-app.yaml`, o KubeVela executa o primeiro passo (`deploy2default`), implanta o `webservice` no namespace `default` com `1/1` réplica pronta e pausa no segundo passo (`type: suspend`), mudando o status da Application para **`workflowSuspending`**; (2) o engenheiro valida a instância em staging usando `vela port-forward first-vela-app 8000:8000`, `vela logs first-vela-app` ou `vela exec first-vela-app`; (3) uma vez validada, executa **`vela workflow resume first-vela-app`**, fazendo o controlador avançar para o passo `deploy2prod`, que aplica as políticas `target-prod` e `deploy-ha` (`Ready: 2/2` no namespace `prod`) e muda o status da Application para **`running`**; e (4) `vela delete first-vela-app` limpa a aplicação.
+EXAMPLE:
+```bash
+# Inspecionar a aplicação pausada em aprovação manual, testar via port-forward e aprovar a continuação para produção
+vela status first-vela-app
+vela port-forward first-vela-app 8000:8000
+vela workflow resume first-vela-app
+vela status first-vela-app --endpoint
+```
+TRADE_OFFS: Enquanto a aplicação estiver no estado `workflowSuspending` aguardando `vela workflow resume`, as alterações subsequentes nos passos seguintes do workflow (`deploy2prod`) permanecem retidas até que o operador retome explicitamente ou reinicie/aborte o workflow.
+VERIFY: Execute `vela status first-vela-app` antes e depois de `vela workflow resume first-vela-app`, confirmando a transição de `Status: workflowSuspending` (apenas `default` com `Ready:1/1`) para `Status: running` (`prod` com `Ready:2/2` e `default` com `Ready:1/1`).
+LINKS: [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[kubevela-console-velaux-sincronizacao-fonte-verdade-gitops]] | [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]]
+SOURCES: https://kubevela.io/docs/quick-start/ | https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/
+
+=== NOTE: 1084 | kubevela-console-velaux-sincronizacao-fonte-verdade-gitops | Console UI VelaUX vs CLI/GitOps no KubeVela: arquitetura de metadados e regra de fonte única da verdade ===
+ONE_LINER: O addon de interface gráfica **VelaUX** (`addon-velaux` em `vela-system`) utiliza uma camada própria de banco de dados de metadados separada do `etcd` do Kubernetes: aplicações gerenciadas via CLI/K8s API são sincronizadas automaticamente para a UI como visualização, mas uma vez que uma aplicação é implantada pela UI Console, a sincronização automática a partir da CLI é interrompida para preservar a fonte da verdade.
+IMPORTANCE: Misturar edições manuais na interface web (VelaUX) com edições via `kubectl`/`vela up` (GitOps/CLI) sobre a mesma aplicação é uma das principais causas de confusão operacional no KubeVela. Compreender a regra de separação de fontes de verdade documentada no *Quick Start* evita conflitos de estado.
+HOW_IT_WORKS: Conforme explica a seção *Manage application with UI Console* (`kubevela.io/docs/quick-start/`): (1) após habilitar o VelaUX, acessa-se a interface com `vela port-forward addon-velaux -n vela-system 8080:80` (cujo login inicial padrão é usuário `admin` e senha `VelaUX12345`, exigindo troca obrigatória no primeiro acesso); (2) o console VelaUX opera como uma arquitetura PaaS que adota um banco de dados próprio como fonte da verdade em vez do `etcd`; (3) por padrão, se você gerencia as aplicações diretamente pela CLI/API do Kubernetes, o KubeVela sincroniza automaticamente os metadados para o backend da UI (associando ao projeto do ambiente correspondente ou ao projeto `default`); porém (4) **assim que você implanta a aplicação a partir do console UI (VelaUX), o processo de sincronização automática da CLI para a UI é interrompido**, pois a fonte da verdade passou a ser o VelaUX.
+EXAMPLE:
+```bash
+# Acessar o console web VelaUX via port-forward após habilitar o addon no namespace vela-system
+vela port-forward addon-velaux -n vela-system 8080:80
+```
+TRADE_OFFS: Conforme a recomendação conclusiva da documentação oficial: se você é um usuário de **CLI, YAML ou GitOps**, utilize **apenas a CLI/GitOps** para gerenciar a CRD `Application` e use o console VelaUX estritamente como um dashboard de visualização; inversamente, se optar por gerenciar uma aplicação pelo VelaUX, conduza todas as alterações subsequentes pela UI, API ou Webhook do VelaUX, nunca modificando a mesma aplicação pelos dois lados.
+VERIFY: Ao acessar o VelaUX, verifique o grafo de recursos da `first-vela-app` e confirme se há avisos de diferença (*diff*) entre o estado da CLI/cluster e o estado do painel.
+LINKS: [[kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli]] | [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[kubevela-comparacao-cicd-gitops-paas-helm-posicionamento]]
+SOURCES: https://kubevela.io/docs/quick-start/ | https://kubevela.io/docs/ | https://raw.githubusercontent.com/kubevela/kubevela/master/README.md
+
+=== NOTE: 1085 | kubevela-comparacao-cicd-gitops-paas-helm-posicionamento | Posicionamento arquitetural do KubeVela frente a CI/CD, GitOps (Argo CD / Flux), PaaS tradicional e Helm ===
+ONE_LINER: Conforme a matriz comparativa oficial (`kubevela.io/docs/`), o KubeVela posiciona-se como um plano de controle de Continuous Delivery programável que opera downstream do CI, complementa motores GitOps com workflows e entrega multi-cloud, oferece a experiência de um PaaS com flexibilidade total via CUE e orquestra pacotes Helm e módulos Terraform lado a lado.
+IMPORTANCE: Arquitetos de plataforma frequentemente questionam se adotar o KubeVela obriga a descartar pipelines do GitHub Actions/Jenkins, charts Helm existentes ou fluxos GitOps. Entender como o KubeVela se integra a cada uma dessas camadas permite reutilizar os investimentos atuais da organização.
+HOW_IT_WORKS: Segundo a seção *KubeVela vs. Other Software* (`kubevela.io/docs/`):
+1. **vs. CI/CD (GitHub Actions, GitLab, Jenkins)**: o KubeVela atua **downstream do CI** — você mantém seu CI para compilar/testar imagens e delega o CD ao KubeVela (workflows declarativos, provisionamento/binding de recursos híbridos e conformidade);
+2. **vs. GitOps (Argo CD, Flux CD)**: o KubeVela suporta GitOps nativamente e o aprimora com workflows extensíveis (incluindo etapas de segurança/aprovação) e entrega multi-cluster/hybrid-cloud como cidadã de primeira classe;
+3. **vs. PaaS (Heroku, Cloud Foundry)**: compartilha o objetivo de simplificar a experiência do desenvolvedor, mas vence a rigidez dos PaaS tradicionais porque **todos os componentes e etapas de workflow são módulos CUE estilo LEGO** que a equipe de plataforma pode estender ou modificar *in-place*;
+4. **vs. Helm**: o Helm empacota manifestos Kubernetes; o KubeVela pode implantar um chart Helm (ex.: WordPress) em conjunto com um módulo Terraform (ex.: AWS RDS) dentro da mesma `Application`, orquestrando a topologia e a ordem de entrega entre eles.
+EXAMPLE:
+```yaml
+# Conceito de Application no KubeVela combinando diferentes tipos de componentes sob o mesmo workflow
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: portal-hibrido
+spec:
+  components:
+    - name: frontend-web
+      type: webservice
+      properties:
+        image: ghcr.io/exemplo/frontend:v1.0.0
+```
+TRADE_OFFS: Embora o KubeVela abstraia a complexidade do Kubernetes para os desenvolvedores de aplicação, a equipe de engenharia de plataforma que cria ou customiza `ComponentDefinitions`, `TraitDefinitions` e `WorkflowStepDefinitions` precisa dominar a linguagem de configuração **CUE**.
+VERIFY: Liste os tipos de componentes e traits já instalados no seu cluster com `vela components` e `vela traits` para verificar o suporte a `webservice`, `worker`, `task`, `kustomize` e `helm`.
+LINKS: [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]] | [[kubevela-extensibilidade-modulos-cue-definitions-addons]] | [[helm-chart-structure-and-packaging]]
+SOURCES: https://kubevela.io/docs/ | https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/quick-start/
+
+=== NOTE: 1086 | kubevela-extensibilidade-modulos-cue-definitions-addons | Extensibilidade do KubeVela: programação de Definitions com CUE e ecossistema de Addons ===
+ONE_LINER: A arquitetura do KubeVela transforma qualquer capacidade de infraestrutura (CRDs de operadores Kubernetes, charts Helm ou módulos de nuvem) em abstrações reutilizáveis por meio de **Definitions programadas em CUE** (`ComponentDefinition`, `TraitDefinition`, `PolicyDefinition`, `WorkflowStepDefinition`) distribuídas e compartilhadas como **Addons**.
+IMPORTANCE: Em um cluster corporativo com dezenas de operadores instalados (Keda, Istio, Cert-Manager, Crossplane, Prometheus), expor todas as CRDs brutas diretamente aos desenvolvedores gera sobrecarga cognitiva. Com CUE Definitions no KubeVela, o engenheiro de plataforma expõe apenas os 3 ou 4 parâmetros essenciais que o desenvolvedor precisa preencher em `properties`.
+HOW_IT_WORKS: Conforme destacam as seções *Deployment as Code* e *Lightweight but highly extensible architecture* do README oficial (`kubevela/kubevela`) e de `kubevela.io/docs/`: (1) o plano de controle `vela-core` não possui tipos engessados em código Go — em vez disso, ele avalia templates escritos em **CUE** (`cuelang.org`) armazenados nas CRDs de definição; (2) isso permite adicionar novos tipos de componentes, traits ou passos de workflow **em tempo de execução (*in-place*)**, sem recompilar nem reiniciar o controlador do KubeVela; e (3) o ecossistema de **Addons** (`vela addon list` / `vela addon enable`) empacota definições CUE e operadores da comunidade (como `velaux`, `fluxcd`, `terraform`, `observability`) para instalação em um único comando.
+EXAMPLE:
+```bash
+# Listar os addons disponíveis no ecossistema do KubeVela e inspecionar o schema de um componente ou trait
+vela addon list
+vela show webservice
+vela show scaler
+```
+TRADE_OFFS: Habilitar múltiplos addons pesados da comunidade (como suítes completas de observabilidade ou provedores Terraform para várias nuvens) aumenta o consumo de recursos no cluster além do footprint mínimo do `vela-core` (`0.5c1g`); habilite apenas os addons necessários para a sua plataforma.
+VERIFY: Execute `vela show webservice` para visualizar na CLI a tabela de parâmetros, tipos e valores padrão gerada dinamicamente a partir do template CUE da `ComponentDefinition`.
+LINKS: [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]] | [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[kubevela-comparacao-cicd-gitops-paas-helm-posicionamento]]
+SOURCES: https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/ | https://kubevela.io/docs/quick-start/
+
+=== NOTE: 1087 | kubevela-entrega-multicluster-hybrid-cloud-topology-override | Entrega Multi-Cluster e Hybrid-Cloud no KubeVela: políticas topology, override e rollout progressivo ===
+ONE_LINER: O KubeVela trata a entrega de aplicações em múltiplos clusters e nuvens híbridas como cidadã de primeira classe, combinando políticas **`topology`** (seleção de clusters e namespaces de destino), políticas **`override`** (diferenciação de réplicas, imagens ou traits por ambiente) e estratégias de rollout progressivo (canary, blue-green e verificação contínua).
+IMPORTANCE: Em arquiteturas distribuídas onde uma aplicação precisa ser promovida do cluster de desenvolvimento para o cluster de staging e depois para múltiplos clusters regionais de produção, gerenciar pastas duplicadas de YAML por cluster dificulta manter a consistência. No KubeVela, a definição base do componente permanece única e as políticas `topology` + `override` adaptam a entrega a cada alvo.
+HOW_IT_WORKS: Conforme documentam o README oficial (`kubevela/kubevela`) e o exemplo do *Quick Start* (`kubevela.io/docs/quick-start/`): (1) cada política do tipo **`topology`** define em quais `clusters` (ex.: `["local"]` ou seletores de labels de clusters gerenciados via ClusterGateway) e em qual `namespace` os componentes serão aplicados; (2) cada política do tipo **`override`** especifica apenas os deltas de configuração para aquele ambiente (por exemplo, alterar o trait `scaler` de `replicas: 1` para `replicas: 2`); e (3) os passos `type: deploy` dentro de `spec.workflow.steps` referenciam a combinação desejada de políticas (`policies: ["target-prod", "deploy-ha"]`), permitindo intercalar aprovações (`suspend`), verificações de métricas e promoções graduais entre ambientes.
+EXAMPLE:
+```yaml
+# Definição declarativa de políticas topology e override para promoção entre ambientes no KubeVela
+policies:
+  - name: target-staging
+    type: topology
+    properties:
+      clusters: ["local"]
+      namespace: "staging"
+  - name: target-prod
+    type: topology
+    properties:
+      clusters: ["cluster-prod-sa-east-1", "cluster-prod-us-east-1"]
+      namespace: "prod"
+  - name: prod-scaling
+    type: override
+    properties:
+      components:
+        - name: express-server
+          traits:
+            - type: scaler
+              properties:
+                replicas: 4
+```
+TRADE_OFFS: Quando uma única `Application` gerencia implantações simultâneas em múltiplos clusters via `workflow`, uma falha de conectividade com um dos clusters remotos pausará ou falhará o passo `deploy` correspondente; monitore o status detalhado por cluster com `vela status <app>`.
+VERIFY: Associe um cluster ou crie múltiplos namespaces de ambiente (`vela env init`) e verifique em `vela status <app>` a tabela `Services:` listando o `Cluster`, `Namespace`, `Healthy Ready` e `Traits` de cada instância entregue.
+LINKS: [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[kubevela-fluxo-entrega-multi-ambiente-suspend-resume-cli]] | [[kubevela-seguranca-multitenancy-rbac-ldap-observabilidade]]
+SOURCES: https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/quick-start/ | https://kubevela.io/docs/
+
+=== NOTE: 1088 | kubevela-seguranca-multitenancy-rbac-ldap-observabilidade | Governança no KubeVela: multi-tenancy, autenticação LDAP/SSO, módulos RBAC granulares e observabilidade integrada ===
+ONE_LINER: O KubeVela inclui suporte nativo para governança corporativa, oferecendo integrações **LDAP/SSO**, autenticação e autorização **multi-tenant e multi-cluster**, módulos **RBAC granulares** customizáveis para a cadeia de suprimentos e dashboards automatizados de observabilidade para todo o processo de entrega.
+IMPORTANCE: Em uma plataforma compartilhada por dezenas de equipes de produto, o plano de controle de entrega precisa garantir que cada equipe só possa implantar aplicações nos namespaces e clusters autorizados para o seu projeto, autenticando-se com suas credenciais corporativas e tendo visibilidade imediata das métricas e logs das suas entregas.
+HOW_IT_WORKS: Conforme destacam os pilares *Built-in observability, multi-tenancy and security support* no README oficial (`kubevela/kubevela`) e em `kubevela.io/docs/`: (1) o KubeVela provê integrações prontas para uso com diretórios **LDAP** e provedores de identidade para autenticar usuários na plataforma; (2) aplica autenticação e autorização multi-tenant através de múltiplos clusters (mapeando projetos, ambientes e permissões RBAC do Kubernetes em vez de usar uma conta superusuário irrestrita para todos os tenants); e (3) fornece blocos de construção de segurança, conformidade e observabilidade automatizada com dashboards Grafana/Prometheus para rastrear a saúde tanto do control plane quanto das aplicações entregues.
+EXAMPLE:
+```bash
+# Inicializar um ambiente isolado associado a um namespace e verificar os recursos da aplicação naquele ambiente
+vela env init equipe-pagamentos --namespace pagamentos-dev
+vela env set equipe-pagamentos
+vela ls -n pagamentos-dev
+```
+TRADE_OFFS: Ao habilitar a camada de projetos e multi-tenancy no VelaUX junto com o uso da CLI `vela`, lembre-se da dica oficial do *Quick Start*: para que uma aplicação criada via CLI seja sincronizada para o projeto correto na UI (em vez de cair no projeto `default`), o namespace da aplicação operada pela CLI já deve estar previamente associado ao respectivo ambiente/projeto.
+VERIFY: Execute `vela env ls` para listar os ambientes configurados e seus respectivos namespaces mapeados no KubeVela.
+LINKS: [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]] | [[kubevela-console-velaux-sincronizacao-fonte-verdade-gitops]] | [[dex-conector-ldap-active-directory-buscas-usuarios-grupos]]
+SOURCES: https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/ | https://kubevela.io/docs/quick-start/
+
+=== NOTE: 1089 | kubevela-dimensionamento-control-plane-footprint-vela-core | Eficiência do plano de controle do KubeVela (vela-core): arquitetura de pod único com 0.5 CPU e 1 GB de RAM ===
+ONE_LINER: Conforme documentado oficialmente nos destaques de arquitetura do KubeVela, o controlador central **`vela-core`** foi projetado para operar com um footprint mínimo de **apenas 1 pod com `0.5 CPU` e `1 GB` de memória (`0.5c1g`)** sendo capaz de processar a entrega de milhares de aplicações.
+IMPORTANCE: Muitas plataformas de Continuous Delivery e PaaS exigem dezenas de microsserviços, bancos de dados pesados, filas de mensageria e vários gigabytes de RAM apenas para manter o plano de controle em pé — o que inviabiliza sua execução em clusters de borda (Edge/IoT), ambientes de desenvolvimento local (`kind`, `k3s`, `vCluster`) ou clusters enxutos.
+HOW_IT_WORKS: Conforme explicam o README oficial (`kubevela/kubevela`) e a página `kubevela.io/docs/`, o KubeVela atinge essa eficiência porque delega o armazenamento de estado das aplicações ao próprio Kubernetes (via CRDs OAM) e executa a renderização de componentes, traits, policies e steps de workflow dentro do motor unificado do `vela-core` usando avaliação em memória de templates CUE. Capacidades extras (como a interface web VelaUX, provedores Terraform ou observabilidade) são mantidas desacopladas como **addons opcionais**, de modo que o núcleo do controlador permanece extremamente leve.
+EXAMPLE:
+```bash
+# Inspecionar o consumo real de CPU e memória do pod vela-core no namespace vela-system
+kubectl -n vela-system top pods
+kubectl -n vela-system get deployment kubevela-vela-core -o jsonpath='{.spec.template.spec.containers[0].resources}' | jq .
+```
+TRADE_OFFS: Embora um único pod com `0.5 CPU` e `1 GB` de RAM seja suficiente para operar o plano de controle com baixo custo, em ambientes críticos de produção recomenda-se executar múltiplas réplicas do `vela-core` (com eleição de líder ativa) e calibrar os limites de memória conforme a quantidade de revisões de `Application` (`ApplicationRevision`) e tamanho dos gráficos Helm/CUE renderizados simultaneamente.
+VERIFY: Execute `kubectl -n vela-system get pods -l app.kubernetes.io/name=vela-core` para verificar a prontidão e o consumo de recursos do controlador central.
+LINKS: [[kubevela-plataforma-entrega-aplicacoes-oam-cue-cncf]] | [[kubevela-extensibilidade-modulos-cue-definitions-addons]] | [[k3s-distribuicao-kubernetes-leve-cncf-arquitetura-binario-unico]]
+SOURCES: https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/ | https://kubevela.io/docs/quick-start/
+
+=== NOTE: 1090 | kubevela-orquestracao-recursos-cloud-helm-kustomize-aplicacoes | Composição de aplicações híbridas no KubeVela: unificando containers, Helm charts, Kustomize e infraestrutura Cloud (Terraform) ===
+ONE_LINER: O KubeVela permite compor uma única `Application` híbrida que declara simultaneamente containers nativos (`webservice`/`worker`), pacotes **Helm**, overlays **Kustomize** e módulos **Terraform** de provedores de nuvem (como bancos de dados gerenciados AWS RDS), orquestrando a ordem de provisionamento e injeção de credenciais entre eles.
+IMPORTANCE: Na vida real, uma aplicação moderna raramente consiste apenas em um `Deployment` stateless: ela depende de um banco de dados gerenciado na nuvem (provisionado via Terraform) e de um middleware instalado via Helm (como Redis ou Kafka). Coordenar a criação do banco, aguardar o endpoint ficar pronto, injetar o Secret de conexão e só então subir o container dentro de um único workflow declarativo elimina scripts frágeis de colagem (*glue code*).
+HOW_IT_WORKS: Conforme descreve a seção *KubeVela vs. Helm* e *Key Features* em `kubevela.io/docs/`, o KubeVela atua como um plano de controle de entrega que suporta múltiplos formatos de encapsulamento. Em uma mesma `Application`, o desenvolvedor pode declarar um componente baseado em um chart Helm (ou container) e um componente baseado em um módulo Terraform de nuvem (por exemplo, AWS RDS), usar o workflow OAM/CUE para provisionar e vincular (*resource provision/binding*) os outputs de conexão do recurso de nuvem diretamente ao componente da aplicação e entregá-los através de múltiplos ambientes.
+EXAMPLE:
+```bash
+# Verificar os tipos de componentes instalados e habilitar addons de integração (como fluxcd para Helm/Kustomize ou terraform)
+vela components
+vela addon list | grep -E "fluxcd|terraform"
+```
+TRADE_OFFS: Como o provisionamento de recursos de nuvem via Terraform (por exemplo, criar uma instância RDS do zero na AWS) leva vários minutos — muito mais tempo do que criar um `Deployment` Kubernetes — o workflow da `Application` permanecerá em execução aguardando a prontidão do recurso cloud antes de avançar para os passos dependentes.
+VERIFY: Inspecione o progresso passo a passo da orquestração com `vela status <nome-da-app>` para verificar quais etapas do workflow já concluíram e quais aguardam provisionamento externo.
+LINKS: [[kubevela-comparacao-cicd-gitops-paas-helm-posicionamento]] | [[kubevela-anatomia-crd-application-components-traits-policies-workflow]] | [[crossplane-cloud-native-control-planes-and-xrd-compositions]]
+SOURCES: https://kubevela.io/docs/ | https://raw.githubusercontent.com/kubevela/kubevela/master/README.md | https://kubevela.io/docs/quick-start/

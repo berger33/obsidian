@@ -1,0 +1,92 @@
+1191|just-command-runner-justfile-diferencas-make-phony|just: Command Runner Declarativo (justfile) e Eliminação de Idiossincrasias do Make|O `just` (`casey/just`) é um executor de comandos de projeto multiplataforma escrito em Rust que armazena receitas (`recipes`) em um arquivo chamado `justfile`, com sintaxe inspirada no `make`, mas projetado especificamente como command runner em vez de sistema de build baseado em timestamps de arquivos.|Usar `Makefile` apenas para salvar comandos de projeto (`test`, `lint`, `deploy`, `docker-build`) exige declarar `.PHONY` em todas as tarefas para evitar colisões com arquivos de mesmo nome (como uma pasta `test/` ou `build/`), além de sofrer com erros crípticos quando um editor converte espaços em vez de tabs.|No `justfile`, toda receita é tratada nativamente como comando a executar (sem necessidade de `.PHONY`), aceita indentação tanto por espaços quanto por tabs (desde que consistente por receita), resolve dependências circulares e receitas inexistentes estaticamente antes de executar qualquer linha e pode ser invocado de qualquer subdiretório do repositório.|```just
+# Exemplo de justfile para automacao DevOps:
+set dotenv-load := true
+
+default:
+  @just --list
+
+lint:
+  golangci-lint run ./...
+
+test: lint
+  go test -race ./...
+```|Misturar espaços e tabulações na indentação dentro do corpo de uma mesma receita no `justfile` gera erro de análise sintática imediato antes da execução.|Padronize a formatação do `justfile` com `just --fmt --unstable` (ou verifique a sintaxe no CI) e liste as receitas disponíveis com `just --list`.|https://raw.githubusercontent.com/casey/just/master/README.md;https://just.systems/man/en/;https://github.com/casey/just
+1192|just-parametros-receitas-valores-padrao-variadic-flags|just: Parâmetros de Receitas, Valores Padrão, Argumentos Variádicos e Flags no justfile|Diferente do `make`, onde passar argumentos posicionais para um alvo exige gambiarra com variáveis de ambiente (`make deploy ENV=staging`), as receitas do `just` aceitam parâmetros posicionais tipados com valores padrão, argumentos variádicos (`+` para um ou mais, `*` para zero ou mais) e exportação direta para variáveis de ambiente (`$param`).|Scripts de operação DevOps frequentemente precisam receber o ambiente alvo (`staging`, `prod`), a tag da imagem e flags extras para repassar ao `kubectl`, `helm` ou `pytest` de forma ergonômica e autodocumentada.|No cabeçalho da receita, declara-se `deploy env="staging" +flags="--atomic":`; dentro do corpo, o valor é interpolado com `{{env}}` e `{{flags}}`, ou exportado automaticamente como variável de ambiente prefixando o parâmetro com `$` (`deploy $ENV="staging":`).|```just
+# Receita com parametro com default, exportacao de env e argumento variadico:
+k8s-apply $KUBE_CTX="kind-dev" *kubectl_args="--dry-run=client":
+  kubectl --context "$KUBE_CTX" apply -f k8s/ {{kubectl_args}}
+```|Esquecer de colocar espaços ao redor de `{{variavel}}` ou não colocar aspas quando o argumento pode conter espaços faz o shell dividir a string em múltiplos tokens inesperados.|Prefira parâmetros exportados com `$` (`$PARAM`) quando o valor puder conter espaços ou caracteres especiais do shell, pois o `just` os passa via ambiente sem sofrer word splitting de interpolação textual.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1193|just-settings-set-shell-dotenv-load-positional-arguments-export|just: Configurações de Comportamento no justfile (set shell, dotenv-load, export e positional-arguments)|O comportamento de execução de um `justfile` é controlado por diretivas declarativas `set <opção> := <valor>` no topo do arquivo, permitindo customizar o shell interpretador (`set shell`), carregar arquivos `.env` automaticamente (`set dotenv-load`), exportar todas as variáveis (`set export`) e habilitar `$1`, `$@` (`set positional-arguments`).|Por padrão, o `just` executa cada linha de uma receita usando `sh -cu`, que não possui `set -o pipefail` do Bash nem carrega variáveis de arquivos `.env` se isso não for declarado nas configurações do `justfile`.|Definir `set shell := ["bash", "-euo", "pipefail", "-c"]` garante que qualquer falha em pipelines com `|` interrompa imediatamente a receita; `set dotenv-load := true` (ou `set dotenv-filename := ".env.local"`) popula o ambiente das receitas a partir do `.env`; e `set export := true` exporta todas as variáveis definidas no `justfile` para os processos filhos.|```just
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set dotenv-load := true
+set export := true
+set positional-arguments := true
+
+tf-plan env="staging":
+  terraform -chdir=envs/$1 init -backend=false
+  terraform -chdir=envs/$1 plan
+```|Manter o `set shell` padrão (`sh -cu`) ao escrever receitas que usam sintaxe exclusiva do Bash (como arrays associativos, condicionais estendidas ou `set -o pipefail`) causa falha em sistemas Debian/Ubuntu onde `/bin/sh` aponta para `dash`.|Declare explicitamente `set shell := ["bash", "-euo", "pipefail", "-c"]` no topo de todo `justfile` que utilize construções Bash modernas.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1194|just-shebang-recipes-execucao-bloco-unico-python-bash-node|just: Receitas Shebang (#!/usr/bin/env) para Execução em Bloco Único e Múltiplas Linguagens|No `just`, receitas comuns executam cada linha em um sub-processo de shell separado, mas receitas que começam com uma linha shebang (`#!/usr/bin/env bash`, `#!/usr/bin/env python3`, `#!/usr/bin/env node`) são salvas em um arquivo temporário e executadas como um único script contínuo pelo interpretador escolhido.|Em receitas linha-a-linha (tanto no `make` quanto no modo padrão do `just`), rodar `cd subpasta` ou definir uma variável local `FOO=bar` na primeira linha não tem efeito na segunda linha, pois cada linha roda num shell distinto.|Ao iniciar o corpo da receita com `#!/usr/bin/env bash` seguido de `set -euo pipefail`, todas as linhas subsequentes compartilham o mesmo processo, diretório de trabalho (`cd`), variáveis locais e traps; além disso, é possível escrever receitas inteiras em Python, Ruby, Nu ou Node.js diretamente dentro do `justfile`.|```just
+verifica-manifestos cluster="staging":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "clusters/{{cluster}}"
+  for f in *.yaml; do
+    echo "Validando $f em $(pwd)"
+    kubectl apply --dry-run=client -f "$f"
+  done
+```|Omitir `set -euo pipefail` dentro de uma receita shebang `#!/usr/bin/env bash` faz com que erros em linhas intermediárias do script sejam ignorados pelo Bash, pois o flag `-e` automático do `just` só se aplica a receitas linha-a-linha.|Adicione sempre `set -euo pipefail` logo abaixo de `#!/usr/bin/env bash` em toda receita shebang no `justfile`.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1195|just-expressoes-funcoes-embutidas-arch-os-env-var-sha256|just: Linguagem de Expressões, Condicionais e Funções Embutidas (os(), arch(), env_var(), sha256())|O `just` possui uma linguagem de expressões avaliada estaticamente com dezenas de funções embutidas — incluindo detecção de sistema e arquitetura (`os()`, `arch()`, `os_family()`), leitura de ambiente (`env()`, `env_var()`, `env_var_or_default()`), manipulação de caminhos (`justfile_directory()`, `invocation_directory()`) e hashing (`sha256()`, `sha256_file()`) — além de condicionais `if/else`.|Construir binários multi-arquitetura ou ajustar flags de Docker/compilação entre macOS (`aarch64` / `macos`) e Linux (`x86_64` / `linux`) normalmente exige invocar `uname -s` via subshells lentos e propensos a erro.|No `justfile`, variáveis podem ser calculadas com funções nativas, backticks `` `git rev-parse --short HEAD` `` e expressões `if os() == "macos" { ... } else { ... }`, determinando tags de imagem, caminhos absolutos da raiz do projeto e flags antes mesmo de invocar o primeiro comando.|```just
+git_sha := `git rev-parse --short HEAD`
+target_arch := if arch() == "aarch64" { "arm64" } else { "amd64" }
+root_dir := justfile_directory()
+
+info:
+  @echo "Sistema: {{os()}} ({{target_arch}}), Commit: {{git_sha}}, Root: {{root_dir}}"
+```|Usar backticks `` `comando` `` no escopo global do `justfile` para comandos demorados ou que exigem rede (como consultar um cluster remoto) atrasa ou quebra até mesmo uma simples execução de `just --list`, pois variáveis globais são avaliadas no início.|Use `env_var_or_default()` ou mova comandos pesados para dentro das receitas específicas que realmente precisam daquele valor.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1196|just-dependencias-receitas-pre-post-argumentos-encadeamento|just: Grafo de Dependências de Receitas (Pré-Dependências, Pós-Dependências e Passagem de Argumentos)|As receitas do `just` suportam pré-dependências (executadas antes da receita principal), pós-dependências prefixadas com `&&` (executadas logo após o término bem-sucedido da receita) e passagem de argumentos parametrizados para dependências entre parênteses (`build: (setup "prod")`).|Em fluxos de release e deploy, muitas vezes é necessário garantir que validações rodem antes do build (`lint`, `test`) e que tarefas de limpeza ou notificação rodem após o deploy sem duplicar chamadas dentro do corpo de cada script.|Na sintaxe `deploy env: (validate env) && (notify env)`, o `just` constrói o grafo acíclico de execução, garante que `validate` rode primeiro com o argumento `env`, executa o corpo de `deploy` e, se retornar código zero, aciona `notify` em seguida.|```just
+validate env:
+  @echo "Validando configuracao de {{env}}..."
+
+notify env:
+  @echo "Deploy concluido em {{env}}!"
+
+deploy env="staging": (validate env) && (notify env)
+  @echo "Aplicando manifestos em {{env}}..."
+```|Assumir que uma pós-dependência (`&& cleanup`) será executada mesmo quando a receita principal falhar deixa recursos temporários órfãos, pois pós-dependências no `just` só rodam se a receita anterior tiver sucesso.|Para limpezas que precisam rodar mesmo em caso de erro (`finally`), utilize `trap ... EXIT` dentro de uma receita shebang `#!/usr/bin/env bash`.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1197|just-modulos-imports-organizacao-monorepos-devops|just: Organização de Monorepos e Plataformas com import e Módulos (mod)|Para repositórios grandes e monorepos de infraestrutura, o `just` oferece duas primitivas de composição: `import 'caminho.just'` (que mescla receitas e variáveis no mesmo namespace) e `mod <nome>` (que cria submódulos isolados invocáveis via `just <modulo> <receita>` ou `just <modulo>::<receita>`).|Concentrar centenas de receitas de Terraform, Kubernetes, observabilidade, banco de dados e CI dentro de um único `justfile` monolítico na raiz do repositório torna o arquivo difícil de manter e gera colisões de nomes de variáveis.|Com `mod k8s 'scripts/k8s.just'` e `mod tf 'scripts/terraform.just'` no `justfile` raiz (e `import? 'local.just'` opcional para overrides locais), cada domínio mantém seu próprio arquivo e diretório de trabalho, enquanto o operador descobre e executa tudo a partir de `just --list` e `just k8s deploy`.|```just
+# No justfile da raiz do monorepo:
+import? 'local.just'
+mod k8s 'ops/k8s.just'
+mod tf 'ops/terraform.just'
+
+# Listando submodulos e receitas:
+# just --list
+# just k8s apply
+```|Usar `import` (sem o modificador opcional `?`) apontando para um arquivo de customização local ignorado pelo Git (`local.just`) quebra a execução do `just` para qualquer desenvolvedor que acabou de clonar o repositório.|Use sempre `import? 'local.just'` (com ponto de interrogação) para arquivos opcionais não versionados e prefira `mod` para isolar escopos de variáveis entre equipes.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1198|just-atributos-confirm-private-no-cd-os-specific-safety|just: Atributos de Receita ([confirm], [private], [no-cd], [linux], [macos]) para Segurança Operacional|O `just` suporta atributos declarativos entre colchetes acima de cada receita — como `[confirm]` (que exige confirmação interativa antes de rodar), `[private]` (que oculta receitas auxiliares de `just --list`), `[no-cd]` (que mantém o diretório atual em vez de mudar para a raiz do `justfile`), `[doc(...)]` e `[linux]`/`[macos]`/`[windows]`.|Receitas destrutivas como `terraform destroy`, `k8s-delete-namespace` ou reset de banco de dados podem ser disparadas acidentalmente no histórico do terminal se não exigirem uma barreira explícita de confirmação.|Ao anotar uma receita com `[confirm("Tem certeza que deseja destruir o ambiente? (y/N)")]`, o `just` bloqueia a execução até que o operador confirme explicitamente (ou passe `--yes` em automação consciente). Atributos de sistema (`[macos]`, `[linux]`) permitem definir implementações diferentes para o mesmo nome de receita conforme o SO.|```just
+[private]
+check-auth:
+  kubectl auth can-i '*' '*'
+
+[confirm("Confirma o rollout restart em producao?")]
+restart-prod deployment: check-auth
+  kubectl -n production rollout restart deployment/{{deployment}}
+```|Acionar uma receita anotada com `[confirm]` dentro de um pipeline de CI/CD não-interativo sem passar a flag `--yes` (`just --yes <receita>`) faz o job falhar ao aguardar entrada do `stdin`.|Proteja todas as receitas destrutivas ou de produção com `[confirm("...")]` para operadores humanos e passe `--yes` apenas em jobs de pipeline que já passaram por aprovação de ambiente.|https://just.systems/man/en/;https://raw.githubusercontent.com/casey/just/master/README.md;https://github.com/casey/just
+1199|just-descoberta-interativa-choose-list-summary-completions|just: Descoberta Interativa de Tarefas (--list, --summary, --choose com fzf e Shell Completions)|Para melhorar a descoberta de automações por novos membros da equipe, o `just` oferece listagem documentada (`just --list`, `just --summary`), seletor interativo (`just --choose`, integrado ao `fzf`) e scripts nativos de autocompletar (`just --completions <shell>`).|Em projetos com dezenas de scripts espalhados em pastas `hack/` ou `scripts/`, engenheiros não sabem quais ferramentas já existem e acabam reescrevendo comandos que a equipe de plataforma já havia padronizado.|Qualquer comentário `#` colocado imediatamente acima de uma receita no `justfile` torna-se automaticamente a documentação exibida ao lado do nome da receita em `just --list`. Além disso, `just --choose` abre um menu fuzzy interativo para selecionar e rodar receitas, e `just --completions zsh` habilita `TAB` completo para nomes de receitas e argumentos.|```bash
+just --list --unsorted
+just --summary
+just --show test
+just --completions bash | head -n 20
+```|Escrever comentários internos de implementação colados na linha imediatamente acima da assinatura da receita sem usar `[doc("...")]` faz com que notas internas apareçam como descrição pública no `just --list`.|Use comentários diretos acima da receita para descrições claras ao usuário (ou o atributo `[doc("...")]`) e valide a aparência do catálogo com `just --list`.|https://raw.githubusercontent.com/casey/just/master/README.md;https://just.systems/man/en/;https://github.com/casey/just
+1200|just-integracao-mise-devbox-direnv-padronizacao-local-ci|just: Padronização de Workflows entre Laptop e CI Combinando just com mise, Devbox e direnv|Combinar o `just` como executor universal de receitas (`justfile`) com um gerenciador declarativo de toolchains (`mise.toml` ou `devbox.json`) e ativação automática de diretório (`direnv`) estabelece uma arquitetura onde o desenvolvedor local e o pipeline de CI executam exatamente os mesmos comandos (`just lint`, `just test`, `just build`, `just deploy`).|Quando o pipeline do GitHub Actions ou GitLab CI contém dezenas de linhas de script shell inline em YAML que não existem localmente, depurar uma falha de CI exige fazer dezenas de commits de tentativa e erro.|Na arquitetura integrada, o `mise` ou `devbox` instala o próprio binário `just` junto com as versões exatas de Go, Python, Terraform, `kubectl` e `helm`; o `direnv` ativa esse ambiente ao entrar na pasta; e tanto o engenheiro quanto o runner de CI invocam exclusivamente `just check` e `just package`, mantendo a lógica em um único lugar testável localmente.|```yaml
+# No workflow de CI chamando as mesmas receitas do justfile local:
+steps:
+  - uses: actions/checkout@v4
+  - uses: jdx/mise-action@v2
+  - name: Executar pipeline padronizado via just
+    run: |
+      just --list
+      just lint
+      just test
+```|Duplicar comandos complexos de build tanto no `justfile` quanto nos passos `run:` do GitHub Actions permite que os dois diverjam silenciosamente ao longo do tempo.|Faça com que cada etapa do CI invoque diretamente uma receita do `justfile` (`just <receita>`) e teste mudanças de pipeline localmente com `just --dry-run <receita>` antes do push.|https://raw.githubusercontent.com/casey/just/master/README.md;https://just.systems/man/en/;https://github.com/casey/just

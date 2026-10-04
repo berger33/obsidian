@@ -1,0 +1,248 @@
+=== NOTE: 1051 | polaris-motor-politicas-validacao-remediacao-kubernetes | Fairwinds Polaris: motor open-source de políticas para validação e remediação de configurações Kubernetes ===
+ONE_LINER: O Fairwinds Polaris (`FairwindsOps/polaris`, Apache-2.0) é um motor open-source de políticas para Kubernetes que valida e remedia configurações de workloads, oferecendo mais de **30 políticas embutidas** de boas práticas, suporte a políticas customizadas com **JSON Schema** e operação em três modos: **Dashboard**, **Admission Controller** (validating/mutating webhook) e **CLI** para CI/CD.
+IMPORTANCE: Pequenos descuidos em manifestos YAML do Kubernetes — como esquecer `readinessProbe`, rodar containers como `root`, permitir escalação de privilégios (`allowPrivilegeEscalation`), usar a tag `:latest` ou omitir limites de memória — causam incidentes de estabilidade e brechas de segurança em produção. O Polaris aplica as mesmas regras de *policy-as-code* desde o repositório Git até o webhook de admissão do cluster.
+HOW_IT_WORKS: Conforme descrevem o README oficial (`FairwindsOps/polaris`) e a página inicial da documentação (`polaris.docs.fairwinds.com`), a arquitetura do Polaris permite executar exatamente o mesmo conjunto de checagens em três estágios: (1) **Command-line tool (`polaris audit` / `polaris fix`)**: audita e corrige arquivos YAML locais ou Helm charts durante o pipeline de CI/CD; (2) **Admission Controller**: atua como Validating Webhook (rejeitando workloads que violem políticas de severidade `danger`) ou Mutating Webhook (modificando automaticamente o pod spec na admissão); e (3) **Dashboard**: interface web que escaneia o cluster em execução e calcula um score percentual de conformidade por namespace e por workload.
+EXAMPLE:
+```bash
+# Instalar a CLI do Polaris via Homebrew e auditar um diretório local de manifestos Kubernetes
+brew tap FairwindsOps/tap
+brew install FairwindsOps/tap/polaris
+polaris version
+polaris audit --audit-path ./deploy/ --format=pretty
+```
+TRADE_OFFS: Quando executado sobre arquivos locais, o Polaris avalia manifestos YAML renderizados; para auditar templates Helm parametrizados, é necessário passar `--helm-chart` e `--helm-values` (ou renderizar previamente com `helm template`), e a mutação automática (`polaris fix`) altera apenas arquivos YAML puros, não templates Helm cheios de diretivas Go `{{ ... }}`.
+VERIFY: Execute `polaris audit --audit-path ./deploy/ --format=pretty` e verifique o score geral calculado e a contagem de checagens aprovadas, `warning` e `danger`.
+LINKS: [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]] | [[polaris-remediacao-automatica-cli-polaris-fix-yaml]] | [[polaris-admission-controller-validating-mutating-webhook]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1052 | polaris-auditoria-iac-cli-ci-cd-scores-danger-flags | Auditoria IaC em CI/CD com o Polaris: --audit-path, --set-exit-code-on-danger, --set-exit-code-below-score e Helm charts ===
+ONE_LINER: Na linha de comando, o comando **`polaris audit`** inspeciona diretórios de manifestos YAML (`--audit-path`) ou Helm charts (`--helm-chart` e `--helm-values`) e bloqueia pipelines de CI/CD automaticamente por meio das flags **`--set-exit-code-on-danger`** e **`--set-exit-code-below-score <0-100>`**.
+IMPORTANCE: Gerar relatórios de segurança que ninguém lê não impede que configurações perigosas cheguem à produção. Configurar gates determinísticos no Pull Request que falham o build (`exit code != 0`) caso surja qualquer violação de nível `danger` ou caso o score de qualidade caia abaixo de um limiar (por exemplo, `90%`) força a correção antes do merge.
+HOW_IT_WORKS: Conforme documenta o guia *Infrastructure as Code* (`polaris.docs.fairwinds.com/infrastructure-as-code/`): (1) por padrão, `polaris audit` imprime os resultados em **JSON**, mas aceita **`--format=pretty`** (e `--color=false` para logs de CI sem suporte ANSI) para saída legível por humanos; (2) **`--only-show-failed-tests true`** filtra a saída exibindo apenas os testes que falharam; (3) **`--set-exit-code-on-danger`** faz a CLI retornar código de erro se detectar qualquer problema de severidade `danger`; (4) **`--set-exit-code-below-score 90`** falha o comando se a pontuação geral cair abaixo de 90%; e (5) **`--helm-chart ./deploy/chart --helm-values ./deploy/chart/values.yml`** audita charts Helm diretamente.
+EXAMPLE:
+```bash
+# Auditar manifestos em um pipeline de CI falhando se houver qualquer item danger ou score abaixo de 90%
+polaris audit --audit-path ./deploy/ \
+  --format=pretty \
+  --color=false \
+  --only-show-failed-tests true \
+  --set-exit-code-on-danger \
+  --set-exit-code-below-score 90
+
+# Auditar um Helm chart passando seu arquivo de valores
+polaris audit \
+  --helm-chart ./deploy/chart \
+  --helm-values ./deploy/chart/values.yml \
+  --set-exit-code-on-danger
+```
+TRADE_OFFS: Se um repositório contiver muitos manifestos legados que já possuem avisos (`warning`), um `--set-exit-code-below-score` muito alto pode bloquear correções urgentes; uma estratégia gradual recomendada é começar com `--set-exit-code-on-danger` (bloqueando apenas falhas críticas) e elevar progressivamente o `--set-exit-code-below-score`.
+VERIFY: Execute o comando `polaris audit --audit-path ./deploy/ --set-exit-code-on-danger; echo $?` e confirme que o código de retorno é `0` para manifestos em conformidade e diferente de zero quando há um item `danger`.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-remediacao-automatica-cli-polaris-fix-yaml]] | [[polaris-github-action-setup-polaris-automacao-pr]]
+SOURCES: https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1053 | polaris-remediacao-automatica-cli-polaris-fix-yaml | Remediação automática de manifestos YAML na CLI com polaris fix --files-path e --checks ===
+ONE_LINER: O subcomando **`polaris fix --files-path <dir> --checks=all`** modifica automaticamente arquivos YAML locais de Kubernetes para corrigir problemas detectados pelas políticas do Polaris, inserindo configurações seguras e adicionando comentários onde o usuário precisa ajustar parâmetros específicos da aplicação.
+IMPORTANCE: Quando uma equipe herda dezenas de manifestos `Deployment` sem `securityContext`, sem `requests`/`limits` e com `imagePullPolicy` incorreta, editar manualmente cada container em cada arquivo YAML é trabalhoso e propenso a erros de indentação. O `polaris fix` aplica as mutações de conformidade diretamente nos arquivos do repositório antes do commit.
+HOW_IT_WORKS: Conforme explica a seção *Fixing Issues* do guia oficial (`polaris.docs.fairwinds.com/infrastructure-as-code/`), ao executar `polaris fix --files-path ./deploy/ --checks=all`, a CLI analisa os manifestos YAML dentro do diretório `./deploy/` e aplica as mutações suportadas pelas regras de remediação. Para certas configurações que dependem do contexto interno da aplicação (como os caminhos ou portas exatas de `livenessProbe` e `readinessProbe`), o Polaris pode deixar comentários ao lado das alterações geradas orientando o desenvolvedor a ajustá-las para valores apropriados ao seu serviço.
+EXAMPLE:
+```bash
+# Aplicar correções automáticas em todos os manifestos YAML do diretório ./deploy e inspecionar o diff no Git
+polaris fix --files-path ./deploy/ --checks=all
+git diff ./deploy/
+```
+TRADE_OFFS: Conforme ressalta explicitamente a documentação oficial, **nem todos os problemas podem ser corrigidos automaticamente** e, atualmente, **apenas manifestos YAML puros (*raw YAML manifests*) podem sofrer mutação via `polaris fix`** — charts Helm parametrizados ainda precisam ser editados manualmente nos templates originais.
+VERIFY: Após executar `polaris fix --files-path ./deploy/ --checks=all`, rode `git diff` para revisar cada linha modificada e execute `polaris audit --audit-path ./deploy/ --format=pretty` para confirmar a elevação do score.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]] | [[polaris-mutating-webhook-19-mutations-padrao]]
+SOURCES: https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1054 | polaris-admission-controller-validating-mutating-webhook | Polaris Admission Controller: instalação via Helm, certificados TLS (cert-manager vs caBundle) e comportamento diante de danger vs warning ===
+ONE_LINER: O Polaris pode ser implantado no cluster como um **Admission Controller** (`--set webhook.enable=true`) que atua por padrão como um **Validating Webhook**, rejeitando qualquer workload que dispare uma checagem de nível **`danger`** enquanto permite a passagem de checagens de nível **`warning`**.
+IMPORTANCE: Mesmo que a organização possua checagens no CI/CD, alguém com acesso `kubectl apply` ou um controlador de terceiros pode tentar criar um pod privilegiado (`runAsPrivileged`) ou com `hostPID: true` diretamente no cluster. O Validating Webhook do Polaris atua como barreira final no Kubernetes API Server.
+HOW_IT_WORKS: Segundo a página *Admission Controller* (`polaris.docs.fairwinds.com/admission-controller/`): (1) o webhook aceita a mesma configuração do dashboard e exige um certificado TLS válido — funcionando automaticamente se o **cert-manager** estiver instalado no cluster, ou exigindo fornecer manualmente `webhook.caBundle` e `webhook.secretName` apontando para um Secret TLS; (2) o webhook vem com suporte embutido para os principais controladores (`Deployments`, `Jobs`, `DaemonSets` etc.), podendo-se adicionar novos tipos via `webhook.rules` no Helm chart; e (3) no modo padrão (pass/fail), o webhook **rejeita apenas workloads que acionem uma checagem de severidade `danger`**; checagens com severidade `warning` passam na validação do webhook (ficando registradas apenas no Polaris Dashboard ou nos logs do webhook, pois não são exibidas na saída do `kubectl` a menos que o workload seja rejeitado).
+EXAMPLE:
+```bash
+# Instalar apenas o Admission Controller (Validating Webhook) do Polaris via Helm chart oficial
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable && helm repo update fairwinds-stable
+helm upgrade --install polaris fairwinds-stable/polaris \
+  --namespace polaris \
+  --create-namespace \
+  --set webhook.enable=true \
+  --set dashboard.enable=false
+```
+TRADE_OFFS: Se você deseja que uma determinada violação (que por padrão no Polaris tem severidade `warning`, como ausência de probes ou limites) seja efetivamente **bloqueada** pelo Validating Webhook no `kubectl apply`, você deve elevar a severidade dessa checagem de `warning` para `danger` na configuração customizada do Polaris.
+VERIFY: Verifique o registro do webhook com `kubectl get validatingwebhookconfigurations` e tente aplicar um manifesto de teste violando uma regra `danger` para confirmar o bloqueio imediato pelo API Server.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-mutating-webhook-19-mutations-padrao]] | [[certmanager-x509-certificates-issuers-and-acme]]
+SOURCES: https://polaris.docs.fairwinds.com/admission-controller/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/infrastructure-as-code/
+
+=== NOTE: 1055 | polaris-mutating-webhook-19-mutations-padrao | Mutating Webhook do Polaris (--set webhook.mutate=true) e as 19 checagens com suporte nativo a mutação ===
+ONE_LINER: Quando instalado com **`--set webhook.mutate=true`**, o Admission Controller do Polaris passa a operar também como um **Mutating Webhook**, remediando automaticamente problemas nos workloads durante a admissão em vez de apenas rejeitá-los, com **19 checagens padrão** habilitadas para mutação.
+IMPORTANCE: Em clusters de desenvolvimento ou plataformas onde se deseja aplicar padrões seguros automaticamente (como forçar `readOnlyRootFilesystem: true`, remover capabilities perigosas ou preencher requests/limits padrão), o Mutating Webhook corrige o manifesto em voo antes da persistência no etcd.
+HOW_IT_WORKS: Conforme lista a seção *Mutating Webhook* da documentação oficial (`polaris.docs.fairwinds.com/admission-controller/`), adicionar `--set webhook.mutate=true` na instalação Helm ativa a remediação automática para as seguintes **19 checagens padrão**: `hostPIDSet`, `hostNetworkSet`, `hostIPCSet`, `priorityClassNotSet`, `hostPortSet`, `pullPolicyNotAlways`, `deploymentMissingReplicas`, `dangerousCapabilities`, `cpuLimitsMissing`, `memoryLimitsMissing`, `livenessProbeMissing`, `memoryRequestsMissing`, `cpuRequestsMissing`, `runAsPrivileged`, `readinessProbeMissing`, `privilegeEscalationAllowed`, `notReadOnlyRootFilesystem`, `insecureCapabilities` e `runAsRootAllowed`. Mutações adicionais podem ser controladas pela flag `webhook.mutations`.
+EXAMPLE:
+```bash
+# Instalar o Polaris via Helm habilitando tanto o Validating Webhook quanto o Mutating Webhook
+helm upgrade --install polaris fairwinds-stable/polaris \
+  --namespace polaris \
+  --create-namespace \
+  --set webhook.enable=true \
+  --set webhook.mutate=true \
+  --set dashboard.enable=true
+```
+TRADE_OFFS: Usar um Mutating Webhook que altera campos do pod spec em tempo de admissão (como injetar `pullPolicyNotAlways`, `cpuRequestsMissing` ou `notReadOnlyRootFilesystem`) em clusters gerenciados por **Argo CD** ou **Flux** pode fazer com que o recurso vivo no cluster difira do YAML no Git (*OutOfSync*), além de quebrar containers que tentam escrever em caminhos fora de volumes montados quando `readOnlyRootFilesystem: true` é injetado; em ambientes GitOps estritos, prefira usar `polaris fix` no Git + Validating Webhook no cluster.
+VERIFY: Inspecione `kubectl get mutatingwebhookconfigurations` no cluster e verifique os campos `securityContext` e `resources` de um Deployment recém-aplicado no namespace monitorado.
+LINKS: [[polaris-admission-controller-validating-mutating-webhook]] | [[polaris-remediacao-automatica-cli-polaris-fix-yaml]] | [[kyverno-mutate-generate-and-verifyimages-rules]]
+SOURCES: https://polaris.docs.fairwinds.com/admission-controller/ | https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md
+
+=== NOTE: 1056 | polaris-categorias-checagens-seguranca-eficiencia-confiabilidade | Categorias de políticas embutidas do Polaris: Segurança (SecurityContext/Host), Eficiência (CPU/Memory) e Confiabilidade (Probes/Replicas/Tags) ===
+ONE_LINER: As mais de 30 políticas embutidas do Polaris avaliam os workloads Kubernetes em três pilares operacionais: **Segurança** (isolamento de host, capabilities Linux e `securityContext`), **Eficiência** (presença de `requests` e `limits` de CPU e memória) e **Confiabilidade** (probes de saúde, múltiplas réplicas e política de pull de imagens).
+IMPORTANCE: Uma auditoria de cluster eficaz não pode olhar apenas para vulnerabilidades de segurança ignorando resiliência ou custos: um pod seguro que roda com `runAsNonRoot: true`, mas não possui `readinessProbe` nem `memoryLimits`, ainda derrubará o serviço durante um deploy ou esgotará a RAM do nó.
+HOW_IT_WORKS: A partir das políticas embutidas documentadas no Polaris (`polaris.docs.fairwinds.com/admission-controller/` e README): (1) no pilar de **Segurança**, checagens como `hostPIDSet`, `hostNetworkSet`, `hostIPCSet`, `hostPortSet`, `runAsPrivileged`, `runAsRootAllowed`, `privilegeEscalationAllowed`, `notReadOnlyRootFilesystem`, `dangerousCapabilities` e `insecureCapabilities` garantem o isolamento do container; (2) no pilar de **Eficiência**, `cpuRequestsMissing`, `cpuLimitsMissing`, `memoryRequestsMissing` e `memoryLimitsMissing` garantem previsibilidade de agendamento e proteção contra vazamentos de recursos; e (3) no pilar de **Confiabilidade**, `livenessProbeMissing`, `readinessProbeMissing`, `deploymentMissingReplicas`, `pullPolicyNotAlways` e `priorityClassNotSet` evitam pontos únicos de falha e inconsistências de imagem.
+EXAMPLE:
+```yaml
+# Exemplo de Deployment que atende simultaneamente aos pilares de Segurança, Eficiência e Confiabilidade do Polaris
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-resiliente
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-resiliente
+  template:
+    metadata:
+      labels:
+        app: api-resiliente
+    spec:
+      priorityClassName: high-priority
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/exemplo/api:v1.2.3
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+          livenessProbe:
+            httpGet: { path: /livez, port: 8080 }
+```
+TRADE_OFFS: Algumas checagens padrão (como `pullPolicyNotAlways` ou `priorityClassNotSet`) podem não ser desejadas para todos os ambientes (por exemplo, clusters locais `kind`/`minikube` com imagens carregadas localmente que exigem `imagePullPolicy: IfNotPresent` ou `Never`); o arquivo de configuração do Polaris permite ajustar a severidade de cada checagem para `ignore`, `warning` ou `danger`.
+VERIFY: Salve o manifesto acima em `./deploy/api.yaml` e execute `polaris audit --audit-path ./deploy/api.yaml --format=pretty` para verificar a aprovação nas três categorias.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-mutating-webhook-19-mutations-padrao]] | [[polaris-politicas-customizadas-json-schema-exencoes]]
+SOURCES: https://polaris.docs.fairwinds.com/admission-controller/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/infrastructure-as-code/
+
+=== NOTE: 1057 | polaris-politicas-customizadas-json-schema-exencoes | Políticas customizadas com JSON Schema e configuração de severidades no Fairwinds Polaris ===
+ONE_LINER: Além das mais de 30 políticas nativas, o Polaris permite criar **políticas customizadas usando JSON Schema** diretamente no seu arquivo de configuração (`--config`), bem como calibrar a severidade (`ignore`, `warning`, `danger`) de cada checagem para alinhar a auditoria aos padrões internos da organização.
+IMPORTANCE: Cada organização possui regras próprias que vão além das práticas gerais do Kubernetes — como exigir labels obrigatórias de centro de custo (`cost-center`, `owner`), restringir registros de imagens permitidos ou validar anotações específicas de malha de serviço. Escrever essas regras em JSON Schema padrão dispensa aprender uma linguagem proprietária complexa para validações estruturais de recursos.
+HOW_IT_WORKS: Conforme descreve o README oficial (`FairwindsOps/polaris`), o motor do Polaris avalia tanto as políticas embutidas quanto `customChecks` declaradas em JSON Schema. No arquivo de configuração (passado para a CLI, para o Dashboard ou para o Admission Controller via Helm values), o bloco `checks:` mapeia cada identificador de política para `ignore`, `warning` ou `danger`, enquanto `customChecks:` define esquemas JSON Schema validados contra o manifesto do workload ou container, emitindo uma mensagem customizada de `failureMessage` e categoria quando o recurso não satisfaz o schema.
+EXAMPLE:
+```yaml
+# Exemplo de arquivo polaris-config.yaml ajustando severidades e declarando uma customCheck em JSON Schema
+checks:
+  cpuRequestsMissing: danger
+  memoryLimitsMissing: danger
+  pullPolicyNotAlways: ignore
+   customLabelOwner: danger
+
+customChecks:
+  customLabelOwner:
+    successMessage: "Label obrigatória 'owner' está presente"
+    failureMessage: "Todo workload deve possuir a label 'owner'"
+    category: Governance
+    target: Workload
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      required: [metadata]
+      properties:
+        metadata:
+          type: object
+          required: [labels]
+          properties:
+            labels:
+              type: object
+              required: [owner]
+```
+TRADE_OFFS: O JSON Schema no Polaris é excelente para validar a estrutura, presença e formato de campos dentro de um recurso individual (Workload, PodSpec ou Container), mas não realiza consultas cruzadas entre múltiplos objetos distintos da API do Kubernetes (cenário no qual motores como Kyverno ou OPA Gatekeeper são mais indicados).
+VERIFY: Execute `polaris audit --config ./polaris-config.yaml --audit-path ./deploy/ --format=pretty` para testar sua `customCheck` sobre manifestos locais antes de aplicá-la no Admission Controller.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]] | [[gatekeeper-constraint-templates-and-rego-targets]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1058 | polaris-github-action-setup-polaris-automacao-pr | Automação do Polaris no GitHub Actions com setup-polaris e verificação de Pull Requests ===
+ONE_LINER: O repositório oficial do Polaris disponibiliza a GitHub Action **`fairwindsops/polaris/.github/actions/setup-polaris`** para baixar uma versão específica do binário `polaris`, adicioná-la ao `PATH` do runner e executar auditorias de *policy-as-code* diretamente nos jobs de integração contínua.
+IMPORTANCE: Integrar o Polaris diretamente no workflow de Pull Request do GitHub garante feedback rápido ao desenvolvedor quando ele altera um manifesto Kubernetes ou Helm chart, barrando violações de segurança e eficiência antes que o código chegue à branch principal e ao controlador GitOps.
+HOW_IT_WORKS: Conforme documentado na seção *As Github Action / Setup polaris action* (`polaris.docs.fairwinds.com/infrastructure-as-code/`), a action `fairwindsops/polaris/.github/actions/setup-polaris@master` recebe o input `version` (no formato `<tag_name>`, determinando qual release baixar) e expõe o output `version`. Uma vez executada a etapa de setup, os passos seguintes do mesmo job no GitHub Actions podem invocar diretamente `polaris version`, `polaris audit` ou `polaris fix`.
+EXAMPLE:
+```yaml
+# Workflow do GitHub Actions instalando o Polaris e auditando os manifestos do diretório ./deploy
+name: Polaris IaC Audit
+on: [pull_request]
+jobs:
+  polaris-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup polaris
+        uses: fairwindsops/polaris/.github/actions/setup-polaris@master
+        with:
+          version: v10.2.0
+      - name: Run Polaris Audit
+        run: |
+          polaris audit --audit-path ./deploy/ \
+            --format=pretty \
+            --only-show-failed-tests true \
+            --set-exit-code-on-danger \
+            --set-exit-code-below-score 85
+```
+TRADE_OFFS: Sempre fixe uma tag explícita no input `version` compatível com as regras do seu arquivo `polaris-config.yaml`, garantindo que todos os desenvolvedores localmente e o runner de CI avaliem exatamente o mesmo conjunto de políticas embutidas.
+VERIFY: Inspecione os logs do job no GitHub Actions confirmando a saída de `polaris version` e o resultado da etapa `polaris audit`.
+LINKS: [[polaris-auditoria-iac-cli-ci-cd-scores-danger-flags]] | [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[pluto-integracao-github-action-ci-cd-detect-files]]
+SOURCES: https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1059 | polaris-migracao-registro-imagens-assinadas-imutaveis-v10-2 | Migração de registro e imagens imutáveis assinadas no Fairwinds Polaris (v10.2.0+) ===
+ONE_LINER: A partir da versão **`v10.2.0`** (`v10.1.8 → v10.2.0`), as imagens de container do Polaris migraram do registro depreciado `quay.io/fairwinds/polaris` para **`us-docker.pkg.dev/fairwinds-ops/oss/polaris`**, adotando imagens assinadas, tags imutáveis e a remoção de tags flutuantes (`v10`, `v10.1`, `latest`).
+IMPORTANCE: Como o Polaris pode atuar como Validating e Mutating Admission Webhook dentro do cluster Kubernetes — uma posição altamente privilegiada que intercepta a criação de workloads — garantir a integridade da imagem do webhook por meio de tags imutáveis, digests SHA256 e assinatura criptográfica previne ataques à cadeia de suprimentos.
+HOW_IT_WORKS: Conforme o comunicado oficial em destaque no README e na documentação (`polaris.docs.fairwinds.com`), desde a release `v10.2.0`: (1) o repositório `quay.io/fairwinds/polaris` está depreciado e substituído por `us-docker.pkg.dev/fairwinds-ops/oss/polaris`; (2) não existem mais tags flutuantes como `v10`, `v10.1` ou `latest`; e (3) os usuários devem referenciar a tag de versão completa (`us-docker.pkg.dev/fairwinds-ops/oss/polaris:v<major>.<minor>.<patch>`) ou fixar pelo digest imutável (`us-docker.pkg.dev/fairwinds-ops/oss/polaris@sha256:<digest>`).
+EXAMPLE:
+```yaml
+# Configuração do repositório e tag imutável do Polaris (v10.2.0+) para o Dashboard e Webhook no Kubernetes
+image:
+  repository: us-docker.pkg.dev/fairwinds-ops/oss/polaris
+  tag: v10.2.0
+  pullPolicy: IfNotPresent
+```
+TRADE_OFFS: Em clusters privados sem acesso irrestrito à internet, lembre-se de liberar ou espelhar o domínio `us-docker.pkg.dev` no seu registro interno (como Harbor) antes de atualizar o chart Helm do Polaris para versões `>= v10.2.0`.
+VERIFY: Verifique a imagem em execução nos pods do namespace `polaris` com `kubectl -n polaris get pods -o jsonpath='{.items[*].spec.containers[*].image}'`.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[goldilocks-migracao-registro-imagens-imutaveis-assinadas-v4-15]] | [[pluto-migracao-registro-verificacao-cosign-checksums-v5-24]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/infrastructure-as-code/ | https://polaris.docs.fairwinds.com/admission-controller/
+
+=== NOTE: 1060 | polaris-dashboard-auditoria-continua-cluster-scorecard | Polaris Dashboard: visibilidade contínua de conformidade no cluster e combinação dos três modos de execução ===
+ONE_LINER: O **Polaris Dashboard** roda em modo somente-leitura (ou ao lado do webhook) para auditar continuamente os recursos implantados no cluster Kubernetes contra as políticas de código, exibindo um *scorecard* visual com notas e detalhamento de falhas `danger` e `warning` por namespace e controlador.
+IMPORTANCE: Antes de ligar o Validating Webhook do Polaris em modo de bloqueio em um cluster produtivo existente, as equipes de plataforma precisam enxergar qual seria o raio de impacto sobre os workloads atuais e acompanhar a evolução da nota de conformidade de cada equipe ao longo do tempo.
+HOW_IT_WORKS: Conforme descrevem o README oficial e a arquitetura do Polaris (`FairwindsOps/polaris`), o Dashboard consulta a API do Kubernetes (ou pode ser aberto localmente apontando para o `kubeconfig` atual via `polaris dashboard`), executa as mais de 30 políticas embutidas e eventuais `customChecks` sobre todos os workloads ativos e agrupa os resultados por categoria (Security, Efficiency, Reliability) e por namespace. Isso permite uma jornada de adoção em três passos sem atrito: (1) visibilidade não intrusiva com o **Dashboard**; (2) feedback preventivo no Pull Request com a **CLI (`polaris audit` / `polaris fix`)**; e (3) bloqueio definitivo de regressões no cluster com o **Admission Controller**.
+EXAMPLE:
+```bash
+# Iniciar o Polaris Dashboard localmente na porta 8080 auditando o cluster atual do kubeconfig
+polaris dashboard --port 8080
+
+# Ou instalar apenas o Polaris Dashboard dentro do cluster via Helm
+helm upgrade --install polaris fairwinds-stable/polaris \
+  --namespace polaris \
+  --create-namespace \
+  --set dashboard.enable=true \
+  --set webhook.enable=false
+```
+TRADE_OFFS: O Polaris foca na validação da configuração declarativa dos controladores de workload (Deployments, DaemonSets, StatefulSets, Jobs, CronJobs); para detectar recursos órfãos/inutilizados (como Services sem Endpoints, Secrets/ConfigMaps/ServiceAccounts não referenciados ou portas divergentes entre Service e Pod), complemente o Polaris com um sanitizador de cluster vivo como o **Popeye**.
+VERIFY: Acesse `http://localhost:8080` após iniciar `polaris dashboard` (ou via `kubectl -n polaris port-forward svc/polaris-dashboard 8080:80`) e inspecione a pontuação percentual do cluster.
+LINKS: [[polaris-motor-politicas-validacao-remediacao-kubernetes]] | [[polaris-admission-controller-validating-mutating-webhook]] | [[popeye-linter-cluster-kubernetes-vivo-readonly]]
+SOURCES: https://raw.githubusercontent.com/FairwindsOps/polaris/master/README.md | https://polaris.docs.fairwinds.com/admission-controller/ | https://polaris.docs.fairwinds.com/infrastructure-as-code/

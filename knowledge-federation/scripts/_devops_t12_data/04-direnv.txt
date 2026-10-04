@@ -1,0 +1,86 @@
+1131|direnv-arquitetura-shell-hook-subshell-bash-diff-ambiente|direnv: Arquitetura de Hook de Prompt e Captura de Diff de Ambiente via Sub-Shell Bash|O `direnv` é uma extensão compilada em um único binário estático e agnóstica de linguagem que carrega e descarrega variáveis de ambiente automaticamente conforme o usuário navega entre diretórios no terminal, mantendo o `~/.profile` e o `~/.zshrc` limpos.|Acumular dezenas de `export AWS_PROFILE=...`, `export KUBECONFIG=...` e caminhos `PATH` de projetos distintos dentro do `~/.bashrc` ou `~/.zshrc` causa colisão de credenciais entre clientes e aplica configurações erradas quando o operador muda de pasta.|Antes de exibir cada prompt do terminal, o hook do `direnv` verifica a existência de um arquivo `.envrc` (e opcionalmente `.env`) no diretório atual ou em diretórios pais. Se o arquivo existir e estiver criptograficamente autorizado, o `direnv` executa o `.envrc` dentro de um sub-processo **bash** isolado, captura apenas a diferença das variáveis exportadas (`environment diff`) e aplica ou reverte esse diff no shell atual (seja `bash`, `zsh`, `fish`, `nushell`, `elvish`, `tcsh` ou `pwsh`).|```bash
+mkdir -p /tmp/demo-direnv && cd /tmp/demo-direnv
+echo 'export KUBECONFIG="$PWD/kubeconfig-homolog.yaml"' > .envrc
+direnv allow .
+echo "$KUBECONFIG"
+cd /tmp
+echo "${KUBECONFIG:-descarregado}"
+```|Definir aliases de shell (`alias k=kubectl`) ou funções bash dentro do `.envrc` esperando que eles fiquem disponíveis no shell interativo falha porque o `direnv` executa o `.envrc` num sub-processo e exporta apenas variáveis de ambiente de volta ao shell pai.|Verifique as variáveis exportadas na linha `direnv export: +VAR` ao entrar no diretório e confirme que elas são removidas (`direnv: unloading`) ao sair com `cd ..`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1132|direnv-seguranca-allow-deny-bloqueio-execucao-envrc|direnv: Mecanismo de Segurança com direnv allow, direnv deny e Hash de Autorização|Por executar código Bash arbitrário contido em `.envrc`, o `direnv` bloqueia por padrão qualquer arquivo `.envrc` novo ou modificado até que o usuário o aprove explicitamente com `direnv allow`, registrando o hash criptográfico do conteúdo permitido.|Sem esse bloqueio baseado em hash, clonar um repositório Git malicioso ou fazer `git pull` de um commit comprometido e simplesmente executar `cd repo` dispararia execução remota de código imediatamente no terminal do engenheiro.|Sempre que um `.envrc` é criado ou alterado em um único byte, o `direnv` recusa o carregamento e exibe `.envrc is not allowed`. O operador deve inspecionar o conteúdo do arquivo (`cat .envrc`) e rodar `direnv allow .` para autorizar aquele hash específico, ou `direnv deny .` para revogar a autorização a qualquer momento.|```bash
+echo 'export APP_ENV=staging' > .envrc
+# O direnv exibe: direnv: error .envrc is not allowed
+cat .envrc
+direnv allow .
+direnv status
+direnv deny .
+```|Configurar `whitelist` ampla (`prefix = ["/home/user/projects"]`) em `direnv.toml` para pular o `direnv allow` em diretórios onde repositórios externos são clonados expõe a estação de trabalho a execução automática de código não revisado.|Revise sempre o diff de qualquer `.envrc` antes de executar `direnv allow .` e audite o estado de autorização do diretório atual com `direnv status`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1133|direnv-configuracao-hooks-bash-zsh-fish-nushell-pwsh|direnv: Configuração de Hooks em Bash, Zsh, Fish, Nushell e PowerShell|Para interceptar mudanças de diretório com latência imperceptível, o `direnv` se integra ao mecanismo nativo de hook de prompt de cada shell (`eval "$(direnv hook bash)"`, `eval "$(direnv hook zsh)"`, `direnv hook fish | source` ou hooks JSON no Nushell).|Se o hook do `direnv` for posicionado antes de extensões que reescrevem `PROMPT_COMMAND` ou `precmd` (como `rvm`, `git-prompt` ou temas customizados), o gatilho de atualização de ambiente pode ser sobrescrito e parar de funcionar.|No Bash (`~/.bashrc`) e no Zsh (`~/.zshrc`), a linha `eval "$(direnv hook <shell>)"` deve ser adicionada ao final do arquivo de inicialização. No Fish (`~/.config/fish/config.fish`), usa-se `direnv hook fish | source` com suporte à variável `direnv_fish_mode` (`eval_on_arrow`, `eval_after_arrow` ou `disable_arrow`). No Nushell, o hook em `$env.config.hooks.env_change.PWD` consome `direnv export json | from json | default {} | load-env`.|```bash
+# No final do ~/.bashrc:
+eval "$(direnv hook bash)"
+
+# No final do ~/.zshrc:
+eval "$(direnv hook zsh)"
+
+# Inspecionar o codigo gerado pelo hook:
+direnv hook bash
+```|Esquecer de reiniciar o shell após adicionar o hook ou posicionar `eval "$(direnv hook bash)"` no topo do `~/.bashrc` antes de manipuladores de prompt impede que o `direnv` detecte a navegação entre pastas.|Execute `direnv hook <seu-shell>` para verificar a saída do hook e teste a ativação entrando em um diretório com `.envrc` permitido.|https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://github.com/direnv/direnv
+1134|direnv-stdlib-path-add-source-up-dotenv-watch-file|direnv: Biblioteca Padrão (stdlib) com PATH_add, dotenv, source_up e watch_file|O `direnv` disponibiliza dentro do contexto do `.envrc` uma biblioteca padrão de funções utilitárias (`direnv-stdlib`) que inclui `PATH_add`, `path_add`, `dotenv`, `dotenv_if_exists`, `source_up`, `source_env`, `watch_file` e `env_vars_required`.|Escrever `export PATH=$PWD/bin:$PATH` manualmente em vários projetos é propenso a erros de digitação (como esquecer `:$PATH` e quebrar todos os comandos do sistema) e não resolve herança hierárquica de diretórios em monorepos.|A função `PATH_add bin` expande o caminho relativo para absoluto e o adiciona com segurança ao início de `$PATH`. Já `dotenv` e `dotenv_if_exists` carregam arquivos `.env` coexistindo com a lógica do `.envrc`; `source_up` carrega o `.envrc` do diretório pai (ideal para monorepos); e `watch_file <arquivo>` instrui o `direnv` a recarregar o ambiente automaticamente sempre que o arquivo monitorado mudar.|```bash
+# Exemplo de .envrc utilizando a stdlib do direnv:
+source_up_if_exists
+PATH_add bin
+PATH_add node_modules/.bin
+watch_file config/local.env
+dotenv_if_exists config/local.env
+env_vars_required AWS_REGION
+```|Usar `dotenv` apontando para um arquivo `.env` que contém sintaxe de script Bash avançada (loops, condicionais ou chamadas da `stdlib`) falha porque o parser `.env` lê apenas pares `CHAVE=VALOR`, reservando código Bash para o `.envrc`.|Use `direnv stdlib` para inspecionar todas as funções disponíveis na versão instalada e valide que `echo $PATH` contém os diretórios adicionados via `PATH_add`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1135|direnv-layouts-python-go-node-ruby-isolamento-linguagem|direnv: Funções de Layout (layout python, layout node, layout go) para Isolamento por Projeto|A `stdlib` do `direnv` inclui funções `layout <linguagem>` (como `layout python`, `layout python3`, `layout node`, `layout go` e `layout ruby`) que criam e ativam automaticamente ambientes virtuais e diretórios de dependências isolados dentro de `.direnv/` do projeto.|Ativar e desativar `source .venv/bin/activate` manualmente a cada troca de repositório Python ou esquecer de adicionar `./node_modules/.bin` ao `PATH` causa instalação de pacotes Python no sistema global ou uso da versão errada de binários JS.|Ao colocar `layout python3` no `.envrc`, o `direnv` cria automaticamente um virtualenv dentro de `.direnv/python-<versao>` (se ainda não existir), exporta `VIRTUAL_ENV` e adiciona `.direnv/python-<versao>/bin` ao topo do `PATH`. Ao sair do diretório com `cd ..`, o virtualenv é desativado instantaneamente.|```bash
+# Conteudo do .envrc para um projeto Python + Node:
+layout python3
+layout node
+
+# No terminal apos direnv allow:
+which python
+which pip
+echo "$VIRTUAL_ENV"
+```|Commitar o diretório `.direnv/` no Git inclui binários locais e caminhos absolutos do virtualenv específicos da máquina do desenvolvedor.|Adicione `.direnv/` ao `.gitignore` global ou do repositório e confirme com `which python` e `echo $VIRTUAL_ENV` que o ambiente virtual isolado está ativo apenas dentro da pasta do projeto.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1136|direnv-use-nix-use-flake-integracao-devbox-mise|direnv: Funções use nix, use flake e Integração com Devbox e mise|Por meio das diretivas `use nix` e `use flake` (da `stdlib` ou via `nix-direnv`), além de integrações com Devbox e `mise`, o `direnv` atua como o ativador universal de toolchains declarativas ao entrar na pasta de um projeto.|Executar `nix develop` ou `devbox shell` manualmente abre um novo sub-shell que perde o histórico de comandos, customizações de prompt e estado de sessão do shell principal do usuário.|Quando o `.envrc` contém `use flake` (para `flake.nix`), `use nix` (para `shell.nix`) ou a integração gerada pelo Devbox (`devbox generate direnv`), o `direnv` resolve o ambiente em background e exporta todas as variáveis `PATH`, `LD_LIBRARY_PATH` e flags de compilação diretamente para o shell interativo atual.|```bash
+# Exemplo de .envrc para projeto com Nix Flake:
+use flake
+
+# Ou verificando o estado de carregamento pelo direnv:
+direnv status
+direnv reload
+```|Usar a implementação básica `use nix` sem cache de derivações em projetos Nix grandes pode reavaliar expressões Nix a cada recarregamento e deixar o prompt lento se arquivos monitorados mudarem com frequência.|Use `use flake` (ou `nix-direnv` / `devbox generate direnv` que fazem cache do perfil em `.direnv/` ou `.devbox/`) e acione `direnv reload` quando atualizar as dependências.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://www.jetify.com/docs/devbox/quickstart;https://github.com/direnv/direnv
+1137|direnv-extensoes-customizadas-direnvrc-config-lib|direnv: Extensões Pessoais e Corporativas em ~/.config/direnv/direnvrc e lib/*.sh|O `direnv` permite estender ou sobrescrever sua biblioteca padrão criando scripts Bash em `~/.config/direnv/direnvrc` ou arquivos modulares em `~/.config/direnv/lib/*.sh`, que são carregados automaticamente antes de qualquer `.envrc`.|Repetir blocos complexos de código Bash (como buscar segredos no Vault/1Password, configurar proxies corporativos ou assumir roles AWS SSO) em dezenas de arquivos `.envrc` espalhados por repositórios dificulta a manutenção e polui os projetos.|Funções definidas em `~/.config/direnv/lib/aws_sso.sh` (por exemplo, `use_aws_profile()`) ficam imediatamente disponíveis como primitivas declarativas para qualquer `.envrc` da máquina. Assim, o `.envrc` do projeto permanece enxuto (`use aws_profile staging-eks`) enquanto a implementação detalhada fica centralizada na configuração do usuário.|```bash
+mkdir -p ~/.config/direnv/lib
+cat << 'EOF' > ~/.config/direnv/lib/kube_ctx.sh
+use_kube_ctx() {
+  export KUBECONFIG="$PWD/.kube/${1}.yaml"
+  watch_file "$KUBECONFIG"
+}
+EOF
+```|Colocar comandos que produzem saída inesperada ou alteram variáveis globais fora de funções dentro de `~/.config/direnv/direnvrc` afeta todos os diretórios gerenciados pelo `direnv` na máquina.|Encapsule toda extensão em `~/.config/direnv/lib/*.sh` dentro de funções nomeadas (`use_<recurso>` ou `layout_<tipo>`) e teste o carregamento com `direnv exec . env`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1138|direnv-isolamento-multi-cluster-kubeconfig-aws-profile-terraform|direnv: Isolamento de Contexto Multi-Cluster e Multi-Cloud (KUBECONFIG, AWS_PROFILE e TF_WORKSPACE)|Em operações DevOps e SRE, o `direnv` previne acidentes graves de execução no cluster ou conta cloud errada ao vincular `KUBECONFIG`, `AWS_PROFILE`, `CLOUDSDK_ACTIVE_CONFIG_NAME` e variáveis `TF_VAR_*` ao diretório de cada ambiente (`envs/staging`, `envs/prod`).|Quando todos os terminais compartilham o mesmo arquivo global `~/.kube/config`, mudar o contexto com `kubectl config use-context prod` em uma aba do terminal muda instantaneamente o contexto de todas as outras abas abertas, causando comandos destrutivos no cluster errado.|Ao estruturar repositórios de infraestrutura por diretório de ambiente e definir em cada `.envrc` um `export KUBECONFIG="$PWD/kubeconfig.yaml"` e `export AWS_PROFILE="org-prod"`, cada aba do terminal fica estritamente isolada ao ambiente da pasta em que se encontra, sem interferir em outros terminais.|```bash
+# Em infra/live/production/.envrc:
+export AWS_PROFILE="acme-production"
+export AWS_DEFAULT_REGION="sa-east-1"
+export KUBECONFIG="$PWD/.kube/prod-cluster.yaml"
+export TF_IN_AUTOMATION="false"
+env_vars_required AWS_PROFILE KUBECONFIG
+```|Armazenar credenciais estáticas de longa duração (`AWS_SECRET_ACCESS_KEY` ou tokens de admin) em texto puro dentro de um `.envrc` commitado no Git compromete a segurança da conta cloud.|Commit apenas nomes de perfis (`AWS_PROFILE`), regiões e caminhos relativos no `.envrc` compartilhado, ou mantenha segredos locais em um `.env.local` ignorado pelo Git e carregado via `dotenv_if_exists .env.local`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1139|direnv-toml-configuracao-global-load-dotenv-strict-env|direnv: Configuração Global no direnv.toml (load_dotenv, strict_env e warn_timeout)|O arquivo de configuração global `~/.config/direnv/direnv.toml` controla comportamentos de segurança, performance e compatibilidade do `direnv`, como carregamento automático de `.env` (`load_dotenv`), modo estrito de execução (`strict_env`) e limite de alerta de lentidão (`warn_timeout`).|Scripts `.envrc` que ignoram erros silenciosos de comandos intermediários ou demoram vários segundos bloqueando o prompt degradam a experiência de terminal sem deixar claro qual comando travou.|Em `~/.config/direnv/direnv.toml`, habilitar `strict_env = true` na seção `[global]` faz com que todo `.envrc` seja avaliado com `set -euo pipefail`, interrompendo imediatamente o carregamento se qualquer comando falhar ou referenciar variável não definida. O parâmetro `warn_timeout` (padrão `5s`) emite aviso quando a avaliação do `.envrc` demora demais.|```toml
+# ~/.config/direnv/direnv.toml
+[global]
+strict_env = true
+warn_timeout = "3s"
+load_dotenv = false
+hide_env_diff = false
+
+[whitelist]
+exact = []
+```|Habilitar `load_dotenv = true` globalmente sem revisar projetos legados pode fazer o `direnv` solicitar autorização ou carregar arquivos `.env` de exemplo que não deveriam sobrescrever o ambiente do shell interativo.|Prefira usar `dotenv` ou `dotenv_if_exists` explicitamente dentro do `.envrc` de cada projeto e mantenha `strict_env = true` ativo no `direnv.toml` para detectar falhas cedo.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv
+1140|direnv-exec-export-ci-cd-editors-vscode-headless|direnv: Execução Não Interativa com direnv exec e direnv export em IDEs e CI/CD|Em ambientes onde não há prompt interativo (como tasks de IDEs, scripts de automação ou steps de GitHub Actions), os subcomandos `direnv exec <dir> <comando>` e `direnv export <shell|json>` carregam o `.envrc` autorizado e executam processos com o ambiente completo.|Como o hook padrão do `direnv` é acionado apenas antes da renderização do prompt interativo (`PROMPT_COMMAND` / `precmd`), scripts executados em background, runners de CI ou extensões de editor que invocam binários diretamente não recebem as variáveis do `.envrc` automaticamente.|O comando `direnv allow . && direnv exec . <comando>` avalia o `.envrc` do diretório indicado, aplica o diff de variáveis de ambiente ao processo filho e executa o comando imediatamente. Já `direnv export json` emite um objeto JSON com as variáveis calculadas, sendo consumido por extensões de VS Code, Neovim, Emacs e pelo hook do Nushell.|```bash
+direnv allow .
+direnv exec . env | grep -E '^(AWS_PROFILE|KUBECONFIG)='
+direnv export json
+```|Invocar `direnv exec . <comando>` em um runner de CI sem antes executar `direnv allow .` falha imediatamente com `error .envrc is not allowed` porque a autorização não é persistida no repositório Git.|Em pipelines de CI ou containers efêmeros, execute `direnv allow .` após o checkout do código revisado antes de chamar `direnv exec . <comando>`.|https://raw.githubusercontent.com/direnv/direnv/master/README.md;https://raw.githubusercontent.com/direnv/direnv/master/docs/hook.md;https://github.com/direnv/direnv

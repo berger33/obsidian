@@ -1,0 +1,108 @@
+TOPIC: CNCF Paralus — Acesso Zero-Trust ao Kubernetes, Kubeconfig Just-in-Time, Federação OIDC/RBAC e Auditoria de kubectl
+SOURCES: https://raw.githubusercontent.com/paralus/paralus/main/README.md | https://www.paralus.io/docs/ | https://www.paralus.io/docs/usage/audit-logs
+
+===NOTE===
+0441|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager|CNCF Paralus: Arquitetura de Gerenciamento de Acesso Zero-Trust para Frotas de Clusters Kubernetes|**Paralus** (`paralus/paralus`, projeto CNCF Sandbox sob Apache-2.0) é uma plataforma open-source de gerenciamento de acesso Zero-Trust ao Kubernetes que centraliza a autenticação SSO/OIDC, a autorização RBAC multi-cluster e a auditoria completa de comandos `kubectl` através de GUI, CLI (`pctl`) e API REST.|Elimina a distribuição perigosa de arquivos `kubeconfig` estáticos de longa validade (ou certificados `system:masters` compartilhados) e remove a necessidade de expor o `kube-apiserver` de clusters privados na internet pública.|O plano central do Paralus (integrado ao Ory Kratos para identidade e PostgreSQL para persistência) comunica-se com os clusters gerenciados através de um **Relay Agent** leve implantado dentro de cada cluster. O agente estabelece um túnel mTLS *outbound* (dial-out) para o Paralus Core, permitindo que desenvolvedores usem seu `kubectl` nativo passando pelo proxy Zero-Trust do Paralus.|```bash
+# Instalar o plano de controle do Paralus em Kubernetes usando o chart Helm oficial
+helm repo add paralus https://paralus.github.io/helm-charts
+helm repo update
+
+helm upgrade --install paralus paralus/ztka \
+  --namespace paralus --create-namespace \
+  --set fqdn.domain="paralus.internal.corp"
+```|O banco PostgreSQL do Paralus armazena políticas de RBAC de toda a frota de clusters e trilhas de auditoria; proteja-o com criptografia em repouso, conexões TLS obrigatórias e backups regulares.|Execute `kubectl -n paralus get pods` e confirme que os serviços core (`paralus`, `relay-server`, `kratos`, `prompt`) estão em estado `Running`.|paralus-conexao-clusters-relay-agent-outbound-mtls-dial-in, paralus-organizacao-projects-groups-custom-roles-namespace-rbac, paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem
+
+===NOTE===
+0442|paralus-conexao-clusters-relay-agent-outbound-mtls-dial-in|CNCF Paralus: Conexão Segura de Clusters Privados via Relay Agent (Túnel mTLS Outbound sem Expor o `kube-apiserver`)|Ao importar um cluster Kubernetes existente (EKS, GKE, AKS, OpenShift, k3s ou bare-metal atrás de firewall/NAT) no Paralus, a plataforma gera um manifesto de bootstrap contendo o **`relay-agent`** e o **`prompt`** (proxy de sessão interativa).|Permite gerenciar o acesso de engenheiros a dezenas de clusters isolados em VPCs privadas ou datacenters on-premises sem abrir nenhuma regra de firewall de entrada (*inbound*) nem criar VPNs ponto a ponto para cada cluster.|O `relay-agent` rodando no namespace `paralus-system` do cluster de destino inicia uma conexão gRPC/mTLS de saída (porta `443`) para o endpoint `cdrelay.<dominio>` do Paralus Core. Quando um usuário autenticado executa `kubectl get pods`, a requisição chega ao `user-relay` do Paralus, é validada contra as políticas RBAC ativas e viaja pelo túnel reverso até o `kube-apiserver` local do cluster.|```bash
+# Baixar o manifesto de bootstrap de um cluster registrado via CLI pctl e aplicá-lo no cluster alvo
+pctl get cluster "prod-eks-sa-east-1" -o yaml > /tmp/cluster-bootstrap.yaml
+kubectl apply -f /tmp/cluster-bootstrap.yaml
+
+# Verificar no cluster alvo se o relay-agent conectou-se com sucesso ao Paralus Core
+kubectl -n paralus-system get pods
+```|Se o certificado mTLS do `relay-agent` ou a conectividade de saída para `cdrelay.<dominio>:443` for interrompida por um proxy corporativo que realiza inspeção TLS (*SSL Bump*), o túnel mTLS falhará; adicione o FQDN do `cdrelay` à lista de bypass de inspeção TLS.|Verifique na UI ou via `pctl get clusters` que o cluster importado atingiu o status `HEALTHY` / `Ready`.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao, ziti-dark-services-routers-eliminacao-portas-inbound-outbound-fabric
+
+===NOTE===
+0443|paralus-organizacao-projects-groups-custom-roles-namespace-rbac|CNCF Paralus: Modelo Multi-Tenant com `Projects`, `Groups`, Papéis Pré-Configurados e `Custom Roles` por Namespace|O Paralus organiza o controle de acesso em uma hierarquia lógica de **Organization -> Projects -> Clusters / Namespaces**, vinculando **Users** e **Groups** a papéis de nível de projeto (`PROJECT_ADMIN`, `PROJECT_READ_ONLY`, `INFRA_ADMIN`) ou de nível de namespace (`NAMESPACE_ADMIN`, `NAMESPACE_READ_ONLY`) e **Custom Roles**.|Sem uma camada central de abstração, conceder a uma equipe de desenvolvimento permissão de leitura apenas no namespace `payments` em 15 clusters exigiria criar e manter 15 `Roles` e `RoleBindings` separadamente; no Paralus, uma única associação de grupo aplica e sincroniza o RBAC em todos os clusters do projeto.|Quando um usuário recebe `NAMESPACE_READ_ONLY` para o namespace `payments` em um projeto, o Paralus provisiona dinamicamente no cluster alvo apenas as permissões equivalentes de leitura restritas àquele namespace, impedindo qualquer visibilidade sobre outros namespaces ou recursos cluster-wide.|```bash
+# Criar um novo projeto de isolamento e listar os papéis (roles) disponíveis via CLI pctl
+pctl create project "payments-platform" --description "Clusters da vertical de pagamentos"
+pctl get roles
+```|Evite conceder `ADMIN` (nível de organização) ou `CLUSTER_ADMIN` para equipes de desenvolvimento de aplicações; utilize sempre papéis com escopo de namespace (`NAMESPACE_ADMIN` / `NAMESPACE_READ_ONLY`) ou `Custom Roles` restritas aos grupos de API necessários.|Teste com uma conta vinculada a `NAMESPACE_READ_ONLY` no namespace `payments`: confirme que `kubectl get pods -n payments` funciona e que `kubectl get secrets -n kube-system` retorna `Forbidden`.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-federacao-sso-oidc-okta-entra-github-mapeamento-grupos, paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao
+
+===NOTE===
+0444|paralus-federacao-sso-oidc-okta-entra-github-mapeamento-grupos|CNCF Paralus: Federação SSO com Provedores OIDC (Okta, Microsoft Entra ID, Google, Keycloak e GitHub) e Mapeamento de Grupos|O Paralus integra-se nativamente a provedores de identidade externos compatíveis com **OpenID Connect (OIDC)** — incluindo Okta, Microsoft Entra ID (Azure AD), Google Workspace, Keycloak, Dex e GitHub — sincronizando usuários e grupos automaticamente no momento do login.|Garante que o desligamento de um funcionário ou a remoção de um engenheiro de um grupo no IdP corporativo revogue o seu acesso a todos os clusters Kubernetes sem necessidade de intervenção manual em cada cluster.|Ao configurar um *Identity Provider* no Paralus (informando `Client ID`, `Client Secret`, `Issuer URL` e escopos `openid`, `profile`, `email`, `groups`), os claims de grupo retornados pelo IdP são mapeados diretamente para **Groups** do Paralus, que já possuem os projetos, clusters, namespaces e roles pré-associados.|```yaml
+# Exemplo de configuração de provedor OIDC corporativo no Paralus
+name: "corp-okta-oidc"
+idpType: "generic-oidc"
+domain: "corp.example.com"
+clientId: "0oa9x8y7z6sigstore"
+issuerUrl: "https://sso.corp.example.com/oauth2/default"
+scopes:
+  - openid
+  - profile
+  - email
+  - groups
+groupAttributeName: "groups"
+```|Se o IdP OIDC não incluir a claim `groups` no ID Token (ou se o nome do atributo configurado em `groupAttributeName` divergir do emitido pelo IdP), o usuário fará login via SSO mas cairá sem permissões de grupo atribuídas.|Realize login via SSO com um usuário de teste e verifique na seção *Users* do Paralus que os grupos provenientes do IdP foram associados automaticamente.|paralus-organizacao-projects-groups-custom-roles-namespace-rbac, paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao, dexidp-autenticacao-kubernetes-oidc-kubectl-kubelogin-rbac
+
+===NOTE===
+0445|paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao|CNCF Paralus: Provisionamento *Just-in-Time* de ServiceAccounts, `kubeconfig` Auditado e Revogação Instantânea|Quando um usuário solicita acesso via `kubectl` (baixando seu `kubeconfig` no Paralus ou usando o terminal web *Prompt*), o Paralus provisiona *Just-in-Time* as credenciais e `ServiceAccounts` efêmeras no cluster de destino e permite revogar permissões ou certificados instantaneamente.|No Kubernetes puro, certificados X.509 de cliente embutidos em arquivos `kubeconfig` não possuem lista de revogação (CRL) nativa no `kube-apiserver` e permanecem válidos até expirarem; como o `kubeconfig` do Paralus aponta para o proxy `user-relay` do Paralus, a revogação no plano de controle bloqueia o acesso no mesmo segundo.|O administrador pode configurar o tempo de validade e rotação do `kubeconfig`, desativar o acesso `kubectl` CLI ou o terminal web por usuário, e revogar o certificado de cliente do `kubeconfig` em um clique caso o notebook de um engenheiro seja extraviado.|```bash
+# Baixar o kubeconfig gerenciado pelo Paralus para um cluster específico usando a CLI pctl
+pctl get kubeconfig "prod-eks-sa-east-1" \
+  --project "payments-platform" > ~/.kube/paralus-prod-payments.yaml
+
+export KUBECONFIG=~/.kube/paralus-prod-payments.yaml
+kubectl get pods -n payments
+```|Armazenar o arquivo `kubeconfig` baixado em diretórios com permissão de leitura global (`0644`) expõe o certificado de cliente a outros processos locais; defina sempre `chmod 600 ~/.kube/paralus-prod-payments.yaml`.|Revogue a associação de role do usuário no Paralus e execute imediatamente `kubectl get pods` com o mesmo `kubeconfig`, confirmando que a requisição é negada em tempo real pelo proxy.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-conexao-clusters-relay-agent-outbound-mtls-dial-in, paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem
+
+===NOTE===
+0446|paralus-terminal-web-prompt-sessoes-efemeras-browser-kubectl|CNCF Paralus: Acesso `kubectl` Browser-Based via Componente `Prompt` (Sessões Efêmeras sem Credenciais no Desktop)|O componente **`prompt`** do Paralus fornece um terminal `kubectl` interativo diretamente no navegador web autenticado via SSO, executando os comandos em um ambiente efêmero isolado sem que o usuário precise baixar um arquivo `kubeconfig` para sua máquina local.|Em cenários de plantão (*on-call*) ou acesso por prestadores de serviço em máquinas não gerenciadas (*BYOD*), o terminal browser-based impede que certificados e chaves de acesso ao cluster fiquem persistidos no disco local do dispositivo.|Quando o usuário abre o terminal web para um cluster autorizado, o serviço `prompt` no cluster instancia uma sessão temporária restrita exatamente às permissões RBAC calculadas pelo Paralus para aquela identidade, encerrando e limpando o ambiente assim que a aba ou o timeout de inatividade expira.|```bash
+# Inspecionar a saúde do deployment prompt no namespace paralus-system do cluster gerenciado
+kubectl -n paralus-system get deploy,pods -l app.kubernetes.io/name=prompt
+```|Para equipes que não devem ter permissão de baixar arquivos `kubeconfig` para uso fora do navegador, desabilite a opção *Allow Kubectl Download* na política do usuário/grupo, restringindo o uso apenas ao terminal supervisionado ou à API.|Abra o terminal web no console do Paralus, execute `kubectl auth whoami` (ou `kubectl auth can-i --list`) e confirme que a identidade efetiva reflete apenas o escopo autorizado.|paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao, paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem, paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager
+
+===NOTE===
+0447|paralus-automacao-cli-pctl-gitops-rbac-as-code-ci-cd|CNCF Paralus: Automação Declarativa (*RBAC-as-Code*) com a CLI `pctl` e API REST em Pipelines GitOps|A ferramenta de linha de comando **`pctl`** (`paralus/cli`) e a API REST do Paralus permitem gerenciar projetos, clusters, grupos, usuários e políticas de acesso de forma totalmente declarativa a partir de pipelines de CI/CD e fluxos GitOps.|Impede alterações manuais não rastreadas (*ClickOps*) nas permissões de acesso aos clusters: toda concessão de papel `NAMESPACE_ADMIN` ou criação de `Custom Role` passa por revisão de Pull Request no Git antes de ser aplicada pelo `pctl`.|O `pctl` autentica-se no Paralus Core usando um perfil de configuração JSON (contendo a `API Key` e `API Secret` de uma conta de automação de CI) e suporta operações idempotentes sobre projetos, grupos e associações de permissões.|```bash
+# Verificar a configuração do perfil da CLI pctl e listar todos os clusters do projeto em JSON
+pctl version
+pctl get clusters --project "payments-platform" -o json | jq '.items[].metadata.name'
+```|Chaves de API (`API Key` / `API Secret`) usadas pelo `pctl` em pipelines de GitOps possuem privilégios elevados de administração de acesso; armazene-as em cofres de segredos (Vault/OpenBao) e rotacione-as periodicamente.|Execute `pctl get projects` usando o perfil de CI e confirme que o estado dos projetos e grupos no Paralus coincide com as definições versionadas no repositório.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-organizacao-projects-groups-custom-roles-namespace-rbac, paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem
+
+===NOTE===
+0448|paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem|CNCF Paralus: Trilhas de Auditoria Imutáveis (`System Audit Logs` e `Kubectl / Relay Audit Logs`) para Conformidade e SIEM|O Paralus registra automaticamente duas trilhas de auditoria granulares: **System Audit Logs** (quem fez login, quem criou projetos, alterou grupos, importou clusters ou baixou um `kubeconfig`) e **Relay / Kubectl Audit Logs** (cada comando `kubectl` e chamada à API Kubernetes executada por cada usuário em qualquer cluster da frota).|Para conformidade com PCI-DSS, SOC 2, ISO 27001 e investigações forenses, não basta saber que *"alguém com o certificado de admin deletou um Secret ou abriu um `kubectl exec` no pod de pagamentos"*; o Paralus atribui a ação nominalmente ao e-mail corporativo exato do usuário autenticado via OIDC.|Cada evento de auditoria de `kubectl` captura o carimbo de tempo, o usuário real (`user`), o projeto, o nome do cluster, o namespace, o verbo da API Kubernetes (`get`, `list`, `create`, `delete`, `exec`, `port-forward`), o recurso/URL invocado e o código de resposta, permitindo filtragem por cluster, usuário ou intervalo de tempo e exportação para SIEM.|```bash
+# Consultar via API REST do Paralus os logs de auditoria de comandos kubectl executados nas últimas 24h
+curl -sS "https://paralus.internal.corp/api/v1/audit/relay?project=payments-platform&time_from=24h" \
+  -H "X-Paralus-API-KeyID: ${PARALUS_KEY_ID}" \
+  -H "X-Paralus-API-Secret: ${PARALUS_SECRET}" | jq .
+```|Se os engenheiros ainda tiverem acesso direto à porta `6443` do `kube-apiserver` usando credenciais nativas da nuvem (ex.: `aws eks update-kubeconfig` direto) sem passar pelo Relay do Paralus, essas ações contornarão o `Relay Audit Log` do Paralus.|Feche o acesso direto de usuários finais ao `kube-apiserver` e valide na aba *Audit Logs -> Kubectl* que 100% dos comandos `kubectl get` e `kubectl exec` aparecem atribuídos ao usuário SSO.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-kubeconfig-dinamico-just-in-time-serviceaccounts-revogacao, auditd-arquitetura-linux-audit-kernel-auditctl-augenrules
+
+===NOTE===
+0449|paralus-custom-roles-restricao-verbs-exec-portforward-secrets|CNCF Paralus: Criação de `Custom Roles` Restritivas (Bloqueio de `pods/exec`, `pods/portforward` e Leitura de `secrets`)|Enquanto o papel padrão `admin` ou `edit` do Kubernetes permite executar comandos arbitrários dentro de containers (`pods/exec`), abrir túneis diretos (`pods/portforward`) e ler variáveis sensíveis (`secrets`), o sistema de **`Custom Roles`** do Paralus permite compor permissões cirúrgicas por `apiGroups`, `resources` e `verbs`.|Bloquear `pods/exec`, `pods/attach` e leitura de `secrets` em clusters de produção permite que desenvolvedores inspecionem logs (`pods/log`), eventos e estado de Deployments para depuração sem poder extrair chaves privadas da memória do container.|No Paralus, o administrador cria uma `Custom Role` de escopo `NAMESPACE` contendo apenas os recursos `pods`, `pods/log`, `deployments`, `events`, `configmaps` com verbos `get`, `list`, `watch`, omitindo explicitamente `secrets` e `pods/exec`, e a associa ao grupo de desenvolvedores em todos os clusters de produção.|```yaml
+# Especificação de Custom Role de observabilidade segura sem acesso a secrets ou pods/exec
+kind: Role
+metadata:
+  name: prod-developer-safe-troubleshoot
+spec:
+  scope: NAMESPACE
+  rolepermissions:
+    - apiGroups: ["", "apps"]
+      resources: ["pods", "pods/log", "events", "deployments", "replicasets"]
+      verbs: ["get", "list", "watch"]
+```|Conceder o verbo `create` ou `patch` sobre `deployments` ou `pods` no mesmo namespace onde reside uma `ServiceAccount` privilegiada equivale indiretamente a conceder acesso aos `secrets` daquele namespace, pois o usuário poderia alterar a imagem do pod para exfiltrar os segredos montados.|Associe a `Custom Role` acima a uma conta de teste e confirme que `kubectl logs pod/app -n payments` sucede enquanto `kubectl exec -it pod/app -n payments -- sh` e `kubectl get secrets -n payments` são negados (`Forbidden`).|paralus-organizacao-projects-groups-custom-roles-namespace-rbac, paralus-auditoria-completa-kubectl-api-relay-audit-logs-siem, kubearmor-protecao-arquivos-sensi-readonly-fromsource-serviceaccount-token
+
+===NOTE===
+0450|paralus-hardening-producao-postgres-kratos-tls-networkpolicies|CNCF Paralus: Hardening da Própria Instalação do Paralus (Certificados TLS, Isolamento de Rede e Proteção de Segredos)|Como o Paralus atua como o ponto central de autenticação e autorização para toda a frota de clusters Kubernetes, o cluster hospedeiro onde o Paralus Core roda deve ser tratado como infraestrutura **Tier Zero** com *hardening* rigoroso.|O comprometimento do namespace `paralus` ou do seu banco PostgreSQL permitiria a um atacante injetar associações `CLUSTER_ADMIN` em qualquer cluster conectado via `relay-agent`.|Em produção, substitua certificados autoassinados por certificados TLS gerenciados pelo `cert-manager` para os três domínios (`console`, `core-connector` e `cdrelay`), externalize o banco PostgreSQL para uma instância gerenciada com mTLS e criptografia KMS, proteja os segredos do Ory Kratos/Paralus via External Secrets Operator e aplique `NetworkPolicies` estritas no namespace `paralus`.|```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-paralus-control-plane
+  namespace: paralus
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+```|Nunca instale o plano de controle do Paralus dentro de um cluster compartilhado com cargas de trabalho não confiáveis de desenvolvimento; isole-o em um cluster de gerenciamento dedicado.|Verifique `kubectl -n paralus get networkpolicies,ingress,certificates` e confirme que todos os endpoints HTTPS do Paralus apresentam certificados TLS válidos e isolamento de rede ativo.|paralus-arquitetura-cncf-zero-trust-kubernetes-access-manager, paralus-conexao-clusters-relay-agent-outbound-mtls-dial-in, bloodhound-governanca-tier-zero-high-value-assets-isolamento-privilegio

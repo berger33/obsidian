@@ -1,0 +1,170 @@
+0211|kubearmor-arquitetura-cncf-runtime-security-enforcement-lsm-ebpf|CNCF KubeArmor: arquitetura de segurança em runtime com bloqueio inline no kernel via `Linux Security Modules (LSMs)` e `eBPF`|Conforme documentado no README oficial (`kubearmor/KubeArmor`, projeto Sandbox da CNCF licenciado sob Apache 2.0), o **KubeArmor** é um sistema cloud-native de **aplicação de políticas de segurança em tempo de execução (*Runtime Security Enforcement*)** que restringe o comportamento de **Pods, Containers e Nós (VMs/Bare-Metal)** diretamente no nível do kernel usando **Linux Security Modules (`AppArmor`, `BPF-LSM` ou `SELinux`)** combinados com observabilidade **`eBPF`**.|Ferramentas de segurança em runtime baseadas apenas em observar syscalls via eBPF em espaço de usuário detectam que um processo malicioso foi executado e enviam um alerta (ou tentam matar o processo depois que ele já rodou algumas instruções, sofrendo de *TOCTOU race conditions*); o KubeArmor usa **LSMs do kernel Linux** para **bloquear a chamada antes da execução (*inline enforcement*)**!|Quando você aplica um CRD `KubeArmorPolicy` no Kubernetes, o DaemonSet do KubeArmor traduz a política para regras nativas do LSM ativo no nó (`BPF-LSM` ou `AppArmor`) e correlaciona toda telemetria e alertas de violação com os metadados do Pod, Container e Namespace via eBPF.|```bash
+# Instalando o cliente oficial karmor e verificando o ambiente e os LSMs suportados no cluster:
+curl -sfL http://get.kubearmor.io/ | sudo sh -s -- -b /usr/local/bin
+karmor probe
+```|O comando **`karmor probe`** inspeciona os nós do seu cluster Kubernetes (ou host local) e informa exatamente qual LSM está habilitado (`BPF-LSM`, `AppArmor` ou `SELinux`) e se o kernel atende todos os pré-requisitos para bloqueio inline.|Execute `karmor probe` e `kubectl get pods -n kubearmor` para validar a saúde do DaemonSet e dos controladores.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://github.com/kubearmor/KubeArmor
+0212|kubearmor-crd-kubearmorpolicy-especificacao-selector-process-file-network|KubeArmor `KubeArmorPolicy` (`ksp`): anatomia da política para Pods/Containers (`selector`, `process`, `file`, `network`, `capabilities`, `action`)|Conforme a especificação oficial *Specification of Security Policy for Containers* (`getting-started/security_policy_specification.md`), uma política **`KubeArmorPolicy`** (`apiVersion: security.kubearmor.com/v1`) seleciona Pods por labels (`selector.matchLabels` / `matchExpressions`) e governa cinco subsistemas do container: **`process`**, **`file`**, **`network`**, **`capabilities`** e **`syscalls`**, aplicando uma **`action`** (`Block`, `Audit` ou `Allow`, sendo **`Block`** o padrão!).|Sem uma política de runtime no nível do container, um invasor que explore uma vulnerabilidade RCE na aplicação web pode invocar `/bin/sh`, `/usr/bin/apt`, `/usr/bin/curl` ou ler o token da ServiceAccount em `/var/run/secrets/kubernetes.io/serviceaccount/token`.|No `KubeArmorPolicy`, você atribui `severity` (de `1` a `10`), `tags` (ex.: `["MITRE", "CIS", "PCI-DSS"]`), `message` e declara exatamente quais caminhos (`matchPaths`), diretórios (`matchDirectories` com `recursive: true`) ou protocolos (`matchProtocols`) devem ser bloqueados ou auditados.|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-block-package-managers
+  namespace: production
+spec:
+  severity: 8
+  tags: ["CIS", "MITRE_T1059"]
+  message: "Execução de gerenciadores de pacotes bloqueada em produção"
+  selector:
+    matchLabels:
+      app: checkout-api
+  process:
+    matchPaths:
+      - path: /usr/bin/apt
+      - path: /usr/bin/apt-get
+      - path: /sbin/apk
+  action: Block
+```|Atenção à nota oficial da especificação: na seção `selector`, quando `matchLabels` e `matchExpressions` são usados juntos, eles operam como uma condição lógica **`AND`**; além disso, para a seção `syscalls`, apenas a ação `Audit` é suportada.|Aplique a política com `kubectl apply -f policy.yaml` e verifique seu status com `kubectl get ksp -n production`.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://github.com/kubearmor/KubeArmor
+0213|kubearmor-restricao-processos-fromsource-owneronly-recursive|KubeArmor Controle Fino de Execução de Processos: `fromSource`, `ownerOnly` e `matchDirectories` recursivos|Na seção **`process`** de uma `KubeArmorPolicy`, cada regra em `matchPaths` ou `matchDirectories` suporta três modificadores poderosos documentados na especificação oficial: **`fromSource`** (restringe qual binário pai pode ou não invocar o executável alvo), **`ownerOnly: true`** (permite a execução apenas pelo usuário proprietário do arquivo binário) e **`recursive: true`** (estende a regra a todos os subdiretórios).|Bloquear `/bin/sh` ou `/usr/bin/env` globalmente em todo o container pode quebrar o script de entrypoint legítimo da aplicação na inicialização; porém, o processo do servidor web (ex.: `/usr/sbin/nginx` ou `/usr/local/bin/node`) nunca deveria invocar `/bin/sh` ou `/bin/bash` depois de iniciado!|Especificando **`fromSource: [{path: /usr/sbin/nginx}]`** com `action: Block` sobre `/bin/bash` e `/bin/sh`, scripts de inicialização continuam funcionando normalmente, mas qualquer tentativa de *Command Injection / Web Shell* originada do processo `nginx` recebe erro imediato `Permission denied (EACCES)` do kernel!|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-nginx-block-shell-spawn
+  namespace: production
+spec:
+  severity: 9
+  selector:
+    matchLabels:
+      app: frontend-nginx
+  process:
+    matchPaths:
+      - path: /bin/sh
+        fromSource:
+          - path: /usr/sbin/nginx
+      - path: /bin/bash
+        fromSource:
+          - path: /usr/sbin/nginx
+  action: Block
+```|Conforme a documentação oficial, evite usar `matchPatterns` (expressões regulares) em regras `process` a menos que necessário, pois a cobertura de regex depende das particularidades do perfil AppArmor; prefira sempre `matchPaths` e `matchDirectories` explícitos.|Teste executar `kubectl exec -it <pod> -- /bin/sh` versus spawna-lo a partir do binário restrito em `fromSource` e observe o alerta em `karmor logs`.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://github.com/kubearmor/KubeArmor
+0214|kubearmor-protecao-arquivos-sensi-readonly-fromsource-serviceaccount-token|KubeArmor Proteção de Arquivos e Segredos (`file`): `readOnly: true`, vínculo `fromSource` e blindagem do Token da ServiceAccount|A seção **`file`** da `KubeArmorPolicy` permite controlar leituras e escritas em arquivos (`matchPaths`) e diretórios (`matchDirectories`) dentro do container, suportando as opções **`readOnly: true`** (permite leitura, mas bloqueia qualquer modificação, exclusão ou escrita), **`ownerOnly: true`** e **`fromSource`** (restringe qual binário específico tem permissão de acessar aquele arquivo!).|Mesmo que um container precise montar um certificado privado TLS (`/etc/ssl/private/tls.key`) ou o token da ServiceAccount do Kubernetes (`/run/secrets/kubernetes.io/serviceaccount/token`), **apenas o binário principal da aplicação** precisa ler esse arquivo — nunca um `curl`, `cat` ou `python` executado por um invasor!|Combinando `action: Allow` (ou `Block` seletivo) com `fromSource`, ou aplicando `readOnly: true` sobre diretórios de binários (`/bin/`, `/usr/bin/`, `/lib/`) e pastas de configuração, o KubeArmor transforma sistemas de arquivos mutáveis em perfis imutáveis no kernel.|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-protect-sa-token-and-etc
+  namespace: production
+spec:
+  severity: 10
+  message: "Acesso ao token da ServiceAccount ou escrita em /etc bloqueados"
+  selector:
+    matchLabels:
+      app: payment-worker
+  file:
+    matchPaths:
+      - path: /var/run/secrets/kubernetes.io/serviceaccount/token
+    matchDirectories:
+      - dir: /etc/
+        recursive: true
+        readOnly: true
+  action: Block
+```|Lembre-se de que em Pods Kubernetes modernos o token da ServiceAccount é montado em `/var/run/secrets/kubernetes.io/serviceaccount/` (que frequentemente é um symlink para `/run/secrets/kubernetes.io/serviceaccount/`); proteja o caminho real resolvido no filesystem do container.|Teste tentar ler o token ou criar um arquivo em `/etc/test` dentro do Pod e verifique o bloqueio `Permission denied`.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://github.com/kubearmor/KubeArmor
+0215|kubearmor-restricao-rede-capabilities-socket-icmp-tcp-udp-por-processo|KubeArmor Controle de Rede (`network`) e Linux Capabilities (`capabilities`) por Executável (`fromSource`)|Diferente das `NetworkPolicies` padrão do Kubernetes (que operam na camada 3/4 para o Pod inteiro, sem saber qual processo dentro do Pod abriu o socket), as seções **`network.matchProtocols`** (`tcp`, `udp`, `icmp`, `raw`) e **`capabilities.matchCapabilities`** do KubeArmor operam no nível do socket/capability do kernel e aceitam **`fromSource`** para restringir operações de rede **por binário executável**!|Se uma `NetworkPolicy` do Kubernetes libera saída na porta TCP 443 para que o binário `/app/server` converse com uma API externa, qualquer exploit que invoque `/usr/bin/curl` ou `/usr/bin/nc` dentro do mesmo Pod também conseguiria usar aquela saída TCP 443 se o filtro for apenas por IP do Pod!|No KubeArmor, você pode bloquear a criação de sockets `tcp`, `udp` e `icmp` especificamente para utilitários de linha de comando (ou permitir rede apenas para `/app/server`), além de bloquear o uso de Linux Capabilities críticas como `net_raw` ou `sys_admin`.|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-block-raw-sockets-and-icmp
+  namespace: production
+spec:
+  severity: 7
+  selector:
+    matchLabels:
+      tier: backend
+  network:
+    matchProtocols:
+      - protocol: icmp
+      - protocol: raw
+  capabilities:
+    matchCapabilities:
+      - capability: net_raw
+  action: Block
+```|Conforme a documentação oficial `security_policy_specification.md`, os nomes de protocolos aceitos em `matchProtocols` são `TCP`/`tcp`, `UDP`/`udp`, `ICMP`/`icmp` e `RAW`/`raw`.|Teste executar `ping 8.8.8.8` de dentro do Pod protegido e confirme que a criação do socket ICMP/RAW é negada pelo LSM.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://github.com/kubearmor/KubeArmor
+0216|kubearmor-politicas-default-posture-allow-whitelist-least-permissive|KubeArmor Postura *Zero-Trust Whitelisting* (`action: Allow` + `kubearmor-file-posture` / `kubearmor-Visibility`): modelo de privilégio mínimo|O KubeArmor suporta duas abordagens de política: **Denylisting (`action: Block`)**, onde tudo é permitido exceto o que a política proíbe, e **Allowlisting / Least Permissive Access (`action: Allow`)**, onde você declara apenas os processos, arquivos e protocolos permitidos para a aplicação e o KubeArmor **bloqueia automaticamente tudo o mais** de acordo com a postura padrão (*Default Posture*) do namespace ou pod!|Tentar listar em uma *denylist* todos os binários perigosos possíveis em uma distribuição Linux (`curl`, `wget`, `python`, `perl`, `nc`, `socat`, `dd`, `base64`) é frágil; se o container só precisa executar `/app/checkout-service`, uma política `action: Allow` reduz a superfície de ataque a um único binário!|A postura padrão para recursos não cobertos por regras `Allow` é controlada por anotações no Namespace (ou flags globais): `kubearmor-file-posture: block|audit`, `kubearmor-network-posture: block|audit` e `kubearmor-capabilities-posture: block|audit`.|```yaml
+# Política de Allowlist (Zero-Trust): permite apenas que /bin/sh inicie /app/service e que /app/service acesse /app/conf/:
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-zero-trust-allowlist
+  namespace: secure-apps
+spec:
+  severity: 9
+  selector:
+    matchLabels:
+      app: vault-connector
+  process:
+    matchPaths:
+      - path: /app/service
+      - path: /bin/sh
+  file:
+    matchDirectories:
+      - dir: /app/conf/
+        recursive: true
+        readOnly: true
+      - dir: /lib/
+        recursive: true
+      - dir: /usr/lib/
+        recursive: true
+  action: Allow
+```|Sempre inicie políticas `action: Allow` com a postura padrão do namespace em modo **`audit`** (`kubectl annotate ns secure-apps kubearmor-file-posture=audit kubearmor-network-posture=audit`), valide em staging que nenhuma biblioteca dinâmica compartilhada (`/lib`, `/etc/ld.so.cache`) faltou na lista e só então mude a postura para `block`!|Inspecione os alertas de postura com `karmor logs --namespace secure-apps` antes de ativar o bloqueio estrito.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://github.com/kubearmor/KubeArmor
+0217|kubearmor-cluster-security-policy-csp-governanca-multi-namespace|KubeArmor `KubeArmorClusterPolicy` (`csp`): políticas de segurança em nível de cluster através de múltiplos namespaces|Conforme listado no README oficial (*Cluster level security Policy for Pods/Containers*), o CRD **`KubeArmorClusterPolicy`** (`apiVersion: security.kubearmor.com/v1`, `kind: KubeArmorClusterPolicy`) permite que a equipe de Plataforma/SecOps aplique regras de segurança transversalmente em ** múltiplos ou todos os namespaces do cluster** usando seletores `matchLabels` ou `matchExpressions` sobre namespaces e pods.|Criar e manter sincronizadas 80 cópias idênticas de uma `KubeArmorPolicy` (por exemplo, bloqueando acesso ao metadado de nuvem ou execução de mineradores) em 80 namespaces diferentes é propenso a esquecimento quando uma nova squad cria o 81º namespace.|Com `KubeArmorClusterPolicy`, uma única definição em escopo de cluster protege automaticamente todos os namespaces selecionados (ou todos os namespaces exceto `kube-system` usando `operator: NotIn`), aplicando governança uniforme desde o primeiro segundo de vida de qualquer novo namespace.|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorClusterPolicy
+metadata:
+  name: csp-protect-ca-certificates-clusterwide
+spec:
+  severity: 9
+  tags: ["CIS", "CLUSTER_BASELINE"]
+  message: "Modificação do bundle de autoridades certificadoras (CA) bloqueada em todo o cluster"
+  selector:
+    matchExpressions:
+      - key: namespace
+        operator: NotIn
+        values:
+          - kube-system
+          - kubearmor
+  file:
+    matchDirectories:
+      - dir: /etc/ssl/certs/
+        recursive: true
+        readOnly: true
+  action: Block
+```|Restrinja via Kubernetes RBAC a permissão de criar/editar objetos `KubeArmorClusterPolicy` exclusivamente à equipe de Segurança/Plataforma, deixando `KubeArmorPolicy` namespaced para políticas específicas de cada aplicação.|Liste todas as políticas de cluster ativas com `kubectl get csp`.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://github.com/kubearmor/KubeArmor
+0218|kubearmor-host-security-policy-hsp-protecao-nodes-vms-systemd-kubelet|KubeArmor `KubeArmorHostPolicy` (`hsp`): hardening de Nós Kubernetes e Servidores Linux Bare-Metal/VM|Além de proteger containers, o KubeArmor protege o **próprio sistema operacional do Nó (VM ou Bare-Metal)** por meio do CRD **`KubeArmorHostPolicy`** (`kind: KubeArmorHostPolicy`, abreviado como `hsp`), selecionando nós via `nodeSelector.matchLabels` e restringindo processos, arquivos, rede, capabilities e syscalls diretamente no host!|Se um invasor escapar de um container mal configurado ou obtiver acesso SSH a um nó worker do Kubernetes, ele tentará ler `/etc/shadow`, modificar unidades do `systemd`, alterar a configuração do `kubelet` (`/var/lib/kubelet/config.yaml`) ou ler as chaves privadas do `etcd` em `/etc/kubernetes/pki/`.|O `KubeArmorHostPolicy` opera tanto em nós de um cluster Kubernetes quanto em máquinas virtuais Linux standalone (onde o KubeArmor roda como serviço `systemd` ou container Docker sem Kubernetes), bloqueando modificações em `/boot`, `/etc/sudoers` e `/etc/kubernetes/` no nível do LSM do host.|```yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorHostPolicy
+metadata:
+  name: hsp-audit-and-block-shadow-access
+spec:
+  severity: 10
+  tags: ["MITRE_T1003", "HOST_HARDENING"]
+  message: "Acesso não autorizado ao arquivo /etc/shadow do nó bloqueado"
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/os: linux
+  file:
+    matchPaths:
+      - path: /etc/shadow
+        fromSource:
+          - path: /bin/cat
+          - path: /usr/bin/awk
+  action: Block
+```|Tenha extremo cuidado ao aplicar `KubeArmorHostPolicy` com `action: Block` sobre diretórios amplos do nó (`/usr`, `/var/lib/kubelet`, `/run`): teste sempre primeiro com `action: Audit` para garantir que agentes legítimos do nó (`kubelet`, `containerd`, CNI) não sejam bloqueados!|Verifique as políticas de host aplicadas com `kubectl get hsp` e monitore eventos de host com `karmor logs --logFilter policy`.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://github.com/kubearmor/KubeArmor
+0219|kubearmor-cli-karmor-logs-profile-recommend-telemetria-tempo-real|KubeArmor CLI (`karmor`): streaming de telemetria e alertas (`karmor logs`), perfilamento (`karmor profile`) e `karmor recommend`|Conforme listado na tabela de repositórios Core do README oficial (`kubearmor/kubearmor-client`), a ferramenta de linha de comando **`karmor`** é a interface operacional oficial para instalar, inspecionar (`karmor probe`), acompanhar telemetria e alertas em tempo real (**`karmor logs`**), perfilar o comportamento de cargas de trabalho (**`karmor profile`**) e gerar políticas recomendadas (**`karmor recommend`**).|Escrever políticas de segurança de runtime do zero sem saber exatamente quais arquivos e processos um container acessa em execução normal exige tentativa e erro.|Com `karmor logs` (conectado via gRPC ao serviço `kubearmor-relay`), você filtra em tempo real alertas de políticas (`--logFilter policy`) ou eventos de sistema (`--logFilter system`) por namespace, pod, operação (`Process`, `File`, `Network`) e exporta em JSON para integração com SIEM/Fluentd/Wazuh.|```bash
+# Acompanhando em tempo real apenas os alertas de violação de política (Block/Audit) em formato JSON:
+karmor logs --logFilter policy --json
+
+# Filtrando telemetria de execução de processos de um namespace específico:
+karmor logs -n production --operation Process
+```|Para reduzir o overhead de telemetria em clusters de altíssima escala, ajuste a anotação `kubearmor-visibility` por namespace (ex.: `process,file,network` em namespaces críticos ou `none` onde desejar apenas alertas de violação de política sem logar todas as chamadas permitidas).|Execute `karmor summary` e `karmor logs --logFilter policy` para auditar o comportamento das políticas em execução.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://github.com/kubearmor/KubeArmor
+0220|kubearmor-matriz-lsm-bpf-lsm-apparmor-selinux-gke-eks-aks|KubeArmor Matriz de LSMs (`BPF-LSM` vs `AppArmor` vs `SELinux`): escolha de sistema operacional de nó em `EKS`, `GKE`, `AKS` e `RKE`|Conforme detalhado na documentação oficial do KubeArmor, a capacidade de bloqueio inline (`action: Block`) depende do **Linux Security Module (LSM)** disponível no kernel do nó: **`BPF-LSM`** (Linux 5.7+ com `CONFIG_BPF_LSM=y` e `lsm=bpf,...` nos parâmetros de boot do kernel), **`AppArmor`** (padrão no Ubuntu, Debian e imagens Google **GKE Container-Optimized OS — COS**) ou **`SELinux`** (para políticas de host em RHEL/Fedora/CentOS).|Se você provisionar nós worker no Amazon EKS usando a imagem *Amazon Linux 2* antiga (kernel 4.14/5.10 sem AppArmor e sem BPF-LSM ativado no boot), o KubeArmor conseguirá **auditar (`Audit`)** via eBPF, mas não terá um LSM para **bloquear (`Block`)** containers!|Para ter suporte completo e moderno ao **`BPF-LSM`** (que anexa programas eBPF diretamente aos hooks de segurança do kernel sem depender de perfis textuais do AppArmor), utilize imagens de nó com kernel moderno (como **Amazon Linux 2023**, **Bottlerocket**, **Ubuntu 22.04/24.04** ou **GKE COS**) e verifique a lista de LSMs ativos em `/sys/kernel/security/lsm`!|```bash
+# Verificando no nó Linux quais Linux Security Modules (LSMs) estão ativos no kernel:
+cat /sys/kernel/security/lsm
+# Saída esperada para suporte moderno a BPF-LSM ou AppArmor:
+# lockdown,capability,landlock,yama,apparmor,bpf
+```|Caso `bpf` não esteja listado em `/sys/kernel/security/lsm` mesmo em um kernel 5.15+, basta adicionar `bpf` à lista do parâmetro de kernel `lsm=...` no GRUB (ou habilitar o container init `kubearmor-init` que configura o ambiente automaticamente).|Rode `karmor probe` após o boot dos nós para confirmar `Enforcement: true` e o LSM selecionado.|https://raw.githubusercontent.com/kubearmor/KubeArmor/main/README.md;https://raw.githubusercontent.com/kubearmor/KubeArmor/main/getting-started/security_policy_specification.md;https://github.com/kubearmor/KubeArmor

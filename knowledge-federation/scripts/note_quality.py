@@ -93,7 +93,7 @@ def assess_markdown(content: str, path: str | Path = "", *, min_words: int = 100
                     min_sources: int = 2) -> dict:
     """Return structural/content-quality findings for one Markdown note.
 
-    A successful result means "ready for human review", never "fact-checked".
+    A successful result means "ready for factual review", never "fact-checked".
     """
     metadata, body, has_frontmatter = _parse_frontmatter(content)
     errors: list[str] = []
@@ -140,6 +140,18 @@ def assess_markdown(content: str, path: str | Path = "", *, min_words: int = 100
     reviewer = metadata.get("revisor", "").strip()
     human_reviewed = human_review in {"aprovada", "aprovado", "validada", "validado", "reviewed"} and bool(reviewer)
 
+    ai_review = normalize(metadata.get("revisao_ia", ""))
+    ai_reviewer = metadata.get("revisor_ia", "").strip()
+    ai_review_date = metadata.get("data_revisao_ia", "").strip()
+    ai_review_report = metadata.get("relatorio_revisao_ia", "").strip()
+    ai_reviewed = (
+        ai_review in {"aprovada", "aprovado", "approved"}
+        and bool(ai_reviewer)
+        and bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", ai_review_date))
+        and bool(ai_review_report)
+    )
+    valid_reviewed = human_reviewed or ai_reviewed
+
     return {
         "path": str(path),
         "title": title,
@@ -149,6 +161,8 @@ def assess_markdown(content: str, path: str | Path = "", *, min_words: int = 100
         "errors": errors,
         "ready_for_review": not errors,
         "human_reviewed": human_reviewed,
+        "ai_reviewed": ai_reviewed,
+        "valid_reviewed": valid_reviewed,
     }
 
 

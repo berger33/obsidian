@@ -1,0 +1,102 @@
+1281|kubevip-arquitetura-vip-load-balancer-control-plane-services|kube-vip: Arquitetura de Virtual IP (VIP) e Load Balancer para Control Plane e Services Kubernetes|O **kube-vip** (`kube-vip/kube-vip`) é uma solução autocontida escrita em Go que fornece tanto um endereço IP Virtual (VIP IPv4 ou IPv6) de alta disponibilidade para o **control plane do Kubernetes** quanto balanceamento de carga para **Kubernetes Services do tipo `LoadBalancer`** em ambientes bare-metal, virtualizados e edge (x86, ARM, Raspberry Pi, ppc64le).|Tradicionalmente, montar um control plane altamente disponível em bare-metal exigia combinar e manter pelo menos duas ferramentas externas separadas nos hosts (como `Keepalived` ou `UCARP` para o VIP flutuante mais `HAProxy` ou `Nginx` para o balanceamento TCP na porta 6443).|O `kube-vip` consolida a gestão do VIP (via **ARP Layer 2** com eleição de líder ou **BGP Layer 3** multi-nó) e o balanceamento de carga (via **IPVS** em espaço de kernel) em um único container enxuto, podendo rodar como **Static Pod** (em clusters `kubeadm` em `/etc/kubernetes/manifests/`) ou como **DaemonSet** (em K3s, RKE2 e distribuições similares).|```bash
+# Verificar pods do kube-vip operando no namespace kube-system:
+kubectl -n kube-system get pods -l app.kubernetes.io/name=kube-vip -o wide
+```|Executar simultaneamente o `kube-vip` como Static Pod e como DaemonSet no mesmo nó configurando o mesmo endereço VIP do control plane gera conflito de posse da interface e instabilidade de ARP/BGP.|Escolha uma única topologia de implantação para o control plane (Static Pod para `kubeadm` ou DaemonSet para K3s) e separe claramente as flags de control plane (`cp_enable`) e de services (`svc_enable`).|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1282|kubevip-arp-layer2-leader-election-gratuitous-arp-failover|kube-vip: Modo ARP (Layer 2), Eleição de Líder e Failover Rápido com Gratuitous ARP|No modo **ARP (Layer 2)** (`enableARP: true`), o `kube-vip` utiliza a eleição de líder nativa do Kubernetes (`client-go/tools/leaderelection` ou Raft para bootstrap do control plane) para eleger um único nó que vincula o endereço VIP à interface de rede declarada e anuncia a mudança na rede local via **Gratuitous ARP**.|Quando o nó líder falha e o VIP migra para outro host na mesma sub-rede L2, clientes e roteadores locais continuariam enviando pacotes para o endereço MAC antigo até o cache ARP expirar (tipicamente 30 segundos) se o novo líder não transmitisse um broadcast Gratuitous ARP.|Assim que o novo líder assume o lease da eleição, o `kube-vip` associa o VIP à interface de rede local e transmite pacotes Gratuitous ARP que atualizam imediatamente o mapeamento VIP-para-MAC nos switches e hosts vizinhos, completando o failover em poucos segundos.|```yaml
+# Variaveis de ambiente para modo ARP Layer 2 com eleicao de lider:
+- name: vip_arp
+  value: "true"
+- name: vip_leaderelection
+  value: "true"
+- name: vip_leaseduration
+  value: "5"
+- name: vip_renewdeadline
+  value: "3"
+- name: vip_retryperiod
+  value: "1"
+```|Configurar o modo ARP (Layer 2) entre nós que estão em sub-redes ou VLANs diferentes sem conectividade de broadcast Layer 2 impede que o VIP flutuante seja alcançado quando o líder muda de sub-rede.|Use o modo ARP apenas quando todos os nós candidatos ao VIP compartilharem o mesmo domínio de broadcast L2; para nós em sub-redes/racks distintos, utilize o modo BGP (Layer 3).|https://kube-vip.io/docs/about/architecture/;https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://github.com/kube-vip/kube-vip
+1283|kubevip-bgp-layer3-ecmp-rotas-peers-multinodo|kube-vip: Modo BGP (Layer 3) para Anúncio Multi-Nó de VIPs e Balanceamento ECMP|No modo **BGP (Layer 3)**, em vez de apenas um líder deter o VIP por vez (como no modo ARP), múltiplos nós executando o `kube-vip` estabelecem sessões BGP com os roteadores Top-of-Rack (ToR) e anunciam simultaneamente o endereço VIP (`bgpConfig.routerID`, `bgpConfig.peers`), permitindo balanceamento de carga **ECMP (Equal-Cost Multi-Path)** na malha de rede.|No modo ARP com eleição de líder sem BGP, todo o tráfego de entrada para um IP de LoadBalancer entra inicialmente pela placa de rede de um único nó líder antes de ser distribuído pelo `kube-proxy`/IPVS.|Com BGP habilitado, cada nó do cluster anuncia a rota `/32` (IPv4) ou `/128` (IPv6) do VIP para os peers BGP configurados; se um nó falhar, a sessão BGP cai e o roteador ToR retira aquele next-hop da tabela ECMP instantaneamente.|```yaml
+# Exemplo de configuracao estruturada para BGP no arquivo de runtime do kube-vip:
+enableBGP: true
+bgpConfig:
+  routerID: "10.0.10.11"
+  localAS: 65000
+  peers:
+    - address: "10.0.10.1"
+      as: 65001
+```|Usar a chave geradora antiga `bgpPeers` em vez de `bgpConfig.peers` em arquivos de configuração de runtime (`--config-file`) causa rejeição imediata, pois o parser de runtime do `kube-vip` rejeita chaves exclusivas de gerador.|Em arquivos passados via `--config-file`, utilize sempre a estrutura documentada `bgpConfig.peers` (ou `bgpPeerConfig`).|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1284|kubevip-control-plane-ipvs-load-balancing-selinux-modprobe|kube-vip: Balanceamento do Control Plane com IPVS (lb_enable) e Pré-Carregamento de Módulos com SELinux|A partir do `kube-vip v0.4.0+`, habilitar `lb_enable: "true"` (`lb_port: "6443"`) configura um balanceador de carga Layer 4 (TCP round-robin) usando **IPVS (IP Virtual Server)** diretamente no espaço de kernel do Linux para distribuir as requisições da API do Kubernetes entre todas as réplicas do control plane.|Como o servidor virtual do IPVS opera dentro do kernel Linux antes que os pacotes cheguem a um socket TCP de user-space, ele pode escutar na porta `6443` do VIP no mesmo host onde o `kube-apiserver` já escuta na porta `6443` sem causar conflito de porta (`Address already in use`).|Em nós com **SELinux** em modo `Enforcing` (como RHEL, Rocky Linux, Fedora CoreOS ou OpenShift), o container do `kube-vip` pode ser bloqueado de solicitar carregamento dinâmico de módulos de kernel (`module_request` negado para `container_t`), entrando em `CrashLoopBackOff` com a mensagem `ensure IPVS kernel modules are loaded`. A solução recomendada pela documentação oficial é pré-carregar `ip_vs` e `ip_vs_rr` no host via `/etc/modules-load.d/kube-vip-ipvs.conf`.|```bash
+sudo modprobe ip_vs
+sudo modprobe ip_vs_rr
+cat << 'EOF' | sudo tee /etc/modules-load.d/kube-vip-ipvs.conf
+ip_vs
+ip_vs_rr
+EOF
+```|Habilitar o booleano global do SELinux `domain_kernel_load_modules` para todos os containers em vez de pré-carregar apenas `ip_vs` e `ip_vs_rr` no host enfraquece o isolamento de segurança de todos os containers do nó.|Pré-carregue os módulos `ip_vs` e `ip_vs_rr` em `/etc/modules-load.d/kube-vip-ipvs.conf` em todos os nós que executam o `kube-vip` com IPVS.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1285|kubevip-service-loadbalancer-cloud-provider-ipam-annotations|kube-vip: Balanceamento de Kubernetes Services (svc_enable) e Integração com kube-vip-cloud-provider|Quando `svc_enable: "true"` está ativo, o `kube-vip` observa objetos `Service` do tipo `LoadBalancer` que possuem a anotação `metadata.annotations["kube-vip.io/loadbalancerIPs"]` (preenchida pelo `kube-vip-cloud-provider` ou declarada estaticamente), anuncia o IP na rede via ARP/BGP e atualiza `status.loadBalancer.ingress`.|Em clusters bare-metal, criar um `Service` com `type: LoadBalancer` deixa o campo `EXTERNAL-IP` eternamente em `<pending>` se não houver um controlador que aloque um IP de um pool e um daemon que anuncie esse IP na rede.|O fluxo ocorre em dois passos coordenados: o **kube-vip-cloud-provider** lê o `ConfigMap` `kubevip` (em `kube-system`, contendo `cidr-global` ou faixas por namespace `cidr-<namespace>`), escolhe um IP livre e grava a anotação `kube-vip.io/loadbalancerIPs` no `Service`; em seguida, o Pod do `kube-vip` detecta a anotação, anuncia o VIP via ARP ou BGP e marca o `Service` como pronto.|```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubevip
+  namespace: kube-system
+data:
+  cidr-global: 192.168.1.200/29
+  range-development: 192.168.1.210-192.168.1.219
+```|Depender exclusivamente do campo legado `spec.loadBalancerIP` (depreciado desde o Kubernetes 1.24) sem usar a anotação moderna `kube-vip.io/loadbalancerIPs` gera avisos de depreciação e perde suporte a múltiplos IPs dual-stack.|Utilize a anotação `kube-vip.io/loadbalancerIPs` (ou deixe o `kube-vip-cloud-provider` gerenciá-la automaticamente a partir do `ConfigMap` `kubevip`).|https://kube-vip.io/docs/about/architecture/;https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://github.com/kube-vip/kube-vip
+1286|kubevip-runtime-config-file-precedencia-validacao-estrita|kube-vip: Arquivo de Configuração de Runtime (--config-file), Ordem de Precedência e Validação Estrita|Os subcomandos `manager` e `service` do `kube-vip` aceitam um arquivo de configuração YAML ou JSON estrito via flag `--config-file PATH` ou variável de ambiente `config_file`, resolvendo valores na ordem de precedência: **1º flags de CLI explícitas, 2º variáveis de ambiente, 3º arquivo de configuração e 4º defaults do comando**.|Misturar flags de linha de comando, variáveis de ambiente no manifesto do Pod e arquivos de configuração sem conhecer a regra de precedência faz com que um valor booleano `false` ou string vazia sobrescreva configurações de forma inesperada.|Qualquer valor explicitamente fornecido (mesmo `false`, `0` ou `""`) em uma fonte de maior prioridade sobrescreve fontes de menor prioridade, enquanto valores omitidos não sobrescrevem. Além disso, o parser de runtime rejeita chaves desconhecidas ou chaves exclusivas de geração de manifesto (`loadBalancers`, `bgpPeers`, `singleNode`, `startAsLeader`, `addPeersAsBackends`, `isDualStack`, `requireDualStack`).|```yaml
+# Exemplo de arquivo de configuracao de runtime valido para --config-file:
+address: "192.168.1.100"
+port: 6443
+interface: "eth0"
+enableControlPlane: true
+enableServices: true
+enableARP: true
+enableLeaderElection: true
+```|Incluir chaves derivadas em tempo de execução (`isDualStack`, `requireDualStack`) ou chaves de gerador (`singleNode`, `startAsLeader`) dentro do arquivo passado em `--config-file` faz o `kube-vip` abortar a inicialização por chave desconhecida.|Use apenas os nomes externos documentados (`enableARP`, `dnsDualStackMode`, `bgpConfig.routerID`, `bgpConfig.peers`) no arquivo de `--config-file`.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1287|kubevip-gateway-api-loadbalancer-sem-endpoints-annotation|kube-vip: Suporte a Services LoadBalancer de Gateway API sem Endpoints (allow-reconcile-without-endpoints)|Para controladores de **Gateway API** que criam objetos `Service` do tipo `LoadBalancer` intencionalmente sem backends `Endpoints` ou `EndpointSlices` (roteando o tráfego por outros mecanismos), o `kube-vip` disponibiliza a anotação opt-in `kube-vip.io/allow-reconcile-without-endpoints: "true"`.|Por padrão, o `kube-vip` aguarda que um `Service` possua pelo menos um endpoint ativo antes de anunciar o endereço VIP na rede; em implementações de Gateway API sem endpoints anexados ao Service, o VIP nunca seria anunciado sem essa anotação.|Quando o `Service` declara `metadata.annotations["kube-vip.io/allow-reconcile-without-endpoints"]: "true"` combinado com `spec.type: LoadBalancer` e `spec.externalTrafficPolicy: Cluster`, o `kube-vip` reconcilia e anuncia o VIP imediatamente mesmo na ausência de `Endpoints`/`EndpointSlices`.|```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-proxy-lb
+  namespace: gateway-system
+  annotations:
+    kube-vip.io/allow-reconcile-without-endpoints: "true"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+```|Combinar `kube-vip.io/allow-reconcile-without-endpoints: "true"` com `externalTrafficPolicy: Local` não tem efeito, pois o comportamento sem endpoints é suportado exclusivamente quando `externalTrafficPolicy` é `Cluster`.|Certifique-se de que `spec.externalTrafficPolicy: Cluster` esteja definido nos Services de Gateway API que utilizam `kube-vip.io/allow-reconcile-without-endpoints: "true"`.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1288|kubevip-egress-source-ip-fixo-dhcp-upnp-redes-locais|kube-vip: Egress com IP de Origem Fixo por Pod, Alocação via DHCP e Exposição UPnP|Além do tráfego de entrada, o `kube-vip` suporta **Egress** (utilizando o IP de um `Service LoadBalancer` também como endereço IP de origem de saída para o Pod), alocação dinâmica de IPs de LoadBalancer via servidor **DHCP** existente na rede (`0.0.0.0`) e exposição automática de portas em gateways via **UPnP**.|Quando uma aplicação dentro do Kubernetes precisa acessar um banco de dados legado ou parceiro externo protegido por firewall de IP de origem (allowlist), o SNAT padrão pelo IP do worker node muda sempre que o Pod é reagendado em outro nó.|Com o modo Egress do `kube-vip` ativado por anotações no `Service`, o `kube-vip` configura regras de roteamento/NAT no nó onde o Pod está rodando para que todo tráfego de saída daquele Pod saia com o endereço VIP estático do `Service` como IP de origem.|```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-gateway-egress
+  annotations:
+    kube-vip.io/egress: "true"
+    kube-vip.io/loadbalancerIPs: "192.168.1.240"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+```|Habilitar `kube-vip.io/egress: "true"` em um `Service` sem `externalTrafficPolicy: Local` ou com múltiplos Pods espalhados em nós diferentes gera conflito sobre qual nó deve originar e receber o retorno do tráfego daquele IP.|Use `externalTrafficPolicy: Local` e garanta relação determinística entre o VIP de Egress e o Pod que origina conexões externas.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1289|kubevip-eleicao-lider-por-service-arp-distribuicao-carga|kube-vip: Eleição de Líder por Service (svc_election) para Distribuir VIPs ARP entre Worker Nodes|No modo ARP (Layer 2) para Kubernetes Services, habilitar `svc_election: "true"` (`enableServicesElection`) faz com que o `kube-vip` execute uma eleição de líder independente (`Lease`) para **cada `Service` individual**, em vez de concentrar todos os VIPs de todos os Services em um único nó líder do cluster.|Com uma única eleição global de líder em modo ARP, se o cluster tiver 30 Services do tipo `LoadBalancer`, 100% dos 30 endereços VIP ficarão vinculados à interface de rede do mesmo nó líder, transformando-o em gargalo de banda.|Com `svc_election: "true"`, o `Service A` elege o `worker-1` como líder de seu VIP (considerando apenas nós que possuem endpoints ativos quando `externalTrafficPolicy: Local`), enquanto o `Service B` elege o `worker-2`, distribuindo a carga de rede Layer 2 pela frota.|```yaml
+- name: svc_enable
+  value: "true"
+- name: svc_election
+  value: "true"
+- name: vip_arp
+  value: "true"
+```|Habilitar `svc_election: "true"` em clusters com centenas de Services `LoadBalancer` aumenta proporcionalmente o número de objetos `Lease` renovados continuamente contra o `kube-apiserver`.|Use `svc_election: "true"` para distribuir até algumas dezenas de Services em redes Layer 2, ou migre para o modo BGP quando escalar para centenas de VIPs.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip
+1290|kubevip-geracao-manifestos-static-pod-daemonset-rbac-upgrade|kube-vip: Geração de Manifestos (kube-vip manifest pod / daemonset), RBAC e Upgrade In-Place|O binário do `kube-vip` inclui um gerador embutido de manifestos (`kube-vip manifest pod` para Static Pods no `kubeadm` e `kube-vip manifest daemonset` para K3s/clusters existentes) que produz o YAML completo com `hostNetwork: true` e as capabilities Linux requeridas (`NET_ADMIN`, `NET_RAW`).|Escrever manualmente o manifesto de Static Pod para `/etc/kubernetes/manifests/kube-vip.yaml` durante o bootstrap do primeiro nó `kubeadm init` é propenso a erros no caminho do `/etc/kubernetes/super-admin.conf` (ou `admin.conf`).|No primeiro nó de control plane (`kubeadm` v1.29+), aponta-se o volume `kubeconfig` do Static Pod inicialmente para `/etc/kubernetes/super-admin.conf` durante o `kubeadm init` (trocando para `/etc/kubernetes/admin.conf` após a criação do RBAC), enquanto para `DaemonSet` aplica-se primeiro `https://kube-vip.io/manifests/rbac.yaml`.|```bash
+kubectl apply -f https://kube-vip.io/manifests/rbac.yaml
+docker run --network host --rm ghcr.io/kube-vip/kube-vip:v0.8.0 \
+  manifest daemonset \
+  --interface eth0 \
+  --address 192.168.1.100 \
+  --controlplane \
+  --services \
+  --arp \
+  --leaderElection
+```|Remover os manifests de Static Pod de todos os nós do control plane ao mesmo tempo durante um upgrade in-place do `kube-vip` derruba o endereço VIP `6443` e interrompe todas as conexões de `kubectl` e dos `kubelets`.|Atualize a imagem do `kube-vip` um nó de control plane por vez, aguardando a transição limpa do lease de líder para outro nó antes de atualizar o próximo.|https://raw.githubusercontent.com/kube-vip/kube-vip/main/README.md;https://kube-vip.io/docs/about/architecture/;https://github.com/kube-vip/kube-vip

@@ -1,0 +1,147 @@
+SOURCES: https://raw.githubusercontent.com/thinkst/opencanary/master/README.md | https://raw.githubusercontent.com/thinkst/opencanary/master/opencanary/data/settings.json
+
+===NOTE===
+1161|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst|Arquitetura do **OpenCanary (`thinkst/opencanary`)**: Honeypot Multiprotocolo de Baixa Interação para Detecção de Intrusão em Redes Internas|Por que a **Thinkst Canary** criou o **OpenCanary** (a versão open-source oficial do famoso appliance comercial *Thinkst Canary*), e por que honeypots internos de baixa interação estão entre os controles de segurança com **maior relação sinal-ruído (quase zero falso positivo)** em redes corporativas?|Enquanto SIEMs e EDRs precisam analisar milhões de eventos legítimos por segundo para tentar separar um ataque de uma atividade administrativa normal, um nó do **OpenCanary** posicionado em uma VLAN interna **não possui nenhuma função de negócio legítima**: portanto, **qualquer pacote que tente enumerar um compartilhamento SMB, fazer login em um banco MySQL/MSSQL/PostgreSQL/Redis, abrir uma página de login de NAS (`nasLogin`) ou escanear portas naquele IP é, por definição, uma atividade anômala ou um invasor em reconhecimento interno**!|Escrito em Python 3.10+ (Twisted) com consumo mínimo de memória e CPU (roda perfeitamente em um Raspberry Pi, container ou micro-VM), o daemon **`opencanaryd`** é controlado por um único arquivo JSON (**`/etc/opencanaryd/opencanary.conf`**) capaz de emular simultaneamente mais de **18 protocolos de rede**!|```bash
+# Instalar o OpenCanary em um ambiente virtual Python, gerar o arquivo inicial /etc/opencanaryd/opencanary.conf e iniciar com drop de privilegios
+python3 -m venv ./opencanary-env && source ./opencanary-env/bin/activate
+pip install opencanary
+sudo ./opencanary-env/bin/opencanaryd --copyconfig
+sudo chmod 600 /etc/opencanaryd/opencanary.conf
+sudo ./opencanary-env/bin/opencanaryd --start --uid=nobody --gid=nogroup
+```|Atenção crítica de segurança destacada na documentação oficial do OpenCanary: como o `opencanaryd` inicia como `root` (para fazer bind em portas privilegiadas `< 1024`) antes de reduzir seus privilégios (`--uid=nobody --gid=nogroup`) e lê objetos Python de configuração de `logger` no `opencanary.conf`, **o arquivo `/etc/opencanaryd/opencanary.conf` DEVE pertencer a `root:root` com permissão `0600`** (caso contrário, um usuário local comum poderia escalar privilégio para `root` editando o logger)!|Use `ip.ignorelist` no `opencanary.conf` para ignorar o endereço IP dos seus scanners internos oficiais de vulnerabilidade.|opencanary-modulos-protocolos-http-https-naslogin-smb-samba-audit, opencanary-modulos-bancos-dados-mysql-mssql-redis-git-ssh-rdp, cowrie-deception-engineering-intranet-deteccao-movimentacao-lateral-ssh
+
+===NOTE===
+1162|opencanary-modulos-protocolos-http-https-naslogin-smb-samba-audit|Emulação de **Servidores de Arquivos (SMB/Samba)** e **Painéis Web de Storage (`http.skin = nasLogin`)** no OpenCanary|Quando um invasor ou operador de ransomware entra em uma rede interna corporativa, quais são os dois primeiros alvos que ele procura imediatamente para roubar backups e dados confidenciais? **Compartilhamentos de rede Windows (`SMB` porta `445`)** e **interfaces Web de administração de storages NAS (Synology / QNAP / NetApp nas portas `80`/`443`/`8080`)**!|No `/etc/opencanaryd/opencanary.conf`, habilitar **`"http.enabled": true`** e **`"https.enabled": true`** com **`"http.skin": "nasLogin"`** levanta instantaneamente uma página convincente de login de Storage NAS (`Apache/2.2.22 (Ubuntu)` customizável) que registra qualquer tentativa de login HTTP/HTTPS (`logtype 3000/3001`) com usuário, senha, User-Agent e IP do invasor!|Paralelamente, o módulo **SMB (`"smb.enabled": true`, `"smb.auditfile": "/var/log/samba-audit.log"`)** integra-se ao módulo **`vfs_full_audit`** do Samba para monitorar uma pasta compartilhada "isca" (ex.: `\\FIN-NAS-02\Backups_Cofre$`): no instante em que o invasor lista a pasta ou abre um arquivo `.xlsx`/`.kdbx` falso dentro do compartilhamento, o OpenCanary parseia o log de auditoria do Samba e dispara um alerta crítico em tempo real!|```json
+{
+  "device.node_id": "fin-nas-02-canary",
+  "http.enabled": true,
+  "http.port": 80,
+  "http.banner": "nginx/1.24.0",
+  "http.skin": "nasLogin",
+  "https.enabled": true,
+  "https.port": 443,
+  "https.skin": "nasLogin",
+  "smb.enabled": true,
+  "smb.auditfile": "/var/log/samba-audit.log"
+}
+```|Ao configurar o Samba para o módulo SMB do OpenCanary no Linux, certifique-se de configurar o `syslog` / `rsyslog` para gravar a facilidade `local7` em `/var/log/samba-audit.log` e defina a pasta compartilhada como **somente-leitura (`read only = yes`)** para que ninguém possa depositar arquivos reais no honeypot.|Você também pode criar skins HTML customizadas no diretório `data/http/skin/` copiando o layout exato do portal de intranet ou VPN da sua empresa.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-modulos-bancos-dados-mysql-mssql-redis-git-ssh-rdp, opencanary-alertas-logger-syslog-webhook-slack-correlator-siem
+
+===NOTE===
+1163|opencanary-modulos-bancos-dados-mysql-mssql-redis-git-ssh-rdp|Armadilhas para **Bancos de Dados (`MySQL`, `MSSQL`, `Redis`)**, **Repositórios `Git` (`9418`)** e **Acesso Remoto (`RDP`, `VNC`, `SSH`, `Telnet`)** no OpenCanary|Desenvolvedores e engenheiros de DevOps frequentemente deixam strings de conexão de bancos de dados (`mysql://`, `redis://`, `Server=tcp:10.20.30.40,1433`) em arquivos de configuração ou variáveis de ambiente. E se você plantar credenciais "isca" (*honeytokens*) apontando para o endereço IP de um sensor **OpenCanary** na sub-rede de bancos de dados?|No `opencanary.conf`, você pode ativar simultaneamente os emuladores de protocolo de **`mysql`** (porta `3306`, simulando handshake nativo do MySQL Server e capturando o usuário e hash de autenticação), **`mssql`** (porta `1433`, simulando Microsoft SQL Server `2012`/`2019` e capturando logins SQL Auth e NTLMSSP Windows Auth!), **`redis`** (porta `6379`, capturando comandos como `AUTH`, `INFO`, `CONFIG SET`, `SLAVEOF` usados por malwares de cryptomining!) e **`git`** (porta `9418`, alertando quando alguém tenta dar `git clone git://...` no repositório falso)!|Somados aos módulos **`rdp`** (`3389`), **`vnc`** (`5000`), **`ssh`** (`22`) e **`telnet`** (`23`, que suporta lista de credenciais falsas `telnet.honeycreds` com hashes PBKDF2-SHA512), o sensor cobre todos os protocolos usados por atacantes na fase de movimentação lateral!|```json
+{
+  "device.node_id": "prd-db-replica-04",
+  "mysql.enabled": true,
+  "mysql.port": 3306,
+  "mysql.banner": "8.0.36-0ubuntu0.22.04.1",
+  "mssql.enabled": true,
+  "mssql.port": 1433,
+  "mssql.version": "2019",
+  "redis.enabled": true,
+  "redis.port": 6379,
+  "git.enabled": true,
+  "git.port": 9418,
+  "rdp.enabled": true,
+  "rdp.port": 3389
+}
+```|Dica de ouro de Deception Engineering: **não ative todos os 18 protocolos de uma vez no mesmo endereço IP** (um servidor que roda simultaneamente FTP, Telnet, SMB Windows, MSSQL, MySQL, Redis, Git, SIP e SNMP parece imediatamente um honeypot no Nmap!). Em vez disso, crie **personas coerentes por VLAN**: um sensor com persona de *Banco de Dados Linux* (`ssh` + `mysql` + `redis`), outro com persona de *Servidor Windows/SQL* (`smb` + `rdp` + `mssql`) e outro com persona de *Storage NAS* (`http` + `https` + `ftp` + `snmp`)!|Plante a string de conexão da persona de Banco de Dados dentro de um arquivo `.env` falso nas máquinas da sua DMZ para detectar invasores no exato segundo em que tentarem usar a credencial vazada.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-modulos-protocolos-http-https-naslogin-smb-samba-audit, pacu-deteccao-honeytokens-canarytokens-aws-iam-detect-honeytokens
+
+===NOTE===
+1164|opencanary-deteccao-varredura-rede-portscan-snmp-llmnr-ntp-tftp|Detecção Precoce de Reconhecimento de Rede com OpenCanary: Módulos **`portscan`**, **`snmp` (`161/UDP`)**, **`llmnr` (`5355/UDP`)**, **`tftp`** e **`ntp`**|Antes mesmo de tentar fazer login em qualquer serviço, a primeira ação de um invasor ou pentester ao acessar uma rede interna é rodar um **Port Scan (`nmap -sS`, `-sV`, `-O` OS Detection)**, consultar comunidades **SNMP (`public` / `private`)** em busca de roteadores e switches, ou escutar/envenenar resolução de nomes via **LLMNR (`5355/UDP`)**!|O OpenCanary detecta todas essas técnicas silenciosas de reconhecimento através de módulos dedicados: **(1) `portscan.enabled: true`** — configura regras de log no firewall do Linux (`iptables` gravando em `/var/log/kern.log`) para detectar instantaneamente **SYN Scans (`portscan.synrate`)**, **Nmap OS Fingerprinting (`portscan.nmaposrate`)** e varreduras locais; **(2) `snmp.enabled: true`** (baseado em `scapy`) — escuta na porta `161/UDP` e registra o IP de origem e a *community string* (`public`, `private`) tentada pelo scanner; e **(3) `llmnr.enabled: true`** — envia consultas periódicas pelo hostname configurado (`llmnr.hostname`, ex.: `DC03`) e **dispara um alerta crítico caso uma ferramenta como o `Responder` tente responder falsificando o IP daquele hostname (LLMNR Poisoning)**!|Esse módulo `llmnr` do OpenCanary é um detector brilhante e automático de ataques **`Responder` / `Inveigh`** na rede local!|```json
+{
+  "device.node_id": "net-core-canary-01",
+  "portscan.enabled": true,
+  "portscan.logfile": "/var/log/kern.log",
+  "portscan.synrate": 5,
+  "portscan.nmaposrate": 5,
+  "snmp.enabled": true,
+  "snmp.port": 161,
+  "llmnr.enabled": true,
+  "llmnr.hostname": "FIN-SQL-PROD09",
+  "llmnr.query_interval": 60
+}
+```|Observe como o módulo **`llmnr`** funciona como um "canário na mina de carvão" contra envenenamento de resolução de nomes: ele pergunta na sub-rede a cada 60 segundos *"Quem é `FIN-SQL-PROD09`?"* (um nome que não existe no DNS!). Se qualquer máquina da VLAN responder *"Sou eu!"*, você acabou de pegar em flagrante um atacante rodando **Responder** naquela sub-rede!|Nota técnica importante: no Linux moderno (Ubuntu 22.04/24.04, Debian 12), lembre-se de que o módulo `portscan` do OpenCanary utiliza a sintaxe do `iptables` e monitora `/var/log/kern.log` (certifique-se de que o daemon `rsyslog` está instalado e gravando logs do kernel em `/var/log/kern.log`).|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-customizacao-banners-perfis-servicos-perfis-industriais, certipy-ataques-configuracao-ca-relay-esc6-esc8-esc11-epa-https
+
+===NOTE===
+1165|opencanary-customizacao-banners-perfis-servicos-perfis-industriais|Módulo **`tcpbanner`** do OpenCanary: Emulando Protocolos Proprietários, Serviços Legados e Controladores Industriais (**ICS/OT**)|E se você precisar emular um protocolo que não possui um módulo dedicado no OpenCanary — como uma porta de gerenciamento de mainframe, uma impressora corporativa JetDirect (`9100`), um serviço Memcached (`11211`), um agente Zabbix ou uma porta TCP de equipamento industrial?|O módulo **`tcpbanner`** do OpenCanary permite configurar até `N` ouvintes TCP customizados (`tcpbanner_1` até `tcpbanner_10`, controlado por `"tcpbanner.maxnum": 10`) em qualquer porta TCP, definindo: **(1) `initbanner`** (banner enviado pelo honeypot assim que o cliente estabelece a conexão TCP), **(2) `datareceivedbanner`** (resposta enviada após o cliente mandar dados), e **(3) `alertstring.enabled` / `alertstring`** (gatilho especial caso os dados enviados pelo atacante contenham uma string específica)!|Com apenas 8 linhas de JSON no `opencanary.conf`, você cria um emulador sob medida para qualquer serviço TCP interno da sua organização!|```json
+{
+  "tcpbanner.enabled": true,
+  "tcpbanner.maxnum": 2,
+  "tcpbanner_1.enabled": true,
+  "tcpbanner_1.port": 11211,
+  "tcpbanner_1.initbanner": "",
+  "tcpbanner_1.datareceivedbanner": "STAT pid 1492\r\nSTAT version 1.6.14\r\nEND\r\n",
+  "tcpbanner_1.alertstring.enabled": true,
+  "tcpbanner_1.alertstring": "stats"
+}
+```|O módulo `tcpbanner` também suporta parâmetros de `keep_alive` (`tcpbanner_1.keep_alive.enabled`, `keep_alive_secret`, `keep_alive_interval`), permitindo manter conexões persistentes monitoradas.|Use `nmap -sV -p <porta>` contra o seu `tcpbanner` em homologação para validar se o Nmap classifica o serviço exatamente como o software alvo que você deseja mimetizar.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-deteccao-varredura-rede-portscan-snmp-llmnr-ntp-tftp, cowrie-anti-fingerprinting-disfarce-honeypot-banners-uptime-rede
+
+===NOTE===
+1166|opencanary-alertas-logger-syslog-webhook-slack-correlator-siem|Arquitetura de Alertas e **`PyLogger`** do OpenCanary: **Syslog RFC, Webhooks (Slack/Teams), SMTP, HPFeeds** e **`opencanary-correlator`**|Quando um atacante interage com qualquer porta do OpenCanary, como o alerta chega imediatamente ao seu SIEM (Splunk, Elastic, Sentinel, Wazuh, QRadar) ou canal de resposta a incidentes do SOC no Slack/Teams, sem inundar a equipe com 500 mensagens separadas se o atacante rodar um scan de portas rápido?|Na seção `"logger"` do `/etc/opencanaryd/opencanary.conf`, a classe `PyLogger` (baseada no `logging.config.dictConfig` do Python) suporta múltiplos **Handlers simultâneos**: **`logging.FileHandler`** (`/var/tmp/opencanary.log`), **`logging.handlers.SysLogHandler`** (enviando eventos formatados via UDP/TCP para o coletor Syslog do SIEM), **`opencanary.logger.WebhookHandler`** (para Slack, Microsoft Teams ou Mattermost), **`SMTPHandler`** (e-mail direto) e **`hpfeeds`**!|Para ambientes com dezenas de sensores OpenCanary espalhados pelas VLANs, a Thinkst disponibiliza o **`opencanary-correlator`** (`thinkst/opencanary-correlator`): um agregador central em Python + Redis que recebe os eventos de todos os sensores, **consolida múltiplos eventos disparados pelo mesmo IP de origem dentro de uma janela curta em um único incidente consolidado** e envia o alerta enriquecido para a equipe!|```json
+{
+  "logger": {
+    "class": "PyLogger",
+    "kwargs": {
+      "formatters": {
+        "syslog_rfc": {
+          "format": "opencanaryd[%(process)-5s:%(thread)d]: %(name)s %(levelname)-5s %(message)s"
+        }
+      },
+      "handlers": {
+        "file": {
+          "class": "logging.FileHandler",
+          "filename": "/var/log/opencanary.log"
+        },
+        "syslog": {
+          "class": "logging.handlers.SysLogHandler",
+          "address": ["10.10.5.50", 514],
+          "socktype": "ext://socket.SOCK_DGRAM",
+          "formatter": "syslog_rfc"
+        }
+      }
+    }
+  }
+}
+```|Cada evento gerado pelo OpenCanary é um objeto JSON estruturado contendo **`dst_host`**, **`dst_port`**, **`src_host`**, **`src_port`**, **`local_time`**, **`utc_time`**, **`node_id`**, **`logtype`** (código numérico do tipo de evento, ex.: `2000` para FTP login, `3001` para HTTP login, `4002` para SSH login, `5001` para Portscan SYN) e **`logdata`** (com as credenciais ou parâmetros capturados)!|Use `"logtype.ignorelist"` no `opencanary.conf` caso queira suprimir códigos específicos de `logtype` ruidosos em determinada VLAN.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-modulos-protocolos-http-https-naslogin-smb-samba-audit, cowrie-telemetria-json-siem-splunk-elastic-misp-threat-intel
+
+===NOTE===
+1167|opencanary-implantacao-docker-host-network-ansible-frota-sensores|Implantação de Frota de Sensores OpenCanary com **Docker (`--network host`)** e **Ansible**: Preservando o IP Real de Origem (`src_host`)|Se você rodar o container Docker do OpenCanary com mapeamento de portas bridge padrão (`docker run -p 80:80 -p 3306:3306`), um problema clássico de rede em containers pode ocorrer: dependendo da configuração do `docker-proxy` e NAT do host, o honeypot pode enxergar o IP do gateway da bridge `docker0` (`172.17.0.1`) como `src_host` em vez do IP real do atacante, além de o módulo `portscan` não ter visibilidade da interface física do host!|Por esse motivo, a documentação oficial do OpenCanary recomenda que, ao implantar via Docker em hosts Linux, você utilize o modo de rede **`host` (`--network host` ou `network_mode: host` no `docker-compose.yml`)** e monte o seu arquivo `/etc/opencanaryd/opencanary.conf` customizado como volume somente-leitura (`:ro`)!|Com um playbook **Ansible** simples que distribui personas diferentes de `opencanary.conf` para micro-VMs ou Raspberry Pis em cada segmento de rede (DMZ, Rede de Servidores, Rede de Bancos de Dados, Rede de Estações/Wi-Fi Corporativo), você constrói uma malha corporativa completa de detecção de movimentação lateral em menos de uma tarde!|```bash
+# Executar o OpenCanary em container Docker no Linux utilizando --network host para preservar 100% da fidelidade de rede (src_host)
+docker run -d \
+  --name opencanary-sensor \
+  --restart unless-stopped \
+  --network host \
+  -v /etc/opencanaryd/opencanary.conf:/root/.opencanary.conf:ro \
+  -v /var/log/opencanary:/var/tmp \
+  thinkst/opencanary:latest
+```|Ao montar `/etc/opencanaryd/opencanary.conf` com a flag **`:ro` (*read-only*)** dentro do container, você garante por isolamento do kernel que o arquivo de configuração nunca possa ser modificado pelo processo em execução.|Monitore a saúde dos seus sensores (`heartbeat`) verificando periodicamente se o processo `opencanaryd` está ativo e enviando logs para o coletor central.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-alertas-logger-syslog-webhook-slack-correlator-siem, cowrie-isolamento-seguranca-redirecionamento-portas-nftables-docker
+
+===NOTE===
+1168|opencanary-integracao-canarytokens-breadcrumbs-active-directory-dns|Estratégia de **Breadcrumbs (Iscas)** para Atrair Atacantes ao OpenCanary: Registros **DNS Internos**, **SPNs no Active Directory** e Arquivos `.env`|Um sensor **OpenCanary** passivo já detecta qualquer invasor que faça um scan de sub-rede (`nmap` / `masscan`); mas e se o invasor for extremamente furtivo, **não fizer scan de portas** e apenas consultar o DNS interno, o Active Directory ou os arquivos da máquina que acabou de comprometer?|É aqui que entra a arte de plantar **Breadcrumbs (*migalhas de pão*)** apontando diretamente para o IP dos seus sensores OpenCanary!|Quatro *breadcrumbs* de altíssima eficácia e custo zero: **(1) Registros DNS `A` tentadores** na zona interna (ex.: `vault-backup.corp.interno`, `k8s-admin.corp.interno`, `sql-legacy.corp.interno` apontando para o IP do OpenCanary); **(2) Contas de serviço falsas no Active Directory com `ServicePrincipalName` (SPN)** apontando para o hostname do OpenCanary (quando o invasor rodar *Kerberoasting* ou enumerar SPNs no BloodHound, ele irá direto conectar na porta `1433`/`445` do seu OpenCanary!); **(3) Entradas em `~/.ssh/config` e histórico do `.bash_history`**; e **(4) Arquivos `.env` / `web.config` falsos** em compartilhamentos internos contendo o IP do sensor!|```bash
+# Exemplo de entradas de Breadcrumb em /etc/hosts ou ~/.ssh/config de servidores de aplicacao apontando para o sensor OpenCanary interno
+cat <<'EOF' >> ~/.ssh/config
+# Servidor legado de backup do cofre de chaves (acesso restrito)
+Host vault-dr-backup
+    HostName 10.40.99.250
+    User admin_backup
+    Port 22
+EOF
+```|Quando um invasor toca no IP `10.40.99.250` porque leu aquele `~/.ssh/config` na máquina `srv-web-01`, o alerta do OpenCanary não apenas avisa que há um invasor na rede, mas **identifica imediatamente qual máquina (`srv-web-01`, `src_host`) já foi comprometida e está servindo de pivô para o atacante**!|Mantenha um inventário confidencial no SOC mapeando qual *breadcrumb* aponta para qual IP/porta do OpenCanary para acelerar o diagnóstico de causa raiz durante um incidente.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-modulos-bancos-dados-mysql-mssql-redis-git-ssh-rdp, pacu-deteccao-honeytokens-canarytokens-aws-iam-detect-honeytokens
+
+===NOTE===
+1169|opencanary-mapeamento-logtypes-regras-sigma-siem-automacao-soar|Tabela de **`logtype`** do OpenCanary e Automação de Resposta (**SOAR / Active Response**) no SIEM|Para escrever regras de detecção precisas no seu SIEM (ou regras **Sigma** customizadas para os logs JSON do OpenCanary) e acionar playbooks de contenção automática (**SOAR**), é essencial conhecer os códigos numéricos de **`logtype`** emitidos pelo `opencanaryd`!|Os códigos seguem uma numeração estruturada por protocolo: **`1000`** (Boot/Start do daemon), **`2000`** (FTP login attempt), **`3000`** (HTTP GET request) e **`3001`** (HTTP POST login attempt), **`4000`** (SSH connection), **`4001`** (SSH remote version) e **`4002`** (SSH login attempt), **`5001`** (Portscan SYN), **`5002`** (Nmap OS scan), **`6001`** (Telnet login attempt), **`7001`** (HTTP Proxy request), **`8001`** (MySQL login attempt), **`9001`** (MSSQL login attempt — SQL Auth) e **`9002`** (MSSQL login attempt — Windows Auth), **`11001`** (NTP monlist), **`12001`** (Redis command), **`13001`** (TCP Banner), **`14001`** (VNC), **`15001`** (SIP), **`16001`** (Git clone request), **`17001`** (Portscan Nmap NULL/XMAS) e **`18001`** (LLMNR query response)!|Sabendo esses códigos, você pode classificar no SIEM: eventos de reconhecimento (`3000`, `4000`, `5001`) como severidade **Alta**, e eventos de tentativa explícita de autenticação ou exploração (`2000`, `3001`, `4002`, `8001`, `9001`, `12001`, `18001` LLMNR Poisoning) como severidade **Crítica (P1)**!|```bash
+# Filtrar do arquivo /var/log/opencanary.log apenas eventos de tentativa de autenticacao (FTP, HTTP, SSH, Telnet, MySQL, MSSQL) ou LLMNR Poisoning
+jq 'select(.logtype | IN(2000, 3001, 4002, 6001, 8001, 9001, 9002, 12001, 18001)) | {
+  utc_time: .utc_time,
+  sensor: .node_id,
+  logtype: .logtype,
+  attacker_ip: .src_host,
+  dst_port: .dst_port,
+  details: .logdata
+}' /var/log/opencanary.log
+```|Cuidado ao configurar ações de **bloqueio automático por IP (Active Response)** em cima de protocolos baseados em **UDP sem handshake (`snmp` `161/UDP`, `ntp` `123/UDP`, `tftp` `69/UDP`)**: como o endereço IP de origem de um único pacote UDP pode ser falsificado (*IP Spoofing*) na rede local por um atacante que queira provocar negação de serviço contra o IP do Domain Controller, **só acione isolamento automático de host em eventos que completaram um handshake TCP de 3 vias ou em alertas correlacionados com o EDR**!|Essa distinção entre protocolos TCP (com handshake completado) e pacotes UDP unitários evita ataques de *Self-DoS* contra sua automação SOAR.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, opencanary-alertas-logger-syslog-webhook-slack-correlator-siem, sigma-arquitetura-formato-universal-regras-deteccao-siem-yaml
+
+===NOTE===
+1170|opencanary-arquitetura-combinada-opencanary-cowrie-defesa-profundidade|Arquitetura de Deception em Camadas: Combinando **OpenCanary** (Detecção Multiprotocolo Rápida) e **Cowrie** (Análise Comportamental Pós-Login)|Quando usar o **OpenCanary**, quando usar o **Cowrie**, e como combinar ambos em uma arquitetura corporativa de **Deception Engineering** de classe mundial?|O **OpenCanary** é um honeypot **multiprotocolo de baixa interação** focado em **alerta imediato de intrusão na rede interna**: na porta `22`, o módulo SSH do OpenCanary registra a versão do cliente SSH, captura o usuário/senha ou chave pública tentada (`logtype 4002`) e **rejeita o login** (ele não abre um shell interativo para o atacante digitar comandos). Já o **Cowrie** é um honeypot **especializado em SSH e Telnet de média/alta interação**, projetado para **deixar o atacante entrar no shell falso**, observar toda a sua sequência de comandos pós-exploração e capturar seus scripts e malwares!|Em uma arquitetura combinada no mesmo servidor de Deception: o **OpenCanary** assume as portas `80`, `443`, `445` (SMB), `1433` (MSSQL), `3306` (MySQL), `3389` (RDP), `6379` (Redis) e `5355/UDP` (LLMNR), enquanto você deixa `"ssh.enabled": false` e `"telnet.enabled": false` no `opencanary.conf` para que as portas **`22` e `23` sejam atendidas pelo Cowrie**!|```bash
+# Verificar com ss -tulnp em um no integrado de Deception que o OpenCanary atende HTTP/MySQL/Redis e o Cowrie atende SSH/Telnet
+sudo ss -tulnp | grep -E "(opencanaryd|twistd|cowrie)"
+```|Com essa divisão de responsabilidades no mesmo host, qualquer tentativa de acesso Web, SMB, Banco de Dados ou RDP dispara imediatamente o alerta do OpenCanary, e qualquer atacante que tente login SSH ou Telnet é capturado na sessão interativa completa do Cowrie com gravação `ttylog` e coleta de artefatos!|Encaminhe tanto o `/var/log/opencanary.log` quanto o `var/log/cowrie/cowrie.json` para o mesmo índice de Deception no seu SIEM com severidade máxima no SOC.|opencanary-arquitetura-honeypot-multiprotocolo-rede-interna-thinkst, cowrie-arquitetura-honeypot-ssh-telnet-shell-proxy-llm, cowrie-deception-engineering-intranet-deteccao-movimentacao-lateral-ssh

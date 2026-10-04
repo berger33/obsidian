@@ -1,0 +1,118 @@
+1151|rbacmanager-operador-declarativo-rbacdefinition-crd|Fairwinds RBAC Manager: Operador Declarativo e CRD RBACDefinition no Kubernetes|O Fairwinds RBAC Manager é um operador Kubernetes open-source que simplifica a gestão de autorização em escala por meio da Custom Resource Definition `RBACDefinition` (`apiVersion: rbacmanager.reactiveops.io/v1beta1`), permitindo declarar `ClusterRoleBindings`, `RoleBindings` e `ServiceAccounts` desejados em um único recurso conciso.|Gerenciar dezenas de objetos `RoleBinding` e `ClusterRoleBinding` nativos separadamente por usuário, grupo e namespace gera repetição massiva de YAML e dificulta auditar quem possui qual acesso no cluster.|O controlador do RBAC Manager observa recursos `RBACDefinition` no cluster e reconcilia continuamente a lista `rbacBindings`. Para cada entrada, ele cria, atualiza ou remove os `ServiceAccounts`, `RoleBindings` e `ClusterRoleBindings` correspondentes, registrando `ownerReferences` para manter o estado real sincronizado com a especificação declarada.|```yaml
+apiVersion: rbacmanager.reactiveops.io/v1beta1
+kind: RBACDefinition
+metadata:
+  name: platform-team-access
+rbacBindings:
+  - name: sres
+    subjects:
+      - kind: Group
+        name: oidc:sre-team
+    clusterRoleBindings:
+      - clusterRole: view
+  - name: app-devs
+    subjects:
+      - kind: User
+        name: alice@example.com
+    roleBindings:
+      - namespace: checkout
+        clusterRole: edit
+```|Editar manualmente um `RoleBinding` que foi criado e possui `ownerReference` apontando para uma `RBACDefinition` faz com que a alteração manual seja revertida pelo operador na próxima reconciliação.|Aplique sempre mudanças de permissão na `RBACDefinition` de origem e verifique os recursos gerados com `kubectl get rolebindings,clusterrolebindings -A -l rbac-manager=reactiveops`.|https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md;https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/
+1152|rbacmanager-atualizacao-imutavel-roleref-recriacao-automatica|Fairwinds RBAC Manager: Recriação Automática de RoleBindings ao Alterar roleRef|Na API nativa de RBAC do Kubernetes (`rbac.authorization.k8s.io/v1`), o campo `roleRef` de um `RoleBinding` ou `ClusterRoleBinding` é estritamente imutável após a criação, e o RBAC Manager resolve essa limitação deletando e recriando automaticamente o binding quando o papel muda na `RBACDefinition`.|Em fluxos GitOps ou pipelines CI/CD tradicionais, alterar o papel de um grupo de `edit` para `view` em um manifesto `RoleBinding` falha no `kubectl apply` com erro de campo imutável (`cannot change roleRef`), exigindo intervenção manual para deletar o objeto antes de reaplicar.|Quando o operador RBAC Manager detecta que o campo `clusterRole` ou `role` dentro de `roleBindings` ou `clusterRoleBindings` de uma `RBACDefinition` foi modificado, ele executa de forma transparente a remoção do `RoleBinding` antigo e a criação imediata do novo `RoleBinding` com o `roleRef` atualizado.|```bash
+# Ao alterar clusterRole de 'edit' para 'view' na RBACDefinition:
+kubectl apply -f rbacdefinition-devs.yaml
+kubectl get events -n rbac-manager --sort-by='.lastTimestamp'
+kubectl get rolebinding -n checkout -o wide
+```|Manter tanto um manifesto `RoleBinding` estático quanto uma `RBACDefinition` tentando gerenciar o mesmo nome de binding no mesmo namespace gera conflitos contínuos de propriedade.|Deixe o ciclo de vida completo dos `RoleBindings` sob responsabilidade exclusiva da `RBACDefinition` e valide nos logs do controlador a recriação limpa ao trocar `clusterRole`.|https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1153|rbacmanager-revogacao-acesso-remocao-bindings-ownerreferences|Fairwinds RBAC Manager: Revogação Automática de Acessos e Limpeza de RoleBindings Órfãos|Cada `RBACDefinition` é proprietária (`ownerReference`) de todos os `RoleBindings`, `ClusterRoleBindings` e `ServiceAccounts` que instancia, comparando continuamente o estado desejado atual com os recursos existentes no cluster para revogar e excluir imediatamente qualquer permissão removida do YAML.|Em repositórios onde cada `RoleBinding` é um arquivo YAML separado aplicado via CI, remover um arquivo do Git nem sempre deleta o objeto do cluster se o pipeline não tiver poda (`prune`) perfeitamente configurada, deixando acessos revogados ativos indefinidamente.|Ao remover um usuário da lista `subjects` ou excluir uma entrada de `roleBindings` dentro da `RBACDefinition` e aplicar o manifesto atualizado, o RBAC Manager consulta os recursos no cluster marcados com seus labels e `ownerReferences` e apaga prontamente os bindings que deixaram de constar na definição.|```bash
+kubectl get rolebindings -n web -l rbac-manager=reactiveops
+# Apos remover um item de roleBindings na RBACDefinition e aplicar:
+kubectl apply -f rbacdefinition.yaml
+kubectl get rolebindings -n web -l rbac-manager=reactiveops
+```|Deletar a CRD `RBACDefinition` sem planejar a migração prévia dos bindings remove em cascata (via garbage collection do Kubernetes) todos os `RoleBindings` e `ServiceAccounts` filhos, cortando o acesso de usuários e bots imediatamente.|Antes de excluir uma `RBACDefinition` em produção, revise todos os objetos dependentes listados por `kubectl get rolebindings,clusterrolebindings,sa -A -l rbac-manager=reactiveops`.|https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1154|rbacmanager-namespaceselector-matchlabels-matchexpressions-dinamico|Fairwinds RBAC Manager: RoleBindings Dinâmicos com namespaceSelector (matchLabels e matchExpressions)|O RBAC Manager suporta o campo `namespaceSelector` (com `matchLabels` e `matchExpressions`) em vez de um `namespace` fixo nas entradas de `roleBindings`, criando automaticamente os `RoleBindings` em qualquer namespace atual ou futuro que corresponda aos labels.|Em plataformas com namespaces efêmeros de preview por Pull Request ou multi-tenancy dinâmico por equipe (`team=payments`, `env=staging`), criar `RoleBindings` manualmente a cada novo namespace atrasa o fluxo e exige automação extra.|O controlador do RBAC Manager observa eventos de criação e atualização de `Namespaces` no cluster. Assim que um namespace recebe o label correspondente ao `namespaceSelector` (por exemplo, `ci: edit` ou `app in (web, queue)`), o operador provisiona instantaneamente os `RoleBindings` declarados na `RBACDefinition` dentro daquele namespace.|```yaml
+apiVersion: rbacmanager.reactiveops.io/v1beta1
+kind: RBACDefinition
+metadata:
+  name: dynamic-team-rbac
+rbacBindings:
+  - name: ci-deployer
+    subjects:
+      - kind: ServiceAccount
+        name: ci-bot
+        namespace: ci-system
+    roleBindings:
+      - clusterRole: edit
+        namespaceSelector:
+          matchExpressions:
+            - key: environment
+              operator: In
+              values: ["dev", "staging"]
+```|Permitir que usuários sem privilégio administrativo editem os labels do próprio `Namespace` (por exemplo, adicionando `team=admin-target`) quando há `RBACDefinitions` baseadas em `namespaceSelector` pode permitir movimentação lateral de permissões.|Restrinja a edição de labels de `Namespaces` via política de admissão (Kyverno/Gatekeeper) e verifique a criação automática de bindings ao rotular um namespace de teste.|https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://rbac-manager.docs.fairwinds.com/introduction/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1155|rbacmanager-gestao-serviceaccounts-automacao-bots-ci|Fairwinds RBAC Manager: Provisionamento Declarativo de ServiceAccounts e Bindings Associados|Quando um `subject` dentro de `rbacBindings` é declarado com `kind: ServiceAccount` e `namespace`, o RBAC Manager cria automaticamente o objeto `ServiceAccount` caso ele ainda não exista e o vincula aos `roleBindings` e `clusterRoleBindings` especificados.|Provisionar contas de serviço para agentes de CI/CD, coletores de métricas ou jobs de automação normalmente exige manter manifestos separados de `ServiceAccount`, `RoleBinding` em múltiplos namespaces e `ClusterRoleBinding`.|Na `RBACDefinition`, basta declarar o `subject` com `kind: ServiceAccount`, `name: ci-bot` e `namespace: rbac-manager` (ou o namespace de automação) e listar os `roleBindings` (fixos ou via `namespaceSelector`). O operador garante a existência da `ServiceAccount` e mantém todos os vínculos de permissão reconciliados.|```yaml
+apiVersion: rbacmanager.reactiveops.io/v1beta1
+kind: RBACDefinition
+metadata:
+  name: automation-service-accounts
+rbacBindings:
+  - name: release-bot
+    subjects:
+      - kind: ServiceAccount
+        name: helm-deployer
+        namespace: cicd-system
+    roleBindings:
+      - clusterRole: admin
+        namespaceSelector:
+          matchLabels:
+            managed-by: helm-deployer
+```|Especificar um `namespace` inexistente no `subject` do `ServiceAccount` impede a criação da conta de serviço até que o namespace seja criado, pois o RBAC Manager gerencia RBAC e ServiceAccounts, mas não cria objetos `Namespace`.|Garanta que o namespace de hospedagem do `ServiceAccount` exista previamente e confirme a criação com `kubectl get sa -n cicd-system helm-deployer`.|https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://rbac-manager.docs.fairwinds.com/introduction/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1156|rbacmanager-instalacao-helm-migracao-registry-pkg-dev|Fairwinds RBAC Manager: Instalação via Helm e Migração para Imagens Assinadas em us-docker.pkg.dev|O RBAC Manager é instalado no cluster via Helm chart (`fairwinds-stable/rbac-manager`) e, a partir da versão `v1.10.0`, utiliza imagens assinadas e tags imutáveis hospedadas em `us-docker.pkg.dev/fairwinds-ops/oss/rbac-manager`, substituindo o repositório legado depreciado `quay.io/reactiveops/rbac-manager`.|Manter implantações antigas apontando para `quay.io/reactiveops/rbac-manager` ou dependendo de tags flutuantes (`v1`, `v1.9`, `latest`) impede a aplicação de correções de segurança e viola políticas de imutabilidade de imagens em produção.|A instalação padrão adiciona o repositório Helm `https://charts.fairwinds.com/stable` e instala o chart no namespace `rbac-manager`, registrando a CRD `rbacdefinitions.rbacmanager.reactiveops.io` e subindo o Deployment do operador com imagem pinada por versão semântica completa (`v<major>.<minor>.<patch>`) ou digest `@sha256`.|```bash
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm repo update
+helm upgrade --install rbac-manager fairwinds-stable/rbac-manager \
+  --namespace rbac-manager --create-namespace \
+  --set image.repository=us-docker.pkg.dev/fairwinds-ops/oss/rbac-manager
+kubectl get pods -n rbac-manager
+```|Desinstalar o Helm release do `rbac-manager` com remoção da CRD `rbacdefinitions` apaga todas as `RBACDefinitions` e, por consequência das `ownerReferences`, destrói todos os `RoleBindings` gerenciados no cluster.|Ao atualizar o chart Helm do `rbac-manager`, verifique sempre que a CRD `rbacdefinitions.rbacmanager.reactiveops.io` permanece intacta e que a imagem vem de `us-docker.pkg.dev/fairwinds-ops/oss/rbac-manager`.|https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md;https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/
+1157|rbacmanager-integracao-oidc-grupos-idp-eks-gke-aks|Fairwinds RBAC Manager: Mapeamento de Grupos OIDC e IAM em Clusters EKS, GKE e AKS|Combinar `RBACDefinition` com grupos provenientes de provedores OIDC (Keycloak, Dex, Okta, Entra ID) ou mapeamentos IAM em EKS, GKE e AKS permite gerenciar autorização de equipes inteiras no Kubernetes sem listar e-mails individuais sempre que um engenheiro entra ou sai do time.|Embora ainda seja comum ver `kind: User` nominal em exemplos básicos, manter dezenas de usuários individuais em arquivos YAML exige Pull Requests constantes de onboarding e offboarding no repositório de plataforma.|Configurada a autenticação do API Server (ou `aws-auth` / EKS Access Entries / GKE Google Groups / AKS Entra ID), a `RBACDefinition` referencia apenas `kind: Group` (por exemplo, `name: platform-admins`, `name: data-engineers`) e distribui `clusterRoleBindings` e `roleBindings` granulares por namespace.|```yaml
+apiVersion: rbacmanager.reactiveops.io/v1beta1
+kind: RBACDefinition
+metadata:
+  name: oidc-groups-authorization
+rbacBindings:
+  - name: observability-readers
+    subjects:
+      - kind: Group
+        name: oidc:sre-oncall
+    roleBindings:
+      - namespace: monitoring
+        clusterRole: view
+      - namespace: logging
+        clusterRole: view
+```|Incluir um prefixo de grupo incorreto na `RBACDefinition` (por exemplo, esquecer o `oidc:` configurado em `--oidc-groups-prefix` no kube-apiserver) faz com que o `RoleBinding` seja criado sem erros, mas nunca coincida com o token JWT do usuário.|Valide as claims de grupo do token OIDC e teste o acesso efetivo com `kubectl auth can-i get pods -n monitoring --as=usuario --as-group=oidc:sre-oncall`.|https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1158|rbacmanager-auditoria-combinada-rbac-lookup-visibilidade|Fairwinds RBAC Manager: Auditoria de Permissões Efetivas em Conjunto com rbac-lookup|A documentação oficial do RBAC Manager recomenda parear a gestão declarativa via `RBACDefinition` com a ferramenta complementar open-source `rbac-lookup` (`FairwindsOps/rbac-lookup`) para consultar rapidamente quais `Roles` e `ClusterRoles` estão vinculados a qualquer usuário, grupo ou `ServiceAccount` no cluster.|Como uma única `RBACDefinition` com `namespaceSelector` pode gerar dezenas de `RoleBindings` distribuídos pelo cluster (além dos bindings nativos criados por charts Helm), visualizar a superfície total de acesso de um sujeito apenas com `kubectl get rolebindings` é trabalhoso.|Enquanto o `rbac-manager` atua como o controlador que materializa o estado desejado a partir das `RBACDefinitions`, o `rbac-lookup` consulta a API do cluster e exibe em uma tabela consolidada o `SUBJECT`, `SCOPE` (namespace ou `cluster-wide`) e `ROLE`, indicando também a origem do vínculo.|```bash
+kubectl get rbacdefinitions.rbacmanager.reactiveops.io -A
+kubectl auth can-i --list --namespace=web --as=dave@example.com
+```|Assumir que apenas as permissões declaradas nas `RBACDefinitions` existem no cluster ignora `ClusterRoleBindings` permissivos criados diretamente por operadores de terceiros fora do controle do RBAC Manager.|Audite regularmente tanto as `RBACDefinitions` quanto a lista global de `RoleBindings` e `ClusterRoleBindings` do cluster usando `kubectl auth can-i` e ferramentas de visibilidade de RBAC.|https://rbac-manager.docs.fairwinds.com/introduction/;https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1159|rbacmanager-seguranca-escalacao-privilegios-controle-acesso-crd|Fairwinds RBAC Manager: Prevenção de Escalação de Privilégios no Acesso à CRD RBACDefinition|Como o controlador do RBAC Manager possui permissões amplas no cluster para criar `ClusterRoleBindings` (incluindo vínculo com `cluster-admin`) e `RoleBindings` em qualquer namespace, o acesso de escrita (`create`, `update`, `patch`, `delete`) sobre a CRD `rbacdefinitions.rbacmanager.reactiveops.io` é equivalente a administrador total do cluster.|Conceder permissão de edição em `rbacdefinitions` a desenvolvedores ou a um pipeline de CI de aplicação permite que qualquer usuário crie um `clusterRoleBinding` vinculando sua própria conta ao papel `cluster-admin`.|O RBAC do próprio cluster deve restringir os verbos `create`, `update`, `patch` e `delete` no recurso `rbacdefinitions` (grupo `rbacmanager.reactiveops.io`) exclusivamente ao controlador GitOps da plataforma (Argo CD / Flux) e aos administradores de segurança, concedendo no máximo `get` e `list` para auditoria.|```bash
+# Verificar quem pode modificar RBACDefinitions no cluster:
+kubectl auth can-i create rbacdefinitions.rbacmanager.reactiveops.io --as=system:serviceaccount:default:default
+kubectl auth can-i update rbacdefinitions.rbacmanager.reactiveops.io --as-group=system:authenticated
+```|Incluir `apiGroups: ["*"]` ou `resources: ["*"]` em uma `Role` ou `ClusterRole` delegada a equipes de desenvolvimento expõe inadvertidamente a CRD `RBACDefinition` (que é um recurso cluster-scoped), abrindo vetor direto de escalação de privilégio.|Certifique-se de que nenhuma `ClusterRole` não administrativa inclua `rbacmanager.reactiveops.io` ou curingas `*`, e valide o bloqueio com `kubectl auth can-i create rbacdefinitions`.|https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://rbac-manager.docs.fairwinds.com/introduction/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md
+1160|rbacmanager-padroes-gitops-separacao-roles-customizadas-bindings|Fairwinds RBAC Manager: Padrão GitOps Separando Definição de Roles/ClusterRoles e RBACDefinitions|Como o RBAC Manager gerencia `RoleBindings`, `ClusterRoleBindings` e `ServiceAccounts` — mas não substitui a definição de `Roles` e `ClusterRoles` em si —, a arquitetura GitOps recomendada mantém um catálogo enxuto de `ClusterRoles` reutilizáveis versionado junto às `RBACDefinitions` que atribuem esses papéis aos sujeitos.|Tentar declarar regras de verbos e recursos (`rules: [apiGroups, resources, verbs]`) diretamente dentro de uma `RBACDefinition` falha porque o escopo deliberado do operador é simplificar o vínculo (`binding`) entre sujeitos e papéis existentes.|No repositório GitOps da plataforma, definem-se primeiro as `ClusterRoles` padrão da organização (além das nativas `view`, `edit` e `admin` do Kubernetes) e, em seguida, aplicam-se as `RBACDefinitions` por unidade organizacional ou por classe de automação, referenciando essas `ClusterRoles` em `roleBindings` (com escopo de namespace) ou `clusterRoleBindings` (escopo global).|```yaml
+# Referenciando uma ClusterRole em escopo de namespace via roleBindings:
+apiVersion: rbacmanager.reactiveops.io/v1beta1
+kind: RBACDefinition
+metadata:
+  name: squad-payments-rbac
+rbacBindings:
+  - name: payments-devs
+    subjects:
+      - kind: Group
+        name: oidc:squad-payments
+    roleBindings:
+      - clusterRole: edit
+        namespaceSelector:
+          matchLabels:
+            squad: payments
+```|Referenciar em `roleBindings` ou `clusterRoleBindings` de uma `RBACDefinition` uma `ClusterRole` customizada que ainda não foi aplicada no cluster deixa o binding apontando para um papel inexistente (que não concede permissão alguma no Kubernetes).|Aplique sempre `ClusterRoles` e `Roles` antes (ou na mesma onda de sincronização GitOps) das `RBACDefinitions` e verifique os logs do pod `rbac-manager` para confirmar reconciliação sem erros.|https://rbac-manager.docs.fairwinds.com/rbacdefinitions/;https://rbac-manager.docs.fairwinds.com/introduction/;https://raw.githubusercontent.com/FairwindsOps/rbac-manager/master/README.md

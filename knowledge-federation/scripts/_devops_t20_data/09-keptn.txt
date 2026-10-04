@@ -1,0 +1,139 @@
+1981|keptn-arquitetura-cncf-cloud-native-application-lifecycle-observability|Keptn: arquitetura CNCF Incubating para orquestração de ciclo de vida de releases, avaliações de SLO e observabilidade OpenTelemetry|O **Keptn** (desenvolvido sob o codinome *Keptn Lifecycle Toolkit — KLT*, projeto **CNCF Incubating** licenciado sob Apache 2.0) traz consciência de aplicação (*application awareness*) para clusters Kubernetes (>= 1.27), complementando ferramentas GitOps (como Argo CD, Flux e GitLab) com **tarefas e avaliações pré/pós-deploy**, **métricas multi-fonte** e **observabilidade OpenTelemetry/DORA nativa**.|Ferramentas de deploy padrão do Kubernetes consideram um rollout concluído assim que os Pods ficam `Ready`, sem verificar antes do deploy se serviços dependentes e recursos do cluster estão saudáveis, e sem avaliar após o deploy se os SLOs de latência/erro no Prometheus/Datadog continuam verdes.|Operando como um **Operator Nível 3** declarativo agnóstico à ferramenta de CD, o Keptn organiza suas funcionalidades em três pilares independentes ou combinados: 1) **Metrics** (servidor de métricas unificado e Kubernetes Custom Metrics API); 2) **Observability** (traces OpenTelemetry de ponta a ponta do deployment e métricas **DORA** nativas); e 3) **Release Lifecycle Management** (tarefas `KeptnTaskDefinition` e avaliações `KeptnEvaluationDefinition` envolvendo workloads e `KeptnApp`).|```bash
+helm repo add keptn https://charts.lifecycle.keptn.sh
+helm repo update
+helm upgrade --install keptn keptn/keptn -n keptn-system --create-namespace --wait
+```|Conforme documentado no README oficial, o Keptn deve ser instalado em seu próprio namespace dedicado (`keptn-system`) que não execute outros componentes ou deployments de aplicação.|Execute `kubectl get pods -n keptn-system` para verificar que os operadores do Keptn (`lifecycle-operator`, `metrics-operator`, `certificate-operator`) estão em execução.|https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://keptn.sh/stable/docs/core-concepts/;https://github.com/keptn/lifecycle-toolkit
+1982|keptn-crd-keptnapp-keptnworkload-agrupamento-logico-microsservicos|Keptn `KeptnApp` e `KeptnWorkload`: agrupamento lógico de múltiplos microsserviços em uma unidade coesa de release|No Keptn, além de monitorar recursos individuais do Kubernetes (`Deployment`, `StatefulSet`, `DaemonSet`) por meio de **`KeptnWorkload`**, o Custom Resource **`KeptnApp`** agrupa múltiplos workloads logicamente relacionados em uma única aplicação versionada para executar verificações, avaliações e traces no nível da aplicação inteira.|Em uma arquitetura de microsserviços onde um e-commerce é formado por 4 Deployments (`frontend`, `cart`, `checkout`, `payment`), validar apenas cada Pod isoladamente não garante que a versão combinada da aplicação inteira esteja pronta para receber tráfego.|Quando você anota seus Deployments/StatefulSets com as anotações do Keptn (`keptn.sh/app: ecommerce`, `keptn.sh/workload: checkout`, `keptn.sh/version: 2.1.0` ou labels equivalentes `app.kubernetes.io/part-of`), o operador gera/reconcilia automaticamente os objetos `KeptnWorkload`, `KeptnWorkloadVersion` e `KeptnAppVersion`, orquestrando o ciclo de vida em dois níveis: primeiro as checagens pré-deploy da `KeptnApp`, depois o agendamento dos Pods e as checagens de cada `KeptnWorkload`, e por fim as avaliações pós-deploy da `KeptnApp`.|```yaml
+apiVersion: lifecycle.keptn.sh/v1beta1
+kind: KeptnAppContext
+metadata:
+  name: ecommerce
+  namespace: prod
+spec:
+  preDeploymentTasks:
+    - verify-db-migrations
+  postDeploymentEvaluations:
+    - checkout-slo-evaluation
+```|O recurso `KeptnAppContext` permite anexar tarefas, avaliações e metadados extras de span OpenTelemetry a um `KeptnApp` descoberto automaticamente sem precisar escrever a lista manual de workloads.|Execute `kubectl get keptnapps,keptnappversions,keptnworkloads,keptnworkloadversions -A` para inspecionar o estado de cada revisão da aplicação.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1983|keptn-scheduler-plugin-gate-pre-deployment-bloqueio-pods|Keptn Pre-Deployment Gates: como o scheduler do Keptn retém o agendamento de Pods até que tarefas e avaliações pré-deploy passem|Para executar tarefas e avaliações **antes** que o novo container da aplicação entre em execução no cluster, o Keptn intercepta a criação dos Pods via mutating webhook e utiliza um plugin de agendamento do Kubernetes que mantém os Pods retidos (*gated*) até que todas as **`preDeploymentTasks`** e **`preDeploymentEvaluations`** sejam aprovadas.|Se o Kubernetes iniciasse os novos Pods da versão `v2` imediatamente enquanto o banco de dados ainda não concluiu a migração de schema ou enquanto o serviço de pagamento upstream está fora do ar, os Pods entrariam em `CrashLoopBackOff` imediato.|Com o Keptn ativo no namespace, quando um `Deployment` é aplicado pelo Argo CD ou `kubectl`: 1) as avaliações e tarefas pré-deploy no nível do `KeptnApp` e `KeptnWorkload` são executadas; 2) somente após todas concluírem com `Succeeded`, o Keptn libera o gate para que o scheduler agende os Pods nos nós; e 3) assim que os Pods ficam prontos, o Keptn dispara as tarefas e avaliações **pós-deploy**.|```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service
+  namespace: prod
+  annotations:
+    keptn.sh/app: ecommerce
+    keptn.sh/workload: checkout-service
+    keptn.sh/version: "2.1.0"
+    keptn.sh/pre-deployment-tasks: check-db-ready
+    keptn.sh/post-deployment-evaluations: latency-slo-check
+```|Se uma avaliação pré-deploy falhar (ex.: o cluster ou serviço dependente não atende aos pré-requisitos após as retentativas configuradas), o `KeptnWorkloadVersion` entra em estado `Failed` e os Pods da revisão defeituosa não consomem recursos de aplicação.|Inspecione a fase atual do rollout com `kubectl get keptnworkloadversions -n prod -o wide`.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1984|keptn-task-definition-keptntask-containers-deno-python-paralelismo|Keptn `KeptnTaskDefinition` e `KeptnTask`: execução paralela e sequencial de tarefas pré/pós-deploy e promoção|O Custom Resource **`KeptnTaskDefinition`** define ações executáveis (usando containers arbitrários, scripts **Deno/TypeScript** ou **Python**) que o Keptn instancia como objetos **`KeptnTask`** (Jobs Kubernetes) nos estágios de **pre-deployment**, **post-deployment** ou **promotion**.|Padronizar a execução de testes de fumaça (*smoke tests*), varreduras de imagem, preparação de infraestrutura ou notificações de release diretamente no ciclo de vida do workload no cluster elimina a dependência de pipelines de CI externos que perdem conexão com o cluster.|Conforme detalhado na documentação de Core Concepts do Keptn: todos os recursos `KeptnTask` definidos no mesmo nível (ex.: duas tarefas listadas em `preDeploymentTasks`) executam **em paralelo**; por outro lado, se um único `KeptnTask` for definido para rodar múltiplos executáveis/funções encadeados, os executáveis dentro daquele `KeptnTask` rodam em **ordem sequencial**.|```yaml
+apiVersion: lifecycle.keptn.sh/v1beta1
+kind: KeptnTaskDefinition
+metadata:
+  name: smoke-test-checkout
+  namespace: prod
+spec:
+  container:
+    name: curl-smoke
+    image: curlimages/curl:8.7.1
+    command:
+      - sh
+      - -c
+      - "curl -fsS --retry 5 http://checkout-service.prod.svc.cluster.local:8080/healthz"
+  retries: 3
+  timeout: 2m
+```|Como recomenda a documentação oficial do Keptn, sequências complexas de compilação e build que não fazem parte do workflow de ciclo de vida do deploy no cluster devem continuar na ferramenta de pipeline de CI, reservando o `KeptnTask` para validações e ações de release in-cluster.|Liste as definições e as execuções de tarefas no namespace com `kubectl get keptntaskdefinitions,keptntasks -n prod`.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1985|keptn-evaluation-definition-slo-validation-pre-post-deployment|Keptn `KeptnEvaluationDefinition`: validação declarativa de SLOs e saúde de aplicação antes e depois do deploy|O Custom Resource **`KeptnEvaluationDefinition`** permite declarar objetivos de nível de serviço (**SLOs**) e pré-requisitos quantitativos (consultando recursos **`KeptnMetric`**) que são avaliados automaticamente antes do deploy (ex.: "há CPU livre suficiente no cluster?") ou após o deploy (ex.: "a latência P95 está `< 250ms` e a taxa de erro `< 1%`?").|Sem validação automatizada de SLOs pós-deploy, um deploy pode subir todos os Pods com `Running` (`1/1`) enquanto retorna HTTP `500` em 15% das transações de clientes.|Cada `objective` dentro de `KeptnEvaluationDefinition.spec.objectives` referencia um `keptnMetricRef` (`name` e `namespace`) e um operador de limiar `evaluationTarget` (como `"<250"`, `">99.5"`, `"<=0.01"`). O controlador executa a avaliação com `retries` e `retryInterval` configuráveis até que todos os objetivos passem.|```yaml
+apiVersion: lifecycle.keptn.sh/v1beta1
+kind: KeptnEvaluationDefinition
+metadata:
+  name: checkout-slo-evaluation
+  namespace: prod
+spec:
+  objectives:
+    - keptnMetricRef:
+        name: checkout-p95-latency-ms
+        namespace: prod
+      evaluationTarget: "<250"
+    - keptnMetricRef:
+        name: checkout-error-rate
+        namespace: prod
+      evaluationTarget: "<0.01"
+```|Se uma avaliação pós-deploy falhar após todas as tentativas, o `KeptnWorkloadVersion` / `KeptnAppVersion` registra a falha de SLO, emitindo eventos Kubernetes, CloudEvents e métricas OpenTelemetry para acionar alertas ou rollback no controlador GitOps.|Execute `kubectl get keptnevaluations -n prod` e `kubectl describe keptnevaluation <nome> -n prod` para ver o valor medido de cada objetivo frente ao `evaluationTarget`.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1986|keptn-metrics-operator-keptnmetricsprovider-keptnmetric-multi-source|Keptn Metrics Operator: unificação de `Prometheus`, `Thanos`, `Cortex`, `Dynatrace`, `Datadog` e `Elastic` via `KeptnMetricsProvider` e `KeptnMetric`|O **Keptn Metrics Operator** padroniza o acesso a dados de observabilidade de múltiplos provedores e múltiplas instâncias no mesmo cluster por meio de dois CRDs (`metrics.keptn.sh/v1beta1`): **`KeptnMetricsProvider`** (que configura o endpoint e credenciais da fonte: Prometheus, Thanos, Cortex, Dynatrace, Datadog, Elastic ou AWS CloudWatch) e **`KeptnMetric`** (que define a query e o intervalo de coleta).|Em empresas grandes onde métricas de infraestrutura estão no Prometheus local, métricas de APM estão no Datadog/Dynatrace e métricas de negócio estão no Elastic/CloudWatch, consultar cada sistema com adaptadores proprietários impede que o HPA ou o Argo Rollouts tomem decisões unificadas.|Uma vez criado um `KeptnMetric`, o Metrics Operator consulta o `KeptnMetricsProvider` periodicamente (`fetchIntervalSeconds`) e expõe o valor atualizado tanto no `status.value` do próprio CRD quanto através da **Kubernetes Custom Metrics API** (`custom.metrics.k8s.io`), permitindo que o **HorizontalPodAutoscaler (HPA)**, **KEDA**, **Argo Rollouts** ou **Flux** consumam qualquer métrica como um recurso nativo do Kubernetes!|```yaml
+apiVersion: metrics.keptn.sh/v1beta1
+kind: KeptnMetricsProvider
+metadata:
+  name: cluster-prometheus
+  namespace: prod
+spec:
+  type: prometheus
+  targetServer: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+---
+apiVersion: metrics.keptn.sh/v1beta1
+kind: KeptnMetric
+metadata:
+  name: checkout-p95-latency-ms
+  namespace: prod
+spec:
+  provider:
+    name: cluster-prometheus
+  query: 'histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket{service="checkout"}[5m])) by (le))'
+  fetchIntervalSeconds: 15
+```|Armazene tokens de API de provedores externos (como Datadog ou Dynatrace) em um `Secret` do Kubernetes e referencie-o em `spec.secretKeyRef` do `KeptnMetricsProvider`.|Execute `kubectl get keptnmetrics -n prod` para visualizar na saída padrão o valor numérico atual coletado pela query.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1987|keptn-observabilidade-opentelemetry-traces-deployments-dora-metrics|Keptn Observabilidade de Deployments: geração nativa de Traces OpenTelemetry de releases e Métricas DORA|O Keptn torna cada implantação no Kubernetes observável de ponta a ponta emitindo automaticamente **Traces OpenTelemetry**, **Métricas DORA** (*Deployment Frequency*, *Lead Time for Changes*, *Change Failure Rate*, *Time to Restore*), **Kubernetes Events** e **CloudEvents** para todas as fases de cada `KeptnAppVersion` e `KeptnWorkloadVersion`.|Quando um deploy no Kubernetes demora 12 minutos ou falha na metade, investigar `kubectl describe` de dezenas de Pods e Jobs sem um trace distribuído unificado torna difícil saber quanto tempo foi gasto nas tarefas pré-deploy, no pull de imagem, na prontidão dos Pods ou nas avaliações pós-deploy.|Configurando o recurso `KeptnConfig` apontando `otelCollectorUrl` para o seu **OpenTelemetry Collector** (Jaeger, Tempo, Grafana), o Keptn cria um trace raiz para o deploy da `KeptnApp` e spans filhos para cada `KeptnTask`, `KeptnEvaluation` e fase de rollout do `KeptnWorkload`, propagando inclusive o `traceparent` W3C para os containers das tarefas.|```yaml
+apiVersion: options.keptn.sh/v1alpha1
+kind: KeptnConfig
+metadata:
+  name: keptn-config
+  namespace: keptn-system
+spec:
+  otelCollectorUrl: "otel-collector.monitoring.svc.cluster.local:4317"
+  keptnAppCreationRequestTimeoutSeconds: 30
+```|As métricas DORA e de ciclo de vida (`keptn_deployment_count`, `keptn_deployment_duration`, `keptn_deployment_interval`) ficam imediatamente disponíveis para visualização em dashboards padrão do **Grafana**.|Aplique o `KeptnConfig` com `otelCollectorUrl` e verifique no Jaeger/Grafana Tempo a árvore completa de spans gerada durante um deploy.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1988|keptn-autoscaling-hpa-custom-metrics-api-adapter-escalonamento|Keptn com HorizontalPodAutoscaler (`HPA`): escalonamento de Pods no Kubernetes baseado em `KeptnMetric` via Custom Metrics API|Graças ao adaptador integrado do Keptn para a **Kubernetes Custom Metrics API** (`custom.metrics.k8s.io/v1beta2`), qualquer métrica definida em um recurso **`KeptnMetric`** (seja vinda do Prometheus, Thanos, Datadog, Dynatrace ou Elastic) pode ser usada diretamente como métrica do tipo `Object` em um **`HorizontalPodAutoscaler` (`autoscaling/v2`)** padrão do Kubernetes.|Normalmente, escalar um Deployment no HPA usando uma métrica do Datadog em um cluster e uma métrica do Thanos em outro exige instalar e manter adaptadores de métricas proprietários diferentes em cada cluster.|Com o Keptn Metrics Operator instalado, o HPA referencia sempre o mesmo objeto padrão: `describedObject: { apiVersion: metrics.keptn.sh/v1beta1, kind: KeptnMetric, name: <metric-name> }`. Se você trocar o provedor de observabilidade de Prometheus para Thanos ou Datadog amanhã, basta atualizar o `KeptnMetricsProvider` sem alterar uma única linha dos manifestos de HPA!|```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: checkout-hpa
+  namespace: prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: checkout-service
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+    - type: Object
+      object:
+        metric:
+          name: checkout-p95-latency-ms
+        describedObject:
+          apiVersion: metrics.keptn.sh/v1beta1
+          kind: KeptnMetric
+          name: checkout-p95-latency-ms
+        target:
+          type: Value
+          value: "200"
+```|Verifique se a API agregada `v1beta2.custom.metrics.k8s.io` está registrada e disponível no cluster antes de aplicar o HPA.|Execute `kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta2/namespaces/prod/keptnmetrics.metrics.keptn.sh/checkout-p95-latency-ms/checkout-p95-latency-ms"` para validar a exposição da métrica na Custom Metrics API.|https://keptn.sh/stable/docs/core-concepts/;https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://github.com/keptn/lifecycle-toolkit
+1989|keptn-certificate-operator-webhooks-tls-integracao-cert-manager|Keptn Certificate Manager vs `cert-manager`: gerenciamento de certificados TLS para os webhooks e APIs do Keptn|O Keptn inclui por padrão o componente **Keptn Certificate Manager** (`certificate-operator`, status `stable`), que provisiona e rotaciona automaticamente os certificados TLS necessários para a comunicação segura entre o `kube-apiserver` e os webhooks/serviços de métricas do Keptn, permitindo alternativamente delegar essa função ao **`cert-manager`** existente no cluster.|Os Mutating/Validating Webhooks de ciclo de vida do Keptn e o servidor da Custom Metrics API exigem certificados TLS válidos com `caBundle` injetado nos recursos `MutatingWebhookConfiguration`, `ValidatingWebhookConfiguration`, `APIService` e `CustomResourceDefinition` (conversion webhooks).|Na instalação padrão via Helm (`helm upgrade --install keptn keptn/keptn`), o `certificate-operator` embutido do Keptn gerencia todo esse ciclo sem exigir dependências externas. Caso sua política de plataforma exija centralizar todos os certificados no `cert-manager`, basta desabilitar o `certificate-operator` embutido nas opções do chart Helm e configurar os `Issuer`/`Certificate` correspondentes do `cert-manager`.|```bash
+# Inspecionando o pod do certificate-operator e o Secret TLS gerado em keptn-system:
+kubectl get pods -n keptn-system -l control-plane=certificate-operator
+kubectl get secret -n keptn-system keptn-certs
+```|Se os certificados do webhook expirarem ou o `certificate-operator` for removido sem substituição pelo `cert-manager`, a criação de Pods nos namespaces monitorados pelo webhook do Keptn falhará no admission controller.|Verifique a validade do certificado atual no Secret `keptn-certs` em `keptn-system` e a presença do `caBundle` em `kubectl get mutatingwebhookconfigurations`.|https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://keptn.sh/stable/docs/core-concepts/;https://github.com/keptn/lifecycle-toolkit
+1990|keptn-controle-namespaces-monitorados-allowednamespaces-gitops-promotion|Keptn Governança de Namespaces e Promoção GitOps: configuração de `allowedNamespaces` e estágios de `promotion`|Por padrão, a orquestração de ciclo de vida do Keptn monitora os namespaces do cluster exceto namespaces reservados de sistema (como `kube-system` e `keptn-system`), podendo ser restrita via Helm (`allowedNamespaces`) ou ativada seletivamente, além de suportar tarefas de **promoção (`promotionTasks`)** ao final de um release bem-sucedido.|Em clusters compartilhados, a equipe de plataforma pode querer ativar a interceptação de webhooks do Keptn apenas nos namespaces `staging` e `prod`, e acionar automaticamente a promoção da versão para o próximo estágio no Git apenas depois que todas as avaliações pós-deploy de `staging` passaram.|Quando todas as `postDeploymentTasks` e `postDeploymentEvaluations` de um `KeptnAppVersion` terminam com sucesso, o Keptn executa as tarefas do estágio de **promotion** (ex.: um `KeptnTask` que abre um Pull Request no repositório GitOps ou dispara um webhook do Argo CD/GitLab para promover a tag para produção).|```yaml
+# Trecho de KeptnAppContext configurando tarefa de promoção após aprovação dos SLOs pós-deploy:
+apiVersion: lifecycle.keptn.sh/v1beta1
+kind: KeptnAppContext
+metadata:
+  name: ecommerce
+  namespace: staging
+spec:
+  postDeploymentEvaluations:
+    - staging-slo-evaluation
+  promotionTasks:
+    - trigger-gitops-prod-pr
+```|Nunca instale workloads de negócio no namespace `keptn-system`, pois ele é excluído da instrumentação dos webhooks de ciclo de vida do próprio Keptn.|Verifique os seletores de namespace configurados no webhook com `kubectl get mutatingwebhookconfigurations -o yaml | grep -A 15 namespaceSelector`.|https://raw.githubusercontent.com/keptn/lifecycle-toolkit/main/README.md;https://keptn.sh/stable/docs/core-concepts/;https://github.com/keptn/lifecycle-toolkit

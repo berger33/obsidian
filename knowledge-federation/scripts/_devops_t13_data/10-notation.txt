@@ -1,0 +1,105 @@
+1291|notation-arquitetura-notary-project-assinatura-artefatos-oci|Notary Project Notation: Arquitetura CNCF Incubating para Assinatura e Verificação de Artefatos OCI|O **Notation** (`notaryproject/notation`, projeto **CNCF Incubating**) é a CLI e biblioteca oficial que implementa as especificações do **Notary Project (Notary v2)** para assinar e verificar criptograficamente imagens de containers e artefatos genéricos como itens padrão no ecossistema de registros OCI.|Enquanto o Notary v1 legado usava um servidor TUF separado incompatível com a portabilidade de artefatos entre registros, o Notation armazena as assinaturas diretamente no próprio registro OCI vinculadas ao digest da imagem.|O Notation assina sempre o **digest imutável** (`@sha256:...`) do artefato (resolvendo tags para digest antes de assinar) e publica um artefato de assinatura com media type `application/vnd.cncf.notary.v2.signature` anexado à imagem no registry, que pode ser listado com `notation ls` e validado com `notation verify`.|```bash
+IMAGE="localhost:5001/net-monitor@sha256:073b75987e95b89f187a89809f08a32033972bb63cda279db8a9ca16b7ff555a"
+notation sign "$IMAGE"
+notation ls "$IMAGE"
+notation verify "$IMAGE"
+```|Passar uma tag mutável (`localhost:5001/net-monitor:v1`) para `notation sign` e continuar usando a tag nos manifestos de deploy permite que a tag seja apontada para outra imagem entre o build e o deploy.|Referencie sempre o digest imutável (`@sha256:...`) tanto ao assinar com `notation sign` quanto ao verificar com `notation verify` e implantar no Kubernetes.|https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://notaryproject.dev/docs/user-guides/installation/cli/
+1292|notation-formatos-assinatura-jws-vs-cose-rfc8152|Notary Project Notation: Envelopes de Assinatura JWS (JSON Web Signature) e COSE (RFC 8152)|O Notation suporta dois formatos padronizados de envelope criptográfico para as assinaturas Notary v2: **JWS (JSON Web Signature)**, utilizado por padrão, e **COSE (CBOR Object Signing and Encryption — RFC 8152)**, selecionável via flag `--signature-format cose`.|Ambientes corporativos e dispositivos de borda com requisitos específicos de serialização binária compacta (CBOR/RFC 8152) ou integração com cadeias de certificados X.509 precisam escolher o formato de envelope compatível com seus validadores.|Ao executar `notation sign $IMAGE`, o Notation gera uma assinatura JWS contendo o descritor OCI assinado, atributos de timestamp/expiração e a cadeia de certificados X.509; passando `notation sign --signature-format cose $IMAGE`, o envelope é codificado no padrão binário COSE, mantendo o mesmo fluxo de listagem (`notation ls`) e verificação (`notation verify`).|```bash
+# Assinar imagem utilizando o formato padrao JWS ou o formato binario COSE:
+notation sign "$IMAGE"
+notation sign --signature-format cose "$IMAGE"
+notation ls "$IMAGE"
+```|Usar versões muito antigas de plugins de verificação ou controladores de admissão que suportavam apenas JWS ao validar imagens assinadas com `--signature-format cose` causa falha de parsing na verificação.|Mantenha o binário `notation` e os validadores de cluster (Ratify / Kyverno) atualizados para suportar tanto envelopes `jws` quanto `cose`.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/user-guides/installation/cli/
+1293|notation-trust-store-ca-signingauthority-tsa-x509-pki|Notary Project Notation: Gerenciamento de Trust Store (ca, signingAuthority e tsa) e Certificados X.509|O modelo de confiança do Notation baseia-se em infraestrutura de chaves públicas X.509 (**PKI**), organizando os certificados confiáveis em uma **Trust Store** local (`notation cert add`, `notation cert ls`, `notation cert show`, `notation cert delete`) dividida por tipos (`ca`, `signingAuthority` e `tsa` para Time Stamping Authorities).|Diferente de modelos que dependem exclusivamente de chaves avulsas sem hierarquia de certificação, o uso de cadeias X.509 permite que uma organização confie na Autoridade Certificadora (CA) raiz corporativa e revogue certificados folha intermediários sem precisar redistribuir chaves públicas em todos os clusters.|Os certificados são adicionados a named stores tipadas, como `ca:wabbit-networks.io`, que depois são referenciadas no array `"trustStores"` das políticas de confiança (`trustpolicy.json`). Para testes locais, `notation cert generate-test --default "wabbit-networks.io"` gera um par de chaves RSA de teste e adiciona o certificado autoassinado à trust store.|```bash
+notation cert generate-test --default "wabbit-networks.io"
+notation key ls
+notation cert ls
+```|Utilizar certificados autoassinados gerados por `notation cert generate-test` em ambientes de produção viola o modelo de segurança do Notary Project (que alerta explicitamente que certificados de teste são apenas para desenvolvimento).|Em produção, utilize certificados X.509 emitidos por uma CA privada/corporativa ou por cofres de nuvem (AWS Signer, Azure Key Vault, HashiCorp Vault) e remova qualquer certificado de teste da Trust Store.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://notaryproject.dev/docs/user-guides/installation/cli/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md
+1294|notation-trust-policy-json-registryscopes-trustedidentities-levels|Notary Project Notation: Configuração de Trust Policy (trustpolicy.json), Escopos e Níveis de Verificação|Para verificar assinaturas com `notation verify`, o Notation exige uma **Trust Policy** (`trustpolicy.json`, importada via `notation policy import ./trustpolicy.json` e inspecionada com `notation policy show`) que declara `registryScopes`, `signatureVerification.level`, `trustStores` e `trustedIdentities`.|Apenas saber que uma assinatura é matematicamente válida contra um certificado da CA não basta: é preciso garantir que o certificado pertence à identidade autorizada para publicar naquele repositório específico (`registryScopes` + `trustedIdentities`).|No arquivo `trustpolicy.json`, cada política define: `registryScopes` (lista de repositórios como `"ghcr.io/org/prod-api"` ou `"*"`), `signatureVerification.level` (`"strict"`, `"permissive"`, `"audit"` ou `"skip"`), `trustStores` (como `["ca:corp-pki"]`) e `trustedIdentities` (Subject DN do certificado X.509, como `"x509.subject: C=BR, O=Acme, CN=ci-signer"`).|```json
+{
+  "version": "1.0",
+  "trustPolicies": [
+    {
+      "name": "production-images-policy",
+      "registryScopes": ["ghcr.io/org/payment-service"],
+      "signatureVerification": {
+        "level": "strict"
+      },
+      "trustStores": ["ca:corp-production-ca"],
+      "trustedIdentities": [
+        "x509.subject: C=BR, ST=SP, O=AcmeCorp, CN=release-signer"
+      ]
+    }
+  ]
+}
+```|Deixar `"registryScopes": ["*"]` e `"trustedIdentities": ["*"]` (usados apenas no exemplo de quickstart local) na política de produção aceita qualquer certificado emitido pela mesma CA para qualquer repositório.|Restrinja sempre `registryScopes` aos repositórios exatos e especifique o `x509.subject` (ou ARN do AWS Signer) em `trustedIdentities`, validando a política ativa com `notation policy show`.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/user-guides/installation/cli/
+1295|notation-plugins-kms-aws-signer-azure-key-vault-vault|Notary Project Notation: Arquitetura de Plugins KMS (AWS Signer, Azure Key Vault e HashiCorp Vault)|O Notation possui uma arquitetura extensível de plugins (`notation plugin ls`) que delega a operação criptográfica de assinatura para serviços de KMS e HSM em nuvem — como **AWS Signer**, **Azure Key Vault (AKV)**, **Google Cloud KMS** e **HashiCorp Vault** — sem que a chave privada jamais saia do HSM.|Gerar e armazenar chaves privadas de assinatura em arquivos locais no disco do runner de CI/CD cria o risco de exfiltração da chave privada caso o runner sofra comprometimento.|Com o plugin instalado no diretório de plugins de `NOTATION_CONFIG`, o operador registra a chave externa com `notation key add --plugin <nome-do-plugin> --id <key-arn-ou-uri>`. Durante `notation sign`, o Notation envia apenas o digest a ser assinado para a API do KMS/Signer (autenticado via OIDC/IAM role do runner) e anexa a assinatura retornada ao registry OCI.|```bash
+notation plugin ls
+notation key ls
+```|Conceder a permissão IAM de `signer:SignPayload` ou acesso de assinatura no Key Vault para jobs de Pull Request não revisados (em vez de restringir aos workflows de release da branch protegida) permite que código de PR receba assinatura oficial de produção.|Restrinja a identidade IAM/OIDC autorizada a invocar o plugin KMS do Notation exclusivamente aos pipelines de release de tags/branches protegidas.|https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://notaryproject.dev/docs/user-guides/installation/cli/
+1296|notation-instalacao-verificacao-shasum-notation-config-dir|Notary Project Notation: Instalação Verificada por Checksum, Estrutura NOTATION_CONFIG e Estabilidade de Versões|A documentação oficial de instalação do Notation recomenda validar a integridade do arquivo tar/zip baixado contra o arquivo `notation_<VERSION>_checksums.txt` usando `shasum --check` antes de extrair o binário, além de configurar o diretório de estado via variável `NOTATION_CONFIG`.|Baixar binários de segurança de supply chain em runners de CI via `curl` sem verificar o checksum SHA-256 ou instalar versões alpha instáveis (como `2.0.0-alpha.1`) em produção compromete a confiabilidade do pipeline.|O Notation cria automaticamente o diretório apontado por `NOTATION_CONFIG` (ou o diretório XDG padrão do sistema operacional), onde armazena `config.json`, `trustpolicy.json`, `localkeys/` (apenas para testes), `truststore/x509/` e `plugins/`.|```bash
+export NOTATION_VERSION=1.3.0
+curl -LO "https://github.com/notaryproject/notation/releases/download/v${NOTATION_VERSION}/notation_${NOTATION_VERSION}_linux_amd64.tar.gz"
+curl -LO "https://github.com/notaryproject/notation/releases/download/v${NOTATION_VERSION}/notation_${NOTATION_VERSION}_checksums.txt"
+grep "linux_amd64.tar.gz" "notation_${NOTATION_VERSION}_checksums.txt" | shasum --check
+```|Usar apenas `notation key delete` e `notation cert delete` para tentar limpar chaves e certificados de teste criados por `notation cert generate-test` não remove os arquivos físicos do disco em `localkeys/`, exigindo limpeza explícita do diretório.|Defina um `NOTATION_CONFIG` isolado para ambientes de teste e utilize sempre releases estáveis verificadas por `shasum --check` em produção.|https://notaryproject.dev/docs/user-guides/installation/cli/;https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md
+1297|notation-inspect-assinaturas-cadeia-certificados-timestamps|Notary Project Notation: Inspeção Detalhada de Assinaturas e Cadeias X.509 com notation inspect|O comando `notation inspect <imagem@sha256:...>` decodifica e exibe em formato legível (árvore ou JSON) todos os metadados internos de cada assinatura anexada a um artefato OCI, incluindo algoritmo de assinatura, atributos assinados (`expiry`, `signingScheme`), timestamps e o `Subject`/`Issuer`/validade de cada certificado da cadeia X.509.|Quando `notation verify` falha por expiração de certificado, incompatibilidade de `trustedIdentities` ou ausência de carimbo de tempo (RFC 3161 TSA), `notation ls` mostra apenas os digests das assinaturas sem revelar qual certificado assinou o artefato.|Ao executar `notation inspect $IMAGE` (ou `notation inspect --output json $IMAGE`), o engenheiro inspeciona exatamente o `Media type` (`application/vnd.cncf.notary.v2.signature`), o algoritmo (`ECDSA-SHA-256`, `RSASSA-PSS-SHA-256`), o `Signed attributes` e a cadeia completa de certificados embutida no envelope JWS ou COSE.|```bash
+notation ls "$IMAGE"
+notation inspect "$IMAGE"
+```|Assinar imagens de produção com certificados folha de curta duração sem anexar um carimbo de tempo confiável (TSA — Time Stamping Authority) faz com que `notation verify` passe a rejeitar a imagem em produção assim que o certificado expirar.|Configure um endpoint TSA RFC 3161 ao assinar artefatos de longa duração e audite os atributos do carimbo de tempo com `notation inspect`.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/user-guides/installation/cli/
+1298|notation-verificacao-admissao-kubernetes-kyverno-ratify-gatekeeper|Notary Project Notation: Verificação de Assinaturas na Admissão do Kubernetes com Kyverno e Ratify|No cluster Kubernetes, as assinaturas geradas pelo Notation são verificadas automaticamente na admissão de cada Pod (`ValidatingWebhookConfiguration`) por motores de política como o **Kyverno** (`verifyImages` com tipo `Notary`) ou o **Ratify** integrado ao **OPA Gatekeeper**.|Assinar imagens no pipeline de CI com `notation sign` sem impor a verificação criptográfica no `kube-apiserver` não impede que alguém com permissão de deploy implante uma imagem não assinada ou adulterada diretamente no cluster.|Na regra `verifyImages` do Kyverno (ou no `Verifier` Notary do Ratify), configura-se o certificado da CA corporativa (ou a `trustpolicy.json` e `TrustStore`) e habilita-se `mutateDigest: true`, de modo que o webhook verifica a assinatura `application/vnd.cncf.notary.v2.signature` no registry e fixa o digest `@sha256:...` verificado no Pod antes de admiti-lo.|```yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-notation-signatures
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-notary-v2
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      verifyImages:
+        - imageReferences: ["ghcr.io/org/*"]
+          type: Notary
+          attestors:
+            - count: 1
+              entries:
+                - certificates:
+                    cert: |-
+                      -----BEGIN CERTIFICATE-----
+                      ...
+                      -----END CERTIFICATE-----
+```|Definir um `webhookTimeoutSeconds` muito baixo (como 3 segundos) em uma política `verifyImages` que precisa consultar o registry OCI e validar cadeias de certificados e revogação pode causar falhas de admissão por timeout durante picos de criação de Pods.|Configure `webhookTimeoutSeconds` adequado (15 a 30 segundos), habilite cache de resultados de verificação no controlador de admissão e use um mirror OCI local como o Zot.|https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://notaryproject.dev/docs/user-guides/installation/cli/
+1299|notation-assinatura-sbom-artefatos-oras-grafo-supply-chain|Notary Project Notation: Assinatura de SBOMs e Artefatos Anexados via ORAS no Grafo OCI|Como o Notation opera sobre qualquer manifesto OCI no registro, ele permite assinar não apenas a imagem de container principal, mas também os artefatos anexados a ela via `oras attach` (como SBOMs SPDX/CycloneDX, relatórios de scan Trivy ou bundles de configuração), criando um grafo de supply chain inteiramente autenticado.|Se a imagem de container for assinada com `notation sign`, mas o SBOM anexado a ela via OCI Referrers não for assinado, um atacante com acesso ao repositório poderia anexar um SBOM falso ocultando pacotes vulneráveis.|O fluxo em três etapas publica a imagem e obtém seu digest (`$IMG_DIGEST`), anexa o SBOM com `oras attach` capturando o digest do próprio manifesto do SBOM (`$SBOM_DIGEST`) e executa `notation sign` tanto em `$IMG_DIGEST` quanto em `$SBOM_DIGEST`, formando uma árvore verificável em dois níveis.|```bash
+# 1. Assinar a imagem principal:
+notation sign "ghcr.io/org/app@${IMG_DIGEST}"
+
+# 2. Anexar o SBOM e assinar tambem o manifesto do SBOM anexado:
+oras attach --artifact-type application/spdx+json "ghcr.io/org/app@${IMG_DIGEST}" sbom.spdx.json
+SBOM_DIGEST=$(oras discover "ghcr.io/org/app@${IMG_DIGEST}" -o json | jq -r '.referrers[0].digest')
+notation sign "ghcr.io/org/app@${SBOM_DIGEST}"
+```|Esquecer de habilitar `REGISTRY_STORAGE_DELETE_ENABLED=true` em registros de teste locais (`distribution/distribution`) durante ciclos de assinatura e limpeza impede a remoção de manifestos de assinatura antigos.|Use `oras discover --format tree` combinado com `notation ls` para visualizar toda a árvore de referrers (SBOMs + assinaturas `application/vnd.cncf.notary.v2.signature`) ligada à imagem.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://oras.land/docs/category/oras-commands/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md
+1300|notation-niveis-verificacao-strict-permissive-audit-skip-migracao|Notary Project Notation: Adoção Gradual com Níveis de Verificação (strict, permissive, audit e skip)|A especificação de Trust Policy do Notation define quatro níveis de verificação (`signatureVerification.level`) — **`strict`**, **`permissive`**, **`audit`** e **`skip`** — que permitem adotar a verificação de assinaturas gradualmente na organização e lidar com imagens base de terceiros.|Impor `"level": "strict"` de imediato para todos os repositórios quando parte dos serviços legados ainda possui certificados expirados ou sem revogação OCSP/CRL acessível trava os pipelines de deploy.|No arquivo `trustpolicy.json`, cada escopo de repositório pode ter seu próprio nível: `"audit"` apenas registra nos logs se a verificação de assinatura falhar (ideal para a fase inicial de rollout); `"permissive"` exige uma assinatura matemática e identidade válidas, mas apenas emite aviso em falhas de expiração/revogação; `"strict"` bloqueia qualquer falha em todas as validações; e `"skip"` isenta explicitamente repositórios públicos não assinados.|```json
+{
+  "version": "1.0",
+  "trustPolicies": [
+    {
+      "name": "internal-prod-strict",
+      "registryScopes": ["ghcr.io/org/prod-services"],
+      "signatureVerification": { "level": "strict" },
+      "trustStores": ["ca:corp-ca"],
+      "trustedIdentities": ["x509.subject: C=BR, O=AcmeCorp, CN=prod-signer"]
+    },
+    {
+      "name": "legacy-migration-audit",
+      "registryScopes": ["ghcr.io/org/legacy-services"],
+      "signatureVerification": { "level": "audit" },
+      "trustStores": ["ca:corp-ca"],
+      "trustedIdentities": ["*"]
+    }
+  ]
+}
+```|Deixar repositórios críticos de produção em `"level": "audit"` ou `"permissive"` permanentemente após concluir a migração faz com que o `notation verify` retorne código de saída `0` mesmo diante de certificados revogados.|Promova todos os escopos internos de produção para `"level": "strict"` assim que o pipeline de assinatura estiver estável e monitore o `trustpolicy.json` via controle de versão.|https://notaryproject.dev/docs/quickstart-guides/quickstart-sign-image-artifact/;https://raw.githubusercontent.com/notaryproject/notation/main/README.md;https://notaryproject.dev/docs/user-guides/installation/cli/

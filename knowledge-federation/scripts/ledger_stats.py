@@ -35,7 +35,7 @@ def main():
     print("virtual_catalog_records", virtual_total)
     print("records_with_template_markers", placeholders)
     print("materialization_paths_not_editorial_validation", materialized)
-    print("human_reviewed_quality_records", quality_reviewed)
+    print("quality_reviewed_records_type_not_distinguished", quality_reviewed)
     print("regulated_operational_markers", regulated)
     print("\nby_domain")
     for domain, count in con.execute("SELECT domain, COUNT(*) FROM virtual_notes GROUP BY domain ORDER BY COUNT(*) DESC"):

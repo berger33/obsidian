@@ -1,0 +1,158 @@
+1601|karmada-arquitetura-control-plane-multi-cluster-cncf-graduated|Karmada: arquitetura de plano de controle multi-cluster CNCF Graduated (`apiserver`, `controller-manager` e `scheduler`)|O Karmada (*Kubernetes Armada*, projeto CNCF Graduated evoluído do Kubernetes Federation v1/v2) é um sistema de orquestração multi-cloud e multi-cluster que permite executar aplicações cloud-native em múltiplos clusters Kubernetes sem modificar os manifestos originais da aplicação.|Em arquiteturas multi-região e multi-nuvem, gerenciar dezenas de clusters independentes aplicando manifestos cluster por cluster fragmenta a operação e impede failover automático ou divisão proporcional de réplicas entre provedores.|O Control Plane do Karmada possui seu próprio `karmada-apiserver` (compatível com a API nativa do Kubernetes), `etcd`, `karmada-scheduler` e `karmada-controller-manager`. O usuário submete um `Deployment` ou `Service` padrão para o `karmada-apiserver` junto a políticas de propagação e override; os controladores internos (`Cluster`, `Policy`, `Binding` e `Execution`) traduzem e distribuem os objetos para os clusters membros.|```bash
+kubectl --kubeconfig ~/.kube/karmada.config config use-context karmada-apiserver
+kubectl --kubeconfig ~/.kube/karmada.config get clusters
+```|O `karmada-config` expõe dois contextos distintos: `karmada-apiserver` (plano de controle federado onde recursos e políticas são aplicados) e `karmada-host` (o cluster hospedeiro subjacente que executa os Pods dos componentes do Karmada).|Execute `kubectl get clusters` no contexto `karmada-apiserver` e confirme que todos os clusters membros aparecem com condição `READY: True`.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1602|karmada-pipeline-propagacao-resourcebinding-work-execution|Karmada: fluxo de propagação em quatro estágios (`PropagationPolicy` -> `ResourceBinding` -> `Work` -> Member Cluster)|A distribuição de um recurso no Karmada segue um pipeline desacoplado de quatro controladores: `Cluster Controller`, `Policy Controller`, `Binding Controller` e `Execution Controller`.|Se um único controlador monolítico lesse um `Deployment`, decidisse o agendamento e gravasse diretamente na API de 50 clusters remotos, qualquer falha parcial ou customização regional bloquearia toda a reconciliação.|Quando um manifesto (Resource Template) e uma `PropagationPolicy` são criados no `karmada-apiserver`: 1) o **Policy Controller** casa o recurso via `resourceSelector` e gera um `ResourceBinding`; 2) o **Karmada Scheduler** lê o `ResourceBinding` e preenche os clusters alvo e a contagem de réplicas por cluster; 3) o **Binding Controller** aplica eventuais `OverridePolicies` e cria um objeto `Work` por cluster membro (no namespace `karmada-es-<cluster>`); 4) o **Execution Controller** (ou `karmada-agent`) aplica o conteúdo do `Work` no cluster membro.|```bash
+kubectl --context karmada-apiserver get propagationpolicy,resourcebinding -n default
+kubectl --context karmada-apiserver get work -n karmada-es-member1
+```|O usuário nunca deve editar manualmente os objetos intermediários `ResourceBinding` ou `Work`, pois eles são reconciliados continuamente pelo `Policy Controller` e pelo `Binding Controller` a partir do template original e das políticas.|Inspecione `kubectl get resourcebinding <nome>-deployment -o yaml` no `karmada-apiserver` para auditar os clusters selecionados em `spec.clusters` e o status agregado em `status.aggregatedStatus`.|https://karmada.io/docs/core-concepts/architecture/;https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://github.com/karmada-io/karmada
+1603|karmada-modos-registro-clusters-push-vs-pull-karmada-agent|Karmada: modos de registro de clusters membros (`Push` direto vs `Pull` via `karmada-agent`)|O Karmada suporta dois modos operacionais de conexão para clusters membros (inclusive combinados na mesma frota): o modo **Push** (o plano de controle acessa diretamente o `kube-apiserver` do cluster membro) e o modo **Pull** (um agente `karmada-agent` rodando no cluster membro busca os objetos `Work` no Karmada).|Clusters em nuvens privadas, filiais de borda (*edge*) ou redes restritas frequentemente ficam atrás de NAT/firewalls rigorosos que proíbem conexões de entrada vindas da internet até o seu `kube-apiserver`, inviabilizando o modo Push.|No modo `Push` (`karmadactl join`), o `Execution Controller` central empurra os recursos para o endpoint da API do cluster membro. Já no modo `Pull` (`karmadactl register`), o `karmada-agent` instalado dentro do cluster membro abre conexão de saída até o `karmada-apiserver`, monitora apenas seu próprio namespace de execução (`karmada-es-<cluster>`), aplica localmente os manifestos dos objetos `Work` e reporta o status de saúde de volta.|```bash
+karmadactl join member-cloud --cluster-kubeconfig=$HOME/.kube/member-cloud.config
+karmadactl register 10.20.0.10:5443 --token abcdef.0123456789abcdef --discovery-token-ca-cert-hash sha256:1234...
+```|No modo `Pull`, o plano de controle central do Karmada não armazena credenciais de `cluster-admin` do cluster membro, reduzindo significativamente o raio de explosão (*blast radius*) em caso de comprometimento central.|Execute `kubectl --context karmada-apiserver get clusters -o wide` e verifique a coluna `MODE` (`Push` ou `Pull`) de cada cluster registrado.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1604|karmada-propagationpolicy-clusterpropagationpolicy-seletores-1-para-n|Karmada: políticas de posicionamento `PropagationPolicy` e `ClusterPropagationPolicy` com mapeamento `1:N`|As APIs `PropagationPolicy` (namespaced) e `ClusterPropagationPolicy` (cluster-scoped) do grupo `policy.karmada.io/v1alpha1` definem onde e como um ou vários recursos Kubernetes devem ser distribuídos entre os clusters membros.|No Kubernetes Federation legado, era necessário criar um wrapper proprietário (`FederatedDeployment`) para cada carga de trabalho. Separar a política de propagação (`PropagationPolicy`) do template nativo (`apps/v1 Deployment`) permite reutilizar uma única política para dezenas de microsserviços (`1:N`).|Uma `PropagationPolicy` declara `spec.resourceSelectors` (selecionando objetos por `apiVersion`, `kind`, `name` ou `labelSelector`) e `spec.placement` (definindo `clusterAffinity`, `clusterTolerations`, `spreadConstraints` e `replicaScheduling`). Também é possível habilitar `propagateDeps: true` para propagar automaticamente `ConfigMaps`, `Secrets` e `ServiceAccounts` referenciados pelo `Deployment`.|```yaml
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: multi-region-ha
+  namespace: default
+spec:
+  propagateDeps: true
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      labelSelector:
+        matchLabels:
+          tier: frontend
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - member-us-east
+        - member-eu-west
+```|Se duas `PropagationPolicies` casarem com o mesmo recurso, o Karmada resolve o conflito avaliando `spec.priority` (explícita) ou a especificidade do seletor (correspondência por `name` exato precede `labelSelector`).|Aplique a `PropagationPolicy` com `propagateDeps: true` e confirme nos clusters membros que tanto o `Deployment` quanto os `ConfigMaps` montados por ele foram criados automaticamente.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1605|karmada-replica-scheduling-duplicated-divided-static-dynamic-weight|Karmada: estratégias de divisão de réplicas (`Duplicated` vs `Divided`, `StaticWeight` vs `DynamicWeight`)|Dentro de `spec.placement.replicaScheduling` de uma `PropagationPolicy`, o Karmada oferece os tipos `Duplicated` (espelha o total de réplicas em cada cluster) e `Divided` (divide o total de `spec.replicas` entre os clusters por peso estático `StaticWeight` ou capacidade livre `DynamicWeight`).|Para um agente de monitoramento ou gateway regional, deseja-se ter `3` réplicas em cada um dos 3 clusters (`Duplicated` = 9 pods no total). Já para um serviço stateless escalado globalmente para `30` réplicas, deseja-se dividir essas `30` réplicas proporcionalmente (por exemplo `20` no cluster principal e `10` no secundário via `Divided`).|Com `replicaSchedulingType: Divided` e `replicaDivisionPreference: Weighted`, o bloco `weightPreference.staticWeightList` atribui pesos numéricos aos clusters alvo (por exemplo peso `2` para `member1` e peso `1` para `member2`, dividindo 30 réplicas em 20 e 10). Se `dynamicWeight: AvailableReplicas` for escolhido, o `karmada-scheduler` consulta a capacidade alocável real de cada cluster membro para distribuir as réplicas proporcionalmente.|```yaml
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: checkout-divided-weight
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: checkout
+  placement:
+    clusterAffinity:
+      clusterNames: [member1, member2]
+    replicaScheduling:
+      replicaSchedulingType: Divided
+      replicaDivisionPreference: Weighted
+      weightPreference:
+        staticWeightList:
+          - targetCluster:
+              clusterNames: [member1]
+            weight: 2
+          - targetCluster:
+              clusterNames: [member2]
+            weight: 1
+```|Quando `replicaSchedulingType: Divided` é usado com um número de réplicas que não divide exatamente pela soma dos pesos, o Karmada distribui o resto da divisão inteira priorizando os clusters de maior peso ou disponibilidade.|Escale o `Deployment` `checkout` no `karmada-apiserver` para `9` réplicas e verifique que `member1` recebeu `6` réplicas e `member2` recebeu `3` réplicas.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1606|karmada-overridepolicy-especializacao-regional-image-overrider-plaintext|Karmada: customização por cluster via `OverridePolicy` (`imageOverrider`, `plaintext`, `labelsOverrider`)|A API `OverridePolicy` (e `ClusterOverridePolicy`, em `policy.karmada.io/v1alpha1`) permite aplicar mutações específicas para cada cluster, nuvem ou região no momento em que o `Binding Controller` gera o objeto `Work`, sem alterar o manifesto base.|Mesmo quando a aplicação é idêntica em todos os clusters, detalhes de infraestrutura variam: o cluster na AWS usa a `StorageClass` `gp3` e um registry ECR regional, enquanto o cluster no GCP usa `standard-rwo` e Artifact Registry.|O `OverridePolicy` suporta `overrideRules` direcionadas por `targetCluster`. Dentro de `overriders`, o Karmada oferece operadores semânticos prontos — como `imageOverrider` (para substituir, adicionar ou remover `Registry`, `Repository` ou `Tag`), `commandOverrider`, `argsOverrider`, `labelsOverrider`, `annotationsOverrider` — além de `plaintext` (patches JSONPatch `add`, `replace`, `remove` por `path`).|```yaml
+apiVersion: policy.karmada.io/v1alpha1
+kind: OverridePolicy
+metadata:
+  name: regional-registry-override
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: checkout
+  overrideRules:
+    - targetCluster:
+        clusterNames: [member-cn]
+      overriders:
+        imageOverrider:
+          - component: Registry
+            operator: replace
+            value: registry.cn-hangzhou.aliyuncs.com
+```|As regras dentro de `overrideRules` são avaliadas em ordem sequencial de declaração; se múltiplas `OverridePolicies` se aplicarem ao mesmo recurso, `ClusterOverridePolicy` é processada antes de `OverridePolicy`.|Inspecione o objeto `Work` gerado em `karmada-es-member-cn` (`kubectl get work -n karmada-es-member-cn -o yaml`) e confirme que a imagem do container teve o domínio do registry substituído.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1607|karmada-spreadconstraints-alta-disponibilidade-multi-dimensao-regiao-az|Karmada: restrições de espalhamento multi-dimensional (`spreadConstraints`) por provedor, região, zona e cluster|Dentro de `spec.placement.spreadConstraints`, o Karmada permite exigir que uma carga de trabalho seja distribuída entre múltiplos domínios de falha (`spreadByField`: `cluster`, `region`, `zone`, `provider` ou `spreadByLabel`) com limites `minGroups` e `maxGroups`.|Apenas selecionar "quaisquer 3 clusters" por label pode acidentalmente escolher 3 clusters localizados na mesma região (`us-east-1`) do mesmo provedor de nuvem; se aquela região inteira cair, a aplicação sai do ar.|Ao declarar dois itens em `spreadConstraints` — um com `spreadByField: provider` (`minGroups: 2`) e outro com `spreadByField: cluster` (`minGroups: 3`, `maxGroups: 3`) — o `karmada-scheduler` garante matematicamente que os 3 clusters escolhidos estejam divididos entre pelo menos 2 provedores de nuvem distintos.|```yaml
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: geo-redundant-placement
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: core-ledger
+  placement:
+    spreadConstraints:
+      - spreadByField: region
+        minGroups: 2
+        maxGroups: 2
+      - spreadByField: cluster
+        minGroups: 2
+        maxGroups: 4
+```|Para que `spreadByField: region`, `zone` ou `provider` funcione, os objetos `Cluster` registrados no Karmada devem ter suas respectivas propriedades de topologia preenchidas (via flags do `karmadactl join/register` ou especificação do objeto `Cluster`).|Verifique `kubectl get clusters -o custom-columns=NAME:.metadata.name,PROVIDER:.spec.provider,REGION:.spec.region,ZONE:.spec.zone` antes de aplicar políticas multi-dimensionais.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1608|karmada-failover-automatico-cluster-application-taints-eviction|Karmada: failover automático de cluster e de aplicação com reagendamento de réplicas e preservação de estado|O Karmada implementa failover automático tanto no nível de **Cluster** (quando um cluster membro inteiro fica `NotReady`/inacessível) quanto no nível de **Aplicação** (quando os Pods em um cluster saudável falham continuamente em atingir `Ready`).|Em uma arquitetura multi-cluster ativa-ativa com réplicas divididas (`Divided`), se um cluster membro perder conectividade ou sofrer esgotamento de recursos, um terço da capacidade global da aplicação desaparece até que um operador intervenha manualmente.|Quando um cluster membro falha nas sondagens de saúde, o Karmada aplica taints automáticos (`cluster.karmada.io/not-ready` ou `unreachable`). Passado o tempo de tolerância (`tolerationSeconds`) ou acionado o `failover` na `PropagationPolicy` (com modos de purga `Directly`, `Graciously` ou `Never` e `statePreservation`), o `karmada-scheduler` migra automaticamente as réplicas daquele cluster para outros clusters saudáveis compatíveis.|```yaml
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: resilient-api-policy
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: api-gateway
+  failover:
+    cluster:
+      purgeMode: Graciously
+  placement:
+    clusterTolerations:
+      - key: cluster.karmada.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 60
+```|No modo `purgeMode: Graciously`, o Karmada aguarda que as novas réplicas fiquem `Ready` no cluster de destino antes de remover o `Work` do cluster em falha, prevenindo queda momentânea da capacidade global.|Simule a indisponibilidade de um cluster membro em laboratório e observe em `kubectl get resourcebinding api-gateway-deployment -o yaml` a realocação automática das réplicas após `60s`.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1609|karmada-resource-interpreter-framework-crds-customizados-lua|Karmada: *Resource Interpreter Framework* e customização em Lua para CRDs de terceiros|O *Resource Interpreter Framework* do Karmada ensina o plano de controle a extrair contagem de réplicas, dependências, revisões e saúde de qualquer Custom Resource Definition (como `Argo Rollout`, `Kyverno Policy`, `Kafka` ou CRDs internos) por meio de hooks declarativos em Lua (`ResourceInterpreterCustomization`) ou webhooks.|O Karmada conhece nativamente os campos de `Deployment`, `StatefulSet`, `DaemonSet`, `Job` e `Pod`, mas um CRD customizado pode guardar seu número de réplicas em `.spec.workers.count` e seu status em `.status.readyWorkers`. Sem um interpretador, o Karmada não saberia dividir réplicas (`Divided`) daquele CRD.|O engenheiro cria um objeto `ResourceInterpreterCustomization` (`config.karmada.io/v1alpha1`) apontando para o `target` (`apiVersion` e `kind` do CRD) e escreve scripts Lua enxutos para `replicaResource` (retornando réplicas e requisitos por réplica), `reviseReplica` (atualizando o campo de réplicas no cluster membro) e `healthInterpretation`.|```yaml
+apiVersion: config.karmada.io/v1alpha1
+kind: ResourceInterpreterCustomization
+metadata:
+  name: custom-worker-interpreter
+spec:
+  target:
+    apiVersion: workload.example.io/v1alpha1
+    kind: WorkerPool
+  customizations:
+    replicaResource:
+      luaScript: >
+        function GetReplicas(obj)
+          return obj.spec.workerCount, obj.spec.template.spec.containers[1].resources
+        end
+    reviseReplica:
+      luaScript: >
+        function ReviseReplica(obj, desiredReplica)
+          obj.spec.workerCount = desiredReplica
+          return obj
+        end
+```|Os scripts Lua do `ResourceInterpreterCustomization` rodam em uma VM Lua determinística embutida diretamente no `karmada-controller-manager` e no `karmada-scheduler`, sem exigir implantação de servidores HTTP de webhook externos.|Teste os scripts Lua antes de aplicá-los no cluster usando o subcomando `karmadactl interpret` contra um manifesto de exemplo do CRD.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada
+1610|karmada-federatedhpa-cronfederatedhpa-multicluster-service-ingress|Karmada: autoescalonamento multi-cluster (`FederatedHPA`, `CronFederatedHPA`) e descoberta `MultiClusterService`|Para fechar o ciclo operacional multi-cluster, o Karmada provê o `FederatedHPA` (autoescalonamento horizontal baseado em métricas agregadas de múltiplos clusters), o `CronFederatedHPA` (escalonamento programado por horário) e os recursos `MultiClusterService` / `MultiClusterIngress`.|Usar um `HorizontalPodAutoscaler` isolado dentro de cada cluster membro entra em conflito direto com o controlador central do Karmada (que sobrescreveria `spec.replicas` no `Work`), além de impedir o escalonamento coordenado quando a capacidade de um cluster específico se esgota.|O `FederatedHPA` (`autoscaling.karmada.io/v1alpha1`) consulta métricas de todos os clusters membros através do `karmada-metrics-adapter`, ajusta o total global de réplicas no `karmada-apiserver` e deixa o `karmada-scheduler` distribuir a nova carga entre os clusters com capacidade livre. Já o `MultiClusterService` (`networking.karmada.io/v1alpha1`) sincroniza `EndpointSlices` entre clusters produtores e consumidores.|```yaml
+apiVersion: autoscaling.karmada.io/v1alpha1
+kind: FederatedHPA
+metadata:
+  name: checkout-fhpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: checkout
+  minReplicas: 4
+  maxReplicas: 40
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+```|Nunca aplique um `autoscaling/v2 HorizontalPodAutoscaler` local no cluster membro sobre um `Deployment` cujo número de réplicas já esteja sendo governado em modo `Divided` pelo Karmada; utilize sempre o `FederatedHPA` no plano de controle do Karmada.|Execute `kubectl --context karmada-apiserver get fhpa checkout-fhpa` para verificar a leitura da métrica agregada (`TARGETS`) e o ajuste de `REPLICAS` globais.|https://raw.githubusercontent.com/karmada-io/karmada/master/README.md;https://karmada.io/docs/core-concepts/architecture/;https://github.com/karmada-io/karmada

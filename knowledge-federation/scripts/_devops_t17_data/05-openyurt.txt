@@ -1,0 +1,97 @@
+1641|openyurt-arquitetura-nao-intrusiva-cloud-edge-cncf-incubating|OpenYurt: arquitetura cloud-edge não intrusiva CNCF Incubating (`YurtHub`, `Yurt-Manager`, `Raven` e `YurtIoTDock`)|O OpenYurt (projeto CNCF Incubating, certificado até Kubernetes v1.34+) estende clusters Kubernetes upstream para cenários de computação de borda de forma 100% não intrusiva, preservando o `kubelet` original nos nós de borda e adicionando componentes modulares (`YurtHub`, `Yurt-Manager`, `Raven-Agent` e `YurtIoTDock`).|Diferentemente de soluções que substituem o `kubelet` por um agente reescrito (o que pode introduzir incompatibilidades com novos recursos de CSI, CNI ou Device Plugins do Kubernetes upstream), o OpenYurt mantém os binários oficiais do Kubernetes intocados no nó de borda.|No OpenYurt, os nós na nuvem recebem o label `openyurt.io/is-edge-worker: false` e os nós na borda recebem `openyurt.io/is-edge-worker: true`. O **YurtHub** roda como static pod em cada nó atuando como proxy/cache local para o `kube-apiserver`; o **Yurt-Manager** roda na nuvem executando os controladores e webhooks de borda; o **Raven-Agent** provê rede L3 e proxy reverso L7 entre regiões; e o **YurtIoTDock** integra dispositivos IoT via EdgeX Foundry.|```bash
+kubectl get nodes -L openyurt.io/is-edge-worker
+kubectl get pods -n kube-system | grep -E "yurt|raven"
+```|Como o `Yurt-Manager` é implantado como um `Deployment` (tipicamente com 2 instâncias: líder e backup), recomenda-se alocá-lo nos nós na nuvem (`Cloud Nodes`) junto aos componentes do control plane do Kubernetes.|Verifique nos nós de borda a presença do label `openyurt.io/is-edge-worker=true` e do Static Pod `yurt-hub` rodando em `kube-system`.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt
+1642|openyurt-yurthub-proxy-local-cache-disco-autonomia-borda|OpenYurt `YurtHub`: proxy sidecar de nó e cache em disco local para autonomia de borda em desconexões|O `YurtHub` é um Static Pod executado em cada worker node do OpenYurt que intercepta todas as requisições enviadas pelos componentes locais (`kubelet`, `kube-proxy`, plugins CNI como Flannel e Pods de aplicação) ao `kube-apiserver` na nuvem, armazenando as respostas em cache no disco local.|Quando um nó de borda perde conectividade com a nuvem e reinicia, um `kubelet` padrão apontando diretamente para o `kube-apiserver` remoto não consegue recuperar a lista de Pods atribuídos àquele nó e encerra ou deixa de iniciar os containers locais.|No modo `edge`, o `kubelet` e o `kube-proxy` do nó são configurados para apontar para o endereço local do `YurtHub` (`127.0.0.1:10261`). Enquanto a rede está saudável, o `YurtHub` encaminha as chamadas ao `kube-apiserver` e grava os objetos no disco local; quando a conexão nuvem-borda cai, o `YurtHub` serve as respostas diretamente do cache local em disco, garantindo que o nó e todas as suas aplicações continuem operando mesmo após um reboot completo offline.|```bash
+# No nó de borda:
+curl -s http://127.0.0.1:10267/v1/healthz
+ls -la /etc/kubernetes/cache/kubelet/
+```|O `YurtHub` opera em dois modos (`edge` e `cloud`): nos nós da nuvem (`openyurt.io/is-edge-worker: false`), o `YurtHub` atua como proxy sem precisar manter cache offline em disco, enquanto nos nós de borda o cache persistente é ativado.|Consulte o endpoint local de saúde do `YurtHub` e verifique o diretório `/etc/kubernetes/cache/` no nó de borda para confirmar que os manifestos do `kubelet` e `kube-proxy` estão persistidos em disco.|https://openyurt.io/docs/core-concepts/architecture/;https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://github.com/openyurtio/openyurt
+1643|openyurt-nodepool-gerenciamento-regioes-fisicas-isolamento-trafego|OpenYurt `NodePool`: agrupamento declarativo de nós por região física e fechamento de tráfego intra-pool|O OpenYurt introduz a abstração de `NodePool` (`apps.openyurt.io/v1beta1`) para agrupar nós de borda localizados na mesma região física, filial ou site de rede, aplicando governança de metadados e isolamento de tráfego de serviços no nível de pool.|Em um cluster Kubernetes padrão, o `kube-proxy` balanceia requisições de um `Service` aleatoriamente entre todos os Pods do cluster inteiro; na borda, isso faria um Pod na fábrica de São Paulo chamar um Pod na fábrica de Manaus pela internet pública ou falhar por falta de rota direta entre sites.|Cada `NodePool` agrega nós da mesma localidade e propaga automaticamente labels, annotations e taints definidos no pool para seus nós membros. Combinado com a filtragem de topologia de endpoints do `YurtHub`, o tráfego de `Services` consumido dentro de um `NodePool` permanece fechado (*closed-loop*) apenas entre os endpoints saudáveis daquele mesmo `NodePool`.|```yaml
+apiVersion: apps.openyurt.io/v1beta1
+kind: NodePool
+metadata:
+  name: factory-sp-pool
+spec:
+  type: Edge
+  labels:
+    region.openyurt.io/site: sao-paulo
+  taints:
+    - key: edge.openyurt.io/dedicated
+      value: factory
+      effect: NoSchedule
+```|O campo `spec.type` de um `NodePool` (`Edge` ou `Cloud`) é imutável após a criação do pool; para migrar um nó para um `NodePool`, basta rotular o nó com `apps.openyurt.io/desired-nodepool=<nome-do-pool>`.|Execute `kubectl get nodepools` para verificar a contagem de nós prontos (`READYNODES`), não prontos (`NOTREADYNODES`) e a propagação dos labels para os nós membros.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt
+1644|openyurt-yurtappset-yurtappdaemon-orquestracao-multi-pool-workloads|OpenYurt: orquestração regional de cargas de trabalho com `YurtAppSet` e `YurtAppDaemon`|Dentro do `Yurt-Manager`, os controladores `YurtAppSet` e `YurtAppDaemon` (`apps.openyurt.io`) automatizam a criação e customização de `Deployments` ou `StatefulSets` independentes para cada `NodePool` a partir de um único template central.|Se uma empresa possui 200 lojas (`NodePools`), manter manualmente 200 objetos `Deployment` separados para a mesma aplicação de caixa registradora — cada um com seu `nodeSelector`, contagem de réplicas e imagem — é operacionalmente inviável.|O `YurtAppSet` recebe um `workloadTemplate` (`DeploymentTemplate` ou `StatefulSetTemplate`) e uma lista de `pools` (com réplicas e patches específicos por pool), enquanto o `YurtAppDaemon` observa dinamicamente os `NodePools` que casam com um `nodepoolSelector` e provisiona automaticamente um workload dedicado sempre que uma nova filial (`NodePool`) é adicionada ao cluster.|```yaml
+apiVersion: apps.openyurt.io/v1alpha1
+kind: YurtAppSet
+metadata:
+  name: pos-terminal-app
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: pos-terminal
+  workloadTemplate:
+    deploymentTemplate:
+      metadata:
+        labels:
+          app: pos-terminal
+      spec:
+        template:
+          metadata:
+            labels:
+              app: pos-terminal
+          spec:
+            containers:
+              - name: pos
+                image: ghcr.io/org/pos:v1.4
+  topology:
+    pools:
+      - name: factory-sp-pool
+        replicas: 3
+```|Como cada `NodePool` recebe seu próprio `Deployment` filho gerenciado pelo `YurtAppSet`, a falha de nós em uma filial jamais faz o `ReplicaSet` tentar recriar os Pods daquela filial dentro de outra filial distante.|Crie o `YurtAppSet` acima e execute `kubectl get deploy -l app=pos-terminal` para confirmar a criação automática do Deployment específico para `factory-sp-pool`.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt
+1645|openyurt-raven-agent-conectividade-l3-vpn-proxy-reverso-l7|OpenYurt `Raven-Agent`: conectividade de rede L3 cross-region e proxy reverso L7 para `kubectl exec`/`logs`|O `Raven-Agent` (implantado como DaemonSet em todos os nós e coordenado pelo CRD `Gateway`) unifica a comunicação de plano de dados e de manutenção no OpenYurt, fornecendo túneis VPN de Camada 3 entre regiões físicas distintas e proxy reverso de Camada 7 (substituindo o antigo `Yurt-Tunnel`).|Em cenários cloud-edge, os nós de borda estão em sub-redes locais privadas sem IP público exposto; por isso, nem os Pods da nuvem conseguem alcançar os IPs de Pods da borda (Camada 3), nem o `kube-apiserver` consegue conectar-se à porta `10250` do `kubelet` da borda para `kubectl logs`/`exec` (Camada 7).|O OpenYurt agrupa os nós de cada domínio de rede física em um recurso `Gateway` (`raven.openyurt.io/v1beta1`). O `Raven-Agent` elege um nó gateway por região para estabelecer túneis VPN seguros (IPsec/WireGuard) entre os gateways de diferentes `NodePools`/nuvem (habilitando roteamento L3 nativo Pod-a-Pod) e túneis de proxy reverso L7 para encaminhar comandos `kubectl exec`, `logs` e coleta de métricas da nuvem até qualquer nó de borda.|```yaml
+apiVersion: raven.openyurt.io/v1beta1
+kind: Gateway
+metadata:
+  name: gw-factory-sp
+spec:
+  nodeSelector:
+    matchLabels:
+      apps.openyurt.io/nodepool: factory-sp-pool
+  exposeType: PublicIP
+```|Enquanto o `YurtHub` cuida do tráfego **borda -> nuvem** (para o `kube-apiserver`), o `Raven-Agent` cuida do tráfego **nuvem -> borda** e **borda -> borda** no plano de dados e de O&M.|Inspecione `kubectl get gateways.raven.openyurt.io` e verifique os endpoints eleitos e o funcionamento de `kubectl logs <pod-na-borda>` a partir da nuvem.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt
+1646|openyurt-yurtiotdock-edgex-foundry-platformadmin-crds-iot|OpenYurt `YurtIoTDock`: fusão cloud-native com EdgeX Foundry via CRD `PlatformAdmin`|O `YurtIoTDock` (evolução integrada do antigo `YurtDeviceController` no repositório principal do OpenYurt) implanta uma instância por `NodePool` de borda para fazer a ponte bidirecional entre a plataforma de IoT industrial **EdgeX Foundry** e CRDs nativos do Kubernetes (`Device`, `DeviceService`, `DeviceProfile`).|O EdgeX Foundry é um padrão industrial consolidado para aquisição de dados de sensores OT (Modbus, BACnet, OPC-UA, MQTT), mas opera tradicionalmente como microsserviços isolados em cada site sem visibilidade nem controle declarativo na API do Kubernetes.|Por meio do Custom Resource `PlatformAdmin` (`iot.openyurt.io`), o operador provisiona automaticamente a pilha do EdgeX Foundry e o `YurtIoTDock` no `NodePool` de borda. Assim que sobe, o `YurtIoTDock` sincroniza continuamente os dispositivos registrados no EdgeX local com os CRDs `Device`, `DeviceService` e `DeviceProfile` no Kubernetes, permitindo gerenciar dispositivos IoT via `kubectl` e GitOps.|```yaml
+apiVersion: iot.openyurt.io/v1alpha2
+kind: PlatformAdmin
+metadata:
+  name: edgex-factory-sp
+  namespace: default
+spec:
+  version: Minnesota
+  poolName: factory-sp-pool
+```|Desde a integração no repositório principal do OpenYurt, não é mais necessário instalar um `yurt-device-controller` separado fora do OpenYurt; o ciclo de vida é orquestrado diretamente via `PlatformAdmin` e `Yurt-Manager`.|Aplique o manifesto `PlatformAdmin` para um `NodePool` e verifique a criação automática dos recursos `devices.iot.openyurt.io` e `deviceservices.iot.openyurt.io` sincronizados.|https://openyurt.io/docs/core-concepts/architecture/;https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://github.com/openyurtio/openyurt
+1647|openyurt-autonomia-no-prevencao-eviccao-pods-desconexao-wan|OpenYurt: prevenção de evicção indevida de Pods durante desconexão nuvem-borda (`node-autonomy`)|Quando um nó de borda marcado como autônomo perde a comunicação com a nuvem e seu status no `kube-apiserver` passa para `NotReady`/`Unknown`, os controladores do OpenYurt impedem que o plano de controle evicte e reagende os Pods daquele nó.|No Kubernetes padrão, após `pod-eviction-timeout` (ou a toleration padrão de 300 segundos para `node.kubernetes.io/unreachable`), os Pods de um nó sem heartbeat são marcados para deleção/evicção. Na borda, o nó frequentemente continua ligado e processando dados localmente — apenas o link de internet caiu; evictar os Pods causaria disrupção assim que o link voltasse.|Combinando o cache em disco local do `YurtHub` no nó com a lógica de autonomia de nó no `Yurt-Manager` (ativada pela anotação de autonomia no nó de borda), o plano de controle preserva os Pods vinculados ao nó desconectado enquanto o `kubelet` local continua mantendo os containers vivos.|```bash
+kubectl annotate node edge-worker-01 node.beta.openyurt.io/autonomy="true" --overwrite
+kubectl get node edge-worker-01 -o jsonpath='{.metadata.annotations.node\.beta\.openyurt\.io/autonomy}'
+```|A anotação de autonomia impede a evicção motivada por perda de heartbeat de rede, mas o administrador deve estar ciente de que, se o servidor físico de borda realmente queimar de vez, os Pods daquele nó não serão migrados automaticamente para outros nós até intervenção ou política explícita.|Anote o nó de borda com `node.beta.openyurt.io/autonomy="true"`, bloqueie temporariamente o tráfego para o `kube-apiserver` por mais de 6 minutos e confirme que os Pods permanecem `Running` sem serem evictados.|https://openyurt.io/docs/core-concepts/architecture/;https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://github.com/openyurtio/openyurt
+1648|openyurt-node-resource-manager-lvm-quotapath-pmem-armazenamento-borda|OpenYurt `Node Resource Manager`: gerenciamento de armazenamento local de borda (LVM, QuotaPath e PMEM)|O componente auxiliar `node-resource-manager` do ecossistema OpenYurt gerencia recursos de armazenamento local nos nós de borda — incluindo volumes lógicos **LVM**, diretórios com cota de disco (**QuotaPath**) e memória persistente (**Persistent Memory / PMEM**).|Em gateways e servidores de borda, raramente existe um cluster de armazenamento distribuído dedicado (como Ceph multi-nó); os containers de banco de dados local e cache de vídeo precisam consumir discos locais do próprio host com isolamento estrito de cota de capacidade e IOPS.|O `node-resource-manager` descobre discos e grupos de volumes nos nós de borda e provisiona dinamicamente volumes locais isolados por LVM ou cota de projeto de filesystem (`QuotaPath`), evitando que um container com vazamento de logs encha 100% da partição raiz do sistema operacional do gateway de borda.|```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: yurt-local-lvm
+provisioner: lvm.csi.openyurt.io
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  vgName: yurt-vg0
+```|Sempre utilize `volumeBindingMode: WaitForFirstConsumer` nas `StorageClasses` locais de borda para garantir que o volume LVM ou QuotaPath seja provisionado no mesmo nó físico de borda onde o Pod consumidor foi agendado.|Crie um PVC com `storageClassName: yurt-local-lvm` consumido por um Pod de borda e verifique a criação do Logical Volume correspondente no grupo `yurt-vg0` do nó.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt
+1649|openyurt-yurt-manager-controladores-webhooks-alta-disponibilidade|OpenYurt `Yurt-Manager`: consolidação de controladores e webhooks cloud-edge em alta disponibilidade|O `Yurt-Manager` consolida em um único binário e `Deployment` (normalmente com 2 réplicas em esquema líder/backup nos nós de nuvem) todos os controladores de ciclo de vida e admission webhooks do OpenYurt (`NodePool`, `YurtAppSet`, `YurtAppDaemon`, `YurtStaticSet`, `PlatformAdmin`, `Gateway`, `PodBinding`).|Nas versões iniciais de arquiteturas de borda, rodar meia dúzia de deployments separados para cada controlador customizado aumentava o consumo de memória na nuvem e multiplicava as conexões de `Watch` e certificados de webhook.|No OpenYurt v1.7+, o `Yurt-Manager` centraliza a liderança (`leader election`) e o servidor de webhooks, coordenando desde a governança de `NodePools` e upgrades de Static Pods (`YurtStaticSet` para atualizar o próprio `YurtHub` nos nós de borda) até a topologia de rede do `Raven`.|```bash
+kubectl get deploy yurt-manager -n kube-system
+kubectl get validatingwebhookconfigurations,mutatingwebhookconfigurations | grep yurt
+```|Como o `Yurt-Manager` hospeda webhooks de validação e mutação para recursos do cluster, nunca o escale para `0` nem o agende em nós de borda com link WAN instável; mantenha sempre `nodeSelector` / `affinity` restrito aos nós de nuvem (`openyurt.io/is-edge-worker: false`).|Verifique com `kubectl get pods -n kube-system -l app.kubernetes.io/name=yurt-manager -o wide` que ambas as réplicas estão alocadas em nós de nuvem e com probes de saúde aprovadas.|https://openyurt.io/docs/core-concepts/architecture/;https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://github.com/openyurtio/openyurt
+1650|openyurt-conversao-cluster-kubernetes-instalacao-control-plane-join-nodes|OpenYurt: instalação de componentes de control plane e ingresso de nós de borda (`yurtadm join`)|A implantação do OpenYurt divide-se em duas fases claras: instalar os componentes de control plane no cluster Kubernetes (`yurt-manager`, `yurt-iot-dock`, `raven-agent`) via Helm e ingressar ou converter nós workers com `yurtadm join`.|Permite transformar qualquer cluster Kubernetes upstream existente (até v1.34 certificado) em uma plataforma híbrida cloud-edge sem precisar reinstalar o control plane do Kubernetes.|Na Parte 1, o administrador instala os charts do OpenYurt no cluster central. Na Parte 2, executa `yurtadm join <apiserver-ip:port> --token=<bootstrap-token> --node-type=edge` (ou `--node-type=cloud`) em cada máquina worker: o `yurtadm` configura automaticamente o Static Pod do `YurtHub`, aponta o `kubelet` para a porta local do `YurtHub` e rotula o nó com `openyurt.io/is-edge-worker`.|```bash
+yurtadm join 198.51.100.20:6443 \
+  --token=abcdef.0123456789abcdef \
+  --node-type=edge \
+  --discovery-token-ca-cert-hash=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```|Ao ingressar um nó com `--node-type=edge`, certifique-se de que as portas necessárias para o `YurtHub` local (`10261`/`10267`) não estejam ocupadas por outros processos no host.|Após concluir o `yurtadm join`, execute `kubectl get nodes -L openyurt.io/is-edge-worker` e confirme que o novo nó ingressou como `Ready` e `openyurt.io/is-edge-worker=true`.|https://raw.githubusercontent.com/openyurtio/openyurt/master/README.md;https://openyurt.io/docs/core-concepts/architecture/;https://github.com/openyurtio/openyurt

@@ -8,6 +8,16 @@ BLOCK_PATTERNS = [
   r"otimiza.{0,30}(potencia|rendimento)", r"burlar\s+fiscalizacao", r"ocultacao"
 ]
 
+
+def suggested_batch_status(structural_ok, quality_ok, note_count, factually_reviewed_count):
+    """A complete batch needs the gate and an explicit human or AI review per note."""
+    if not structural_ok or not quality_ok:
+        return "needs_review"
+    if note_count > 0 and factually_reviewed_count == note_count:
+        return "complete"
+    return "ready_for_review"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--batch", required=True)
@@ -17,7 +27,7 @@ def main():
     if not b: raise SystemExit("batch não encontrado")
     rows = con.execute("SELECT * FROM notes WHERE batch_id=?", (args.batch,)).fetchall()
     broken=[]; nofm=[]; blocked=[]; orphan=[]; quality_issues=[]
-    quality_ready=0; human_reviewed=0
+    quality_ready=0; human_reviewed=0; ai_reviewed=0; factually_reviewed=0
     slugs = {r["slug"] for r in rows}
     incoming = {r["slug"]: 0 for r in rows}
     for r in rows:
@@ -32,13 +42,17 @@ def main():
         quality = assess_markdown(txt, r["path"])
         if quality["ready_for_review"]:
             quality_ready += 1
-            quality_status = "reviewed" if quality["human_reviewed"] else "ready_for_review"
+            quality_status = "reviewed" if quality["valid_reviewed"] else "ready_for_review"
         else:
             quality_status = "needs_review"
             quality_issues.append(f"{r['slug']} :: {', '.join(quality['errors'])}")
         con.execute("UPDATE notes SET quality_status=? WHERE id=?", (quality_status, r["id"]))
         if quality["human_reviewed"]:
             human_reviewed += 1
+        if quality["ai_reviewed"]:
+            ai_reviewed += 1
+        if quality["valid_reviewed"]:
+            factually_reviewed += 1
         if r["domain"] in ["cannabis-medicinal", "micologia"]:
             for pat in BLOCK_PATTERNS:
                 if re.search(pat, txt, re.I):
@@ -53,19 +67,16 @@ def main():
             orphan.append(s)
     structural_ok = not broken and not nofm and not blocked
     quality_ok = bool(rows) and len(quality_issues) == 0 and quality_ready == len(rows)
-    if not structural_ok or not quality_ok:
-        status = "needs_review"
-    elif human_reviewed == len(rows):
-        status = "complete"
-    else:
-        status = "ready_for_review"
+    status = suggested_batch_status(structural_ok, quality_ok, len(rows), factually_reviewed)
     report = f"""# Auditoria {args.batch}
 
 - lote: {args.batch}
 - domínio: {b['domain']}/{b['subdomain']}
 - notas no registro: {len(rows)}
 - candidatas aprovadas no gate automatizado: {quality_ready}/{len(rows)}
-- notas com revisão humana registrada: {human_reviewed}/{len(rows)}
+- notas com revisão factual humana registrada: {human_reviewed}/{len(rows)}
+- notas com revisão factual por IA registrada: {ai_reviewed}/{len(rows)}
+- notas com revisão factual humana ou por IA: {factually_reviewed}/{len(rows)}
 - status sugerido: {status}
 - links/arquivos quebrados: {len(broken)}
 - sem frontmatter: {len(nofm)}
@@ -73,7 +84,7 @@ def main():
 - pendências no gate de conteúdo: {len(quality_issues)}
 - possíveis órfãs dentro do lote: {len(orphan)}
 
-> Passar pelo gate automatizado não comprova veracidade. `complete` exige também revisão humana identificada no frontmatter.
+> Passar pelo gate automatizado não comprova veracidade. `complete` exige também revisão factual registrada por pessoa ou IA; o tipo e o responsável permanecem separados no frontmatter e neste relatório.
 
 ## Links/arquivos quebrados
 {chr(10).join('- '+x for x in broken[:200]) or 'Nenhum.'}

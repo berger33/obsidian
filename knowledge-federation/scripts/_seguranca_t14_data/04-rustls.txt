@@ -1,0 +1,144 @@
+SOURCES: https://raw.githubusercontent.com/rustls/rustls/main/README.md | https://raw.githubusercontent.com/rustls/rustls/main/rustls/src/manual/features.rs
+
+===NOTE===
+1331|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring|Arquitetura do **Rustls (`rustls/rustls`)**: Biblioteca Moderna de **TLS 1.3 e TLS 1.2 Memory-Safe em Rust** e Modelo de **`CryptoProvider` (`aws-lc-rs` e `ring`)**|Por que projetos críticos de infraestrutura da Internet (como clientes e servidores HTTP em Rust `reqwest`/`hyper`/`axum`, proxies Envoy/Pingora/Linkerd, resolvedores DNS `ickory-dns` e até módulos C via `rustls-ffi` como Apache `mod_tls` e `curl`) estão adotando o **Rustls** como implementação de **TLS 1.3 e TLS 1.2**?|Historicamente, bibliotecas TLS escritas em C (com centenas de milhares de linhas de parsing manual de buffers ASN.1, X.509 e pacotes de rede) sofreram vulnerabilidades graves de corrupção de memória como o *Heartbleed (`CVE-2014-0160`)*! Escrito em **Rust seguro de memória (*memory-safe*)** e auditado independentemente (com selo OpenSSF Best Practices), o **Rustls** elimina na compilação classes inteiras de bugs de *buffer over-read*, *use-after-free* e *null pointer dereference* na máquina de estados do protocolo TLS!|Além disso, desde o Rustls 0.22/0.24+, toda primitiva criptográfica é plugável através da trait/struct **`crypto::CryptoProvider`**, mantendo dois provedores oficiais de primeira linha: **(1) `rustls-aws-lc-rs`** (baseado no **AWS-LC** da Amazon: altíssima performance, suporte a **FIPS 140-3** e troca de chaves pós-quântica **`X25519MLKEM768`**!) e **(2) `rustls-ring`** (portabilidade enxuta baseada no `ring`)!|```rust
+// Inicializar explicitamente o CryptoProvider recomendado (aws-lc-rs) e construir um ClientConfig seguro no Rustls
+use std::sync::Arc;
+use rustls::{ClientConfig, RootCertStore};
+
+fn criar_config_tls(roots: RootCertStore) -> Arc<ClientConfig> {
+    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
+    let config = ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+        .expect("versoes TLS seguras")
+        .with_root_certificates(roots)
+        .with_no_client_auth();
+    Arc::new(config)
+}
+```|Por que o Rustls recomenda o provedor **`rustls-aws-lc-rs`** como escolha principal em servidores e aplicações modernas? Porque além de entregar performance de criptografia simétrica e assimétrica altamente otimizada em assembly para x86_64 e ARM64, ele já inclui suporte nativo à troca de chaves híbrida pós-quântica **`X25519MLKEM768`** e modo validado **FIPS 140-3**!|Para ambientes restritos ou microcontroladores/IoT, a arquitetura `CryptoProvider` também permite plugar provedores comunitários como `rustls-symcrypt` (Microsoft SymCrypt), `rustls-graviola`, `rustls-mbedtls-provider` ou `rustls-rustcrypto`.|rustls-decisoes-seguranca-non-features-tls12-tls13-pfs-aead-obrigatorio, rustls-troca-chaves-pos-quantica-hibrida-x25519mlkem768-fips, openssl-arquitetura-providers-openssl3-default-fips-legacy-cnf
+
+===NOTE===
+1332|rustls-decisoes-seguranca-non-features-tls12-tls13-pfs-aead-obrigatorio|Filosofia **"Secure by Default" e Non-Features Deliberadas** no Rustls: Por que o Rustls Proíbe Cifras Sem PFS, Modos CBC (`MAC-then-Encrypt`), Renegociação e TLS < 1.2?|Diferente de bibliotecas legadas que tentam implementar todas as extensões e cifras obsoletas criadas nos últimos 30 anos (exigindo que o desenvolvedor configure dezenas de flags para desativar opções inseguras), o **Rustls** segue um princípio radical de engenharia de segurança: **"Secure with Zero Configuration — No Obsolete Cryptography by Design"**!|Consultando a especificação oficial de **`Non-features` (`features.rs`)** do Rustls, veja o que o Rustls **NÃO suporta e JAMAIS suportará deliberadamente**: **(1) Protocolos obsoletos**: sem SSLv1/v2/v3, sem TLS 1.0 e sem TLS 1.1 (apenas **TLS 1.3** e **TLS 1.2**!);|Na camada complementar de implementação e execução técnica: **(2) Cifras quebradas ou sem AEAD**: sem RC4, sem DES/3DES, sem EXPORT e **sem nenhuma cifra CBC / `MAC-then-Encrypt`** (eliminando 100% da família de ataques *Lucky13*, *POODLE* e *Padding Oracle* — apenas cifras **AEAD**: `AES-128-GCM`, `AES-256-GCM` e `ChaCha20-Poly1305`!); **(3) Sem troca de chaves sem Forward Secrecy**: sem RSA Key Transport estático e sem Diffie-Hellman de logaritmo discreto lento (`FFDHE`) por padrão (apenas **ECDHE com `X25519`, `secp256r1` ou `secp384r1` e `X25519MLKEM768`**!); e **(4) Sem Renegociação TLS 1.2 e sem Compressão TLS (`CRIME`)**!|```rust
+// Auditar em tempo de execucao quais Cipher Suites AEAD e grupos de troca de chaves (KX) estao habilitados no provider padrao do Rustls
+fn listar_suites_ativas() {
+    let provider = rustls::crypto::aws_lc_rs::default_provider();
+    for suite in &provider.cipher_suites {
+        println!("CipherSuite ativa: {:?}", suite.suite());
+    }
+    for kx in &provider.kx_groups {
+        println!("Grupo Key Exchange ativo: {:?}", kx.name());
+    }
+}
+```|Além disso, no **TLS 1.2**, o Rustls exige proteções modernas contra ataques de *Triple Handshake* e *Downgrade*: suporte a **Extended Master Secret (`RFC 7627` / `RFC 9846`)** e **Signaling Cipher Suite Value (`SCSV` / sentinelas de downgrade do TLS 1.3 no `ServerHello.random`)**!|Essa superfície mínima de protocolo significa que qualquer aplicação compilada com `ClientConfig` / `ServerConfig` padrão do Rustls já nasce automaticamente com nota **A+** em auditorias de TLS sem precisar de tuning manual de strings de cifras!|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-validacao-certificados-webpki-root-store-pinning-crl, testssl-auditoria-protocolos-ssl-tls-cipher-suites-pfs-grease
+
+===NOTE===
+1333|rustls-troca-chaves-pos-quantica-hibrida-x25519mlkem768-fips|Criptografia **Pós-Quântica Híbrida (`X25519MLKEM768`)** e Conformidade **FIPS 140-3** no Rustls com `aws-lc-rs`: Protegendo o Tráfego TLS Hoje|Como habilitar no **Rustls** a troca de chaves híbrida pós-quântica padronizada pelo IETF/NIST (**`X25519MLKEM768`**, que combina a curva elíptica `X25519` com o algoritmo de encapsulamento de chaves baseado em reticulados **NIST FIPS 203 `ML-KEM-768`**) e o modo **FIPS 140-3**?|Com o provedor oficial **`rustls-aws-lc-rs`**, o suporte ao grupo de troca de chaves híbrido **`X25519MLKEM768`** já vem **integrado e negociado automaticamente no TLS 1.3**! Quando um cliente Rustls conecta a um servidor compatível (como Cloudflare, Chrome, servidores Rustls ou OpenSSL 3.5+), o `ClientHello` oferece `X25519MLKEM768` como grupo preferencial de *Key Share*, protegendo imediatamente a sessão TLS 1.3 contra ataques do tipo *"Harvest Now, Decrypt Later"*!|E para ambientes regulados que exigem **FIPS 140-3**, basta ativar a feature Cargo `fips` no `rustls` / `aws-lc-rs`: o Rustls passa a usar o módulo criptográfico **AWS-LC FIPS validado pelo NIST CMVP**, restringindo automaticamente as Cipher Suites e curvas exclusivamente aos algoritmos aprovados pelo FIPS!|```rust
+// Verificar programaticamente no Rustls se o ClientConfig/ServerConfig esta operando com um CryptoProvider aprovado para FIPS 140-3
+fn verificar_modo_fips(config: &rustls::ClientConfig) {
+    assert!(
+        config.fips(),
+        "O CryptoProvider atual nao esta operando em modo validado FIPS 140-3!"
+    );
+}
+```|Veja o método **`config.fips()`** (disponível tanto em `ClientConfig` quanto em `ServerConfig`) no exemplo acima: você pode colocar um `assert!(config.fips())` na inicialização do seu binário em produção para garantir que o serviço jamais suba se alguém compilar a imagem sem o provedor FIPS ativo!|Como o *Key Share* do `X25519MLKEM768` adiciona ~1.216 bytes ao `ClientHello`, o Rustls gerencia o buffering e a fragmentação dos registros TLS de forma transparente sobre o socket TCP.|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, strongswan-criptografia-pos-quantica-pqc-ikev2-rfc9370-ml-kem-hibrido, openssl-conformidade-fips-140-3-fipsmodule-cnf-fipsinstall-validacao
+
+===NOTE===
+1334|rustls-validacao-certificados-webpki-root-store-pinning-crl|Verificação Estrita de Certificados X.509 no Rustls com **` rustls-webpki`**: `RootCertStore`, `rustls-native-certs`, `webpki-roots` e Revogação **CRL / OCSP**|Por que a validação da cadeia de certificados X.509 no **Rustls** (realizada pela biblioteca **`rustls-webpki`**) é muito mais rigorosa e resistente a vulnerabilidades de falsificação de CA que implementações X.509 legadas?|O **`rustls-webpki`** foi projetado especificamente em torno do perfil **WebPKI (`RFC 5280` + requisitos do CA/Browser Forum)**: **(1)** Ele separa estritamente **Certificados de Autoridade Certificadora (`BasicConstraints: CA=TRUE`)** de **Certificados de Entidade Final (`End-Entity`)** — conforme documentado em `features.rs`, o verificador padrão do Rustls **recusa usar uma âncora de confiança (`Trust Anchor`) simultaneamente como CA e como certificado de servidor autoassinado**, eliminando ambiguidades na construção de caminhos (`Path Building`)!; **(2)** Ele ignora o legado `Common Name (CN)` e exige validação estrita de `SubjectAlternativeName` (DNS ou IP); e **(3)** Valida restrições de subárvore **`NameConstraints`**!|Para carregar as CAs confiáveis no `RootCertStore`, você pode escolher entre **`rustls-platform-verifier` / `rustls-native-certs`** (usa o Trust Store do sistema operacional, ideal para ambientes corporativos com PKI interna!) ou **`webpki-roots`** (embute as raízes do Mozilla Root Program diretamente no binário)!|```rust
+// Configurar um WebPkiServerVerifier no Rustls com suporte a verificacao de Listas de Certificados Revogados (CRLs)
+use std::sync::Arc;
+use rustls::client::WebPkiServerVerifier;
+use rustls::RootCertStore;
+use rustls_pki_types::CertificateRevocationListDer;
+
+fn criar_verificador_com_crl(
+    roots: Arc<RootCertStore>,
+    crls: Vec<CertificateRevocationListDer<'static>>,
+) -> Arc<WebPkiServerVerifier> {
+    WebPkiServerVerifier::builder(roots)
+        .with_crls(crls)
+        .build()
+        .expect("verificador X.509 com CRL")
+}
+```|Usando o **`WebPkiServerVerifier::builder(roots).with_crls(crls)`** (e o equivalente **`WebPkiClientVerifier`** para mTLS no servidor!), você anexa Listas de Certificados Revogados (`CRLs` em formato DER) e controla se a checagem de revogação deve cobrir toda a cadeia ou apenas o certificado folha (`only_check_end_entity_revocation`) e como tratar status desconhecido (`enforce_revocation_expiry`)!|Nunca implemente a trait `ServerCertVerifier` com um verificador vazio que ignora erros de certificado em código de produção!|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-autenticacao-mutua-mtls-webpkiclientverifier-zero-trust, openssl-operacoes-pki-ca-x509-req-crl-ocsp-automacao
+
+===NOTE===
+1335|rustls-autenticacao-mutua-mtls-webpkiclientverifier-zero-trust|Autenticação Mútua (**mTLS Zero-Trust**) e Seleção Dinâmica de Certificados via **SNI (`ResolvesServerCert`)** em Servidores Rustls|Como construir em Rust (usando `rustls` + `tokio-rustls` / `axum` / `tonic` gRPC) um servidor de microsserviço ou API Gateway Zero-Trust que **exige Certificado de Cliente X.509 válido (`mTLS`)**, valida revogação contra uma CRL interna e ainda seleciona dinamicamente o certificado de servidor correto com base no **SNI (`Server Name Indication`)** enviado pelo cliente?|No lado do servidor (`ServerConfig`), o Rustls oferece o **`WebPkiClientVerifier::builder(client_roots)`**! Diferente de configurações antigas onde mTLS era "tudo ou nada" sem granularidade, o `WebPkiClientVerifier` permite: **(1) Exigir certificado de cliente obrigatório** (rejeitando no handshake qualquer conexão sem certificado assinado pela CA interna `.build()`); **(2) Permitir certificado opcional (`.allow_unauthenticated()`)** para rotas mistas; e **(3) Anexar CRLs de clientes revogados (`.with_crls(...)`)**!|E quando o mesmo servidor atende múltiplos domínios (`api.empresa.br`, `auth.empresa.br`) ou rotaciona certificados em tempo real sem reiniciar o processo, você utiliza **`ResolvesServerCertUsingSni`** ou implementa a trait **`ResolvesServerCert`**!|```rust
+// Configurar um ServerConfig no Rustls exigindo Autenticacao Mutua (mTLS) obrigatoria de clientes assinados pela CA interna
+use std::sync::Arc;
+use rustls::{RootCertStore, ServerConfig};
+use rustls::server::WebPkiClientVerifier;
+use rustls_pki_types::{CertificateDer, PrivateKeyDer};
+
+fn criar_servidor_mtls(
+    ca_clientes: Arc<RootCertStore>,
+    cert_cadeia: Vec<CertificateDer<'static>>,
+    chave_privada: PrivateKeyDer<'static>,
+) -> Arc<ServerConfig> {
+    let client_verifier = WebPkiClientVerifier::builder(ca_clientes)
+        .build()
+        .expect("verificador mTLS de clientes");
+
+    let config = ServerConfig::builder()
+        .with_client_cert_verifier(client_verifier)
+        .with_single_cert(cert_cadeia, chave_privada)
+        .expect("certificado e chave privada validos");
+    Arc::new(config)
+}
+```|Após o handshake mTLS concluir, a aplicação pode inspecionar a cadeia exata de certificados apresentada pelo cliente chamando **`connection.peer_certificates()`** sobre a sessão Rustls — permitindo extrair o `SPIFFE ID` (URI SAN, usado no Istio/SPIRE) ou o `Subject` do cliente para decisões de autorização em nível de rota!|Para recarregar certificados TLS renovados pelo Certbot/Step-CA em memória com zero downtime, implemente a trait `ResolvesServerCert` lendo um `ArcSwap<CertifiedKey>` atualizado por um watcher de arquivo ou sinal `SIGHUP`.|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-validacao-certificados-webpki-root-store-pinning-crl, teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos
+
+===NOTE===
+1336|rustls-privacidade-encrypted-client-hello-ech-rfc9849-sni-alpn|Privacidade no Handshake TLS 1.3 com **Encrypted Client Hello (`ECH` — `RFC 9849`)**, Compressão de Certificados (**`RFC 8879`**) e **Raw Public Keys (`RFC 7250`)** no Rustls|Em uma conexão TLS 1.3 padrão, embora todo o tráfego HTTP e até o certificado do servidor já viajem criptografados, um único campo crítico no primeiro pacote (`ClientHello`) ainda viajava em texto claro visível para qualquer provedor de internet (ISP) ou sniffer passivo no caminho: a extensão **`SNI` (*Server Name Indication*)**, que revela o nome do domínio exato que o usuário está acessando!|Como o **Rustls** resolve esse último vazamento de metadados do TLS 1.3 e acelera handshakes modernos?|O Rustls implementa nativamente no cliente o padrão **Encrypted Client Hello (`ECH`, `RFC 9849`)**! Com o **ECH** habilitado (obtendo a `EchConfigList` publicada pelo domínio em registros DNS `HTTPS` / `SVCB` via DoH/DoT), o cliente Rustls divide o `ClientHello` em dois: um **`ClientHelloOuter`** público (que mostra apenas o nome genérico do provedor de borda/CDN, ex.: `cloudflare-ech.com`) e um **`ClientHelloInner` 100% criptografado via HPKE (`RFC 9180`)** que contém o **SNI verdadeiro, o ALPN privado e as extensões sensíveis**!|```rust
+// Configurar o modo Encrypted Client Hello (ECH - RFC 9849) no Rustls usando os parametros ECH publicados no registro DNS HTTPS
+use rustls::client::{EchConfig, EchMode};
+use rustls::crypto::aws_lc_rs::hpke::ALL_SUPPORTED_SUITES;
+use rustls_pki_types::EchConfigListBytes;
+
+fn criar_modo_ech(ech_dns_bytes: EchConfigListBytes<'static>) -> EchMode {
+    let ech_config = EchConfig::new(ech_dns_bytes, ALL_SUPPORTED_SUITES)
+        .expect("EchConfig HPKE suportada");
+    EchMode::from(ech_config)
+}
+```|E o que acontece se você também habilitar a **Compressão de Certificados (`RFC 8879`)** suportada pelo Rustls (via Brotli/Zlib)? Cadeias de certificados X.509 (especialmente importantes com certificados futuros pós-quânticos maiores!) são comprimidas e cacheadas em memória, reduzindo o tamanho das mensagens `Certificate` em até **70%** e evitando que o handshake TLS exceda a janela inicial de congestionamento TCP (`initcwnd`)!|Para comunicações Machine-to-Machine (M2M) / IoT onde os pares já conhecem os hashes das chaves públicas um do outro sem precisar da sobrecarga ASN.1 de certificados X.509 completos, o Rustls também suporta **Raw Public Keys (`RFC 7250`)** no TLS 1.3!|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-troca-chaves-pos-quantica-hibrida-x25519mlkem768-fips, dnsx-consultas-multi-registro-a-aaaa-cname-txt-mx-ns-soa-ptr-axfr
+
+===NOTE===
+1337|rustls-retomada-sessao-tickets-0rtt-anti-replay-seguranca|Retomada de Sessão (**Session Resumption**), Rotação de **Session Tickets** e Riscos de **Replay em Dados `0-RTT` (`EarlyData`)** no Rustls|Para reduzir a latência de reconexão de clientes recorrentes, o TLS 1.3 oferece **Retomada de Sessão via PSK / Tickets (`1-RTT Resumption`)** e envio imediato de dados no primeiro pacote (**`0-RTT Early Data`**). Quais são os cuidados de segurança que o **Rustls** aplica na retomada de sessão e por que você deve ter extremo cuidado antes de habilitar `0-RTT` (`enable_early_data`)?|Primeiro, na retomada normal **`1-RTT`**: o `ServerConfig` do Rustls inclui por padrão um gerenciador de tickets em memória (**`Ticketer`**) que cifra os tickets de sessão com uma chave simétrica efêmera gerada na RAM e **rotaciona essa chave automaticamente a cada poucas horas** — garantindo que os tickets nunca fiquem gravados em disco e preservando o *Forward Secrecy* mesmo para sessões retomadas!|Segundo, o perigo do **`0-RTT Early Data`**: dados enviados pelo cliente no `0-RTT` (junto com o primeiro pacote `ClientHello`, antes do servidor responder com um `ServerHello` fresco!) **NÃO possuem proteção contra Replay Attacks no nível do protocolo TLS**! Se um invasor na rede capturar o pacote TCP do `0-RTT` e reenviá-lo 10 vezes para o servidor, uma requisição não-idempotente (como `POST /api/transferir-dinheiro`) seria executada 10 vezes!|```rust
+// Por padrao, o Rustls mantem enable_early_data = false; verifique sempre essa propriedade ao auditar configuracoes de alta seguranca
+fn auditar_config_segura(server_config: &rustls::ServerConfig) {
+    assert!(
+        !server_config.max_early_data_size.gt(&0),
+        "0-RTT Early Data deve permanecer desabilitado para APIs mutaveis (risco de Replay Attack)!"
+    );
+}
+```|Por esse motivo de segurança, o **Rustls mantém `0-RTT` (`enable_early_data` / `max_early_data_size`) DESABILITADO por padrão** tanto no `ClientConfig` quanto no `ServerConfig`!|Se você habilitar `0-RTT` em um proxy de borda para acelerar o carregamento inicial, aceite em `EarlyData` **exclusivamente requisições HTTP `GET` / `HEAD` estritamente idempotentes** e rejeite qualquer requisição com efeitos colaterais com o código HTTP **`425 Too Early` (`RFC 8470`)** forçando o cliente a reenviar após concluir o handshake `1-RTT` completo!|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-decisoes-seguranca-non-features-tls12-tls13-pfs-aead-obrigatorio, rustls-otimizacao-performance-vectored-io-fragment-size-tokio-rustls
+
+===NOTE===
+1338|rustls-otimizacao-performance-vectored-io-fragment-size-tokio-rustls|Performance de Alta Vazão no Rustls: **Vectored I/O (`write_vectored`)**, **`max_fragment_size`**, Zero-Copy Unbuffering e Integração **`tokio-rustls`**|Como o **Rustls** atinge vazão multi-gigabit e latência de handshake inferior a bibliotecas legadas em C quando integrado a servidores assíncronos em Rust (**`tokio-rustls`**, **`hyper`**, **`tonic`**, **`quinn` QUIC**)?|Através de quatro otimizações arquiteturais na camada de I/O do Rustls: **(1) Vectored I/O (`writev` syscall via `write_vectored`)** — em vez de copiar múltiplos registros TLS para um único buffer intermediário na memória antes de chamar o kernel, o Rustls entrega fatias de memória diretamente para a chamada de sistema `writev(2)`, minimizando cópias de memória e transições usuário-kernel!;|Na camada complementar de implementação e execução técnica: **(2) Ajuste de Tamanho de Fragmento (`max_fragment_size`)** — permite alinhar o tamanho dos registros TLS com o MTU da interface de rede subjacente para evitar que um registro TLS de 16 KB fique bloqueado esperando o último pacote TCP chegar (*Head-of-Line Blocking* de registro!); **(3) API `UnbufferedConnection`** para motores de alto desempenho (`io_uring`); e **(4) Integração com Kernel TLS (`ktls`)**!|```rust
+// Exemplo de aceite de conexao assincrona TLS 1.3 com tokio-rustls aplicando timeout rigoroso no handshake contra Slowloris TLS
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::net::TcpStream;
+use tokio::time::timeout;
+use tokio_rustls::TlsAcceptor;
+
+async fn aceitar_conexao_segura(
+    acceptor: &TlsAcceptor,
+    tcp_stream: TcpStream,
+) -> std::io::Result<tokio_rustls::server::TlsStream<TcpStream>> {
+    timeout(Duration::from_secs(5), acceptor.accept(tcp_stream))
+        .await
+        .map_err(|_| std::io::Error::new(std::io::ErrorKind::TimedOut, "Handshake TLS expirou"))?
+}
+```|Regra obrigatória de engenharia defensiva mostrada no código acima: **SEMPRE envolva `acceptor.accept(tcp_stream)` em um `tokio::time::timeout` curto (ex.: `5` segundos)**! Por quê? Porque sem um timeout no handshake TLS, um atacante pode abrir milhares de conexões TCP e nunca enviar o `ClientHello` (ataque de exaustão de sockets *TLS Slowloris*), prendendo tasks assíncronas indefinidamente!|Reutilize sempre a mesma instância `Arc<ServerConfig>` e `Arc<ClientConfig>` entre todas as conexões do processo (nunca reconstrua `ServerConfig` ou `RootCertStore` a cada requisição, pois é dentro do `Arc<ServerConfig>` que reside o cache de retomada de sessões TLS!).|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-retomada-sessao-tickets-0rtt-anti-replay-seguranca, openssl-benchmarking-criptografico-speed-evp-aes-ni-avx512-pqc-ml-kem
+
+===NOTE===
+1339|rustls-depuracao-segura-sslkeylogfile-keylog-wireshark-auditoria|Depuração Controlada de Tráfego TLS 1.3 com **`KeyLogFile` (`SSLKEYLOGFILE`)** e **Session Exporters (`RFC 5705` / `RFC 8446`)** no Rustls|Como o TLS 1.3 usa **Perfect Forward Secrecy (ECDHE / ML-KEM)** em 100% das conexões, possuir a chave privada do certificado do servidor **não serve mais para descriptografar um arquivo `.pcap`** capturado no Wireshark/Arkime! Então, como um engenheiro de segurança ou desenvolvedor depura um problema de protocolo dentro de um túnel TLS do Rustls em ambiente de laboratório ou extrai segredos de canal (**Channel Binding `RFC 5705` / `RFC 9266` `tls-exporter`**)?|Para depuração controlada em laboratório, o Rustls oferece a struct **`rustls::KeyLogFile`** (implementação da trait `KeyLog`): quando explicitamente habilitada no `ClientConfig` ou `ServerConfig` (`config.key_log = Arc::new(KeyLogFile::new())`), ela verifica se a variável de ambiente **`SSLKEYLOGFILE`** está definida e grava ali os segredos efêmeros da sessão (`CLIENT_HANDSHAKE_TRAFFIC_SECRET`, `CLIENT_traffic_secret_0`) no formato NSS Key Log que o **Wireshark** e o **`tshark`** leem instantaneamente!|E para protocolos que exigem **Channel Binding criptográfico** (como `SCRAM-SHA-256-PLUS` no PostgreSQL ou autenticação de token vinculada ao canal TLS para impedir *Token Replay*), o Rustls implementa **`connection.export_keying_material(...)` (`RFC 5705` / `RFC 8446 Section 7.5`)**!|```bash
+# Em ambiente de laboratorio local, passar SSLKEYLOGFILE para uma aplicacao com KeyLogFile habilitado e descriptografar o PCAP no tshark
+export SSLKEYLOGFILE="./tls_debug_keys.log"
+tshark -r ./captura_lab.pcap -o "tls.keylog_file:./tls_debug_keys.log" -Y "http"
+```|Por segurança padrão (**Secure by Default**), o `ClientConfig` e o `ServerConfig` do Rustls vêm com **`NoKeyLog`** configurado de fábrica — o que significa que, diferentemente de outras bibliotecas onde basta um malware definir `SSLKEYLOGFILE` no ambiente do usuário para vazar todas as chaves TLS, **uma aplicação Rustls de produção ignora `SSLKEYLOGFILE` a menos que o desenvolvedor tenha optado explicitamente por injetar `KeyLogFile::new()`**!|Mesmo quando habilitar `KeyLogFile` para diagnóstico, proteja essa opção atrás de uma flag de compilação de debug (`#[cfg(debug_assertions)]`) ou flag explícita de CLI.|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, wireshark-descriptografia-tls-1-2-tls-1-3-sslkeylogfile-quic-http2, arkime-arquitetura-full-packet-capture-capture-viewer-opensearch-spi
+
+===NOTE===
+1340|rustls-integracao-c-ffi-rustls-ffi-curl-apache-mod-tls-migracao|Levando Segurança de Memória para Aplicações em C/C++ com **`rustls-ffi` (`crustls`)**: Integrando o Rustls no **`curl`**, **Apache `mod_tls`** e Daemons Legados|E se a sua organização mantém sistemas críticos escritos em **C ou C++** (ou utiliza ferramentas universais como **`curl`** e **Apache HTTP Server**) e quer substituir o parser TLS em C por uma implementação **Memory-Safe em Rust** sem precisar reescrever o sistema inteiro em Rust?|A equipe oficial do Rustls mantém o projeto **`rustls-ffi` (`libcrustls` / pacote `librustls-dev`)**, uma biblioteca de bindings C estável e limpa (`#include <rustls.h>`) que expõe as estruturas seguras do Rustls (`rustls_client_config`, `rustls_server_config`, `rustls_connection`) para qualquer programa em C ou C++!|Hoje, projetos de infraestrutura mundial já possuem backends oficiais baseados em `rustls-ffi`: **(1) O `curl` (`libcurl` compilado com `--with-rustls`)**, permitindo fazer requisições HTTPS em C com a segurança de memória do Rustls; e **(2) O módulo `mod_tls` do Apache HTTP Server** (desenvolvido em parceria com a ISRG / Let's Encrypt como alternativa moderna e *memory-safe* ao clássico `mod_ssl`)!|```bash
+# Verificar no terminal quais backends TLS (OpenSSL, Rustls, GnuTLS) estao compilados e ativos na sua instalacao do curl
+curl --version | head -n 3
+```|Por que a API do **`rustls-ffi`** foi desenhada como uma API C nova e segura (onde toda função retorna códigos explícitos `rustls_result` e gerencia propriedade de ponteiros de forma estrita) em vez de tentar imitar a antiga API `SSL_*` do OpenSSL? Porque a própria API histórica em C do OpenSSL contém armadilhas de gerenciamento de memória e ponteiros compartilhados que impediriam garantir *Memory Safety* na fronteira FFI!|Ao construir novas aplicações nativas na nuvem, proxies de borda, agentes de segurança ou CLIs, prefira diretamente o ecossistema **Rust + `rustls` + `rustls-aws-lc-rs`** para obter simultaneamente **Memory Safety**, **TLS 1.3**, **Pós-Quântico (`X25519MLKEM768`)** e **FIPS 140-3**.|rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring, rustls-troca-chaves-pos-quantica-hibrida-x25519mlkem768-fips, openssl-arquitetura-providers-openssl3-default-fips-legacy-cnf

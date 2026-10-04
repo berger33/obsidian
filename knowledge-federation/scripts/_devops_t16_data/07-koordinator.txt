@@ -1,0 +1,136 @@
+1561|koordinator-arquitetura-colocation-qos-scheduler-koordlet|Koordinator: arquitetura de co-localização híbrida baseada em QoS (`koord-scheduler`, `koord-manager` e `koordlet`)|O Koordinator (projeto CNCF Sandbox, escrito em Go) é um sistema de agendamento e gerenciamento de recursos baseado em QoS para Kubernetes projetado para co-localizar (*co-locate*) cargas de trabalho online sensíveis à latência (microsserviços) e jobs batch/IA nos mesmos nós, elevando a utilização real do cluster sem degradar SLOs.|Nos clusters Kubernetes tradicionais, a utilização média de CPU frequentemente fica abaixo de 20%–30% porque as equipes dimensionam `requests` pelo pico máximo de tráfego, deixando recursos ociosos na maior parte do tempo que o `kube-scheduler` padrão não consegue reaproveitar com segurança para tarefas batch.|A arquitetura do Koordinator divide-se no plano de controle (`koord-scheduler`, `koord-descheduler` e `koord-manager`) e no plano de nó (`koordlet` DaemonSet e opcionalmente `koord-runtime-proxy`). O `koordlet` mede o uso real dos Pods em tempo real, reclama os recursos alocados mas ociosos como recursos de *overcommit* (Mid/Batch/Free) e aplica isolamento fino de kernel (CPU, memória, cache L3, banda de memória e I/O) para proteger os serviços online.|```bash
+helm repo add koordinator-sh https://koordinator-sh.github.io/charts/
+helm upgrade --install koordinator koordinator-sh/koordinator --namespace koordinator-system --create-namespace
+kubectl get pods -n koordinator-system
+```|O Koordinator mantém total compatibilidade com workloads Kubernetes existentes: Pods que não especificam classes QoS do Koordinator continuam funcionando normalmente sob o modelo padrão `Guaranteed`, `Burstable` e `BestEffort` do Kubernetes.|Verifique que `koord-scheduler`, `koord-descheduler`, `koord-manager` e o DaemonSet `koordlet` estão em estado `Running` no namespace `koordinator-system`.|https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://koordinator.sh/docs/architecture/overview/;https://github.com/koordinator-sh/koordinator
+1562|koordinator-modelo-qos-lse-lsr-ls-be-system-prioridades|Koordinator: classes de QoS diferenciadas (`LSE`, `LSR`, `LS`, `BE` e `SYSTEM`) para cargas híbridas|O Koordinator define cinco classes de Qualidade de Serviço (`koordinator.sh/qosClass`) — `SYSTEM`, `LSE` (*Latency-Sensitive Exclusive*), `LSR` (*Latency-Sensitive Reserved*), `LS` (*Latency-Sensitive*) e `BE` (*Best-Effort*) — para governar o isolamento físico e o compartilhamento de CPU, memória e cache nos nós.|As três classes QoS nativas do Kubernetes (`Guaranteed`, `Burstable`, `BestEffort`) são inferidas apenas pela igualdade entre `requests` e `limits` e não distinguem se um workload é um motor de banco de dados de ultra-baixa latência, um microsserviço web elástico ou um job Spark offline tolerante a preempção.|No modelo do Koordinator, `LSE` e `LSR` reservam núcleos de CPU dedicados para aplicações críticas de latência extrema; `LS` compartilha um pool de CPUs com garantias de cota e baixa latência de escalonamento; `BE` consome a capacidade ociosa reclamada (*reclaimed resources*) das cargas `LS`/`LSR` com supressão dinâmica imediata caso as cargas `LS` precisem de mais CPU; e `SYSTEM` protege daemons essenciais de infraestrutura.|```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: payment-gateway
+  labels:
+    koordinator.sh/qosClass: LS
+spec:
+  schedulerName: koord-scheduler
+  containers:
+    - name: gateway
+      image: ghcr.io/org/gateway:v1.3
+      resources:
+        requests:
+          cpu: "4"
+          memory: "8Gi"
+        limits:
+          cpu: "4"
+          memory: "8Gi"
+```|Pods da classe `BE` consomem recursos estendidos do tipo `kubernetes.io/batch-cpu` e `kubernetes.io/batch-memory` (calculados pelo `koordlet` a partir da folga dos nós) em vez dos recursos padrão `cpu` e `memory`.|Inspecione o objeto `Node` (`kubectl describe node <node>`) e confirme a publicação dos recursos alocáveis estendidos `kubernetes.io/batch-cpu` e `kubernetes.io/batch-memory` calculados pelo Koordinator.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1563|koordinator-colocation-profile-injecao-automatica-sem-modificar-workloads|Koordinator: adoção transparente de co-localização via `ClusterColocationProfile` sem alterar manifestos|O controlador `ColocationProfile` (no `koord-manager`), configurado pelo CRD `ClusterColocationProfile`, intercepta Pods na criação via mutating webhook e injeta automaticamente `koordinator.sh/qosClass`, `schedulerName: koord-scheduler`, `priorityClassName` e reescrita de recursos estendidos (`batch-cpu`/`batch-memory`).|Em organizações com dezenas de operadores de big data (Spark Operator, Argo Workflows, Kubeflow) já implantados, exigir que todas as equipes reescrevam seus geradores de Pod para trocar `cpu` por `kubernetes.io/batch-cpu` e adicionar labels do Koordinator atrasaria a adoção da co-localização.|O administrador cria um `ClusterColocationProfile` com seletores `namespaceSelector` e `selector` (por labels do Pod). Quando um operador submete um Pod batch comum naquele namespace pedindo `cpu: 2`, o webhook do `koord-manager` converte automaticamente o pedido para `kubernetes.io/batch-cpu: 2000`, define `koordinator.sh/qosClass: BE` e direciona o Pod para o `koord-scheduler`.|```yaml
+apiVersion: config.koordinator.sh/v1alpha1
+kind: ClusterColocationProfile
+metadata:
+  name: spark-batch-colocation
+spec:
+  namespaceSelector:
+    matchLabels:
+      koordinator.sh/enable-colocation: "true"
+  selector:
+    matchLabels:
+      spark-role: executor
+  qosClass: BE
+  priorityClassName: koord-batch
+  schedulerName: koord-scheduler
+  koordinatorPriority: 1000
+```|Antes de ativar um `ClusterColocationProfile` em um namespace, certifique-se de que a `PriorityClass` referenciada (como `koord-batch`) já existe no cluster.|Rotule um namespace com `koordinator.sh/enable-colocation=true`, crie um Pod com label `spark-role=executor` e verifique com `kubectl get pod -o yaml` que `qosClass: BE` e `kubernetes.io/batch-cpu` foram injetados automaticamente.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1564|koordinator-koord-scheduler-load-aware-scheduling-prevencao-hotspots|Koordinator: agendamento sensível à carga real (`Load-Aware Scheduling`) no `koord-scheduler`|O plugin de *Load-Aware Scheduling* do `koord-scheduler` agenda Pods avaliando a utilização real histórica e instantânea de CPU e memória dos nós (reportada pelo `koordlet` via CRD `NodeMetric`), e não apenas a soma estática de `requests` alocadas na API.|O `kube-scheduler` padrão decide o posicionamento olhando apenas para `requests`: um nó pode ter 80% de `requests` reservados por Pods ociosos (usando 5% de CPU física), enquanto outro nó com 50% de `requests` está com 95% de CPU física saturada. O scheduler padrão colocaria novos Pods no nó já saturado, causando *throttling* severo.|O `koordlet` coleta métricas de utilização do nó e de cada Pod em janelas deslizantes e atualiza o recurso `NodeMetric` (`slo.koordinator.sh/v1alpha1`). Durante as fases `Filter` e `Score`, o `koord-scheduler` filtra nós que ultrapassaram os limiares de segurança de uso real (por exemplo 75% de CPU física) e atribui maior pontuação aos nós com menor carga efetiva.|```yaml
+apiVersion: slo.koordinator.sh/v1alpha1
+kind: NodeMetric
+metadata:
+  name: worker-node-01
+spec:
+  collectPolicy:
+    aggregateDurationSeconds: 300
+    reportIntervalSeconds: 60
+```|Para workloads recém-criados que ainda não acumularam histórico no `NodeMetric`, o plugin de Load-Aware Scheduling estima a carga inicial a partir de um fator configurável dos `requests` do Pod para evitar sobrecarregar um nó recém-esvaziado com dezenas de agendamentos simultâneos.|Execute `kubectl get nodemetric -o wide` para inspecionar as taxas de utilização real de CPU e memória reportadas pelo `koordlet` em cada nó do cluster.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1565|koordinator-orquestracao-fina-cpu-numa-topology-llc-isolamento|Koordinator: orquestração fina de CPU, topologia NUMA e isolamento de cache L3 (`LLC`) e banda de memória|O Koordinator implementa orquestração fina de CPU (*Fine-Grained CPU Orchestration*) no `koord-scheduler` e no `koordlet`, alinhando alocação de CPUs físicas, Hyper-Threads, nós NUMA e partições de Last Level Cache (`LLC`) / Memory Bandwidth Allocation (`MBA`) via Intel RDT ou ARM MPAM.|O `CPU Manager` estático padrão do kubelet exige que o Pod seja `Guaranteed` com `requests` inteiros de CPU e não coordena o alinhamento NUMA entre múltiplos Pods nem evita que tarefas batch (`BE`) poluam o cache L3 dos núcleos dedicados às aplicações de baixa latência (`LSE`/`LSR`).|O `koord-scheduler` mantém a topologia detalhada de sockets, nós NUMA e pares lógicos SMT de cada servidor no CRD `NodeResourceTopology`, alocando CPUs com políticas como `PCPUs` (evitando compartilhar o mesmo núcleo físico com outra carga sensível) e `NUMAAffinity`. No nó, o `koordlet` aplica `cpuset.cpus` nos cgroups e configura grupos `resctrl` do kernel Linux para restringir o percentual de cache L3 e banda de memória acessível pelos Pods `BE`.|```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: low-latency-trading
+  labels:
+    koordinator.sh/qosClass: LSE
+  annotations:
+    scheduling.koordinator.sh/numa-topology-spec: '{"numaTopologyPolicy":"Restricted"}'
+spec:
+  schedulerName: koord-scheduler
+  containers:
+    - name: engine
+      image: ghcr.io/org/trading-engine:v2.0
+      resources:
+        requests:
+          cpu: "8"
+          memory: "16Gi"
+        limits:
+          cpu: "8"
+          memory: "16Gi"
+```|O isolamento de cache L3 (`CAT`) e banda de memória (`MBA`) via sistema de arquivos `/sys/fs/resctrl` requer suporte de hardware (como Intel Xeon com Resource Director Technology) e kernel Linux com parâmetros `rdt=` habilitados.|Inspecione `kubectl get noderesourcetopology <node> -o yaml` para verificar a descoberta dos nós NUMA e o mapa de CPUs reservadas pelo `koord-scheduler`.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1566|koordinator-koordlet-qos-manager-supressao-dinamica-interferencia|Koordinator: detecção de interferência e supressão dinâmica de cargas batch pelo `koordlet` QoS Manager|O `koordlet` executa em cada nó um loop contínuo de *Resource Profiling*, *Interference Detection* e *QoS Manager* que monitora picos repentinos de consumo das cargas online (`LS`/`LSR`) e suprime instantaneamente (ou despeja) cargas `BE` locais para preservar o SLO.|O modelo de overcommit de recursos assume que as aplicações online não usam 100% da CPU o tempo todo; porém, durante um pico súbito de tráfego (flash crowd), a aplicação online reclamará seus recursos imediatamente — em milissegundos ou segundos, rápido demais para depender de uma reação centralizada do control plane.|Quando o módulo de *Resource Profiling* e *Interference Detection* do `koordlet` detecta aumento de utilização dos Pods `LS`, aumento de atraso de agendamento de CPU (*CPU scheduling delay*), contenção de alocação de memória ou I/O de disco acima da linha d'água configurada no `NodeSLO`, o *QoS Manager* reduz imediatamente a cota de CPU (`cpu.cfs_quota_us` / `cpuset`) dos containers `BE` naquele nó e, se a pressão persistir, evicta seletivamente os Pods `BE` de menor prioridade.|```yaml
+apiVersion: slo.koordinator.sh/v1alpha1
+kind: NodeSLO
+metadata:
+  name: default-node-slo
+spec:
+  resourceUsedThresholdWithBE:
+    enable: true
+    cpuSuppressThresholdPercent: 65
+    cpuSuppressPolicy: cpuset
+    memoryEvictThresholdPercent: 75
+```|Definir `cpuSuppressThresholdPercent` muito alto (por exemplo acima de 85%) reduz a margem de segurança para absorver rajadas sub-segundo de tráfego nas aplicações `LS` antes que ocorra *CPU throttling*.|Inspecione o `ConfigMap` `slo-controller-config` em `koordinator-system` e os objetos `NodeSLO` (`kubectl get nodeslo -o yaml`) para auditar os limiares de supressão e evicção ativos.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1567|koordinator-resource-reservation-crd-descheduling-preempcao|Koordinator: reserva explícita de recursos de nó via CRD `Reservation` e `NodeReservation`|O Koordinator introduz o CRD `Reservation` (`scheduling.koordinator.sh/v1alpha1`) para reservar preventivamente recursos específicos de um nó para Pods futuros ou em migração, sem precisar criar Pods "pause" fictícios (*balloon pods*).|No Kubernetes padrão, quando um Descheduler remove um Pod de um nó sobrecarregado ou durante uma migração/upgrade, outro Pod concorrente na fila pode "roubar" a vaga no nó de destino antes que o Pod migrado seja recriado, deixando a aplicação original `Pending`.|Um objeto `Reservation` funciona como um contrato de reserva de capacidade avaliado nativamente pelo `koord-scheduler`: ele aloca virtualmente CPU, memória, GPUs ou portas em um nó para um `allocateOnce` ou proprietário específico (`owners` por seletor de labels/controller) com tempo de expiração (`ttl`). Adicionalmente, o recurso de *Node Reservation* permite reservar fatias do nó para processos importantes que rodam fora do Kubernetes (daemons systemd não containerizados).|```yaml
+apiVersion: scheduling.koordinator.sh/v1alpha1
+kind: Reservation
+metadata:
+  name: reserve-for-checkout-migration
+spec:
+  ttl: 15m
+  allocateOnce: true
+  template:
+    spec:
+      schedulerName: koord-scheduler
+      containers:
+        - name: placeholder
+          resources:
+            requests:
+              cpu: "4"
+              memory: "8Gi"
+  owners:
+    - labelSelector:
+        matchLabels:
+          app: checkout
+```|Sempre defina um `spec.ttl` (ou `expires`) razoável nas `Reservations` para evitar que uma reserva órfã (cujo workload alvo foi cancelado) retenha capacidade ociosa no cluster indefinidamente.|Execute `kubectl get reservation` e confirme que a fase passa para `Available` quando o `koord-scheduler` vincula a reserva a um nó compatível, passando para `Succeeded` quando o Pod proprietário a consome.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1568|koordinator-koord-descheduler-rebalanceamento-carga-seguro|Koordinator: `koord-descheduler` com migração segura apoiada em `Reservation` e balanceamento de carga|O `koord-descheduler` estende o Descheduler comunitário do Kubernetes com um framework determinístico de migração segura (`MigrationController`) e plugins de desagendamento baseados em carga real (`LowNodeLoad`).|Desagendar um Pod em produção usando o descheduler tradicional apaga o Pod imediatamente (`Evict`) sem garantir que exista espaço livre em outro nó para agendá-lo, podendo reduzir a capacidade ativa do serviço se o novo Pod ficar preso em `Pending`.|No `koord-descheduler`, o controlador de migração (via CRD `PodMigrationJob`) primeiro cria uma `Reservation` no cluster e aguarda que o `koord-scheduler` confirme a reserva de recursos em um nó saudável e menos carregado. Somente após os recursos do destino estarem garantidos (`Reservation Available`), o `koord-descheduler` evicta o Pod de origem para que o substituto assuma imediatamente a vaga reservada.|```yaml
+apiVersion: scheduling.koordinator.sh/v1alpha1
+kind: PodMigrationJob
+metadata:
+  name: migrate-hot-pod-01
+spec:
+  podRef:
+    namespace: prod
+    name: checkout-7d9c8b-x4k2p
+  mode: ReservationFirst
+  ttl: 5m
+```|O modo `ReservationFirst` exige que o workload do Pod migrado seja agendado pelo `koord-scheduler`, pois o `kube-scheduler` padrão não reconhece nem consome objetos `Reservation`.|Crie um `PodMigrationJob` com `mode: ReservationFirst` e acompanhe `kubectl get podmigrationjob migrate-hot-pod-01 -o wide` para observar as fases de reserva de recursos, evicção e alocação do novo Pod.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1569|koordinator-koord-runtime-proxy-interceptacao-cri-cgroup-kernel|Koordinator: interceptação de requisições CRI via `koord-runtime-proxy` para políticas avançadas de kernel|O `koord-runtime-proxy` é um serviço systemd opcional de nó que atua como proxy gRPC entre o `kubelet` e o container runtime (`containerd` ou `CRI-O`), interceptando chamadas CRI (`RunPodSandbox`, `CreateContainer`, `UpdateContainerResources`) para aplicar políticas de isolamento antes mesmo do container iniciar.|Quando o `kubelet` cria um container diretamente no `containerd`, existe uma janela entre a partida do container e a reconciliação assíncrona de um DaemonSet externo em que o container pode rodar com parâmetros de cgroup padrão inadequados para cargas híbridas.|Instalado no caminho do socket CRI do nó, o `koord-runtime-proxy` encaminha os eventos de ciclo de vida do container para hooks registrados pelo `koordlet`. Isso permite ajustar sincronamente parâmetros de cgroup (como `cpu.idle` para agendamento `SCHED_IDLE` do kernel Linux moderno, pesos de I/O de bloco e limites de memória) no instante exato da criação do container.|```bash
+koord-runtime-proxy \
+  --koord-runtimeproxy-endpoint=/var/run/koord-runtimeproxy/runtimeproxy.sock \
+  --remote-runtime-service-endpoint=/var/run/containerd/containerd.sock \
+  --remote-image-service-endpoint=/var/run/containerd/containerd.sock
+```|Em versões recentes do Kubernetes que suportam NRI (*Node Resource Interface*) no `containerd` v1.7+, muitas dessas interceptações podem ser realizadas via plugin NRI nativo do `koordlet` sem precisar alterar a flag `--container-runtime-endpoint` do `kubelet`.|Verifique o status do socket CRI/NRI nos logs do `koordlet` (`kubectl logs -n koordinator-system -l app=koordlet`) para confirmar o registro dos hooks de isolamento de containers.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
+1570|koordinator-job-scheduling-elastic-quota-gang-heterogeneo-ai|Koordinator: agendamento de jobs batch/IA com `Elastic Quota`, `Gang Scheduling` e dispositivos heterogêneos|Além da co-localização no nível de nó, o `koord-scheduler` incorpora capacidades nativas de agendamento de jobs distribuídos de Big Data e IA/ML: *Gang Scheduling* (`Coscheduling`), cotas elásticas hierárquicas (`Elastic Quota`) e agendamento topológico de GPUs/RDMA.|Treinamentos distribuídos de modelos (PyTorch, Ray, Spark) exigem que todos os N workers subam juntos (*all-or-nothing*) com GPUs interconectadas por NVLink/RDMA, além de precisarem tomar emprestada a cota ociosa de outras equipes e devolvê-la quando o proprietário original submeter tarefas.|O `koord-scheduler` suporta grupos de Pods (`PodGroup` compatível com `scheduling.sigs.k8s.io`), gerencia árvores de cotas com `min` garantido e `max` compartilhável para empréstimo entre departamentos e descobre a topologia física de GPUs, NICs RDMA e FPGAs por meio do `koordlet`, alocando dispositivos no mesmo switch PCIe/NVLink.|```yaml
+apiVersion: scheduling.sigs.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: pytorch-distributed-job
+  namespace: ai-training
+spec:
+  minMember: 4
+  scheduleTimeoutSeconds: 300
+```|Se os `4` Pods do `PodGroup` não puderem ser alocados dentro de `scheduleTimeoutSeconds`, o plugin de `Coscheduling` libera as reservas parciais daquele grupo para evitar *deadlock* de recursos entre múltiplos jobs concorrentes na fila.|Inspecione `kubectl get podgroup -n ai-training` e verifique a transição de fase do grupo quando todos os `minMember` Pods são agendados conjuntamente pelo `koord-scheduler`.|https://koordinator.sh/docs/architecture/overview/;https://raw.githubusercontent.com/koordinator-sh/koordinator/main/README.md;https://github.com/koordinator-sh/koordinator
