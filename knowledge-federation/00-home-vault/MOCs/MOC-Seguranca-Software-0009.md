@@ -6,18 +6,18 @@ subdominio: seguranca
 lote: software-seguranca-2000-0003
 tipo_nota: moc
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1700 notas substantivas (Tranches 1–17, IDs `1–1700`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1600 / 2.000 notas válidas (80,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1600**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1600 / 1600** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md))
+- Progresso atual: **1700 / 2.000 notas válidas (85,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1700**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1700 / 1700** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -2131,3 +2131,135 @@ Mapa de conteúdo das **1600 notas substantivas (Tranches 1–16, IDs `1–1600`
 - [[govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain]] — Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**
 - [[govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate]] — Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**
 - [[govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign]] — Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**
+
+## Tranche 17 (IDs 1601–1700)
+
+### Trivy
+
+- [[trivy-varredura-de-vulnerabilidades-de-imagem-por-digest]] — Trivy: Varredura de vulnerabilidades de imagem por digest
+- [[trivy-escolha-explicita-de-scanners]] — Trivy: Escolha explícita de scanners
+- [[trivy-misconfiguracao-em-terraform-e-kubernetes]] — Trivy: Misconfiguração em Terraform e Kubernetes
+- [[trivy-segredos-na-configuracao-da-imagem]] — Trivy: Segredos na configuração da imagem
+- [[trivy-analise-do-sistema-de-arquivos-do-repositorio]] — Trivy: Análise do sistema de arquivos do repositório
+- [[trivy-scanner-de-licencas-e-inventario]] — Trivy: Scanner de licenças e inventário
+- [[trivy-relatorios-json-e-sarif-em-ci]] — Trivy: Relatórios JSON e SARIF em CI
+- [[trivy-excecoes-de-vulnerabilidade-com-justificativa]] — Trivy: Exceções de vulnerabilidade com justificativa
+- [[trivy-atualizacao-e-cache-das-bases-de-dados]] — Trivy: Atualização e cache das bases de dados
+- [[trivy-priorizacao-de-remediacao-pela-classe-do-achado]] — Trivy: Priorização de remediação pela classe do achado
+
+### Syft
+
+- [[syft-escolha-de-origem-entre-imagem-diretorio-e-arquivo]] — Syft: Escolha de origem entre imagem, diretório e arquivo
+- [[syft-catalogadores-de-pacotes-declarados-e-instalados]] — Syft: Catalogadores de pacotes declarados e instalados
+- [[syft-selecao-restrita-de-catalogadores]] — Syft: Seleção restrita de catalogadores
+- [[syft-exportacao-de-sbom-cyclonedx-e-spdx]] — Syft: Exportação de SBOM CycloneDX e SPDX
+- [[syft-identificadores-package-url-e-correspondencia]] — Syft: Identificadores Package URL e correspondência
+- [[syft-proveniencia-e-metadados-da-origem]] — Syft: Proveniência e metadados da origem
+- [[syft-identificacao-de-distribuicao-do-sistema-operacional]] — Syft: Identificação de distribuição do sistema operacional
+- [[syft-pacotes-descobertos-em-binarios]] — Syft: Pacotes descobertos em binários
+- [[syft-reprodutibilidade-do-sbom-no-pipeline]] — Syft: Reprodutibilidade do SBOM no pipeline
+- [[syft-comparacao-entre-inventario-de-fonte-e-artefato]] — Syft: Comparação entre inventário de fonte e artefato
+
+### Grype
+
+- [[grype-scan-direto-de-imagem-de-container]] — Grype: Scan direto de imagem de container
+- [[grype-analise-de-sbom-syft]] — Grype: Análise de SBOM Syft
+- [[grype-scan-de-sistema-de-arquivos]] — Grype: Scan de sistema de arquivos
+- [[grype-correspondencia-de-ecossistemas-e-versoes]] — Grype: Correspondência de ecossistemas e versões
+- [[grype-atualizacao-e-estado-da-base-local]] — Grype: Atualização e estado da base local
+- [[grype-triagem-por-severidade-e-contexto]] — Grype: Triagem por severidade e contexto
+- [[grype-uso-de-openvex-para-explicitar-status]] — Grype: Uso de OpenVEX para explicitar status
+- [[grype-filtros-e-excecoes-com-rastreabilidade]] — Grype: Filtros e exceções com rastreabilidade
+- [[grype-saidas-json-e-sarif]] — Grype: Saídas JSON e SARIF
+- [[grype-diferenciar-finding-de-explorabilidade]] — Grype: Diferenciar finding de explorabilidade
+
+### Sigstore Cosign
+
+- [[cosign-assinatura-de-imagem-por-digest]] — Sigstore Cosign: Assinatura de imagem por digest
+- [[cosign-assinatura-keyless-com-oidc]] — Sigstore Cosign: Assinatura keyless com OIDC
+- [[cosign-verificacao-por-identidade-e-issuer]] — Sigstore Cosign: Verificação por identidade e issuer
+- [[cosign-verificacao-de-claim-de-digest]] — Sigstore Cosign: Verificação de claim de digest
+- [[cosign-armazenamento-de-assinatura-como-oci-referrer]] — Sigstore Cosign: Armazenamento de assinatura como OCI referrer
+- [[cosign-atestacao-de-metadados-de-build]] — Sigstore Cosign: Atestação de metadados de build
+- [[cosign-verificacao-de-atestacao-por-politica]] — Sigstore Cosign: Verificação de atestação por política
+- [[cosign-chaves-locais-e-kms]] — Sigstore Cosign: Chaves locais e KMS
+- [[cosign-assinatura-de-blobs-e-bundles]] — Sigstore Cosign: Assinatura de blobs e bundles
+- [[cosign-politica-de-confianca-no-deploy]] — Sigstore Cosign: Política de confiança no deploy
+
+### Open Policy Agent (OPA)
+
+- [[opa-modelagem-da-decisao-em-rego]] — Open Policy Agent (OPA): Modelagem da decisão em Rego
+- [[opa-separacao-entre-input-e-data]] — Open Policy Agent (OPA): Separação entre input e data
+- [[opa-consulta-local-com-opa-eval]] — Open Policy Agent (OPA): Consulta local com `opa eval`
+- [[opa-testes-unitarios-opa-test]] — Open Policy Agent (OPA): Testes unitários `opa test`
+- [[opa-formato-e-lint-de-modulos-rego]] — Open Policy Agent (OPA): Formato e lint de módulos Rego
+- [[opa-bundles-versionados-de-politicas]] — Open Policy Agent (OPA): Bundles versionados de políticas
+- [[opa-integracao-via-api-de-decisao]] — Open Policy Agent (OPA): Integração via API de decisão
+- [[opa-trilha-de-decisao-e-logs]] — Open Policy Agent (OPA): Trilha de decisão e logs
+- [[opa-compilacao-de-politica-para-webassembly]] — Open Policy Agent (OPA): Compilação de política para WebAssembly
+- [[opa-cobertura-de-regras-e-cenarios-negativos]] — Open Policy Agent (OPA): Cobertura de regras e cenários negativos
+
+### Kyverno
+
+- [[kyverno-validacao-de-recursos-no-admission]] — Kyverno: Validação de recursos no admission
+- [[kyverno-mutacao-de-defaults-seguros]] — Kyverno: Mutação de defaults seguros
+- [[kyverno-geracao-de-recursos-auxiliares]] — Kyverno: Geração de recursos auxiliares
+- [[kyverno-verificacao-de-imagens-assinadas]] — Kyverno: Verificação de imagens assinadas
+- [[kyverno-acao-de-validacao-audit-versus-enforce]] — Kyverno: Ação de validação Audit versus Enforce
+- [[kyverno-politicas-em-cel-e-migracao]] — Kyverno: Políticas em CEL e migração
+- [[kyverno-escopo-por-recurso-e-namespace]] — Kyverno: Escopo por recurso e namespace
+- [[kyverno-relatorios-de-violacoes-e-politica]] — Kyverno: Relatórios de violações e política
+- [[kyverno-excecoes-de-politica-governadas]] — Kyverno: Exceções de política governadas
+- [[kyverno-teste-local-de-politicas-antes-do-cluster]] — Kyverno: Teste local de políticas antes do cluster
+
+### Falco
+
+- [[falco-fonte-de-eventos-syscall]] — Falco: Fonte de eventos syscall
+- [[falco-fontes-de-eventos-via-plugins]] — Falco: Fontes de eventos via plugins
+- [[falco-condicao-e-saida-da-regra]] — Falco: Condição e saída da regra
+- [[falco-macros-e-listas-reutilizaveis]] — Falco: Macros e listas reutilizáveis
+- [[falco-maturidade-e-selecao-das-regras]] — Falco: Maturidade e seleção das regras
+- [[falco-saida-estruturada-e-encaminhamento]] — Falco: Saída estruturada e encaminhamento
+- [[falco-contexto-de-container-e-namespace]] — Falco: Contexto de container e namespace
+- [[falco-excecoes-e-reducao-de-ruido]] — Falco: Exceções e redução de ruído
+- [[falco-privilegio-de-coleta-e-superficie-do-agente]] — Falco: Privilégio de coleta e superfície do agente
+- [[falco-validacao-de-alerta-antes-do-rollout]] — Falco: Validação de alerta antes do rollout
+
+### Checkov
+
+- [[checkov-analise-de-terraform-no-repositorio]] — Checkov: Análise de Terraform no repositório
+- [[checkov-analise-de-plano-terraform]] — Checkov: Análise de plano Terraform
+- [[checkov-checks-para-kubernetes-e-helm]] — Checkov: Checks para Kubernetes e Helm
+- [[checkov-analise-de-dockerfile-e-imagens]] — Checkov: Análise de Dockerfile e imagens
+- [[checkov-supressao-inline-de-finding]] — Checkov: Supressão inline de finding
+- [[checkov-politicas-customizadas]] — Checkov: Políticas customizadas
+- [[checkov-formato-json-e-sarif]] — Checkov: Formato JSON e SARIF
+- [[checkov-baseline-de-findings-existentes]] — Checkov: Baseline de findings existentes
+- [[checkov-selecao-por-diretorio-e-framework]] — Checkov: Seleção por diretório e framework
+- [[checkov-gates-de-ci-por-politica]] — Checkov: Gates de CI por política
+
+### kube-bench
+
+- [[kube-bench-alinhar-versao-do-benchmark]] — kube-bench: Alinhar versão do benchmark
+- [[kube-bench-separar-checks-por-papel-do-no]] — kube-bench: Separar checks por papel do nó
+- [[kube-bench-estrutura-dos-controles-yaml]] — kube-bench: Estrutura dos controles YAML
+- [[kube-bench-interpretacao-de-audit-e-test-items]] — kube-bench: Interpretação de audit e test_items
+- [[kube-bench-execucao-seletiva-por-ids]] — kube-bench: Execução seletiva por IDs
+- [[kube-bench-diferenca-entre-fail-e-warning]] — kube-bench: Diferença entre fail e warning
+- [[kube-bench-saidas-json-e-junit]] — kube-bench: Saídas JSON e JUnit
+- [[kube-bench-remediacoes-como-plano-de-mudanca]] — kube-bench: Remediações como plano de mudança
+- [[kube-bench-acesso-e-ambiente-de-execucao]] — kube-bench: Acesso e ambiente de execução
+- [[kube-bench-excecoes-para-plataforma-gerenciada]] — kube-bench: Exceções para plataforma gerenciada
+
+### OWASP ASVS
+
+- [[asvs-fixar-versao-do-asvs-no-contrato]] — OWASP ASVS: Fixar versão do ASVS no contrato
+- [[asvs-escolher-nivel-de-verificacao]] — OWASP ASVS: Escolher nível de verificação
+- [[asvs-mapear-requisitos-a-user-stories]] — OWASP ASVS: Mapear requisitos a user stories
+- [[asvs-validacao-de-entrada-e-codificacao-de-saida]] — OWASP ASVS: Validação de entrada e codificação de saída
+- [[asvs-requisitos-de-autenticacao]] — OWASP ASVS: Requisitos de autenticação
+- [[asvs-autorizacao-e-controle-de-acesso]] — OWASP ASVS: Autorização e controle de acesso
+- [[asvs-protecao-de-dados-e-criptografia]] — OWASP ASVS: Proteção de dados e criptografia
+- [[asvs-evidencia-de-testes-automatizados-e-manuais]] — OWASP ASVS: Evidência de testes automatizados e manuais
+- [[asvs-rastreio-de-requisito-nao-aplicavel]] — OWASP ASVS: Rastreio de requisito não aplicável
+- [[asvs-uso-do-padrao-em-aquisicao-de-software]] — OWASP ASVS: Uso do padrão em aquisição de software

@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1600 / 2.000 (80,00%)**
-- Gate automatizado: **1600/1600 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 16)
-- Revisão factual humana: **0/1600**
-- Revisão factual por IA: **1600/1600**
-- Contabilizadas como válidas: **1600/1600**
-- Revisor das 1600 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–16 (1600 notas, IDs 1–1600) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1700 / 2.000 (85,00%)**
+- Gate automatizado: **1700/1700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
+- Revisão factual humana: **0/1700**
+- Revisão factual por IA: **1700/1700**
+- Contabilizadas como válidas: **1700/1700**
+- Revisor das 1700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–17 (1700 notas, IDs 1–1700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-16.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-16.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-17.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-17.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md)
 
-Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 400 restantes.
+Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 300 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2131,3 +2131,135 @@ Existem 1600 notas materiais listadas abaixo; não há IDs reservados, placehold
 1598. [Fluxo de Remediação de Vulnerabilidades Detectadas pelo `govulncheck`: Atualizando Módulos (**`go get pac@vX.Y.Z`**), **`go mod tidy`** e Toolchain **`go` (`stdlib`)**](../../domains/software-0009/software/seguranca/govulncheck-remediacao-go-get-upgrade-go-mod-tidy-stdlib-toolchain.md)
 1599. [Filtrando e Automatizando Quality Gates com `govulncheck -format json` e `jq`: Distinguindo Achados de **Nível de Símbolo (`function`)** vs. **Nível de Módulo**](../../domains/software-0009/software/seguranca/govulncheck-triagem-json-jq-distincao-modulo-pacote-simbolo-ci-gate.md)
 1600. [Arquitetura de Referência DevSecOps para **Go (`golang`)**: Combinando **`gosec` (SAST)**, **`govulncheck` (Reachable SCA)**, **`Syft` (SBOM)** e **`Cosign` (Assinatura Sigstore)**](../../domains/software-0009/software/seguranca/govulncheck-pipeline-devsecops-go-completo-gosec-govulncheck-syft-cosign.md)
+
+## Tranche 17 — Trivy, Syft, Grype, Sigstore Cosign, Open Policy Agent (OPA), Kyverno, Falco, Checkov, kube-bench, OWASP ASVS (100 notas substantivas; revisão factual por IA registrada)
+
+### Trivy — scanner de vulnerabilidades, segredos, configurações e licenças para imagens, sistemas de arquivos e infraestrutura como código
+
+1601. [Trivy: Varredura de vulnerabilidades de imagem por digest](../../domains/software-0009/software/seguranca/trivy-varredura-de-vulnerabilidades-de-imagem-por-digest.md)
+1602. [Trivy: Escolha explícita de scanners](../../domains/software-0009/software/seguranca/trivy-escolha-explicita-de-scanners.md)
+1603. [Trivy: Misconfiguração em Terraform e Kubernetes](../../domains/software-0009/software/seguranca/trivy-misconfiguracao-em-terraform-e-kubernetes.md)
+1604. [Trivy: Segredos na configuração da imagem](../../domains/software-0009/software/seguranca/trivy-segredos-na-configuracao-da-imagem.md)
+1605. [Trivy: Análise do sistema de arquivos do repositório](../../domains/software-0009/software/seguranca/trivy-analise-do-sistema-de-arquivos-do-repositorio.md)
+1606. [Trivy: Scanner de licenças e inventário](../../domains/software-0009/software/seguranca/trivy-scanner-de-licencas-e-inventario.md)
+1607. [Trivy: Relatórios JSON e SARIF em CI](../../domains/software-0009/software/seguranca/trivy-relatorios-json-e-sarif-em-ci.md)
+1608. [Trivy: Exceções de vulnerabilidade com justificativa](../../domains/software-0009/software/seguranca/trivy-excecoes-de-vulnerabilidade-com-justificativa.md)
+1609. [Trivy: Atualização e cache das bases de dados](../../domains/software-0009/software/seguranca/trivy-atualizacao-e-cache-das-bases-de-dados.md)
+1610. [Trivy: Priorização de remediação pela classe do achado](../../domains/software-0009/software/seguranca/trivy-priorizacao-de-remediacao-pela-classe-do-achado.md)
+
+### Syft — gerador de SBOM que cataloga pacotes de imagens, diretórios, arquivos de imagem e outros alvos suportados
+
+1611. [Syft: Escolha de origem entre imagem, diretório e arquivo](../../domains/software-0009/software/seguranca/syft-escolha-de-origem-entre-imagem-diretorio-e-arquivo.md)
+1612. [Syft: Catalogadores de pacotes declarados e instalados](../../domains/software-0009/software/seguranca/syft-catalogadores-de-pacotes-declarados-e-instalados.md)
+1613. [Syft: Seleção restrita de catalogadores](../../domains/software-0009/software/seguranca/syft-selecao-restrita-de-catalogadores.md)
+1614. [Syft: Exportação de SBOM CycloneDX e SPDX](../../domains/software-0009/software/seguranca/syft-exportacao-de-sbom-cyclonedx-e-spdx.md)
+1615. [Syft: Identificadores Package URL e correspondência](../../domains/software-0009/software/seguranca/syft-identificadores-package-url-e-correspondencia.md)
+1616. [Syft: Proveniência e metadados da origem](../../domains/software-0009/software/seguranca/syft-proveniencia-e-metadados-da-origem.md)
+1617. [Syft: Identificação de distribuição do sistema operacional](../../domains/software-0009/software/seguranca/syft-identificacao-de-distribuicao-do-sistema-operacional.md)
+1618. [Syft: Pacotes descobertos em binários](../../domains/software-0009/software/seguranca/syft-pacotes-descobertos-em-binarios.md)
+1619. [Syft: Reprodutibilidade do SBOM no pipeline](../../domains/software-0009/software/seguranca/syft-reprodutibilidade-do-sbom-no-pipeline.md)
+1620. [Syft: Comparação entre inventário de fonte e artefato](../../domains/software-0009/software/seguranca/syft-comparacao-entre-inventario-de-fonte-e-artefato.md)
+
+### Grype — scanner de vulnerabilidades para imagens, sistemas de arquivos e SBOMs, incluindo pacotes de sistema operacional e linguagens
+
+1621. [Grype: Scan direto de imagem de container](../../domains/software-0009/software/seguranca/grype-scan-direto-de-imagem-de-container.md)
+1622. [Grype: Análise de SBOM Syft](../../domains/software-0009/software/seguranca/grype-analise-de-sbom-syft.md)
+1623. [Grype: Scan de sistema de arquivos](../../domains/software-0009/software/seguranca/grype-scan-de-sistema-de-arquivos.md)
+1624. [Grype: Correspondência de ecossistemas e versões](../../domains/software-0009/software/seguranca/grype-correspondencia-de-ecossistemas-e-versoes.md)
+1625. [Grype: Atualização e estado da base local](../../domains/software-0009/software/seguranca/grype-atualizacao-e-estado-da-base-local.md)
+1626. [Grype: Triagem por severidade e contexto](../../domains/software-0009/software/seguranca/grype-triagem-por-severidade-e-contexto.md)
+1627. [Grype: Uso de OpenVEX para explicitar status](../../domains/software-0009/software/seguranca/grype-uso-de-openvex-para-explicitar-status.md)
+1628. [Grype: Filtros e exceções com rastreabilidade](../../domains/software-0009/software/seguranca/grype-filtros-e-excecoes-com-rastreabilidade.md)
+1629. [Grype: Saídas JSON e SARIF](../../domains/software-0009/software/seguranca/grype-saidas-json-e-sarif.md)
+1630. [Grype: Diferenciar finding de explorabilidade](../../domains/software-0009/software/seguranca/grype-diferenciar-finding-de-explorabilidade.md)
+
+### Sigstore Cosign — ferramenta de assinatura, verificação e atestação de artefatos OCI e blobs com suporte a chaves e identidade OIDC
+
+1631. [Sigstore Cosign: Assinatura de imagem por digest](../../domains/software-0009/software/seguranca/cosign-assinatura-de-imagem-por-digest.md)
+1632. [Sigstore Cosign: Assinatura keyless com OIDC](../../domains/software-0009/software/seguranca/cosign-assinatura-keyless-com-oidc.md)
+1633. [Sigstore Cosign: Verificação por identidade e issuer](../../domains/software-0009/software/seguranca/cosign-verificacao-por-identidade-e-issuer.md)
+1634. [Sigstore Cosign: Verificação de claim de digest](../../domains/software-0009/software/seguranca/cosign-verificacao-de-claim-de-digest.md)
+1635. [Sigstore Cosign: Armazenamento de assinatura como OCI referrer](../../domains/software-0009/software/seguranca/cosign-armazenamento-de-assinatura-como-oci-referrer.md)
+1636. [Sigstore Cosign: Atestação de metadados de build](../../domains/software-0009/software/seguranca/cosign-atestacao-de-metadados-de-build.md)
+1637. [Sigstore Cosign: Verificação de atestação por política](../../domains/software-0009/software/seguranca/cosign-verificacao-de-atestacao-por-politica.md)
+1638. [Sigstore Cosign: Chaves locais e KMS](../../domains/software-0009/software/seguranca/cosign-chaves-locais-e-kms.md)
+1639. [Sigstore Cosign: Assinatura de blobs e bundles](../../domains/software-0009/software/seguranca/cosign-assinatura-de-blobs-e-bundles.md)
+1640. [Sigstore Cosign: Política de confiança no deploy](../../domains/software-0009/software/seguranca/cosign-politica-de-confianca-no-deploy.md)
+
+### Open Policy Agent (OPA) — motor de políticas que avalia dados estruturados com Rego e pode ser integrado a serviços e pipelines
+
+1641. [Open Policy Agent (OPA): Modelagem da decisão em Rego](../../domains/software-0009/software/seguranca/opa-modelagem-da-decisao-em-rego.md)
+1642. [Open Policy Agent (OPA): Separação entre input e data](../../domains/software-0009/software/seguranca/opa-separacao-entre-input-e-data.md)
+1643. [Open Policy Agent (OPA): Consulta local com `opa eval`](../../domains/software-0009/software/seguranca/opa-consulta-local-com-opa-eval.md)
+1644. [Open Policy Agent (OPA): Testes unitários `opa test`](../../domains/software-0009/software/seguranca/opa-testes-unitarios-opa-test.md)
+1645. [Open Policy Agent (OPA): Formato e lint de módulos Rego](../../domains/software-0009/software/seguranca/opa-formato-e-lint-de-modulos-rego.md)
+1646. [Open Policy Agent (OPA): Bundles versionados de políticas](../../domains/software-0009/software/seguranca/opa-bundles-versionados-de-politicas.md)
+1647. [Open Policy Agent (OPA): Integração via API de decisão](../../domains/software-0009/software/seguranca/opa-integracao-via-api-de-decisao.md)
+1648. [Open Policy Agent (OPA): Trilha de decisão e logs](../../domains/software-0009/software/seguranca/opa-trilha-de-decisao-e-logs.md)
+1649. [Open Policy Agent (OPA): Compilação de política para WebAssembly](../../domains/software-0009/software/seguranca/opa-compilacao-de-politica-para-webassembly.md)
+1650. [Open Policy Agent (OPA): Cobertura de regras e cenários negativos](../../domains/software-0009/software/seguranca/opa-cobertura-de-regras-e-cenarios-negativos.md)
+
+### Kyverno — motor de políticas Kubernetes que valida, modifica, gera e verifica configurações e imagens em recursos
+
+1651. [Kyverno: Validação de recursos no admission](../../domains/software-0009/software/seguranca/kyverno-validacao-de-recursos-no-admission.md)
+1652. [Kyverno: Mutação de defaults seguros](../../domains/software-0009/software/seguranca/kyverno-mutacao-de-defaults-seguros.md)
+1653. [Kyverno: Geração de recursos auxiliares](../../domains/software-0009/software/seguranca/kyverno-geracao-de-recursos-auxiliares.md)
+1654. [Kyverno: Verificação de imagens assinadas](../../domains/software-0009/software/seguranca/kyverno-verificacao-de-imagens-assinadas.md)
+1655. [Kyverno: Ação de validação Audit versus Enforce](../../domains/software-0009/software/seguranca/kyverno-acao-de-validacao-audit-versus-enforce.md)
+1656. [Kyverno: Políticas em CEL e migração](../../domains/software-0009/software/seguranca/kyverno-politicas-em-cel-e-migracao.md)
+1657. [Kyverno: Escopo por recurso e namespace](../../domains/software-0009/software/seguranca/kyverno-escopo-por-recurso-e-namespace.md)
+1658. [Kyverno: Relatórios de violações e política](../../domains/software-0009/software/seguranca/kyverno-relatorios-de-violacoes-e-politica.md)
+1659. [Kyverno: Exceções de política governadas](../../domains/software-0009/software/seguranca/kyverno-excecoes-de-politica-governadas.md)
+1660. [Kyverno: Teste local de políticas antes do cluster](../../domains/software-0009/software/seguranca/kyverno-teste-local-de-politicas-antes-do-cluster.md)
+
+### Falco — motor de detecção em runtime que avalia streams de eventos contra regras de comportamento anômalo
+
+1661. [Falco: Fonte de eventos syscall](../../domains/software-0009/software/seguranca/falco-fonte-de-eventos-syscall.md)
+1662. [Falco: Fontes de eventos via plugins](../../domains/software-0009/software/seguranca/falco-fontes-de-eventos-via-plugins.md)
+1663. [Falco: Condição e saída da regra](../../domains/software-0009/software/seguranca/falco-condicao-e-saida-da-regra.md)
+1664. [Falco: Macros e listas reutilizáveis](../../domains/software-0009/software/seguranca/falco-macros-e-listas-reutilizaveis.md)
+1665. [Falco: Maturidade e seleção das regras](../../domains/software-0009/software/seguranca/falco-maturidade-e-selecao-das-regras.md)
+1666. [Falco: Saída estruturada e encaminhamento](../../domains/software-0009/software/seguranca/falco-saida-estruturada-e-encaminhamento.md)
+1667. [Falco: Contexto de container e namespace](../../domains/software-0009/software/seguranca/falco-contexto-de-container-e-namespace.md)
+1668. [Falco: Exceções e redução de ruído](../../domains/software-0009/software/seguranca/falco-excecoes-e-reducao-de-ruido.md)
+1669. [Falco: Privilégio de coleta e superfície do agente](../../domains/software-0009/software/seguranca/falco-privilegio-de-coleta-e-superficie-do-agente.md)
+1670. [Falco: Validação de alerta antes do rollout](../../domains/software-0009/software/seguranca/falco-validacao-de-alerta-antes-do-rollout.md)
+
+### Checkov — analisador de configuração para infraestrutura como código e artefatos cloud-native com checks embutidos e personalizados
+
+1671. [Checkov: Análise de Terraform no repositório](../../domains/software-0009/software/seguranca/checkov-analise-de-terraform-no-repositorio.md)
+1672. [Checkov: Análise de plano Terraform](../../domains/software-0009/software/seguranca/checkov-analise-de-plano-terraform.md)
+1673. [Checkov: Checks para Kubernetes e Helm](../../domains/software-0009/software/seguranca/checkov-checks-para-kubernetes-e-helm.md)
+1674. [Checkov: Análise de Dockerfile e imagens](../../domains/software-0009/software/seguranca/checkov-analise-de-dockerfile-e-imagens.md)
+1675. [Checkov: Supressão inline de finding](../../domains/software-0009/software/seguranca/checkov-supressao-inline-de-finding.md)
+1676. [Checkov: Políticas customizadas](../../domains/software-0009/software/seguranca/checkov-politicas-customizadas.md)
+1677. [Checkov: Formato JSON e SARIF](../../domains/software-0009/software/seguranca/checkov-formato-json-e-sarif.md)
+1678. [Checkov: Baseline de findings existentes](../../domains/software-0009/software/seguranca/checkov-baseline-de-findings-existentes.md)
+1679. [Checkov: Seleção por diretório e framework](../../domains/software-0009/software/seguranca/checkov-selecao-por-diretorio-e-framework.md)
+1680. [Checkov: Gates de CI por política](../../domains/software-0009/software/seguranca/checkov-gates-de-ci-por-politica.md)
+
+### kube-bench — ferramenta que audita a configuração de nós e componentes Kubernetes segundo checks de benchmarks CIS
+
+1681. [kube-bench: Alinhar versão do benchmark](../../domains/software-0009/software/seguranca/kube-bench-alinhar-versao-do-benchmark.md)
+1682. [kube-bench: Separar checks por papel do nó](../../domains/software-0009/software/seguranca/kube-bench-separar-checks-por-papel-do-no.md)
+1683. [kube-bench: Estrutura dos controles YAML](../../domains/software-0009/software/seguranca/kube-bench-estrutura-dos-controles-yaml.md)
+1684. [kube-bench: Interpretação de audit e test_items](../../domains/software-0009/software/seguranca/kube-bench-interpretacao-de-audit-e-test-items.md)
+1685. [kube-bench: Execução seletiva por IDs](../../domains/software-0009/software/seguranca/kube-bench-execucao-seletiva-por-ids.md)
+1686. [kube-bench: Diferença entre fail e warning](../../domains/software-0009/software/seguranca/kube-bench-diferenca-entre-fail-e-warning.md)
+1687. [kube-bench: Saídas JSON e JUnit](../../domains/software-0009/software/seguranca/kube-bench-saidas-json-e-junit.md)
+1688. [kube-bench: Remediações como plano de mudança](../../domains/software-0009/software/seguranca/kube-bench-remediacoes-como-plano-de-mudanca.md)
+1689. [kube-bench: Acesso e ambiente de execução](../../domains/software-0009/software/seguranca/kube-bench-acesso-e-ambiente-de-execucao.md)
+1690. [kube-bench: Exceções para plataforma gerenciada](../../domains/software-0009/software/seguranca/kube-bench-excecoes-para-plataforma-gerenciada.md)
+
+### OWASP ASVS — padrão aberto de requisitos para verificar controles técnicos de segurança em aplicações web
+
+1691. [OWASP ASVS: Fixar versão do ASVS no contrato](../../domains/software-0009/software/seguranca/asvs-fixar-versao-do-asvs-no-contrato.md)
+1692. [OWASP ASVS: Escolher nível de verificação](../../domains/software-0009/software/seguranca/asvs-escolher-nivel-de-verificacao.md)
+1693. [OWASP ASVS: Mapear requisitos a user stories](../../domains/software-0009/software/seguranca/asvs-mapear-requisitos-a-user-stories.md)
+1694. [OWASP ASVS: Validação de entrada e codificação de saída](../../domains/software-0009/software/seguranca/asvs-validacao-de-entrada-e-codificacao-de-saida.md)
+1695. [OWASP ASVS: Requisitos de autenticação](../../domains/software-0009/software/seguranca/asvs-requisitos-de-autenticacao.md)
+1696. [OWASP ASVS: Autorização e controle de acesso](../../domains/software-0009/software/seguranca/asvs-autorizacao-e-controle-de-acesso.md)
+1697. [OWASP ASVS: Proteção de dados e criptografia](../../domains/software-0009/software/seguranca/asvs-protecao-de-dados-e-criptografia.md)
+1698. [OWASP ASVS: Evidência de testes automatizados e manuais](../../domains/software-0009/software/seguranca/asvs-evidencia-de-testes-automatizados-e-manuais.md)
+1699. [OWASP ASVS: Rastreio de requisito não aplicável](../../domains/software-0009/software/seguranca/asvs-rastreio-de-requisito-nao-aplicavel.md)
+1700. [OWASP ASVS: Uso do padrão em aquisição de software](../../domains/software-0009/software/seguranca/asvs-uso-do-padrao-em-aquisicao-de-software.md)
