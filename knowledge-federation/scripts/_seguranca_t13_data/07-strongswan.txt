@@ -1,0 +1,150 @@
+SOURCES: https://raw.githubusercontent.com/strongswan/strongswan/master/README.md | https://docs.strongswan.org/docs/latest/swanctl/swanctlConf.html
+
+===NOTE===
+1261|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux|Arquitetura Moderna do **strongSwan (`strongswan/strongswan`)**: Daemon **`charon`**, Protocolo **`vici`** e Configuração Declarativa **`swanctl.conf`**|Quando uma empresa precisa fechar um túnel **IPsec / IKEv2** padronizado pela IETF com gateways de nuvem (**AWS Site-to-Site VPN**, **Google Cloud VPN**, **Azure VPN Gateway**), firewalls corporativos (FortiGate, Palo Alto, Cisco) ou clientes nativos de Windows, macOS, iOS e Android (que já vêm com cliente IKEv2 embutido de fábrica no sistema operacional!), qual é a solução open-source padrão mundial no Linux?|O **strongSwan** consolida o plano de controle IKEv2 em espaço de usuário com o plano de dados XFRM de altíssima vazão no Kernel Linux.|Nas versões modernas (5.x/6.x), o strongSwan abandonou o antigo formato legado `ipsec.conf` / `ipsec.secrets` (`starter` / `stroke`) em favor de uma arquitetura moderna, modular e totalmente programável composta por três elementos: **(1) O daemon IKE `charon` (`charon-systemd`)**, que negocia as associações de segurança **IKEv2 (`RFC 7296`, UDP 500 / 4500 NAT-T)** em espaço de usuário e instala as chaves de criptografia de pacotes **ESP (`Encapsulating Security Payload`)** diretamente no subsistema **XFRM do Kernel Linux** via Netlink; **(2) O protocolo IPC `vici` (*Versatile IKE Configuration Interface*)**; e **(3) A ferramenta de controle `swanctl`**, que lê o arquivo declarativo **`/etc/swanctl/swanctl.conf`**!|```bash
+# Carregar todas as configuracoes, certificados e credenciais de /etc/swanctl/swanctl.conf no daemon charon via protocolo vici
+swanctl --load-all
+swanctl --stats
+```|Por que o Kernel Linux processa o tráfego de dados do **IPsec (`ESP` via XFRM)** em velocidades de dezenas de Gigabits por segundo? Porque o daemon `charon` em espaço de usuário atua **apenas no plano de controle** (autenticando os pares, negociando IKEv2 e fazendo o *rekeying* periódico das chaves); uma vez que as chaves `AES-GCM-256` ou `ChaCha20-Poly1305` são instaladas na tabela XFRM do kernel, **100% dos pacotes IP são cifrados e decifrados diretamente dentro do Kernel Linux com aceleração de hardware (`AES-NI`) ou offloading de placa de rede (`XFRM Hardware Offload`)**!|Nunca misture o legado `ipsec.conf` com o moderno `swanctl.conf` no mesmo servidor: instale e utilize exclusivamente os pacotes `strongswan-swanctl` e `charon-systemd`.|strongswan-estrutura-swanctl-conf-connections-children-secrets-pools, strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap, wireguard-arquitetura-protocolo-vpn-kernel-noise-ikpsk2-criptografia
+
+===NOTE===
+1262|strongswan-estrutura-swanctl-conf-connections-children-secrets-pools|Anatomia do **`/etc/swanctl/swanctl.conf`**: As 4 Seções Principais (**`connections`, `children`, `secrets`, `pools`**) e Diretórios `/etc/swanctl/x509*`|Como é organizado o arquivo de configuração declarativo **`/etc/swanctl/swanctl.conf`** e a hierarquia de diretórios de chaves e certificados de `/etc/swanctl/` no strongSwan moderno?|O arquivo `swanctl.conf` é estruturado em **quatro seções de topo** claras e legíveis: **(1) `connections { ... }`** — define os túneis **IKE SA (Fase 1)**, especificando `version = 2` (IKEv2!), endereços `local_addrs` / `remote_addrs`, propostas criptográficas `proposals` e blocos de autenticação `local { auth = ... }` e `remote { auth = ... }`; **(2) `children { ... }` (aninhado dentro de cada conexão)** — define os túneis de dados **CHILD SA / ESP (Fase 2)**, especificando seletores de tráfego `local_ts` e `remote_ts`, `esp_proposals` e a ação inicial `start_action = trap|start|none`; **(3) `secrets { ... }`** — define chaves pré-compartilhadas (`ike-...`), credenciais EAP ou senhas de chaves privadas; e **(4) `pools { ... }`** — define pools de IPs virtuais para clientes Roadwarrior!|Além disso, o `swanctl --load-creds` carrega automaticamente certificados e chaves dos subdiretórios padronizados: **`/etc/swanctl/x509/`** (certificados locais), **`/etc/swanctl/x509ca/`** (Autoridades Certificadoras raiz/intermediárias confiáveis!), **`/etc/swanctl/x509crl/`** e **`/etc/swanctl/private/`** (chaves privadas com permissão `0600`)!|```text
+# Estrutura essencial de /etc/swanctl/swanctl.conf com IKEv2 (version = 2), autenticacao mútua por certificado X.509 e Child SA ESP
+connections {
+    matriz-filial {
+        version = 2
+        local_addrs  = 198.51.100.10
+        remote_addrs = 203.0.113.20
+        proposals = aes256gcm16-prfsha384-ecp384
+        local {
+            auth = pubkey
+            certs = gateway-matriz.pem
+            id = matriz.vpn.exemplo.br
+        }
+        remote {
+            auth = pubkey
+            id = filial.vpn.exemplo.br
+        }
+        children {
+            rede-interna {
+                local_ts  = 10.1.0.0/16
+                remote_ts = 10.2.0.0/16
+                esp_proposals = aes256gcm16-ecp384
+                start_action = trap
+            }
+        }
+    }
+}
+```|Sempre defina explicitamente **`version = 2`** em todas as conexões do `swanctl.conf` para aceitar exclusivamente o protocolo moderno **IKEv2 (`RFC 7296`)** e rejeitar negociações legadas IKEv1!|Ao editar apenas as conexões, você pode recarregar sem afetar túneis ativos usando **`swanctl --load-conns`**!|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap, strongswan-suites-criptograficas-proposals-aes-gcm-chacha20-pfs-dh
+
+===NOTE===
+1263|strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap|VPN **Site-to-Site IKEv2** com strongSwan: Geração de PKI com **`pki`**, Autenticação Mútua X.509 (`auth = pubkey`) e Sob Demanda (**`start_action = trap`**)|Ao conectar duas redes corporativas ou VPCs de nuvem via **Site-to-Site IPsec VPN**, por que usar **Autenticação Mútua por Certificados X.509 (`auth = pubkey`)** em vez de senhas pré-compartilhadas (`PSK`), e o que faz a diretiva **`start_action = trap`**?|Com **Certificados X.509 emitidos por uma CA interna dedicada**, cada gateway possui sua própria chave privada exclusiva (`ECDSA P-384` ou `Ed25519`), eliminando o compartilhamento de segredos simétricos (`PSK`) e permitindo adicionar ou revogar filiais sem tocar na configuração dos demais gateways! O próprio strongSwan inclui a ferramenta oficial de linha de comando **`pki`** (`pki --gen`, `pki --self`, `pki --pub`, `pki --issue`) para criar a CA raiz e emitir os certificados dos gateways com a extensão obrigatória **`--flag serverAuth`** e **`--san <fqdn_ou_ip>`**!|Já a diretiva **`start_action = trap`** no bloco `children` instala imediatamente as **Políticas de Segurança (`XFRM Trap Policies`)** no Kernel Linux: no exato milissegundo em que o primeiro pacote IP da sub-rede `10.1.0.0/16` tenta sair rumo a `10.2.0.0/16`, o Kernel Linux avisa o daemon `charon`, que fecha o túnel IKEv2/ESP automaticamente sob demanda!|```bash
+# Gerar uma chave privada Ed25519 e emitir um certificado de gateway VPN com a ferramenta nativa 'pki' do strongSwan
+pki --gen --type ed25519 --outform pem > /etc/swanctl/private/gw-matrizKey.pem
+chmod 600 /etc/swanctl/private/gw-matrizKey.pem
+swanctl --list-Pols
+```|Combine sempre **`start_action = trap`** com **`dpd_delay = 30s`** (*Dead Peer Detection* no bloco da conexão): assim o strongSwan envia *keepalives* IKEv2 a cada 30 segundos quando não há tráfego de retorno e renegocia a Child SA automaticamente se o link WAN do parceiro oscilar!|Verifique no firewall (`nftables` / `iptables` / Security Group) que as portas **UDP `500`** (IKE), **UDP `4500`** (NAT-Traversal) e o protocolo IP **`50` (`ESP`)** estão liberados entre os IPs públicos dos dois gateways.|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-estrutura-swanctl-conf-connections-children-secrets-pools, strongswan-interfaces-xfrm-route-based-vpn-if-id-bgp-ospf
+
+===NOTE===
+1264|strongswan-roadwarrior-virtual-ip-pools-eap-tls-eap-mschapv2|VPN de Acesso Remoto (**Roadwarrior**) com strongSwan: **Virtual IP `pools`**, `local_ts = 0.0.0.0/0` e Clientes Nativos (**Windows, macOS, iOS, Android**)|Uma das maiores vantagens operacionais do **strongSwan com IKEv2** para acesso remoto de funcionários (**Roadwarrior VPN**) é que **Windows 10/11, macOS, iOS, iPadOS e Android já possuem clientes IKEv2 nativos embutidos no próprio sistema operacional**, dispensando a instalação e atualização de softwares de terceiros nas estações!|Além de simplificar a distribuição em toda a frota, o suporte nativo do sistema operacional permite reconexão transparente (*MOBIKE* `RFC 4555`) quando o notebook ou celular alterna entre Wi-Fi e 5G.|Como configurar um gateway Roadwarrior no `swanctl.conf`? **(1)** Na seção **`pools`**, você define a faixa de IPs virtuais internos (`addrs = 10.10.10.0/24`) e os servidores DNS internos (`dns = 10.1.0.53`) que serão atribuídos aos clientes conectados; **(2)** Na conexão `rw`, você referencia **`pools = rw_pool`** (que instrui o strongSwan a responder ao *Configuration Payload (`CP`)* do cliente entregando um IP `/32` do pool!) e deixas `remote_ts` em branco (pois o strongSwan substitui automaticamente `remote_ts` pelo IP virtual atribuído ao cliente!); e **(3)** Na autenticação do cliente (`remote`), você exige **Certificado de Cliente (`auth = pubkey` / `eap-tls`)** ou **EAP (`auth = eap-mschapv2` / `eap-radius`)** integrado ao FreeRADIUS/Active Directory!|```text
+# Exemplo de bloco Roadwarrior com Virtual IP Pool no /etc/swanctl/swanctl.conf
+connections {
+    rw-corporativo {
+        version = 2
+        pools = pool-clientes-vpn
+        send_cert = always
+        local {
+            auth = pubkey
+            certs = vpn-gateway.pem
+            id = vpn.empresa.exemplo.br
+        }
+        remote {
+            auth = eap-tls
+        }
+        children {
+            acesso-interno {
+                local_ts = 10.1.0.0/16
+                esp_proposals = aes256gcm16-ecp384
+            }
+        }
+    }
+}
+pools {
+    pool-clientes-vpn {
+        addrs = 10.10.10.10-10.10.10.250
+        dns = 10.1.0.53
+    }
+}
+```|Atenção aos requisitos exigidos pelos clientes nativos IKEv2 do **Windows 11, macOS e iOS** sobre o certificado X.509 do gateway (`vpn-gateway.pem`): **(1)** Ele **deve** conter o FQDN exato do servidor na extensão **`subjectAltName` (`--san vpn.empresa.exemplo.br`)**; **(2)** Ele **deve** conter a extensão Extended Key Usage **`serverAuth` (`1.3.6.1.5.5.7.3.1` / `--flag serverAuth`)**; e **(3)** Deve-se configurar **`send_cert = always`** na conexão para que o gateway sempre envie o certificado completo no handshake IKE_AUTH!|Para máxima segurança Zero Trust sem senhas, utilize **`auth = eap-tls`** (ou `auth = pubkey`) com certificados de cliente gravados em **YubiKey PIV / Smartcard / TPM**!|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-estrutura-swanctl-conf-connections-children-secrets-pools, strongswan-integracao-hardware-tpm2-pkcs11-hsm-protecao-chaves
+
+===NOTE===
+1265|strongswan-suites-criptograficas-proposals-aes-gcm-chacha20-pfs-dh|Engenharia Criptográfica no strongSwan: Configurando **`proposals`** e **`esp_proposals`** com AEAD (**`aes256gcm16`**, **`chacha20poly1305`**) e **PFS (`ecp384`, `curve25519`)**|Qual é o perigo de não definir explicitamente as diretivas **`proposals`** (na conexão IKE) e **`esp_proposals`** (no bloco `children`) ou de aceitar algoritmos legados como `3des`, `aes128-sha1` ou `modp1024` (DH Group 2 / 5)?|Algoritmos legados sem autenticação integrada (*non-AEAD* ou grupos Diffie-Hellman abaixo de 2048 bits) são lentos em software e vulneráveis a ataques criptográficos ou de downgrade! No strongSwan moderno, toda proposta criptográfica é uma string separada por hífens que combina: **(1) Cifra AEAD (`aes256gcm16` ou `chacha20poly1305`)**, **(2) Pseudo-Random Function (`prfsha384` ou `prfsha256`, usada apenas no IKE SA)** e **(3) Grupo Diffie-Hellman de Curva Elíptica (`ecp384` = NIST P-384 / DH Group 20, ou `curve25519` = X25519 / DH Group 31)**!|Ponto crítico de segurança: **SEMPRE inclua o grupo Diffie-Hellman (`ecp384` ou `curve25519`) também dentro de `esp_proposals` (na Child SA)**! Por quê? Porque é a presença do grupo DH em `esp_proposals` que habilita o **Perfect Forward Secrecy (PFS)** a cada *rekey* periódico (`rekey_time = 1h`) do túnel de dados ESP — garantindo que cada hora de tráfego use um segredo efêmero novo e independente!|```bash
+# Listar todos os algoritmos criptograficos AEAD, PRFs e grupos Diffie-Hellman (ECDH / ML-KEM) carregados pelos plugins do strongSwan
+swanctl --list-algs
+```|Por que usar cifras **AEAD (`aes256gcm16` ou `chacha20poly1305`)** em `esp_proposals` é duplamente superior ao antigo `aes256-sha256` (CBC + HMAC separado)? Porque além de ser imune a oráculos de padding, a instrução `AES-GCM` das CPUs modernas calcula a criptografia e a tag de autenticidade de 128 bits (`16` bytes) **em uma única passada de hardware**, reduzindo pela metade a latência e o uso de CPU do Kernel Linux!|Em dispositivos ARM/móveis sem aceleração AES por hardware, inclua `chacha20poly1305-prfsha256-curve25519` como opção na lista de propostas.|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-criptografia-pos-quantica-pqc-ikev2-rfc9370-ml-kem-hibrido, openssl-arquitetura-providers-openssl3-default-fips-legacy-cnf
+
+===NOTE===
+1266|strongswan-criptografia-pos-quantica-pqc-ikev2-rfc9370-ml-kem-hibrido|VPNs **Pós-Quânticas Híbridas (PQC)** no strongSwan: Implementando **RFC 9370 (*Multiple Key Exchanges in IKEv2*)** com **ML-KEM (`ke1_mlkem768` / `mlkem1024`)**|Qual é a maior ameaça de longo prazo contra túneis VPN IPsec/IKEv2 que transportam segredos industriais, financeiros, diplomáticos ou de estado? O ataque **"Harvest Now, Decrypt Later" (*Coletar Agora, Descriptografar Depois*)**: um adversário intercepta e grava hoje na internet o handshake IKEv2 e os pacotes ESP cifrados; quando computadores quânticos criptograficamente relevantes (CRQCs) estiverem disponíveis, o algoritmo de Shor quebrará retroativamente a troca de chaves clássica ECDH (`ecp384`/`curve25519`) e descriptografará todo o tráfego gravado!|O **strongSwan (6.0+)** é pioneiro mundial na implementação da **RFC 9370 (*Multiple Key Exchanges in IKEv2*)** e do padrão pós-quântico do NIST **FIPS 203 (`ML-KEM`, antigo Crystals-Kyber)**!|Como funciona a proposta híbrida no `swanctl.conf`? Você combina a troca de chaves clássica (**`ecp384` ou `curve25519`**) com até 7 trocas de chaves adicionais (`ke1_...` a `ke7_...`) usando **`ke1_mlkem768`** ou **`ke1_mlkem1024`**: **`proposals = aes256gcm16-prfsha384-ecp384-ke1_mlkem768`**! O segredo final do túnel é derivado da combinação criptográfica de **ambos** os algoritmos (ECDH clássico + ML-KEM pós-quântico via troca `IKE_INTERMEDIATE`), garantindo segurança mesmo que um dos dois paradigmas matemáticos sofra qualquer avanço futuro!|```text
+# Configuracao de proposta IKEv2 e ESP Hibrida Pos-Quantica (ECDH P-384 + NIST FIPS 203 ML-KEM-768 / ML-KEM-1024 via RFC 9370) no swanctl.conf
+connections {
+    tunel-pqc-hibrido {
+        version = 2
+        proposals = aes256gcm16-prfsha384-ecp384-ke1_mlkem768
+        children {
+            dados-criticos {
+                esp_proposals = aes256gcm16-ecp384-ke1_mlkem768
+            }
+        }
+    }
+}
+```|Como as chaves públicas e *ciphertexts* do **ML-KEM-768 / ML-KEM-1024** têm mais de 1.000 bytes (podendo ultrapassar o MTU UDP padrão de 1.500 bytes na internet), o strongSwan habilita por padrão nas conexões IKEv2 a diretiva **`fragmentation = yes` (`RFC 7383` — *IKEv2 Message Fragmentation*)**, fragmentando os pacotes IKE ao nível da aplicação antes do envio UDP para que nunca sejam descartados por firewalls no caminho!|Verifique com `swanctl --list-algs | grep -i mlkem` se o plugin de suporte a `mlkem` (nativo ou via `openssl` / `oqs` / `wolfssl`) está ativo na sua versão do strongSwan.|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-suites-criptograficas-proposals-aes-gcm-chacha20-pfs-dh, openssl-arquitetura-providers-openssl3-default-fips-legacy-cnf
+
+===NOTE===
+1267|strongswan-interfaces-xfrm-route-based-vpn-if-id-bgp-ospf|VPN Baseada em Rota (**Route-Based VPN**) no strongSwan: Interfaces Virtuais do Kernel Linux (**XFRM Interfaces `xfrmi`** com **`if_id_in` / `if_id_out`**) e BGP/OSPF|Qual é a diferença arquitetural entre uma **VPN Baseada em Política (*Policy-Based IPsec*)** tradicional e uma **VPN Baseada em Rota (*Route-Based IPsec*)**, e por que arquitetos de rede e engenheiros de nuvem preferem **Route-Based VPNs com Interfaces XFRM (`xfrmi`)**?|Na VPN tradicional baseada em política, você precisa declarar estaticamente todas as sub-redes em `local_ts` e `remote_ts`, e o roteamento acontece "por fora" da tabela de rotas normal do Linux (`ip route`), dificultando o uso de protocolos de roteamento dinâmico (**BGP / OSPF com FRRouting ou BIRD**), ECMP (*Equal-Cost Multi-Path*) e regras de firewall por interface!|A partir do Kernel Linux 4.19+ e do strongSwan moderno, você cria uma **Interface Virtual XFRM (`ip link add ipsec0 type xfrm dev eth0 if_id 42`)** e configura na seção `children` (ou na conexão) do `swanctl.conf`: **`if_id_in = 42`**, **`if_id_out = 42`**, **`local_ts = 0.0.0.0/0, ::/0`** e **`remote_ts = 0.0.0.0/0, ::/0`**! Com isso, toda a decisão de qual tráfego entra no túnel passa a ser controlada simplesmente pela **tabela de rotas padrão do Linux (`ip route add 10.2.0.0/16 dev ipsec0`) ou por uma sessão BGP fechada diretamente sobre a interface `ipsec0`**!|```bash
+# Criar uma interface virtual XFRM (if_id 42) no Kernel Linux e adicionar uma rota padrão de sub-rede apontando para ela
+ip link add ipsec0 type xfrm dev eth0 if_id 42
+ip addr add 169.254.42.1/30 dev ipsec0
+ip link set ipsec0 up
+ip route add 10.2.0.0/16 dev ipsec0
+```|Por que as **XFRM Interfaces (`type xfrm if_id <N>`)** são muito superiores às antigas interfaces `VTI` (`Virtual Tunnel Interface`)? Porque as interfaces XFRM suportam nativamente **IPv4 e IPv6 simultaneamente (Dual-Stack) na mesma interface**, não exigem consumir IPs públicos de túnel na criação do link e permitem associar múltiplos túneis com `if_id` distintos sobre a mesma placa de rede física!|Além disso, como `ipsec0` é uma interface de rede Linux real, você pode rodar **`tcpdump -ni ipsec0`** para inspecionar o tráfego descriptografado em tempo real e aplicar regras `nftables` (`iifname "ipsec0"`) com clareza total!|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-estrutura-swanctl-conf-connections-children-secrets-pools, strongswan-operacao-diagnostico-swanctl-list-sas-ip-xfrm-tcpdump
+
+===NOTE===
+1268|strongswan-validacao-revogacao-certificados-crl-ocsp-authorities|Autoridades Certificadoras (**`authorities`**), Validação **OCSP / CRL** e Políticas Estritas de Revogação (`revocation = strict`) no strongSwan|O que acontece se o notebook de um funcionário ou o certificado de um gateway de filial for comprometido, você revogar esse certificado na sua Autoridade Certificadora (PKI), mas o seu gateway strongSwan continuar aceitando conexões daquele certificado revogado porque o servidor de revogação OCSP/CRL não foi consultado ou a política padrão era branda?|Para que a revogação de certificados funcione de forma imediata e determinística em uma VPN IPsec, você deve configurar duas coisas no `swanctl.conf`: **(1) A seção de topo `authorities { ... }`**, onde você vincula o certificado da sua CA (`cacert = ca-interna.pem`) às URLs de distribuição de **Lista de Certificados Revogados (`crl_uris = http://pki.interna/ca.crl`)** e/ou ao respondedor **OCSP (`ocsp_uris = http://ocsp.interna:8080`)**; e **(2) A diretiva `revocation = strict`** dentro do bloco `remote { ... }` da conexão!|Por que entender a diferença entre `revocation = relaxed` (o padrão), `ifuri` e **`strict`** é vital? No modo `relaxed`, se o servidor OCSP/CRL estiver temporariamente inacessível na rede, o strongSwan apenas registra um aviso e **permite** o túnel; já no modo **`revocation = strict`**, se o status de não-revogação não puder ser confirmado positivamente via OCSP ou CRL fresca, o strongSwan **bloqueia a conexão (*Fail-Closed*)**!|```text
+# Configurar no /etc/swanctl/swanctl.conf uma Autoridade Certificadora (authorities) com verificacao OCSP e CRL
+authorities {
+    pki-corporativa {
+        cacert = ca-raiz-corporativa.pem
+        ocsp_uris = http://ocsp.pki.exemplo.br
+        crl_uris  = http://crl.pki.exemplo.br/corporativa.crl
+    }
+}
+```|Para evitar que uma oscilação momentânea do servidor HTTP de CRL derrube túneis legítimos quando `revocation = strict` estiver ativo, habilite o cache local de CRLs no plugin `revocation` e configure um job `cron`/systemd timer que baixa periodicamente a CRL atualizada para **`/etc/swanctl/x509crl/`** e roda **`swanctl --load-creds`**!|Use **`swanctl --list-certs --type x509_crl`** para auditar no terminal todas as CRLs atualmente em memória no daemon `charon` e suas datas de validade (`until`).|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap, openssl-operacoes-pki-ca-x509-req-crl-ocsp-automacao
+
+===NOTE===
+1269|strongswan-integracao-hardware-tpm2-pkcs11-hsm-protecao-chaves|Proteção de Chaves Privadas de VPN em Hardware com o strongSwan: Integração Nativa com **TPM 2.0 (`handle`)**, **Smartcards / YubiKey (`PKCS#11`)** e HSMs|Se um invasor conseguir acesso `root` temporário a um servidor de borda Linux que atua como gateway VPN IPsec e copiar o diretório `/etc/swanctl/private/`, como impedir matematicamente que ele consiga roubar a chave privada do gateway VPN e personificar a matriz da empresa a partir de outra máquina?|Armazenando a chave privada do gateway dentro do chip criptográfico de hardware **TPM 2.0 (*Trusted Platform Module*)** da placa-mãe do servidor (ou em um token **YubiKey PIV / Smartcard / HSM via `PKCS#11`**) em vez de salvá-la como um arquivo `.pem` em disco!|O strongSwan possui suporte nativo de primeira classe a **TPM 2.0 (`tpm` plugin + `tss2`)** e a **PKCS#11 (`pkcs11` plugin)**: quando a chave privada RSA/ECDSA é gerada ou selada dentro do objeto persistente do TPM 2.0 (ex.: handle hexadecimal **`0x81010002`**), ela **jamais pode ser exportada do chip físico**. No `swanctl.conf`, basta declarar uma seção `secrets { token-gw { handle = 0x81010002 } }` — toda vez que o daemon `charon` precisa assinar o handshake IKEv2 (`IKE_AUTH`), ele envia o hash do desafio para o chip TPM 2.0 / HSM assinar internamente!|```text
+# Referenciar no /etc/swanctl/swanctl.conf uma chave privada e um certificado X.509 armazenados dentro do chip de hardware TPM 2.0
+connections {
+    matriz-segura {
+        version = 2
+        local {
+            auth = pubkey
+            cert_1 {
+                handle = 0x01800004
+            }
+        }
+    }
+}
+secrets {
+    private-tpm-gateway {
+        handle = 0x81010002
+    }
+}
+```|Você pode inspecionar a chave pública de um objeto do TPM 2.0 diretamente com a ferramenta **`pki --pub --in 0x81010002 --type priv`** do strongSwan para gerar a CSR (*Certificate Signing Request*) sem que a chave privada jamais saia do chip TPM!|Para estações Linux de administradores (Roadwarriors), referenciar `slot = 0` e `module = opensc-pkcs11` na seção `secrets { token-yubikey { ... } }` permite autenticar na VPN IKEv2 exigindo o PIN e a presença física da **YubiKey PIV** na porta USB.|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap, keepassxc-autenticacao-multifator-yubikey-hmac-sha1-keyfile
+
+===NOTE===
+1270|strongswan-operacao-diagnostico-swanctl-list-sas-ip-xfrm-tcpdump|Diagnóstico e Troubleshooting Avançado de Túneis IPsec no Linux: **`swanctl --list-sas`**, **`swanctl --log`**, **`ip -s xfrm state/policy`** e NAT-Traversal (`UDP 4500`)|Quando um túnel VPN IPsec/IKEv2 não sobe na Fase 1 (`IKE SA`), falha nos seletores de tráfego da Fase 2 (`CHILD SA` com erro `TS_UNACCEPTABLE`) ou sobe mas não passa pacotes entre as duas redes, quais são os 4 comandos essenciais de diagnóstico que todo engenheiro de redes e segurança Linux deve dominar?|Primeiro, acompanhe a negociação IKEv2 em tempo real no terminal rodando **`swanctl --log`** em uma aba enquanto dispara a conexão manualmente em outra aba com **`swanctl --initiate --child <nome_child>`**! Segundo, inspecione o estado das SAs negociadas, algoritmos eleitos, SPIs e contadores de bytes/pacotes com **`swanctl --list-sas`**!|Terceiro — e aqui está o segredo para diagnosticar problemas no plano de dados! — consulte diretamente as tabelas **XFRM do Kernel Linux** com **`ip -s xfrm state`** (que mostra as chaves ESP instaladas, contadores de pacotes cifrados/decifrados e se há drops de replay `replay-window` ou integridade!) e **`ip -s xfrm policy`** (que mostra os seletores de tráfego `dir out`, `dir in` e `dir fwd`)!|```bash
+# Inspecionar tuneis ativos, contadores de bytes/pacotes IKEv2 e auditar diretamente as tabelas XFRM de estado e politica no Kernel Linux
+swanctl --list-sas
+ip -s xfrm state
+ip -s xfrm policy
+```|Como entender rapidamente a transição automática para **NAT-Traversal (`UDP 4500`)** na saída do `swanctl --list-sas`? O IKEv2 inicia a negociação na porta **UDP `500`**, mas durante o primeiro par de mensagens (`IKE_SA_INIT`) ambos os lados trocam hashes dos seus IPs/portas (`NAT_DETECTION_SOURCE_IP` / `DESTINATION_IP`); se houver qualquer NAT no caminho (como ocorre em toda VM na AWS/GCP/Azure que possui um IP privado na placa e um Elastic IP anexado externamente!), o strongSwan **flutua automaticamente na mensagem `IKE_AUTH` para a porta UDP `4500` e encapsula todos os pacotes ESP dentro de UDP `4500` (`encap: espinudp`)**!|Se `swanctl --list-sas` mostrar que os contadores de bytes `out` aumentam mas `in` permanece em `0`, verifique se o firewall do outro lado está bloqueando `UDP 4500` ou protocolo `ESP (50)`.|strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux, strongswan-interfaces-xfrm-route-based-vpn-if-id-bgp-ospf, tcpdump-filtros-bpf-avancados-flags-tcp-syn-rst-vlan-icmp-ipv6

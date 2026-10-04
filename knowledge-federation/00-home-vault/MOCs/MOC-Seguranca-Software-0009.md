@@ -11,13 +11,13 @@ updated: 2026-10-03
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1200 notas substantivas (Tranches 1–12, IDs `1–1200`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1300 notas substantivas (Tranches 1–13, IDs `1–1300`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1200 / 2.000 notas válidas (60,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1200**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1200 / 1200** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md))
+- Progresso atual: **1300 / 2.000 notas válidas (65,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1300**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1300 / 1300** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -1603,3 +1603,135 @@ Mapa de conteúdo das **1200 notas substantivas (Tranches 1–12, IDs `1–1200`
 - [[openssh-restricoes-authorized-keys-restrict-command-sftp-chroot]] — Confinamento Granular em **`authorized_keys` (`restrict`, `command=`, `from=`)** e **SFTP Chroot Jail (`internal-sftp` + `ChrootDirectory`)**
 - [[openssh-auditoria-forense-loglevel-verbose-fingerprints-pam-tty]] — Auditoria e Forense de Acessos SSH: **`LogLevel VERBOSE`**, Rastreamento de **Fingerprints `SHA256` de Chaves e Certificados** e Timers de Inatividade (`ChannelTimeout`)
 - [[openssh-auditoria-automatizada-ssh-audit-testes-conformidade-cicd]] — Auditoria Automatizada de Servidores e Clientes OpenSSH: Inspecionando Banners, Algoritmos KEX/Ciphers/MACs e Prevenindo Regressões
+
+## Tranche 13 (IDs 1201–1300)
+
+### KeePassXC (keepassxreboot/keepassxc) — Gerenciamento de Cofres de Credenciais Offline KDBX 4 (Argon2id/ChaCha20), YubiKey HMAC-SHA1, ssh-agent, keepassxc-cli e Passkeys
+
+- [[keepassxc-arquitetura-cofre-offline-kdbx4-argon2id-chacha20-aes256]] — Arquitetura Criptográfica do **KeePassXC (`keepassxreboot/keepassxc`)**: Formato **KDBX 4**, Derivação **Argon2id** e Cifras **ChaCha20 / AES-256 / Twofish**
+- [[keepassxc-autenticacao-multifator-yubikey-hmac-sha1-keyfile]] — Chave Composta do KeePassXC: Combinando **Senha Mestra + Key File + Hardware Challenge-Response (`YubiKey` / `OnlyKey` HMAC-SHA1)**
+- [[keepassxc-integracao-ssh-agent-chaves-privadas-anexos-lock]] — Integração Nativa com **`ssh-agent`** no KeePassXC: Carregamento Automático de Chaves SSH ao Destravar o Cofre e Remoção Automática no Lock
+- [[keepassxc-automacao-keepassxc-cli-scripts-ci-cd-extracao-segura]] — Automação de Segredos no Terminal com **`keepassxc-cli`**: Injetando Credenciais e TOTPs em Variáveis de Ambiente sem Expor no `.bash_history`
+- [[keepassxc-integracao-navegador-nativa-nacl-passkeys-anti-phishing]] — Integração Segura com Navegadores (**`keepassxc-proxy`**) e Suporte a **Passkeys (WebAuthn / FIDO2)** no KeePassXC: Prevenção contra Phishing de Domínio
+- [[keepassxc-autotype-sequencias-customizadas-protecao-window-title]] — Segurança do **Auto-Type (`Ctrl+Shift+V`)** no KeePassXC: Sequências Customizadas (`{USERNAME}{TAB}{PASSWORD}{TOTP}`), Delay e Validação de Título de Janela
+- [[keepassxc-freedesktop-secret-service-substituicao-gnome-keyring-linux]] — KeePassXC como Provedor **`org.freedesktop.secrets` (Secret Service D-Bus)** no Linux: Substituindo o `gnome-keyring` / `KWallet` com Criptografia Forte
+- [[keepassxc-compartilhamento-equipes-keeshare-assinatura-merge-git]] — Compartilhamento Seguro de Cofres em Equipe com **KeeShare** (Contêineres Assinados) e Resolução de Conflitos com **`keepassxc-cli merge`**
+- [[keepassxc-auditoria-saude-senhas-hibp-k-anonymity-relatorios]] — Auditoria de Saúde Criptográfica do Cofre (**Database Reports**): Verificação Privada **HaveIBeenPwned (`k-Anonymity`)**, Reuso e Entropia
+- [[keepassxc-hardening-memoria-protecao-process-dump-cve-2023-35866]] — Segurança de Memória em Gerenciadores de Senhas Desktop: Lições do **`keepass-password-dumper` (`CVE-2023-35866`)**, `prctl(PR_SET_DUMPABLE)` e Isolamento
+
+### Plaso / log2timeline (log2timeline/plaso) — Motor Forense de Super Timelines e Targeted Timelines Multi-Artefatos (log2timeline.py, psort.py, pinfo.py, psteal.py) e Integração Timesketch
+
+- [[plaso-arquitetura-motor-super-timeline-forense-log2timeline-sqlite]] — Arquitetura do **Plaso (`log2timeline/plaso`)**: Motor de **Super Timeline Forense** Multi-Artefatos para Windows, Linux, macOS e Android
+- [[plaso-extracao-imagens-disco-log2timeline-particoes-vss-bitlocker]] — Extração Forense com **`log2timeline.py`**: Processando Imagens **E01/RAW**, Partições Múltiplas (`--partitions`), **Volume Shadow Copies (`--vss_stores`)** e **BitLocker**
+- [[plaso-presets-parsers-customizados-win7-linux-macos-targeted-timelines]] — Timelines Direcionadas (**Targeted Timelines**) no Plaso: Controlando **`--parsers`** (`win7`, `linux`, `macosx`, `webhist`) e **`-f` Filter Files**
+- [[plaso-inspecao-diagnostico-pinfo-compare-auditoria-extracao]] — Auditoria e Diagnóstico de Arquivos `.plaso` com **`pinfo.py`**: Metadados de Pré-Processamento, Contagem por Parser e **`--compare`**
+- [[plaso-filtragem-exportacao-psort-time-slice-dynamic-output-l2tcsv]] — Pós-Processamento, Recorte Temporal (**`--slice`**) e Linguagem de Filtro no **`psort.py`**: Exportando `l2tcsv`, `dynamic` e `json_line`
+- [[plaso-tagging-eventos-analysis-plugins-viper-virustotal-nsrl]] — Rotulagem Automática (**Event Tagging**) e **Analysis Plugins** no Plaso: Destacando Execução, Persistência, Logins e Indicadores Maliciosos
+- [[plaso-integracao-timesketch-opensearch-psteal-investigacao-colaborativa]] — Pipeline Direto **`psteal.py`** e Integração Nativa **Plaso + Google Timesketch (`opensearch_ts`)**: Investigação Forense Colaborativa em Escala
+- [[plaso-forense-linux-macos-containers-syslog-auditd-plist-unified-logs]] — Forense de Servidores **Linux, macOS e Containers** com o Plaso: Parsers `syslog`, `systemd_journal`, `utmp`/`wtmp`, `bash_history`, `fsext` e `plist`
+- [[plaso-forense-navegadores-webhist-chrome-firefox-edge-downloads-cookies]] — Reconstrução de **Atividade de Navegadores e Downloads de Malware (`webhist`)** no Plaso: Chrome/Edge (Chromium), Firefox, Safari e Extensões
+- [[plaso-otimizacao-performance-workers-memoria-hashes-sha256-escala]] — Otimização de Performance e Extração de **Hashes `SHA-256` (`--hashers`)** no `log2timeline.py`: Gerenciando Workers, Memória e Arquivos Grandes
+
+### Mandiant capa (mandiant/capa) — Detecção Automatizada de Capacidades em Binários (PE, ELF, .NET, Shellcode) e Relatórios de Sandbox Mapeadas ao MITRE ATT&CK e MBC
+
+- [[capa-arquitetura-deteccao-capacidades-binarios-mitre-attack-mbc-mandiant]] — Arquitetura do **Mandiant `capa` (`mandiant/capa`)**: Detecção Automatizada de Capacidades em Binários (**PE, ELF, .NET, Shellcode**) Mapeadas ao **MITRE ATT&CK** e **MBC**
+- [[capa-modos-saida-verbose-vv-enderecos-funcoes-json-automacao]] — Triagem Rápida vs. Engenharia Reversa Profunda no `capa`: Modos Padrão, Verboso (**`-v`**), Muito Verboso (**`-vv`**) e Exportação **`-j` JSON**
+- [[capa-anatomia-regras-yaml-escopos-file-function-basic-block-instruction]] — Anatomia das Regras YAML do **`capa-rules`**: Escopos Estáticos (**`file`, `function`, `basic block`, `instruction`**) e Operadores Lógicos (`and`, `or`, `count`, `optional`)
+- [[capa-filtros-restricao-escopo-tags-functions-processes-otimizacao]] — Acelerando o `capa` em Binários Complexos: Filtros por Tag/Namespace (**`-t`**), Restrição por Endereço de Função (**`--restrict-to-functions`**) e Cache **`.viv`**
+- [[capa-analise-multi-formato-pe-elf-dotnet-shellcode-assinaturas-flirt]] — Análise Multi-Formato no `capa`: Executáveis **Windows PE**, **Linux ELF**, Assemblies **.NET (CIL)**, **Shellcode Bruto (`-f sc32`/`sc64`)** e Assinaturas **FLIRT (`-s`)**
+- [[capa-analise-dinamica-relatorios-sandbox-cape-drakvuf-vmray-processos]] — Análise Dinâmica com o `capa`: Extraindo Capacidades de Relatórios de **Sandboxes (`CAPE`, `DRAKVUF`, `VMRay`)** e Filtrando por **PID (`--restrict-to-processes`)**
+- [[capa-integracao-ida-pro-ghidra-binary-ninja-capa-explorer-web]] — Integração do `capa` com **Ghidra, IDA Pro, Binary Ninja** e **`capa Explorer Web`**: Navegação Interativa e Renomeação de Funções na Engenharia Reversa
+- [[capa-mapeamento-mitre-attack-malware-behavior-catalog-mbc-diferencas]] — Por que o `capa` Mapeia Simultaneamente para o **MITRE ATT&CK** e para o **Malware Behavior Catalog (`MBC`)**? Entendendo a Diferença Técnica
+- [[capa-uso-biblioteca-python-automacao-pipelines-triagem-malware-soc]] — Usando o `capa` como **Biblioteca Python (`capa.main`, `capa.rules`, `capa.engine`)**: Construindo Pipelines Automatizados de Triagem de Malware e Validação de Builds
+- [[capa-workflow-combinado-floss-yara-velociraptor-engenharia-reversa]] — Workflow Integrado de Análise de Malware e DFIR: Combinando **Mandiant `FLOSS` + `capa` + `YARA` + `Velociraptor` / `Plaso`**
+
+### Mandiant FLOSS (mandiant/flare-floss) — Extração e Desofuscação de Strings em Malware (Static, Stack Strings, Tight Strings, Decoded Strings via Emulação e Go/Rust)
+
+- [[floss-arquitetura-extracao-strings-ofuscadas-stack-tight-decoded]] — Arquitetura do **Mandiant FLOSS (`mandiant/flare-floss`)**: Superando o `strings` Tradicional com Extração de **Stack Strings, Tight Strings, Decoded Strings e Go/Rust**
+- [[floss-desofuscacao-stack-strings-tight-strings-construcao-pilha-x86]] — Como o FLOSS Reconstrói **Stack Strings** e **Tight Strings**: Desfazendo a Ofuscação de Strings Montadas Caractere por Caractere na Pilha da CPU
+- [[floss-emulacao-funcoes-decoded-strings-vivisect-xor-rc4-custom]] — Extração de **Decoded Strings** no FLOSS: Identificando Heurísticas de Funções de Decodificação e Emulando a CPU com **`vivisect`**
+- [[floss-extracao-strings-go-rust-utf8-estruturas-slice-sem-null-byte]] — Análise de Binários Modernos em **Go (`Golang`)** e **Rust** com o FLOSS: Extraindo Strings de Estruturas `StringHeader` / Slices sem Terminador `\x00`
+- [[floss-layout-aware-static-strings-section-structure-semantic-tags]] — Strings Estáticas Conscientes de Layout (**Layout-Aware Static Strings**) e **Tags Semânticas (`--tag`, `--interesting`)** no FLOSS
+- [[floss-busca-filtragem-query-regex-json-html-web-viewer]] — Busca com Expressões Regulares (**`--query`**), Exportação **`-j` JSON** e Relatório Visual Interativo (**`--html`**) no FLOSS
+- [[floss-integracao-ida-pro-ghidra-binary-ninja-relatorio-html]] — Anotando Automaticamente Desmontadores (**IDA Pro, Ghidra, Binary Ninja e x64dbg**) com os Scripts Gerados pelo FLOSS
+- [[floss-analise-shellcode-arquivos-grandes-limites-tuning-performance]] — Analisando **Shellcodes (`-f sc32`/`sc64`)** e Binários Gigantes (**`-L` / `--large-file`**, `--max-strings`, `--max-address-space`) no FLOSS
+- [[floss-criacao-regras-yara-ioc-hunting-a-partir-strings-desofuscadas]] — Armadilha Clássica em **Regras YARA**: Por que Usar *Decoded Strings* do FLOSS em Regras YARA de Disco Falha (e Como Usar para Caça em Memória!)
+- [[floss-automacao-python-batch-triage-comparacao-builds-supply-chain]] — Automação em Lote com o **FLOSS** (`FLOSS_CACHE_DIR`, API JSON) para Triagem de Malware em Escala e Auditoria de Binários de Terceiros
+
+### Gophish (gophish/gophish) — Framework Open-Source de Simulação de Phishing, Treinamento de Conscientização (Security Awareness), Operações Red Team e Automação via API/Webhooks
+
+- [[gophish-arquitetura-simulacao-phishing-conscientizacao-campanhas]] — Arquitetura do **Gophish (`gophish/gophish`)**: Plataforma Open-Source de Simulação de Phishing, Red Team e Treinamento de Conscientização em Segurança
+- [[gophish-configuracao-sending-profiles-smtp-tls-headers-autenticidade]] — Configuração de **Sending Profiles (Perfis SMTP)** e Cabeçalhos Customizados (`X-Phish-Test`) no Gophish: Entregabilidade, SPF/DKIM/DMARC e Autorização
+- [[gophish-templates-email-variaveis-dinamicas-tracking-pixel-links]] — Engenharia de **Email Templates** no Gophish: Variáveis de Template (`{{.FirstName}}`, `{{.URL}}`, `{{.Tracker}}`), Importação de E-mail Original (`RFC 5322`) e Anexos
+- [[gophish-landing-pages-captura-credenciais-redirecionamento-educativo]] — Criação de **Landing Pages** Éticas no Gophish: Clonagem de Site, **`Capture Submitted Data`**, Privacidade de Senhas e Redirecionamento Educativo (*Teachable Moment*)
+- [[gophish-grupos-usuarios-importacao-csv-segmentacao-departamentos]] — Gerenciamento de **Users & Groups** no Gophish: Importação em Lote via CSV e Segmentação de Campanhas por Perfil de Risco (`Position`)
+- [[gophish-execucao-campanhas-agendamento-send-by-date-throttling]] — Orquestração de **Campaigns** no Gophish: Cadência de Disparo (**`Send Emails By`**), Prevenção de *Rate-Limiting* SMTP e Escalonamento Temporal
+- [[gophish-relatorios-eventos-email-reportado-rid-metricas-soc]] — Métricas de Sucesso e **Email Reporting (`/report?rid=...`)** no Gophish: Medindo Não Apenas Cliques, Mas a **Taxa de Reporte ao SOC (`Email Reported`)**
+- [[gophish-webhooks-integracao-soar-slack-automacao-api-rest]] — Automação em Tempo Real com **Webhooks Autenticados (`HMAC-SHA256`)** e **API REST** no Gophish: Integrando Simulações ao SOAR e Treinamento
+- [[gophish-imap-monitoramento-caixa-entrada-respostas-automaticas]] — Monitoramento **IMAP** de Caixa de Entrada no Gophish: Detectando Respostas Diretas dos Usuários e Auto-Replies (*Out-of-Office*)
+- [[gophish-hardening-opsec-infraestrutura-gophish-headers-rid-customizado]] — OPSEC e Hardening de Infraestrutura **Gophish** para Red Teams: Customizando o Parâmetro `rid`, Cabeçalhos `X-Gophish` e Proteção com Proxy Reverso
+
+### OWASP ModSecurity v3 (libmodsecurity) — Motor de Web Application Firewall (WAF) em C++17, Linguagem SecRule, Detecção Léxica libinjection (@detectSQLi/@detectXSS) e OWASP CRS
+
+- [[modsecurity-arquitetura-libmodsecurity-v3-conectores-nginx-apache-envoy]] — Arquitetura do **OWASP ModSecurity v3 (`libmodsecurity`)**: Motor WAF Standalone em C++17 e Conectores para **Nginx, Apache e Envoy**
+- [[modsecurity-modos-operacao-secruleengine-detectiononly-on-tuning]] — Implantação Segura do ModSecurity em Produção: **`SecRuleEngine DetectionOnly` vs. `On`** e Inspeção dos Corpos de Requisição e Resposta
+- [[modsecurity-anatomia-secrule-variaveis-operadores-transformacoes-acoes]] — Anatomia da Linguagem **`SecRule`** e as **5 Fases de Processamento HTTP** no ModSecurity: `VARIABLES`, `@OPERATOR`, `t:transform` e `ACTIONS`
+- [[modsecurity-processadores-body-json-xml-limites-anti-dos-pcre]] — Inspeção Nativa de **APIs JSON e XML (`ctl:requestBodyProcessor`)** e Proteção contra **ReDoS / JSON Bomb** no ModSecurity v3
+- [[modsecurity-deteccao-sqli-xss-libinjection-detectsqli-detectxss]] — Detecção Léxica de **SQL Injection (`@detectSQLi`)** e **XSS (`@detectXSS`)** com **`libinjection`** no ModSecurity v3: Além das Expressões Regulares
+- [[modsecurity-integracao-owasp-crs-anomaly-scoring-paranoia-level]] — Integração do ModSecurity com o **OWASP Core Rule Set (`CRS`)**: Modelo de **Pontuação de Anomalia (*Anomaly Scoring*)** e **Paranoia Levels (`PL1`–`PL4`)**
+- [[modsecurity-tuning-falsos-positivos-exclusoes-ctl-ruleremovetargetbyid]] — Engenharia de Tuning e Eliminação Cirúrgica de Falsos Positivos no ModSecurity: **`ctl:ruleRemoveTargetById`** vs. `SecRuleRemoveById`
+- [[modsecurity-auditoria-logs-json-secauditlogparts-ingestao-siem-wazuh]] — Logs de Auditoria Estruturados em **JSON (`SecAuditLogFormat JSON`)** e Anatomia de **`SecAuditLogParts` (`ABIJDEFHZ`)** para Ingestão em SIEM / Wazuh
+- [[modsecurity-virtual-patching-cve-zero-day-mitigacao-imediata-borda]] — Aplicando **Virtual Patching** no ModSecurity v3: Mitigando **Zero-Days e CVEs Críticas** na Borda em Minutos Enquanto o Código da Aplicação é Corrigido
+- [[modsecurity-inspecao-uploads-arquivos-files-tmpnames-antivirus-yara]] — Proteção contra **Upload de Webshells e Malware** no ModSecurity: Inspecionando `FILES`, `FILES_TMPNAMES` e Integrando **`@inspectFile`** com **YARA / ClamAV**
+
+### strongSwan (strongswan/strongswan) — VPN IPsec/IKEv2 no Linux, Daemon charon, Interface vici/swanctl.conf, Interfaces Virtuais XFRM (Route-Based), TPM 2.0/PKCS#11 e IKEv2 Pós-Quântico (RFC 9370 ML-KEM)
+
+- [[strongswan-arquitetura-ipsec-ikev2-charon-vici-swanctl-linux]] — Arquitetura Moderna do **strongSwan (`strongswan/strongswan`)**: Daemon **`charon`**, Protocolo **`vici`** e Configuração Declarativa **`swanctl.conf`**
+- [[strongswan-estrutura-swanctl-conf-connections-children-secrets-pools]] — Anatomia do **`/etc/swanctl/swanctl.conf`**: As 4 Seções Principais (**`connections`, `children`, `secrets`, `pools`**) e Diretórios `/etc/swanctl/x509*`
+- [[strongswan-vpn-site-to-site-ikev2-pki-certificados-x509-trap]] — VPN **Site-to-Site IKEv2** com strongSwan: Geração de PKI com **`pki`**, Autenticação Mútua X.509 (`auth = pubkey`) e Sob Demanda (**`start_action = trap`**)
+- [[strongswan-roadwarrior-virtual-ip-pools-eap-tls-eap-mschapv2]] — VPN de Acesso Remoto (**Roadwarrior**) com strongSwan: **Virtual IP `pools`**, `local_ts = 0.0.0.0/0` e Clientes Nativos (**Windows, macOS, iOS, Android**)
+- [[strongswan-suites-criptograficas-proposals-aes-gcm-chacha20-pfs-dh]] — Engenharia Criptográfica no strongSwan: Configurando **`proposals`** e **`esp_proposals`** com AEAD (**`aes256gcm16`**, **`chacha20poly1305`**) e **PFS (`ecp384`, `curve25519`)**
+- [[strongswan-criptografia-pos-quantica-pqc-ikev2-rfc9370-ml-kem-hibrido]] — VPNs **Pós-Quânticas Híbridas (PQC)** no strongSwan: Implementando **RFC 9370 (*Multiple Key Exchanges in IKEv2*)** com **ML-KEM (`ke1_mlkem768` / `mlkem1024`)**
+- [[strongswan-interfaces-xfrm-route-based-vpn-if-id-bgp-ospf]] — VPN Baseada em Rota (**Route-Based VPN**) no strongSwan: Interfaces Virtuais do Kernel Linux (**XFRM Interfaces `xfrmi`** com **`if_id_in` / `if_id_out`**) e BGP/OSPF
+- [[strongswan-validacao-revogacao-certificados-crl-ocsp-authorities]] — Autoridades Certificadoras (**`authorities`**), Validação **OCSP / CRL** e Políticas Estritas de Revogação (`revocation = strict`) no strongSwan
+- [[strongswan-integracao-hardware-tpm2-pkcs11-hsm-protecao-chaves]] — Proteção de Chaves Privadas de VPN em Hardware com o strongSwan: Integração Nativa com **TPM 2.0 (`handle`)**, **Smartcards / YubiKey (`PKCS#11`)** e HSMs
+- [[strongswan-operacao-diagnostico-swanctl-list-sas-ip-xfrm-tcpdump]] — Diagnóstico e Troubleshooting Avançado de Túneis IPsec no Linux: **`swanctl --list-sas`**, **`swanctl --log`**, **`ip -s xfrm state/policy`** e NAT-Traversal (`UDP 4500`)
+
+### Firejail (netblue30/firejail) — Sandboxing de Aplicações Linux com Kernel Namespaces, Filtros seccomp-bpf, Linux Capabilities, AppArmor, Isolamento X11/D-Bus e Perfis .profile
+
+- [[firejail-arquitetura-sandbox-suid-namespaces-seccomp-capabilities]] — Arquitetura do **Firejail (`netblue30/firejail`)**: Isolamento de Aplicações Linux com **Kernel Namespaces, `seccomp-bpf`, Linux Capabilities e AppArmor**
+- [[firejail-anatomia-perfis-profile-blacklist-whitelist-read-only-include]] — Anatomia dos Perfis **`.profile`** e Customizações **`.local`** no Firejail: `blacklist`, `whitelist`, `read-only`, `noexec` e Herança `include`
+- [[firejail-isolamento-filesystem-private-private-dev-private-etc-bin]] — Isolamento Efêmero de Sistema de Arquivos no Firejail: **`--private`**, **`--private-dev`**, **`--private-etc`**, **`--private-bin`** e **`--private-tmp`**
+- [[firejail-filtragem-syscalls-seccomp-caps-drop-all-nonewprivs]] — Redução de Superfície de Ataque do Kernel no Firejail: **`--seccomp`**, **`--caps.drop=all`**, **`--nonewprivs`** e **`--noroot` (User Namespace)**
+- [[firejail-isolamento-rede-net-none-veth-netfilter-dns-sandboxing]] — Isolamento de Rede no Firejail: **`--net=none`**, Interfaces Virtuais **`veth` (`--net=eth0` / `br0`)**, Firewall Interno **`--netfilter`** e **`--protocol`**
+- [[firejail-isolamento-grafico-x11-xephyr-xvfb-xpra-wayland-dbus]] — Protegendo o Servidor Gráfico e o Barramento IPC no Firejail: Isolamento de **X11 (`--x11=xephyr`/`xpra`)**, **Wayland** e Filtragem de **D-Bus (`--dbus-user`)**
+- [[firejail-integracao-apparmor-cgroups-rlimits-controle-recursos]] — Defesa em Profundidade no Firejail: Integração com **AppArmor (`--apparmor`)**, Limites de Recursos (**`rlimits`**) e **Control Groups (`--cgroup`)**
+- [[firejail-construcao-perfis-customizados-build-auditoria-sandbox]] — Geração Automática de Perfis de Segurança sob Medida com **`firejail --build`** e Auditoria de Sandboxes em Execução (**`--join`**, **`--ls`**, **`--get`**)
+- [[firejail-hardening-global-firejail-config-suid-firejail-users-grupos]] — Hardening Global do Próprio Firejail (**`/etc/firejail/firejail.config`** e **`firejail.users`**): Mitigando Riscos de Binários SUID no Linux
+- [[firejail-sandboxing-navegadores-leitores-pdf-analise-artefatos-dfir]] — Sandboxing Prático de **Navegadores Web, Clientes de E-mail e Triagem de Artefatos Suspeitos (DFIR)** no Desktop Linux com Firejail
+
+### Linux-PAM (linux-pam/linux-pam) — Arquitetura de Módulos de Autenticação Plugáveis (auth, account, password, session), Bloqueio pam_faillock, Qualidade pam_pwquality, MFA FIDO2/TOTP e Auditoria auid
+
+- [[pam-arquitetura-pluggable-authentication-modules-grupos-auth-account]] — Arquitetura do **Linux-PAM (`linux-pam/linux-pam`)**: Os 4 Grupos de Gerenciamento (**`auth`, `account`, `password`, `session`**) e Arquivos `/etc/pam.d/`
+- [[pam-flags-controle-required-requisite-sufficient-optional-substack]] — Semântica das **Control Flags** do Linux-PAM (**`required`, `requisite`, `sufficient`, `optional`**) e Sintaxe Avançada `[success=done default=ignore]`
+- [[pam-protecao-forca-bruta-pam-faillock-faillock-conf-bloqueio-contas]] — Bloqueio contra Força Bruta no Linux com **`pam_faillock.so`** e **`/etc/security/faillock.conf`**: `deny`, `fail_interval`, `unlock_time` e `even_deny_root`
+- [[pam-qualidade-senhas-pam-pwquality-entropia-dicionario-historico]] — Políticas de Complexidade de Senhas (`pam_pwquality.so` / `/etc/security/pwquality.conf`) e Histórico Anti-Reuso (`pam_pwhistory.so`) no Linux-PAM
+- [[pam-controle-acesso-pam-access-access-conf-pam-time-pam-wheel]] — Controle de Acesso Granular por Origem e Horário no PAM: **`pam_access.so` (`/etc/security/access.conf`)**, **`pam_time.so`** e Restrição de `su` com **`pam_wheel.so`**
+- [[pam-limites-recursos-sessao-pam-limits-limits-conf-fork-bomb-core]] — Blindagem de Sessão com **`pam_limits.so` (`/etc/security/limits.conf`)** e **`pam_umask.so`**: Prevenindo **Fork Bombs (`nproc`)**, Core Dumps (`core 0`) e Permissões Frouxas
+- [[pam-auditoria-rastreabilidade-pam-loginuid-auditd-pam-tty-audit]] — Rastreabilidade Imutável de Identidade no Linux: Como o **`pam_loginuid.so`** Preserva o **`auid` (*Audit UID*)** Original Mesmo Após `sudo su -`!
+- [[pam-autenticacao-multifator-mfa-pam-u2f-fido2-google-authenticator-sshd]] — Autenticação Multifator (**MFA**) no Linux-PAM para **`sshd`** e **`sudo`**: Integrando Chaves de Hardware **FIDO2 (`pam_u2f.so`)** e **TOTP (`pam_google_authenticator.so`)**
+- [[pam-isolamento-namespaces-pam-namespace-polimorfico-tmp-var-tmp]] — Diretórios Polimórficos por Usuário com **`pam_namespace.so` (`/etc/security/namespace.conf`)**: Isolando `/tmp` e `/var/tmp` em Servidores Multiusuário
+- [[pam-auditoria-integridade-pam-d-prevencao-backdoors-pam-permit]] — Caça a **Backdoors PAM** em Resposta a Incidentes (DFIR): Detectando `pam_permit.so`, `pam_exec.so` Malicioso e Modificações de Binários em `/lib/security/`
+
+### OpenSSL 3.x (openssl/openssl) — Arquitetura de Providers (default, fips, legacy, base), Conformidade FIPS 140-3, Operações EVP (genpkey, x509, s_client, dgst, mac, kdf, cms, pkcs12) e Políticas @SECLEVEL
+
+- [[openssl-arquitetura-providers-openssl3-default-fips-legacy-cnf]] — Arquitetura do **OpenSSL 3.x (`openssl/openssl`)**: `libssl`, `libcrypto` e o Novo Modelo de **Providers (`default`, `fips`, `legacy`, `base`, `null`)**
+- [[openssl-conformidade-fips-140-3-fipsmodule-cnf-fipsinstall-validacao]] — Conformidade **FIPS 140-3** no OpenSSL 3.x: Ativando o **`fips` Provider (`fips.so`)**, Auto-Testes **`openssl fipsinstall`** e `default_properties = fips=yes`
+- [[openssl-geracao-chaves-genpkey-ed25519-ecdsa-rsa-pss-protecao-pkcs8]] — Geração Moderna de Chaves Assimétricas com **`openssl genpkey`**: Preferindo **`Ed25519` / `X25519` / `ECDSA P-384`** e Proteção **PKCS#8 (`-aes-256-cbc`)**
+- [[openssl-operacoes-pki-ca-x509-req-crl-ocsp-automacao]] — Operações de **PKI e Certificados X.509** no OpenSSL 3.x: Gerando **CSRs e Certificados com `SAN` (`-addext subjectAltName`)** em Uma Única Linha!
+- [[openssl-diagnostico-tls-s-client-certificados-ciphers-alpn-ocsp]] — Diagnóstico Profundo de **TLS 1.3 / 1.2 e mTLS** com **`openssl s_client`**: Inspecionando Cadeia de Certificados, **SNI**, **ALPN**, **OCSP Stapling** e Cipher Suites
+- [[openssl-hashes-hmac-kdf-dgst-mac-kdf-hkdf-pbkdf2-scrypt-argon2]] — Integridade Criptográfica, **HMAC** e Derivação de Chaves (**KDF**) no OpenSSL 3.x: **`openssl dgst`**, **`openssl mac`** e **`openssl kdf` (`HKDF`, `PBKDF2`, `Scrypt`, `Argon2id`)**
+- [[openssl-criptografia-simetrica-enc-pbkdf2-iter-limitacoes-cms-age]] — Criptografia de Arquivos com **`openssl enc`** vs. **`openssl cms`**: A Importância Obrigatória de **`-pbkdf2 -iter 600000`** e Limites de Cifras Sem MAC
+- [[openssl-formatos-certificados-chaves-pem-der-pkcs12-conversao-segura]] — Conversão Segura entre Formatos de Certificados e Chaves (**`PEM`, `DER`, `PKCS#12 / .pfx`, `PKCS#7`**) no OpenSSL 3.x: Criptografia Forte no **`openssl pkcs12`**
+- [[openssl-politicas-seguranca-openssl-cnf-cipherstring-seclevel-minprotocol]] — Hardening Sistêmico via **`/etc/ssl/openssl.cnf`**: Impondo **`MinProtocol = TLSv1.2`** e **`CipherString = DEFAULT@SECLEVEL=2`** para Todas as Aplicações do Servidor!
+- [[openssl-benchmarking-criptografico-speed-evp-aes-ni-avx512-pqc-ml-kem]] — Benchmarking Criptográfico e Aceleração de Hardware com **`openssl speed -evp`**: Medindo **AES-NI / VAES**, **ChaCha20-Poly1305**, **Ed25519** e **ML-KEM / ML-DSA**
