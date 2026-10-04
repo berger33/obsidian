@@ -11,13 +11,13 @@ updated: 2026-10-04
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1700 notas substantivas (Tranches 1–17, IDs `1–1700`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1800 notas substantivas (Tranches 1–18, IDs `1–1800`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1700 / 2.000 notas válidas (85,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1700**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1700 / 1700** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md))
+- Progresso atual: **1800 / 2.000 notas válidas (90,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1800**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1800 / 1800** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [Tranche 15](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [Tranche 16](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [Tranche 17](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [Tranche 18](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -2263,3 +2263,135 @@ Mapa de conteúdo das **1700 notas substantivas (Tranches 1–17, IDs `1–1700`
 - [[asvs-evidencia-de-testes-automatizados-e-manuais]] — OWASP ASVS: Evidência de testes automatizados e manuais
 - [[asvs-rastreio-de-requisito-nao-aplicavel]] — OWASP ASVS: Rastreio de requisito não aplicável
 - [[asvs-uso-do-padrao-em-aquisicao-de-software]] — OWASP ASVS: Uso do padrão em aquisição de software
+
+## Tranche 18 (IDs 1701–1800)
+
+### Semgrep
+
+- [[semgrep-estrutura-de-uma-regra-yaml]] — Semgrep: Estrutura de uma regra YAML
+- [[semgrep-metavariaveis-em-padroes-de-codigo]] — Semgrep: Metavariáveis em padrões de código
+- [[semgrep-combinar-padroes-com-contexto]] — Semgrep: Combinar padrões com contexto
+- [[semgrep-analise-de-taint-com-fontes-e-sinks]] — Semgrep: Análise de taint com fontes e sinks
+- [[semgrep-sanitizadores-em-regras-de-taint]] — Semgrep: Sanitizadores em regras de taint
+- [[semgrep-selecao-de-rulesets-por-projeto]] — Semgrep: Seleção de rulesets por projeto
+- [[semgrep-escaneamento-em-pull-request]] — Semgrep: Escaneamento em pull request
+- [[semgrep-exclusoes-de-arquivos-do-scan]] — Semgrep: Exclusões de arquivos do scan
+- [[semgrep-supressao-rastreavel-de-finding]] — Semgrep: Supressão rastreável de finding
+- [[semgrep-testes-de-regressao-para-regras]] — Semgrep: Testes de regressão para regras
+
+### SonarQube Server
+
+- [[sonarqube-fluxo-entre-scanner-e-servidor]] — SonarQube Server: Fluxo entre scanner e servidor
+- [[sonarqube-escopo-de-fontes-e-testes]] — SonarQube Server: Escopo de fontes e testes
+- [[sonarqube-perfis-de-qualidade-aplicados]] — SonarQube Server: Perfis de qualidade aplicados
+- [[sonarqube-quality-gate-como-criterio-de-integracao]] — SonarQube Server: Quality gate como critério de integração
+- [[sonarqube-definicao-de-codigo-novo]] — SonarQube Server: Definição de código novo
+- [[sonarqube-analise-de-taint-e-apis-internas]] — SonarQube Server: Análise de taint e APIs internas
+- [[sonarqube-exclusoes-por-caminho]] — SonarQube Server: Exclusões por caminho
+- [[sonarqube-cobertura-de-testes-como-dado-separado]] — SonarQube Server: Cobertura de testes como dado separado
+- [[sonarqube-revisao-e-resolucao-de-issues]] — SonarQube Server: Revisão e resolução de issues
+- [[sonarqube-build-scanner-reproduzivel-em-ci]] — SonarQube Server: Build scanner reproduzível em CI
+
+### Snyk CLI
+
+- [[snyk-preparar-autenticacao-e-ambiente]] — Snyk CLI: Preparar autenticação e ambiente
+- [[snyk-analise-de-dependencias-com-snyk-test]] — Snyk CLI: Análise de dependências com snyk test
+- [[snyk-analise-sast-com-snyk-code-test]] — Snyk CLI: Análise SAST com snyk code test
+- [[snyk-varredura-de-infraestrutura-como-codigo]] — Snyk CLI: Varredura de infraestrutura como código
+- [[snyk-inspecao-de-imagens-de-container]] — Snyk CLI: Inspeção de imagens de container
+- [[snyk-busca-de-segredos-em-arquivos]] — Snyk CLI: Busca de segredos em arquivos
+- [[snyk-monitoramento-de-projeto]] — Snyk CLI: Monitoramento de projeto
+- [[snyk-exclusao-controlada-de-diretorios]] — Snyk CLI: Exclusão controlada de diretórios
+- [[snyk-integrar-resultados-ao-pipeline]] — Snyk CLI: Integrar resultados ao pipeline
+- [[snyk-aplicar-correcoes-com-revisao]] — Snyk CLI: Aplicar correções com revisão
+
+### Kubescape
+
+- [[kubescape-selecionar-framework-explicitamente]] — Kubescape: Selecionar framework explicitamente
+- [[kubescape-executar-scan-de-um-control]] — Kubescape: Executar scan de um control
+- [[kubescape-analisar-manifests-locais-antes-do-deploy]] — Kubescape: Analisar manifests locais antes do deploy
+- [[kubescape-examinar-cluster-com-kubeconfig-definido]] — Kubescape: Examinar cluster com kubeconfig definido
+- [[kubescape-escanear-charts-e-templates-renderizados]] — Kubescape: Escanear charts e templates renderizados
+- [[kubescape-definir-limiar-de-conformidade-no-ci]] — Kubescape: Definir limiar de conformidade no CI
+- [[kubescape-governar-excecoes-de-findings]] — Kubescape: Governar exceções de findings
+- [[kubescape-interpretar-remediacao-assistida]] — Kubescape: Interpretar remediação assistida
+- [[kubescape-conhecer-requisitos-do-host-scanner]] — Kubescape: Conhecer requisitos do host scanner
+- [[kubescape-publicar-resultados-junit-em-ci]] — Kubescape: Publicar resultados JUnit em CI
+
+### KubeLinter
+
+- [[kube-linter-comecar-pelos-checks-padroes]] — KubeLinter: Começar pelos checks padrões
+- [[kube-linter-precedencia-do-arquivo-de-configuracao]] — KubeLinter: Precedência do arquivo de configuração
+- [[kube-linter-selecionar-checks-por-inclusao-e-exclusao]] — KubeLinter: Selecionar checks por inclusão e exclusão
+- [[kube-linter-criar-checks-customizados-a-partir-de-templates]] — KubeLinter: Criar checks customizados a partir de templates
+- [[kube-linter-ignorar-paths-com-escopo-limitado]] — KubeLinter: Ignorar paths com escopo limitado
+- [[kube-linter-avaliar-charts-helm]] — KubeLinter: Avaliar charts Helm
+- [[kube-linter-inspecionar-lista-de-checks-instalados]] — KubeLinter: Inspecionar lista de checks instalados
+- [[kube-linter-usar-resultado-como-pre-merge-gate]] — KubeLinter: Usar resultado como pre-merge gate
+- [[kube-linter-interpretar-objeto-e-orientacao-de-correcao]] — KubeLinter: Interpretar objeto e orientação de correção
+- [[kube-linter-distinguir-lint-de-avaliacao-de-runtime]] — KubeLinter: Distinguir lint de avaliação de runtime
+
+### Cilium Tetragon
+
+- [[tetragon-escolher-hook-point-da-policy]] — Cilium Tetragon: Escolher hook point da policy
+- [[tetragon-filtrar-eventos-no-kernel]] — Cilium Tetragon: Filtrar eventos no kernel
+- [[tetragon-executar-primeiro-em-modo-monitor]] — Cilium Tetragon: Executar primeiro em modo monitor
+- [[tetragon-usar-enforcement-somente-com-evidencia]] — Cilium Tetragon: Usar enforcement somente com evidência
+- [[tetragon-entender-modo-monitor-only]] — Cilium Tetragon: Entender modo monitor_only
+- [[tetragon-separar-dominios-de-carregamento]] — Cilium Tetragon: Separar domínios de carregamento
+- [[tetragon-limitar-policy-por-namespace-e-labels]] — Cilium Tetragon: Limitar policy por namespace e labels
+- [[tetragon-monitorar-acesso-a-arquivos-sensiveis]] — Cilium Tetragon: Monitorar acesso a arquivos sensíveis
+- [[tetragon-avaliar-conexao-de-rede-por-processo]] — Cilium Tetragon: Avaliar conexão de rede por processo
+- [[tetragon-versionar-policies-e-testar-compatibilidade]] — Cilium Tetragon: Versionar policies e testar compatibilidade
+
+### Renovate
+
+- [[renovate-versionar-configuracao-de-renovate]] — Renovate: Versionar configuração de Renovate
+- [[renovate-selecionar-managers-e-manifests]] — Renovate: Selecionar managers e manifests
+- [[renovate-agendar-verificacoes-de-atualizacao]] — Renovate: Agendar verificações de atualização
+- [[renovate-agrupar-updates-por-regra]] — Renovate: Agrupar updates por regra
+- [[renovate-limitar-automerge-por-tipo-de-update]] — Renovate: Limitar automerge por tipo de update
+- [[renovate-exigir-aprovacao-para-major-updates]] — Renovate: Exigir aprovação para major updates
+- [[renovate-controlar-forma-de-merge]] — Renovate: Controlar forma de merge
+- [[renovate-usar-dashboard-para-backlog-de-dependencias]] — Renovate: Usar dashboard para backlog de dependências
+- [[renovate-atualizar-lockfiles-com-teste]] — Renovate: Atualizar lockfiles com teste
+- [[renovate-separar-alertas-de-vulnerabilidade-de-rotina]] — Renovate: Separar alertas de vulnerabilidade de rotina
+
+### GitHub Dependabot
+
+- [[dependabot-distinguir-alertas-de-updates-agendados]] — GitHub Dependabot: Distinguir alertas de updates agendados
+- [[dependabot-estruturar-dependabot-yml]] — GitHub Dependabot: Estruturar dependabot.yml
+- [[dependabot-escolher-package-ecosystem-correto]] — GitHub Dependabot: Escolher package ecosystem correto
+- [[dependabot-configurar-frequencia-de-version-updates]] — GitHub Dependabot: Configurar frequência de version updates
+- [[dependabot-limitar-pull-requests-em-aberto]] — GitHub Dependabot: Limitar pull requests em aberto
+- [[dependabot-ignorar-versoes-com-escopo]] — GitHub Dependabot: Ignorar versões com escopo
+- [[dependabot-autenticar-acesso-a-registries-privados]] — GitHub Dependabot: Autenticar acesso a registries privados
+- [[dependabot-atualizar-dependencias-de-github-actions]] — GitHub Dependabot: Atualizar dependências de GitHub Actions
+- [[dependabot-testar-security-update-pull-request]] — GitHub Dependabot: Testar security update pull request
+- [[dependabot-priorizar-triagem-de-alerta]] — GitHub Dependabot: Priorizar triagem de alerta
+
+### CycloneDX CLI
+
+- [[cyclonedx-cli-validar-contra-schema-escolhido]] — CycloneDX CLI: Validar contra schema escolhido
+- [[cyclonedx-cli-converter-formato-de-bom]] — CycloneDX CLI: Converter formato de BOM
+- [[cyclonedx-cli-inspecionar-multiplas-versoes-de-componentes]] — CycloneDX CLI: Inspecionar múltiplas versões de componentes
+- [[cyclonedx-cli-comparar-boms-entre-releases]] — CycloneDX CLI: Comparar BOMs entre releases
+- [[cyclonedx-cli-mesclar-inventarios-com-proveniencia]] — CycloneDX CLI: Mesclar inventários com proveniência
+- [[cyclonedx-cli-adicionar-informacoes-a-um-bom]] — CycloneDX CLI: Adicionar informações a um BOM
+- [[cyclonedx-cli-assinar-e-verificar-documentos]] — CycloneDX CLI: Assinar e verificar documentos
+- [[cyclonedx-cli-escolher-versao-de-saida-conscientemente]] — CycloneDX CLI: Escolher versão de saída conscientemente
+- [[cyclonedx-cli-integrar-validacao-ao-ci]] — CycloneDX CLI: Integrar validação ao CI
+- [[cyclonedx-cli-interpretar-bom-como-inventario-nao-scan]] — CycloneDX CLI: Interpretar BOM como inventário, não scan
+
+### AWS CloudFormation Guard
+
+- [[cfn-guard-modelar-uma-clause-booleana]] — AWS CloudFormation Guard: Modelar uma clause booleana
+- [[cfn-guard-reutilizar-named-rule-blocks]] — AWS CloudFormation Guard: Reutilizar named-rule blocks
+- [[cfn-guard-testar-regras-antes-da-validacao]] — AWS CloudFormation Guard: Testar regras antes da validação
+- [[cfn-guard-validar-arquivo-de-entrada-com-rules-file]] — AWS CloudFormation Guard: Validar arquivo de entrada com rules file
+- [[cfn-guard-aplicar-multiplas-regras-e-arquivos]] — AWS CloudFormation Guard: Aplicar múltiplas regras e arquivos
+- [[cfn-guard-injetar-parametros-de-contexto]] — AWS CloudFormation Guard: Injetar parâmetros de contexto
+- [[cfn-guard-fornecer-mensagens-de-violacao-uteis]] — AWS CloudFormation Guard: Fornecer mensagens de violação úteis
+- [[cfn-guard-consultar-estruturas-aninhadas]] — AWS CloudFormation Guard: Consultar estruturas aninhadas
+- [[cfn-guard-usar-guard-como-gate-de-template]] — AWS CloudFormation Guard: Usar Guard como gate de template
+- [[cfn-guard-versionar-regras-e-aprovacoes]] — AWS CloudFormation Guard: Versionar regras e aprovações

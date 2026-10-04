@@ -1,0 +1,47 @@
+---
+id: software.seguranca.tranche18.001766
+tipo: tecnica
+dominio: software
+subdominio: seguranca
+nivel: intermediario
+confianca: media
+ultima_verificacao: 2026-10-04
+validade: volatil
+status: candidata
+revisao_humana: nao_solicitada
+revisor: ""
+revisao_ia: aprovada
+revisor_ia: "Arena.ai Agent Mode"
+data_revisao_ia: 2026-10-04
+relatorio_revisao_ia: "knowledge-federation/exports/reports/ai-review-software-seguranca-2000-0003-tranche-18.md"
+fontes: ["https://docs.renovatebot.com/configuration-options/", "https://docs.renovatebot.com/key-concepts/dashboard/"]
+tags: [dominio/software, subdominio/seguranca, qualidade/candidata]
+lote: software-seguranca-2000-0003
+---
+
+# Renovate: Exigir aprovação para major updates
+
+## Em uma frase
+**Renovate — Exigir aprovação para major updates:** Dashboard approval pode pausar updates escolhidos até revisão explícita sem torná-los invisíveis.
+
+## Por que importa
+O recorte de **exigir aprovação para major updates** ajuda a manter dependências e ferramentas atualizadas com revisão, agrupamento e testes automatizados. A equipe registra risco, evidência e responsável.
+
+## Como funciona
+Para **exigir aprovação para major updates**, managers reconhecem arquivos, regras escolhem como agrupar ou agendar updates e a plataforma recebe branches ou pull requests. Delimite entrada e saída. Repita se o alvo mudar.
+
+## Exemplo
+Peça aprovação manual para major updates de framework antes de criar PRs. Teste em staging autorizado.
+
+## Limites e trade-offs
+Aprovação manual não substitui avaliação de changelog e migrações. Exceções exigem responsável e prazo.
+
+## Como verificar
+Verifique no dashboard que o pacote pendente aparece e não foi atualizado automaticamente. Guarde versão e configuração. Inclua casos positivos e negativos.
+
+## Conexões
+- [[renovate-controlar-forma-de-merge]] — Complementa o tópico com renovate: controlar forma de merge.
+
+## Fontes
+- [Renovate — Configuration options](https://docs.renovatebot.com/configuration-options/) — referência oficial de managers, packageRules, schedule e automerge; consultado em 2026-10-04.
+- [Renovate — Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) — guia oficial de aprovação, visibilidade de updates e workflow do dashboard; consultado em 2026-10-04.

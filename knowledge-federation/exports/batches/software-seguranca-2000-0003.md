@@ -6,19 +6,19 @@ Manifesto auditável do terceiro lote de escala (`software-seguranca-2000-0003`)
 
 - Domínio / subdomínio: `software` / `seguranca` (`knowledge-federation/domains/software-0009/software/seguranca/`)
 - Meta do lote: **2.000 notas substantivas**
-- Notas efetivamente redigidas até agora: **1700 / 2.000 (85,00%)**
-- Gate automatizado: **1700/1700 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 17)
-- Revisão factual humana: **0/1700**
-- Revisão factual por IA: **1700/1700**
-- Contabilizadas como válidas: **1700/1700**
-- Revisor das 1700 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
-- Status do lote maior: `in_progress`; tranches 1–17 (1700 notas, IDs 1–1700) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
+- Notas efetivamente redigidas até agora: **1800 / 2.000 (90,00%)**
+- Gate automatizado: **1800/1800 aprovadas** (conteúdo mínimo, seções, fontes específicas e wikilinks; reexecutado após a tranche 18)
+- Revisão factual humana: **0/1800**
+- Revisão factual por IA: **1800/1800**
+- Contabilizadas como válidas: **1800/1800**
+- Revisor das 1800 notas aprovadas por IA: `Arena.ai Agent Mode`, com relatórios específicos; não são aprovações humanas
+- Status do lote maior: `in_progress`; tranches 1–18 (1800 notas, IDs 1–1800) foram conferidas factualmente por IA e aprovadas sob o protocolo atualizado
 - MOC do lote: [`MOC-Seguranca-Software-0009.md`](../../00-home-vault/MOCs/MOC-Seguranca-Software-0009.md)
 - Relatório de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../reports/note-quality-software-seguranca-2000-0003.md)
-- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-17.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-17.md)
-- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md)
+- Reconciliação estrutural mais recente do manifesto/fila: [`batch-reconciliation-software-seguranca-2000-0003-tranche-18.md`](../reports/batch-reconciliation-software-seguranca-2000-0003-tranche-18.md)
+- Relatórios factuais por IA: [`tranche 1`](../reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [`tranche 2`](../reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [`tranche 3`](../reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [`tranche 4`](../reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [`tranche 5`](../reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [`tranche 6`](../reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [`tranche 7`](../reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [`tranche 8`](../reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [`tranche 9`](../reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [`tranche 10`](../reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [`tranche 11`](../reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [`tranche 12`](../reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [`tranche 13`](../reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [`tranche 14`](../reports/ai-review-software-seguranca-2000-0003-tranche-14.md), [`tranche 15`](../reports/ai-review-software-seguranca-2000-0003-tranche-15.md), [`tranche 16`](../reports/ai-review-software-seguranca-2000-0003-tranche-16.md), [`tranche 17`](../reports/ai-review-software-seguranca-2000-0003-tranche-17.md), [`tranche 18`](../reports/ai-review-software-seguranca-2000-0003-tranche-18.md)
 
-Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 300 restantes.
+Existem 1800 notas materiais listadas abaixo; não há IDs reservados, placeholders ou registros virtuais para as 200 restantes.
 
 ## Tranche 1 — Gitleaks, TruffleHog, Google OSV-Scanner V2, OWASP Dependency-Track, OWASP ZAP, ProjectDiscovery Nuclei, OpenFGA, AuthZed SpiceDB, Cerbos e OpenSSF Scorecard (100 notas; revisão factual por IA registrada)
 
@@ -2263,3 +2263,135 @@ Existem 1700 notas materiais listadas abaixo; não há IDs reservados, placehold
 1698. [OWASP ASVS: Evidência de testes automatizados e manuais](../../domains/software-0009/software/seguranca/asvs-evidencia-de-testes-automatizados-e-manuais.md)
 1699. [OWASP ASVS: Rastreio de requisito não aplicável](../../domains/software-0009/software/seguranca/asvs-rastreio-de-requisito-nao-aplicavel.md)
 1700. [OWASP ASVS: Uso do padrão em aquisição de software](../../domains/software-0009/software/seguranca/asvs-uso-do-padrao-em-aquisicao-de-software.md)
+
+## Tranche 18 — Semgrep, SonarQube Server, Snyk CLI, Kubescape, KubeLinter, Cilium Tetragon, Renovate, GitHub Dependabot, CycloneDX CLI, AWS CloudFormation Guard (100 notas substantivas; revisão factual por IA registrada)
+
+### Semgrep — analisador estático com regras YAML para detectar padrões de segurança, desempenho e correção em código-fonte
+
+1701. [Semgrep: Estrutura de uma regra YAML](../../domains/software-0009/software/seguranca/semgrep-estrutura-de-uma-regra-yaml.md)
+1702. [Semgrep: Metavariáveis em padrões de código](../../domains/software-0009/software/seguranca/semgrep-metavariaveis-em-padroes-de-codigo.md)
+1703. [Semgrep: Combinar padrões com contexto](../../domains/software-0009/software/seguranca/semgrep-combinar-padroes-com-contexto.md)
+1704. [Semgrep: Análise de taint com fontes e sinks](../../domains/software-0009/software/seguranca/semgrep-analise-de-taint-com-fontes-e-sinks.md)
+1705. [Semgrep: Sanitizadores em regras de taint](../../domains/software-0009/software/seguranca/semgrep-sanitizadores-em-regras-de-taint.md)
+1706. [Semgrep: Seleção de rulesets por projeto](../../domains/software-0009/software/seguranca/semgrep-selecao-de-rulesets-por-projeto.md)
+1707. [Semgrep: Escaneamento em pull request](../../domains/software-0009/software/seguranca/semgrep-escaneamento-em-pull-request.md)
+1708. [Semgrep: Exclusões de arquivos do scan](../../domains/software-0009/software/seguranca/semgrep-exclusoes-de-arquivos-do-scan.md)
+1709. [Semgrep: Supressão rastreável de finding](../../domains/software-0009/software/seguranca/semgrep-supressao-rastreavel-de-finding.md)
+1710. [Semgrep: Testes de regressão para regras](../../domains/software-0009/software/seguranca/semgrep-testes-de-regressao-para-regras.md)
+
+### SonarQube Server — plataforma de análise de código integrada a scanners, perfis de qualidade e quality gates para equipes de desenvolvimento
+
+1711. [SonarQube Server: Fluxo entre scanner e servidor](../../domains/software-0009/software/seguranca/sonarqube-fluxo-entre-scanner-e-servidor.md)
+1712. [SonarQube Server: Escopo de fontes e testes](../../domains/software-0009/software/seguranca/sonarqube-escopo-de-fontes-e-testes.md)
+1713. [SonarQube Server: Perfis de qualidade aplicados](../../domains/software-0009/software/seguranca/sonarqube-perfis-de-qualidade-aplicados.md)
+1714. [SonarQube Server: Quality gate como critério de integração](../../domains/software-0009/software/seguranca/sonarqube-quality-gate-como-criterio-de-integracao.md)
+1715. [SonarQube Server: Definição de código novo](../../domains/software-0009/software/seguranca/sonarqube-definicao-de-codigo-novo.md)
+1716. [SonarQube Server: Análise de taint e APIs internas](../../domains/software-0009/software/seguranca/sonarqube-analise-de-taint-e-apis-internas.md)
+1717. [SonarQube Server: Exclusões por caminho](../../domains/software-0009/software/seguranca/sonarqube-exclusoes-por-caminho.md)
+1718. [SonarQube Server: Cobertura de testes como dado separado](../../domains/software-0009/software/seguranca/sonarqube-cobertura-de-testes-como-dado-separado.md)
+1719. [SonarQube Server: Revisão e resolução de issues](../../domains/software-0009/software/seguranca/sonarqube-revisao-e-resolucao-de-issues.md)
+1720. [SonarQube Server: Build scanner reproduzível em CI](../../domains/software-0009/software/seguranca/sonarqube-build-scanner-reproduzivel-em-ci.md)
+
+### Snyk CLI — interface de linha de comando para análise de dependências, código, imagens de containers, IaC e segredos
+
+1721. [Snyk CLI: Preparar autenticação e ambiente](../../domains/software-0009/software/seguranca/snyk-preparar-autenticacao-e-ambiente.md)
+1722. [Snyk CLI: Análise de dependências com snyk test](../../domains/software-0009/software/seguranca/snyk-analise-de-dependencias-com-snyk-test.md)
+1723. [Snyk CLI: Análise SAST com snyk code test](../../domains/software-0009/software/seguranca/snyk-analise-sast-com-snyk-code-test.md)
+1724. [Snyk CLI: Varredura de infraestrutura como código](../../domains/software-0009/software/seguranca/snyk-varredura-de-infraestrutura-como-codigo.md)
+1725. [Snyk CLI: Inspeção de imagens de container](../../domains/software-0009/software/seguranca/snyk-inspecao-de-imagens-de-container.md)
+1726. [Snyk CLI: Busca de segredos em arquivos](../../domains/software-0009/software/seguranca/snyk-busca-de-segredos-em-arquivos.md)
+1727. [Snyk CLI: Monitoramento de projeto](../../domains/software-0009/software/seguranca/snyk-monitoramento-de-projeto.md)
+1728. [Snyk CLI: Exclusão controlada de diretórios](../../domains/software-0009/software/seguranca/snyk-exclusao-controlada-de-diretorios.md)
+1729. [Snyk CLI: Integrar resultados ao pipeline](../../domains/software-0009/software/seguranca/snyk-integrar-resultados-ao-pipeline.md)
+1730. [Snyk CLI: Aplicar correções com revisão](../../domains/software-0009/software/seguranca/snyk-aplicar-correcoes-com-revisao.md)
+
+### Kubescape — scanner de segurança Kubernetes que avalia clusters, manifests e charts contra frameworks e controles publicados
+
+1731. [Kubescape: Selecionar framework explicitamente](../../domains/software-0009/software/seguranca/kubescape-selecionar-framework-explicitamente.md)
+1732. [Kubescape: Executar scan de um control](../../domains/software-0009/software/seguranca/kubescape-executar-scan-de-um-control.md)
+1733. [Kubescape: Analisar manifests locais antes do deploy](../../domains/software-0009/software/seguranca/kubescape-analisar-manifests-locais-antes-do-deploy.md)
+1734. [Kubescape: Examinar cluster com kubeconfig definido](../../domains/software-0009/software/seguranca/kubescape-examinar-cluster-com-kubeconfig-definido.md)
+1735. [Kubescape: Escanear charts e templates renderizados](../../domains/software-0009/software/seguranca/kubescape-escanear-charts-e-templates-renderizados.md)
+1736. [Kubescape: Definir limiar de conformidade no CI](../../domains/software-0009/software/seguranca/kubescape-definir-limiar-de-conformidade-no-ci.md)
+1737. [Kubescape: Governar exceções de findings](../../domains/software-0009/software/seguranca/kubescape-governar-excecoes-de-findings.md)
+1738. [Kubescape: Interpretar remediação assistida](../../domains/software-0009/software/seguranca/kubescape-interpretar-remediacao-assistida.md)
+1739. [Kubescape: Conhecer requisitos do host scanner](../../domains/software-0009/software/seguranca/kubescape-conhecer-requisitos-do-host-scanner.md)
+1740. [Kubescape: Publicar resultados JUnit em CI](../../domains/software-0009/software/seguranca/kubescape-publicar-resultados-junit-em-ci.md)
+
+### KubeLinter — analisador estático para YAML Kubernetes, charts Helm e manifests Kustomize com checks padrão e configuráveis
+
+1741. [KubeLinter: Começar pelos checks padrões](../../domains/software-0009/software/seguranca/kube-linter-comecar-pelos-checks-padroes.md)
+1742. [KubeLinter: Precedência do arquivo de configuração](../../domains/software-0009/software/seguranca/kube-linter-precedencia-do-arquivo-de-configuracao.md)
+1743. [KubeLinter: Selecionar checks por inclusão e exclusão](../../domains/software-0009/software/seguranca/kube-linter-selecionar-checks-por-inclusao-e-exclusao.md)
+1744. [KubeLinter: Criar checks customizados a partir de templates](../../domains/software-0009/software/seguranca/kube-linter-criar-checks-customizados-a-partir-de-templates.md)
+1745. [KubeLinter: Ignorar paths com escopo limitado](../../domains/software-0009/software/seguranca/kube-linter-ignorar-paths-com-escopo-limitado.md)
+1746. [KubeLinter: Avaliar charts Helm](../../domains/software-0009/software/seguranca/kube-linter-avaliar-charts-helm.md)
+1747. [KubeLinter: Inspecionar lista de checks instalados](../../domains/software-0009/software/seguranca/kube-linter-inspecionar-lista-de-checks-instalados.md)
+1748. [KubeLinter: Usar resultado como pre-merge gate](../../domains/software-0009/software/seguranca/kube-linter-usar-resultado-como-pre-merge-gate.md)
+1749. [KubeLinter: Interpretar objeto e orientação de correção](../../domains/software-0009/software/seguranca/kube-linter-interpretar-objeto-e-orientacao-de-correcao.md)
+1750. [KubeLinter: Distinguir lint de avaliação de runtime](../../domains/software-0009/software/seguranca/kube-linter-distinguir-lint-de-avaliacao-de-runtime.md)
+
+### Cilium Tetragon — sistema eBPF de observabilidade e enforcement de segurança em runtime para processos, arquivos e rede
+
+1751. [Cilium Tetragon: Escolher hook point da policy](../../domains/software-0009/software/seguranca/tetragon-escolher-hook-point-da-policy.md)
+1752. [Cilium Tetragon: Filtrar eventos no kernel](../../domains/software-0009/software/seguranca/tetragon-filtrar-eventos-no-kernel.md)
+1753. [Cilium Tetragon: Executar primeiro em modo monitor](../../domains/software-0009/software/seguranca/tetragon-executar-primeiro-em-modo-monitor.md)
+1754. [Cilium Tetragon: Usar enforcement somente com evidência](../../domains/software-0009/software/seguranca/tetragon-usar-enforcement-somente-com-evidencia.md)
+1755. [Cilium Tetragon: Entender modo monitor_only](../../domains/software-0009/software/seguranca/tetragon-entender-modo-monitor-only.md)
+1756. [Cilium Tetragon: Separar domínios de carregamento](../../domains/software-0009/software/seguranca/tetragon-separar-dominios-de-carregamento.md)
+1757. [Cilium Tetragon: Limitar policy por namespace e labels](../../domains/software-0009/software/seguranca/tetragon-limitar-policy-por-namespace-e-labels.md)
+1758. [Cilium Tetragon: Monitorar acesso a arquivos sensíveis](../../domains/software-0009/software/seguranca/tetragon-monitorar-acesso-a-arquivos-sensiveis.md)
+1759. [Cilium Tetragon: Avaliar conexão de rede por processo](../../domains/software-0009/software/seguranca/tetragon-avaliar-conexao-de-rede-por-processo.md)
+1760. [Cilium Tetragon: Versionar policies e testar compatibilidade](../../domains/software-0009/software/seguranca/tetragon-versionar-policies-e-testar-compatibilidade.md)
+
+### Renovate — bot de atualização de dependências que cria branches e pull requests configuráveis para repositórios de software
+
+1761. [Renovate: Versionar configuração de Renovate](../../domains/software-0009/software/seguranca/renovate-versionar-configuracao-de-renovate.md)
+1762. [Renovate: Selecionar managers e manifests](../../domains/software-0009/software/seguranca/renovate-selecionar-managers-e-manifests.md)
+1763. [Renovate: Agendar verificações de atualização](../../domains/software-0009/software/seguranca/renovate-agendar-verificacoes-de-atualizacao.md)
+1764. [Renovate: Agrupar updates por regra](../../domains/software-0009/software/seguranca/renovate-agrupar-updates-por-regra.md)
+1765. [Renovate: Limitar automerge por tipo de update](../../domains/software-0009/software/seguranca/renovate-limitar-automerge-por-tipo-de-update.md)
+1766. [Renovate: Exigir aprovação para major updates](../../domains/software-0009/software/seguranca/renovate-exigir-aprovacao-para-major-updates.md)
+1767. [Renovate: Controlar forma de merge](../../domains/software-0009/software/seguranca/renovate-controlar-forma-de-merge.md)
+1768. [Renovate: Usar dashboard para backlog de dependências](../../domains/software-0009/software/seguranca/renovate-usar-dashboard-para-backlog-de-dependencias.md)
+1769. [Renovate: Atualizar lockfiles com teste](../../domains/software-0009/software/seguranca/renovate-atualizar-lockfiles-com-teste.md)
+1770. [Renovate: Separar alertas de vulnerabilidade de rotina](../../domains/software-0009/software/seguranca/renovate-separar-alertas-de-vulnerabilidade-de-rotina.md)
+
+### GitHub Dependabot — serviço do GitHub que informa vulnerabilidades em dependências e pode propor atualizações via pull request
+
+1771. [GitHub Dependabot: Distinguir alertas de updates agendados](../../domains/software-0009/software/seguranca/dependabot-distinguir-alertas-de-updates-agendados.md)
+1772. [GitHub Dependabot: Estruturar dependabot.yml](../../domains/software-0009/software/seguranca/dependabot-estruturar-dependabot-yml.md)
+1773. [GitHub Dependabot: Escolher package ecosystem correto](../../domains/software-0009/software/seguranca/dependabot-escolher-package-ecosystem-correto.md)
+1774. [GitHub Dependabot: Configurar frequência de version updates](../../domains/software-0009/software/seguranca/dependabot-configurar-frequencia-de-version-updates.md)
+1775. [GitHub Dependabot: Limitar pull requests em aberto](../../domains/software-0009/software/seguranca/dependabot-limitar-pull-requests-em-aberto.md)
+1776. [GitHub Dependabot: Ignorar versões com escopo](../../domains/software-0009/software/seguranca/dependabot-ignorar-versoes-com-escopo.md)
+1777. [GitHub Dependabot: Autenticar acesso a registries privados](../../domains/software-0009/software/seguranca/dependabot-autenticar-acesso-a-registries-privados.md)
+1778. [GitHub Dependabot: Atualizar dependências de GitHub Actions](../../domains/software-0009/software/seguranca/dependabot-atualizar-dependencias-de-github-actions.md)
+1779. [GitHub Dependabot: Testar security update pull request](../../domains/software-0009/software/seguranca/dependabot-testar-security-update-pull-request.md)
+1780. [GitHub Dependabot: Priorizar triagem de alerta](../../domains/software-0009/software/seguranca/dependabot-priorizar-triagem-de-alerta.md)
+
+### CycloneDX CLI — ferramenta de linha de comando para validar, analisar, mesclar, comparar, converter e assinar documentos BOM
+
+1781. [CycloneDX CLI: Validar contra schema escolhido](../../domains/software-0009/software/seguranca/cyclonedx-cli-validar-contra-schema-escolhido.md)
+1782. [CycloneDX CLI: Converter formato de BOM](../../domains/software-0009/software/seguranca/cyclonedx-cli-converter-formato-de-bom.md)
+1783. [CycloneDX CLI: Inspecionar múltiplas versões de componentes](../../domains/software-0009/software/seguranca/cyclonedx-cli-inspecionar-multiplas-versoes-de-componentes.md)
+1784. [CycloneDX CLI: Comparar BOMs entre releases](../../domains/software-0009/software/seguranca/cyclonedx-cli-comparar-boms-entre-releases.md)
+1785. [CycloneDX CLI: Mesclar inventários com proveniência](../../domains/software-0009/software/seguranca/cyclonedx-cli-mesclar-inventarios-com-proveniencia.md)
+1786. [CycloneDX CLI: Adicionar informações a um BOM](../../domains/software-0009/software/seguranca/cyclonedx-cli-adicionar-informacoes-a-um-bom.md)
+1787. [CycloneDX CLI: Assinar e verificar documentos](../../domains/software-0009/software/seguranca/cyclonedx-cli-assinar-e-verificar-documentos.md)
+1788. [CycloneDX CLI: Escolher versão de saída conscientemente](../../domains/software-0009/software/seguranca/cyclonedx-cli-escolher-versao-de-saida-conscientemente.md)
+1789. [CycloneDX CLI: Integrar validação ao CI](../../domains/software-0009/software/seguranca/cyclonedx-cli-integrar-validacao-ao-ci.md)
+1790. [CycloneDX CLI: Interpretar BOM como inventário, não scan](../../domains/software-0009/software/seguranca/cyclonedx-cli-interpretar-bom-como-inventario-nao-scan.md)
+
+### AWS CloudFormation Guard — ferramenta policy-as-code para validar dados JSON ou YAML com regras declarativas antes da implantação
+
+1791. [AWS CloudFormation Guard: Modelar uma clause booleana](../../domains/software-0009/software/seguranca/cfn-guard-modelar-uma-clause-booleana.md)
+1792. [AWS CloudFormation Guard: Reutilizar named-rule blocks](../../domains/software-0009/software/seguranca/cfn-guard-reutilizar-named-rule-blocks.md)
+1793. [AWS CloudFormation Guard: Testar regras antes da validação](../../domains/software-0009/software/seguranca/cfn-guard-testar-regras-antes-da-validacao.md)
+1794. [AWS CloudFormation Guard: Validar arquivo de entrada com rules file](../../domains/software-0009/software/seguranca/cfn-guard-validar-arquivo-de-entrada-com-rules-file.md)
+1795. [AWS CloudFormation Guard: Aplicar múltiplas regras e arquivos](../../domains/software-0009/software/seguranca/cfn-guard-aplicar-multiplas-regras-e-arquivos.md)
+1796. [AWS CloudFormation Guard: Injetar parâmetros de contexto](../../domains/software-0009/software/seguranca/cfn-guard-injetar-parametros-de-contexto.md)
+1797. [AWS CloudFormation Guard: Fornecer mensagens de violação úteis](../../domains/software-0009/software/seguranca/cfn-guard-fornecer-mensagens-de-violacao-uteis.md)
+1798. [AWS CloudFormation Guard: Consultar estruturas aninhadas](../../domains/software-0009/software/seguranca/cfn-guard-consultar-estruturas-aninhadas.md)
+1799. [AWS CloudFormation Guard: Usar Guard como gate de template](../../domains/software-0009/software/seguranca/cfn-guard-usar-guard-como-gate-de-template.md)
+1800. [AWS CloudFormation Guard: Versionar regras e aprovações](../../domains/software-0009/software/seguranca/cfn-guard-versionar-regras-e-aprovacoes.md)
