@@ -21,14 +21,14 @@ A cobertura poderá incluir prototipagem, ferramentas e engines de jogos, geraç
 - Domínio / subdomínio: `software` / `criacao-ia` (`knowledge-federation/domains/software-0010/software/criacao-ia/`)
 - Meta: **2.000 notas substantivas**
 - Cadência: **20 tranches planejadas × 100 notas**
-- Notas materiais redigidas: **300 / 2.000 (15,00%)**
-- Gate automatizado: **300/300 aprovadas**
-- Revisão factual humana: **0/300** (nenhuma aprovação humana solicitada ou registrada)
-- Revisão factual por IA: **300/300** (relatórios das tranches 1, 2 e 3)
-- Notas válidas contabilizadas: **300/2.000 (15,00%)**
-- Estado: `in_progress` — tranches 1, 2 e 3 concluídas e reconciliadas; 17 tranches planejadas permanecem sem IDs reservados.
+- Notas materiais redigidas: **400 / 2.000 (20,00%)**
+- Gate automatizado: **400/400 aprovadas**
+- Revisão factual humana: **0/400** (nenhuma aprovação humana solicitada ou registrada)
+- Revisão factual por IA: **400/400** (relatórios das tranches 1, 2, 3 e 4)
+- Notas válidas contabilizadas: **400/2.000 (20,00%)**
+- Estado: `in_progress` — tranches 1, 2, 3 e 4 concluídas e reconciliadas; 16 tranches planejadas permanecem sem IDs reservados.
 
-A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–300, com arquivos e conteúdo; para as 1.700 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
+A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–400, com arquivos e conteúdo; para as 1.600 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
 
 ## Eixos editoriais iniciais
 
@@ -445,6 +445,139 @@ IDs materiais: `software.criacao_ia.tranche03.000201`–`software.criacao_ia.tra
 299. [OAS 3.1.1 Path Item `$ref`: não sobrepor fields com o alvo](../../domains/software-0010/software/criacao-ia/oas311-path-item-ref-conflitos.md) — `software.criacao_ia.tranche03.000299`
 300. [OAS 3.1.1: validar readOnly e writeOnly conforme direção da mensagem](../../domains/software-0010/software/criacao-ia/oas311-readonly-writeonly-annotations.md) — `software.criacao_ia.tranche03.000300`
 
+## Tranche 4 — WebGPU, WGSL, Bevy ECS, Unity Entities, Godot shaders, GDExtension, Blender cor/VSE, Web Audio, llama.cpp server e geração no Transformers (100 notas)
+
+IDs materiais: `software.criacao_ia.tranche04.000301`–`software.criacao_ia.tranche04.000400`. Cada tópico tem fontes primárias específicas na própria nota; eixos com cobertura anterior (Playwright, OpenTelemetry, OpenAPI genérico) não foram reescritos.
+
+### WebGPU: adaptador, buffers, texturas, bindings e diagnóstico
+
+301. [WebGPU: filtrar adaptador por potência e modo de compatibilidade](../../domains/software-0010/software/criacao-ia/webgpu-requestadapter-por-criterios.md) — `software.criacao_ia.tranche04.000301`
+302. [WebGPU: tratar device lost como fronteira de recuperação](../../domains/software-0010/software/criacao-ia/webgpu-devicelost-camada-recuperacao.md) — `software.criacao_ia.tranche04.000302`
+303. [WebGPU: pedir limites maiores e calcular antes do limite suportado](../../domains/software-0010/software/criacao-ia/webgpu-requiredlimits-calcular-custo.md) — `software.criacao_ia.tranche04.000303`
+304. [WebGPU: features são opcionais e viram dependência de plataforma](../../domains/software-0010/software/criacao-ia/webgpu-features-antes-dependencia.md) — `software.criacao_ia.tranche04.000304`
+305. [WebGPU: ler dados da GPU exige buffer staging com MAP_READ](../../domains/software-0010/software/criacao-ia/webgpu-leitura-gpu-staging-buffer.md) — `software.criacao_ia.tranche04.000305`
+306. [WebGPU: mappedAtCreation para dados iniciais sem cópia adicional](../../domains/software-0010/software/criacao-ia/webgpu-mappedatcreation-dado-inicial.md) — `software.criacao_ia.tranche04.000306`
+307. [WebGPU: declarar cada uso de textura no momento certo](../../domains/software-0010/software/criacao-ia/webgpu-textureusage-views-permitidos.md) — `software.criacao_ia.tranche04.000307`
+308. [WebGPU: bind groups só valem se o layout for compatível com o pipeline](../../domains/software-0010/software/criacao-ia/webgpu-bindgrouplayout-compatibilidade.md) — `software.criacao_ia.tranche04.000308`
+309. [WebGPU: capturar erros assíncronos com escopos empilhados](../../domains/software-0010/software/criacao-ia/webgpu-erros-asyncronos-escopos.md) — `software.criacao_ia.tranche04.000309`
+310. [WebGPU: medir tempo de GPU com query sets de timestamp](../../domains/software-0010/software/criacao-ia/webgpu-timestamp-medir-gpu-real.md) — `software.criacao_ia.tranche04.000310`
+
+### WGSL: classes de armazenamento, layout de binding, tipos e diagnóstico de compilação
+
+311. [WGSL: escolher a classe de armazenamento pelo tempo de vida](../../domains/software-0010/software/criacao-ia/wgsl-classes-armazenamento-escopo.md) — `software.criacao_ia.tranche04.000311`
+312. [WGSL: pares @group/@binding são contrato com o layout do pipeline](../../domains/software-0010/software/criacao-ia/wgsl-binding-layout-visibilidade.md) — `software.criacao_ia.tranche04.000312`
+313. [WGSL: o layout de uniform padroniza tudo em 16 bytes](../../domains/software-0010/software/criacao-ia/wgsl-alinhamento-uniform-cinco-regra.md) — `software.criacao_ia.tranche04.000313`
+314. [WGSL: só o storage buffer aceita array de tamanho em tempo de execução](../../domains/software-0010/software/criacao-ia/wgsl-storage-runtime-array.md) — `software.criacao_ia.tranche04.000314`
+315. [WGSL: constantes overridables ajustam o pipeline sem recompilar o shader](../../domains/software-0010/software/criacao-ia/wgsl-override-constantes-pipeline.md) — `software.criacao_ia.tranche04.000315`
+316. [WGSL: atômicos só em memória de escrita explícita, e CAS é loop manual](../../domains/software-0010/software/criacao-ia/wgsl-atomicos-compare-loop.md) — `software.criacao_ia.tranche04.000316`
+317. [WGSL: amostrar uma textura exige ver o tipo certo, não só o binding](../../domains/software-0010/software/criacao-ia/wgsl-textura-amostragem-tipo-view.md) — `software.criacao_ia.tranche04.000317`
+318. [WGSL: cada estágio expõe apenas os embutidos que fazem sentido para ele](../../domains/software-0010/software/criacao-ia/wgsl-builtins-estagios-corte.md) — `software.criacao_ia.tranche04.000318`
+319. [WGSL: fluxo divergente e operações uniformes — uma análise, não uma sugestão](../../domains/software-0010/software/criacao-ia/wgsl-uniformidade-amostragem.md) — `software.criacao_ia.tranche04.000319`
+320. [WGSL: sem coerções implícitas — o construtor é obrigatório e o erro é cedo](../../domains/software-0010/software/criacao-ia/wgsl-sem-conversao-implicita.md) — `software.criacao_ia.tranche04.000320`
+
+### Bevy ECS: agendamento, queries, mutação adiada e organização de app
+
+321. [Bevy ECS: Startup roda uma vez antes de tudo; Update é o loop](../../domains/software-0010/software/criacao-ia/bevy-startup-update-duas-momentos.md) — `software.criacao_ia.tranche04.000321`
+322. [Bevy ECS: o paralelismo vem dos acessos declarados, não de threads manuais](../../domains/software-0010/software/criacao-ia/bevy-paralelismo-por-acesso.md) — `software.criacao_ia.tranche04.000322`
+323. [Bevy ECS: use chain() onde a ordem importa, e só lá](../../domains/software-0010/software/criacao-ia/bevy-chain-ordenamento-minimo.md) — `software.criacao_ia.tranche04.000323`
+324. [Bevy ECS: uma query &mut é o ponto único de escrita de um tipo](../../domains/software-0010/software/criacao-ia/bevy-query-mutavel-unico-por-alvo.md) — `software.criacao_ia.tranche04.000324`
+325. [Bevy ECS: com With/Without você estreita o alvo sem quebrar o contrato de acesso](../../domains/software-0010/software/criacao-ia/bevy-query-filtros-refinam-superficie.md) — `software.criacao_ia.tranche04.000325`
+326. [Bevy ECS: Commands é a fila de mutação estrutural adiada](../../domains/software-0010/software/criacao-ia/bevy-commands-mundo-diferido.md) — `software.criacao_ia.tranche04.000326`
+327. [Bevy ECS: resources são o valor-único do mundo, não mais um componente](../../domains/software-0010/software/criacao-ia/bevy-resources-valor-unico-mundo.md) — `software.criacao_ia.tranche04.000327`
+328. [Bevy ECS: componente é struct Rust com derive — a decomposição é o design](../../domains/software-0010/software/criacao-ia/bevy-componente-struct-derive.md) — `software.criacao_ia.tranche04.000328`
+329. [Bevy ECS: Plugin é a unidade de empacotamento, não de lógica](../../domains/software-0010/software/criacao-ia/bevy-plugins-unidade-distribuicao.md) — `software.criacao_ia.tranche04.000329`
+330. [Bevy ECS: App planeja, Schedule decide quando, World guarda o estado](../../domains/software-0010/software/criacao-ia/bevy-app-schedule-world-camadas.md) — `software.criacao_ia.tranche04.000330`
+
+### Unity Entities (DOTS): mudanças estruturais, jobs, safety e armazenamento por chunk
+
+331. [Unity Entities: criar/destruir é caro porque o layout muda, e por isso é estrutural](../../domains/software-0010/software/criacao-ia/unity-estrutura-mudanca-custo-episodio.md) — `software.criacao_ia.tranche04.000331`
+332. [Unity Entities: a EntityCommandBuffer é replay, não fila mágica](../../domains/software-0010/software/criacao-ia/unity-ecb-bufferfromentity-replay.md) — `software.criacao_ia.tranche04.000332`
+333. [Unity Entities: IJobEntity gera código por assinatura — e pode virar main thread sem aviso de sintaxe](../../domains/software-0010/software/criacao-ia/unity-ijobentity-fonte-gerada-main-thread.md) — `software.criacao_ia.tranche04.000333`
+334. [Unity Jobs: o safety system é a sua revisão de concorrência em tempo de execução](../../domains/software-0010/software/criacao-ia/unity-safety-system-corrida-exception.md) — `software.criacao_ia.tranche04.000334`
+335. [Unity Jobs: em IJobParallelFor você escreve no seu índice e lê fora com intenção declarada](../../domains/software-0010/software/criacao-ia/unity-parallelfor-indexo-proprio.md) — `software.criacao_ia.tranche04.000335`
+336. [Unity Entities: iterar por chunk é o grão de leitura da arquitetura](../../domains/software-0010/software/criacao-ia/unity-chunks-arquetipos-leitura-lote.md) — `software.criacao_ia.tranche04.000336`
+337. [Unity Entities: RefRW/RefRO são handles com verificação, não ponteiros para sempre](../../domains/software-0010/software/criacao-ia/unity-refrw-invalidacao-apos-estrutural.md) — `software.criacao_ia.tranche04.000337`
+338. [Unity Entities: Blob assets são o lado imutável do dado, não JSON serializado](../../domains/software-0010/software/criacao-ia/unity-blob-assets-imutavel-compacto.md) — `software.criacao_ia.tranche04.000338`
+339. [Unity Entities: RefAspect limpa a assinatura do sistema, não o armazenamento](../../domains/software-0010/software/criacao-ia/unity-aspects-limpeza-de-assinatura.md) — `software.criacao_ia.tranche04.000339`
+340. [Unity Entities: o baking é a fronteira de conversão cena↔ECS, e o runtime tem outra porta](../../domains/software-0010/software/criacao-ia/unity-baking-ponteiro-cenario-para-ecs.md) — `software.criacao_ia.tranche04.000340`
+
+### Godot 4: linguagem de shaders, embutidos canvas-item e flags de render espacial
+
+341. [Godot 4: cada tipo de shader tem seu conjunto de embutidos — a referência é o mapa](../../domains/software-0010/software/criacao-ia/godot-shader-builtins-por-familia.md) — `software.criacao_ia.tranche04.000341`
+342. [Godot 4: no canvas-item, VERTEX fala em píxeles locais — não em UV nem em mundo](../../domains/software-0010/software/criacao-ia/godot-canvas-vertex-px-locais.md) — `software.criacao_ia.tranche04.000342`
+343. [Godot 4: TIME é tempo de render em segundos, com rolover e sem pause](../../domains/software-0010/software/criacao-ia/godot-tempo-time-rollover-pause.md) — `software.criacao_ia.tranche04.000343`
+344. [Godot 4: COLOR em 2D é a trama de vértice × modulate × self_modulate](../../domains/software-0010/software/criacao-ia/godot-color-vertex-multipliers.md) — `software.criacao_ia.tranche04.000344`
+345. [Godot 4: INSTANCE_CUSTOM é o canal de dados por-partícula para o shader 2D](../../domains/software-0010/software/criacao-ia/godot-particulas-instance-custom.md) — `software.criacao_ia.tranche04.000345`
+346. [Godot 4: a shading language não faz cast implícito — e suas variáveis locais nascem sem inicializar](../../domains/software-0010/software/criacao-ia/godot-shading-sem-cast-implicito.md) — `software.criacao_ia.tranche04.000346`
+347. [Godot 4: o /** acima do uniform é documentação vira-inspetor, não comentário decorativo](../../domains/software-0010/software/criacao-ia/godot-uniform-docs-inspector.md) — `software.criacao_ia.tranche04.000347`
+348. [Godot 4: os blend modes do material espacial e o truque do fog em blend_add](../../domains/software-0010/software/criacao-ia/godot-blend-modes-spatial.md) — `software.criacao_ia.tranche04.000348`
+349. [Godot 4: flags de render do shader espacial que economizam passes inteiros](../../domains/software-0010/software/criacao-ia/godot-render-flags-sombras-wireframe.md) — `software.criacao_ia.tranche04.000349`
+350. [Godot 4: nas shaders, matrizes são colunares — m[1][0] é a segunda coluna, primeira linha](../../domains/software-0010/software/criacao-ia/godot-shader-matrizes-colunares.md) — `software.criacao_ia.tranche04.000350`
+
+### Godot 4 GDExtension: o arquivo .gdextension, compatibilidade de versão e bindings nativos
+
+351. [Godot 4: GDExtension é a ponte runtime para bibliotecas nativas](../../domains/software-0010/software/criacao-ia/gdextension-biblioteca-compartilhada-runtime.md) — `software.criacao_ia.tranche04.000351`
+352. [Godot 4: entry_symbol é o contrato mínimo do arquivo .gdextension](../../domains/software-0010/software/criacao-ia/gdextension-entry-symbol-obrigatorio.md) — `software.criacao_ia.tranche04.000352`
+353. [Godot 4: mire a extensão na versão mais baixa que te atende, não na mais nova](../../domains/software-0010/software/criacao-ia/gdextension-alvo-baixo-compative-frente.md) — `software.criacao_ia.tranche04.000353`
+354. [Godot 4: compatibility_minimum e maximum são portas de carga, não metadados](../../domains/software-0010/software/criacao-ia/gdextension-compatibility-min-max.md) — `software.criacao_ia.tranche04.000354`
+355. [Godot 4: reloadable recarrega a extensão — e é ferramenta de desenvolvimento, não de produção](../../domains/software-0010/software/criacao-ia/gdextension-reloadable-dev-debug.md) — `software.criacao_ia.tranche04.000355`
+356. [Godot 4: a seção [libraries] é um filtro por feature flags, não uma lista de caminhos](../../domains/software-0010/software/criacao-ia/gdextension-libraries-feature-tags.md) — `software.criacao_ia.tranche04.000356`
+357. [Godot 4: no .gdextension, a linha mais específica precisa vir antes — o matching é sequencial](../../domains/software-0010/software/criacao-ia/gdextension-ordem-especifica-antes.md) — `software.criacao_ia.tranche04.000357`
+358. [Godot 4: a extensão só carrega no build de motor com a mesma precisão de float](../../domains/software-0010/software/criacao-ia/gdextension-double-single-api-json.md) — `software.criacao_ia.tranche04.000358`
+359. [Godot 4: [icons] e [dependencies] completam o .gdextension — com contrato de 16×16 px](../../domains/software-0010/software/criacao-ia/gdextension-icone-svg-e-dependencies.md) — `software.criacao_ia.tranche04.000359`
+360. [Godot 4: godot-cpp versus módulos C++ — uma decisão de distribuição](../../domains/software-0010/software/criacao-ia/gdextension-vs-modules-custo-distribuicao.md) — `software.criacao_ia.tranche04.000360`
+
+### Blender 5.2 LTS: gestão de cor (view transforms, espaços) e pipeline de proxy/cache do VSE
+
+361. [Blender: o View Transform (AgX, Filmic, Standard) é decisão de destino, não de look](../../domains/software-0010/software/criacao-ia/blender-view-transform-agx-filmic-standard.md) — `software.criacao_ia.tranche04.000361`
+362. [Blender: máscaras, normal maps e LUTs são Non-Color — converter dado é corromper sinal](../../domains/software-0010/software/criacao-ia/blender-non-color-dados-nunca-convertidos.md) — `software.criacao_ia.tranche04.000362`
+363. [Blender: o display view não é o arquivo salvo — o laço View as Render/Save as Render](../../domains/software-0010/software/criacao-ia/blender-what-you-see-is-not-what-you-save.md) — `software.criacao_ia.tranche04.000363`
+364. [Blender VSE: Proxy Render Size é um switch global que habilita todos os strips](../../domains/software-0010/software/criacao-ia/blender-proxy-tamanho-global-view.md) — `software.criacao_ia.tranche04.000364`
+365. [Blender VSE: proxies vivem em BL_proxy junto da footage — e podem ser arquivos existentes](../../domains/software-0010/software/criacao-ia/blender-proxy-bl-pasta-e-arquivos-externos.md) — `software.criacao_ia.tranche04.000365`
+366. [Blender VSE: Quality do proxy é compressão com perda em percentual direto — 100 é sem perda](../../domains/software-0010/software/criacao-ia/blender-proxy-quality-lossy-percentual.md) — `software.criacao_ia.tranche04.000366`
+367. [Blender VSE: Memory Cache Limit vive nas Preferences, e o VSE lê dele](../../domains/software-0010/software/criacao-ia/blender-sequencer-cache-memoria-limites.md) — `software.criacao_ia.tranche04.000367`
+368. [Blender 5.2: o backend da interface é escolha (OpenGL × Vulkan) com custo de reinicialização](../../domains/software-0010/software/criacao-ia/blender-backend-vulkan-interface-52.md) — `software.criacao_ia.tranche04.000368`
+369. [Blender 5.2: os limites de memória do System — undo, shaders, geometry nodes — e seus efeitos colaterais](../../domains/software-0010/software/criacao-ia/blender-limites-de-memoria-undo-shaders-stack.md) — `software.criacao_ia.tranche04.000369`
+370. [Blender VSE: Proxy Setup Automatic gera sozinho, Manual delega à farm — a decisão é de pipeline](../../domains/software-0010/software/criacao-ia/blender-proxy-setup-automatico-vs-manual.md) — `software.criacao_ia.tranche04.000370`
+
+### Web Audio API: tempo, autoplay, worklets e os nós de espacialização/análise
+
+371. [Web Audio: o AudioContext nasce suspenso e só um gesto humano o acorda](../../domains/software-0010/software/criacao-ia/webaudio-contexto-suspenso-gesto.md) — `software.criacao_ia.tranche04.000371`
+372. [Web Audio: nós de fonte são one-shot — start() e stop() cada um uma vez só](../../domains/software-0010/software/criacao-ia/webaudio-fontes-oneshot-start-stop.md) — `software.criacao_ia.tranche04.000372`
+373. [Web Audio: setTargetAtTime é o easing exponencial — a constante define 63%, não o fim](../../domains/software-0010/software/criacao-ia/webaudio-settargetattime-constante-tempo.md) — `software.criacao_ia.tranche04.000373`
+374. [Web Audio: exponentialRampToValueAtTime não passa por zero — nem começando nem terminando nele](../../domains/software-0010/software/criacao-ia/webaudio-exp-ramp-zero-proibido.md) — `software.criacao_ia.tranche04.000374`
+375. [Web Audio: decodeAudioData ressampleia para o contexto e exige o dado completo](../../domains/software-0010/software/criacao-ia/webaudio-decodeaudiodata-ressample-completo.md) — `software.criacao_ia.tranche04.000375`
+376. [Web Audio: AudioWorklet é módulo separado com o seu próprio global scope](../../domains/software-0010/software/criacao-ia/webaudio-audioworklet-modulos-processador.md) — `software.criacao_ia.tranche04.000376`
+377. [Web Audio: o port do AudioWorkletNode é o fio da navalha entre página e render](../../domains/software-0010/software/criacao-ia/webaudio-worklet-port-fio-da-navalha.md) — `software.criacao_ia.tranche04.000377`
+378. [Web Audio: PannerNode escolhe como o som se move no espaço — pan, equal power ou HRTF](../../domains/software-0010/software/criacao-ia/webaudio-panner-modelos-espaciais.md) — `software.criacao_ia.tranche04.000378`
+379. [Web Audio: ConvolverNode é a reverberação física — e o IR define canal por canal](../../domains/software-0010/software/criacao-ia/webaudio-convolver-resposta-ao-impulso.md) — `software.criacao_ia.tranche04.000379`
+380. [Web Audio: AnalyserNode dá o espectro com janela e suavização — não a FFT crua](../../domains/software-0010/software/criacao-ia/webaudio-analyser-janela-frequencia.md) — `software.criacao_ia.tranche04.000380`
+
+### llama.cpp server: contexto, cache de KV, slots paralelos, endpoints e saída estruturada
+
+381. [llama.cpp server: tamanho de contexto e batch de prompt são duas alavancas separadas](../../domains/software-0010/software/criacao-ia/llamacpp-contexto-e-batch-na-carga.md) — `software.criacao_ia.tranche04.000381`
+382. [llama.cpp server: Flash Attention abre a porta da quantização de KV](../../domains/software-0010/software/criacao-ia/llamacpp-flash-attention-quantizacao-kv.md) — `software.criacao_ia.tranche04.000382`
+383. [llama.cpp server: -np multiplica o contexto e -cb faz o cache caber em cada slot](../../domains/software-0010/software/criacao-ia/llamacpp-slots-paralelos-np-cb.md) — `software.criacao_ia.tranche04.000383`
+384. [llama.cpp server: cache de prompt tem três camadas — o mesmo estado, três knobs](../../domains/software-0010/software/criacao-ia/llamacpp-cache-prompt-ram-e-reuse.md) — `software.criacao_ia.tranche04.000384`
+385. [llama.cpp server: /completion é API própria, /v1/completions é a de OpenAI](../../domains/software-0010/software/criacao-ia/llamacpp-endpoints-completion-vs-openai.md) — `software.criacao_ia.tranche04.000385`
+386. [llama.cpp server: não é um servidor de produção exposto — e as três chaves que aproximam](../../domains/software-0010/software/criacao-ia/llamacpp-servidor-sem-auth-na-rede.md) — `software.criacao_ia.tranche04.000386`
+387. [GBNF: a sintaxe que construi constrangimento de tokens, e o que 'root' significa](../../domains/software-0010/software/criacao-ia/gbnf-sintaxe-e-root.md) — `software.criacao_ia.tranche04.000387`
+388. [GBNF: repetições aninhadas custam exponencialmente — e a doc dá o recheio anti-armadilha](../../domains/software-0010/software/criacao-ia/gbnf-custo-e-armadilha-de-repeticao.md) — `software.criacao_ia.tranche04.000388`
+389. [llama.cpp: JSON Schema vira GBNF — restringe a saída e não entra no prompt](../../domains/software-0010/software/criacao-ia/gbnf-json-schema-nao-e-prompt.md) — `software.criacao_ia.tranche04.000389`
+390. [llama.cpp: o pipeline de samplers tem ordem fixa, e cada campo do pedido é um nó dele](../../domains/software-0010/software/criacao-ia/llamacpp-samplers-ordem-fixa.md) — `software.criacao_ia.tranche04.000390`
+
+### Transformers (Hugging Face): geração — config, estratégias, caches de amostragem, KV e decodificação assistida
+
+391. [Transformers: os None da GenerationConfig são herança, não desatenção](../../domains/software-0010/software/criacao-ia/hf-generation-config-nen-hereda-modelo.md) — `software.criacao_ia.tranche04.000391`
+392. [Transformers: max_new_tokens é o budget relativo; max_length é o absoluto que te morderá](../../domains/software-0010/software/criacao-ia/hf-max-new-tokens-vs-max-length.md) — `software.criacao_ia.tranche04.000392`
+393. [Transformers: num_beams × do_sample é uma tabela de 4 modos, não dois knobs independentes](../../domains/software-0010/software/criacao-ia/hf-beams-e-amostragem-tabela.md) — `software.criacao_ia.tranche04.000393`
+394. [Transformers: early_stopping do beam tem três estados — e 'never' existe por um motivo](../../domains/software-0010/software/criacao-ia/hf-early-stopping-never.md) — `software.criacao_ia.tranche04.000394`
+395. [Transformers: os defaults de sampling (1.0/50/1.0) não são config — são a ausência dela](../../domains/software-0010/software/criacao-ia/hf-temperature-topk-topp-defaults.md) — `software.criacao_ia.tranche04.000395`
+396. [Transformers: os filtros alternativos do sampling — min_p, top_h, typical_p — e suas faixas](../../domains/software-0010/software/criacao-ia/hf-min-p-top-h-typical-p-filtros.md) — `software.criacao_ia.tranche04.000396`
+397. [Transformers: o arsenal anti-repetição — n-gramas, penalidades e viés de tokens](../../domains/software-0010/software/criacao-ia/hf-repeticao-ngram-e-bias.md) — `software.criacao_ia.tranche04.000397`
+398. [Transformers: cache_implementation escolhe o destino da KV — dynamic, static, offload ou quantizada](../../domains/software-0010/software/criacao-ia/hf-cache-implementation-quatro-modos.md) — `software.criacao_ia.tranche04.000398`
+399. [Transformers: decodificação assistida — draft por modelo, n-gram, medusa ou ensemble](../../domains/software-0010/software/criacao-ia/hf-assisted-decoding-especifico.md) — `software.criacao_ia.tranche04.000399`
+400. [Transformers: past_key_values no retorno e generate custom por repositório](../../domains/software-0010/software/criacao-ia/hf-retornos-e-custom-generate.md) — `software.criacao_ia.tranche04.000400`
 ## Critério de entrada na contagem
 
 Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, explicação, exemplo, limites, verificação, duas fontes HTTPS específicas, wikilinks resolvidos e ausência de marcadores de template. A revisão factual por IA precisa usar `revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`; não cria nem altera aprovação humana. Gate e revisão factual serão executados e registrados por tranche antes de reconciliar as contagens.
@@ -463,4 +596,7 @@ Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, exp
 - Revisão factual IA da tranche 3: [`ai-review-software-criacao-ia-2000-0004-tranche-03.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md)
 - Gate da tranche 3: [`note-quality-software-criacao-ia-2000-0004-tranche-03.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md)
 - Reconciliação da tranche 3: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md)
+- Revisão factual IA da tranche 4: [`ai-review-software-criacao-ia-2000-0004-tranche-04.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md)
+- Gate da tranche 4: [`note-quality-software-criacao-ia-2000-0004-tranche-04.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md)
+- Reconciliação da tranche 4: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md)
 - Diretório das notas: [`domains/software-0010/software/criacao-ia/`](../../domains/software-0010/software/criacao-ia/)

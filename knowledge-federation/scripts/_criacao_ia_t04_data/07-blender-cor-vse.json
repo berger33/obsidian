@@ -1,0 +1,236 @@
+{
+  "group": "Blender 5.2 LTS: gestão de cor (view transforms, espaços) e pipeline de proxy/cache do VSE",
+  "check": "Revisão da página System das preferências e das páginas do Proxy/cache do Video Sequencer na 'Blender 5.2 LTS Manual' (docs.blender.org/manual/en/latest), lidas em 2026-10-04, mais as páginas de color management verificadas em sessão anterior; claims restritos ao texto conferido.",
+  "notes": [
+    {
+      "slug": "blender-view-transform-agx-filmic-standard",
+      "title": "Blender: o View Transform (AgX, Filmic, Standard) é decisão de destino, não de look",
+      "one": "O View Transform converte a cena linear para o espaço do display, e cada um (AgX, Filmic, Standard, Linear) define um teto de stops e um comportamento de saturação nas altas luzes — antes de qualquer look.",
+      "why": "Times que tratam o view transform como 'filtro' descobrem tarde que a cena foi iluminada para um rolloff que não existe no escolhido: Standard estoura highlights em branco puro, enquanto AgX/Filmic comprimem a faixa alta trocando estouro por desaturação progressiva. A escolha determina quanta luz a cena pode ter antes do clipping.",
+      "how": "Por View de dispositivo (padrão sRGB), o seletor troca entre Standard, AgX, Filmic e Linear: Standard destina-se a vídeo sem fotorealismo e material pronto (sem compressão de faixa); AgX estende a faixa útil para ~16,5 stops com desaturação em luzes altas; Filmic é o antecessor direto; Linear assume display sem transform (uso de referência). A doc do color management lista os Views disponíveis por dispositivo — é aí que a escolha acontece, no render e na preview, cada um com seus Views.",
+      "example": "Uma cena de pôr do sol com céu HDR 'estoura' em Standard mas vira gradiente legível em AgX — sem toque em nenhuma luz: a mudança foi no destino, não na fonte. A look (olho estilizado) entra depois, por Look.",
+      "limits": "Trocar o transform não re-gradua texturas já authoradas para o outro destino (pintura feita em Filmic muda de aspecto em AgX). 'Standard é só para vídeo' é a regra da doc para o caso fotográfico; uso artístico de outros Views tem seu lugar declarado (Linear p/ referência). O render final e a exibição podem divergir quando o destino do arquivo não acompanha o View do display (nota separada sobre salvamento).",
+      "verify": "Renderize o mesmo quadro em cada View e meça a curva em um rampa cinza 0..4 em scopes — a diferença de shoulder é o que você está padronizando. Grave o View escolhido no template de projeto e num teste que falha se o .blend divergir do preset do pipeline. Para look-dev, compare frames com Look desligado e transform ligado.",
+      "sources": [
+        {
+          "label": "Blender — Displays & Views",
+          "url": "https://docs.blender.org/manual/en/latest/render/color_management/displays_views.html",
+          "why": "página oficial que lista os Views por dispositivo e suas propriedades"
+        },
+        {
+          "label": "Blender — Color Spaces",
+          "url": "https://docs.blender.org/manual/en/latest/render/color_management/color_spaces.html",
+          "why": "o outro lado do pipeline: espaços de entrada/trabalho vs Views de saída"
+        }
+      ],
+      "review": "A taxonomia de Views por display device (Standard/AgX/Filmic/Linear) e o perfil de cada um (destinos, ~16,5 stops e desaturação de luzes altas no AgX) foram conferidos na leitura da página na sessão; a página 4.0 correspondente corrobora."
+    },
+    {
+      "slug": "blender-non-color-dados-nunca-convertidos",
+      "title": "Blender: máscaras, normal maps e LUTs são Non-Color — converter dado é corromper sinal",
+      "one": "Imagens que codificam números (vetores de normal, máscaras de altura, tabelas de lookup) precisam de Color Space Non-Color; o pipeline sRGB do resto reinterpreta esses bytes como luminância e deforma o dado.",
+      "why": "É a família de bug 'o normal map parece estranho sob luz rasante' e 'a rampa de altura ficou torta': a textura foi lida com decode sRGB→linear quando cada pixel era um valor cru. A página Color Spaces define o espaço Non-Color como o dos dados que não representam cor — a recusa de conversão é a função, não um ajuste fino.",
+      "how": "No atributo da imagem (image editor > sidebar N > Source, ou no node Image), defina o Color Space como Non-Color para normal/depth/mask/LUT; imagens coloridas permanecem no File (sRGB) e o Working Space do cena é o espaço linear de composição. A doc também cobre o caso de View Transform inverso para composições prontas ('View' do tipo 'Raw'/'Inverse' para material já finalizado que não deve ser re-gradeado) — o princípio é um só: dizer ao pipeline que aquele dado não é cor de cena.",
+      "example": "Um displacement map vindo do Substance entra com Non-Color: sem isso, a sombra do cinza-médio é deslocada pelo decode e o relevo inteiro fica mais fundo/mais raso que o authorado.",
+      "limits": "Non-Color no arquivo errado tem efeito oposto: albedo sem cor parece estourado/lavado. O espaço é por imagem (e pode divergir entre o arquivo e o datablock importado — confira após append). LUTs que já carregam suas próprias curvas pedem Non-Color no dado E View apropriado no consumo; dois toggles, dois papéis.",
+      "verify": "Abra a imagem com o image editor, leia o valor de um pixel cinza 50%: em Non-Color é 128 (ou 0.5 cru), em sRGB é ~0.21 linear — a medição é a lição. Renderize um material só com o normal map e valide o reflexo numa esfera de teste. Um script de auditoria pode listar imports sem Non-Color nos tipos que o pipeline exige.",
+      "sources": [
+        {
+          "label": "Blender — Color Spaces",
+          "url": "https://docs.blender.org/manual/en/latest/render/color_management/color_spaces.html",
+          "why": "define os espaços (File/Non-Color/Working) e o papel de cada um"
+        },
+        {
+          "label": "Blender — Displays & Views",
+          "url": "https://docs.blender.org/manual/en/latest/render/color_management/displays_views.html",
+          "why": "o outro lado: como Views tratam o dado já convertido"
+        }
+      ],
+      "review": "A definição do espaço Non-Color para dados não-cor e a estrutura File/View/Working foram conferidas na página Color Spaces; a classificação do decode sRGB é a mecânica documentada da mesma seção."
+    },
+    {
+      "slug": "blender-what-you-see-is-not-what-you-save",
+      "title": "Blender: o display view não é o arquivo salvo — o laço View as Render/Save as Render",
+      "one": "A janela de render mostra o resultado no View do display (ex.: AgX); o arquivo salvo usa o espaço de arquivo configurado — e os toggles 'View as Render'/'Save as Render' são o mecanismo de fechar essa lacuna conscientemente.",
+      "why": "O bug clássico do compositor: o quadro 'estourado e sem cor' no arquivo quando a preview estava linda, ou vice-versa — porque o arquivo foi salvo com o transform do display embutido e depois re-gradeado no consumo. Times que gravam EXR intermediário precisam saber de que lado a curva mora.",
+      "how": "Para o caso intermediário (render → compositor → entrega), mantenha o arquivo em espaço de trabalho linear e deixe o view transform só para a exibição. A doc (seção Color Management do manual 4.x) registra os comandos de render para o comportamento do display no arquivo — 'View as Render' faz o resultado do render carregar a aparência do view escolhido, 'Save as Render' aplica isso ao salvar — usando-os, a decisão fica explícita no pipeline em vez de implícita no driver da preview. A escolha documentada do espaço do arquivo (ex.: Linear vs Filmic para EXR) é o outro par do toggle.",
+      "example": "Um fluxo de FX grava EXR multi-camadas em raw (sem view), a composição final aplica AgX uma única vez na saída; o compositor que receber JPEG 'já com AgX' produziria o duplo rolloff clássico — evitado porque o view mora só na entrega.",
+      "limits": "Comportamento exato dos toggles e nomes de menu variam entre versões do manual (a referência aqui é a seção homóloga da série 4.x/5.x); valide na sua build antes de codificar um padrão de estúdio. 'View as Render' em material preview é conveniência de look, não metadado de pipeline. Para entrega vídeo (codecs de 8 bits), o view precisa estar no arquivo — e é a inversão do caso EXR, não contradição.",
+      "verify": "Salve o mesmo quadro com e sem 'Save as Render', amostrando um highlight no arquivo: um tem o shoulder, o outro é linear — a prova de onde a curva entrou. Compare a janela de render com o output real na mesma composição para pegar divergências. Rode o pipeline completo numa imagem de teste com rampa conhecida.",
+      "sources": [
+        {
+          "label": "Blender — Color Management (4.0)",
+          "url": "https://docs.blender.org/manual/en/4.0/render/color_management.html",
+          "why": "página da série 4.x que registra View as Render/Save as Render no fluxo de render"
+        },
+        {
+          "label": "Blender — Displays & Views (atual)",
+          "url": "https://docs.blender.org/manual/en/latest/render/color_management/displays_views.html",
+          "why": "a separação display-view vs arquivo que o toggle atravessa"
+        }
+      ],
+      "review": "A existência dos comandos 'View as Render' e 'Save as Render' e seu papel no laço display↔arquivo foram conferidos na página 4.0; a recomendação de EXR linear+view único segue a separação de papéis descrita na página atual."
+    },
+    {
+      "slug": "blender-proxy-tamanho-global-view",
+      "title": "Blender VSE: Proxy Render Size é um switch global que habilita todos os strips",
+      "one": "Escolher Proxy Render Size na aba View da Preview ativa a resolução escolhida para todos os strips do projeto e dispara a geração dos arquivos de proxy — é um modo de exibição global, não um toggle por-clip.",
+      "why": "A expectativa natural ('vou ativar proxy só no clipe pesado') leva o editor a não entender por que toda a timeline de repente baixa de resolução. E a parte não documentada no susto: mudar o tamanho global reconfigura os demais, com geração em massa de proxies no primeiro play. Saber que o View tab é o interruptor mestre da doc oficial evita as duas surpresas.",
+      "how": "No Sequencer, Preview/Sequencer & Preview modes, sidebar > View > View Settings: 'Proxy Render Size' controla a resolução da preview (valores menores, pior detalhe, melhor performance) e 'Use Proxies' liga/desliga o uso como toggle separado (aba View do preview sidebar). O caminho rápido documentado é o View tab; a aba Proxy (ausente em modo Preview puro) expõe o setup por-strips — e em Preview mode o setup migra para o menu View ‣ Proxy ‣ Setup.",
+      "example": "Uma timeline de 4K multicam: o editor deixa o View global em 50% para corte fino e sobe para 100% (proxy 100% já codificado) só para conferir foco — os clipes não precisam de reconfiguração individual para isso.",
+      "limits": "O tamanho é um preset (25/50/75/100% e afins da UI); se o arquivo do tamanho não existe, a preview cai no full-res e a performance engasga silenciosamente até a geração. 'Use Proxies' desligado mantém os arquivos mas exibe o original — estado que parece bug de cache. A configuração por-strip (Strip Proxy & Timecode) refina o que o global habilitou, não substitui o gate global.",
+      "verify": "Numa timeline com um clip pesado, mude o View global e confirme que todos os strips respondem juntos — inclusive o leve, que ganha proxy 'por tabela'. Desligue 'Use Proxies' e observe o frame time voltar ao original: é o par de switches documentado. Registre os fps medidos em 25/50/100 na máquina do estúdio — é o número da decisão de tamanho.",
+      "sources": [
+        {
+          "label": "Blender — Sequencer Sidebar: Proxy",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/sequencer/sidebar/proxy.html",
+          "why": "descreve o atalho do View tab que habilita todos os strips e gera os arquivos"
+        },
+        {
+          "label": "Blender — Preview Sidebar",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/preview/sidebar.html",
+          "why": "define Proxy Render Size e Use Proxies nos View Settings da preview"
+        }
+      ],
+      "review": "A frase do View tab como habilitador global ('This will automatically enable the selected proxy resolution in all the strips and start generating...'), a semântica de Proxy Render Size/Use Proxies e a nota do Preview mode sem aba Proxy foram conferidas nas duas páginas oficiais."
+    },
+    {
+      "slug": "blender-proxy-bl-pasta-e-arquivos-externos",
+      "title": "Blender VSE: proxies vivem em BL_proxy junto da footage — e podem ser arquivos existentes",
+      "one": "O destino default dos proxies gerados é <caminho da footage>/BL_proxy/<nome do clipe>/, configurável por Custom Directory, com Custom File apontando para proxies pré-existentes.",
+      "why": "Esse layout define as decisões de infraestrutura do setup: o volume da mídia vira volume dos proxies (espaço, backup, permissões); o time que edita em rede lê BL_proxy do mesmo share; e a pipeline externa (que gera proxies próprios no render farm) só entra no VSE via Custom File — sem conhecê-lo, o editor duplica codificação que já existia.",
+      "how": "Em Strip Proxy & Timecode (aba Proxy do sidebar): 'Custom Directory' substitui a pasta padrão dos selecionados, 'Custom File' usa um proxy que já existe — a doc também cobre 'Set Selected Strip Proxies', que abre o pop-up de resoluções com escolha de sobrescrever existentes. Resolutions permite múltiplos tamanhos por clipe; a codificação roda em background e o progresso é a janela de process. Regra operacional: mantenha ou tudo-default ou tudo-custom; misturar destinos por clipe é o caminho do 'sumiu o proxy no outro host'.",
+      "example": "Um setup com NVMe local para edição: Custom Directory → /mnt/nvme/BL_proxy compartilhado com o farm; no fim, um script de limpeza trata um destino só em vez do jardim de BL_proxy espalhados por 20 shares de footage.",
+      "limits": "Custom Directory é por-estrip-config: não há 'preferência global' no VSE para isso além do próprio default. Proxies externos (Custom File) precisam manter o nome/formato que o strip espera — a doc não abstrai seu naming scheme. Mover footage sem mover BL_proxy quebra o vínculo do default silenciosamente. Proxy com qualidade 0% em codec pesado decodifica mais devagar que o original leve — a escolha de formato tem duas pernas.",
+      "verify": "Rode um rebuild num clipe e confirme a criação da pasta BL_proxy esperada; mude Custom Directory, rebuild, e valide o novo destino. Teste o caminho Custom File com um proxy externo e confira que o strip o usa sem regenerar (sem progresso de codificação ao trocar o View). Documente o layout resultante num README do projeto — é a convenção que sobrevive à pessoa.",
+      "sources": [
+        {
+          "label": "Blender — Sequencer Sidebar: Proxy",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/sequencer/sidebar/proxy.html",
+          "why": "define BL_proxy default, Custom Directory/File e o fluxo Set Selected Strip Proxies"
+        },
+        {
+          "label": "Blender — Preferences: System (Video Sequencer)",
+          "url": "https://docs.blender.org/manual/en/latest/editors/preferences/system.html",
+          "why": "o Proxy Setup global (Automatic/Manual) que decide quando essa máquina gera os arquivos"
+        }
+      ],
+      "review": "O default '<path of original footage>/BL_proxy/<clip name>', os campos Custom Directory/Custom File, o pop-up com overwrite e o par Automatic/Manual do Proxy Setup foram conferidos nas duas páginas citadas (a segunda lida na íntegra)."
+    },
+    {
+      "slug": "blender-proxy-quality-lossy-percentual",
+      "title": "Blender VSE: Quality do proxy é compressão com perda em percentual direto — 100 é sem perda",
+      "one": "No painel Strip Proxy & Timecode, Quality controla o nível de compressão lossy aplicada à imagem do proxy: 0% é compressão máxima (menor arquivo, mais artefato), 100% é 'no compression'.",
+      "why": "O engano frequente é ler o percentual como 'qualidade final' na cabeça de export — aqui o eixo é a perda: 'Lossy compression reduces file size by discarding some image data'. Em projetos longos, a escolha de Quality é um cálculo explícito: espaço de disco em BL_proxy, velocidade de decode, e fidelidade da decisão de corte/color — proxy agressivo esconde banding que depois assombra a entrega.",
+      "how": "Combine Quality com a resolução: para edição de corte (não de look), resolução menor costuma comprar mais que compressão agressiva; para proxies 'de verdade' (pré-render para cor), 100% com resolução média é o meio-termo. A doc define as múltiplas Resolutions selecionáveis por clipe — gere só os tamanhos usados no View global, porque cada resolução extra tem seu custo de codificação e disco. A qualidade é um parâmetro da geração (Rebuild), não do playback: mudar exige regenerar.",
+      "example": "Um documentário 4K com 30h de material: 25/50% a 90% de quality ocupam menos que o volume da footage, e a revisão de corte não julga gradiente — a aprovação de look volta ao original no grade final.",
+      "limits": "Artefato de compressão em proxy pode ser lido como 'problema do master' na revisão de cor se a pessoa não sabe que está em proxy — comunicação de pipeline, não bug. O codec/formato interno da geração do VSE não é configurável finamente pela UI documentada (resoluções+quality); pipelines que exigem ProRes para cor geram proxies externos e os plugam via Custom File. Banding em proxy é irreversível ao subir o View (o arquivo é o que é).",
+      "verify": "Gere o mesmo clipe em 0/50/100% e compare tamanho do arquivo e decode do frame no player — a curva custo/fidelidade fica visível. Faça uma revisão de cor dupla (proxy vs. original) num quadro extremo: os problemas que só existem no proxy definem seu floor de Quality. Rode o rebuild pós-mudança para confirmar que a geração é quem lê o parâmetro.",
+      "sources": [
+        {
+          "label": "Blender — Sequencer Sidebar: Proxy",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/sequencer/sidebar/proxy.html",
+          "why": "a definição literal de Quality: 0% compressão máxima, 100% sem compressão, perda de detalhe"
+        },
+        {
+          "label": "Blender — Preview Sidebar",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/preview/sidebar.html",
+          "why": "o consumo dos proxies no preview (Proxy Render Size/Use Proxies) que o Quality serve"
+        }
+      ],
+      "review": "O texto de Quality (percentual de compressão lossy, 0% mínimo/100% sem compressão, nota de perda de detalhe) e a seleção de múltiplas resoluções por clipe foram conferidos literalmente na página Proxy."
+    },
+    {
+      "slug": "blender-sequencer-cache-memoria-limites",
+      "title": "Blender VSE: Memory Cache Limit vive nas Preferences, e o VSE lê dele",
+      "one": "O orçamento do cache de quadros do Sequencer/Movie Clip Editor é definido em Preferences ‣ System ‣ Video Sequencer ‣ Memory Cache Limit (MB), com recomendação oficial de valores altos para performance ótima.",
+      "why": "O buffer default é conservador; numa máquina com RAM, o gargalo de scrubbing costuma ser o cache esvaziando cedo, não o disco. A página do System é explícita: 'For an optimal Clip editor and Sequencer performance, high values are recommended' — um toggle que muitos setups nunca tocaram, documentado como ajuste primário do editor de vídeo.",
+      "how": "Defina o limite em MB conforme a RAM do host (a doc não prescreve fração — a regra prática de estúdio é deixá-lo folgado para o resto da máquina). O mesmo bloco System traz o Proxy Setup global: Automatic (gera proxies para cada preview size ao adicionar strips de vídeo/imagem) ou Manual (setup feito a mão), a decisão que liga/desliga o pipeline da nota de BL_proxy. O lado por-projeto do cache (quais imagens entram, tipos) mora no painel Sequencer Cache Properties, referenciado pela própria página.",
+      "example": "Uma workstation de 64 GB com projeto de multicam 4K sobe o limite para 32768: o scrubbing passa a servir frames do cache e o pico de engasgo some — a medição é o tempo de seek nos 10 primeiros segundos após seek.",
+      "limits": "O limite é global à instalação (preferences), não por projeto: dois editores na mesma máquina compartilham o orçamento e a configuração. Cache de memória não é pré-render: efeitos de strips pesados ainda custam por frame, o cache só amortiza repetição — para esses, o sequencer tem render cache próprio. Values altos demais em máquina apertada trocam engasgo por swap/OOM.",
+      "verify": "Meça o scrubbing antes/depois de dobrar o limite num projeto longo (mesmo seek, mesma timeline) — é o número que sustenta a config. Confirme no painel Cache Properties do projeto que o conteúdo cachado cresce até o teto (o contador de cache do VSE mostra). Rode com Proxy Setup Automatic numa pasta só de leitura e observe a falha de geração que o modoManual evita.",
+      "sources": [
+        {
+          "label": "Blender — Preferences: System",
+          "url": "https://docs.blender.org/manual/en/latest/editors/preferences/system.html",
+          "why": "a seção Video Sequencer com Memory Cache Limit e Proxy Setup, na íntegra"
+        },
+        {
+          "label": "Blender — Sequencer Cache Properties",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/sequencer/sidebar/cache.html",
+          "why": "página de propriedades de cache por projeto, referenciada pela página System"
+        }
+      ],
+      "review": "As frases da seção Video Sequencer (limite em MB, recomendação de valores altos, Automatic/Manual do Proxy Setup) e o link de see-also para o Cache Properties foram conferidos na página System lida na íntegra hoje."
+    },
+    {
+      "slug": "blender-backend-vulkan-interface-52",
+      "title": "Blender 5.2: o backend da interface é escolha (OpenGL × Vulkan) com custo de reinicialização",
+      "one": "As preferências de System expõem 'Backend' para os gráficos de display (OpenGL tradicional, Vulkan moderno) e 'Device Vulkan' para escolher a GPU da UI em máquinas multi-GPU; trocar qualquer um exige reiniciar o Blender.",
+      "why": "É a primeira vez que a UI do viewport entra em política de GPU explicitamente: notebooks com iGPU+dGPU renderizam a interface e a preview na auto-select — nem sempre a que você esperava. A doc declara o trade-off sem eufemismo: Vulkan 'may offer improved performance and better support for modern GPU features, but compatibility may vary depending on the system and drivers'.",
+      "how": "Em Preferences ‣ System ‣ Display Graphics: Backend escolhe a API por que a interface desenha ('Changing the backend requires restarting Blender'); Device Vulkan fixa o device de drawing para a UI — útil 'for systems with multiple GPUs (e.g., integrated + discrete)'. Para pipeline de estúdio, o ponto não é 'Vulkan é mais rápido': é registrar qual backend cada estação usa, porque bugs de driver são por-backend e os screenshots de comparação de look precisam da mesma configuração.",
+      "example": "Um laptop de revisão de corte alterna entre a iGPU (bateria) e a dGPU (tomada): Device Vulkan forçado na dGPU na estação, auto no modo bateria — o mesmo projeto, duas configurações documentadas.",
+      "limits": "A doc não promete paridade de features de UI entre backends, e nota explicitamente que o hardware pode não suportar opções (algumas somem ou são corrigidas no start). Há dependências cruzadas documentadas no mesmo painel (ex.: certain shader-compile options exigem OpenGL) — os toggles interagem; teste combos antes de padronizar. Vulkan na interface é config de display, independente do render engine (Cycles/OptiX etc. têm sua própria seção no mesmo painel).",
+      "verify": "Alterne o backend no host de teste, reinicie, e rode a mesma cena de viewport pesada com fps do overlay — comparação honesta é por máquina. Liste no doc de setup as opções que sumiram em cada backend (a própria doc avisa que unsupported ops desaparecem da UI). Reproduza no editor qualquer bug de flicker em ambos os backends antes de reportar — é a separação de culpas que o painel criou.",
+      "sources": [
+        {
+          "label": "Blender — Preferences: System",
+          "url": "https://docs.blender.org/manual/en/latest/editors/preferences/system.html",
+          "why": "a seção Display Graphics com Backend, Device Vulkan e a nota de reinicialização"
+        },
+        {
+          "label": "Blender — GPU Rendering (Cycles)",
+          "url": "https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html",
+          "why": "a página de devices de render que a própria System referencia — o outro lado do GPU stack"
+        }
+      ],
+      "review": "Os textos de Backend/Device Vulkan ('requires restarting Blender', o caso multi-GPU integrado+dedicada, a ressalva de compatibilidade de drivers) foram conferidos literalmente na página System do manual 5.2 lida hoje."
+    },
+    {
+      "slug": "blender-limites-de-memoria-undo-shaders-stack",
+      "title": "Blender 5.2: os limites de memória do System — undo, shaders, geometry nodes — e seus efeitos colaterais",
+      "one": "O painel Memory & Limits centraliza tetos que parecem cosméticos mas mudam comportamento: Undo Memory Limit, Texture/VBO Time Out com Garbage Collection Rate, Shader Compilation Method e Geometry Nodes Stack Limit.",
+      "why": "Cada um tem um trade-off documentado na página: Global Undo desligado economiza memória mas 'stops the Adjust Last Operation panel from functioning, also preventing tool options from being changed in some cases'; Subprocess na compilação de shaders acelera 'at the cost of higher memory usage'; e subir o stack limit de Geometry Nodes 'can result in crashes caused by running out of stack memory'. O painel é uma negociação de recursos, não um menu de prefs.",
+      "how": "Undo Steps/Undo Memory Limit (MB, 0 ilimitado) dimensionam o histórico — time com cenas de simulação longa aumenta; Texture Time Out controla quando a GL texture não-usada é liberada (0 mantém alocadas — o caminho do VRAM apertado é timeout baixo, não 'menos undo'). Shader Compilation Method Thread (memory-efficient, mais lento) vs. Subprocess (mais rápido em cores altas, RAM alta) é escolha por perfil da estação; a página nota que não há opção em macOS e que exige backend OpenGL, e requer restart. Stack Limit é o teto das node groups aninhadas — aumente com um crash de teste na cena, não por intuição.",
+      "example": "Um pipeline de look-dev que recompila shaders a cada nó novo adota Subprocess nas estações de 16 cores e volta a Thread nas laptops de review de 8 GB — a própria doc dá a regra de decisão.",
+      "limits": "Essas prefs são da instalação, não do arquivo .blend: config de estação vive no doc de setup do estúdio, não no projeto. A dependência OpenGL do método de shader-compile significa que a pilha Vulkan da nota anterior remove esse dial — os dois painéis competem. Os timeouts de GL texturas não governam memória de render engine; para Cycles, os budget próprios estão nas suas páginas (a mesma página só faz o link do assunto).",
+      "verify": "Meça o tempo de 'novo material com nó' nos dois métodos de compilação numa estação real — é o critério da doc para a escolha. Force o stack limit baixo e confirme que a cena de aninhamento profundo falha (crash controlado vira teste); restaure e valide. Reproduza o efeito colateral do Global Undo desligado (Adjust Last Operation morto) para que o time saiba por que ele fica ligado.",
+      "sources": [
+        {
+          "label": "Blender — Preferences: System",
+          "url": "https://docs.blender.org/manual/en/latest/editors/preferences/system.html",
+          "why": "as seções Memory & Limits e seus textos de trade-off, na íntegra"
+        },
+        {
+          "label": "Blender — Undo and Redo",
+          "url": "https://docs.blender.org/manual/en/latest/interface/undo_redo.html",
+          "why": "a página see-also da própria System para os limites e o Global Undo"
+        }
+      ],
+      "review": "Todos os textos citados (Global Undo warning, Thread/Subprocess com nota macOS+OpenGL, Stack Limit crash risk, timeouts de texture/VBO) foram conferidos na íntegra na página System carregada hoje."
+    },
+    {
+      "slug": "blender-proxy-setup-automatico-vs-manual",
+      "title": "Blender VSE: Proxy Setup Automatic gera sozinho, Manual delega à farm — a decisão é de pipeline",
+      "one": "A preference Video Sequencer ‣ Proxy Setup decide o comportamento raiz: Automatic constrói proxies de cada strip de vídeo/imagem adicionado em cada preview size; Manual deixa o setup para o operador (ou para a sua pipeline externa).",
+      "why": "Em produção pequena, Automatic é mão-na-roda: o proxy existe antes do primeiro corte. Em ingest de 20h de material por dia, ele é uma armadilha — a geração local compete com o próprio decode, no disco onde a footage mora. A doc define os dois modos literalmente, e a escolha pertence ao pipeline de ingest, não à preferência de última pessoa que mexeu.",
+      "how": "Automatic: ao adicionar um strip, Blender programa a geração para os tamanhos ativos; o painel do Proxy Settings (Resolutions, Quality, Overwrite) define o que é gerado. Manual: o operador ativa via 'Set Selected Strip Proxies' (pop-up de resoluções com overwrite) ou 'Rebuild Proxy' do menu Strip nos clipes escolhidos — dois cliques por seleção, zero custo no ingest. O ponto cego de ambos: o View tab global (Proxy Render Size) ainda habilita a exibição — setup é sobre quem gera, display é sobre quem usa; documente a dupla nos SOPs do time.",
+      "example": "O ingest do estúdio roda Manual com um job no farm produzindo proxies padronizados no BL_proxy custom; a preference local nunca muda. O editor independente roda Automatic com 25/50% só — o default da estação.",
+      "limits": "Automatic + pasta de footage read-only (mount de arquivo só-escritura) é falha de geração silenciosa — o primeiro sintoma é proxy 'inexistente' no View. Proxies gerados pelo Blender priorizam decode rápido de edição, não fidelidade de cor — o grade final continua lendo o original. A preference é global à instalação (não por projeto): times com ingest local E farm precisam do mesmo valor e da mesma resolução-alvo, senão os modos se sobrepõem e duplicam arquivos.",
+      "verify": "Num projeto limpo, adicione um clipe em cada modo e observe a fila de jobs de codificação (Automatic) vs. o silêncio (Manual) — é a diferença do painel em 10 segundos. Rode Automatic contra share somente-leitura e registre a falha para o SOP. No modo farm, confirme que os proxies externos aparecem como 'existing' e que o overwrite está desligado por padrão.",
+      "sources": [
+        {
+          "label": "Blender — Preferences: System",
+          "url": "https://docs.blender.org/manual/en/latest/editors/preferences/system.html",
+          "why": "a definição dos dois modos na seção Video Sequencer, na íntegra"
+        },
+        {
+          "label": "Blender — Sequencer Sidebar: Proxy",
+          "url": "https://docs.blender.org/manual/en/latest/editors/video_sequencer/sequencer/sidebar/proxy.html",
+          "why": "o caminho de ativação por-clip do modo Manual e o pop-up de geração"
+        }
+      ],
+      "review": "As duas linhas de Proxy Setup (Automatic 'Build proxies for added movie and image strips in each preview size' / Manual 'Set up proxies manually') foram conferidas literalmente na página System; o fluxo Manual via Set Selected Strip Proxies, na página Proxy."
+    }
+  ]
+}

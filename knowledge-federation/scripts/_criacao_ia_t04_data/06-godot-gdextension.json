@@ -1,0 +1,236 @@
+{
+  "group": "Godot 4 GDExtension: o arquivo .gdextension, compatibilidade de versão e bindings nativos",
+  "check": "Revisão das páginas 'What is GDExtension?', 'The .gdextension file' e 'About godot-cpp' da documentação stable (4.7) em docs.godotengine.org, lidas na íntegra em 2026-10-04; claims restritos ao texto conferido.",
+  "notes": [
+    {
+      "slug": "gdextension-biblioteca-compartilhada-runtime",
+      "title": "Godot 4: GDExtension é a ponte runtime para bibliotecas nativas",
+      "one": "GDExtension permite que o motor converse com bibliotecas nativas compartilhadas em tempo de execução — código C/C++ sem compilar a engine junto.",
+      "why": "A alternativa histórica (módulos C++) obriga a recompilar o motor inteiro a cada mudança e a distribuir templates de export por plataforma. A extensão nativa via GDExtension separa seu código do código do motor: você compila apenas sua biblioteca e a distribui como add-on, com o ciclo de desenvolvimento de um script.",
+      "how": "A tecnologia se apoia em três peças nomeadas pela própria doc: 'gdextension_interface.h' (um conjunto de funções C por que Godot e a extensão se comunicam), 'extension_api.json' (a lista de funções C expostas pelas APIs do Godot, consumida pelos bindings) e o arquivo '*.gdextension' lido pelo motor para carregar a extensão. Na prática, usa-se um binding — godot-cpp oficial para C++, ou os bindings comunitários listados na doc — em vez de escrever as chamadas C cruas.",
+      "example": "Um decodificador de áudio proprietário (uma .so/.dll fornecida pelo cliente) entra no projeto por um godot-cpp fino que expõe 'AudioFeed' como Node; sem tocar nos fontes do motor, sem template de export customizado.",
+      "limits": "O acesso da extensão é menos profundo que o de um módulo estático — a própria doc de godot-cpp recomenda módulos quando o sistema-alvo não está exposto via GDExtension. Em export, a biblioteca nativa viaja com o jogo (módulos 'embutidos' não precisam de arquivos nativos separados). E a API de extensão é marcada como em evolução: a compatibilidade entre versões tem regras próprias (nota separada).",
+      "verify": "Confira no seu build que o arquivo .gdextension aponta para a lib correta por plataforma e que a engine a carrega (o nó custom aparece na Scene dock). Para a fronteira módulo×extensão: procure a função que você precisa na extensão_api.json gerada do seu motor — o que não está lá, não é alcançável sem módulo ou upstream.",
+      "sources": [
+        {
+          "label": "Godot — What is GDExtension?",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/what_is_gdextension.html",
+          "why": "define a tecnologia e as três peças do mecanismo"
+        },
+        {
+          "label": "Godot — The GDExtension system (índice)",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/index.html",
+          "why": "porta da seção com o conjunto de páginas do sistema"
+        }
+      ],
+      "review": "A definição ('lets the engine interact with native shared libraries at runtime... without compiling it with the engine'), as três peças do mecanismo e a lista de bindings foram conferidos na íntegra na página oficial."
+    },
+    {
+      "slug": "gdextension-entry-symbol-obrigatorio",
+      "title": "Godot 4: entry_symbol é o contrato mínimo do arquivo .gdextension",
+      "one": "A seção [configuration] do arquivo .gdextension declara entry_symbol — o nome da função que inicializa a extensão — sem o qual a extensão não funciona.",
+      "why": "O loader precisa de um ponto de entrada estável para iniciar a biblioteca após carregá-la; a doc crava que a função deve estar definida e que 'Adding this is necessary for the extension to work' com godot-cpp no arquivo register_types.cpp. Erro clássico de primeira extensão: a .dll carrega, nada acontece, e o problema são dois caracteres no nome da função.",
+      "how": "Com godot-cpp, o template de projeto gera a função de registro (por exemplo 'example_library_init') em register_types.cpp; o valor de entry_symbol deve ser exatamente esse nome. A tabela oficial da seção [configuration] lista os campos: entry_symbol (String), compatibility_minimum, compatibility_maximum, reloadable e android_aar_plugin. Mantenha o .gdextension dentro do projeto e referencie as libs por caminho relativo — a doc recomenda relativo porque 'permite que a extensão continue funcionando se for instalada em outra pasta'.",
+      "example": "O repositório de exemplo da doc usa 'entry_symbol = \"gdexample_library_init\"' no gdexample.gdextension espelhando a função em register_types.cpp; renomeie um sem o outro e o motor reporta falha de entrada, não um crash mudo.",
+      "limits": "O nome é um símbolo C exportado — mangled C++ não resolve; os bindings cuidam do extern 'C', código cru precisa cuidar você mesmo. A função de entrada roda cedo, na carga: trabalho pesado ou dependências de cena ali são fonte de deadlock e ordem de inicialização quebrada — registre tipos, não simule. Cada binding tem sua convenção de nome de entrada.",
+      "verify": "Corrompa de propósito o entry_symbol (um caractere a mais) e observe a mensagem de falha de carregamento no console do editor — é o contrato em ação. Rode o exemplo oficial da doc de ponta a ponta e compare o seu .gdextension campo a campo. Um teste de fumaça no CI que abre o projeto e verifica se o nó da extensão existe pega regressão de rename.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "tabela da seção [configuration] e a nota de necessidade do entry function"
+        },
+        {
+          "label": "Godot — GDExtension C++ example",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/gdextension_cpp_example.html",
+          "why": "exemplo oficial onde o entry_symbol é definido e usado"
+        }
+      ],
+      "review": "A linha da tabela ('Name of the entry function for initializing the GDExtension... register_types.cpp... necessary for the extension to work') e a recomendação de caminhos relativos foram conferidas literalmente na página oficial."
+    },
+    {
+      "slug": "gdextension-alvo-baixo-compative-frente",
+      "title": "Godot 4: mire a extensão na versão mais baixa que te atende, não na mais nova",
+      "one": "A política de compatibilidade declarada: extensões mirando uma versão anterior do Godot devem funcionar em minors posteriores — nunca o contrário — e a escolha da versão-alvo determina quantos builds você mantém.",
+      "why": "Sem essa regra, o instinto é compilar contra o motor mais recente e 'funciona para todo mundo' — e é exatamente ao contrário: seu add-on vira refém de um único 4.x. A doc formaliza a estratégia: 'target the lowest version of Godot that has the features you need... This can save you from needing to create multiple builds'.",
+      "how": "Decida o alvo pela feature, não pela data: o binding godot-cpp tem branches por versão (4.x) que correspondem à release do motor, e você compila a extensão contra a API do alvo. A exceção documentada é histórica: extensões criadas para Godot 4.0 não funcionam em 4.1+ (houve quebra deliberada, com página própria de migração). E o status geral segue sendo de API em evolução — a doc registra que quebras podem acontecer para corrigir bugs maiores, o que torna o compatibility_maximum (abaixo) o cinto de segurança.",
+      "example": "Um plugin de importação nativa mira 4.2 (a versão mínima com o recurso de que precisa), declara compatibility_minimum = 4.2, e um único conjunto de binários cobre 4.2, 4.3, 4.4... até que uma quebra justificada o force a subir de alvo.",
+      "limits": "Devem funcionar ≠ garantidamente funciona: a nota de status experimental autoriza quebra de compatibilidade em minor upgrades. Recursos que você não usa hoje mas pode querer amanhã podem mudar a escolha do alvo — a decisão é um trade-off registrado, não uma receita. E o alvo baixo não elimina o teste na versão mais nova: o custo de descobrir a quebra é do autor da extensão.",
+      "verify": "Instale o par de versões do motor (alvo e mais nova) e carregue a mesma extensão nos dois: o teste é binário e em minutos. Na doc, confira que o exemplo de versão usada para compilar o binding corresponde ao seu alvo. Rode o upgrade de engine do projeto cliente com o add-on carregando — é o cenário real que a política protege.",
+      "sources": [
+        {
+          "label": "Godot — About godot-cpp: Version compatibility",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/about_godot_cpp.html",
+          "why": "enuncia a política de compatibilidade (inclusive a exceção do 4.0) e a estratégia de alvo baixo"
+        },
+        {
+          "label": "Godot — Upgrading to Godot 4.1",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.1.html",
+          "why": "página de migração referenciada pela nota de quebra das extensões de 4.0"
+        }
+      ],
+      "review": "A frase 'GDExtensions targeting an earlier version of Godot should work in later minor versions, but not vice-versa', a estratégia de mirar a menor versão possível e a exceção 4.0→4.1 foram conferidas literalmente na página About godot-cpp."
+    },
+    {
+      "slug": "gdextension-compatibility-min-max",
+      "title": "Godot 4: compatibility_minimum e maximum são portas de carga, não metadados",
+      "one": "Dois campos da seção [configuration] decidem em quais versões do motor a extensão é aceita: minimum barra engines antigas de carregar recursos novos; maximum barra engines novas de carregar extensões desatualizadas.",
+      "why": "Cada lado da janela protege um failure-mode diferente. Sem minimum, um Godot 4.0 tenta carregar uma extensão que usa APIs de 4.2 e o crash acontece longe do arquivo .gdextension, no meio da execução. Sem maximum, o usuário atualiza o motor, a extensão carrega sobre uma API que mudou, e os bugs aparecem como comportamento fantasma de uma lib nativa.",
+      "how": "A tabela oficial: 'compatibility_minimum — Minimum compatible version. This prevents older versions of Godot from loading extensions that depend on features from newer versions' (só a partir do 4.1); 'compatibility_maximum — prevents newer versions of Godot from loading the extension' (só a partir do 4.3). Declare minimum sempre igual ao alvo da compilação; use maximum ao saber de uma quebra não corrigida no binding, e suba-o conforme testar cada nova versão. Em motores sem suporte ao campo, o campo é ignorado — o suporte em si segue a regra de compatibilidade de versão.",
+      "example": "O add-on compilado contra 4.3 declara minimum=4.3; um usuário em 4.2 recebe o aviso de incompatibilidade na importação em vez de um SIGSEGV. Ao surgir a primeira falha reportada em 4.7-rc, um maximum temporário 4.6 compra tempo até o fix sair.",
+      "limits": "Os campos são uma cortina de fumaça de segurança, não verificação: não validam sua ABI, só barram a carga. maximum permanente sem re-teste é como remover suporte de produto — defina expectativa de release. E o valor é string de versão — coerência com o alvo real do binding é manutenção sua.",
+      "verify": "Mude o minimum do seu add-on para uma versão acima da sua engine de teste e confirme a recusa de carga com aviso legível. Faça o inverso com maximum. Numa versão de engine sem suporte ao campo (4.0/4.2), confirme o comportamento de ignorar — para documentar no README do seu produto.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "a tabela [configuration] com as definições exatas e as notas de versão 4.1+/4.3+"
+        },
+        {
+          "label": "Godot — About godot-cpp",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/about_godot_cpp.html",
+          "why": "o contexto de compatibilidade entre versões que os campos operacionalizam"
+        }
+      ],
+      "review": "As duas linhas da tabela (definições e notas 'Only supported in Godot 4.1 or later' / '4.3 or later') foram conferidas na íntegra na página oficial."
+    },
+    {
+      "slug": "gdextension-reloadable-dev-debug",
+      "title": "Godot 4: reloadable recarrega a extensão — e é ferramenta de desenvolvimento, não de produção",
+      "one": "O campo booleano reloadable permite à extensão ser recarregada ao ser recompilada, sem reiniciar o editor — com o suporte declarado como 'deve ser usado principalmente para desenvolver ou depurar'.",
+      "why": "O ciclo nativo no editor é o ponto doloroso clássico: recompilar, fechar o motor, reabrir, recriar o estado da cena. O reload corta esse ciclo. A ressalva da própria doc existe porque estado de runtime — ponteiros vivos, sinais conectados, singletons da sua lib — atravessa o reload por conta sua.",
+      "how": "Declare 'reloadable = true' na seção [configuration]. Suporte atual: 'reloading is supported for the godot-cpp binding in Godot 4.2 or later. Other language bindings may or may not support it as well.' Projete a lib para o reload: alocação de estado em structures gerenciadas pelo motor onde possível, sem estado global que dependa de endereços de função, e sem caches de objetos Godot crus que o desligar da lib invalidaria. Em CI de release, considere a decisão explícita de não depender de reload para o produto.",
+      "example": "O dev do plugin ativa reloadable, troca um parâmetro de filtro, 'Rebuild' no IDE e o editor recarrega com o comportamento novo em segundos; no build final o campo continua true — inofensivo, mas o time documenta que suporte a hot-reload não é garantido para bindings alternativos.",
+      "limits": "Fora do godot-cpp ≥4.2 o comportamento é 'may or may not' — testar o seu binding antes de montar workflow em cima. Reload não é atualização a quente de dados: cenas com instâncias da lib podem precisar re-inicialização manual. E no export/runtime do jogador a flag não compra nada — é para a bancada.",
+      "verify": "O teste é o ciclo: mude o output de um método, recompilie, confirme no editor que o comportamento mudou sem reiniciar. Com reloadable = false, confirme que nada muda até o reinício — a baseline. Rode o projeto com um binding comunitário para documentar empiricamente o suporte.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "a linha da tabela com o suporte (godot-cpp 4.2+) e a ressalva de escopo dev/debug"
+        },
+        {
+          "label": "Godot — The GDExtension system (índice)",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/index.html",
+          "why": "a seção que reúne as páginas do mecanismo de carga"
+        }
+      ],
+      "review": "O texto da linha 'reloadable' (recompilação, suporte godot-cpp 4.2+, 'should be mainly used for developing or debugging') foi conferido na íntegra na tabela oficial."
+    },
+    {
+      "slug": "gdextension-libraries-feature-tags",
+      "title": "Godot 4: a seção [libraries] é um filtro por feature flags, não uma lista de caminhos",
+      "one": "Cada linha de [libraries] combina flags (sistema × build × arquitetura) a um caminho de binário; todas as flags da linha devem casar com as flags ativas do motor ou da export para aquela entrada valer.",
+      "why": "Uma extensão multiplataforma mantém um mapa de dezenas de binários — e o motor decide qual carregar por matching, não por extensão de arquivo. Entender o modelo de linhas 'macos.debug', 'linux.release.arm64' como conjunção de flags evita o clássico 'funciona no editor, some no export de Android'.",
+      "how": "As listas oficiais de flags: sistemas windows, macos, linux, bsd, linuxbsd, android, ios, web; build debug, release, editor (builds de editor sempre têm debug features); arquitetura double, single, x86_64, arm64, rv64, riscv, wasm32. Toda flag da linha precisa bater com as feature flags do Godot ou das suas flags de export customizadas; 'every feature flag must match'. Caminhos relativos são recomendados pela doc; comentários começam com ';', inclusive inline após a linha. O conjunto completo (incluindo as custom) está na página de feature tags.",
+      "example": "O template canônico da doc cobre 'linux.debug.arm64', 'linux.release.rv64', 'windows.*.x86_32'... — um espelho honesto dos presets que o godot-cpp compila, pronto para cortar o que seu produto não exporta.",
+      "limits": "Flag errada é linha morta, e o motor avisa pouco: a falha aparece como 'a lib não carregou' na plataforma afetada. Flags de export customizadas (por exemplo, presets com tags próprias) ampliam a matriz de teste por produto. A lista da página é 'algumas das opções' — a página de feature tags é a fonte completa; não invente flag nova sem checar.",
+      "verify": "Teste de matriz: exporte um debug e um release numa plataforma e confirme no log qual linha casou (o caminho carregado é reportado). Rode com uma linha removida e registre a mensagem de ausência — sua equipe precisa saber lê-la. Um script que cruza os binários existentes no build com as linhas do .gdextension pega desalinhamento antes do release.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "a seção Libraries com as tabelas de flags e as regras de matching"
+        },
+        {
+          "label": "Godot — Feature tags",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/export/feature_tags.html",
+          "why": "a fonte completa das flags de plataforma/export referenciada pela página"
+        }
+      ],
+      "review": "A regra 'Every feature flag must match...', as tabelas de flags (sistemas, build, arquitetura), a nota de editor-sempre-debug, comentários ';' e a recomendação de caminhos relativos foram conferidos na íntegra na página oficial."
+    },
+    {
+      "slug": "gdextension-ordem-especifica-antes",
+      "title": "Godot 4: no .gdextension, a linha mais específica precisa vir antes — o matching é sequencial",
+      "one": "As entradas de [libraries] são avaliadas de cima para baixo e a primeira que fecha com as flags ativas vence; duas linhas compatíveis com o mesmo sistema exigem ordenação consciente.",
+      "why": "É a regra que resolve o conflito 'editor vs. jogador' na mesma plataforma: um editor build tem editor+debug+macos ativos, e a linha macos.debug pura também casa. Sem a ordenação, o carregamento escolhe a lib errada — a variante 'template_debug' em vez da 'editor', ou vice-versa — e a falha aparece como ausência de ClassDB registrations só dentro do editor.",
+      "how": "A doc demonstra com o par 'linux.release.editor.x86_64' (a variante com editor) listado antes de 'linux.release.x86_64' (a variante de runtime), com a instrução explícita: 'Entries are matched in order, so if two sets of feature tags could match the same system, be sure to put the more specific ones first'. Convenção de projeto: ordenar por número de flags, decrescente; manter editor×release×debug no topo; revisar a ordem sempre que um preset de export com flag customizada entrar no produto.",
+      "example": "O preset 'demo' exporta com a tag 'demo' e precisa de um stub nativo leve; a linha 'windows.release.demo' entra antes de 'windows.release.x86_64' para não ser engolida pela geral — exatamente o mecanismo das flags de export customizadas da linha anterior.",
+      "limits": "A regra é de primeiro-match, não de melhor-match: reordenar por estética quebra o carregamento silenciosamente. Flags excludentes não existem (não há 'NOT editor') — especificidade só se expressa por mais linhas. E o debug do editor é coberto pelo fato de que builds de editor sempre trazem a flag debug; ordenar para 'editor' resolve a sobra.",
+      "verify": "Inverta a ordem do par da doc num projeto de teste e observe qual lib carrega — é a demonstração da regra em duas linhas de diff. No seu produto, o teste real é o export com as duas variantes presentes: se o runtime não quebra por registrar classes em export de jogo, a ordem está certa.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "o exemplo 'put the more specific ones first' e os dois trechos de configuração que o acompanham"
+        },
+        {
+          "label": "Godot — Feature tags",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/export/feature_tags.html",
+          "why": "a fonte das flags (inclusive customizadas) que interagem com a regra de ordem"
+        }
+      ],
+      "review": "A frase de ordenação e o exemplo literal 'linux.release.editor.x86_64' antes de 'linux.release.x86_64' foram conferidos na página oficial, incluindo a justificativa de que cada linha é avaliada de cima para baixo."
+    },
+    {
+      "slug": "gdextension-double-single-api-json",
+      "title": "Godot 4: a extensão só carrega no build de motor com a mesma precisão de float",
+      "one": "Extensões são compatíveis apenas com builds do motor que usam o mesmo nível de precisão de ponto flutuante da compilação — e os builds double exigem o extension_api.json gerado pelo seu próprio motor custom.",
+      "why": "Coordenadas de mundo em single são um default de motor que vira ABI: trocar single por double muda o layout das estruturas trocadas com o motor. A doc é explícita no mecanismo ('the extension must also be compiled for double-precision floats and use an extension_api.json file generated by your custom engine build') porque grandes mundos (large world coordinates) dependem do double — e é a fronteira onde 'funcionava no desktop' morre em port.",
+      "how": "Para o caso duplo (literal): o build do motor com single é o default; extensões single/single rodam nele. Um motor customizado com 'precision=double' exige extensão compilada em double E o JSON de API gerado por aquele build (não o do release oficial) — a própria página aponta o processo na seção de build system (scons). A regra geral: 'if you build a custom version of Godot, you should generate an extension_api.json from it', porque seu motor pode divergir do oficial no que expõe. Declare a matriz (plataforma × precisão × versão) nos seus artefatos.",
+      "example": "Um jogo de espaço 4X usa double para posições orbitais; o plugin de física compila dois sets de binários (single e double) referenciados pelas linhas 'double'/'single' na seção [libraries] — a flag de arquitetura da doc é exatamente para isso.",
+      "limits": "A flag double/single é uma escolha de compilação do motor, não um toggle de runtime para o jogador. extension_api.json de build custom desatualizado é um erro silencioso até a primeira divergência — trate o arquivo como artefato versionado junto do motor. Port web tem sua via (wasm32), e o resto da matriz continua valendo.",
+      "verify": "Rode a extensão single no motor double e confirme a recusa/falha documentada — é a regra como teste. Gere o extension_api.json do seu build custom, diff contra o oficial e registre o que divergiu; o diff é a evidência de por que a regra existe. Na lib do produto, as duas flags de arquitetura aparecem com caminhos distintos.",
+      "sources": [
+        {
+          "label": "Godot — About godot-cpp",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/about_godot_cpp.html",
+          "why": "a seção Version compatibility com a regra de precisão e do JSON do build custom"
+        },
+        {
+          "label": "Godot — Large world coordinates",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/physics/large_world_coordinates.html",
+          "why": "o caso de uso que motiva o motor double, referenciado pela regra"
+        }
+      ],
+      "review": "A exigência de mesma precisão, o extension_api.json gerado do build custom, a recomendação geral para motores customizados e o link para o build system (scons) foram conferidos literalmente na página About godot-cpp."
+    },
+    {
+      "slug": "gdextension-icone-svg-e-dependencies",
+      "title": "Godot 4: [icons] e [dependencies] completam o .gdextension — com contrato de 16×16 px",
+      "one": "Além de configuration e libraries, o arquivo tem a seção [icons] (SVG 16×16 com dois toggles de import) e a seção [dependencies] (caminhos das libs de terceiros a exportar com o jogo).",
+      "why": "A experiência do add-on no editor é parte do produto: nós com o ícone genérico de Node no dock dizem 'estoque' quando dizem 'sua extensão'; e esquecer [dependencies] é entregar um binário que abre na máquina de dev e cai na do cliente pela lib que faltou no export.",
+      "how": "Em [icons], o par nome-do-no = caminho do SVG; a doc exige SVG de 16×16 pixels com duas opções marcadas na importação: 'Editor > Scale with Editor Scale' e 'Editor > Convert Colors with Editor Theme', 'garante que o ícone se comporte o mais próximo possível dos ícones do editor'. Em [dependencies], declaram-se os caminhos das libs que a extensão requer — a seção existe 'para exportar as dependências quando exportar o executável do jogo'. Comente o porquê de cada linha — é a segunda metade da doc de manutenção do arquivo.",
+      "example": "O plugin GDExample publica 'GDExample = \"res://icons/gd_example.svg\"' e registra 'libonnxruntime.so' em dependencies; na release do cliente o executável exporta com as duas bibliotecas sem manual de instalação nativa.",
+      "limits": "Ícone sem os dois toggles importados fica com tamanho/cores errados em tema escuro e editor em HiDPI — o contrato não é cosmético. A seção de ícones não define a categoria do nó na Scene dock (isso é ClassDB); e dependencies não resolve versões de SONAME/Loader Path — se a lib exige rpath, é build seu. O campo de ícone aceita um caminho por nome de classe.",
+      "verify": "Abra a Scene dock e compare o ícone do seu nó com os nativos no tema escuro e no zoom 200%: o par de toggles é justamente o que garante o match. Exporte o projeto para uma máquina limpa sem as libs de sistema instaladas — o export com [dependencies] declaradas roda; sem, não. Um teste de fumaça automatizado confirma.",
+      "sources": [
+        {
+          "label": "Godot — The .gdextension file",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/gdextension/gdextension_file.html",
+          "why": "as seções Icons e Dependencies com o contrato do SVG e do export"
+        },
+        {
+          "label": "Godot — Editor icons",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/editor/creating_icons.html",
+          "why": "o guia de criação de ícones referenciado pela seção [icons]"
+        }
+      ],
+      "review": "O exemplo 'GDExample = \"res://icons/gd_example.svg\"', a exigência de 16×16, os dois toggles nomeados e a frase da seção de dependências foram conferidos na página oficial; a criação de ícones é o link direto do próprio texto."
+    },
+    {
+      "slug": "gdextension-vs-modules-custo-distribuicao",
+      "title": "Godot 4: godot-cpp versus módulos C++ — uma decisão de distribuição",
+      "one": "A escolha entre GDExtension e módulo é de distribuição, não de performance crua: o mesmo compiled godot-cpp serve editor e projeto exportado, enquanto módulos entram no build estático do motor e obrigam recompilar templates.",
+      "why": "O texto oficial compara as duas vias e lista os dois lados da balança — a portabilidade da lib única contra o acesso profundo ao motor. Times que escolhem por ideologia ('módulo é mais rápido', 'extension é mais fácil') pagam nos detalhes: quem precisa de um hook interno do render driver numa extensão descobre tarde que GDExtension não alcança o que módulo alcança.",
+      "how": "A favor de godot-cpp (a doc, literal): 'use the same compiled godot-cpp library in the editor and exported project' (com módulos, é preciso recompilar todos os templates de export usados); 'godot-cpp only requires you to compile your library, not the whole engine'. A favor de módulos: integração mais profunda ('C++ modules provide deeper integration into the engine'), e features sem carregar arquivos nativos no export. A regra de ouro da própria doc: se algo é acessível só por módulo, abra issue no godot-cpp para discutir expor a funcionalidade — a fronteira é negociada, não fixa.",
+      "example": "Um codec de compressão próprio como extensão: uma release cobre editor+export de todas as plataformas com N binários por [libraries]. Um novo compositing pass que mexe no render pipeline: módulo, engine recompilada, templates próprios por plataforma — com o custo de release que isso implica.",
+      "limits": "A performance das chamadas não decide entre as duas (ambas são código nativo compilado perto do motor); o que decide é o escopo de API e o custo de distribuição. 'Ideal if you need high-performance code you'd like to distribute as an add-on in the Asset Store' é o enquadramento de produto da extensão. E o canal 'abra uma issue' não é promessa de prazo — projetos de prazo fixo devem auditar a lista de funções alcançáveis antes de escolher.",
+      "verify": "Antes de apostar na extensão: liste as APIs do motor de que seu código precisa e procure-as na doc de extensão_api.json do seu alvo. Um spike mínimo de um nó que faz o call mais crítico fecha a dúvida em dias. Revise a decisão a cada upgrade de engine — a lista de 'não alcançável via extensão' encurta com o tempo.",
+      "sources": [
+        {
+          "label": "Godot — About godot-cpp",
+          "url": "https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/about_godot_cpp.html",
+          "why": "a seção 'Differences between godot-cpp and C++ modules' com os prós declarados de cada lado"
+        },
+        {
+          "label": "Godot — Custom C++ modules",
+          "url": "https://docs.godotengine.org/en/stable/engine_details/engine_api/custom_modules_in_cpp.html",
+          "why": "a via alternativa, com o custo de compilar o motor descrito pela própria doc"
+        }
+      ],
+      "review": "As três citações (mesma lib para editor+export, só a lib precisa de build, módulos dão integração mais profunda e a recomendação de abrir issue) foram conferidas na seção de diferenças da página oficial."
+    }
+  ]
+}

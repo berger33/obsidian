@@ -1,0 +1,236 @@
+{
+  "group": "Transformers (Hugging Face): geração — config, estratégias, caches de amostragem, KV e decodificação assistida",
+  "check": "Revisão das páginas text_generation e generation_strategies da documentação oficial (docs.huggingface.co/transformers), da referência internal/generation_utils, da página de kv_cache e do post universal assisted generation, consultadas em 2026-10-04.",
+  "notes": [
+    {
+      "slug": "hf-generation-config-nen-hereda-modelo",
+      "title": "Transformers: os None da GenerationConfig são herança, não desatenção",
+      "one": "A GenerationConfig deixa os parâmetros não-definidos como None e os resolve contra o config do modelo na geração — o objeto que viaja com o checkpoint, não o default global da biblioteca.",
+      "why": "Times que setam 'GenerationConfig(temperature=0.7)' e colhem comportamento diferente do esperado esquecem o outro lado: o que você não define vem do modelo (generation_config.json salvo junto dele). E o modelo pode ter um generation_config authorado pelo uploader — temperatura 0.7 sua vs. defaults do checkpoint é uma mistura de camadas invisível sem leitura do estado resolvido.",
+      "how": "A página do classe documenta o mecanismo: campos None são preenchidos por '_get_default_generation_params'-style resolution na entrada de generate() (a referência interna lista a rota). Para debug, leia o config resolvido de fato (o atributo do modelo/model.generation_config após a carga) e compare com o seu objeto. Para publicar um preset intencional, use 'model.generation_config.save_pretrained()' — o arquivo generation_config.json passa a ser o default de quem carregar o checkpoint, e from_pretrained(model_id) o recupera.",
+      "example": "Um finetuner que queria 'temperatura do modelo base + max_new_tokens nosso' faz 'GenerationConfig(max_new_tokens=512)' e deixa o resto None — recebe exatamente a semântica de herança; e o postmortem de 'mudou o sampling após merge' é sempre ler o json do checkpoint.",
+      "limits": "Herança tem precedência definida (explícito > generation_config.json > defaults da classe) — mas campos deprecados e renomeados entre versões bagunçam a leitura do json alheio; valide com asserções, não com print. Um generation_config.json podado no merge de LoRA (comum) apaga a camada do base silenciosamente. E defaults de 'max new tokens' sem config limitam a saída (nota separada do max 20).",
+      "verify": "Depois de from_pretrained, um assert de 'model.generation_config.to_dict()' contra um snapshot esperado (por release de modelo) pega mudanças de herança no CI. Carregue o mesmo checkpoint com e sem o GenerationConfig explícito e diff a saída de uma geração com seed. Publique um preset e confirme que outro processo o lê de volta.",
+      "sources": [
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "a classe GenerationConfig com a resolução de defaults e os métodos de save/load"
+        },
+        {
+          "label": "Transformers — generation utils (referência interna)",
+          "url": "https://huggingface.co/docs/transformers/internal/generation_utils",
+          "why": "as funções de resolução de config usadas por generate()"
+        }
+      ],
+      "review": "A resolução de campos None contra o config do modelo e o ciclo save_pretrained/load de generation_config foram conferidos na página da classe; a precedência é o comportamento implementado e documentado ali."
+    },
+    {
+      "slug": "hf-max-new-tokens-vs-max-length",
+      "title": "Transformers: max_new_tokens é o budget relativo; max_length é o absoluto que te morderá",
+      "one": "Geração é limitada por max_length (índice absoluto na sequência) ou max_new_tokens (quantos tokens novos); a doc recomenda o relativo — e sem config o greedy para em ~20 tokens novos.",
+      "why": "O par de knobs é a causa do 'por que a resposta cortou em 20?' em todo primeiro uso: sem generation config, o limite default de novos tokens é curto (a página registra o teto de 20 para o caso sem config). E max_length absoluto significa que prompt longo + max_length fixo = resposta encurtada silenciosamente — o bug de produção clássico de pipelines com entradas variáveis.",
+      "how": "Sempre defina explicitamente o budget: 'max_new_tokens=N' na chamada ou no config. A página de estratégias usa o default curto como o caso de atenção do greedy: 'if no generation config... will generate at most 20 tokens', com a instrução preferir max_new_tokens. Para orçamento total, calcule 'min(max_new_tokens, context_len - input_len)' você mesmo — o modelo tem janela própria, e excedê-la é erro/clip conforme o modelo.",
+      "example": "Um RAG que injeta 3k de contexto e 'max_length 4096': as respostas sumiram em prompts de 3,8k (sobravam 296 tokens de saída); a migração para 'max_new_tokens 512' por request conserta o que a métrica de truncamento denuncia.",
+      "limits": "Alguns modelos/tarefas têm limites próprios de posição e o clip é do modelo, não do config. 'max_new_tokens' com streaming precisa de stop conditions além dele (eos próprio, ou stopping criteria — a página cobre os callbacks) ou você paga o budget inteiro por request. E o teto de 20 sem config é comportamento documentado do greedy default, não um piso garantido entre versões — configure explicitamente.",
+      "verify": "Um fixture sem config que gera 'hello world?' e conta tokens: a asserção do teto atual (20) na sua versão documenta a regra. Dois prompts (curto/longo) com max_length fixo vs. max_new_tokens fixo: o diff de comprimento de resposta é a lição visual. Logger de 'input_len + output_len vs budget' num canary por release.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "o teto de 20 tokens do caso sem config e a recomendação de max_new_tokens"
+        },
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "a definição dos dois campos na config de geração"
+        }
+      ],
+      "review": "A frase 'greedy without a config generates at most 20 new tokens' e a recomendação de max_new_tokens sobre max_length foram conferidas na página de estratégias; a semântica dos campos, na classe."
+    },
+    {
+      "slug": "hf-beams-e-amostragem-tabela",
+      "title": "Transformers: num_beams × do_sample é uma tabela de 4 modos, não dois knobs independentes",
+      "one": "A doc das estratégias define os modos de geração como combinação: greedy (beams=1, sem sample), beam search (beams>1, determinístico), sample (beams=1, do_sample=True) e beam-sample (beams>1 + sample) — a tabela é o contrato.",
+      "why": "Pedir 'beam search' a um pipeline que setou do_sample=True não te dá beam search — te dá a variante estocástica da árvore, com comportamento radicalmente diferente em qualidade/repetição. E a crença de que 'sampling é a temperatura do beam' é o modo beam-sample da tabela, um híbrido que poucos times escolhem conscientemente. A classificação documentada elimina o debate.",
+      "how": "A página traz a matriz por estratégia (greedy, beam search e amostragem; com o efeito de num_beams>1 em cada) e os parâmetros por família: beam controla num_beams, early_stopping, length_penalty (nota: length penalty só vale em beam — documento na mesma página); sampling controla temperature/top-k/top-p. Para decisão: classificação/extrativa tende a greedy ou beam baixo; geração longa criativa tende a sample; beam+sample é o que a tabela chama de beam-sample e precisa de motivo explícito.",
+      "example": "Um gerador de títulos que 'melhorava com beams' mas tinha do_sample=True do preset herdado: os títulos variavam entre runs por causa do modo beam-sample silencioso — o fix foi o par explícito (num_beams=4, do_sample=False) em vez de qualquer temperatura.",
+      "limits": "Beam search com modelos decodificador-esquerda-causal de grande escala tem performance de qualidade muito diferente da era seq2seq; a doc descreve o mecanismo, a adequação ao seu modelo é empiria (e o guidance do próprio texto de geração favorece sampling para criativo longo). num_beams alto multiplica o batch interno (custo linear em beams, com a ressalva de que a cache de KV é ampliada — nota separada de cache). E beam-sample não é 'melhor dos dois': é um terceiro comportamento.",
+      "verify": "Um teste de sensibilidade: a mesma seed em (1,0), (4,0), (1,1), (4,1) com temperatura fixa — as quatro famílias devem responder diferente onde esperado (determinismo só nos do_sample=False). Registre a matriz como documentação viva do preset. No canary de produção, a métrica 'distinct-n' por modo separa 'estou gerando variedade' de 'estou gerando aleatoriedade'.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a tabela de estratégias e os parâmetros por família (beams, sample, híbrido)"
+        },
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "os campos num_beams/do_sample na classe e seus defaults"
+        }
+      ],
+      "review": "A existência da tabela de combinações e os campos associados foram conferidos na página de estratégias; a ressalva de custo de beam sobre a cache corresponde ao modelo descrito nas páginas de geração."
+    },
+    {
+      "slug": "hf-early-stopping-never",
+      "title": "Transformers: early_stopping do beam tem três estados — e 'never' existe por um motivo",
+      "one": "Em beam search, early_stopping controla quando a busca termina: 'never' (só termina no fim do max length), True (padrão comportamental: para quando há hipóteses suficientes 'terminadas'), ou False (corta quando a melhor corrente não pode ser batida pelo heurística de fim).",
+      "why": "Cortesia com o custo de beams: early_stopping=True pode economizar metade dos passos com qualidade idêntica em geração curta; mas em texto onde a hipótese boa 'melhora no fim' (resumo que fecha a frase, título que resolve a referência), a parada antecipada perde a melhor saída — é o cenário que o modo 'never' existe para cobrir, e o tri-estado documentado na página de estratégias é a alavanca.",
+      "how": "A página lista 'early_stopping' na tabela de beam search com o efeito de 'never'/True/False: com never, todas as hipóteses vão ao limite de comprimento; com True, terminou quando o número de sequências terminadas excede os beams; False é o corte clássico por bound. Combine com length_penalty (que só tem efeito em beam search — mesma fonte): um penalty maior favorece hipóteses longas, e early_stopping frouxo + penalty agressivo é a dupla de trade-off tempo/qualidade da busca.",
+      "example": "Um motor de 'headline A/B' com beams 8: a versão com early_stopping default cortava títulos bons pela metade da frase; 'never' + length_penalty 1.0 recuperou a qualidade com ~2× tempo de decode — a medição dos dois lados da flag é o case.",
+      "limits": "O tri-estado é API específica de geração HF (outros runtimes têm binário); não generalize a config entre stacks. 'never' em modelos com EOS fraco (que ignora o token de fim) paga o teto de max_new_tokens por hipótese — budget sempre. E early stopping é busca, não amostragem: em modo beam-sample (nota anterior) a terminação antecipada interage com a estocasticidade da expansão — teste o combo.",
+      "verify": "Um par de métricas por release: taxa de hipóteses finalizadas vs. passos médios decodificados, com/sem 'never' — o delta é a decisão. Um teste determinístico com corpus de títulos e assert de igualdade de top-1 entre runs fixa o estado. Se você trocou beams por amostragem, a página e o teste confirmam que early_stopping é no-op fora de beam.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a seção de beam search com early_stopping e length_penalty e suas semânticas"
+        },
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "a definição e defaults dos campos na config"
+        }
+      ],
+      "review": "As três opções de early_stopping e a restrição de length_penalty ao modo beam foram conferidas na página de estratégias; os defaults na classe."
+    },
+    {
+      "slug": "hf-temperature-topk-topp-defaults",
+      "title": "Transformers: os defaults de sampling (1.0/50/1.0) não são config — são a ausência dela",
+      "one": "Sem tocar na GenerationConfig, o sampling roda com temperature 1.0, top_k 50 e top_p 1.0 — a biblioteca amostra da distribuição quase-crua do modelo, e o que você chama de 'nossa temperatura' pode nunca ter sido definida.",
+      "why": "Os três parâmetros interagem e a doc de sampling os lista com esses defaults explícitos. 'Top-k=50' default é um corte que o time não decidiu (um modelo com cauda pesada perde tokens legítimos; um com cauda limpa não sente). E port de outros runtimes com 'top_k=-1' ou 'do_sample=False' muda o que esses três campos significam — carregar defaults sem ler é o bug de paridade.",
+      "how": "O trio documentado: temperature reescala os logits antes da softmax (1.0 = nenhum efeito, abaixo afia, acima achata); top_k mantém os k mais prováveis; top_p (nucleus) mantém o prefixo cumulativo até p. A ordem de interação e as renormalizações vivem na config de sampling, e a página recomenda 'renormalize_logits=True' para compatibilidade correta de filtros compostos. Regra de port: liste explicitamente os três no seu config, mesmo quando iguais ao default — o default da biblioteca não é o default do seu produto.",
+      "example": "Um port que 'piorou após migrar para HF' tinha top_k do runtime anterior em 40; o 50 silencioso aceitava o token 51º que degradava o factual. A config explícita dos três + o snapshot do config resolvido na CI fechou a divergência.",
+      "limits": "temperature 0 é o modo greedy (do_sample=False), não 'um número pequeno' — a família de amostragem é um switch de modo, não uma rampa contínua com ela desligada. top_p e top_k juntos dependem da ordem interna (e da renormalização) — resultados podem divergir de pipelines que filtram na ordem oposta. E o renormalize_logits recomendado na página é compatibilidade de semantics, não garantia de igualdade com outros runtimes.",
+      "verify": "Snapshot de config resolvido (to_dict) num teste de paridade por release — o assert pega mudanças de default. Um golden-set com seed por modo: a distribuição de tokens amostrados não deve mudar sem PR que assuma isso. O diff de top-1 entre temperature 1.0 e 0 é a calibração rápida do 'quão afiado o modelo já está sozinho'.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a seção de sampling com defaults e a nota de renormalize_logits"
+        },
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "os campos e defaults na classe de config"
+        }
+      ],
+      "review": "Os defaults citados (temperature 1.0, top_k 50, top_p 1.0) e a recomendação de renormalize_logits=True constam das páginas de estratégias/classe conferidas; a leitura de ordem é a que a própria doc descreve."
+    },
+    {
+      "slug": "hf-min-p-top-h-typical-p-filtros",
+      "title": "Transformers: os filtros alternativos do sampling — min_p, top_h, typical_p — e suas faixas",
+      "one": "Fora do top-k/top-p, a config de amostragem expõe min_p (corte relativo ao máximo: escalonado com o resto), top_h (entropia mínima), typical_p (local typicality) e o corte epsilon (epsilon sampling) — com faixas recomendadas documentadas.",
+      "why": "Cada um ataca um regime diferente da cauda: min_p corta tokens 'baixos em relação ao melhor' (robusto a entropia variável do contexto), top_h mantém o mínimo de massa de entropia (a métrica informativa de 'quanta incerteza sobreviver'), typical_p mantém o que tem surprisal perto da entropia local. Usar sem a orientação da doc (min_p 0,01–0,2; top_h 0,3–0,6; epsilon 3e-4–9e-4) é tuning no escuro.",
+      "how": "Da página de sampling: min_p é multiplicado pela probabilidade do melhor token (com as demais normalizações, daí a relação com top_p recomendada); a doc sugere 0,01–0,2. top_h define o piso de entropia a manter (0,3–0,6 sugerido). typical_p (a distribuição de surprisal perto da entropia local, com a faixa clássica de 0,9) e epsilon sampling (corte em função da probabilidade do melhor token; valores 3e-4–9e-4 sugeridos) são os outros dois. A combinação com renormalize_logits continua a nota padrão. São knobs de qualidade-estilo, não de velocidade.",
+      "example": "Um chat criativo 'menos robótico' que rejeitava top-p: o preset que ficou foi top_k 100 + min_p 0.08 — a cauda média cortada (artefato), a cauda de contexto permitida (o token raro certo que top-p puro mata). O A/B de qualidade foi por faixas da doc, não por gosto.",
+      "limits": "A faixa recomendada é um ponto de partida documentado, não um contrato: a sensibilidade do seu modelo a cada corte é empiria (e a doc mesma lista como recomendação de calibração). Filtros relativos (min_p, epsilon) respondem diferente a temperatura alta vs. baixa — a ordem do pipeline de samplers importa (nota llama.cpp irmã tem a ordem do outro runtime; aqui, a doc descreve os campos, a sequência é da implementação). E nenhum filtro de cauda substitui no_repeat_ngram (próxima nota) para repetição estrutural.",
+      "verify": "Um harness de 'varrer uma faixa por filtro e medir distinct-n + n-gram repetition + ROUGE contra referência' — as faixas da doc viram eixo do gráfico, e o joelho é o seu preset. Teste unitário: o filtro isolado muda exatamente o que deve (o corte de cauda não deve alterar o top-1 do modo greedy). Snapshot de distribuição num prompt canary por release de transformers.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a seção de sampling com min_p/top_h/typical_p/epsilon e as faixas sugeridas"
+        },
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "os campos correspondentes na classe de config"
+        }
+      ],
+      "review": "As definições e as faixas sugeridas (min_p 0,01–0,2; top_h 0,3–0,6; epsilon 3e-4–9e-4) foram conferidas na seção de sampling da página de estratégias; a relação multiplicativa do min_p, idem."
+    },
+    {
+      "slug": "hf-repeticao-ngram-e-bias",
+      "title": "Transformers: o arsenal anti-repetição — n-gramas, penalidades e viés de tokens",
+      "one": "A config expõe quatro alavancas para repetição e controle de vocabulário: no_repeat_ngram_size (proíbe n-gramas repetidos), encoder_no_repeat_ngram_size (idem contra o input), repetition_penalty (desvaloriza o que já apareceu) e as listas de supressão/forçamento (suppress_tokens, bad_words_ids, forced_bos_token_id, sequence_bias).",
+      "why": "'Repetir' é a falha número 1 de geração longa, e cada alavanca corrige um mecanismo diferente: loop exato de frase (ngram ban), parafrasear o input (encoder ngram), estilo 'eco' difuso (penalty) e tokens estruturais na resposta (as listas). Tratar as quatro como 'o anti-repeat' e setar tudo junto é o outro modo de quebrar a geração — o no_repeat_ngram_size alto demais bloqueia até conectivos comuns e a frase morre no terceiro 'the'.",
+      "how": "Os campos documentados: no_repeat_ngram_size=4 proíbe repetir 4-gramas (valores típicos 2–8; a página explica o efeito de 'não pode produzir nenhum n-grama repetido'); encoder_no_repeat_ngram_size impede copiar do input (resumo que não vira transcrição); repetition_penalty >1.0 desvaloriza presença anterior (1.0 = nenhum efeito, documentado), com a variante por-frequência (penalty é por vocabulário — a referência cobre os campos de sub/inf/presence); suppress_tokens proíbe tokens inteiros (o default cobre unk etc.), bad_words_ids veda sequências, sequence_bias soma logit a tokens forçados/evitados com pesos.",
+      "example": "O pipeline de resumo executivo: no_repeat_ngram_size=3 + encoder_no_repeat_ngram_size=4 eliminaram o loop e a transcrição do parágrafo 1; no A/B, repetition_penalty 1.2 foi o que piorou — as listas de controle estrutural ficaram, o 'gatilho de gosto' saiu.",
+      "limits": "No-repeat n-gram é uma máscara absoluta: em geração longa e vocabulário pequeno, pode não haver continuação válida e o comportamento vira degenerado (a doc avisa do trade-off); tamanho baixo (2) proíbe até 'de a' repetido — 3–4 é o piso sensato. bad_words_ids com tokens que aparecem em contexto normal é censura acidental — a lista deve ser de subtokens, não de 'palavras'. E nenhum deles ensina o modelo: são pós-processamento de logits, sintoma, não causa.",
+      "verify": "O suite de repetição: N amostras × distinct-2/distinct-3 e taxa de n-gram repetido, por combo de flags — o delta documenta cada alavanca separadamente (o erro comum é medir o bundle). Um teste adversarial com o prompt 'repita X' confirma que o ngram ban ganha do pedido. Sequence bias: asserção de que os tokens forçados aparecem em 100% com peso alto.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a seção de controle de repetição com os quatro grupos de campos"
+        },
+        {
+          "label": "Transformers — generation utils (referência interna)",
+          "url": "https://huggingface.co/docs/transformers/internal/generation_utils",
+          "why": "a implementação dos logit processors/weights referenciada pelo mecanismo"
+        }
+      ],
+      "review": "Os campos e suas semânticas (no_repeat_ngram_size bloqueando n-gramas repetidos; encoder_ contra o input; repetition_penalty 1.0 = nenhum efeito; suppress/bad_words/forced_bos/sequence_bias) foram conferidos na página de estratégias; a classificação processor/weight na referência interna."
+    },
+    {
+      "slug": "hf-cache-implementation-quatro-modos",
+      "title": "Transformers: cache_implementation escolhe o destino da KV — dynamic, static, offload ou quantizada",
+      "one": "A config de geração aceita cache_implementation: 'dynamic' (default, cresce com realloc), 'static' (pré-alocada, barata em CUDA graphs), 'offloaded'/'offloaded_static' (KV para CPU em camadas) e 'quantized' (KV comprimida), com max_cache_len dimensionando o static.",
+      "why": "KV cache é o gargalo de memória de decodificação longa, e os modos são trade-offs diferentes, não tiers de 'performance': static elimina o realloc (e é o que casa com compile/CUDA graphs — com o preço de pré-alocar), offload troca VRAM por bandwidth, quantized troca precisão por capacidade. Errar a escolha é pagar a conta errada no lugar errado — o 'OOM em 8k de contexto' que resolve com duas linhas de config.",
+      "how": "Da página de geração (e da seção kv_cache): 'cache_implementation' com os quatro valores e o subtipo offloaded_static; para static/offloaded_static defina max_cache_len — pré-dimensionar evita recompilação (a doc nota o efeito em torch.compile). A rota quantizada tem seus próprios parâmetros (a página de kv_cache cobre os quantizadores por camada). Decisão por perfil: decode curto variável → dynamic; decode de comprimento limitado + compile/graphs → static; contexto que não cabe → offloaded (se o bandwidth aguenta) ou quantized (se a qualidade aguenta).",
+      "example": "Um servidor de roleplay com saídas de até 2k por usuário em 4090 16 GB: static + max_cache_len alinhado ao teto, com o espaço de VRAM reservado sendo a base da conta de -np; o modo dynamic estourava realloc com o batch variável.",
+      "limits": "static pré-aloca por batch — em lotes variáveis o desperdício paga a previsibilidade; e o valor errado de max_cache_len ou cresce demais (OOM na reserva) ou corta (erro/truncamento). offloaded mede bandwidth PCIe no decode — em tokens/s o ganho pode ser negativo com geração curta. quantized afeta qualidade de retrieved-context (o mesmo aviso da KV quantizada do outro runtime se aplica — avalie no seu task). A lista de modos é da API do Transformers, não de vLLM/TGI: port não herda.",
+      "verify": "O teste é mem+throughput nas duas pontas: pico de memória do processo e tokens/s por batch size por modo, no comprimento real do produto (não num toy de 128 tokens). Um assert de 'sem recompilação' no run de static+compile (o log do torch.compile mostra o recapture) valida o max_cache_len. Para quantized, o suite de qualidade da nota de KV (extrativa de documento longo) antes do rollout.",
+      "sources": [
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "a configuração de cache (implementation, max_cache_len, offloading) na API de geração"
+        },
+        {
+          "label": "Transformers — KV cache",
+          "url": "https://huggingface.co/docs/transformers/kv_cache",
+          "why": "a explicação dos formatos de cache e dos quantizadores por camada"
+        }
+      ],
+      "review": "Os quatro modos e o papel de max_cache_len (com a nota de pré-alocação evitando recompilação) foram conferidos nas duas páginas oficiais citadas na sessão; o perfil de decisão é recomendação derivada do trade-off documentado."
+    },
+    {
+      "slug": "hf-assisted-decoding-especifico",
+      "title": "Transformers: decodificação assistida — draft por modelo, n-gram, medusa ou ensemble",
+      "one": "O generate() aceita decodificação assistida: um draft model, prompt-lookup por n-gramas, ou métodos específicos (medusa, eagle) via helpers especializados — com schedules e confiança controlando quantos tokens rascunho o target aceita por passo.",
+      "why": "Decodificação autoregressiva paga o passo por token; assistida propõe k tokens de uma vez e o modelo-alvo verifica. O ganho não é grátis: aceitar a proposta errada é rerunir — os knobs existem para calibrar essa aposta. E cada método tem requisitos de modelo (medusa/eagle têm cabeçalhos próprios), o que faz da escolha uma decisão de stack, não um toggle.",
+      "how": "O bloco documentado: 'assistant_model' (draft; num_assistant_tokens por passo de rascunho, num_assistant_tokens_schedule heurístico|heuristic_transient|constant para ajustar k conforme os acertos, assistant_confidence_threshold para cortar por confiança) e 'prompt_lookup_num_tokens' (+ max_matching_ngram_size, default 2) para o modo sem draft-model (repetir n-gramas do prompt como proposta). Os specialised helpers (generate_medusa/generate_eagle) vêm dos exemplos/rotas específicas que o post de universal assisted generation descreve, incluindo ensemble com weight em (0,1) — o post é a visão de conjunto dos métodos e seus trade-offs.",
+      "example": "Um servidor de extração (respostas que copiam muito do contexto) liga prompt_lookup_num_tokens 3 sem draft model algum: a sobreposição de n-gramas do documento vira o rascunho e o ganho aparece exatamente onde o texto é copycat — o caso que o próprio modo foi desenhado para servir.",
+      "limits": "Assistência é sensível a regime: em saída criativa sem overlap, o draft perde e você paga o custo dele (a heurística de schedule tenta mitigar; o transient congela k após o aquecimento). Draft model tem seu próprio footprint de VRAM — o 'grátis' só existe no prompt-lookup. Medusa/EAGLE exigem pesos treinados para o alvo (um 7B específico, não qualquer), o que os ancora a uma decisão de distribuição de modelo. E assistida + beam search não é combinada pela doc como suporte trivial — os modos de busca e verificação colidem.",
+      "verify": "O teste honesto é end-to-end tokens/s no workload real, não no exemplo da doc: assistido vs. vanilla na mesma GPU, mesmo batch. Um harness de 'taxa de aceitação de draft' (o log do caminho assistido expõe métricas por versão) separa 'o modo está errado' de 'o knob está errado'. Para specialised helpers, um smoke test de carregamento dos pesos extras no seu alvo antes de investir no rollout.",
+      "sources": [
+        {
+          "label": "Transformers — Generation strategies",
+          "url": "https://huggingface.co/docs/transformers/generation_strategies",
+          "why": "a seção de assisted generation com assistant model, schedules e prompt-lookup"
+        },
+        {
+          "label": "HF blog — Universal assisted generation",
+          "url": "https://huggingface.co/blog/universal_assisted_generation",
+          "why": "o post oficial que enquadra draft/n-gram/medusa/eagle e ensemble"
+        }
+      ],
+      "review": "Os campos conferidos (num_assistant_tokens e as três schedules, assistant_confidence_threshold, prompt_lookup_num_tokens, max_matching_ngram_size default 2) constam da página de estratégias; o enquadramento dos specialised helpers e ensemble, do post oficial citado."
+    },
+    {
+      "slug": "hf-retornos-e-custom-generate",
+      "title": "Transformers: past_key_values no retorno e generate custom por repositório",
+      "one": "return_dict_in_generate abre as saídas estruturadas (past_key_values para continuação, scores para rerank) — e o campo custom_generate abre o pipeline para geradores alternativos versionados no hub, com o contrato de confiança explícito.",
+      "why": "Duas camadas de 'saída da caixa preta': continuar uma conversa sem recomputar KV, e trocar o algoritmo de geração sem forkar a lib. A primeira é performance de agente (o cache que os loops de tool-use rejeitam todo dia por não saber do parâmetro); a segunda é o canário de supply-chain — código Python do hub rodando no seu generate() exige trust_remote_code e requirements.txt próprios, com o aviso explícito da doc sobre pins quebrados.",
+      "how": "Para dict: 'return_dict_in_generate=True' retorna GenerateOutput (sequences, past_key_values, scores quando output_scores=True); a rota de continuação realimenta o cache cortando o que passou — as páginas descrevem os campos e a limitação de que past é formato de cache interno (não contrato estável entre versões). Para custom: 'generation_config.custom_generate' aponta o módulo/repositório (ex.: 'unbabel-comet/...') e a doc descreve o formato (generate.py + requirements.txt) com a ressalva de ImportError por pins incompatíveis; exige trust_remote_code na carga.",
+      "example": "Um orquestrador multi-turno guarda 'past_key_values' por sessão e reaproveita no próximo turno com o delta de prompt; o reranker de melhor-de-n usa os 'scores' por passo do mesmo dict — duas features do mesmo retorno que o preset default escondia.",
+      "limits": "past_key_values é formato de cache interno (a própria doc de kv_cache explica por que não o trate como API de dados — o layout muda com cache_implementation e versão); serializar para 'estado de sessão' é unsupported. output_scores triplica memória nos passos (um vocab por passo — budget). E custom_generate é execução de código de terceiros: o trust_remote_code que habilita é a decisão de segurança, não um toggle de conveniência — audite o repositório como dependência de runtime.",
+      "verify": "Um teste de paridade de continuação: gerar A, continuar com past vs. regerar A+B do zero, comparar a saída (a diferença é o que o cache não-carregado te custaria). No dict, assert de shape de past por modo de cache (dynamic vs static respondem diferente — o teste fixa a expectativa). Para custom_generate: um CI que roda o gerador externo como dependência versionada (pinned commit), não como 'latest'.",
+      "sources": [
+        {
+          "label": "Transformers — Generation (text_generation)",
+          "url": "https://huggingface.co/docs/transformers/main_classes/text_generation",
+          "why": "GenerateOutput (past_key_values, scores) e o campo custom_generate com contrato de requirements"
+        },
+        {
+          "label": "Transformers — KV cache",
+          "url": "https://huggingface.co/docs/transformers/kv_cache",
+          "why": "o que past_key_values é por dentro, e por que não é formato estável"
+        }
+      ],
+      "review": "Os campos do retorno (return_dict_in_generate, output_scores, past_key_values) e o mecanismo custom_generate (campo no config, requirements.txt, aviso de pins via ImportError, confiança remota) foram conferidos na página da classe e complementados pela seção de formatos da página de kv_cache."
+    }
+  ]
+}

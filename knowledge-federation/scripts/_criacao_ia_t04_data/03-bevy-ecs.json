@@ -1,0 +1,236 @@
+{
+  "group": "Bevy ECS: agendamento, queries, mutação adiada e organização de app",
+  "check": "Revisão das páginas do quick-start oficial (bevy.org) e das referências docs.rs consultadas em 2026-10-04; afirmações limitadas ao material canônico verificado, com API do estado atual da documentação.",
+  "notes": [
+    {
+      "slug": "bevy-startup-update-duas-momentos",
+      "title": "Bevy ECS: Startup roda uma vez antes de tudo; Update é o loop",
+      "one": "O app executa sistemas em schedules — Startup corre exatamente uma vez na inicialização, Update corre todo frame — e registrar o sistema no schedule errado muda o comportamento sem mudar uma linha de lógica.",
+      "why": "Inserir entidades com um sistema de setup no Update os recria a cada frame; fazer lógica de frame no Startup congela a simulação no primeiro tick. Como a distinção é só um argumento de 'add_systems', o erro típico de Bevy não é de sintaxe, é de momento — e a documentação canônica define o papel de cada schedule.",
+      "how": "Sistemas são funções Rust comuns; 'App::add_systems(schedule, sistema)' escolhe quando rodam. O quick-start define os Startup systems como exatamente-uma-vez, na largada, antes dos demais — o exemplo 'add_people' cria as entidades ali. Update é o schedule padrão do jogo. A partir daqui, schedules extras (FixedUpdate para física, RunFixedMainLoop e afins) seguem a mesma lógica: a pergunta de revisão é sempre 'este código pertence a qual momento do app?'.",
+      "example": "Um gerador de mundo coloca spawn de cenário em OnEnter/Startup, o consumo de input em Update e a simulação determinística em FixedUpdate — os três acessando os mesmos componentes, cada um no seu relógio.",
+      "limits": "Startup corre uma vez — se o mundo pode ser reiniciado (novo mapa, respawn), o sistema precisa ser idempotente ou viver num schedule de transição, não no Startup. A ordem 'Startup antes de Update' vale para a largada; entre sistemas do mesmo schedule a ordem não é garantida sem configuração explícita. Schedules customizados têm suas próprias condições de disparo.",
+      "verify": "Coloque um println com contagem em cada schedule e confirme: Startup exatamente 1, Update igual ao número de frames, FixedUpdate em ritmo próprio. Mude um spawn de Update para Startup e observe que ele deixa de repetir — o teste visual da regra. Para projetos, teste de integração com App::default().update() duas vezes cobre o contrato.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "define Startup (exatamente uma vez, antes dos demais) e a função de add_systems"
+        },
+        {
+          "label": "docs.rs — bevy::app::App",
+          "url": "https://docs.rs/bevy/latest/bevy/app/struct.App.html",
+          "why": "referência da API de registro de schedules e plugins"
+        }
+      ],
+      "review": "A frase do quick-start sobre startup systems ('run exactly once, before all other systems, right when our app starts') foi conferida na página; a classificação de schedules extras é apresentação canônica da API, mantida em nível descritivo."
+    },
+    {
+      "slug": "bevy-paralelismo-por-acesso",
+      "title": "Bevy ECS: o paralelismo vem dos acessos declarados, não de threads manuais",
+      "one": "Sistemas em Bevy rodam em paralelo sempre que seus acessos a componentes não conflitam — a unidade de concorrência é a assinatura de Query, não a gerência de threadpool.",
+      "why": "Um jogo com 30 sistemas onde cada um declara o que lê e escreve escala quase sozinho em múltiplos núcleos; um sistema que grava println desordenado na saída é a prova do modelo: o próprio quick-start avisa que a ordem dos prints pode variar porque os sistemas correm concorrentes. Trocar isso por mutex manuais anula o ganho.",
+      "how": "O agendador constrói um grafo de conflitos por sistema: dois sistemas que podem escrever o mesmo tipo de componente são serializados; leituras puras coexistem com leituras; escrita conflita com tudo no mesmo tipo. Não há anotação de thread para pedir — o tipo do parâmetro (Query<&T> vs. Query<&mut T>) é a política de concorrência. Para ordenar quando a concorrência natural não basta, usa-se chain ou sets, explicitamente.",
+      "example": "Os sistemas 'animar sprites' (lê Transform, escreve Sprite) e 'aplicar gravidade' (escreve Velocity) rodam em paralelo porque não se tocam; ao introduzir 'aterrissagem' que lê Sprite e escreve Velocity, o plano do frame muda sozinho — sem código novo de sincronização.",
+      "limits": "Paralelo por acesso não ordena efeitos colaterais visíveis (prints, IO de arquivos, rand global): dois sistemas independentes podem produzir saída intercalada. Um único &mut em hot path serializa os vizinhos — a métrica certa é 'quantos sistemas ficam bloqueados por este tipo'. O modelo vale para o mundo ECS; comandos de render e áudio têm seus próprios agendadores.",
+      "verify": "Compare o tempo de frame de um sistema pesado duplicado (leitura pura de &T) — se fosse lock manual, não escalaria. Insira uma escrita em &mut no mesmo tipo e observe a serialização no profiler de schedule. Testes de ordem: rode com 'available_parallelism' variável e confirme que o resultado da simulação independe da ordem dos sistemas independentes.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "afirma que sistemas rodam em paralelo por padrão sempre que possível e ilustra com a ordem variável dos prints"
+        },
+        {
+          "label": "docs.rs — bevy_ecs::schedule::Schedule",
+          "url": "https://docs.rs/bevy_ecs/latest/bevy_ecs/schedule/struct.Schedule.html",
+          "why": "referência da estrutura que materializa ordem e paralelismo dos sistemas"
+        }
+      ],
+      "review": "A frase 'systems run in parallel by default whenever possible' e o exemplo da ordem variável de saída foram conferidos no quick-start; a descrição do grafo de conflitos segue a documentação do Schedule."
+    },
+    {
+      "slug": "bevy-chain-ordenamento-minimo",
+      "title": "Bevy ECS: use chain() onde a ordem importa, e só lá",
+      "one": "A ordem entre sistemas do mesmo schedule é definida pelos seus acessos; quando dois sistemas independentes em acesso precisam de sequência lógica, '.chain()' força a ordem listada.",
+      "why": "O exemplo canônico do quick-start diz exatamente isso: 'update_people' precisa rodar antes de 'greet_people' para que o nome alterado apareça no cumprimento — sem chain, a ordem é indefinida. Inverter a relação nos dados é mais barato e mais robusto, mas quando a dependência é de efeito (não de leitura/escrita de componente), a ordem explícita é a ferramenta honesta.",
+      "how": "Aplique .chain() no tuple de sistemas no add_systems — a sequência do tuple vira restrição de precedência. Use na menor granularidade que resolve: chain entre os dois sistemas que disputam, não entre os dez do módulo. A alternativa preferida quando possível é remodelar: um sistema que produz o componente que o outro consome já ordena via acessos; chain é para o resíduo de dependências invisíveis ao tipo.",
+      "example": "O pipeline de AI decide-algo e aplica-algo compartilham apenas um recurso de decisão: o par '(decidir, aplicar).chain()' elimina a corrida sem trocar o tipo do recurso.",
+      "limits": "Chain demais recompõe a serialização que o modelo ECS evita por design: cada par acorrentado reduz o paralelismo do schedule. A restrição é intra-schedule — sistemas em schedules diferentes (Update vs. FixedUpdate) não se alinham com chain, exigem fix-first ou transições explícitas. Ordem não é contrato de persistência entre versões de API; prefira invariantes de dados sempre que possível.",
+      "verify": "Rode o exemplo do quick-start com e sem chain e observe a diferença na saída. Adicione um teste que perturbe a ordem de registro e afirme o invariant (nome greetado = nome atualizado). Se o profiler mostrar 'sistemas em série' crescendo, conte as chains — é a métrica de dívida de ordenamento.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "introduz .chain() com a motivação literal do caso update/greet"
+        },
+        {
+          "label": "docs.rs — bevy::app::App",
+          "url": "https://docs.rs/bevy/latest/bevy/app/struct.App.html",
+          "why": "superfície do add_systems que recebe os tuples e a configuração de ordem"
+        }
+      ],
+      "review": "A motivação literal do quick-start (name might change after greet sem chain) e o uso no tuple de add_systems foram conferidos na página citada."
+    },
+    {
+      "slug": "bevy-query-mutavel-unico-por-alvo",
+      "title": "Bevy ECS: uma query &mut é o ponto único de escrita de um tipo",
+      "one": "Query<&mut T> pede acesso exclusivo aos componentes T do sistema; dentro do mesmo sistema, dois acessos mutáveis sobrepostos violam as regras de aliasing que a referência documenta.",
+      "why": "A segurança de dados do Bevy é compilada na assinatura: o compilador Rust impede duas &mut na mesma memória, e o runtime verifica a sobreposição entre queries de sistemas concorrentes. A regra 'um mutador por tipo' é o preço e a vantagem — você sabe, por assinatura, que ninguém mais está escrevendo ali enquanto o sistema roda.",
+      "how": "Para ler-e-escrever o mesmo componente no mesmo sistema, uma única query mutável cobre leitura e escrita (o iterador 'for mut name in &mut query' faz ambos). Para mover dados entre componentes A e B, a query dupla '&mut A, &B' é válida; '&mut A, &mut A' não é. O quick-start mostra o padrão de busca com break após a mutação — uma mutação, um dono, sem estado fantasma entre queries.",
+      "example": "O sistema de dano usa '(query_mut<&mut Health>, query<&EnemyTag>)': a escrita em Health fica num único canal de acesso; filtrar por EnemyTag na query mutável teria o mesmo efeito com um tipo a menos de empréstimo.",
+      "limits": "Iterar '&mut query' ao mesmo tempo que se inspeciona o World por outro parâmetro pode esbarrar em regras de empréstimo que o compilador pega cedo demais — refatorar em dois sistemas resolve melhor que contornar. Query com Option<&mut T> não multiplica o direito de escrita; o empréstimo é do tipo. Acesso a um mesmo componente em dois schedules diferentes é serializado pelo executor, não unificado — um 'paralelo' aqui é uma ilusão.",
+      "verify": "Duplique a query mutável num fixture e confirme o erro do borrow checker (é o contrato agindo). Rode o exemplo do quick-start e verifique que sem o 'mut' a atribuição não compila — a prova da direção do empréstimo. No profiler, um único &mut serializando 8 sistemas é um sinal de que a assinatura está dizendo algo útil sobre design.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "define o padrão da query mutável (mut query, for mut name) e a iteração com break"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::system::Query",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/system/struct.Query.html",
+          "why": "referência da API de Query, seus parâmetros e regras de empréstimo"
+        }
+      ],
+      "review": "O padrão de query mutável do quick-start foi conferido na página; as regras de aliasing/uso simultâneo são as documentadas na referência da estrutura Query."
+    },
+    {
+      "slug": "bevy-query-filtros-refinam-superficie",
+      "title": "Bevy ECS: com With/Without você estreita o alvo sem quebrar o contrato de acesso",
+      "one": "Filtros de query (With, Without, Or) refinam quais entidades a iteração toca, sem alterar o que é lido — e o agendador continua enxergando os tipos reais.",
+      "why": "Iterar tudo e filtrar no corpo com if continua correto em resultado, mas paga o custo por cada entidade e não comunica intenção. Um filtro na assinatura documenta o recorte ('só Name de Person') e reduz iteração; o quick-start usa exatamente Query<&Name, With<Person>> para expressar 'todo Name cujo dono é Person'.",
+      "how": "O segundo parâmetro genérico de Query é o filtro: With<Marker> exige a presença, Without<Marker> a ausência, Or<(A, B)> a disjunção. Combine com os tipos lidos para manter o mínimo de superfície. Filtros não pedem permissão de escrita sobre o tipo filtrado — ler a presença de Marker via filtro não é ler seu valor; por isso With<Marker> funciona com marcador vazio sem custo de acesso. Para negação composta, Or com Without é o padrão documentado na referência.",
+      "example": "Dois sistemas sobre 'Sprite': um atualiza 'Sprite, With<Enemy>' e outro 'Sprite, With<Player>' não se serializam entre si, pois os conjuntos são disjuntos — o filtro vira informação de concorrência, não só economia.",
+      "limits": "Filtros não são índices de arcabouço: o custo de teste por entidade existe e With em tipo raro pode iterar mais do que parece; a estrutura de índices é detalhe de versão. Or amplia o conjunto de leitura e, por isso, pode alargar o conflito no grafo de agendamento: filtrar é também uma declaração de alcance.",
+      "verify": "Compare a contagem de iterações (um contador local no sistema) entre filtro na query e if no corpo com 100 mil entidades. Rode o par de sistemas do exemplo e confirme que ganham paralelismo quando os filtros ficam disjuntos. Mude Or para a conjunção e observe a mudança no profile — é a semântica de alcance funcionando.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "introduz Query<&Name, With<Person>> com a leitura literal da semântica"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::system::Query",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/system/struct.Query.html",
+          "why": "documenta os tipos de filtro (With, Without, Or) e combinações"
+        }
+      ],
+      "review": "A forma e a frase-exemplo do filtro With no quick-start, e a existência de With/Without/Or como parâmetro de filtro, foram conferidas nas duas fontes."
+    },
+    {
+      "slug": "bevy-commands-mundo-diferido",
+      "title": "Bevy ECS: Commands é a fila de mutação estrutural adiada",
+      "one": "Sistemas que precisam spawnar, inserir ou remover entidades e componentes mutam o mundo via Commands, que enfileira operações aplicadas quando o executor está num ponto seguro.",
+      "why": "Uma mutação estrutural no meio da iteração invalidaria a query que está rodando — em qualquer ECS. Bevy resolve por contrato de tipo: quem precisa criar entidades pede 'mut commands: Commands' e não toca no World diretamente. O adiamento é o que mantém as queries sem travas e o paralelismo honesto.",
+      "how": "Dentro do sistema, 'commands.spawn((A, B))', 'commands.entity(e).insert(C)', 'commands.entity(e).despawn()' e variantes retornam handles com 'get()' para encadear operações na mesma fila. O executor drena as filas em pontos definidos entre sistemas/frames. Consequência prática: a entidade referenciada pelo Entity retornado só passa a existir no mundo após o drain — ler imediatamente no mesmo sistema não encontra.",
+      "example": "O disparo de projétil: 'let bullet = commands.spawn((Pos, Vel)).id();' na bala, e 'commands.entity(shooter).insert(Recoil);' — as duas entidades novas só são visíveis no próximo ponto de aplicação, e o sistema de colisão as vê no frame seguinte.",
+      "limits": "Comandos adiados não veem efeito uns dos outros no mesmo sistema: encadear spawn e depois 'query' o resultado falha; precisa de dois sistemas com um ponto de drenagem entre eles. Para mutações fora do fluxo normal (setup manual, testes, I/O pesado), existe acesso direto via 'world'/'World' e 'world_mut()' — as regras de segurança de sistema não valem ali, e a responsabilidade é sua. O padrão de fila é o que torna a API de spawn um custo de alocação por frame em massa — perfis que importam usam spawn_batch.",
+      "verify": "Escreva um teste que faz spawn via Commands e update o App; confirme que só após update o query retorna a entidade. Compare tempo de frame com N=50k spawns via spawn vs. spawn_batch — a API alternativa existe porque o custo real. Rode o sistema com o drain manual para entender o ponto de aplicação.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "usa Commands como o meio canônico de popular o World nos exemplos"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::system::Commands",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/system/struct.Commands.html",
+          "why": "define a fila de operações de mundo e a aplicação adiada"
+        }
+      ],
+      "review": "O papel de Commands ('add people to our World using Commands') foi conferido no quick-start; a semântica de fila adiada é a definição da referência da estrutura."
+    },
+    {
+      "slug": "bevy-resources-valor-unico-mundo",
+      "title": "Bevy ECS: resources são o valor-único do mundo, não mais um componente",
+      "one": "Um Resource é uma instância única por tipo, armazenada no World e acessível via Res/ResMut — o lugar certo para estado global do app, não para dado repetido por entidade.",
+      "why": "Colocar contagem global de kills em 'componente de um player-fantasma' é um hack que surge do desconhecimento do mecanismo de resource. O quick-start de Resources define o modelo: valor único por programa, 'a value that is unique per program'; e o tipo da assinatura (Res<T> vs. ResMut<T>) diz ao executor quem pode escrever.",
+      "how": "Defina 'struct Score(u32);', registre com 'app.init_resource::<Score>()' (ou insert_resource com valor inicial) e acesse nos sistemas por parâmetro Res<Score> para ler, ResMut<Score> para escrever. O registro é obrigatório: um sistema pedindo Res<T> sem T no mundo é erro de runtime, não de tipo. O trade-off documentado na página de recursos: recursos têm acesso mais lento que componentes para uso em massa por entidade — componente por entidade, resource por app.",
+      "example": "Configuração de simulação (dt alvo, dificuldade) e contadores agregados rodam como resources; posição e saúde por entidade permanecem componentes. Um 'Res<Config>' em dez sistemas dá leitura paralela trivial, porque ninguém escreve.",
+      "limits": "Res<T> com escrita esparsa ainda concorre: um ResMut em sistema lento serializa os leitores até o fim do sistema — o custo de um mutador de resource é maior que o de um mutador de componente raro. Resources não têm change-detection automática como a de componentes para todos os padrões; estado que precisa de eventos explícitos deve ser modeled como evento. O World guarda um resource por tipo — dois 'config' exigem dois tipos novos, não dois nomes.",
+      "verify": "Um teste: App com init_resource, sistema que incrementa, asserção do valor pós-update. Remova o init_resource e confirme o panic claro (a falta é registrada como erro). Para o perfil: um ResMut escrito a cada frame com dez leitores; o time dos leitores deve mover quando o mutador passa a componente.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: Resources",
+          "url": "https://bevy.org/learn/quick-start/getting-started/resources/",
+          "why": "página oficial que define resource como valor único por programa e a dupla Res/ResMut"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::world::World",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html",
+          "why": "o armazenamento onde componentes e resources vivem; documenta get_resource/get_resource_mut"
+        }
+      ],
+      "review": "A definição 'a value that is unique per program' e o par Res/ResMut com registro obrigatório foram conferidos na página de Resources do quick-start; os métodos de acesso na referência do World."
+    },
+    {
+      "slug": "bevy-componente-struct-derive",
+      "title": "Bevy ECS: componente é struct Rust com derive — a decomposição é o design",
+      "one": "Componentes são tipos dados comuns anotados com #[derive(Component)]; o ganho do ECS vem de quebrá-los em peças pequenas que se recombinam entre entidades.",
+      "why": "O quick-start argumenta o motivo com um caso concreto: nomear 'Person' e 'Name' separados porque 'dogs should probably also have a name' — a decomposição permite que entidades diferentes compartilhem componentes sem herança, e o padrão 'forces you to break up your app data and logic into its core components'. Um componente monolito por entidade joga fora exatamente isso.",
+      "how": "Cada struct que representa um aspecto (Position, Velocity, Name) recebe 'Component'; entidades são chaves com uma coleção delas; queries pegam o produto cartesiano que interessa. As regras de registro são triviais (derive + spawn com tuple); o design é a pergunta: este campo muda de vida própria? Se sim, componente separado. Componentes-vazio para marcação funcionam (o marcador 'Person' do exemplo não tem campos) e são baratos em iteração quando combinados com &mut.",
+      "example": "O inimigo '(Position, Velocity, Hostile, Name)' e o NPC '(Position, Name)' compartilham Position e Name sem classe base; adicionar um terceiro aspecto não toca os sistemas existentes — só os queries que o pedem.",
+      "limits": "Decompor até o átomo aumenta o custo de join em queries amplas — componentes que vivem e morrem juntos podem ser um só struct. Derivar Component é o contrato de tipo, não de persistência: salvar/carregar mundos exige reflexão/serialização além do derive. 'struct Entity(u64)' do quick-start lembra que a entidade é só um índice — lógica em cima de identidade exige cuidado com reciclo de slot.",
+      "verify": "Um teste de regressão de design: adicione um tipo de entidade novo reusando componentes existentes sem modificar nenhum sistema — se precisa modificar, a decomposição falhou. Compare o iterado em query '&mut (A, B, C)' antes e depois de juntar A+B num só struct para medir o custo real de joins.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: ECS",
+          "url": "https://bevy.org/learn/quick-start/getting-started/ecs/",
+          "why": "justifica a divisão de Person/Name e o papel do derive Component com exemplos diretos"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::component::Component",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/component/trait.Component.html",
+          "why": "define o trait que transforma um tipo em componente"
+        }
+      ],
+      "review": "O raciocínio de decomposição (Person/Name, dogs also have names) e a forma do derive foram conferidos literalmente no quick-start; o trait de marca é o link direto da página."
+    },
+    {
+      "slug": "bevy-plugins-unidade-distribuicao",
+      "title": "Bevy ECS: Plugin é a unidade de empacotamento, não de lógica",
+      "one": "Um Plugin agrupa a instalação coesa de um sistema — seus recursos, schedules e handlers — e 'add_plugins' compõe o app; DefaultPlugins é o próprio pacote de engine.",
+      "why": "Bevy deliberadamente não tem herança de engine: o app cresce por composição. Sem a unidade Plugin, cada integração vira dez linhas espalhadas no main, impossíveis de reusar entre jogos ou desligar. O quick-start de Plugins trata isso como estrutura primária de organização, não estilo.",
+      "how": "Implemente 'impl Plugin for MeuPlugin { fn build(&self, app: &mut App) { ... } }' e registre com 'add_plugins((ModoA, ModoB))' em tupla. O build recebe o app mutável: inicialize recursos, registre tipos de asset, adicione sistemas nos schedules. Configurações viram campos do plugin struct (o padrão de 'MyPlugin { resolution }'), o que permite dois jogos lendo o mesmo crate com presets diferentes. Subconjuntos mínimos para código sem render (servidor dedicado, testes, headless CI) é o benefício documentado do modelo.",
+      "example": "O plugin de lobby expõe 'LobbyPlugin { max_slots: 8 }'; o mesmo crate roda no jogo completo com DefaultPlugins e num headless de teste com 'MinimalPlugins + LobbyPlugin', sem mudar o plugin.",
+      "limits": "Ordem de add_plugins importa quando plugins escrevem no mesmo estado de app; 'build' roda na ordem dada — dependências implícitas entre plugins são a fragilidade que o padrão não resolve por si. Plugin não é sandbox: pode tocar qualquer parte do app, e o compiler não avisa sobre dois plugins competindo pelo mesmo resource. O ganho de composição em crates separados pressupõe versionar as interfaces de tipo (componentes compartilhados viram API pública).",
+      "verify": "Teste unitário: App::new().add_plugins(MinimalPlugins).add_plugins(LobbyPlugin::default()).update() e assert no estado — a granularidade de plugin deve ser testável sem janela. Verifique que desligar o plugin da UI não quebra a simulação: se quebra, a coesão vazou. Rode o headless de CI com o mesmo plugin do cliente: é o cenário de origem da regra.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: Plugins",
+          "url": "https://bevy.org/learn/quick-start/getting-started/plugins/",
+          "why": "página oficial que define a função de plugin e o padrão de composição"
+        },
+        {
+          "label": "docs.rs — bevy::app::App",
+          "url": "https://docs.rs/bevy/latest/bevy/app/struct.App.html",
+          "why": "a superfície de add_plugins/DefaultPlugins na API"
+        }
+      ],
+      "review": "A definição de plugin como agrupador coeso com o padrão build(&mut App) e a economia de plugins em tuplas foi conferida na página do quick-start de Plugins."
+    },
+    {
+      "slug": "bevy-app-schedule-world-camadas",
+      "title": "Bevy ECS: App planeja, Schedule decide quando, World guarda o estado",
+      "one": "A arquitetura do runtime é em três camadas — App agrega plugins e schedules, Schedule ordena sistemas num instante, World armazena entidades e resources — e entender a costura evita decisões de API no lugar errado.",
+      "why": "Dúvidas de projeto de engine ('onde marco ordem? onde salvo o estado?') são respostas de camada, não de sintaxe. Registrar sistema é App, definir precedência é Schedule, iterar e mutar dados é World — o quick-start mostra as três em uso desde o primeiro exemplo, com add_systems, schedules e comandos de World separados.",
+      "how": "'App::new().add_plugins(...).add_systems(Update, ...).run()' é a fachada: cada schedule (Update, Startup, FixedUpdate) tem seu grafo de sistemas. O World é o agregado de dados (tabelas por archetype, resources) que os sistemas recebem mutado; fora do agendamento, 'world.rs()' e acesso direto ao World existem para setup e teste, mas ignoram as convenções de paralelismo que os sistemas ganham de graça. A pergunta de revisão certa para cada adição: é configuração (App), é tempo (Schedule) ou é dado (World)?",
+      "example": "Carregar um save vira World-mutation no build do plugin de save; a reordenação dos sistemas pós-load é Schedule; o registro do sistema de autosave é App — três camadas, cada uma com seu tipo de mudança e seu lugar natural na revisão.",
+      "limits": "Schedules têm políticas próprias (condições de execução, fix-rate) que não são globais ao app; confundir FixedUpdate com Update é o erro de camada com maior custo silencioso. Mutação direta do World em testes pode passar onde um sistema seria bloqueado — o 'teste verde' não implica 'sistema seguro'. A superfície do App muda entre releases do Bevy mais que as outras camadas; plugins que guardam referências a ele devem ser pequenos.",
+      "verify": "Num fixture, faça a mesma operação pelas três portas (app, schedule, world direto) e compare o que compila/empana — o contraste ensina as fronteiras. Um teste que usa 'App::world_mut' na inicialização e depois roda update documenta onde a exceção de segurança é legítima. A revisão de código deveria ser capaz de classificar cada PR por camada; se não consegue, a arquitetura está vazando.",
+      "sources": [
+        {
+          "label": "Bevy — Quick Start: Getting Started",
+          "url": "https://bevy.org/learn/quick-start/getting-started/",
+          "why": "sequência oficial App → schedules → World que as notas de arquitetura seguem"
+        },
+        {
+          "label": "docs.rs — bevy::ecs::world::World",
+          "url": "https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html",
+          "why": "referência da camada de estado e do acesso direto fora de sistema"
+        }
+      ],
+      "review": "A correspondência das três camadas com os exemplos do quick-start (App::new/add_systems/World) foi conferida na página de índice do Getting Started e na referência do World; as generalizações foram mantidas no nível descritivo."
+    }
+  ]
+}

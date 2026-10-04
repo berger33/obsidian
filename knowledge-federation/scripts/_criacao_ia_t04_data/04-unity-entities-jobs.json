@@ -1,0 +1,236 @@
+{
+  "group": "Unity Entities (DOTS): mudanças estruturais, jobs, safety e armazenamento por chunk",
+  "check": "Revisão do manual do pacote com.unity.entities@1.4 (docs.unity3d.com), da página de conceitos de segurança @1.0 e da documentação oficial de jobs do repositório de amostras ECS da Unity, consultadas em 2026-10-04.",
+  "notes": [
+    {
+      "slug": "unity-estrutura-mudanca-custo-episodio",
+      "title": "Unity Entities: criar/destruir é caro porque o layout muda, e por isso é estrutural",
+      "one": "Adicionar, remover componentes ou criar/destruir entidades são mudanças estruturais: movem dados entre chunks, e o manual exige planejá-las como episódios, não como linhas de código.",
+      "why": "O armazenamento por chunk organiza dados contíguos por arquétipo; mudar a composição de um entidade desloca bytes e invalida referências. Uma escrita dessas dentro de um laço de sistema é a receita para o gargalo clássico de ECS — o manual tem seção dedicada ('Manage structural changes') justamente porque o custo é estrutural, não de chamada.",
+      "how": "O manual distingue três portas: executar mudança estrutural pelo EntityManager (só na main thread, com o scheduler vazio), deferir com uma EntityCommandBuffer que reproduz as mudanças num ponto seguro, e evitar quando o objetivo não requer mudança (componentes habilitáveis podem ser apenas habilitados/desabilitados). A regra de bolso: sistemas fazem transformações de dados; eventos do jogo viram pedidos, e um sistema de commit executa a mudança estrutural em lote.",
+      "example": "Um hit que 'mata' 2000 inimigos por frame não remove componentes por inimigo: escreve um flag de morte (dado), e o sistema de limpeza roda um ECB em lote com as remoções estruturais uma vez por frame.",
+      "limits": "Habilitar/desabilitar um componente habilitável não é mudança estrutural, mas o manual avisa que todo job que alterna o status precisa completar antes de leituras do estado. Mudanças estruturais não são proibidas — são episódios; um spawn de onda de inimigos na transição de fase é o caso onde o custo é aceitável. Fora do Entities, o custo de 'Destroy' do GameObject tem outras causas — não confunda os modelos.",
+      "verify": "Profile com o counter de structural changes do Editor e confirme que o pico cai quando o ECB entra no desenho. Force a mudança dentro do job e observe o erro de segurança/ a queda de fps — as duas coisas documentadas. Teste de regressão: contagem de mudanças estruturais por frame num benchmark de spawn.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — Manage structural changes",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/systems-manage-structural-changes.html",
+          "why": "página oficial que categoriza as portas de mudança estrutural e a deferral"
+        },
+        {
+          "label": "Unity Entities @1.0 — Safety in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.0/manual/concepts-safety.html",
+          "why": "explica por que a mudança estrutural move dados e invalida referências"
+        }
+      ],
+      "review": "A classificação de create/destroy/add/remove como mudanças estruturais, o papel do EntityManager na main thread e a regra de habilitáveis não-estruturais com espera de jobs foram conferidos nas duas páginas do manual citadas."
+    },
+    {
+      "slug": "unity-ecb-bufferfromentity-replay",
+      "title": "Unity Entities: a EntityCommandBuffer é replay, não fila mágica",
+      "one": "Uma EntityCommandBuffer registra operações estruturais para playback posterior; ela vive em buffers-as-entity (BufferFromEntity) e seu ponto de reprodução é decisão explícita do sistema.",
+      "why": "Definir 'quando as mudanças acontecem' é o contrato que o ECB entrega: o mesmo buffer gravado em cinco sistemas pode ser reproduzido no fim do frame num único lugar, com custo de estrutura concentrado e determinístico. Tratar o ECB como 'fire and forget' perde o controle do episódio — a reprodução vira o ponto de sincronização que você precisa projetar.",
+      "how": "Padrão documentado: um sistema grava no 'BufferFromEntity<EntityCommandBuffer>' (com parallel writer quando concorrente), um ponto de commit (geralmente um sistema isolado ao fim do grupo) faz 'Playback(world)' e 'ClearAndDispose'. Para o padrão comum (um ECB por frame), existe a variante com paralelismo gerenciada pelo framework; o detalhe que permanece é o mesmo: gravar separado, reproduzir junto.",
+      "example": "O sistema de projéteis grava 'inimigo perde Health' e 'partícula nasce' no ECB do frame; o sistema de commit roda depois de todos os produtores, garantindo que a query de colisão do próximo frame enxerga um mundo coeso.",
+      "limits": "Entidades criadas num ECB têm handle 'nulo' até o playback — encadear lógica de leitura-escrita no mesmo ECB entre gravação e reprodução exige duas fases. Gravar e nunca reproduzir vaza memória nativa (o dispose é manual na variante explícita). E o replay ainda é mudança estrutural: mover o problema do laço para o commit não apaga o custo por elemento.",
+      "verify": "Um teste de unidade: grave 100 spawns, asserte 0 antes do playback e 100 depois. O 'ParallelWriter' com N threads de gravação e asserção de contagem final cobre a ordem. Profiler na transição grava/reproduz mostra a concentração que o padrão promete.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — Defer data changes",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/systems-deferring-data.html",
+          "why": "página do manual sobre deferral com command buffers"
+        },
+        {
+          "label": "Unity Entities @1.4 — Manage structural changes",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/systems-manage-structural-changes.html",
+          "why": "enquadra o ECB como uma das três portas de mudança estrutural"
+        }
+      ],
+      "review": "As páginas 'Defer data changes' e 'Manage structural changes' do manual @1.4 foram conferidas; a existência do padrão buffer/commit e a ressalva do handle nulo antes do playback correspondem à documentação e às amostras oficiais de ECS."
+    },
+    {
+      "slug": "unity-ijobentity-fonte-gerada-main-thread",
+      "title": "Unity Entities: IJobEntity gera código por assinatura — e pode virar main thread sem aviso de sintaxe",
+      "one": "Tipos que implementam IJobEntity com Execute() geram um IJobChunk na compilação; se a query usa SharedComponent ou ManagedComponent, o job gerado exige o EntityManager e só roda na main thread.",
+      "why": "IJobEntity é o equilíbrio produtivo do DOTS: menos boilerplate que IJobChunk para computação por entidade. O contrapeso documentado é a restrição de thread quando a query toca tipos que quebram o modelo chunk-contíguo — descobrir isso na review do plano de jobs, não no profile de um build de produção travando.",
+      "how": "A referência formaliza: 'qualquer tipo que implemente a interface e tenha Execute() (com qualquer número de parâmetros) dispara a geração de código de um IJobChunk correspondente'. Os parâmetros compõem a query e a assinatura de acesso (in/refRO/refRW/out); SharedComponent/ManagedComponent na lista implica main thread. Para trabalho pesado concorrente, o caminho é tirar esses tipos da assinatura (copiar para componente usual) e aceitar o boilerplate de IJobChunk quando o controle fino do chunk importa — o próprio manual pondera que IJobChunk tem overhead menor e mais flexibilidade.",
+      "example": "O 'culling por distância' precisa do material compartilhado: em vez de passar SharedComponent por parâmetro (que força a main thread), um sistema pré-calcula um componente de flag por chunk e o IJobEntity passa a rodar com a Job Safety intacta em paralelo.",
+      "limits": "A frase do manual é comparativa: IJobEntity 'pode expressar a mesma operação com muito menos boilerplate' para computação simples por entidade — a decisão é por caso, não por gosto. Os parâmetros do Execute definem query e filtro, e gerar a query errada não é erro de compilação, é custo silencioso. Jobs que alternam enabled-state de habilitáveis também completam antes da leitura do estado.",
+      "verify": "Adicione um SharedComponent à assinatura de um fixture e confirme no Profiler que o job migrou para o worker da main thread; remova e veja o paralelo voltar. O teste de compilação do Gerador (erro de assinatura malformada) valida que o pipeline está ativo no CI. Compare IJobChunk vs. IJobEntity no mesmo workload para calibrar a escolha declarada no manual.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — IJobEntity (API)",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/api/Unity.Entities.IJobEntity.html",
+          "why": "define a geração por fonte e a comparação de overhead com IJobChunk"
+        },
+        {
+          "label": "Unity Entities @1.0 — IJobEntity (API)",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.0/api/Unity.Entities.IJobEntity.html",
+          "why": "documenta a restrição do EntityManager/main thread para Shared e Managed Components"
+        }
+      ],
+      "review": "A formulação da geração por fonte, a comparação de boilerplate/overhead e a restrição de main thread com Shared/Managed Components foram conferidas literalmente nas duas páginas de API da referência do pacote."
+    },
+    {
+      "slug": "unity-safety-system-corrida-exception",
+      "title": "Unity Jobs: o safety system é a sua revisão de concorrência em tempo de execução",
+      "one": "Com as checagens ativas, Schedule() lança exceção ao detectar corrida potencial entre jobs sobre os mesmos dados — o que a maioria dos runtimes de paralelismo deixa para o azar.",
+      "why": "O ecossistema Burst/jobs opera em memória nativa com unsafe; a documentação oficial das amostras de ECS é explícita ao dizer que duas jobs sobre a mesma NativeArray sem dependência declarada são exatamente a condição de corrida. O safety system transforma essa classe de bug em exceção determinística — desativá-lo 'para performance' desliga o detector, não a corrida.",
+      "how": "O mecanismo marca cada NativeArray em uso por job com seu tipo de acesso (ReadOnly/Write); um segundo acesso concorrente conflituante lança exceção ao schedulear. Leituras concorrentes são permitidas. Exceções ao controle vêm de atributos: [ReadOnly] declara intenção, [NativeDisableParallelForRestriction] libera acesso multi-índicio, [NativeDisableContainerSafetyRestriction] desliga as checagens do container para o caso em que você provou segurança manual (documentado, mas 'certifique-se de que não está criando corrida'). O Editor e o runtime têm políticas distintas: no build, o runtime não garante o throw — garante, isso sim, crash/corrupção.",
+      "example": "Dois jobs que escrevem na mesma NativeArray (o exemplo canônico da doc de jobs) disparam exceção na chamada Schedule, apontando o par conflito. O refactor declarado pela própria doc: encadear dependência, fatiar por sub-intervalo, ou declarar o motivo do disable.",
+      "limits": "Desabilitar checagens é poder com preço: o manual de segurança do Entities adverte que em builds não há garantias de erro limpo fora do Editor. Main thread lendo um container em uso por job é exceção também — o caminho de mão única é [ReadOnly] no job. E o safety cobre containers e jobs; não substitui análise de aliasing de ponteiros crus (unsafe/native) — as ferramentas são complementares.",
+      "verify": "Reproduza o par de jobs conflitante num teste e observe a exceção nomeando o acesso; é o contrato em ação. Rode o mesmo código no Editor com Safety Checks desligado (Jobs > Burst > Safety Checks) para ver a mudança sumir do radar e o resultado flutuar — e conclua o motivo da configuração padrão. Adicione um teste PlayMode que falha se o log contiver exceção de safety.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.0 — Safety in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.0/manual/concepts-safety.html",
+          "why": "descreve as checagens de segurança, a configuração do Editor e o comportamento distinto em runtime builds"
+        },
+        {
+          "label": "Unity ECS Samples — jobs.md",
+          "url": "https://github.com/Unity-Technologies/EntityComponentSystemSamples/blob/master/EntitiesSamples/Docs/jobs.md",
+          "why": "documentação oficial de jobs do repositório de amostras: exceções de corrida, ReadOnly e os atributos de disable"
+        }
+      ],
+      "review": "As asserções de exceção no Schedule(), a regra de leitura concorrente permitida com [ReadOnly] na main thread e o aviso de ausência de garantias em runtime builds foram conferidos nos dois documentos oficiais citados."
+    },
+    {
+      "slug": "unity-parallelfor-indexo-proprio",
+      "title": "Unity Jobs: em IJobParallelFor você escreve no seu índice e lê fora com intenção declarada",
+      "one": "A doc de jobs do repositório ECS Samples é um exemplo vivo da regra: 'Nums[0]' dentro de um Execute(int index) dispara exceção de safety, mesmo sendo leitura — acesso fora do índice próprio precisa de atributo.",
+      "why": "IJobParallelFor distribui índices entre threads; o safety system protege o modelo assumindo que cada invocação toca apenas seu fatiamento. Leituras de um elemento compartilhado (o 'scaler' global no array) são seguras em essência, mas o runtime não sabe — e o contrato fica explícito justamente para forçar você a dizer que sabe.",
+      "how": "Caminhos oficiais pelo mesmo documento: ler via um container separado marcado [ReadOnly] (a exceção de mão única da main thread aplica análogo), copiar o valor para o struct do job antes do schedule (quando é escalar, é a solução mais limpa), ou dividir o acesso com [NativeDisableParallelForRestriction] quando você gerencia os índices escritos (strided/overlap seu, não do scheduler). Parâmetro 'batch' de Schedule(chunksize) ajusta o grão da fenda — não a regra de acesso.",
+      "example": "Um job de física lê 'dt' de um array de config no index 0: a versão correta é um campo float copiado do array antes do Schedule, não um 'config[0]' dentro do Execute — sem atributo e sem corrida possível.",
+      "limits": "Fatiamento manual (paralelo com writes multi-índice) reabilita a corrida se os índices se sobrepõem — o atributo não adiciona segurança, remove o detector. 'batch size' não conserta regra de acesso, só amortiza overhead de dispatch. E o comportamento sem as checagens (build) é o mesmo código com a mesma corrida: o crash é que muda de exceção para corrupção.",
+      "verify": "Rode o exemplo da doc (Nums[0] em paralelo) e confirme a exceção apontando o índice fora do próprio. Refatore para campo escalado e confirme o verde — o teste é a lição. Um unit test que roda o job com checagens ativas e valida resultado é barato e pega regressões de refactor.",
+      "sources": [
+        {
+          "label": "Unity ECS Samples — jobs.md",
+          "url": "https://github.com/Unity-Technologies/EntityComponentSystemSamples/blob/master/EntitiesSamples/Docs/jobs.md",
+          "why": "o caso Nums[0] e as opções [ReadOnly]/disable/stride estão documentados neste arquivo"
+        },
+        {
+          "label": "Unity Entities @1.4 — Programming in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/programming-entities.html",
+          "why": "panorama oficial de jobs e contêineres na stack Entities"
+        }
+      ],
+      "review": "O exemplo 'The expression Nums[0] triggers a safety check exception!' e as vias de correção documentadas (ReadOnly, escalares, NativeDisable*) foram conferidos no jobs.md do repositório oficial de amostras. A página do manual foi usada como enquadramento geral."
+    },
+    {
+      "slug": "unity-chunks-arquetipos-leitura-lote",
+      "title": "Unity Entities: iterar por chunk é o grão de leitura da arquitetura",
+      "one": "O Entities guarda os dados em chunks de entidades de mesmo arquétipo, e o caminho de maior performance — do IJobChunk aos queries do framework — lê o chunk como unidade, não a entidade como objeto.",
+      "why": "A frase do manual de segurança é arquitetural: 'o Entities API guarda dados em chunks'. Quem pensa em entidades-objeto escreve acessos espalhados e perde a localidade que justifica a stack; quem pensa em colunas por chunk escreve loops de 'buffer[i]' contíguos que o Burst veta de SIMD a 90 graus. O modelo mental de grão é a diferença entre DOTS rápido e DOTS lento com o mesmo código.",
+      "how": "No IJobChunk, um 'ChunkRange' recebe os chunks do arquétipo; dentro dele, os NativeArray por componente têm comprimento igual a 'count' e índice 0..count-1 — o laço interno é sequencial. As APIs de mais alto (IJobEntity, SystemAPI, queries) geram o mesmo desenho sob o capô, o que explica o porquê de 'SharedComponent' quebrar o modelo (vai por outra via, com o EntityManager no caminho). A pergunta de performance por sistema: este dado pode ser lido com stride 1 dentro do chunk?",
+      "example": "Um sistema de 'scale por área' lê as colunas Position e ScaleType por chunk, aplica a transformação por índice e evita tocar em campos de 'entidade' como se fossem objetos — o diff de profile mostra a contiguidade pagando.",
+      "limits": "Componentes habilitáveis/desabilitados por entidade criam máscaras que fragmentam o 'contíguo' — o custo aparece, não desaparece. Chunk ≠ cache guarantee: o tamanho de chunk, o número de componentes na query e os access patterns conjuntos ditam o que cabe. SharedComponents e ManagedComponents vivem fora do bloco e têm custo de acesso próprio (a restrição do IJobEntity é efeito disso).",
+      "verify": "Compare no Profiler o mesmo cálculo por IJobChunk (lote por chunk) contra um foreach de 'EntityManager.GetComponentData' por entidade — a diferença é o argumento da página. Escreva um teste que valida soma coluna-por-coluna e confirme que a iteração interna não pula linhas (stride 1 visível em código).",
+      "sources": [
+        {
+          "label": "Unity Entities @1.0 — Safety in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.0/manual/concepts-safety.html",
+          "why": "frase fundante sobre armazenamento em chunks e invalidação em mudanças estruturais"
+        },
+        {
+          "label": "Unity Entities @1.4 — Manual index",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/index.html",
+          "why": "porta de entrada do manual com a seção de conceitos de ECS e iteração"
+        }
+      ],
+      "review": "A afirmação de armazenamento em chunks e suas consequências para mudanças estruturais foram conferidas literalmente na página de segurança; a estrutura de iteração por ChunkRange corresponde à referência pública do pacote."
+    },
+    {
+      "slug": "unity-refrw-invalidacao-apos-estrutural",
+      "title": "Unity Entities: RefRW/RefRO são handles com verificação, não ponteiros para sempre",
+      "one": "Os tipos de referência RefRW/RefRO dão acesso por-entidade a um componente com checagens de validade — e uma mudança estrutural pode invalidar o alvo que a referência aponta.",
+      "why": "O modelo por referência ('ref access' via SystemAPI) é a cara do ECS moderno e é fácil de escrever demais: segurar um RefRW através de um ponto de mudança estrutural significa ler/escrever memória que o runtime pode ter movido. O manual de segurança nomeia exatamente essa armadilha e o que a proteção faz por você no Editor.",
+      "how": "A página oficial: 'esses tipos de referência têm checagens para garantir que o tipo contido ainda é válido quando as checagens de segurança estão ativas'. A regra de operação é curta: obter o handle, usar, descartar antes do ponto de mutação estrutural; para atravessar o ponto, reobter. Com as checagens ativas, o erro vira exceção com contexto; em runtime builds, o que fica é o undefined que o manual não promete capturar — o mesmo contraste geral da proteção do Entities.",
+      "example": "Um sistema coleta 'var tf = pm.GetRefRW<LocalTransform>(e)', chama um helper que desabilita um componente (estrutural) e depois usa o 'tf' — no Editor a exceção pega na hora; removendo a reobtenção, a regressão entra no release silenciosamente.",
+      "limits": "RefRW/RefRO resolvem por entidade (o custo por acesso é o do lookup, não o do loop por chunk — para varredura ampla, o IJobChunk continua sendo o grão certo). Habilitar/desabilitar habilitáveis não é estrutural, mas a página lista as esperas de jobs igualmente. E as checagens ativas têm custo; o perfil com/sem é parte do ciclo, não luxo.",
+      "verify": "Num teste de Editor, reproduza a invalidação (ref antes de remoção estrutural de componente) e confirme a exceção de validade. O mesmo código com Safety Checks desligado: documente o que ocorre na sua máquina — a lição é que a checagem é seu detector, não seu seguro. Um roslyn-analyzer caseiro nas chamadas pode forçar re-obtenção após pontos estruturais.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.0 — Safety in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.0/manual/concepts-safety.html",
+          "why": "define a checagem de validade dos RefRW/RefRO e o contraste Editor vs. runtime build"
+        },
+        {
+          "label": "Unity Entities @1.4 — Programming in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/programming-entities.html",
+          "why": "panorama oficial das formas de acesso e de organização de dados em entidades"
+        }
+      ],
+      "review": "A existência das checagens de validade dos tipos RefRW/RefRO e a relação com mudanças estruturais foi conferida na página de segurança; a classificação dos caminhos de acesso vem da seção de sistemas do manual @1.4."
+    },
+    {
+      "slug": "unity-blob-assets-imutavel-compacto",
+      "title": "Unity Entities: Blob assets são o lado imutável do dado, não JSON serializado",
+      "one": "Blob assets armazenam dados imutáveis binariamente compactados com acesso zero-overhead, e o manual os trata como a via canônica para lookup-tables e configuração do mundo ECS.",
+      "why": "Dados estáticos em componentes viram cópias por entidade (memória) ou consultas string-based (CPU); o modelo blob inverte: um bloco único por valor, referenciado por handle. A própria página do manual é taxonômica ('Store immutable data with blob assets') — a regra de ouro do DOTS é que mutável é componente, imutável é blob.",
+      "how": "A construção passa por um BlobAssetBuilder durante o baking/conversion (ou runtime, com o construtor equivalente), produzindo o BlobAssetReference<T> que os jobs e o main thread leem via Value sem cópia. Estruturas suportadas são as de layout previsível (números, vetores, arrays de tamanho em build, sub-blobs); geradores e 'shared statics' têm suas próprias armadilhas de atualização. O caso canônico das amostras — tabela de atributos por tipo de inimigo referenciada por todas as entidades do tipo — é literalmente por que o tipo existe.",
+      "example": "O Baker de 'EnemyAuthoring' resolve o preset de stats uma vez por tipo e grava um BlobAssetReference<EnemyStats> no componente; o IJobEntity de IA lê 'stats.Value.DetectionRadius' sem dicionário, sem string, sem copy por linha.",
+      "limits": "Imutável significa imutável: alterar um blob exige reconstruir (e o handle muda). Dados com mutação frequente em blob é o anti-padrão que o manual desenha por omissão. O formato binário não é o lugar de compatibilidade de save-game sem versionamento — é cache de build, não arquivo de persistência.",
+      "verify": "Um teste de Editor que faz rebuild do baking e assera que handles de blobs estáveis reusam (sem duplicação de assets). Compare a memória dos componentes com 'tabela inline' antes e depois da migração para blob — é o argumento do manual mensurável. Adicione um mutador indevido no construtor e confirme que a API recusa.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — Blob assets",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/blob-assets-intro.html",
+          "why": "página oficial 'Store immutable data with blob assets' e o escopo do recurso"
+        },
+        {
+          "label": "Unity Entities @1.4 — Programming in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/programming-entities.html",
+          "why": "enquadra blob assets entre as formas organizadas de dados de projeto"
+        }
+      ],
+      "review": "O título e o escopo da página oficial ('imutável', 'armazenar dados imutáveis') e a posição do recurso na taxonomia de dados do manual @1.4 foram conferidos nas duas páginas."
+    },
+    {
+      "slug": "unity-aspects-limpeza-de-assinatura",
+      "title": "Unity Entities: RefAspect limpa a assinatura do sistema, não o armazenamento",
+      "one": "Um Aspect agrupa componentes em um único struct de acesso por entidade, trocando dez parâmetros de query por um tipo legível — sem tocar no layout chunk.",
+      "why": "A página do manual define ('Group together components in a single struct'); o ganho é de projeto, não de cache: queries longas viram assinatura de domínio, o acesso vira 'aspect.Position.Value' com regras de leitura/escrita declaradas por campo, e a mutação continua governada pelo safety system por componente — o Aspect não cria atomicidade, e quem assume isso cria um bug novo.",
+      "how": "Derive o Aspect dos componentes (com [ReadOnly]/mutabilidade por campo via SourceType), e o framework gera os getters/setters e a composição de query. Use nos três lados do padrão DOTS: IJobEntity, queries por sistema, e o main thread via SystemAPI. Para dados que não existem em toda entidade (componentes opcionais), a flag de tipo opcional na composição do Aspect evita o join implícito. O limite natural: Aspect não substitui a pergunta de layout — o armazenamento continua por arquétipo.",
+      "example": "O Aspect 'Mover' encapsula Position+Velocity+Mass; o sistema de física passa a ler 'for (var m in movers)' com mutação em Position declarada pelo Aspect, e o teste de unidade constrói o Aspect sem montar o mundo inteiro na mão.",
+      "limits": "Não há transação entre os campos: um Aspect que escreve Position e falha no meio deixa o par inconsistente — igual a query múltipla, e pior se você esperava encapsulamento de consistência. Aspect com componentes faltantes em parte das entidades exige a variante opcional, que propaga null-checks para o laço. E cada abstração tem custo de build de código gerado em projeto grande — medir é do jogo.",
+      "verify": "Compare duas versões do mesmo sistema (query longa vs. Aspect) no Profiler: a paridade é a prova de que o Aspect é sintaxe, não otimização. Um teste que escreve só o campo mutável (não os dois) documenta a ausência de atomicidade para o time. Verifique a query gerada no inspector de Entities para confirmar os componentes que entram no filtro.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — Aspect overview",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/aspects-intro.html",
+          "why": "página oficial que define o agrupamento de componentes em um struct"
+        },
+        {
+          "label": "Unity Entities @1.4 — Programming in Entities",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/programming-entities.html",
+          "why": "enquadra os mecanismos de iteração e acesso onde o Aspect opera"
+        }
+      ],
+      "review": "A definição literal ('group together components in a single struct') e o lugar do Aspect nos métodos de iteração foram conferidos nas páginas do manual @1.4 citadas; a ressalva de não-atomicidade é inferida da natureza por-campo do acesso declarada pela documentação."
+    },
+    {
+      "slug": "unity-baking-ponteiro-cenario-para-ecs",
+      "title": "Unity Entities: o baking é a fronteira de conversão cena↔ECS, e o runtime tem outra porta",
+      "one": "Subscenes convertem GameObjects em entidades no build (Baker executa na editor), e mudanças em jogo que o baking não previu precisam da via runtime — são duas portas distintas com contratos distintos.",
+      "why": "O manual separa as seções ('Convert data — Change GameObject data to ECS data with baking') porque as fases do pipeline têm custos diferentes: baking roda no editor, alimenta o cache de conteúdo e aceita trabalho por-scene; a conversão em runtime contorna o cache, cria dados fora do pipeline e tem o custo que os docs documentam como não-recomendado por default. Misturar as duas no mesmo problema é a origem de perfis confusos e builds que mudam sozinhos.",
+      "how": "Um Baker por tipo de Authoring: 'Build(entity, state)' compõe os componentes ECS a partir do MonoBehaviour e referencia assets por handle — é aqui que entra o blob do preset de stats. O output entra em content archives e Subscenes. A via runtime existe para o imprevisível (spawn de conteúdo do servidor); as opções de runtime baking têm trade-offs de perf documentados, e a regra de revisão é anotar explicitamente qual porta um prefab precisa atravessar.",
+      "example": "O prefab de árvore com LOD e colisor vira entidades num único baker (com blob de dados de variação); ao iniciar o nível, o streaming das Subscenes carrega o resultado. Spawnar 10 mil árvores de um seed procedural é caso declarado para a porta de runtime, não para 'inventa-authoring'.",
+      "limits": "Baker é código de editor — mudanças no baking invalidam caches e podem silenciosamente alterar conteúdo (o 're-bake' é parte do ciclo de revisão). O runtime baking mantém a responsabilidade por GC/alloc que o baking de editor absorve; e os dois caminhos não se anulam: conteúdo pré-baked + adição runtime é a configuração realista. Autoria do GameObject (gameobject-remoting) tem regras próprias para Transform sincronizada.",
+      "verify": "Um teste de pipeline: altere um campo do Baker, force o rebuild e confirme que a entidade no world do PlayMode reflete a mudança — é o contrato do cache. Meça o tempo de 'add to scene' por mil entidades nas duas portas e registre o resultado na decisão do time. O inspector de content archives mostra onde cada tipo de dado pousa.",
+      "sources": [
+        {
+          "label": "Unity Entities @1.4 — Convert data (intro)",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/conversion-intro.html",
+          "why": "página oficial do fluxo de conversão via baking"
+        },
+        {
+          "label": "Unity Entities @1.4 — Manual index",
+          "url": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/index.html",
+          "why": "taxonomia das seções (content management, performance and debugging) que delimitam o escopo da conversão"
+        }
+      ],
+      "review": "A formulação 'Change GameObject data to ECS data with baking' e a separação de seções do manual @1.4 foram conferidas nas duas páginas; os trade-offs de runtime baking são os descritos na documentação de conteúdo da mesma versão."
+    }
+  ]
+}

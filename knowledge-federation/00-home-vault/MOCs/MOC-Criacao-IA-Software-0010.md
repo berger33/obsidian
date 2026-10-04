@@ -14,10 +14,10 @@ Mapa de navegação para o lote [`software-criacao-ia-2000-0004`](../../exports/
 ## Estado do lote
 
 - Meta: **2.000 notas substantivas**; cadência planejada: **20 tranches × 100 notas**.
-- Progresso: **300 / 2.000 notas válidas (15,00%)** (`status: in_progress`).
-- Gate: **300/300**; revisão factual humana: **0/300**; revisão factual por IA: **300/300**.
-- Notas materiais presentes e contadas: **300**, IDs 000001–000300. Para as próximas 1.700 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
-- As tranches 1–3 foram selecionadas com documentação primária e concluídas em dez trilhas temáticas cada; as 17 tranches futuras e seus títulos ainda não estão decididos.
+- Progresso: **400 / 2.000 notas válidas (20,00%)** (`status: in_progress`).
+- Gate: **400/400**; revisão factual humana: **0/400**; revisão factual por IA: **400/400**.
+- Notas materiais presentes e contadas: **400**, IDs 000001–000400. Para as próximas 1.600 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
+- As tranches 1–4 foram selecionadas com documentação primária e concluídas em dez trilhas temáticas cada; as 16 tranches futuras e seus títulos ainda não estão decididos.
 
 ## Conteúdo materializado — tranche 1 (100 notas; IDs 000001–000100)
 
@@ -417,6 +417,137 @@ A seleção cobre programação assistida, integração de modelos em apps, ferr
 - [[oas311-path-item-ref-conflitos]] — OAS 3.1.1 Path Item `$ref`: não sobrepor fields com o alvo.
 - [[oas311-readonly-writeonly-annotations]] — OAS 3.1.1: validar readOnly e writeOnly conforme direção da mensagem.
 
+## Conteúdo materializado — tranche 4 (100 notas; IDs 000301–000400)
+
+### WebGPU: adaptador, buffers, texturas, bindings e diagnóstico
+
+- [[webgpu-requestadapter-por-criterios]] — WebGPU: filtrar adaptador por potência e modo de compatibilidade.
+- [[webgpu-devicelost-camada-recuperacao]] — WebGPU: tratar device lost como fronteira de recuperação.
+- [[webgpu-requiredlimits-calcular-custo]] — WebGPU: pedir limites maiores e calcular antes do limite suportado.
+- [[webgpu-features-antes-dependencia]] — WebGPU: features são opcionais e viram dependência de plataforma.
+- [[webgpu-leitura-gpu-staging-buffer]] — WebGPU: ler dados da GPU exige buffer staging com MAP_READ.
+- [[webgpu-mappedatcreation-dado-inicial]] — WebGPU: mappedAtCreation para dados iniciais sem cópia adicional.
+- [[webgpu-textureusage-views-permitidos]] — WebGPU: declarar cada uso de textura no momento certo.
+- [[webgpu-bindgrouplayout-compatibilidade]] — WebGPU: bind groups só valem se o layout for compatível com o pipeline.
+- [[webgpu-erros-asyncronos-escopos]] — WebGPU: capturar erros assíncronos com escopos empilhados.
+- [[webgpu-timestamp-medir-gpu-real]] — WebGPU: medir tempo de GPU com query sets de timestamp.
+
+### WGSL: classes de armazenamento, layout de binding, tipos e diagnóstico de compilação
+
+- [[wgsl-classes-armazenamento-escopo]] — WGSL: escolher a classe de armazenamento pelo tempo de vida.
+- [[wgsl-binding-layout-visibilidade]] — WGSL: pares @group/@binding são contrato com o layout do pipeline.
+- [[wgsl-alinhamento-uniform-cinco-regra]] — WGSL: o layout de uniform padroniza tudo em 16 bytes.
+- [[wgsl-storage-runtime-array]] — WGSL: só o storage buffer aceita array de tamanho em tempo de execução.
+- [[wgsl-override-constantes-pipeline]] — WGSL: constantes overridables ajustam o pipeline sem recompilar o shader.
+- [[wgsl-atomicos-compare-loop]] — WGSL: atômicos só em memória de escrita explícita, e CAS é loop manual.
+- [[wgsl-textura-amostragem-tipo-view]] — WGSL: amostrar uma textura exige ver o tipo certo, não só o binding.
+- [[wgsl-builtins-estagios-corte]] — WGSL: cada estágio expõe apenas os embutidos que fazem sentido para ele.
+- [[wgsl-uniformidade-amostragem]] — WGSL: fluxo divergente e operações uniformes — uma análise, não uma sugestão.
+- [[wgsl-sem-conversao-implicita]] — WGSL: sem coerções implícitas — o construtor é obrigatório e o erro é cedo.
+
+### Bevy ECS: agendamento, queries, mutação adiada e organização de app
+
+- [[bevy-startup-update-duas-momentos]] — Bevy ECS: Startup roda uma vez antes de tudo; Update é o loop.
+- [[bevy-paralelismo-por-acesso]] — Bevy ECS: o paralelismo vem dos acessos declarados, não de threads manuais.
+- [[bevy-chain-ordenamento-minimo]] — Bevy ECS: use chain() onde a ordem importa, e só lá.
+- [[bevy-query-mutavel-unico-por-alvo]] — Bevy ECS: uma query &mut é o ponto único de escrita de um tipo.
+- [[bevy-query-filtros-refinam-superficie]] — Bevy ECS: com With/Without você estreita o alvo sem quebrar o contrato de acesso.
+- [[bevy-commands-mundo-diferido]] — Bevy ECS: Commands é a fila de mutação estrutural adiada.
+- [[bevy-resources-valor-unico-mundo]] — Bevy ECS: resources são o valor-único do mundo, não mais um componente.
+- [[bevy-componente-struct-derive]] — Bevy ECS: componente é struct Rust com derive — a decomposição é o design.
+- [[bevy-plugins-unidade-distribuicao]] — Bevy ECS: Plugin é a unidade de empacotamento, não de lógica.
+- [[bevy-app-schedule-world-camadas]] — Bevy ECS: App planeja, Schedule decide quando, World guarda o estado.
+
+### Unity Entities (DOTS): mudanças estruturais, jobs, safety e armazenamento por chunk
+
+- [[unity-estrutura-mudanca-custo-episodio]] — Unity Entities: criar/destruir é caro porque o layout muda, e por isso é estrutural.
+- [[unity-ecb-bufferfromentity-replay]] — Unity Entities: a EntityCommandBuffer é replay, não fila mágica.
+- [[unity-ijobentity-fonte-gerada-main-thread]] — Unity Entities: IJobEntity gera código por assinatura — e pode virar main thread sem aviso de sintaxe.
+- [[unity-safety-system-corrida-exception]] — Unity Jobs: o safety system é a sua revisão de concorrência em tempo de execução.
+- [[unity-parallelfor-indexo-proprio]] — Unity Jobs: em IJobParallelFor você escreve no seu índice e lê fora com intenção declarada.
+- [[unity-chunks-arquetipos-leitura-lote]] — Unity Entities: iterar por chunk é o grão de leitura da arquitetura.
+- [[unity-refrw-invalidacao-apos-estrutural]] — Unity Entities: RefRW/RefRO são handles com verificação, não ponteiros para sempre.
+- [[unity-blob-assets-imutavel-compacto]] — Unity Entities: Blob assets são o lado imutável do dado, não JSON serializado.
+- [[unity-aspects-limpeza-de-assinatura]] — Unity Entities: RefAspect limpa a assinatura do sistema, não o armazenamento.
+- [[unity-baking-ponteiro-cenario-para-ecs]] — Unity Entities: o baking é a fronteira de conversão cena↔ECS, e o runtime tem outra porta.
+
+### Godot 4: linguagem de shaders, embutidos canvas-item e flags de render espacial
+
+- [[godot-shader-builtins-por-familia]] — Godot 4: cada tipo de shader tem seu conjunto de embutidos — a referência é o mapa.
+- [[godot-canvas-vertex-px-locais]] — Godot 4: no canvas-item, VERTEX fala em píxeles locais — não em UV nem em mundo.
+- [[godot-tempo-time-rollover-pause]] — Godot 4: TIME é tempo de render em segundos, com rolover e sem pause.
+- [[godot-color-vertex-multipliers]] — Godot 4: COLOR em 2D é a trama de vértice × modulate × self_modulate.
+- [[godot-particulas-instance-custom]] — Godot 4: INSTANCE_CUSTOM é o canal de dados por-partícula para o shader 2D.
+- [[godot-shading-sem-cast-implicito]] — Godot 4: a shading language não faz cast implícito — e suas variáveis locais nascem sem inicializar.
+- [[godot-uniform-docs-inspector]] — Godot 4: o /** acima do uniform é documentação vira-inspetor, não comentário decorativo.
+- [[godot-blend-modes-spatial]] — Godot 4: os blend modes do material espacial e o truque do fog em blend_add.
+- [[godot-render-flags-sombras-wireframe]] — Godot 4: flags de render do shader espacial que economizam passes inteiros.
+- [[godot-shader-matrizes-colunares]] — Godot 4: nas shaders, matrizes são colunares — m[1][0] é a segunda coluna, primeira linha.
+
+### Godot 4 GDExtension: o arquivo .gdextension, compatibilidade de versão e bindings nativos
+
+- [[gdextension-biblioteca-compartilhada-runtime]] — Godot 4: GDExtension é a ponte runtime para bibliotecas nativas.
+- [[gdextension-entry-symbol-obrigatorio]] — Godot 4: entry_symbol é o contrato mínimo do arquivo .gdextension.
+- [[gdextension-alvo-baixo-compative-frente]] — Godot 4: mire a extensão na versão mais baixa que te atende, não na mais nova.
+- [[gdextension-compatibility-min-max]] — Godot 4: compatibility_minimum e maximum são portas de carga, não metadados.
+- [[gdextension-reloadable-dev-debug]] — Godot 4: reloadable recarrega a extensão — e é ferramenta de desenvolvimento, não de produção.
+- [[gdextension-libraries-feature-tags]] — Godot 4: a seção [libraries] é um filtro por feature flags, não uma lista de caminhos.
+- [[gdextension-ordem-especifica-antes]] — Godot 4: no .gdextension, a linha mais específica precisa vir antes — o matching é sequencial.
+- [[gdextension-double-single-api-json]] — Godot 4: a extensão só carrega no build de motor com a mesma precisão de float.
+- [[gdextension-icone-svg-e-dependencies]] — Godot 4: [icons] e [dependencies] completam o .gdextension — com contrato de 16×16 px.
+- [[gdextension-vs-modules-custo-distribuicao]] — Godot 4: godot-cpp versus módulos C++ — uma decisão de distribuição.
+
+### Blender 5.2 LTS: gestão de cor (view transforms, espaços) e pipeline de proxy/cache do VSE
+
+- [[blender-view-transform-agx-filmic-standard]] — Blender: o View Transform (AgX, Filmic, Standard) é decisão de destino, não de look.
+- [[blender-non-color-dados-nunca-convertidos]] — Blender: máscaras, normal maps e LUTs são Non-Color — converter dado é corromper sinal.
+- [[blender-what-you-see-is-not-what-you-save]] — Blender: o display view não é o arquivo salvo — o laço View as Render/Save as Render.
+- [[blender-proxy-tamanho-global-view]] — Blender VSE: Proxy Render Size é um switch global que habilita todos os strips.
+- [[blender-proxy-bl-pasta-e-arquivos-externos]] — Blender VSE: proxies vivem em BL_proxy junto da footage — e podem ser arquivos existentes.
+- [[blender-proxy-quality-lossy-percentual]] — Blender VSE: Quality do proxy é compressão com perda em percentual direto — 100 é sem perda.
+- [[blender-sequencer-cache-memoria-limites]] — Blender VSE: Memory Cache Limit vive nas Preferences, e o VSE lê dele.
+- [[blender-backend-vulkan-interface-52]] — Blender 5.2: o backend da interface é escolha (OpenGL × Vulkan) com custo de reinicialização.
+- [[blender-limites-de-memoria-undo-shaders-stack]] — Blender 5.2: os limites de memória do System — undo, shaders, geometry nodes — e seus efeitos colaterais.
+- [[blender-proxy-setup-automatico-vs-manual]] — Blender VSE: Proxy Setup Automatic gera sozinho, Manual delega à farm — a decisão é de pipeline.
+
+### Web Audio API: tempo, autoplay, worklets e os nós de espacialização/análise
+
+- [[webaudio-contexto-suspenso-gesto]] — Web Audio: o AudioContext nasce suspenso e só um gesto humano o acorda.
+- [[webaudio-fontes-oneshot-start-stop]] — Web Audio: nós de fonte são one-shot — start() e stop() cada um uma vez só.
+- [[webaudio-settargetattime-constante-tempo]] — Web Audio: setTargetAtTime é o easing exponencial — a constante define 63%, não o fim.
+- [[webaudio-exp-ramp-zero-proibido]] — Web Audio: exponentialRampToValueAtTime não passa por zero — nem começando nem terminando nele.
+- [[webaudio-decodeaudiodata-ressample-completo]] — Web Audio: decodeAudioData ressampleia para o contexto e exige o dado completo.
+- [[webaudio-audioworklet-modulos-processador]] — Web Audio: AudioWorklet é módulo separado com o seu próprio global scope.
+- [[webaudio-worklet-port-fio-da-navalha]] — Web Audio: o port do AudioWorkletNode é o fio da navalha entre página e render.
+- [[webaudio-panner-modelos-espaciais]] — Web Audio: PannerNode escolhe como o som se move no espaço — pan, equal power ou HRTF.
+- [[webaudio-convolver-resposta-ao-impulso]] — Web Audio: ConvolverNode é a reverberação física — e o IR define canal por canal.
+- [[webaudio-analyser-janela-frequencia]] — Web Audio: AnalyserNode dá o espectro com janela e suavização — não a FFT crua.
+
+### llama.cpp server: contexto, cache de KV, slots paralelos, endpoints e saída estruturada
+
+- [[llamacpp-contexto-e-batch-na-carga]] — llama.cpp server: tamanho de contexto e batch de prompt são duas alavancas separadas.
+- [[llamacpp-flash-attention-quantizacao-kv]] — llama.cpp server: Flash Attention abre a porta da quantização de KV.
+- [[llamacpp-slots-paralelos-np-cb]] — llama.cpp server: -np multiplica o contexto e -cb faz o cache caber em cada slot.
+- [[llamacpp-cache-prompt-ram-e-reuse]] — llama.cpp server: cache de prompt tem três camadas — o mesmo estado, três knobs.
+- [[llamacpp-endpoints-completion-vs-openai]] — llama.cpp server: /completion é API própria, /v1/completions é a de OpenAI.
+- [[llamacpp-servidor-sem-auth-na-rede]] — llama.cpp server: não é um servidor de produção exposto — e as três chaves que aproximam.
+- [[gbnf-sintaxe-e-root]] — GBNF: a sintaxe que construi constrangimento de tokens, e o que 'root' significa.
+- [[gbnf-custo-e-armadilha-de-repeticao]] — GBNF: repetições aninhadas custam exponencialmente — e a doc dá o recheio anti-armadilha.
+- [[gbnf-json-schema-nao-e-prompt]] — llama.cpp: JSON Schema vira GBNF — restringe a saída e não entra no prompt.
+- [[llamacpp-samplers-ordem-fixa]] — llama.cpp: o pipeline de samplers tem ordem fixa, e cada campo do pedido é um nó dele.
+
+### Transformers (Hugging Face): geração — config, estratégias, caches de amostragem, KV e decodificação assistida
+
+- [[hf-generation-config-nen-hereda-modelo]] — Transformers: os None da GenerationConfig são herança, não desatenção.
+- [[hf-max-new-tokens-vs-max-length]] — Transformers: max_new_tokens é o budget relativo; max_length é o absoluto que te morderá.
+- [[hf-beams-e-amostragem-tabela]] — Transformers: num_beams × do_sample é uma tabela de 4 modos, não dois knobs independentes.
+- [[hf-early-stopping-never]] — Transformers: early_stopping do beam tem três estados — e 'never' existe por um motivo.
+- [[hf-temperature-topk-topp-defaults]] — Transformers: os defaults de sampling (1.0/50/1.0) não são config — são a ausência dela.
+- [[hf-min-p-top-h-typical-p-filtros]] — Transformers: os filtros alternativos do sampling — min_p, top_h, typical_p — e suas faixas.
+- [[hf-repeticao-ngram-e-bias]] — Transformers: o arsenal anti-repetição — n-gramas, penalidades e viés de tokens.
+- [[hf-cache-implementation-quatro-modos]] — Transformers: cache_implementation escolhe o destino da KV — dynamic, static, offload ou quantizada.
+- [[hf-assisted-decoding-especifico]] — Transformers: decodificação assistida — draft por modelo, n-gram, medusa ou ensemble.
+- [[hf-retornos-e-custom-generate]] — Transformers: past_key_values no retorno e generate custom por repositório.
 ## Mapa de escopo
 
 Estes eixos são áreas de pesquisa, não notas ou placeholders:
@@ -445,4 +576,4 @@ Tutoriais reprodutíveis para programas, apps e jogos; documentação técnica; 
 
 Cada nota futura terá fontes específicas para a ferramenta, engine, API ou técnica que descreve. Conteúdo gerado por IA será tratado como rascunho sujeito a execução, revisão e testes; não como resultado automaticamente correto. O gate, a revisão factual e a reconciliação do manifesto serão concluídos antes de atualizar qualquer contagem.
 
-A abertura e as regras de contagem estão no [relatório de escopo](../../exports/reports/batch-opening-software-criacao-ia-2000-0004.md) e na [reconciliação inicial](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-initial.md). Tranche 1: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md). Tranche 2: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md). Tranche 3: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md). Lotes adicionais nesse eixo são uma possibilidade a reavaliar, não uma reserva de progresso; não há lote 5 aberto.
+A abertura e as regras de contagem estão no [relatório de escopo](../../exports/reports/batch-opening-software-criacao-ia-2000-0004.md) e na [reconciliação inicial](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-initial.md). Tranche 1: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md). Tranche 2: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md). Tranche 3: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md). Tranche 4: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md). Lotes adicionais nesse eixo são uma possibilidade a reavaliar, não uma reserva de progresso; não há lote 5 aberto.

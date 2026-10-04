@@ -1,0 +1,236 @@
+{
+  "group": "WebGPU: adaptador, buffers, texturas, bindings e diagnóstico",
+  "check": "Revisão das páginas W3C e MDN consultadas em 2026-10-04; o texto separa o modelo normativo da especificação do estado de implementação nos navegadores.",
+  "notes": [
+    {
+      "slug": "webgpu-requestadapter-por-criterios",
+      "title": "WebGPU: filtrar adaptador por potência e modo de compatibilidade",
+      "one": "O pedido de adaptador aceita opções para preferir alto desempenho, baixo consumo ou adaptador de software, e resolve para nulo quando nada atende aos requisitos.",
+      "why": "Um dispositivo pode ter mais de uma GPU — integrada, dedicada e até uma implementação por software. Sem critérios, a escolha fica com o navegador; ao explicitar a preferência, a aplicação evita gastar bateria num trabalho leve ou perder throughput numa cena pesada.",
+      "how": "Chame navigator.gpu.requestAdapter com um objeto de opções. Em powerPreference use 'high-performance' quando throughput importa mais que energia e 'low-power' para interfaces e simulações discretas. A flag forceFallbackAdapter seleciona explicitamente a implementação por software, útil em testes sem GPU. Adaptador nulo significa que nenhuma GPU atende: a aplicação deve degrada com aviso, não falhar. Recursos e limites pertencem primeiro ao adaptador e depois ao dispositivo lógico pedido a ele.",
+      "example": "Um visualizador de modelos 3D pede 'high-performance'; se o adaptador vier nulo, mostra um aviso e cai para render 2D. Uma ferramenta de revisão em laptop escolhe 'low-power' para sessões longas. O CI sem GPU roda com forceFallbackAdapter para validar pipelines.",
+      "limits": "A preferência não é garantia: o navegador pode ignorá-la quando existe uma só GPU ou por política interna. O fallback de software é lento e serve a diagnóstico, não a produção. Dentro de um worker o ponto de entrada é WorkerNavigator.gpu, com as mesmas regras, e o acesso exige contexto seguro (HTTPS).",
+      "verify": "Registre as opções enviadas e leia as informações do adaptador retornado para confirmar a GPU escolhida. Compare fps medido entre preferências na mesma máquina. Verifique o caminho nulo em ambiente sem WebGPU: a página deve continuar utilizável com aviso visível.",
+      "sources": [
+        {
+          "label": "MDN — GPU: requestAdapter()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPU/requestAdapter",
+          "why": "documenta powerPreference, forceFallbackAdapter e o retorno nulo"
+        },
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define o modelo adaptador/dispositivo e o requisito de contexto seguro"
+        }
+      ],
+      "review": "As opções powerPreference e forceFallbackAdapter, o nulo quando não há adaptador e o contexto seguro foram conferidos na página MDN e no texto da especificação W3C."
+    },
+    {
+      "slug": "webgpu-devicelost-camada-recuperacao",
+      "title": "WebGPU: tratar device lost como fronteira de recuperação",
+      "one": "Todo objeto de uma WebGPU device se torna inutilizável quando ela é perdida, e device.lost é a única notificação confiável para reconstruir o estado.",
+      "why": "Drivers reiniciam, GPUs dedicadas são recuperadas pelo sistema e a própria aplicação pode destruir o dispositivo. Ignorar device.lost produz erros em cascata por todo o código que ainda referencia pipelines, buffers e bind groups mortos, com diagnóstico confuso longe da causa real.",
+      "how": "Após criar o dispositivo, aguarde a promise device.lost, que resolve com um objeto de razão ('device-lost' quando o driver falha, 'destroyed-by-application' após chamar destroy()). Marque a camada de render como suja e reconstrua a partir do registro de configuração original: o adaptador e o dispositivo novo não herdam objetos do anterior. Erros não capturados também podem culminar em perda do dispositivo, por isso a recuperação deve ser idempotente.",
+      "example": "Um jogo web guarda a lista declarativa de recursos criados (buffers, texturas, layouts) num construtor de cena. Quando device.lost resolve com 'device-lost', o jogo mostra uma pausa automática, recria adaptador e dispositivo e repassa o mesmo construtor.",
+      "limits": "Não existe API para retomar o dispositivo antigo: reconstruir é a única rota. Reconstruir no mesmo frame da perda custa tempo e causa um hitch visível; amortecer com um pequeno atraso é decisão da aplicação. O comportamento em caso de falha do navegador varia por plataforma.",
+      "verify": "Chame device.destroy() e confirme que await device.lost resolve com a razão esperada. Simule falha de driver quando o sistema permitir e observe se a aplicação recria os recursos sem travar. Verifique que chamadas póstumas aos objetos antigos geram erro claro e são interceptadas pela sua camada.",
+      "sources": [
+        {
+          "label": "MDN — GPUDevice: lost",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/lost",
+          "why": "descreve a promise e as razões de perda do dispositivo"
+        },
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define a semântica de perda de dispositivo e invalidação de objetos dependentes"
+        }
+      ],
+      "review": "A promise lost, as razões 'device-lost' e 'destroyed-by-application' e a invalidação de objetos dependentes foram conferidas na documentação MDN e no texto da especificação."
+    },
+    {
+      "slug": "webgpu-requiredlimits-calcular-custo",
+      "title": "WebGPU: pedir limites maiores e calcular antes do limite suportado",
+      "one": "Limites são uma negociação: a aplicação declara o que precisa via requiredLimits e deve ler device.limits depois, pois valores variam por hardware.",
+      "why": "Os valores-padrão da especificação (por exemplo, dimensão máxima 8192 em texturas 2D e 64 KiB por binding uniform) são o mínimo que toda implementação deve oferecer. Um motor que assume o teto da própria placa de desenvolvimento quebra em máquinas menores, e o custo de um limite elevado recai sobre toda a cena.",
+      "how": "Compare seu plano de recursos com adapter.limits antes de chamar requestDevice; inclua apenas o que o código realmente exige, pois limites elevados podem ser recusados ou aumentar o custo de alocação. Depois da criação, use device.limits — a interseção do pedido com o suporte — como verdade para a lógica de alocação: tamanho máximo de buffer, número de cores por amostra, trabalho por grupo. Escreva o código de forma que reduza resoluções e lotes quando um limite menor for retornado.",
+      "example": "Um atlas virtual exige buffer maior que 256 MB (padrão de maxBufferSize)? Verifique adapter.limits.maxBufferSize e, se não suportar, divida em sub-buffers com cópias por encadeamento de passes, em vez de pedir um limite gigante e falhar a criação do dispositivo.",
+      "limits": "Pedir limites acima do suportado faz requestDevice rejeitar; não há concessão parcial silenciosa de valores maiores. Limites cobrem capacidade declarada, não orçamento de memória do sistema — alocar até o máximo suportado ainda pode falhar por pressão de memória.",
+      "verify": "Leia adapter.limits e device.limits na mesma execução e confirme a interseção. Force um requiredLimits absurdo (por exemplo, maxTextureDimension2D acima do suportado) e observe a rejeição. Rode a aplicação em GPU de entrada e na placa de desenvolvimento, ativando o caminho de redução de lotes quando os limites caírem.",
+      "sources": [
+        {
+          "label": "MDN — GPUSupportedLimits",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUSupportedLimits",
+          "why": "lista os membros de limite e seus valores-padrão"
+        },
+        {
+          "label": "W3C — WebGPU: seção Limits",
+          "url": "https://www.w3.org/TR/webgpu/#limits",
+          "why": "define os limites normativos e as regras de requiredLimits"
+        }
+      ],
+      "review": "Valores-padrão (8192 em dimensões 2D, 64 KiB de uniform binding, 256 MB de maxBufferSize) conferidos contra a tabela de limites; a semântica de negociação requiredLimits→device.limits foi conferida na especificação."
+    },
+    {
+      "slug": "webgpu-features-antes-dependencia",
+      "title": "WebGPU: features são opcionais e viram dependência de plataforma",
+      "one": "Recursos nomeados, como timestamps e subgrupos, só existem se a aplicação os exigir no pedido de dispositivo e o adaptador os suportar.",
+      "why": "Cada feature habilita comportamento que não está nos piores casos da Web: sem pedir 'timestamp-query', qualquer QuerySet desse tipo falha; sem 'texture-compression-bc', formatos bloqueados ficam indisponíveis. Tratar feature como garantida produz bugs que aparecem apenas em parte do parque de hardware.",
+      "how": "Antes de requestDevice, teste adapter.features.has(nome) e inclua em requiredFeatures apenas o conjunto que o código realmente usa; decida o que fazer quando faltar (degradar, avisar ou recusar o dispositivo). Depois da criação, a fonte de verdade é device.features, não a memória do pedido. Features não substituem limites: um recurso pode estar presente com limites pequenos, e vice-versa.",
+      "example": "O painel de profiling do motor usa timestamps; se 'timestamp-query' não estiver em device.features, o painel desenha barras relativas medidas por CPU e exibe um aviso 'precisão limitada por plataforma' em vez de lançar exceção.",
+      "limits": "Suporte por navegador e driver muda entre versões, então cada feature solicitada é uma decisão de compatibilidade, não um custo zero. Haver com lista vazia não é falha do motor: pode ser hardware real, e o produto precisa responder com degradação definida.",
+      "verify": "Imprima device.features na inicialização em três GPUs diferentes e confirme as diferenças. Peça uma feature inexistente via URL de depuração e verifique se a criação do dispositivo falha com mensagem clara. Teste o caminho degradado com a feature removida da lista de requisitos.",
+      "sources": [
+        {
+          "label": "W3C — WebGPU: seção Features",
+          "url": "https://www.w3.org/TR/webgpu/#features",
+          "why": "lista as features normativas e a regra de solicitação por dispositivo"
+        },
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "texto geral que define a negociação de features entre adaptador e dispositivo"
+        }
+      ],
+      "review": "A mecânica requiredFeatures, o conjunto GPUSupportedFeatures e o princípio de opcionalidade foram conferidos no texto da especificação; o exemplo de degradação é prática recomendada, não garantia normativa."
+    },
+    {
+      "slug": "webgpu-leitura-gpu-staging-buffer",
+      "title": "WebGPU: ler dados da GPU exige buffer staging com MAP_READ",
+      "one": "Um buffer somente pode ser mapeado para leitura se o uso combinado for exatamente MAP_READ mais COPY_DST, o que força uma cópia intermediária.",
+      "why": "A restrição da especificação elimina ambiguidade de aliasing: nunca há CPU e GPU escrevendo e lendo o mesmo armazenamento simultaneamente. O padrão staging copia o resultado do binding (uniform, storage) para um buffer de troca, cuja leitura aguarda a GPU terminar a cópia.",
+      "how": "Crie o buffer de leitura com usage COPY_DST | MAP_READ, grave um copyBufferToBuffer do recurso de origem para ele no command encoder e submeta a fila. Só então chame mapAsync(GPUMapMode.READ), leia via getMappedRange e, ao terminar, chame unmap() — enquanto está mapeado, qualquer outro uso do buffer é inválido. Um buffer de escrita do CPU segue o par MAP_WRITE | COPY_SRC com cópia na direção oposta.",
+      "example": "Para validar um compute de partículas que escreve posições num storage buffer, copie 1024 bytes para um staging, mapAsync, compare os primeiros vetores com a simulação de referência e unmap antes de novo ciclo.",
+      "limits": "mapAsync resolve de forma assíncrona e pode esperar trabalho arbitrário da fila; não chame dentro do passo síncrono de render e espere o resultado. Cópias de leitura bloqueiam reuso imediato do staging até o unmap. O caminho é lento comparado a manter estado na CPU; use para diagnóstico e pontos de verificação.",
+      "verify": "Confirme que criar buffer com MAP_READ isolado é rejeitado pela validação (use um error scope para capturar o TypeError de descrição inválida). Depois leia um valor conhecido gravado via writeBuffer e copiado, e verifique que o resultado aparece só após a promise de mapAsync.",
+      "sources": [
+        {
+          "label": "MDN — GPUBuffer: getMappedRange()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBuffer/getMappedRange",
+          "why": "documenta a janela mapeada e a necessidade de cópia para leitura de resultados"
+        },
+        {
+          "label": "W3C — WebGPU: GPUBuffer Usage",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "tabelas de uso definem 'MAP_READ may only be combined with COPY_DST' e o par simétrico de escrita"
+        }
+      ],
+      "review": "As regras de combinação MAP_READ+COPY_DST e MAP_WRITE+COPY_SRC foram conferidas nas tabelas de buffer usage da especificação atual e na página MDN de mapeamento."
+    },
+    {
+      "slug": "webgpu-mappedatcreation-dado-inicial",
+      "title": "WebGPU: mappedAtCreation para dados iniciais sem cópia adicional",
+      "one": "Buffers criados com mappedAtCreation nascem mapeados para escrita, permitindo preencher o conteúdo antes de qualquer submissão à fila.",
+      "why": "Sem essa via, o dado inicial de geometria, índices ou uniforms exigiria um staging com MAP_WRITE, cópia e limpeza — três operações a mais no setup. O caminho direto reduz código e picos de memória em cenas com muitos recursos carregados na inicialização.",
+      "how": "Passe mappedAtCreation: true no dicionário de criação; o uso não pode incluir MAP_READ nem MAP_WRITE, porque o estado de escrita é garantido pela flag. Escreva no ArrayBuffer de getMappedRange (por exemplo, via Float32Array), chame unmap() para efetivar e, só então, submeta passes que leem o buffer. Depois do primeiro unmap, o buffer fica imutável para o CPU; atualizações seguintes exigem queue.writeBuffer ou cópias.",
+      "example": "O carregador de malha monta Float32Array com posições e UVs, cria o vertex buffer com mappedAtCreation, copia o array para o range mapeado e dá unmap antes de criar os bind groups que o referenciam.",
+      "limits": "O preenchimento ocorre no thread principal durante a criação — para dados de MB, isso trava frames se feito em massa. Texturas não têm equivalente direto; dados de imagem passam por copyExternalImageToTexture ou buffers. Se esquecer o unmap, qualquer uso subsequente no encoder é erro de validação.",
+      "verify": "Escreva um padrão determinístico, crie o buffer, leia o resultado de volta com o fluxo staging e compare byte a byte. Adicione um uso indevido (MAP_WRITE junto com mappedAtCreation) e confirme a rejeição com mensagem clara. Meça o custo de criação para o maior buffer da sua cena.",
+      "sources": [
+        {
+          "label": "MDN — GPUBuffer: mappedAtCreation",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBuffer/mappedAtCreation",
+          "why": "descreve o estado inicial mapeado e a restrição de flags"
+        },
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define a criação de buffer com criação-mapeada como caminho normativo de dados iniciais"
+        }
+      ],
+      "review": "A flag mappedAtCreation e a incompatibilidade simultânea com MAP_READ/MAP_WRITE constam da especificação e da página MDN de criação de buffer — conferidas nas duas."
+    },
+    {
+      "slug": "webgpu-textureusage-views-permitidos",
+      "title": "WebGPU: declarar cada uso de textura no momento certo",
+      "one": "Flags de uso de textura são cumulativas e imutáveis: cada papel — amostragem, anexo de render, destino de cópia — precisa ser declarado na criação.",
+      "why": "O hardware organiza memória por intenção de uso; a WebGPU expõe isso como contrato. Esquecer TEXTURE_BINDING faz o shader não conseguir amostrar; esquecer RENDER_ATTACHMENT invalida o pipeline; e toda flag adicionada pode custar layout de memória maior. A falha aparece tarde se a validação não for monitorada.",
+      "how": "No GPUTextureDescriptor, componha usage: TEXTURE_BINDING para leitura no shader, RENDER_ATTACHMENT para render passes, COPY_DST quando writeTexture ou copyExternalImageToTexture alimentam o recurso, e STORAGE_BINDING apenas para escrita (o estágio não lê uma storage texture sem formato read-write apropriado). Para ler um anexo de profundidade depois, crie a textura com TEXTURE_BINDING adicional e declare viewFormats coerentes no render pass. Prefira a menor combinação de flags que o frame exige.",
+      "example": "Um passes de sombra escreve num depth texture com RENDER_ATTACHMENT | TEXTURE_BINDING e viewFormats contendo o formato read para sampling; o pass principal amostra a mesma textura para PCF.",
+      "limits": "Multisample não combina com STORAGE_BINDING e formatos de armazenamento carregáveis limitam o par TEXTURE_BINDING+STORAGE. Recriar uma textura para trocar de uso implica alocar de novo — desenhe o conjunto de flags por estágio desde o início. Os formatos suportados variam por plataforma; o desc apenas define o espaço de formatos.",
+      "verify": "Ative um error scope de validação e remova intencionalmente uma flag esperada: a descrição do pipeline deve falhar com mensagem apontando o uso. Rode o mesmo código em outra GPU e confirme a compatibilidade do formato escolhido. Audite o conjunto de flags de cada textura listando as criadas no carregamento.",
+      "sources": [
+        {
+          "label": "W3C — WebGPU: GPUTexture",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define as flags de uso de textura e as regras por formato"
+        },
+        {
+          "label": "MDN — GPUBindGroup",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBindGroup",
+          "why": "contextualiza o binding de textura amostrável que exige TEXTURE_BINDING"
+        }
+      ],
+      "review": "As flags de textura e a regra de amostragem de profundidade via TEXTURE_BINDING e viewFormats foram conferidas no texto da especificação; a página MDN de bind group corrobora o consumo por binding."
+    },
+    {
+      "slug": "webgpu-bindgrouplayout-compatibilidade",
+      "title": "WebGPU: bind groups só valem se o layout for compatível com o pipeline",
+      "one": "A compatibilidade de pipeline exige que o bind group criado para um layout seja setado exatamente no índice e com o tipo declarados no layout do pipeline.",
+      "why": "O custo da validação no momento do bind é o que permite submissões baratas; em troca, a WebGPU não faz coerção. Layouts estruturalmente idênticos mas criados separados são objetos diferentes, e um bind group do layout errado é rejeitado em setBindGroup, com efeito dominó em todo o pass.",
+      "how": "Declare GPUBindGroupLayoutDescriptor entries com binding, visibility por estágio e tipo exato (buffer com minBindingSize, sampler, textura de viewSampleType específica). Crie o GPUPipelineLayout a partir de layouts indexados e monte o pipeline com o mesmo layout. Reutilize o objeto de layout entre pipelines que compartilham o contrato — a identidade do layout é o que o motor compara. Bind groups são substituíveis por índice a cada pass; para offsets variáveis, prefira dynamic offsets alinhados (256 bytes uniform, 256 storage por default) a recriar grupos.",
+      "example": "Um material com 40 variações compartilha um bind group layout global (texturas de ambiente) e um por-material (uniforms), reduzindo recriações por frame para apenas os grupos que mudam.",
+      "limits": "Pipeline layouts têm contagem de grupos limitada por maxBindGroups; esgotar o orçamento obriga a mesclar blocos. Dynamic offset custa alinhamento e consome entradas do layout; nem todo binding aceita (somente buffer dynamic). Layouts incompatíveis falham em validação — mas só se você a estiver observando.",
+      "verify": "Com error scope ativo, atribua um bind group do layout errado e confirme a mensagem de incompatibilidade. Compare contagem de grupos criados por frame antes e depois de compartilhar layouts entre materiais. Valide os offsets dinâmicos com teste que quebre o alinhamento e observe a rejeição.",
+      "sources": [
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define compatibilidade de pipeline e os requisitos de layout/bind group"
+        },
+        {
+          "label": "MDN — GPUBindGroupLayout",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBindGroupLayout",
+          "why": "documenta o papel do layout como contrato entre pipeline e bind groups"
+        }
+      ],
+      "review": "A regra de compatibilidade por identidade de layout e as restrições de dynamic offsets/alinhamento foram conferidas no texto normativo, com a página MDN do layout como corroborante."
+    },
+    {
+      "slug": "webgpu-erros-asyncronos-escopos",
+      "title": "WebGPU: capturar erros assíncronos com escopos empilhados",
+      "one": "Erros de validação não lançam exceções no ponto do erro; só aparecem via escopos capturados com popErrorScope ou na perda do dispositivo.",
+      "why": "A WebGPU valida comandos quando o encoder é construído e submetido — não quando a API é chamada. Sem escopos, o desenvolvedor recebe um erro silencioso e um resultado visualmente errado, ou um uncapturederror que mata o dispositivo. Escopos transformam validação distribuída em um resultado determinístico por região de código.",
+      "how": "Envolva a seção com device.pushErrorScope('validation') (ou 'out-of-memory'/'internal'), execute os comandos e faça await device.popErrorScope() — a promise resolve para null se nada falhou, ou para um GPUError com mensagem da implementação. Empilhamento importa: cada push precisa de um pop correspondente e escopos capturam erros de operações assíncronas iniciadas dentro dele. Em produção, também conecte o listener uncapturederror do dispositivo para falhas fora de qualquer escopo.",
+      "example": "O carregador de material cria pipelines dentro de um escopo 'validation'; se a mensagem vier, registra-se o shader culprit e o material cai para uma variante conhecida, em vez de derrubar a renderização inteira.",
+      "limits": "Mensagens de erro variam por navegador e driver; parseá-las é frágil. push/pop têm custo, e escopo para cada draw tornaria o frame mais caro — use em fronteiras de inicialização e testes. Um pop antes da hora deixa erros órfãos caírem em 'uncaptured', possivelmente perdendo o dispositivo.",
+      "verify": "Injete um uso de buffer inválido e confirme que o pop dentro do escopo retorna o erro, e que sem escopo o mesmo código dispara uncapturederror. Alterne filtros ('internal' vs 'validation') para ver a classificação. Escreva um teste automatizado que falha se qualquer pop retornar erro na suite de carregadores.",
+      "sources": [
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define a pilha de escopos de erro e a semântica de captura assíncrona"
+        },
+        {
+          "label": "MDN — GPUCompilationInfo",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUCompilationInfo",
+          "why": "cobre o outro canal de diagnóstico: mensagens de compilação de shaders"
+        }
+      ],
+      "review": "A assincronia da validação, a pilha push/pop de escopos e o papel de uncapturederror foram conferidos na especificação; getCompilationInfo como canal separado foi conferido na família de páginas MDN."
+    },
+    {
+      "slug": "webgpu-timestamp-medir-gpu-real",
+      "title": "WebGPU: medir tempo de GPU com query sets de timestamp",
+      "one": "Timestamps medidos na própria GPU exigem a feature 'timestamp-query' e um buffer de resolução — o relógio do navegador não sabe quando o work terminou.",
+      "why": "performance.now() ao redor de submit mede enqueue, não execução; filas e paralelismo escondem a verdade. Para decisões de otimização de shader, tiling e orden de passes, a única cronometragem honesta vem de queries escritas pelo dispositivo e resolvidas num buffer legível.",
+      "how": "Crie o device com requiredFeatures contendo 'timestamp-query' e um GPUQuerySet do tipo 'timestamp' com count par (início/fim por região). No pass, use writeTimestamp(querySet, index) ou os timestamps dos render/compute pass descriptors; resolva com resolveQuerySet para um buffer com COPY_DST|MAP_READ, copie para um segundo buffer de leitura quando necessário, e converta os BigUInt64 subtraindo início do fim. Some os valores apenas como deltas; o período de contagem vem de queue.getTimestampPeriod, que é por plataforma.",
+      "example": "Um profiler de overlay mede cada pass de pós-processamento com dois writeTimestamp por pass, resolve ao fim do frame e exibe a média móvel dos deltas — os spikes de shadow pass ficam visíveis na hora.",
+      "limits": "Timestamps absolutos não têm significado entre dispositivos nem entre passes; deltas são a única grandeza útil. Nem toda implementação expõe a feature (verifique device.features). Contagens altas de queries aumentam o custo do pass, e a janela entre resolve e leitura pode cruzar frames, distorcendo atribuições se a pipeline de render for profunda.",
+      "verify": "Confira que 'timestamp-query' está em device.features antes de criar o QuerySet (sem a feature, a criação falha por validação). Compare deltas de timestamp com o relógio da CPU para um trabalho sintético grande e confirme correlação. Rode na CPU-driver de teste (fallback) e confirme o comportamento documentado quando o período não está disponível.",
+      "sources": [
+        {
+          "label": "W3C — WebGPU (especificação)",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "define GPUQuerySet de timestamps, resolveQuerySet e o significado de getTimestampPeriod"
+        },
+        {
+          "label": "MDN — GPUQuerySet",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUQuerySet",
+          "why": "documenta tipos de query set e ciclo de vida (count, destroy, reset)"
+        }
+      ],
+      "review": "A feature obrigatória, o uso por pares início/fim, a resolução em buffer u64 e a regra de deltas relativos via getTimestampPeriod foram conferidos na especificação; o resumo MDN corrobora o ciclo de vida."
+    }
+  ]
+}

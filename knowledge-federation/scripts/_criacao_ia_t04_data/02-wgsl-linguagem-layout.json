@@ -1,0 +1,236 @@
+{
+  "group": "WGSL: classes de armazenamento, layout de binding, tipos e diagnóstico de compilação",
+  "check": "Revisão do texto da especificação WGSL e da página-guia da MDN consultadas em 2026-10-04; onde a especificação usa terminologia técnica, a nota mantém o termo e explica o efeito prático.",
+  "notes": [
+    {
+      "slug": "wgsl-classes-armazenamento-escopo",
+      "title": "WGSL: escolher a classe de armazenamento pelo tempo de vida",
+      "one": "Cada variável WGSL vive numa classe — function, private, workgroup, storage, uniform — que determina escopo, persistência e quem pode escrevê-la.",
+      "why": "Confundir classes gera dois erros caros: estado que deveria durar entre invocações de um mesmo workgroup posto em 'function' (some a cada invocação), e dados por-thread globais postos em 'private' quando poderiam ser parâmetros locais. A escolha também define quais operações atômicas e de sincronização são válidas.",
+      "how": "Use function para temporários; private para estado por-invocação acessível a funções auxiliares (não compartilha nada entre threads); workgroup para memória compartilhada dentro de um workgroup, visível após barrier(); storage para buffers grandes lidos/escritos por compute e legíveis como read-only em estágios de render; uniform para dados por-dispatch pequenos e de acesso rápido. O modo de acesso (read, read_write, write) é declarado junto e é contrato, não sugestão.",
+      "example": "Uma redução por workgroup acumula parciais em 'var<workgroup> shared: array<f32, 64>;', faz barrier() entre fases e só o thread 0 grava o resultado no storage buffer de saída — colocar o acumulador em private duplicaria por thread e perderia a fase.",
+      "limits": "workgroup tem orçamento pequeno (o limite maxComputeWorkgroupStorageSize vale por default 16 KiB, e é negociável pelo seu limite); uniform tem teto bem menor que storage (64 KiB por binding no valor-padrão de limite). classes read_write em storage só com uso STORAGE_BINDING e visibilidade de compute (ou fragment onde o formato permitir).",
+      "verify": "Troque workgroup por private num exemplo de redução e observe o resultado errado antes do barrier; é a prova viva do escopo. Compile com o modo de acesso violado (escrever em uniform) e confirme o erro de validação do compilador. Rode um caso que estoura o orçamento de workgroup e confirme a falha de criação do pipeline.",
+      "sources": [
+        {
+          "label": "W3C — WGSL: endereços e classes",
+          "url": "https://www.w3.org/TR/WGSL/#address-spaces",
+          "why": "seção normativa sobre address spaces e suas semânticas"
+        },
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "texto completo do módulo, incluindo regras de acesso e visibilidade"
+        }
+      ],
+      "review": "As cinco classes com escopo e persistência descritos conferem com a seção de address spaces; os números de orçamento remetem às tabelas de limites da WebGPU consultadas para a nota-irmã."
+    },
+    {
+      "slug": "wgsl-binding-layout-visibilidade",
+      "title": "WGSL: pares @group/@binding são contrato com o layout do pipeline",
+      "one": "Todo recurso externamente ligado é identificado por @group(g) @binding(b), e o conjunto de declarações deve coincidir com o bind group layout na visibilidade e no tipo.",
+      "why": "A API de execução não resolve nomes — resolve posições. Se o shader declara um binding em visibility vertex mas o layout diz fragment, a compatibilidade de pipeline falha; se a ordem muda, recursos inteiros são lidos do slot errado silenciosamente em implementações que só validam parte disso.",
+      "how": "Escreva o shader como espelho do layout: para cada entry do GPUBindGroupLayoutDescriptor, uma declaração com mesmo group, binding e tipo (sampler, textura com viewSampleType compatível, buffer com access e tamanho mínimo). Mantenha convenções: group 0 global por-frame, group 1 por-material, group 2 por-objeto é um padrão comum, não normativa. Ao trocar o layout, regere os shaders — diff entre as listas de binding é revisão obrigatória.",
+      "example": "O uniform de câmera migra do binding 3 do group 0 para um novo group 0 binding 0 compartilhado com outro pass; os dois shaders que liam a matriz antiga precisam da nova dupla, e o layout do pipeline que os compõe ganha um entry deslocado.",
+      "limits": "Duplicar o mesmo binding em dois shaders de um mesmo pipeline exige declarações idênticas; divergência mínima (um array sem tamanho vs. com) já é incompatibilidade. A visibilidade por estágio restringe onde o recurso é legível — declarar 'todos os estágios' é permissivo demais e pode custar otimizações de driver.",
+      "verify": "Gere a lista de bindings do layout e do pré-processamento do shader por script e compare na CI (erro de compatibilidade vira falha de build, não de runtime). Inverta dois bindings num fixture e confirme que a criação do pipeline falha com error scope ativo.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define a atribuição group/binding e o vínculo com o layout de binding"
+        },
+        {
+          "label": "MDN — GPUBindGroup",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBindGroup",
+          "why": "mostra o lado JS do contrato: entradas numeradas por binding dentro de um layout"
+        }
+      ],
+      "review": "A exigência de correspondência de group/binding/visibilidade/tipo entre módulo e layout foi conferida na especificação; o vínculo com o lado JS foi confirmado na página MDN de bind group."
+    },
+    {
+      "slug": "wgsl-alinhamento-uniform-cinco-regra",
+      "title": "WGSL: o layout de uniform padroniza tudo em 16 bytes",
+      "one": "No espaço 'uniform', cada membro de uma struct começa em múltiplo do seu próprio alinhamento, com um mínimo de 16, e arrays consomem 16 bytes por elemento quando o tipo base é menor.",
+      "why": "Campos compactados 'na mão' no lado da CPU geram offsets silenciosamente deslocados quando a regra do compilador não é respeitada — um vec3<f32> no fim de um array de uniform consome 16, não 12 bytes, e o shader lê o float errado sem qualquer mensagem de erro.",
+      "how": "Ordene membros do maior alinhamento para o menor (vec4, matNxM antes de scalares), preencha lacunas com pad e evite arrays de tipos de alinhamento 8 dentro de uniform (o array força passo 16). Prefira vec4+mat4x4 para conjuntos pequenos: o desperdício é previsível e o layout, trivial. O storage buffer não tem piso de 16 por membro — lá o custo de alinhar é menor, razão pela qual motores movem blocos grandes para storage.",
+      "example": "Um bloco por-draw { vec4 color; float time; } ocupa 16 bytes (color) + 4 (time) + 12 de preenchimento = 32; o upload com stride 20 é a fonte clássica do bug de 'o time lê lixo'.",
+      "limits": "As regras exatas vêm das tabelas de 'alignment and size' da especificação; implementações as seguem, mas o erro de layout só aparece em validação de binding size se o minBindingSize ajudar — muitas vezes aparece como dado errado, não exceção. Matrices em uniform: colunas alinhadas a 16.",
+      "verify": "Calcule o tamanho esperado via um gerador (o próprio JS pode montar a struct espelho) e compare com o size de upload; uma asserção na inicialização pega regressões. Mude um membro para storage e confirme que o layout mudou — sinal de que você entendeu a regra.",
+      "sources": [
+        {
+          "label": "W3C — WGSL: Alignment and Size",
+          "url": "https://www.w3.org/TR/WGSL/#alignment-and-size",
+          "why": "tabelas normativas de alinhamento/tamanho por tipo e por espaço de armazenamento"
+        },
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "contexto das restrições por espaço de armazenamento (uniform vs. storage)"
+        }
+      ],
+      "review": "O piso de alinhamento de 16 bytes no espaço uniform, o passo de 16 bytes por elemento de array com tipos de alinhamento menor e as tabelas de alinhamento por tipo foram conferidos na seção 'Alignment and Size' da especificação."
+    },
+    {
+      "slug": "wgsl-storage-runtime-array",
+      "title": "WGSL: só o storage buffer aceita array de tamanho em tempo de execução",
+      "one": "Para um array cujo comprimento é conhecido só no binding, declare o último membro da struct como array<T> no espaço storage — uniform rejeita isso por regra.",
+      "why": "Dados de instância (milhares de partículas, tiles, NPCs) não cabem no teto de uniform e não têm tamanho fixo. Um runtime-sized array resolve os dois; a restrição de posição (último membro) e o passo alinhado são o preço que o compilador cobra para não haver ambiguidade de layout.",
+      "how": "Modele a struct de buffer como { header: metadados fixos; itens: array<Item> }, crie o buffer com STORAGE | COPY_DST (adicione COPY_SRC para leitura de diagnóstico) e o layout com type:'storage' e access:'read'|'read_write'|'write' adequado. O passo de array<T> é o tamanho de T arredondado para seu alinhamento — para Item com vec3 dentro, calcule antes de escrever o upload. Acesso com índices limitados pelo comprimento real do buffer (a implementação não corta por você).",
+      "example": "Um sistema de partículas com contagem variável a cada frame usa um único storage buffer; o shader lê 'let count = dados.num_particles;' do header e itera 'dados.itens[i]', com i < count garantido no lado da CPU.",
+      "limits": "read-only em estágio de fragment exige o binding correspondente no layout; write sem read funciona apenas em compute (ou onde permitido). stride de array com tipos de alinhamento 8 não sofre o piso 16 do uniform, mas herda a regra de arredondamento — e o upload CPU precisa replicá-la. Ler além do fim é comportamento indefinido que geralmente dá zero ou lixo, não exceção.",
+      "verify": "Imprima via error scope a descrição rejeitada de um array runtime-sized em uniform. Compare o stride calculado à mão com o offset de dois itens escritos no buffer e lidos de volta via staging. Teste o caminho 'buffer menor que o iterado' para ver a falha que você quer prevenir.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define runtime-sized arrays e as restrições por espaço de armazenamento"
+        },
+        {
+          "label": "MDN — GPUBufferUsage",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUBufferUsage",
+          "why": "lista as flags de uso de buffer exigidas pelo fluxo storage + cópias"
+        }
+      ],
+      "review": "A exigência de array runtime-sized restrito a storage e como último membro, e as regras de passo alinhado, foram conferidas no texto da especificação; as flags de buffer na página MDN de GPUBufferUsage."
+    },
+    {
+      "slug": "wgsl-override-constantes-pipeline",
+      "title": "WGSL: constantes overridables ajustam o pipeline sem recompilar o shader",
+      "one": "Um módulo pode declarar @override constantes cujo valor o pipeline de render substitui na criação, sem editar o código-fonte do shader.",
+      "why": "Variantes de qualidade (número de passos de um loop, tamanho de bloco, habilitar um efeito) sem override viram uma explosão de pipelines por combinação de texto-fonte. With overridables, o mesmo módulo atende dezenas de configurações e o sistema de cache vê menos artefatos.",
+      "how": "Declare no módulo uma constante de sobrecarga de pipeline, por exemplo 'override samples : i32 = 4;', e passe o mapa de valores no estágio correspondente via GPUProgrammableStage.constants na criação do pipeline. O compilador trata o valor substituído como constante: loops e condições dependentes dele são otimizados no pipeline resultante. Constantes sem override são puramente locais; para identificá-las na API, a especificação permite atribuir @id.",
+      "example": "O material de sombra expõe 'override shadow_steps:i32'; qualidade baixa cria o pipeline com constants {shadow_steps: 2}, alta com 8, ambos do mesmo shader module cacheado.",
+      "limits": "O valor entra na criação do pipeline — mudar é recriar o pipeline, não um set barato por frame. Nem toda plataforma trata todo tipo/expressão de override igualmente; em caso de loop condicionalmente pesado, confirme empiricamente a otimização por driver. Constantes de módulo sem @id não são endereçáveis pela API.",
+      "verify": "Crie dois pipelines com valores diferentes e confirme visualmente que o número de passos mudou (um buffer de depuração que soma as iterações conta isso melhor que o olho). Teste a criação com valor inválido (tipo errado) e espere a falha de validação documentada. Compare métricas de compilação entre variante por texto e por override.",
+      "sources": [
+        {
+          "label": "MDN — GPUProgrammableStage",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUProgrammableStage",
+          "why": "documenta o dicionário constants do estágio do pipeline"
+        },
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define constantes overridables, tipos aceitos e @id"
+        }
+      ],
+      "review": "A existência do campo constants no dicionário de estágio (MDN) e a semântica de 'pipeline overridable module constants' com @id (especificação WGSL) foram conferidas nas duas fontes."
+    },
+    {
+      "slug": "wgsl-atomicos-compare-loop",
+      "title": "WGSL: atômicos só em memória de escrita explícita, e CAS é loop manual",
+      "one": "Tipos atomic<i32>/<u32> existem apenas em storage read_write e workgroup read_write, e a troca condicional do WGSL retorna um struct que exige retry manual.",
+      "why": "Contadores globais, free lists e filas de trabalho são o tecido de sistemas paralelos na GPU; escrever sem atomicidade produz resultados que flutuam entre frames e não reproduzem em log. A API WGSL deliberadamente não oferece CAS atômica de um passo — ignorar isso leva a algoritmos errados que parecem certos.",
+      "how": "Declare 'var<storage, read_write> counters : atomic<i32>;' e use atomicAdd/atomicLoad/atomicStore para operações diretas; para um padrão 'só o primeiro thread faz', faça loop: leia, teste, atomicCompareExchangeWeak(expected, desired) e repita enquanto o membro 'exchanged' do resultado for falso. Em workgroup, combine atômicos com barrier() quando outros threads dependerem do valor. Atômicos não têm tipo 64-bit portável na especificação atual e não existem em uniform.",
+      "example": "Um pass de alocação de worklist: cada thread em loop tenta 'atomicCompareExchangeWeak(0, meu_valor)' no slot; quem conseguir 'exchanged' publica e sai, os demais re-leem e saem, sem lock entre workgroups.",
+      "limits": "CAS fraca é fraca: mesmo quando retorna exchanged=true num contexto ABA, algoritmos que dependem de versão precisam de palavras de etiqueta. A disponibilidade por estágio é limitada a compute (e fragment onde o formato read_write permite); não espere atômicos no vertex. O retry loop sem teto vira hang se a lógica de sucesso for incompatível com a semântica fraca.",
+      "verify": "Rode um contador com 100 mil increments por thread via atomicAdd e compare com o valor esperado — a versão não-atômica erra e é seu teste de referência. Verifique a recusa de compilação de um atomic em read-only. Adicione um ABA sintético se o algoritmo usar CAS para decisão estrutural.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define os tipos atômicos, seus espaços de armazenamento permitidos e o struct de compare-exchange"
+        },
+        {
+          "label": "W3C — WebGPU",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "a API irmã define STORAGE_BINDING com acesso write-only e o que o layout aceita"
+        }
+      ],
+      "review": "A restrição de atômicos a storage/workgroup com modo de escrita, o formato do resultado de atomicCompareExchangeWeak e a ausência de CAS forte foram conferidos na especificação WGSL."
+    },
+    {
+      "slug": "wgsl-textura-amostragem-tipo-view",
+      "title": "WGSL: amostrar uma textura exige ver o tipo certo, não só o binding",
+      "one": "A expressão do tipo da textura no shader (f32, i32, u32, depth) precisa coincidir com o viewSampleType do layout — depth texturas só se amostram por comparação.",
+      "why": "Dois bugs clássicos de sampling têm a mesma raiz: declarar 'texture_2d<f32>' sobre uma view de profundidade, ou 'textureSample' sem gradientes controlados dentro de laço divergente. A especificação resolve ambos com tipos de view explícitos e funções separadas (sample vs. sampleCompare vs. load), eliminando a mágica de GL.",
+      "how": "Para cor: textureSample(t, s, uv) em 'texture_2d<f32>'. Para profundidade com shadow map: a textura é 'texture_depth_2d' e só existe textureSampleCompare(t, s, uv, ref). Para leitura sem filtro (manipulação, formato R32*): textureLoad(t, coord, level) com viewSampleType float|sint|uint coerente. Combine com o sampler (filtering, address modes) declarado como entry separada do mesmo grupo — o layout amarra os dois.",
+      "example": "Um PCF 3x3 usa textureSampleCompareLoop num laço de offsets; cada iteração lê uma vizinhança do depth map, e a média vira o termo de sombra — sem o tipo depth no shader, a compilação nem começaria.",
+      "limits": "textureSample com derivação implícita de mip em fluxo divergente é indefinido no fragment — troque por sampleLevel. A restrição de comparação (sem filtro manual) vale só para views de profundidade; formatos de integer exigem minFilter magFilter 'nearest' no sampler para coerência com sample não-comparativo onde a plataforma o permite. A origem (0,0) é o canto superior esquerdo em ambas as APIs — coordenadas de textura vs. framebuffer.",
+      "verify": "Troque intencionalmente o viewSampleType do layout e confirme a falha de compatibilidade no createRenderPipeline. Renderize um quad de teste com gradientes conhecidos e leia os deltas de mip via staging para validar a escolha sampleLevel vs. sample. Compare os resultados do seu PCF com uma referência por CPU num mapa pequeno.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define texturas amostráveis por tipo, sampling de comparação e as funções de load"
+        },
+        {
+          "label": "MDN — WebGPU API (guia)",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API",
+          "why": "panorama do pipeline de amostragem: samplers, texturas e bindings"
+        }
+      ],
+      "review": "As famílias de tipos de textura por sample type, a obrigatoriedade de textureSampleCompare para views depth e as regras de filtragem de inteiros foram conferidas na especificação; o guia MDN confirma o arranjo de samplers e bindings."
+    },
+    {
+      "slug": "wgsl-builtins-estagios-corte",
+      "title": "WGSL: cada estágio expõe apenas os embutidos que fazem sentido para ele",
+      "one": "Variáveis @builtin dão ao shader posições e índices do sistema, mas a lista disponível é por estágio e o espaço de coordenadas muda na saída do vertex.",
+      "why": "Assumir que 'position' significa o mesmo nas três funções de um material é fonte de bugs de culling e de profundidade: na saída do vertex é clip space; no fragment é coordenada de framebuffer com Y para baixo; e o espaço de profundidade da WebGPU vai de 0 a 1, diferente do GL [-1,1] que muitos portadores carregam na memória muscular.",
+      "how": "Vertex: entrada @builtin(vertex_index)/@builtin(instance_index) com draw procedimental; saída com position em clip space (w implícito) e dados interpolados anotados @location(n). Fragment: @builtin(position) é a coordenada framebuffer (origin no canto superior esquerdo, y crescente para baixo) e @builtin(front_facing)/@builtin(sample_index) onde habilitado. Compute: @builtin(global_invocation_id/local_invocation_id/workgroup_id) mais num_workgroups no dispatch. Profundidade fora de [-1,1] exige reescalonamento manual em port de GL.",
+      "example": "O quad fullscreen de pós-processamento não lê buffer de vértices: usa @builtin(vertex_index) num draw de 3 triângulos e deriva UV de 'position.xy' já na resolução do canvas.",
+      "limits": "Nem todo builtin existe em todo estágio (sample_index só com multisample; frag_depth só quando o render pass o aceita), e usar um não-disponível é erro de compilação, não de link de runtime. O Y invertido em fragment position pega portadores de GL de surpresa — a correção de eixo deve estar centralizada.",
+      "verify": "Escreva um programa mínimo que grava @builtin(position) numa textura de debug e confirme a origem/escala na janela do dispositivo. Num port GL, compare o resultado da sombra com a fórmula reescalada de profundidade antes e depois. A listagem de builtins por estágio na especificação serve como checklist de revisão.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "lista de builtins por estágio e espaços de coordenadas normativos"
+        },
+        {
+          "label": "MDN — GPUShaderModule",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule",
+          "why": "exemplo canônico usa @builtin(position) e @location na estrutura de pipeline básico"
+        }
+      ],
+      "review": "O mapeamento de builtins por estágio, o espaço clip na saída do vertex, a origem superior-esquerda no fragment e o intervalo de profundidade 0..1 (em oposição ao [-1,1] do GL) foram conferidos na especificação; o exemplo MDN confirma a sintaxe dos atributos."
+    },
+    {
+      "slug": "wgsl-uniformidade-amostragem",
+      "title": "WGSL: fluxo divergente e operações uniformes — uma análise, não uma sugestão",
+      "one": "A especificação WGSL faz análise de uniformidade: certas operações (barrier, sampling com derivadas implícitas) só são válidas onde o compilador pode provar que threads concordam.",
+      "why": "Um barrier dentro de um ramo que metade do workgroup pode pular é deadlock na teoria e undefined na prática; um textureSample em fluxo não uniforme usa derivadas mistas entre pixels vizinhos e produz artefatos de mip aleatórios. A regra existe porque o hardware é SIMT — fingir o contrário é como portar código CUDA direto e estragar a festa.",
+      "how": "A análise marca valores como uniformes (idênticos entre threads do workgroup) e não-uniformes; operações 'uniform-only' (workgroupUniformLoad, barrier, gradientes implícitos) precisam de inputs uniformes em fluxo uniforme. Para sampling em condição ramificada, use textureSampleLevel com mip calculado manualmente; para sincronização parcial, reconstrua o algoritmo em fases com barriers entre elas, não dentro de ramos.",
+      "example": "Um tile de 'only red pixels' que chama barrier() dentro do if por pixel é rejeitado; a mesma lógica com um mask lido uniformemente do workgroup, barrier fora do if e seleção por máscara dentro, compila e preserva a semântica.",
+      "limits": "A análise é conservadora: há casos corretos que ela rejeita — a especificação fornece 'nonuniform' escape para casos controlados de sampling, mas o abuso anula a proteção. Uniformidade de derivada é regra de fragment; em compute o que importa é o contrato do workgroup (barrier atinge threads do mesmo workgroup e ponto final).",
+      "verify": "Injete um barrier num ramo dependente de input por-thread e confirme o erro de compilação com mensagem de fluxo não-uniforme. Substitua o sample divergente por sampleLevel manual e valide a ausência de artefatos de mip num caso extremo de zoom. Rode o mesmo shader em dois drivers para ver a variação de diagnóstico (não de resultado).",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define a análise de uniformidade e as operações uniform-only"
+        },
+        {
+          "label": "W3C — WebGPU",
+          "url": "https://www.w3.org/TR/webgpu/",
+          "why": "descreve o modelo de execução compute por workgroups no qual a análise se apoia"
+        }
+      ],
+      "review": "A existência e o papel da uniformity analysis, a restrição de barrier e sampling implícito a fluxo uniforme e o mecanismo de escape 'nonuniform' foram conferidos no texto da especificação WGSL."
+    },
+    {
+      "slug": "wgsl-sem-conversao-implicita",
+      "title": "WGSL: sem coerções implícitas — o construtor é obrigatório e o erro é cedo",
+      "one": "WGSL não converte scalar↔vetor nem tipo numérico implicitamente; cada conversão (int para float, vec3 para vec4) precisa de um construtor explícito, e literais devem ser digitados.",
+      "why": "Portadores de GLSL e HLSL carregam o hábito de expressões que 'funcionam por mágica'. Em WGSL o compilador recusa, e isso é uma vantagem: a política de precisão e sinal fica visível no código-fonte, onde revisão e testes podem enxergá-la — i32(1.5) truncando é seu bug explícito, não escondido.",
+      "how": "Escreva float(1) ou 1.0 conforme o caso; converta vetores por construtor ('vec4f(pos, 1.0)'); use select() em vez de ternário com ramos de tipo divergente; e para lógica boolean↔numérica prefira if/int(true). Literais sem sufixo assumem o tipo inferido do contexto — anote quando o contexto não basta, para evitar que um i32 de 32 bits vire u32 silencioso num laço. O compilador reporta esses casos como erros de compilação do módulo, legíveis via getCompilationInfo().",
+      "example": "O pós-processador que soma 'luma = dot(albedo.rgb, vec3(0.2126, 0.7152, 0.0722))' escrito em GLSL só compila em WGSL com os literais float coerentes; o diff de migração inteiro é um teste de atenção.",
+      "limits": "getCompilationInfo informa mensagens por 'line' e 'offset' mas o mapeamento de fonte do seu pré-processador de shaders pode embaralhar as posições — mantenha o texto-fonte exato enviado. O erro é na compilação do módulo, antes da criação do pipeline; não espere recuperação por runtime. Ferramentas de validação independentes existem na comunidade, mas não substituem o compilador da plataforma.",
+      "verify": "Conecte getCompilationInfo() a um assert da build (testes de shader devem falhar no CI se 'messages' contiver erro para um fixture). Mantenha um 'kitchen sink' shader cobrindo cada padrão de coerção e confirme que só as formas explícitas compilam. Registre a posição reportada vs. real para calibrar o pré-processador.",
+      "sources": [
+        {
+          "label": "W3C — WGSL (especificação)",
+          "url": "https://www.w3.org/TR/WGSL/",
+          "why": "define regras de conversão explícita, literais e inferência de tipo"
+        },
+        {
+          "label": "MDN — GPUShaderModule/getCompilationInfo()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/GPUShaderModule/getCompilationInfo",
+          "why": "documenta o acesso programático a erros e avisos de compilação"
+        }
+      ],
+      "review": "A ausência de coerção implícita, a sintaxe de construtores e a rota de diagnóstico por getCompilationInfo foram conferidas nas duas fontes citadas: especificação WGSL e a página MDN do getter."
+    }
+  ]
+}
