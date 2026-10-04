@@ -9,17 +9,17 @@ Data: 2026-10-01
 Baixe a branch consolidada inteira como ZIP:
 
 ```text
-https://github.com/berger33/obsidian/archive/refs/heads/arena/01a0f8f9-obsidian.zip
+https://github.com/berger33/obsidian/archive/refs/heads/main.zip
 ```
 
-Ou veja a branch e o Pull Request no GitHub:
+Ou veja a `main` e o Pull Request da consolidação no GitHub:
 
 ```text
-https://github.com/berger33/obsidian/tree/arena/01a0f8f9-obsidian
-https://github.com/berger33/obsidian/pull/2
+https://github.com/berger33/obsidian/tree/main
+https://github.com/berger33/obsidian/pull/4
 ```
 
-*(Após o merge do Pull Request em `main`, o download direto da `main` também estará disponível em `https://github.com/berger33/obsidian/archive/refs/heads/main.zip`.)*
+> Atualizado em 2026-10-04: as branches paralelas `arena/*` (`01a0f4eb`, `01a0f8f9`, `01a0f960`, `01a0f9df`, `01a0ff06`, `01a0ff9b`) foram consolidadas na `main` e removidas para eliminar duplicidade. Links antigos para essas branches deixaram de funcionar; use `main`. O conteúdo superado da tranche 15 alternativa dos testes está preservado na tag `archive/tranche15-testes-alternativa`. Detalhes: [`PROMPT-CONTINUACAO.md`](PROMPT-CONTINUACAO.md).
 
 ## Arquivos principais prontos em `knowledge-federation/archives/`
 
