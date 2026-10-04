@@ -1,6 +1,6 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-04T02:38:22+00:00`
+Executada em: `2026-10-04T16:28:30+00:00`
 
 > O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.
 
@@ -5709,6 +5709,19 @@ Executada em: `2026-10-04T02:38:22+00:00`
 - `knowledge-federation/domains/software-0001/software/fundamentos/fundamentos-conceito-essencial-0053.md` — `missing_heading:exemplo`, `missing_heading:como verificar`, `missing_heading:limites_ou_quando_nao_usar`, `template_phrase:nota semente sobre`, `template_phrase:criada para compor o mapa federado`, `template_phrase:em lotes futuros`
 - `knowledge-federation/domains/software-0001/software/fundamentos/fundamentos-conceito-essencial-0057.md` — `missing_heading:exemplo`, `missing_heading:como verificar`, `missing_heading:limites_ou_quando_nao_usar`, `template_phrase:nota semente sobre`, `template_phrase:criada para compor o mapa federado`, `template_phrase:em lotes futuros`
 - … mais 60 arquivos; consulte os critérios para reexecutar a auditoria por subdiretório.
+
+## Checkpoint SQLite legado
+
+- Registros virtuais no ledger: **1,000,000** (inventário/IDs; não são automaticamente notas válidas).
+- Registros com marcadores explícitos de conteúdo-template: **1,000,000**.
+- Registros virtuais restantes sem esses marcadores: **0**; não são promovidos automaticamente a notas válidas.
+- Registros virtuais com caminho materializado no checkpoint: **8,000**; materialização de arquivo não equivale a validação editorial.
+- Notas físicas registradas no checkpoint: **100**; status `deep/reviewed/valid` no schema antigo: **0**.
+- Registros no estado candidata/pronta para revisão no checkpoint: **0**.
+- Registros com pendência de revisão no checkpoint: **0**.
+- Registros com qualidade revisada explicitamente marcada no checkpoint: **0**.
+
+A auditoria do ledger usa os campos `summary`, `body_seed` e `title` para detectar o padrão legado. Mesmo um registro que não corresponda a esse padrão precisa ser materializado, avaliado e revisado antes de entrar na contagem válida.
 
 ## Próximo passo
 
