@@ -10,7 +10,7 @@ Resultado: **100 notas contabilizadas após gate e revisão factual por IA**. Es
 - Fontes e dados reproduzíveis: [`_build_tranche21.py`](../../scripts/_build_tranche21.py) e [`_tranche21_data/`](../../scripts/_tranche21_data/).
 - Relatório de revisão: [`ai-review-software-testes-2000-0001-tranche-21.md`](ai-review-software-testes-2000-0001-tranche-21.md). Registra 100 decisões factuais por IA, sem alterar as 49 aprovações humanas históricas.
 - Grupos: Nightwatch, AVA, Chai, Sinon.JS, VCR.py, freezegun, mutmut, cargo-mutants, Toxiproxy e Jazzer.
-- Contexto de retomada: esta tranche continua a série a partir da tranche 20; a tranche 15 alternativa registrada no branch `arena/01a0f9df-obsidian` permanece substituída pela versão reconciliada no histórico do branch `arena/01a0ff06-obsidian`.
+- Contexto de retomada: esta tranche continua a série a partir da tranche 20; a tranche 15 alternativa registrada no branch `arena/01a0f9df-obsidian` permanece substituída pela versão reconciliada no histórico do branch `arena/01a0ff06-obsidian`. *(Nota de 2026-10-04: ambos os branches foram consolidados na `main` e removidos; a versão substituída segue recuperável na tag `archive/tranche15-testes-alternativa`.)*
 
 ## Auditorias e resultados
 
