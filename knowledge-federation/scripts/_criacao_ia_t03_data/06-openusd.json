@@ -1,0 +1,156 @@
+{
+  "group": "OpenUSD 26.08: composition, variants, time and asset resolution",
+  "check": "Revisão da documentação versionada OpenUSD 26.08; tutoriais de referencing, variants e xforms foram usados junto às referências de API de stage, load rules, attributes e asset resolution.",
+  "notes": [
+    {
+      "slug": "openusd-stage-composed-view-layers",
+      "title": "OpenUSD: entender UsdStage como vista composta de layers",
+      "one": "Um `UsdStage` apresenta uma cena composta de layers e arcs, não simplesmente o conteúdo isolado do arquivo root layer.",
+      "why": "Uma transformação visível no stage pode vir de referência, sublayer, variant, sessão ou override local. Editar o arquivo errado pode não alterar o valor composto, e salvar a camada equivocada pode misturar autoria de departamentos distintos.",
+      "how": "Abra um stage com root layer e, quando apropriado, session layer. Inspecione a origem das opinions e sua strength antes de mudar propriedades. A composição reúne prims e valores de múltiplas camadas em uma vista consultável; escolher `EditTarget` determina onde operações de autoria serão escritas, enquanto flattening é uma operação separada.",
+      "example": "Um artista vê a cor de uma malha em `usdview`, mas quer mudar apenas a variação de material do asset. Ele localiza a opinion responsável, escolhe a camada de trabalho ou variant edit context apropriado e confirma a camada exportada, em vez de sobrescrever a referência original.",
+      "limits": "A aparência do stage depende dos arcs, resolver, load rules e seleções ativos. Leitura do valor composto não revela por si só a política de autoria desejada; stage cache e session layer também podem influenciar uma inspeção local.",
+      "verify": "Inspecione root/session layers, prim stack e composition arcs; altere uma opinion numa camada temporária e observe strength e valor composto. Reabra o arquivo sem session layer para verificar quais alterações foram persistidas.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — UsdStage API", "url": "https://openusd.org/release/api/class_usd_stage.html", "why": "define operação e composição do stage a partir de layers e configuração"},
+        {"label": "OpenUSD 26.08 — Glossary", "url": "https://openusd.org/release/glossary.html", "why": "define stage, composition, prims, layers e strength ordering"}
+      ],
+      "review": "Stage foi tratado como vista composta e não como root layer; referências oficiais descrevem composição e separação de autoria por edit target."
+    },
+    {
+      "slug": "openusd-load-rules-payloads-working-set",
+      "title": "OpenUSD: tratar load rules como working set de payloads",
+      "one": "Load rules determinam quais payload arcs estão carregados no stage, permitindo limitar a cena composta ao conjunto necessário para a tarefa atual.",
+      "why": "Stages de produção podem conter muito mais descrição do que o viewport, conversor ou job de render precisa. Carregar tudo sem necessidade aumenta memória e tempo de composição, enquanto descarregar um payload reduz conteúdo visível sem apagar a autoria no arquivo.",
+      "how": "Use APIs de load/unload ou `UsdStageLoadRules` para definir comportamento por prim e carregar ou descarregar payloads de forma explícita. `LoadAll` e `LoadNone` estabelecem políticas amplas; regras por caminho refinam o conjunto de trabalho. Salve as regras apropriadas no código da aplicação se cada job precisar de estado de carregamento reproduzível.",
+      "example": "Um editor de mundo abre primeiro uma planta de cenário com payloads descarregados, mostra bounds e estrutura dos prims, e carrega apenas o bairro sob edição. O sistema registra os caminhos carregados para que uma imagem de revisão possa ser reproduzida.",
+      "limits": "Load rules control payloads, não substituem política de asset resolution nem garantem que todas as dependências externas estejam disponíveis. Um payload descarregado pode ocultar dados que uma operação posterior espera encontrar; não confunda unload com apagar ou desativar prim.",
+      "verify": "Compare travessia e memória sob LoadNone e LoadAll, inspecione estado carregado de cada prim e reabra o stage com as mesmas regras. Teste referências e payloads aninhados em caminhos de asset ausentes.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — UsdStageLoadRules API", "url": "https://openusd.org/release/api/class_usd_stage_load_rules.html", "why": "define regras de carregamento por stage e seleção de payloads"},
+        {"label": "OpenUSD 26.08 — UsdStage API", "url": "https://openusd.org/release/api/class_usd_stage.html", "why": "documenta Load, Unload e políticas de carga para um stage"}
+      ],
+      "review": "Load rules foram limitadas à seleção de payloads carregados; não se afirma que descarregar um payload altera a descrição fonte."
+    },
+    {
+      "slug": "openusd-reference-versus-payload",
+      "title": "OpenUSD: escolher reference ou payload para composição diferida",
+      "one": "Uma reference incorpora scene description durante composição, enquanto payload é um arc projetado para carregamento diferido controlável pelo stage.",
+      "why": "Asset composition precisa equilibrar acesso imediato, tamanho do working set e capacidade de streaming. Uma referência comum pode tornar conteúdo parte do stage sem política de unload por payload; payload permite que consumidor adie a composição de conteúdo caro até solicitar aquele caminho.",
+      "how": "Use references para compor assets que fazem parte do conjunto carregado por padrão e payloads para subárvores pesadas que podem ser carregadas sob demanda. Combine payload arcs com load rules do stage para definir quais caminhos estão ativos. Avalie também `defaultPrim`, path resolver e strength do arc ao integrar o asset.",
+      "example": "Um veículo compõe chassi e controles como referência essencial, mas usa payload separado para interior de alta resolução. O editor pode navegar no exterior com interior descarregado e carregar esse payload quando a câmera entra ou quando artista abre a tarefa de materiais.",
+      "limits": "Payload não é apenas arquivo menor nem forma de compressão; comportamento de carga depende do stage e do arc. Uma cena pode conter payloads aninhados, resolver contexts e opinions mais fortes que mudam o resultado composto.",
+      "verify": "Compare a árvore de prims com payload carregado e descarregado, use UsdStage load rules, verifique referência/defaultPrim e inspecione o prim stack após composição. Teste um asset que tem dependências relativas.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Referencing Layers", "url": "https://openusd.org/release/tut_referencing_layers.html", "why": "explica reference arc, defaultPrim e composição não destrutiva"},
+        {"label": "OpenUSD 26.08 — UsdStageLoadRules API", "url": "https://openusd.org/release/api/class_usd_stage_load_rules.html", "why": "documenta load/unload de payloads no working set do stage"}
+      ],
+      "review": "A distinção entre arc reference e carga controlada de payload foi cruzada entre tutorial de composição e API load rules; nenhuma é descrita como simples compressão."
+    },
+    {
+      "slug": "openusd-asset-resolver-context-identifiers",
+      "title": "OpenUSD: resolver context e asset identifiers de pipeline",
+      "one": "Um asset path OpenUSD é um identificador entregue a um resolver e não precisa ser um caminho de arquivo local comum.",
+      "why": "Pipelines podem localizar assets em repositórios versionados, armazenamentos remotos ou serviços de produção. Assumir que todos os identifiers são caminhos do sistema de arquivos quebra portabilidade e faz referências relativas dependerem de layout local acidental.",
+      "how": "Asset resolver plugins convertem identifiers em assets efetivos conforme política do site. Um resolver context representa configuração relevante de busca e pode ser associado à abertura do stage; mantenha o contexto consistente ao compor referências, consultar assets e construir caches. Registre identifier lógico separado do caminho resolvido para auditoria e reprodução.",
+      "example": "Uma referência guarda um identifier de asset versionado que o resolver de estúdio mapeia à revisão aprovada no storage central. O mesmo USD abre em workstation e farm porque ambas selecionam o contexto correto, sem reescrever o arquivo com caminho absoluto de uma máquina.",
+      "limits": "Resolver context não garante que asset esteja disponível nem fixa automaticamente uma revisão imutável se a configuração permitir alias mutável. Plugins específicos de site podem aplicar regras próprias e precisam ser instalados em todos os consumidores.",
+      "verify": "Abra o mesmo stage com contextos diferentes, registre resolved path e layer identifier e valide que cada referência aponta à revisão esperada. Execute o teste em workstation limpa e worker de farm.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Asset Resolution", "url": "https://openusd.org/release/api/ar_page_front.html", "why": "define asset resolvers, identifiers e contextos de resolução"},
+        {"label": "OpenUSD 26.08 — UsdStage API", "url": "https://openusd.org/release/api/class_usd_stage.html", "why": "documenta abrir stage com configuração de resolução de paths"}
+      ],
+      "review": "Asset identifiers foram descritos como strings resolvidas por plugin, não necessariamente files; o papel de contexto e instalação do resolver foi conferido."
+    },
+    {
+      "slug": "openusd-variants-edit-context",
+      "title": "OpenUSD: autorar opiniões no variant edit context correto",
+      "one": "Para gravar uma propriedade dentro de uma variant, selecione a variant e direcione a edição ao seu `VariantEditContext`.",
+      "why": "Selecionar uma opção de variant altera a composição, mas não redireciona automaticamente todos os comandos de autoria. Sem edit context, uma gravação pode virar opinion local mais forte e mascarar todas as alternativas da variant set.",
+      "how": "Crie ou acesse `UsdVariantSet`, adicione as opções e selecione a que receberá dados. Use `GetVariantEditContext()` para que `UsdAttribute.Set()` escreva no edit target da variant. Inspecione o root layer e as seleções resultantes depois da gravação; strength ordering decide como essa opinion interage com layers mais fortes.",
+      "example": "Uma variant set `shadingVariant` guarda cores red, blue e green. O script escolhe `red`, entra no variant edit context e grava `displayColor`; depois seleciona green e grava seu valor. A cena troca seleção sem substituir a opinião local da prim.",
+      "limits": "Variants selecionadas podem ser afetadas por opiniões e regras mais fortes, e a variante não é uma cópia independente de toda a cena. O edit context controla destino de autoria, não valida se a propriedade escolhida é semanticamente adequada.",
+      "verify": "Exporte a layer como USDA, confirme que opinião aparece sob a chave da variante e alterne seleções. Repita sem edit context para observar como uma local opinion pode sobrepor alternativas.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Authoring Variants", "url": "https://openusd.org/release/tut_authoring_variants.html", "why": "demonstra seleção de variant, edit context e efeito de local opinion"},
+        {"label": "OpenUSD 26.08 — UsdVariantSet API", "url": "https://openusd.org/release/api/class_usd_variant_set.html", "why": "define operações para criar e selecionar variant sets e variants"}
+      ],
+      "review": "O tutorial exemplifica exatamente que `Set` fora do variant edit context produz local opinion; sequência de autoria foi conferida."
+    },
+    {
+      "slug": "openusd-opinion-strength-overrides",
+      "title": "OpenUSD: diagnosticar strength entre local opinions e variants",
+      "one": "O valor composto de uma propriedade é escolhido pela força relativa das opinions, e uma opinion local mais forte pode prevalecer sobre uma opinion de variant.",
+      "why": "Alternar variant sem mudança visível nem sempre indica erro de UI; um override local ou de outra layer pode continuar vencendo. Entender a ordem de composição evita apagar dados de uma variante quando basta localizar e limpar a opinion dominante.",
+      "how": "Inspecione prim stack, edit target e composition arcs para identificar a origem do valor. A documentação usa o exemplo de uma cor local azul mais forte que valores authorados dentro de variants; `Clear()` remove a opinion local no contexto da layer de autoria, permitindo que variant contribua novamente. Referências e ordenação LIVERPS também influenciam o resultado.",
+      "example": "Um material permanece azul ao escolher a variant vermelha. Inspecionar o stack mostra uma opinion local de `displayColor`; limpá-la no layer correto faz a cor da variant voltar a ser visível sem reescrever dados das opções.",
+      "limits": "A força total depende de tipos de arc, ordem de layers, session layer e detalhes do caminho. Não remova uma opinion sem saber qual layer e edit target serão alterados, especialmente em arquivo compartilhado.",
+      "verify": "Compare o valor composto antes e depois de `Clear()`, exporte layers relevantes e revise LIVERPS. Teste com session layer ativa e sem ela para evitar atribuir uma opinion temporária ao asset base.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Authoring Variants", "url": "https://openusd.org/release/tut_authoring_variants.html", "why": "demonstra override local mais forte que variantes e limpeza da opinion"},
+        {"label": "OpenUSD 26.08 — Referencing Layers", "url": "https://openusd.org/release/tut_referencing_layers.html", "why": "explica opinions não destrutivas de over e strength ao compor referências"}
+      ],
+      "review": "Exemplo de precedence local sobre variant e usos de `over` foram verificados nos tutoriais; a nota condiciona a limpeza à layer correta."
+    },
+    {
+      "slug": "openusd-attribute-default-e-time-samples",
+      "title": "OpenUSD: separar default value de time samples em atributos",
+      "one": "Um `UsdAttribute` pode armazenar um valor default, valores animados por time samples ou ambos, e a consulta depende do time code solicitado.",
+      "why": "Uma propriedade pode parecer estática quando somente o default foi consultado, ou variar de modo inesperado quando samples e layers se combinam. Em pipelines de animação, separar valor estático e série temporal ajuda a identificar se o dado de fato foi keyframed.",
+      "how": "Use `UsdAttribute.Get()` com `UsdTimeCode.Default()` para consultar default e um time code explícito para consultar animação. Atributos animados podem ser interpolados entre samples segundo a configuração e tipo. Metadados do stage definem faixa de time codes e escala para segundos, que não devem ser confundidos com números de frame sem contexto.",
+      "example": "Uma rotação tem samples nos time codes 1 e 192. O viewer consulta o meio da sequência para obter valor interpolado, enquanto uma ferramenta de exportação também consulta default para verificar se existe valor estático de fallback.",
+      "limits": "Interpolation e disponibilidade dependem de tipo do atributo, samples, blocks e opiniões mais fortes. Time codes são unitless até interpretados com metadados de escala; não presuma que time code 24 significa sempre 1 segundo.",
+      "verify": "Liste `GetTimeSamples()`, consulte default e momentos antes, entre e depois dos samples, e inspecione `timeCodesPerSecond`, start/end time code e opiniões por layer.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — UsdAttribute API", "url": "https://openusd.org/release/api/class_usd_attribute.html", "why": "define consultas de atributos por default ou time code e presença de time samples"},
+        {"label": "OpenUSD 26.08 — Transformations, Animation, and Layer Offsets", "url": "https://openusd.org/release/tut_xforms.html", "why": "demonstra samples de animação e escala de time codes para segundos"}
+      ],
+      "review": "Default, time samples, consulta temporal e escala de time codes foram confirmados na API e no tutorial de animação 26.08."
+    },
+    {
+      "slug": "openusd-layer-offset-retimar-animacao",
+      "title": "OpenUSD: retimar animação referenciada com layer offset",
+      "one": "Layer offsets alteram a correspondência temporal de dados de uma layer referenciada sem reescrever os samples de autoria da layer original.",
+      "why": "Reutilizar a mesma animação em tomadas com início ou velocidade diferentes é um caso de composição, não necessariamente motivo para duplicar e editar todas as chaves. Preservar os samples fonte mantém procedência e permite que várias tomadas usem a mesma versão do asset.",
+      "how": "Adicione a layer ou reference com offset de tempo e escala apropriados no arc de composição. Em USD, time codes da layer subordinada são remapeados ao compor, e a escala de stage interpreta os códigos em tempo real. A API `SdfLayerOffset` representa translação e escala do mapeamento; confira intervalo e direção do mapeamento com samples conhecidos.",
+      "example": "Uma sequência de giro authorada em 24 fps pode começar em outro ponto e tocar em velocidade diferente numa tomada de render. A layer de tomada aplica offset/scale à composição, enquanto os valores originais de rotação continuam intactos no arquivo de animação.",
+      "limits": "Offsets não convertem automaticamente coordenadas espaciais, unidades métricas ou semântica de frames da aplicação. Layer offsets compostos podem ser difíceis de auditar e precisam considerar outros offsets existentes no caminho de composição.",
+      "verify": "Inspecione o valor do atributo em tempos de entrada e saída calculados, compare `GetTimeSamples()` na fonte com avaliação no stage e valide start/end time codes, fps e offsets acumulados.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Transformations, Animation, and Layer Offsets", "url": "https://openusd.org/release/tut_xforms.html", "why": "demonstra animação referenciada e retiming por layer offsets"},
+        {"label": "OpenUSD 26.08 — UsdAttribute API", "url": "https://openusd.org/release/api/class_usd_attribute.html", "why": "documenta consulta de samples e valores avaliados em time codes"}
+      ],
+      "review": "O tutorial de xforms usa layer offsets para retimar animação; a nota distingue remapeamento temporal de edição dos samples fonte."
+    },
+    {
+      "slug": "openusd-flattening-stage-export",
+      "title": "OpenUSD: flattening exporta resultado composto, não estrutura editável",
+      "one": "Exportar um stage flattenado materializa a descrição de cena composta depois de avaliar operators como variants, em vez de preservar esses operators.",
+      "why": "Flattening é útil para entregar uma cena consolidada, mas perde a estrutura que permitia trocar variantes, inspecionar referências e separar autoria por layers. Tratar o resultado como backup equivalente da composição torna uma pipeline difícil de editar e reconciliar.",
+      "how": "Mantenha arquivos de layers e arcs como fonte editável. Use exportação flattenada quando o consumidor precisar do resultado resolvido e documente que composition operators foram avaliados. Se a saída deve conservar variants ou references para edição posterior, exporte as layers relevantes e não substitua o projeto pela representação plana.",
+      "example": "Uma entrega para preview cria um USDA flattenado da seleção de variante atual. O arquivo fonte preserva variant sets e reference arcs; a equipe salva ambos e usa o flatten apenas como snapshot de render, com metadata que identifica a revisão e seleção usada.",
+      "limits": "Flattening não implica automaticamente converter todos os tipos de dados a outro formato nem elimina a necessidade de resolver assets. O conteúdo final ainda depende de load state, selections, resolver context e configuração do stage usada no momento da exportação.",
+      "verify": "Compare arquivos antes e depois, procure `variantSet`, `references` e outros arcs na saída, reabra stage e alterne uma variante. Confirme que snapshot reproduz o valor composto esperado para o conjunto carregado.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Authoring Variants", "url": "https://openusd.org/release/tut_authoring_variants.html", "why": "mostra `UsdStage.ExportToString` flattenando variants avaliadas"},
+        {"label": "OpenUSD 26.08 — UsdStage API", "url": "https://openusd.org/release/api/class_usd_stage.html", "why": "documenta operações de exportação e flattening do stage"}
+      ],
+      "review": "O tutorial confirma que exportar stage composto avalia composition operators; recomenda-se preservar source layers separadamente."
+    },
+    {
+      "slug": "openusd-stage-units-up-axis-metadata",
+      "title": "OpenUSD: harmonizar upAxis, metersPerUnit e timeCodesPerSecond",
+      "one": "Metadados de stage comunicam eixo vertical, escala métrica e escala temporal, mas não devem ser confundidos com transformação automática de cada asset.",
+      "why": "Duas cenas podem compartilhar coordenadas numéricas e ainda usar convenções diferentes de orientação ou escala. Animação também usa time codes sem unidade que precisam de taxa para converter a segundos, por isso intercâmbio exige ler metadata explícita em cada arquivo.",
+      "how": "Defina e valide `upAxis` por stage ou conforme convenção do site; consulte `metersPerUnit` para interpretar distância e `timeCodesPerSecond` para interpretar time samples. A documentação de xforms recomenda registrar eixo no arquivo para que ele funcione independentemente de configuração local. Conversões espaciais ou temporais precisam ser feitas pela ferramenta de pipeline quando necessário.",
+      "example": "Um importador detecta stage em eixo Z e escala métrica declarada, depois converte para convenção interna Y-up apenas uma vez e registra fator utilizado. Ao processar animação, transforma time codes com a taxa registrada em vez de assumir que frames são segundos.",
+      "limits": "Metadata pode estar ausente ou depender de política de site, e definir um up axis não reorienta automaticamente malhas já autoradas. Diferentes consumidores podem interpretar ou aplicar convenções conforme configuração; valide cada fronteira de import/export.",
+      "verify": "Leia metadata root layer e stage API, compare bounds conhecidos com escala esperada e amostre animação em tempo real equivalente após conversão. Inclua assets de eixo e escala conhecidos nos testes de interoperabilidade.",
+      "sources": [
+        {"label": "OpenUSD 26.08 — Transformations, Animation, and Layer Offsets", "url": "https://openusd.org/release/tut_xforms.html", "why": "explica up axis, time codes e timeCodesPerSecond em arquivo de cena"},
+        {"label": "OpenUSD 26.08 — UsdStage API", "url": "https://openusd.org/release/api/class_usd_stage.html", "why": "documenta metadata e métodos de configuração do stage"}
+      ],
+      "review": "Unidades de tempo, eixo e metadata de stage foram conferidos no tutorial; a nota deixa explícito que metadata não garante conversão geométrica automática."
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "group": "FFmpeg: ordem de opções, timestamps, filtros e inspeção",
+  "check": "Revisão das referências oficiais FFmpeg consultadas em 2026-10-04; semântica depende da versão compilada, demuxer, muxer e dos streams realmente selecionados.",
+  "notes": [
+    {
+      "slug": "ffmpeg-escopo-opcoes-por-arquivo",
+      "title": "FFmpeg: posicionar opções no input ou output correto",
+      "one": "A maioria das opções de arquivo FFmpeg aplica-se ao próximo input ou output e é reiniciada entre arquivos.",
+      "why": "Uma flag tecnicamente válida pode parecer ignorada quando aparece após o nome de arquivo errado. Com vários inputs e outputs, reordenar um argumento pode mudar decodificação, time base, codec ou container de um arquivo diferente sem produzir erro de sintaxe.",
+      "how": "Leia a linha de comando como uma sequência de escopos. Opções de input aparecem antes do `-i` correspondente; opções de output aparecem entre os inputs e o caminho do output que devem configurar. Opções globais são exceção e pertencem ao processo. Repita uma opção quando vários arquivos precisam do mesmo comportamento e mantenha inputs agrupados antes dos outputs.",
+      "example": "Para interpretar um arquivo raw a 1 fps e produzir H.264 a 24 fps, coloque a taxa de input antes de `-i` e a taxa de output depois dele. Em dois outputs com codecs distintos, defina cada `-c:v` no bloco que precede seu próprio nome de arquivo.",
+      "limits": "Algumas opções são globais, por stream ou específicas de demuxer/muxer, e stream specifiers podem refinar o alvo. A regra de posição ajuda a reconhecer escopo, mas não substitui a referência da opção individual.",
+      "verify": "Use `ffmpeg -h` para consultar opção por componente, examine log de input e stream mapping e teste configurações em um input mínimo. Reordene deliberadamente uma opção em teste para confirmar qual arquivo passa a receber seu efeito.",
+      "sources": [
+        {"label": "FFmpeg — Main documentation", "url": "https://ffmpeg.org/ffmpeg.html", "why": "define ordem das opções de arquivo, reset entre arquivos e exemplos de input/output"},
+        {"label": "FFmpeg — Utilities syntax", "url": "https://ffmpeg.org/ffmpeg-utils.html", "why": "documenta sintaxe e parsing de argumentos usados pelos utilitários FFmpeg"}
+      ],
+      "review": "A regra de opção aplicada ao próximo arquivo e as exceções globais foram confirmadas no manual principal; exemplos diferenciam flags de input e output."
+    },
+    {
+      "slug": "ffmpeg-map-filtergraph-stream-labels",
+      "title": "FFmpeg: mapear streams de entrada e saídas rotuladas",
+      "one": "`-map` controla explicitamente quais streams chegam ao output, e labels de outputs de complex filtergraphs identificam streams produzidos por filtros.",
+      "why": "Seleção automática pode escolher um vídeo, áudio ou legenda diferente do pretendido. Filtergraphs complexos também criam streams que não são diretamente uma stream de input, então deixar descoberta implícita dificulta reproduzir uma exportação multi-faixa.",
+      "how": "Use índices de input começando em zero e stream specifiers para escolher tipo ou índice. Nomeie outputs de um `filter_complex` entre colchetes e mapeie cada label no output de destino. Distinga `-map` de filtros: mapeamento seleciona a stream que alimenta arquivo; filtergraph transforma e produz stream nova. Revise automatic stream selection quando não houver mapping explícito.",
+      "example": "Uma composição recebe vídeo do primeiro arquivo e áudio do segundo; um `overlay` cria `[composite]`, que é mapeado como vídeo, enquanto `0:a:0` é mapeado como faixa de áudio. Para um arquivo somente visual, mapeie a saída de filtro e não deixe áudio automático ser escolhido de outra entrada.",
+      "limits": "Mapeamentos incompatíveis com o muxer ou labels usados mais de uma vez podem falhar. Outputs de filtergraph sem label e sem mapping possuem regras automáticas próprias; não generalize que qualquer `-map` suprime toda seleção implícita.",
+      "verify": "Leia o bloco Stream mapping no log, inspecione arquivo final com `ffprobe -show_streams` e compare número, codec, idioma e disposição de cada faixa. Teste inputs com múltiplas streams para detectar seleção automática inesperada.",
+      "sources": [
+        {"label": "FFmpeg — Stream selection", "url": "https://ffmpeg.org/ffmpeg.html#Stream-selection", "why": "define seleção automática, `-map`, índices e tratamento de outputs de filtergraph"},
+        {"label": "FFmpeg — Filtergraph syntax", "url": "https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-description", "why": "documenta labels e ligações entre outputs e inputs de filtros"}
+      ],
+      "review": "Mapping, labels e seleção automática foram conferidos nos capítulos oficiais; a nota mantém a ressalva de outputs de filtergraph não rotulados."
+    },
+    {
+      "slug": "ffmpeg-concat-demuxer-precondicoes",
+      "title": "FFmpeg concat demuxer: conferir streams e durações de entrada",
+      "one": "O concat demuxer lê uma lista de arquivos como uma sequência de pacotes, exigindo estrutura de streams compatível e estimativas de duração confiáveis.",
+      "why": "Concatenar no nível de pacotes pode evitar decodificar e recodificar, mas timestamps do próximo arquivo dependem de informações temporais do segmento anterior. Se arquivos divergem em codecs, streams ou durações registradas, o resultado pode ter timestamps sobrepostos, lacunas ou sincronização incorreta.",
+      "how": "Crie um arquivo de lista com diretivas `file` e invoque o demuxer concat. Verifique que todos os arquivos têm mesmas streams, codecs e parâmetros relevantes antes do concat; durações informadas pelo container ou especificadas na lista participam da localização temporal do próximo arquivo. Para mídia incompatível, transforme streams para formato comum ou use concat filter após decodificação.",
+      "example": "Clipes codificados de forma idêntica e com áudio/vídeo correspondentes podem ser concatenados em stream copy. Antes, `ffprobe` mede streams e duração; depois, a saída é reaberta para verificar duração, início de pacotes e sincronismo nas fronteiras.",
+      "limits": "Concat demuxer não reamostra, redimensiona ou reconcilia diferenças de codec e parâmetros. Duração de stream pode ser estimada com erro ou ausente; arquivos com edit lists ou timestamps fora de zero exigem atenção adicional.",
+      "verify": "Compare `ffprobe -show_format -show_streams` de cada segmento, examine os pacotes próximo às junções e procure warning do demuxer. Valide áudio e vídeo com reprodução e teste a duração total contra a lista.",
+      "sources": [
+        {"label": "FFmpeg — concat demuxer format", "url": "https://ffmpeg.org/ffmpeg-formats.html#concat-1", "why": "especifica formato da lista, compatibilidade e tratamento de duration no concat demuxer"},
+        {"label": "ffprobe documentation", "url": "https://ffmpeg.org/ffprobe.html", "why": "descreve inspeção de formatos, streams, metadados e writers estruturados"}
+      ],
+      "review": "Pré-condições do concat demuxer e uso de durações foram confrontados com a documentação do demuxer; compatibilidade de codec não é tratada como garantida por concat."
+    },
+    {
+      "slug": "ffmpeg-concat-filter-timestamps-zero",
+      "title": "FFmpeg concat filter: alinhar cada segmento e normalizar streams",
+      "one": "O concat filter combina streams decodificadas por segmentos e pressupõe que cada segmento começa em timestamp zero.",
+      "why": "Diferente da concatenação de pacotes, o filtro pode transformar streams antes da junção e permite lidar com formatos diferentes, mas a graph precisa fornecer quantidade e ordenação correta de entradas. Timestamps de origem fora de zero causam gaps ou sincronismo inesperado.",
+      "how": "Decodifique streams, zere timestamps quando necessário com filtros apropriados e conecte entradas na ordem de segmento e tipo declarada pelo filtro. Padronize resolução, pixel format, sample rate e channel layout se necessário. A duração usada para transicionar para próximo segmento segue a stream mais longa no segmento, exceto último, cujo áudio pode precisar de padding explícito conforme requisito.",
+      "example": "Para duas cenas, conecte vídeo e áudio do segmento um, depois vídeo e áudio do segmento dois ao `concat` configurado para dois segmentos com áudio e vídeo. Normalize vídeo e áudio em ramos separados e inspecione PTS nas duas fronteiras.",
+      "limits": "O filter não repara automaticamente todo tipo de descontinuidade ou diferença semântica. Número de entradas, stream count e layouts precisam corresponder à configuração; bitrate final e codec são escolhidos depois, no output.",
+      "verify": "Teste cada segmento isoladamente, use `showinfo` ou `ashowinfo` antes e depois do concat, e confira duração, PTS, frame rate e continuidade de áudio na fronteira de cada par.",
+      "sources": [
+        {"label": "FFmpeg — concat filter", "url": "https://ffmpeg.org/ffmpeg-filters.html#concat", "why": "define segmentos, ordenação, timestamps e duração de referência do filtro concat"},
+        {"label": "FFmpeg — Filtering introduction", "url": "https://ffmpeg.org/ffmpeg.html#Filtering", "why": "explica decodificação, filtergraphs e diferença entre filtros e streamcopy"}
+      ],
+      "review": "O pressuposto de timestamps zero e a regra de duração por segmento foram conferidos no manual do filtro concat; exemplos exigem normalização explícita."
+    },
+    {
+      "slug": "ffmpeg-trim-nao-redefine-pts",
+      "title": "FFmpeg trim: separar seleção de frames e reinício de timestamps",
+      "one": "Os filtros `trim` e `atrim` selecionam intervalo de frames ou amostras, mas não redefinem automaticamente seus timestamps de apresentação.",
+      "why": "Um trecho pode começar com PTS alto mesmo depois de ser recortado. Em concatenação ou sincronização com outra fonte, esse offset mantido pode introduzir silêncio, atraso ou timestamps não esperados apesar de a duração visual parecer correta.",
+      "how": "Use `trim` ou `atrim` para escolher conteúdo e, quando for desejado iniciar novo timeline em zero, aplique `setpts=PTS-STARTPTS` ou `asetpts=PTS-STARTPTS` depois. Se precisar preservar relação temporal com outras streams, mantenha ou transforme PTS deliberadamente em vez de zerar às cegas.",
+      "example": "Um áudio é recortado de 12 a 18 segundos para começar junto de um vídeo novo. `atrim` seleciona seis segundos, e `asetpts` ajusta o primeiro sample a zero antes do ramo chegar a `concat` ou muxer.",
+      "limits": "Zerar PTS em apenas um dos ramos pode destruir sincronização intencional entre streams; trim baseado em timestamps ou duração também depende de time base e precisão das amostras. O filtro não garante que codificador ou container preserve todos os valores exatamente.",
+      "verify": "Coloque `ashowinfo`/`showinfo` antes e depois, inspecione PTS e time base com `ffprobe -show_packets` e compare início de áudio e vídeo na reprodução.",
+      "sources": [
+        {"label": "FFmpeg — trim and atrim filters", "url": "https://ffmpeg.org/ffmpeg-filters.html#trim", "why": "documenta que trim seleciona frames e recomenda setpts/asetpts para alterar timestamps"},
+        {"label": "FFmpeg — setpts and asetpts", "url": "https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts", "why": "define expressões temporais para transformação dos PTS de vídeo e áudio"}
+      ],
+      "review": "Os filtros trim/atrim não alteram PTS por si e setpts/asetpts realizam a transformação posterior; alerta de sincronismo foi incluído."
+    },
+    {
+      "slug": "ffmpeg-setpts-timebase-e-relatorio",
+      "title": "FFmpeg: interpretar PTS em conjunto com time base",
+      "one": "PTS é um valor expresso em unidades da time base da stream, não um número de segundos até ser interpretado com essa escala.",
+      "why": "Comparar inteiros de PTS entre streams com time bases diferentes leva a cálculos errados de atraso. Filtros de tempo usam expressões sobre timestamps e podem trocar time base ou gerar valores não representáveis com a precisão inicialmente presumida.",
+      "how": "Leia PTS junto com `time_base` na stream e converta unidades antes de comparar. `setpts` e `asetpts` reescrevem timestamps por expressão; `STARTPTS`, `PTS` e expressões de escala ajudam a manter ou deslocar timeline. Após filtering, examine o PTS já quantizado na time base recebida pelo próximo estágio.",
+      "example": "Para deslocar vídeo e áudio pelo mesmo intervalo real, calcule a expressão em segundos ou converta para unidades da respectiva time base, em vez de subtrair o mesmo inteiro bruto em ambas. Inspecione frame inicial e pacotes após mux para validar sincronismo.",
+      "limits": "Time base pode ser renegociada por filtros e codificadores, e valores de PTS podem ser desconhecidos ou negativos em fluxos válidos. Aritmética de timestamps não substitui análise de start_time, edit lists e comportamento do muxer.",
+      "verify": "Use `ffprobe -show_streams -show_packets` para comparar `pts`, `pts_time`, `time_base` e `start_time`; coloque `showinfo` em cada ramo e valide no container final.",
+      "sources": [
+        {"label": "FFmpeg — setpts and asetpts", "url": "https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts", "why": "define PTS expressions, valores de referência e time base usados em filtros"},
+        {"label": "ffprobe documentation", "url": "https://ffmpeg.org/ffprobe.html", "why": "documenta campos e seleção de streams para inspecionar timestamps e metadados"}
+      ],
+      "review": "A relação entre timestamp e time base foi cruzada com filtros setpts e campos de inspeção do ffprobe; não se presume que o inteiro seja segundos."
+    },
+    {
+      "slug": "ffmpeg-fps-filter-versus-output-r",
+      "title": "FFmpeg: distinguir filtro fps de opção de output -r",
+      "one": "O filtro `fps` cria uma sequência de frames na taxa escolhida dentro do filtergraph, enquanto `-r` atua conforme seu escopo de input ou output.",
+      "why": "Confundir a flag de taxa de input com uma conversão de frame rate pode reinterpretar timestamps em vez de duplicar ou descartar frames do modo desejado. Aplicar filtro e `-r` sem planejar a cadeia também pode gerar conversão dupla ou cadência irregular.",
+      "how": "Use `fps` quando a transformação de frames fizer parte do filtergraph e precise ocorrer antes de outras etapas. Use a opção `-r` no escopo correto do arquivo e confirme seu efeito na versão atual. A opção antes de `-i` pode definir taxa de formatos de entrada apropriados; depois do input pode definir política do output. Escolha um ponto de conversão claro.",
+      "example": "Para converter uma origem com taxa variável a saída 24 fps, o projeto coloca filtro `fps=24` no ramo de vídeo e confere frames descartados/duplicados. Para uma fonte raw sem timing incorporado, define taxa de input antes de `-i` e trata conversão de output separadamente.",
+      "limits": "Comportamento depende de formato, timestamps e modo de sincronização; opção `-r` pode ser ignorada ou interpretada de forma específica pelo pipeline. FPS nominal de container não descreve sempre cadence efetiva de timestamps.",
+      "verify": "Compare quantidade de frames, `avg_frame_rate`, `r_frame_rate` e `pts_time` com ffprobe; reproduza trechos com movimento e confira duplicate/drop policy antes e depois do encode.",
+      "sources": [
+        {"label": "FFmpeg — Main documentation and -r examples", "url": "https://ffmpeg.org/ffmpeg.html", "why": "distingue taxa do arquivo de entrada raw e frame rate do arquivo de saída"},
+        {"label": "FFmpeg — fps filter", "url": "https://ffmpeg.org/ffmpeg-filters.html#fps", "why": "documenta filtro que converte a sequência para taxa de frames definida"}
+      ],
+      "review": "Escopo de `-r` antes/depois de `-i` foi conferido nos exemplos do manual principal; filtro `fps` tem etapa explícita no graph."
+    },
+    {
+      "slug": "ffmpeg-filtergraph-escaping-niveis",
+      "title": "FFmpeg filtergraph: separar escaping do filtro e da shell",
+      "one": "Uma string de filtro pode passar por mais de um parser, então escaping interno do filtergraph e quoting da shell são camadas distintas.",
+      "why": "Paths com dois pontos, apóstrofos, vírgulas ou colchetes podem ser interpretados como separadores de filtros. Escapar apenas para shell não garante que o parser de opções ou parser de filtergraph receba o caractere literal pretendido.",
+      "how": "Identifique a sintaxe do valor no filtro, a gramática de filtergraph e por fim a shell ou linguagem que monta o comando. Escape caracteres especiais na camada correta, considere lista de args sem shell em automação e mova graphs longos para arquivo quando suportado por opção apropriada como `-/filter:v` em versões compatíveis.",
+      "example": "Um `drawtext` com caminho contendo dois pontos é construído em string de filtro com quoting FFmpeg e depois passado como argumento único via subprocess sem shell. Um teste usa nome com apóstrofo, espaço e vírgula para verificar que nenhum caractere vira separador de filtro.",
+      "limits": "A regra varia por contexto: filtros têm escaping próprio, shells POSIX e PowerShell diferem e uma wrapper de linguagem pode adicionar outra camada. Opções de arquivo para ler argumentos dependem de suporte na versão instalada.",
+      "verify": "Use `ffmpeg-utils` e a seção filtergraph escaping para reproduzir a string em cada camada; imprima os argumentos finais do subprocess e teste paths adversariais de forma automatizada.",
+      "sources": [
+        {"label": "FFmpeg — Notes on filtergraph escaping", "url": "https://ffmpeg.org/ffmpeg-filters.html#Notes-on-filtergraph-escaping", "why": "explica escaping em filtergraph e as camadas de parser"},
+        {"label": "FFmpeg — Utilities quoting and escaping", "url": "https://ffmpeg.org/ffmpeg-utils.html#Quoting-and-escaping", "why": "define quoting, backslash escaping e segundo nível de escaping da shell"}
+      ],
+      "review": "A necessidade de separar gramática de filtergraph e shell foi conferida nas duas páginas oficiais; o exemplo evita supor que quoting elimina parsing interno."
+    },
+    {
+      "slug": "ffmpeg-framesync-overlay-eof-policy",
+      "title": "FFmpeg framesync: definir comportamento ao terminar uma entrada",
+      "one": "Filtros com várias entradas sincronizam frames por timestamps e usam opções framesync para decidir o que acontece quando uma entrada termina.",
+      "why": "Uma composição com overlay pode continuar exibindo o último frame da camada sobreposta ou terminar quando o ramo curto acaba. Essa escolha muda a semântica do vídeo final e pode ser confundida com problema de duração de output.",
+      "how": "Inspecione opções comuns de framesync como `shortest`, `repeatlast` e `eof_action` na referência do filtro. `shortest` determina saída até a entrada mais curta; `repeatlast` controla repetição do último frame secundário; `eof_action` especifica ação em EOF. Ajuste a política para cada filtro e combine com duração do output quando necessário.",
+      "example": "Uma camada de títulos dura cinco segundos e o clipe de fundo dez. Para manter a composição apenas enquanto título existe, configure política de saída curta; para congelar último frame da camada de imagem, habilite repetição documentada. O teste compara fronteira no quinto segundo.",
+      "limits": "Nomes e defaults podem variar por filtro e versão. Diferenças de timestamps ou time base afetam o momento que cada input é considerado encerrado; uma opção do framesync não corrige offsets de origem.",
+      "verify": "Teste entradas de durações distintas, PTS deslocados e EOF normal ou prematuro. Observe `showinfo` em cada entrada e saída, e confira primeiro e último frame com `ffprobe` e reprodução.",
+      "sources": [
+        {"label": "FFmpeg — Framesync options", "url": "https://ffmpeg.org/ffmpeg-filters.html#Options-for-filters-with-several-inputs-_0028framesync_0029", "why": "define shortest, repeatlast e eof_action para filtros multi-input"},
+        {"label": "FFmpeg — overlay filter", "url": "https://ffmpeg.org/ffmpeg-filters.html#overlay", "why": "mostra uso das opções de sincronização no caso concreto do overlay"}
+      ],
+      "review": "Políticas multi-input e nomes das opções foram verificados no manual de framesync; a nota ressalva defaults específicos do filtro."
+    },
+    {
+      "slug": "ffprobe-json-inspecao-pipeline",
+      "title": "ffprobe: produzir inventário estruturado para validar um pipeline",
+      "one": "`ffprobe` inspeciona container, streams e pacotes e pode serializar seções de saída num writer JSON legível por máquina.",
+      "why": "Mensagens humanas variam com versões e não são um contrato robusto para scripts. Uma resposta estruturada permite verificar codec, duração, dimensões, idioma, índices e timestamps antes de transcodificar ou aprovar um artefato.",
+      "how": "Selecione explicitamente dados necessários com `-show_format`, `-show_streams`, `-show_packets` ou `-show_frames` e escolha `-of json`. Parseie tipos e campos opcionais sem pressupor que todo arquivo tenha mesmo número de streams ou todos os metadados. `-select_streams` e stream specifiers restringem consulta; código de saída indica falha de abertura ou reconhecimento.",
+      "example": "Um validador extrai video stream primária, codec, largura, altura, time base, duração e faixas de áudio. Compara com contrato do projeto e bloqueia concatenação se streams ou formatos divergem, preservando JSON de diagnóstico para cada input e output.",
+      "limits": "ffprobe informa o que pode ler dos demuxers e metadados; duração pode ser estimada e campos podem faltar. JSON é estruturado mas seu schema efetivo acompanha versão e tipo do container, então consumidor precisa tolerar chaves opcionais e formatos numéricos documentados.",
+      "verify": "Valide parser com vídeo sem áudio, múltiplas faixas, streams incompletas e arquivo corrompido. Compare sumário JSON com pacotes selecionados e revise stderr/código de saída para diferenciar arquivo inválido de campo ausente.",
+      "sources": [
+        {"label": "ffprobe Documentation", "url": "https://ffmpeg.org/ffprobe.html", "why": "define opções de seleção, sections e JSON writer para saída automatizada"},
+        {"label": "FFmpeg — Stream specifiers", "url": "https://ffmpeg.org/ffmpeg.html#Stream-specifiers", "why": "documenta seleção de streams por índice, tipo, programa e metadata"}
+      ],
+      "review": "Writers e seções selecionáveis de ffprobe foram verificados no manual; a nota trata campos ausentes e durações como dados que precisam ser validados."
+    }
+  ]
+}

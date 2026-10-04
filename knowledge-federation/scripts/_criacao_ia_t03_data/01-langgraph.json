@@ -1,0 +1,156 @@
+{
+  "group": "LangGraph: persistência, controle de execução e streaming",
+  "check": "Conferência das afirmações na documentação oficial atual de LangGraph sobre checkpointers, interrupções, time travel, Graph API, Functional API e streaming; APIs com versão explícita foram tratadas como dependentes da versão instalada.",
+  "notes": [
+    {
+      "slug": "langgraph-interrupt-retomar-sem-repetir-efeitos",
+      "title": "LangGraph: retomar interrupts sem duplicar efeitos colaterais",
+      "one": "Um interrupt durável pausa o nó e, ao retomar, volta a executar a função do nó desde o início, não apenas a linha seguinte.",
+      "why": "Esse detalhe muda o desenho de aprovações humanas e confirmações de ações em jogos ou aplicativos: gravações, cobranças, envio de mensagens e chamadas de serviço feitas antes da pausa podem acontecer novamente. O checkpoint restaura o fluxo, mas não desfaz automaticamente um efeito externo já realizado.",
+      "how": "Compile o grafo com um checkpointer e forneça um `thread_id` estável. A função `interrupt()` entrega um payload serializável; uma execução posterior com `Command(resume=...)` fornece a resposta como valor de retorno do interrupt. Como a função do nó recomeça, mantenha antes da pausa apenas preparação repetível, ou proteja o efeito com uma chave de idempotência persistida fora do nó. Colocar a ação irreversível depois da decisão também simplifica a semântica.",
+      "example": "Em uma ferramenta de publicação, primeiro monte e valide o rascunho, depois interrompa para aprovação e somente então publique. Se a operação anterior à pausa reservar um recurso, grave um identificador único e consulte-o antes de reservar outra vez. No teste, retome duas vezes com o mesmo `thread_id` e confirme que o identificador do efeito não se duplica.",
+      "limits": "Idempotência depende do contrato do serviço externo; um checkpointer não fornece transação distribuída com banco de dados, rede ou engine. Respostas do modelo e chamadas externas repetidas podem produzir resultados diferentes. Um payload de interrupt também não deve ser tratado como mecanismo de autorização.",
+      "verify": "Inspecione a implementação do nó em torno de `interrupt()` e simule parada e retomada com o mesmo `thread_id`. Registre quantas vezes a função executa, quantas vezes o serviço é chamado e o comportamento após timeout entre o efeito remoto e a gravação local.",
+      "sources": [
+        {"label": "LangGraph — Interrupts", "url": "https://docs.langchain.com/oss/python/langgraph/interrupts", "why": "explica checkpoint, retomada com `Command` e reinício do nó que contém o interrupt"},
+        {"label": "LangGraph — Checkpointers", "url": "https://docs.langchain.com/oss/python/langgraph/checkpointers", "why": "define thread, checkpoint e recuperação de execução interrompida"}
+      ],
+      "review": "Confirmado que o nó reinicia desde o início ao retomar e que a retomada depende do mesmo thread e do checkpointer; recomendação de idempotência é apresentada como defesa de aplicação, não como garantia do runtime."
+    },
+    {
+      "slug": "langgraph-thread-id-e-checkpoint-id",
+      "title": "LangGraph: distinguir thread_id de checkpoint_id",
+      "one": "`thread_id` identifica a sequência persistida de uma execução conversacional; `checkpoint_id` seleciona um snapshot específico dentro dessa sequência.",
+      "why": "Confundir os dois identificadores leva a retomar uma conversa errada, perder histórico ou depurar o estado atual quando a intenção era reproduzir um passo anterior. A distinção é especialmente importante em aplicações que mostram histórico, oferecem desfazer ou executam várias sessões em paralelo.",
+      "how": "Passe `thread_id` em `configurable` em toda invocação que deve continuar a mesma thread. Um checkpointer grava snapshots em limites de super-step e a API de histórico permite localizar cada snapshot, inclusive seu `checkpoint_id` e nós seguintes. Use o identificador do checkpoint ao pedir um ponto histórico; mantenha o identificador da thread para delimitar a cadeia. Um novo `thread_id` inicia outra cadeia, não é um alias do snapshot mais recente.",
+      "example": "Uma interface de suporte pode guardar `thread_id` por conversa. Ao abrir a tela de auditoria, ela lista snapshots dessa conversa e registra o `checkpoint_id` escolhido para replay. A operação de continuação usa a configuração histórica daquele snapshot, enquanto mensagens novas seguem na mesma thread quando esse for o fluxo pretendido.",
+      "limits": "Um checkpoint é um retrato de estado, não uma cópia independente de todas as dependências externas. Retenção, serialização e consistência dependem do backend do checkpointer. Não exponha IDs como credenciais nem presuma que conhecer um identificador concede autorização sobre a thread.",
+      "verify": "Crie duas threads e vários snapshots em cada uma. Confirme que trocar apenas o `thread_id` não carrega estado da outra conversa e que selecionar um `checkpoint_id` antigo retorna o snapshot esperado. Revise como IDs são persistidos e autorizados na API de produto.",
+      "sources": [
+        {"label": "LangGraph — Checkpointers", "url": "https://docs.langchain.com/oss/python/langgraph/checkpointers", "why": "define threads, checkpoints, snapshots por super-step e configuração de `thread_id`"},
+        {"label": "LangGraph — Time travel", "url": "https://docs.langchain.com/oss/python/langgraph/use-time-travel", "why": "mostra consulta do histórico e retomada a partir da configuração de checkpoint selecionada"}
+      ],
+      "review": "A documentação diferencia thread como sequência persistida e checkpoint como snapshot de estado; o exemplo separa seleção histórica de autorização de acesso."
+    },
+    {
+      "slug": "langgraph-time-travel-replay-ou-fork",
+      "title": "LangGraph: escolher replay ou fork no time travel",
+      "one": "Replay repete a execução a partir de um checkpoint; fork cria uma ramificação histórica com estado alterado, sem apagar a linha original.",
+      "why": "Usar o recurso certo evita interpretar uma reexecução como consulta passiva ao cache. Nós posteriores ao checkpoint executam novamente, então chamadas de modelo, APIs e interrupts podem retornar valores diferentes ou repetir efeitos externos. O fork é útil para explorar uma alternativa mantendo a história anterior.",
+      "how": "Use `get_state_history` para escolher o checkpoint. Para replay, invoque o grafo com a configuração daquele ponto; para fork, aplique `update_state` nesse checkpoint e continue com a nova configuração. `update_state` não rebobina nem modifica retroativamente a thread antiga: produz um novo checkpoint derivado. Em caminhos paralelos, informe `as_node` quando a origem do update não puder ser inferida sem ambiguidade.",
+      "example": "Num fluxo de geração de missão, repita desde o estado imediatamente anterior ao nó que escolhe a recompensa para observar o comportamento atual do modelo. Para comparar uma recompensa alternativa, faça fork com estado ajustado e execute a continuação separada; registre ambos os IDs de checkpoint no relatório de QA.",
+      "limits": "Replay não é uma leitura de resultados armazenados e pode refazer operações externas. Interrupts acionam uma nova pausa e exigem nova resposta. O grafo precisa de checkpointer e os reducers continuam determinando como updates são combinados.",
+      "verify": "Compare a sequência de nós antes e depois do checkpoint, inspecione `next` e os IDs gerados, e use um serviço de teste que conte chamadas externas. Confirme que o histórico da execução original continua disponível depois do fork.",
+      "sources": [
+        {"label": "LangGraph — Time travel", "url": "https://docs.langchain.com/oss/python/langgraph/use-time-travel", "why": "define replay, fork, `update_state`, `as_node` e repetição de nós posteriores"},
+        {"label": "LangGraph — Interrupts", "url": "https://docs.langchain.com/oss/python/langgraph/interrupts", "why": "documenta a interação entre interrupções, checkpoint e nova retomada"}
+      ],
+      "review": "A distinção replay/fork e o efeito de reexecutar nós posteriores correspondem à documentação; não se promete rollback de serviços externos."
+    },
+    {
+      "slug": "langgraph-checkpointer-versus-store",
+      "title": "LangGraph: separar checkpointer de store de longo prazo",
+      "one": "Checkpointer salva snapshots do estado de uma thread; Store mantém valores de aplicação que podem ser consultados entre threads.",
+      "why": "Colocar preferências permanentes do usuário no histórico de uma única conversa dificulta reutilização e controle de retenção. No sentido inverso, armazenar todo o estado transitório do grafo em um Store pode misturar conversas e apagar a semântica de retomada. As duas ferramentas resolvem escopos diferentes e podem coexistir.",
+      "how": "Compile o grafo com um checkpointer para estado de execução, interrupções, continuidade da conversa e time travel. Use um Store com namespace e chave para dados arbitrários compartilhados, como preferências ou fatos aprovados. O nó recebe o Store via runtime e decide explicitamente quais valores ler ou gravar. Escolha implementações persistentes em produção; os backends em memória são úteis para desenvolvimento e testes, mas não sobrevivem ao reinício do processo.",
+      "example": "Uma aplicação de criação de níveis pode manter as escolhas recentes da sessão no checkpoint e guardar o tema visual preferido do usuário num Store com namespace por conta. Ao iniciar uma conversa nova, a preferência pode ser consultada sem importar o estado transitório da thread anterior.",
+      "limits": "Store não fornece automaticamente qualidade semântica, consentimento ou política de expiração para cada fato. Um checkpointer também não deve ser tratado como memória global. A forma de ordenação e consulta pode variar entre backends, então a lógica não deve depender da ordem de inserção sem teste.",
+      "verify": "Teste duas threads com o mesmo usuário: o snapshot deve permanecer isolado por `thread_id`, enquanto o item do Store aparece somente no namespace previsto. Reinicie a aplicação usando um backend persistente e valide migração, retenção, limites de acesso e exclusão de dados.",
+      "sources": [
+        {"label": "LangGraph — Persistence", "url": "https://docs.langchain.com/oss/python/langgraph/persistence", "why": "compara checkpointers de escopo thread e stores de dados entre threads"},
+        {"label": "LangGraph — Stores", "url": "https://docs.langchain.com/oss/python/langgraph/stores", "why": "detalha namespaces, operações key-value e backends do Store"}
+      ],
+      "review": "Escopos e funções de checkpointer e Store foram conferidos na tabela oficial; persistência depende do backend escolhido."
+    },
+    {
+      "slug": "langgraph-supersteps-e-reducers-paralelos",
+      "title": "LangGraph: combinar atualizações paralelas com reducers",
+      "one": "Nós ativados no mesmo super-step podem executar em paralelo, e reducers definem como suas atualizações sobre um canal compartilhado são aplicadas.",
+      "why": "Duas ramificações podem concluir em ordem não determinística. Se ambas escreverem no mesmo campo sem uma regra de combinação apropriada, o grafo pode rejeitar a atualização ou produzir um estado que não representa o resultado desejado. O reducer faz parte do contrato de estado, não é apenas uma otimização.",
+      "how": "Defina o schema de estado por canal e associe reducers para campos que recebem contribuições concorrentes. Uma lista pode usar concatenação, enquanto contadores e mapas podem exigir funções específicas com propriedades de associatividade. Após o super-step, o runtime consolida as escritas e cria o checkpoint correspondente. Se o valor final precisar ser determinístico, projete a redução para não depender da ordem de chegada.",
+      "example": "Um agente que consulta três fontes em paralelo pode devolver um item por resultado e usar um reducer de concatenação no canal `evidence`. Se a ordem for importante, inclua índice de fonte nos itens e ordene numa etapa seguinte em vez de supor que tarefas paralelas terminam numa sequência fixa.",
+      "limits": "Um reducer não coordena transações externas nem remove duplicatas por si só. Funções de redução mutáveis ou não determinísticas podem dificultar replay e teste. Alterar o schema sem migração pode tornar checkpoints antigos incompatíveis.",
+      "verify": "Execute as ramificações em ordem variável e injete falhas em uma delas. Verifique o valor consolidado, duplicatas e retomada após falha, além de comparar um checkpoint salvo com o schema de estado que o consumirá.",
+      "sources": [
+        {"label": "LangGraph — Graph API", "url": "https://docs.langchain.com/oss/python/langgraph/graph-api", "why": "define estado, canais, reducers e execução em super-steps"},
+        {"label": "LangGraph — Checkpointers", "url": "https://docs.langchain.com/oss/python/langgraph/checkpointers", "why": "explica checkpoints de limite de super-step e escritas de tarefas paralelas"}
+      ],
+      "review": "Execução paralela por super-step, reducers por canal e persistência de escritas parciais foram confirmados na documentação do runtime."
+    },
+    {
+      "slug": "langgraph-functional-api-task-result-checkpoint",
+      "title": "LangGraph Functional API: persistir resultados com @task",
+      "one": "Na Functional API, `@task` marca trabalho discreto cujo resultado pode ser recuperado do checkpoint quando um entrypoint é retomado.",
+      "why": "Separar chamadas demoradas de etapas que podem pausar evita refazer trabalho já concluído após uma interrupção. Isso é valioso para síntese de assets, compilação de um projeto ou requisições de dados usadas antes de solicitar aprovação humana. O benefício depende do resultado realmente ter sido salvo no checkpoint.",
+      "how": "Marque a função de trabalho com `@task` e coordene-a dentro de um `@entrypoint` compilado com checkpointer. Resolva o future da task e use seu resultado na etapa seguinte. Na retomada do entrypoint, o runtime pode reutilizar o resultado da task persistido para aquele checkpoint, enquanto a função do entrypoint percorre novamente o fluxo. Mantenha a task determinística ou idempotente quando efeitos externos não puderem ser repetidos.",
+      "example": "Gere uma prévia de textura numa task, apresente o hash da imagem num interrupt para aprovação e retome o entrypoint. O teste confirma que a imagem não é calculada de novo depois de retomar e que uma alteração de entrada cria uma execução com resultado novo.",
+      "limits": "A função em memória do processo não substitui um backend persistente se o processo for reiniciado. Uma task só pode reaproveitar o que a implementação de checkpoint efetivamente registrou; cache não deve ser confundido com garantia de exactly-once para serviços externos.",
+      "verify": "Use uma task de teste que incremente um contador e interrompa o entrypoint depois dela. Retome usando o mesmo thread e verifique a contagem, o resultado e o comportamento ao trocar o identificador de thread ou os dados de entrada.",
+      "sources": [
+        {"label": "LangGraph — Functional API", "url": "https://docs.langchain.com/oss/python/langgraph/functional-api", "why": "descreve `@entrypoint`, `@task`, checkpointing e recuperação de resultados ao retomar"},
+        {"label": "LangGraph — Persistence", "url": "https://docs.langchain.com/oss/python/langgraph/persistence", "why": "distingue persistência de execução por checkpointer e durabilidade entre reinícios"}
+      ],
+      "review": "Recuperação do resultado da task ao retomar foi conferida no exemplo oficial; o texto limita a garantia ao estado persistido, não a exactly-once externo."
+    },
+    {
+      "slug": "langgraph-streaming-v2-partes-tipadas",
+      "title": "LangGraph: usar partes tipadas no streaming v2",
+      "one": "O formato `version=v2` entrega cada chunk de streaming com os campos discriminantes `type`, `ns` e `data`.",
+      "why": "O formato antigo varia conforme se solicita um modo, vários modos ou saída de subgrafo, levando consumidores a ramificar por tuplas e formas diferentes. Um discriminante estável simplifica renderização de mensagens, snapshots de estado e progresso sem confundir dados de modos distintos.",
+      "how": "Passe `version=v2` a `stream()` ou `astream()` numa versão compatível do LangGraph e selecione os modos necessários, como `updates`, `messages` e `custom`. Faça narrowing por `chunk['type']` antes de interpretar `data`; `ns` informa o namespace de subgrafo quando aplicável. A documentação atual requer LangGraph 1.1 ou posterior para esse formato e recomenda event streaming para novas aplicações que preferem projeções tipadas de nível superior.",
+      "example": "Um painel de execução pode anexar chunks de `updates` ao estado visível e encaminhar `custom` para uma barra de progresso. A branch para `messages` extrai token e metadados próprios; nenhuma delas tenta converter todos os payloads num único tipo genérico.",
+      "limits": "O parâmetro de versão precisa corresponder ao SDK instalado e o formato padrão documentado ainda pode diferir. O chunk `data` varia por modo e a ordem temporal de dois modos pode afetar a interface. Streaming não significa que a execução foi persistida ou concluída.",
+      "verify": "Fixe a versão de LangGraph no ambiente de CI, teste cada tipo de chunk esperado e valide subgrafos e múltiplos modos. Compare o comportamento de consumidor v1 e v2 antes de migrar uma integração pública.",
+      "sources": [
+        {"label": "LangGraph — Streaming", "url": "https://docs.langchain.com/oss/python/langgraph/streaming", "why": "especifica o envelope v2, seus campos e compatibilidade mínima indicada"},
+        {"label": "LangGraph — Event streaming", "url": "https://docs.langchain.com/oss/python/langgraph/event-streaming", "why": "apresenta a camada de projeções tipadas recomendada para novos fluxos"}
+      ],
+      "review": "Envelope e requisito de versão v2 foram conferidos na página de streaming; recomendação atual de event streaming é registrada como orientação versionada."
+    },
+    {
+      "slug": "langgraph-event-streaming-projecoes-concorrentes",
+      "title": "LangGraph: consumir projeções do event streaming v3",
+      "one": "Event streaming oferece projeções tipadas de uma execução, como `messages`, `values`, `subgraphs`, `interrupts` e `output`.",
+      "why": "Aplicações de agente costumam precisar mostrar texto parcial, estado final, subagentes e pedidos de aprovação na mesma tela. Ler um único fluxo bruto pode acoplar a aplicação ao formato interno do engine, enquanto projeções nomeadas separam usos e podem ser consumidas independentemente.",
+      "how": "Crie o fluxo por `stream_events(..., version=v3)` e selecione a projeção apropriada. O stream bruto representa eventos do protocolo; projeções integradas transformam esses eventos para consumidores da aplicação. Em código assíncrono, a documentação mostra consumidores independentes das projeções; use a operação de interleaving quando a ordem de chegada entre tipos diferentes precisar ser preservada. Continue drenando a execução e aguarde `output` para o resultado final.",
+      "example": "Uma interface pode iterar `stream.messages` para exibir texto e observar `stream.subgraphs` para revelar atividade de especialistas. Se `stream.interrupted` for verdadeiro, apresenta o conteúdo de `stream.interrupts`; após decisão humana, inicia outra chamada com `Command` e a configuração persistida.",
+      "limits": "O event streaming foi introduzido em versão recente e nomes ou contratos podem mudar. Projeções consumidas separadamente não garantem uma ordenação global; para sequência exata, use os eventos brutos ou o mecanismo de interleaving documentado.",
+      "verify": "Teste execução normal, uso de ferramenta, subgrafo, interrupção e cancelamento com a versão travada. Assegure que todos os consumidores terminem e que o resultado exposto à interface seja igual ao estado final retornado pelo grafo.",
+      "sources": [
+        {"label": "LangGraph — Event streaming", "url": "https://docs.langchain.com/oss/python/langgraph/event-streaming", "why": "documenta versão v3, projeções, consumo concorrente e interleaving"},
+        {"label": "LangGraph — Interrupts", "url": "https://docs.langchain.com/oss/python/langgraph/interrupts", "why": "mostra a forma de expor e retomar interrupts em event streaming"}
+      ],
+      "review": "Projeções documentadas e diferença entre streams independentes e ordem global foram verificadas; versões recentes são identificadas como dependência."
+    },
+    {
+      "slug": "langgraph-schemas-entrada-saida-e-estado-privado",
+      "title": "LangGraph: separar schemas de entrada, saída e estado interno",
+      "one": "Um grafo pode expor schemas menores de entrada e saída e manter canais privados no schema interno compartilhado pelos nós.",
+      "why": "Em fluxos extensos, detalhes intermediários, chaves de cache e resultados parciais não deveriam virar automaticamente contrato público. Separar as superfícies reduz acoplamento entre consumidores e implementação e permite que um nó passe informação a outro sem aceitar esse campo da entrada externa.",
+      "how": "Defina o schema interno com os canais usados pelos nós e declare `input_schema` e `output_schema` como subconjuntos explícitos ao construir `StateGraph`. Os nós continuam retornando updates de estado que passam pelos reducers. Use tipos compatíveis e valide campos obrigatórios na fronteira; o limite do schema é um contrato de dados, não uma política de autorização.",
+      "example": "Um grafo de criação de arte pode aceitar `brief` como entrada, manter `prompt_normalized` e `asset_hash` em schema privado, e devolver apenas `asset_url` e `validation_status`. Teste que o cliente não consiga sobrescrever a chave interna enviando-a no objeto de entrada.",
+      "limits": "Schemas distintos não escondem dados que o grafo exponha por logs, streaming ou checkpoints. O suporte a modelos de estado e comportamento de validação varia entre `TypedDict`, dataclasses e Pydantic; a documentação alerta para diferenças de desempenho e validação.",
+      "verify": "Inspecione o schema de entrada e a saída compilada, envie campos desconhecidos e confira a política adotada, e percorra cada canal privado em nós e reducers. Teste serialização de checkpoints após mudanças de schema.",
+      "sources": [
+        {"label": "LangGraph — Graph API", "url": "https://docs.langchain.com/oss/python/langgraph/graph-api", "why": "descreve schemas múltiplos, canais privados e tipos de estado"},
+        {"label": "LangGraph — Use the Graph API", "url": "https://docs.langchain.com/oss/python/langgraph/use-graph-api", "why": "mostra como declarar contratos explícitos de entrada e saída"}
+      ],
+      "review": "Uso de schemas separados e canais privados corresponde à Graph API; a nota ressalva que fronteira de dados não equivale a autorização."
+    },
+    {
+      "slug": "langgraph-politica-retencao-checkpoints",
+      "title": "LangGraph: planejar retenção e limpeza de checkpoints",
+      "one": "Checkpoints crescem com o histórico de uma thread, então retenção e limpeza precisam ser uma decisão operacional explícita.",
+      "why": "Snapshots dão suporte a recuperação e time travel, mas armazenar indefinidamente cada estado pode ampliar custo, tempo de consulta e exposição de dados de usuário. O ciclo de vida do estado deve atender simultaneamente à necessidade de debug, política de retenção e requisitos de privacidade.",
+      "how": "Escolha um backend persistente para produção, estime o volume por thread e defina janelas de retenção coerentes com a função de recuperação. A documentação recomenda pruning periódico ou política de retenção quando checkpoints se acumulam. Faça a limpeza pelo mecanismo suportado pelo backend, monitore índices e registre se snapshots antigos ainda podem ser restaurados.",
+      "example": "Para sessões de geração de conteúdo, retenha checkpoints recentes enquanto o trabalho está ativo e mova artefatos aprovados para armazenamento próprio antes de remover estados transitórios. Uma tarefa agendada pode eliminar checkpoints além do prazo, preservando uma amostra de diagnóstico quando permitido pela política.",
+      "limits": "A API de limpeza e efeitos sobre históricos dependem do checkpointer escolhido; não assuma que o runtime aplica TTL por padrão. Excluir um checkpoint não apaga automaticamente arquivos ou side effects associados, e retenção legal pode exigir período diferente do técnico.",
+      "verify": "Gere uma thread longa em ambiente de teste, meça número de snapshots e custo de leitura, aplique a rotina de limpeza e confirme quais operações históricas deixam de funcionar. Teste concorrência entre retenção e execução ativa.",
+      "sources": [
+        {"label": "LangGraph — Persistence", "url": "https://docs.langchain.com/oss/python/langgraph/persistence", "why": "identifica acúmulo de checkpoints e recomenda pruning ou retenção"},
+        {"label": "LangGraph — Checkpointers", "url": "https://docs.langchain.com/oss/python/langgraph/checkpointers", "why": "explica snapshots, armazenamento persistente e recuperação por super-step"}
+      ],
+      "review": "Acúmulo de snapshots e recomendação de retenção foram confirmados; nenhuma política automática de TTL é atribuída ao runtime."
+    }
+  ]
+}

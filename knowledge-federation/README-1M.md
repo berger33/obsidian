@@ -14,7 +14,7 @@ O TAR reconstruído em 2026-10-01 contém **1.015.608 arquivos de nota represent
 
 ## Estado editorial atual — fora do snapshot
 
-Atualizado em 2026-10-04. O estado ativo soma **6240 notas válidas** (49 aprovações humanas históricas + 6191 revisões factuais por IA) em **6340 arquivos Markdown**, incluindo 100 notas legadas com pendências que permanecem fora da contagem. Os três primeiros lotes estão completos; `software-criacao-ia-2000-0004` avançou a 200/2.000, após a tranche 2 ([revisão factual IA](exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md), [reconciliação](exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md)). O estado detalhado e os relatórios auditáveis estão no [status atual](STATUS-CONSOLIDACAO-1M.md) e no [manifesto do lote 4](exports/batches/software-criacao-ia-2000-0004.md).
+Atualizado em 2026-10-04. O estado ativo soma **6340 notas válidas** (49 aprovações humanas históricas + 6291 revisões factuais por IA) em **6440 arquivos Markdown**, incluindo 100 notas legadas com pendências que permanecem fora da contagem. Os três primeiros lotes estão completos; `software-criacao-ia-2000-0004` avançou a 300/2.000, após a tranche 3 ([revisão factual IA](exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md), [reconciliação](exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md)). O estado detalhado e os relatórios auditáveis estão no [status atual](STATUS-CONSOLIDACAO-1M.md) e no [manifesto do lote 4](exports/batches/software-criacao-ia-2000-0004.md).
 
 ## Artefatos
 

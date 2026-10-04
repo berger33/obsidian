@@ -1,0 +1,156 @@
+{
+  "group": "OpenAPI 3.1.1: semântica do Schema Object, referências, conteúdo e callbacks",
+  "check": "Fontes primárias: texto normativo versionado OAS v3.1.1 e JSON Schema Draft 2020-12 referenciado pelo OAS; temas escolhidos por semântica desta versão, não por contratos REST genéricos.",
+  "notes": [
+    {
+      "slug": "oas311-jsonschema-dialect-default-override",
+      "title": "OAS 3.1.1: selecionar o dialect JSON Schema correto",
+      "one": "OAS 3.1.1 usa um dialect JSON Schema baseado em Draft 2020-12 e permite configurar um default por documento sem substituir `$schema` na raiz de cada recurso-schema.",
+      "why": "Um validador que assume sempre JSON Schema puro pode ignorar vocabulário OAS, enquanto outro pode processar `$schema` de forma inconsistente entre documentos. Em descrições multi-documento, essa divergência muda referências, annotations e até a interpretação dos mesmos keywords.",
+      "how": "O dialect OAS para esta especificação é identificado por `https://spec.openapis.org/oas/3.1/dialect/base`. `jsonSchemaDialect` no OpenAPI Object define o default para Schema Objects do documento; se ausente, aplica-se o dialect OAS. Um `$schema` presente na raiz de um schema resource prevalece sobre o default. Tooling OAS deve suportar o OAS dialect id e pode suportar outros dialects.",
+      "example": "Uma API que usa o dialect padrão deixa `jsonSchemaDialect` ausente. Um schema externo que declara explicitamente `$schema: https://json-schema.org/draft/2020-12/schema` seleciona aquele dialect para seu recurso, enquanto schemas sem override continuam a usar o default do documento OAS.",
+      "limits": "`$schema` não é um indicador arbitrário em qualquer subobjeto: a especificação o descreve em raiz de schema resource. Um parser que só carrega o fragmento referenciado pode perder a informação de dialect e de base URI presente no documento completo.",
+      "verify": "Teste documento sem default, documento com `jsonSchemaDialect` customizado e schema resource com `$schema` explícito. Registre qual dialect o validador escolheu para cada recurso, inclusive após resolver referências externas.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Specifying Schema Dialects", "url": "https://spec.openapis.org/oas/v3.1.1.html#specifying-schema-dialects", "why": "define precedência de $schema, jsonSchemaDialect e OAS dialect schema id"},
+        {"label": "OpenAPI 3.1 Schema Object Dialect", "url": "https://spec.openapis.org/oas/3.1/dialect/base", "why": "publica o meta-schema do dialect base e os vocabulários JSON Schema incluídos"}
+      ],
+      "review": "Default, override de recurso e URI canônica do dialect foram verificados nas seções normativas OAS 3.1.1 e no documento oficial do dialect."
+    },
+    {
+      "slug": "oas311-reference-object-vs-schema-ref",
+      "title": "OAS 3.1.1: diferenciar Reference Object de `$ref` em Schema Object",
+      "one": "Um Reference Object do OAS e um Schema Object que usa `$ref` são construções diferentes, apesar de compartilharem o mesmo nome de keyword.",
+      "why": "Confundir os dois formatos faz geradores descartarem constraints irmãs de schemas ou, inversamente, usarem propriedades não suportadas em uma referência de parâmetro. A diferença afeta validação, substituição de summary/description e o tratamento de campos adicionais.",
+      "how": "Um Reference Object tem `$ref` obrigatório e admite `summary` e `description` como overrides recomendados; outras propriedades adicionadas devem ser ignoradas. Dentro de Schema Object, `$ref` é o applicator de JSON Schema: keywords irmãs continuam compondo o schema e podem impor constraints adicionais ao alvo. Verifique o tipo do ponto onde a referência aparece antes de aplicar as regras.",
+      "example": "Em `schema: { $ref: '#/components/schemas/Name', maxLength: 40 }`, `maxLength` continua restringindo as instâncias referenciadas. Já `parameters: [{ $ref: '#/components/parameters/Limit', description: '...' }]` usa um Reference Object e a descrição pode sobrescrever a descrição do componente; um campo arbitrário não é merge universal.",
+      "limits": "Não generalize comportamento de Reference Object para Path Item `$ref`: OAS 3.1.1 define uma regra especial para propriedades adjacentes do Path Item e deixa conflitos indefinidos. Implementações também podem limitar quais schemas JSON Schema externos suportam.",
+      "verify": "Valide uma instância aceita pelo schema referenciado, mas rejeitada pela constraint irmã. Em referência de parâmetro, confira override de descrição e confirme que uma propriedade adicional desconhecida não alterou a definição efetiva.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Reference Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#reference-object", "why": "define campos e limitações do Reference Object e o diferencia de Schema Object com $ref"},
+        {"label": "JSON Schema Core Draft 2020-12", "url": "https://json-schema.org/draft/2020-12/json-schema-core", "why": "define o keyword $ref no modelo de applicators e na resolução de schemas"}
+      ],
+      "review": "As regras de campos adicionais do Reference Object foram comparadas com o modelo de $ref em JSON Schema; o escopo foi limitado aos objetos apropriados."
+    },
+    {
+      "slug": "oas311-id-and-relative-ref-base-uri",
+      "title": "OAS 3.1.1: resolver `$ref` relativo usando `$id` e URI-base",
+      "one": "Dentro de Schema Objects, um `$id` pode mudar a URI-base usada por referências relativas; fora do contexto de schemas, a base vem do documento que contém a referência.",
+      "why": "Dois arquivos idênticos servidos de locais distintos podem resolver a mesma referência relativa para recursos diferentes. O problema é especialmente perigoso quando um loader valida apenas o fragmento referenciado e não enxerga `$id` ou outras palavras-chave que mudam a base.",
+      "how": "A especificação OAS herda a resolução JSON Schema 2020-12: referências em Schema Objects usam o `$id` ancestral mais próximo como base, se existir. Referências URI em outros Objects e schemas sem `$id` ancestral usam a base URI do documento referenciador, normalmente sua retrieval URI ou uma URI esperada configurada. Para JSON/YAML, um fragmento deve ser resolvido pelo mecanismo do documento e geralmente como JSON Pointer.",
+      "example": "Se um schema resource tem `$id: https://schemas.example/v1/order` e contém `$ref: address.json`, o alvo é resolvido em relação àquele id, não necessariamente à pasta de download. Uma referência `externalDocs.url` que não esteja dentro de schema continua usando a base do documento OAS.",
+      "limits": "OAS 3.1.1 declara indefinido o resultado de parsing de fragmentos isolados quando a base correta depende do documento completo. Adotar somente caminho local, sem manter a URI esperada, pode produzir comportamento não interoperável e carregar conteúdo inesperado.",
+      "verify": "Crie fixture com dois `$id` diferentes e o mesmo `$ref` relativo; resolva o documento por retrieval URI e por expected URI e confira o alvo. Audite também referências de Reference Object, Schema Object e externalDocs para garantir o escopo correto.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Relative References in API Description URIs", "url": "https://spec.openapis.org/oas/v3.1.1.html#relative-references-in-api-description-uris", "why": "define `$id` ancestral, base do documento e interpretação dos fragmentos"},
+        {"label": "OpenAPI Specification v3.1.1 — Parsing Documents", "url": "https://spec.openapis.org/oas/v3.1.1.html#parsing-documents", "why": "exige considerar documentos completos antes de concluir que uma referência não é resolvível"}
+      ],
+      "review": "Regras de base URI, `$id` ancestral e parsing fragmentado foram confirmadas nas duas seções normativas do OAS 3.1.1."
+    },
+    {
+      "slug": "oas311-format-annotation-nao-validacao",
+      "title": "OAS 3.1.1: `format` não é uma validação garantida",
+      "one": "No comportamento padrão de OAS 3.1.1, `format` é annotation não validante; sua presença não substitui `type` nem garante que um payload será rejeitado por formato incorreto.",
+      "why": "Formatos conhecidos como `date-time`, `email` ou `int64` são frequentemente tratados como assertions por ferramentas, mas o padrão não obriga suporte igual a todos. Um cliente que usa `format` como única constraint pode aceitar tipos errados ou divergir do servidor.",
+      "how": "Escreva primeiro o tipo JSON com `type`, depois adicione `format` para a annotation e para validação estendida que a implementação oferecer. OAS 3.1.1 indica que format é annotation por default e o suporte a registros adicionais de formato é opcional; JSON Schema também permite que o vocabulário `format-assertion` seja usado explicitamente em outro dialect.",
+      "example": "`{ type: string, format: date-time }` descreve uma string com formato desejado. Com apenas `format: date-time`, a especificação observa que keywords e formatos aplicáveis a strings consideram instâncias de outros tipos automaticamente válidas; por isso, a constraint de tipo precisa estar explícita.",
+      "limits": "Mesmo com `type: string`, a validade calendárica de um `date-time` pode depender de suporte de formato opcional e da versão da biblioteca. Não confunda o formato de Schema Object com serialização HTTP ou uma validação de runtime que OAS não prescreve.",
+      "verify": "Rode o mesmo payload em dois validadores: string válida, string malformada e número. Confirme a constraint de tipo em ambos e registre separadamente se o validador habilitou assertions para o formato.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Data Type Format", "url": "https://spec.openapis.org/oas/v3.1.1.html#data-type-format", "why": "define formatos como annotations não validantes por default e suporte opcional"},
+        {"label": "JSON Schema Validation Draft 2020-12", "url": "https://json-schema.org/draft/2020-12/json-schema-validation", "why": "distingue a annotation format da asserção opcional format-assertion"}
+      ],
+      "review": "Semântica default de `format` e necessidade de `type` explícito foram verificadas na especificação OAS e no vocabulário de validação JSON Schema."
+    },
+    {
+      "slug": "oas311-null-union-boolean-schemas",
+      "title": "OAS 3.1.1: representar null e schemas booleanos com JSON Schema",
+      "one": "OAS 3.1.1 adota schemas booleanos e uniões de tipo JSON Schema; `nullable` de OAS 3.0 não é a forma normativa de permitir `null`.",
+      "why": "Migração mecânica de schemas 3.0 pode deixar `nullable: true` sem o efeito esperado em validadores 3.1. Além disso, schemas sem objeto não são necessariamente inválidos: os valores booleanos permitem expressar aceitação universal ou rejeição total.",
+      "how": "Use `type: [string, 'null']` para permitir string e null, mantendo os outros constraints que fizerem sentido. `true` é o schema vazio que permite qualquer instância; `false` é o schema que nenhuma instância satisfaz. Aplique `type` explicitamente quando keywords como `pattern` só se destinarem a strings.",
+      "example": "Uma propriedade opcionalmente nula pode usar `schema: { type: [string, 'null'] }`. Para um campo proibido por uma variante específica, `schema: false` expressa rejeição total; para conteúdo sem constraints além de JSON válido, `schema: true` expressa aceitação geral.",
+      "limits": "Ferramentas antigas podem não aceitar schemas booleanos nem arrays no campo `type`. OAS Schema Object permite propriedades não reconhecidas, mas um `nullable` não definido pelo dialect não converte por si só uma string em união com null.",
+      "verify": "Valide string, null e número contra a união e confirme que somente os dois primeiros passam. Teste `true` e `false` isoladamente e faça lint para detectar ocorrências herdadas de `nullable` em arquivos migrados.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Schema Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#schema-object", "why": "declara Schema Object como superset de JSON Schema 2020-12 e permite boolean schemas"},
+        {"label": "JSON Schema Core Draft 2020-12", "url": "https://json-schema.org/draft/2020-12/json-schema-core", "why": "define a forma de schemas, tipos JSON e semântica de referência"}
+      ],
+      "review": "Aceitação de schemas `true`/`false`, origem Draft 2020-12 e uso de união de tipos foram checados contra as fontes oficiais."
+    },
+    {
+      "slug": "oas311-discriminator-nao-altera-validacao",
+      "title": "OAS 3.1.1 discriminator: pista de serialização, não regra de validação",
+      "one": "O `discriminator` do OAS pode orientar seleção e desserialização, mas não pode alterar o resultado da validação JSON Schema.",
+      "why": "Um schema que espera que o discriminator descubra subclasses pode aceitar ou rejeitar instâncias de modo diferente do imaginado. Em particular, um pai `allOf` não varre automaticamente schemas filhos apenas porque há `propertyName` e mapping.",
+      "how": "O objeto requer `propertyName` e pode mapear valores de payload a nomes de componentes ou URI references. É legal junto de `oneOf`, `anyOf` ou `allOf`; se `oneOf`/`anyOf` o acompanha, todas as alternativas devem ser listadas explicitamente. A validação continua dependendo dos constraints JSON Schema; `discriminator` apenas fornece uma pista útil a tooling de serialization/deserialization.",
+      "example": "Em `oneOf: [Cat, Dog]` com `propertyName: petType`, uma tabela de mapping pode direcionar rapidamente `petType: dog` ao schema Dog. Ainda assim, os constraints de Cat e Dog determinam se o objeto é válido; a pista não torna válido um payload que falha no schema selecionado.",
+      "limits": "Com `allOf` em um schema pai, o discriminator é útil para casos não validantes, mas não busca schemas filhos. Mapping ambíguo entre nome de componente e URI relativo pode ser implementation-defined; prefira URI explícita quando houver ambiguidade.",
+      "verify": "Crie payload com discriminator válido e propriedades inválidas; confirme que continua falhando. Teste mapping implícito e explícito, e valide que as alternatives oneOf/anyOf estejam listadas em vez de presumidas.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Discriminator Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#discriminator-object", "why": "define que discriminator não muda resultado de validação e restringe seus usos"},
+        {"label": "OpenAPI Specification v3.1.1 — Composition and Inheritance", "url": "https://spec.openapis.org/oas/v3.1.1.html#composition-and-inheritance-polymorphism", "why": "explica composição allOf e o papel do discriminator no modelamento"}
+      ],
+      "review": "A função de hint e as limitações de oneOf, anyOf e allOf foram conferidas nas seções específicas da especificação 3.1.1."
+    },
+    {
+      "slug": "oas311-binary-contentencoding-vs-format",
+      "title": "OAS 3.1.1: modelar binário com contentEncoding e contentMediaType",
+      "one": "Em OAS 3.1.1, `format: binary` não define encoding do payload; os keywords JSON Schema `contentEncoding` e `contentMediaType` expressam conteúdo codificado.",
+      "why": "Descrições migradas de 3.0 podem continuar usando `format: binary` esperando que o gerador produza base64 ou trate a mensagem como arquivo. Isso mistura JSON Schema com o `Content-Encoding` HTTP, que se aplica em outra etapa da serialização.",
+      "how": "Para binário cru como corpo HTTP, o Schema Object pode ser omitido ou representar media type sem impor um tipo JSON. Para bytes codificados dentro de texto, use `type: string`, `contentEncoding` como `base64` ou `base64url` e `contentMediaType` para o conteúdo representado. `contentEncoding` não é o header HTTP `Content-Encoding`; este último trata compressão da mensagem após a serialização do conteúdo.",
+      "example": "Um upload PNG binário pode usar `content: { image/png: {} }`. Um campo JSON contendo uma representação em texto pode usar `type: string`, `contentEncoding: base64url` e `contentMediaType: image/png`; a codificação URL da própria request continua sendo uma etapa adicional se o payload estiver numa query ou form.",
+      "limits": "As keywords de conteúdo são annotations por default em JSON Schema e podem não ser verificadas por validadores. Quando o media type já aparece na chave do Media Type Object, contentMediaType pode ser redundante; se houver conflito com media type/Encoding Object do OAS, a regra de precedência deve ser considerada.",
+      "verify": "Inspecione a representação no fio para payload cru, JSON base64 e `application/x-www-form-urlencoded`. Confirme que o HTTP Content-Encoding só muda compressão e que nenhum consumer espera base64 apenas por encontrar `format: binary`.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Working with Binary Data", "url": "https://spec.openapis.org/oas/v3.1.1.html#working-with-binary-data", "why": "distingue binário cru, string codificada, contentEncoding e Content-Encoding HTTP"},
+        {"label": "OpenAPI Specification v3.1.1 — Data Type Format", "url": "https://spec.openapis.org/oas/v3.1.1.html#data-type-format", "why": "define que format em 3.1 não carrega semântica de encoding binário"}
+      ],
+      "review": "A migração do antigo `format: binary`, as duas formas de payload e a distinção de HTTP Content-Encoding foram confirmadas no texto normativo."
+    },
+    {
+      "slug": "oas311-webhooks-versus-callbacks",
+      "title": "OAS 3.1.1: escolher entre webhook top-level e callback de operação",
+      "one": "`webhooks` descreve requests recebidas independentemente de outra chamada; um Callback Object descreve request associada a uma operação e a um runtime expression.",
+      "why": "Os dois recursos podem descrever chamadas iniciadas pelo provider, mas têm gatilhos diferentes. Colocar qualquer push do serviço em callback pode sugerir falsamente que uma request específica sempre o provoca, e representar um callback como webhook omite a URL derivada do contexto da operação.",
+      "how": "Use o campo top-level `webhooks` para incoming requests que o consumer pode implementar, inclusive eventos iniciados fora de uma chamada API anterior, como após registro out-of-band. Use `callbacks` no Operation Object quando a request do provider decorre daquela operação; a chave do callback pode ser uma expressão avaliada no request/response runtime para localizar a URL.",
+      "example": "Um provider envia avisos de conta depois que o consumer registrou endpoint fora de uma operação: descreva o formato em `webhooks`. Já uma operação `/subscribe` recebe `queryUrl` e por causa dela envia confirmação para aquele endereço: modele como callback com chave baseada em `$request.query.queryUrl`.",
+      "limits": "Ambos descrevem o contrato da mensagem iniciada pelo provider, não provam que a entrega ocorrerá ou que a URL estará alcançável. A proteção SSRF, autenticação e política de retries do endpoint callback/webhook pertencem também à implementação e deployment.",
+      "verify": "Inspecione o gatilho de cada mensagem: se depende de uma operação identificável, modele callback; se é independente de uma chamada, modele webhook. Teste a avaliação da expressão de URL com request que tem e que não tem o campo esperado.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — OpenAPI Object webhooks", "url": "https://spec.openapis.org/oas/v3.1.1.html#oas-webhooks", "why": "define incoming webhooks top-level, fora de uma chamada API"},
+        {"label": "OpenAPI Specification v3.1.1 — Callback Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#callback-object", "why": "define requests out-of-band relacionadas à operação pai e suas runtime expressions"}
+      ],
+      "review": "A diferença de gatilho entre webhook e callback foi verificada diretamente nas definições OAS 3.1.1 e nos exemplos de expressão."
+    },
+    {
+      "slug": "oas311-path-item-ref-conflitos",
+      "title": "OAS 3.1.1 Path Item `$ref`: não sobrepor fields com o alvo",
+      "one": "No Path Item Object do OAS 3.1.1, se um field também aparece no objeto local e no alvo de `$ref`, o comportamento é indefinido.",
+      "why": "Ferramentas podem implementar merge de maneira diferente, principalmente para operações, servers e parameters. O comportamento definido para o Reference Object — como summary e description que sobrepõem campos — não deve ser presumido para `$ref` dentro de um Path Item.",
+      "how": "Use `$ref` do Path Item para referenciar uma definição sem repetir localmente os mesmos fields. A especificação observa que a semântica de `$ref` com propriedades adjacentes pode mudar em versões futuras para se aproximar do Reference Object, mas OAS 3.1.1 ainda define conflito entre fields como indefinido.",
+      "example": "Se `components.pathItems.Shared` define `get` e `parameters`, evite escrever outro `get` ou `parameters` ao lado de `$ref: '#/components/pathItems/Shared'`. Para variação real, crie uma definição de Path Item explícita ou gere duas definições consistentes, em vez de depender de merge não especificado.",
+      "limits": "Ferramentas podem aceitar esse padrão legado, mas o resultado não é interoperável nem garantido. Isso é diferente de Reference Object e também diferente de `$ref` dentro do Schema Object, que segue o modelo JSON Schema.",
+      "verify": "Lint o grafo de referências para detectar propriedade repetida entre Path Item e seu alvo. Execute parser de pelo menos duas ferramentas somente para encontrar divergências; não considere compatibilidade observada como regra normativa.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Path Item Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#path-item-object", "why": "define conflito indefinido de fields entre Path Item local e referenciado"},
+        {"label": "OpenAPI Specification v3.1.1 — Reference Object", "url": "https://spec.openapis.org/oas/v3.1.1.html#reference-object", "why": "permite contrastar os overrides definidos para Reference Object com a regra de Path Item"}
+      ],
+      "review": "A ressalva foi validada na seção Path Item Object e comparada com os campos permitidos de Reference Object; não foi descrita como merge."
+    },
+    {
+      "slug": "oas311-readonly-writeonly-annotations",
+      "title": "OAS 3.1.1: validar readOnly e writeOnly conforme direção da mensagem",
+      "one": "Em OAS 3.1.1, `readOnly` e `writeOnly` são annotations; JSON Schema não sabe por si só se está validando request ou response.",
+      "why": "Reusar um único modelo para entrada e saída é comum, mas um validador JSON Schema puro não tem contexto da direção HTTP para aplicar essas anotações. Tratar `readOnly` como exclusão automática do schema ou `writeOnly` como erro universal pode divergir entre geradores, clients e servidores.",
+      "how": "OAS 3.1.1 permite validação estendida que considera annotation, direção de leitura/escrita e valor atual. A autoridade do recurso pode ignorar um campo read-only ou tratá-lo como erro; a especificação observa que essa semântica difere da versão 3.0. Mantenha constraints estruturais em JSON Schema e implemente regra direcional explicitamente no validador de request/response quando ela for requisito.",
+      "example": "Um campo de auditoria marcado `readOnly: true` pode aparecer em resposta e ser ignorado ou rejeitado numa request PUT, conforme regra da API. Um schema reutilizado não deve levar um validator sem contexto a remover a propriedade silenciosamente antes de comparar o payload.",
+      "limits": "`readOnly` e `writeOnly` não garantem criptografia, ocultação de dados nem remoção pelo servidor. Diferentes consumers podem mostrar as annotations na documentação sem usá-las durante runtime; valide os comportamentos das ferramentas escolhidas.",
+      "verify": "Teste o mesmo payload nos fluxos de request e response, com readOnly e writeOnly, em gerador, validator e implementação. Confirme a política de campo obrigatório em cada direção e documente se o serviço ignora, rejeita ou emite o valor.",
+      "sources": [
+        {"label": "OpenAPI Specification v3.1.1 — Validating readOnly and writeOnly", "url": "https://spec.openapis.org/oas/v3.1.1.html#validating-readonly-and-writeonly", "why": "define keywords como annotations, validação opcional contextual e diferença em relação a 3.0"},
+        {"label": "JSON Schema Validation Draft 2020-12", "url": "https://json-schema.org/draft/2020-12/json-schema-validation", "why": "define readOnly/writeOnly no vocabulário de validation e o papel de annotations"}
+      ],
+      "review": "O contexto de direção e a diferença de 3.0 foram conferidos na seção normativa OAS; a interpretação como annotation foi comparada com JSON Schema Validation."
+    }
+  ]
+}

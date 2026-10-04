@@ -1,0 +1,156 @@
+{
+  "group": "Blender 5.2 Geometry Nodes: fields, state, attributes e instancing",
+  "check": "Verificação na documentação Blender 5.2 LTS consultada para fields, Capture Attribute, attributes, Repeat/Simulation Zones, Viewer e instancing; comportamento é específico à semântica avaliada por contexto do node tree.",
+  "notes": [
+    {
+      "slug": "blender-geometry-nodes-field-contexto-avaliacao",
+      "title": "Blender Geometry Nodes: fields são avaliados no contexto do consumidor",
+      "one": "Um field é uma função avaliada pelo nó de fluxo de dados consumidor, então a mesma árvore de field pode produzir valores diferentes em consumidores diferentes.",
+      "why": "Conexões de field parecem dados armazenados, mas muitas representam instruções que serão executadas mais tarde em cada elemento. Se a geometria mudar entre dois consumidores, campos como Position e Index podem ser reavaliados sobre nova topologia ou posição e não preservar o valor original.",
+      "how": "Identifique sockets de field e os nós de fluxo de dados que os consomem. Field nodes obtêm contexto de componente e domínio a partir da geometria do consumidor. Para manter um valor original após mudar geometry, avalie-o antes da transformação e capture o resultado como atributo anônimo; caso precise de um valor único, use Sample Index ou Attribute Statistic em vez de supor que field converte automaticamente em escalar.",
+      "example": "Uma graph armazena a posição inicial de cada ponto antes de deslocar a geometria. Se o mesmo nó Position alimentar outro Set Position depois da mudança, ele poderá ler a nova localização; capturar o valor inicial cria atributo que pode orientar a operação posterior.",
+      "limits": "A avaliação concreta depende do componente e domain usados no consumidor. Não assuma avaliação eager só porque o field está conectado, nem que uma conexão visualmente igual tenha valor estático em toda a árvore.",
+      "verify": "Conecte a mesma rede de Position a consumidores antes e depois de Set Position, compare resultados no Viewer e Capture Attribute e confira o domain selecionado em cada nó consumidor.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Fields", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/fields.html", "why": "define fields como funções e explica contexto de avaliação por data-flow node"},
+        {"label": "Blender 5.2 LTS — Capture Attribute", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attribute/capture_attribute.html", "why": "mostra como fixar resultado de um field em atributo anônimo na geometria"}
+      ],
+      "review": "A documentação afirma que fields são reavaliados por consumidor e podem mudar com geometria; captura é indicada para preservar o valor anterior."
+    },
+    {
+      "slug": "blender-capture-attribute-antes-de-conversao",
+      "title": "Blender: capturar fields antes de uma conversão de geometria",
+      "one": "Capture Attribute avalia fields na geometria de entrada e armazena seus valores num atributo anônimo acessível na geometria de saída do próprio nó.",
+      "why": "Conversões entre curvas, malhas, pontos e instâncias podem remover o contexto necessário para recomputar um field. Capturar previamente um parâmetro de spline ou outra propriedade preserva um dado útil para nós posteriores e evita reavaliar num domínio que já não existe.",
+      "how": "Ligue geometry à entrada e escolha explicitamente domain e tipos dos Capture Items. O field é avaliado para elementos selecionados; elementos não selecionados recebem valor padrão do tipo. O atributo novo só existe na geometria de saída do nó e não pode ser lido por nós upstream ou geometry sibling; nós downstream acessam o output do mesmo Capture Attribute.",
+      "example": "Para cortar segmentos regulares numa curva convertida em tubo, capture o parâmetro da spline nos pontos de controle antes de Curve to Mesh. A conversão transfere o atributo para vértices do tubo, onde filtros posteriores conseguem usar a distância original para remover partes.",
+      "limits": "O resultado depende de domain, seleção e regras de interpolação dos nós seguintes. Capture Attribute armazena temporariamente, não cria necessariamente um atributo nomeado persistente para materiais ou outros sistemas.",
+      "verify": "Visualize antes e depois da conversão com Viewer e Spreadsheet, alterne Selection e confirme valores default em elementos não capturados. Tente conectar a um nó irmão para verificar o limite de escopo.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Capture Attribute", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attribute/capture_attribute.html", "why": "define domínio, seleção, escopo do atributo e exemplo de conversão curve-to-mesh"},
+        {"label": "Blender 5.2 LTS — Fields", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/fields.html", "why": "explica avaliação contextual e mudança de resultados após transformações"}
+      ],
+      "review": "Escopo downstream, tratamento de seleção e exemplo de captura antes de converter curva foram confirmados no manual 5.2."
+    },
+    {
+      "slug": "blender-anonymous-versus-named-attributes",
+      "title": "Blender Geometry Nodes: escolher atributo anônimo ou nomeado",
+      "one": "Atributos anônimos circulam por sockets de Geometry Nodes sem nome; atributos nomeados atendem usos em áreas do Blender como shaders e UV mapping.",
+      "why": "Nomear todos os valores temporários aumenta risco de colisão e escrita acidental sobre atributos que já existem no objeto. Por outro lado, dados que precisam cruzar um limite para shading ou outra ferramenta podem exigir interface nomeada e persistência explícita.",
+      "how": "Use Capture Attribute para dados intermediários locais que serão consumidos por links downstream. Use Store Named Attribute e Named Attribute quando outra parte do Blender precisar consultar o identificador pelo nome. A disponibilidade de atributo anônimo depende da geometria ligada; ele não pode ser conectado diretamente a uma geometry independente de outra origem.",
+      "example": "Uma graph calcula peso transitório para selecionar pontos e guarda o field por link anônimo, evitando uma string compartilhada. Se o shader deve ler máscara de desgaste, armazene essa máscara com nome definido e confirme que o domínio e tipo correspondem ao material.",
+      "limits": "Atributos anônimos podem ser interpolados quando a geometria muda, com exceções por operação, e simulation zones exigem armazenamento explícito no estado. Um nome explícito não garante que o atributo sobreviva a cada nó nem que tenha tipo esperado.",
+      "verify": "Use o Named Attributes overlay para procurar colisões e Spreadsheet para confirmar nome, tipo e domain. Teste junção de geometrias e nós que criam geometry nova para observar se o atributo continua disponível.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Attributes", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attributes_reference.html", "why": "define atributos anônimos/nomeados e limites de transferência entre geometrias"},
+        {"label": "Blender 5.2 LTS — Capture Attribute", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attribute/capture_attribute.html", "why": "compara captura temporária anônima com Store/Named Attribute"}
+      ],
+      "review": "Diferenças de nome, escopo, transferência e usos externos foram conferidas nos manuais de Attributes e Capture Attribute."
+    },
+    {
+      "slug": "blender-attributes-domain-conversoes-implicitas",
+      "title": "Blender Geometry Nodes: auditar domínio e conversão de atributos",
+      "one": "O domínio de um atributo identifica o elemento geométrico associado a cada valor e determina como o dado pode ser interpolado e usado.",
+      "why": "Um valor numérico no domínio Point não é automaticamente equivalente a um no domínio Face ou Face Corner. Conversões implícitas também podem truncar inteiros, reduzir vetores à média ou converter valores float maiores que zero em Boolean, produzindo resultados plausíveis mas incorretos.",
+      "how": "Confira domain e tipo em Spreadsheet e na busca de atributos do modifier. Quando operações combinam geometrias ou domains, conheça a interpolação e as conversões válidas documentadas. Atributos com mesmo nome podem exigir tipo compatível; ao unir geometrias, o tipo de maior complexidade pode ser escolhido, o que altera os valores de saída esperados.",
+      "example": "Uma máscara float por face convertida para Point pode se tornar interpolada em vértices compartilhados. Se a intenção é uma decisão discreta, converta explicitamente em local controlado e confirme que cada ponto recebe o valor esperado em vez de depender da redução automática.",
+      "limits": "As regras de conversão dependem dos tipos, domains e nós envolvidos. Não assuma que domínio preserva correspondência um para um após remesh, subdivisão, instancing ou Join Geometry.",
+      "verify": "Inspecione atributo antes e depois de cada operação que altera topologia ou domain, compare número de elementos e valores de fronteira, e habilite Geometry Randomization para detectar dependência indevida de ordem de elementos.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Attributes", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attributes_reference.html", "why": "define domains, conversões implícitas e escolha de tipo ao combinar geometria"},
+        {"label": "Blender 5.2 LTS — Inspection", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/inspection.html", "why": "descreve inspeção de sockets, atributos e randomização da geometria"}
+      ],
+      "review": "Domínio, conversões exemplificadas e tipo de atributo em operações de join foram checados no manual 5.2; a nota evita prometer correspondência após mudança de topologia."
+    },
+    {
+      "slug": "blender-repeat-zone-iters-e-inputs-externos",
+      "title": "Blender Repeat Zone: distinguir feedback de entradas constantes",
+      "one": "Repeat Zone encaminha outputs internos para a iteração seguinte, mas inputs ligados a nós externos permanecem iguais em todas as iterações.",
+      "why": "Um loop geométrico só evolui se a saída de uma passagem voltar ao estado de entrada correto. Confundir parâmetro externo com feedback pode recalcular uma operação a partir do estado original repetidas vezes, sem acumular o resultado esperado.",
+      "how": "Declare os Repeat Items que devem cruzar a fronteira da zona e conecte cada valor de estado do output ao input da iteração seguinte. O socket `Iteration` começa em zero. Inputs provenientes de fora podem parametrizar cada passagem, mas seus valores não mudam dentro do loop; outputs da zona ficam disponíveis após a última iteração.",
+      "example": "Para construir uma pilha, leve geometria acumulada pelo Repeat Output ao próximo Repeat Input, adicione a nova peça por iteração e use `Iteration` para altura ou escala. Um deslocamento conectado de fora permanece igual, a menos que seja combinado explicitamente com o índice da iteração.",
+      "limits": "Repeat Zone não é memória temporal de frames; seu número de iterações e custo ocorrem na avaliação atual do node tree. A geometria pode crescer rapidamente em cada volta e elevar o consumo de memória.",
+      "verify": "Inspecione vários `Inspection Index` na zona, compare geometria entre iterações e defina um caso mínimo de duas passagens para provar que feedback muda estado e parâmetro externo continua constante.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Repeat Zone", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/utilities/repeat_zone.html", "why": "define inputs externos, feedback, índice de iteração e Inspection Index"},
+        {"label": "Blender 5.2 LTS — Inspection", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/inspection.html", "why": "explica inspeção do último resultado avaliado e limites de sockets"}
+      ],
+      "review": "Comportamento de inputs fixos e passagem de feedback foi confirmado no manual de Repeat Zone; índice começa em zero."
+    },
+    {
+      "slug": "blender-repeat-versus-simulation-zone",
+      "title": "Blender Geometry Nodes: escolher Repeat ou Simulation Zone",
+      "one": "Repeat Zone itera várias vezes numa avaliação; Simulation Zone transporta estado entre frames da timeline.",
+      "why": "As duas caixas parecem loops, mas têm relógios e armazenamento diferentes. Usar Repeat para movimento dependente do tempo recria uma sequência por avaliação; usar Simulation para uma construção instantânea que só precisa de N passos introduz cache de frames desnecessário.",
+      "how": "Escolha Repeat para número configurável de passagens em uma avaliação e feedback entre iterações. Escolha Simulation quando o resultado do frame anterior deve influenciar o seguinte. Na simulação, valores ligados ao input inicial são avaliados uma vez, enquanto links externos para nós dentro da zona são reavaliados por frame; `Delta Time` expressa segundos entre frames.",
+      "example": "Um empilhamento procedural de blocos usa Repeat com índice como altura. Uma multidão de partículas que desloca posição a cada frame usa Simulation e incorpora delta time à velocidade, para manter movimento comparável quando a taxa de frames muda.",
+      "limits": "Simulation está disponível em contexto Modifier, não Tool, e depende da avaliação da timeline. Repeat não mantém estado entre render frames. Parâmetros e caches exigem teste quando se altera frame rate ou sequência temporal.",
+      "verify": "Mude o frame sem alterar número de iterações e observe qual grafo preserva estado anterior. Reproduza simulação em frame rate distinto e confira o uso de Delta Time; compare custo de cache para tarefa equivalente.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Repeat Zone", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/utilities/repeat_zone.html", "why": "define repetição interna, iteração e fluxo de inputs/outputs"},
+        {"label": "Blender 5.2 LTS — Simulation Zone", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/simulation/simulation_zone.html", "why": "define dependência entre frames, Delta Time e avaliação de inputs externos"}
+      ],
+      "review": "Diferença entre iteração local e estado de frame foi verificada nos dois manuais; restrição de Tool context é atribuída apenas a Simulation."
+    },
+    {
+      "slug": "blender-simulation-anonymous-attributes-state",
+      "title": "Blender Simulation Zone: declarar atributos anônimos no estado",
+      "one": "Atributos anônimos não são propagados automaticamente pelos nós de Simulation; precisam ser explicitamente guardados no estado da simulação.",
+      "why": "Um atributo anônimo pode continuar acessível em links comuns de geometry nodes, mas a fronteira temporal não consegue inferir quais campos serão necessários em frames futuros. Uma graph que parece correta numa etapa pode perder silenciosamente um dado ao entrar ou sair da simulação.",
+      "how": "Inclua os valores que precisam atravessar frames entre os Simulation State items e direcione atributos para uma forma explicitamente armazenada. Lembre que o resultado só é acessado pelo Simulation Output e que dados iniciais conectados ao Simulation Input são avaliados uma vez no começo; valores externos aos nós da zona podem ser reavaliados por frame.",
+      "example": "Uma simulação de objetos em desgaste guarda o atributo anônimo `wear_amount` junto da geometria entre frames antes de usar o valor para deslocar vértices. Sem esse item de estado, a graph reaparece com valores ausentes apesar de link anônimo continuar desenhado no editor.",
+      "limits": "A disponibilidade e compatibilidade dos itens de estado dependem de tipo, geometry e cache. Attribute anônimo não é substituto para uma interface nomeada externa, e o Simulation Zone não está disponível no Tool context.",
+      "verify": "Inspecione valor no input, dentro da zona e no output em vários frames; limpe e reconstrua cache após alterar estado. Teste atributo nomeado e anônimo separadamente em geometry inicial e criada durante a simulação.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Simulation Zone", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/simulation/simulation_zone.html", "why": "declara explicitamente que anonymous attributes não são propagados sem estado"},
+        {"label": "Blender 5.2 LTS — Attributes", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/attributes_reference.html", "why": "explica escopo e continuidade de atributos anônimos em geometry nodes"}
+      ],
+      "review": "Requisito de guardar atributos anônimos explicitamente no simulation state foi confirmado no manual Blender 5.2."
+    },
+    {
+      "slug": "blender-simulation-cache-bake-render",
+      "title": "Blender Simulation Zone: gerenciar cache e bake para render",
+      "one": "Simulation Zones são cacheadas durante playback e podem ser baked em disco para renderização fora de ordem dos frames.",
+      "why": "Um render farm costuma solicitar frames sem reproduzir a timeline sequencialmente, enquanto um cache local em memória pode desaparecer ou consumir muita RAM. Separar preview, cache e bake torna mais previsível renderizar um estado validado.",
+      "how": "Durante playback, confira a faixa roxa de frames válidos na timeline. Para prévia focada só no frame atual, o manual permite desativar Cache e economizar memória. Quando o resultado está pronto para render farm, bake em disco habilita frames não sequenciais. A operação bake abrange todas as simulations em todos os modifiers dos objetos selecionados.",
+      "example": "Antes de enviar uma sequência de destruição ao farm, selecione somente os objetos previstos, execute bake e confirme frames inicial/final. Um worker renderiza os frames 1, 50 e 100 fora de ordem e valida que cada imagem corresponde ao cache salvo.",
+      "limits": "Bake pode atingir mais zones do que a selecionada visualmente, porque inclui simulações nos modifiers dos objetos selecionados. Atualizar geometry, parâmetros ou versão do graph pode invalidar resultados já baked; armazene o arquivo junto de seus assets e revisão.",
+      "verify": "Faça cache, invalide um frame intermediário, rebake e renderize frames fora de ordem. Registre objetos selecionados, faixa baked, uso de memória e existência dos dados em disco ao reabrir o projeto.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Simulation Zone", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/simulation/simulation_zone.html", "why": "documenta cache em playback, opção de cache, bake em disco e escopo em objetos selecionados"},
+        {"label": "Blender 5.2 LTS — Geometry Nodes inspection", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/inspection.html", "why": "explica que ferramentas de inspeção mostram dados da última avaliação"}
+      ],
+      "review": "Cache, bake em disco e abrangência de todos os modifiers dos objetos selecionados foram conferidos no manual de Simulation Zone."
+    },
+    {
+      "slug": "blender-instancing-realize-atributos-custo",
+      "title": "Blender Geometry Nodes: manter instâncias até precisar realizá-las",
+      "one": "Instance on Points cria referências eficientes a geometry compartilhada; Realize Instances materializa cópias para processamento individual, com possível custo alto.",
+      "why": "Manter objetos como instâncias evita duplicar dados base, mas certos nós precisam de geometry real para operações por elemento. Realizar cedo em uma floresta de meshes complexos pode multiplicar memória e trabalho sem necessidade.",
+      "how": "Use Instance on Points e mantenha a geometria instanciada enquanto transformações comuns e atributos no instance domain bastarem. Insira Realize Instances somente antes do nó que exige dados materializados. A realização propaga atributos do instance domain; se um atributo existir tanto na geometry base quanto na instância, o valor da base tem precedência.",
+      "example": "Distribua milhares de props como instâncias, ajuste rotação e escala por ponto, e só realize um subconjunto selecionado antes de deformar individualmente cada malha. A equipe verifica quais atributos de variação ficam no instance domain e quais sobrevivem à materialização.",
+      "limits": "Realize Instances pode degradar muito o desempenho com numerosas instâncias de geometry complexa. Instâncias aninhadas têm profundidade configurável e volumes múltiplos recebem tratamento especial; não assuma cópia integral para todo componente.",
+      "verify": "Compare tempo e memória antes e depois de realizar, confira quantidade de elementos e instâncias aninhadas, e inspecione atributos de mesmo nome em base e instância para confirmar precedência.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Instance on Points", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/instances/instance_on_points.html", "why": "explica referências de geometry, atributos do instance domain e instancing aninhado"},
+        {"label": "Blender 5.2 LTS — Realize Instances", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/instances/realize_instances.html", "why": "documenta custo, propagação e precedência de atributos ao realizar"}
+      ],
+      "review": "Eficiência de instâncias, custo potencial de realização e precedência de atributos da base foram confirmados no manual 5.2."
+    },
+    {
+      "slug": "blender-viewer-domain-spreadsheet-debug",
+      "title": "Blender Geometry Nodes: inspecionar fields com Viewer e domain explícito",
+      "one": "Viewer visualiza dados intermediários em geometry nodes, enquanto seu domain determina como um field é avaliado e quais colunas aparecem na Spreadsheet.",
+      "why": "Um valor pode parecer incorreto porque foi calculado num domain diferente do esperado, e olhar apenas o objeto final não mostra onde a mudança aconteceu. Viewer e Spreadsheet permitem verificar geometria intermediária e valores por elemento, desde que a graph tenha sido avaliada.",
+      "how": "Conecte Geometry primeiro e depois o field ao Viewer para visualização direta. Deixe Auto quando a inferência de domain funcionar ou selecione explicitamente Face Corner/Point quando não funcionar. A Spreadsheet mostra atributos do domain selecionado; Viewer funciona no contexto Modifier, não Tool. Socket inspection em geral reflete a última avaliação e requer que o node esteja ligado ao Group Output.",
+      "example": "Ao avaliar noise numa malha, conecte geometry e campo ao Viewer, selecione o domain de vertices e compare o gradiente no viewport com a coluna numérica no Spreadsheet. Pinar o Viewer mantém dados visíveis ao alternar seleção de objeto.",
+      "limits": "Viewer não tem outputs e não altera a geometria final. Valores podem estar desatualizados se a graph não foi reavaliada; Viewer não é mecanismo de render final ou persistência de dados.",
+      "verify": "Altere deliberadamente o domain, atualize a avaliação e compare coluna, viewport e output do Group. Confirme ordem dos sockets, contexto Modifier e que node de interesse está no caminho avaliado.",
+      "sources": [
+        {"label": "Blender 5.2 LTS — Viewer Node", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/output/viewer.html", "why": "define visualização, seleção automática/manual de domain e comportamento de Spreadsheet"},
+        {"label": "Blender 5.2 LTS — Inspection", "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/inspection.html", "why": "explica valores da última avaliação e exigência de conexão ao Group Output"}
+      ],
+      "review": "Domínio do Viewer, ordem dos sockets, Spreadsheet e recência da inspeção foram conferidos nos documentos oficiais Blender 5.2."
+    }
+  ]
+}

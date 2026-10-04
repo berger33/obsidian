@@ -1,0 +1,156 @@
+{
+  "group": "OpenAI Agents SDK: orquestração, guardrails, state e tracing",
+  "check": "Conferência na documentação Python do Agents SDK consultada em 2026-10-04; detalhes de tool search e eventos de streaming foram tratados como dependentes das versões do SDK e da Responses API.",
+  "notes": [
+    {
+      "slug": "agents-sdk-especialista-como-tool-ou-handoff",
+      "title": "Agents SDK: escolher Agent.as_tool ou handoff",
+      "one": "Com `Agent.as_tool()`, o agente gerente conserva o controle da conversa; com handoff, o especialista escolhido passa a ser o agente ativo do restante do turno.",
+      "why": "Ambos os padrões delegam trabalho, mas diferem em quem sintetiza a resposta e conduz a interação seguinte. Escolher a forma errada pode produzir respostas desconexas, uma hierarquia de aprovação difícil de auditar ou contexto duplicado entre agente coordenador e especialista.",
+      "how": "Use agentes como tools para pedir tarefas delimitadas e reunir várias contribuições sob uma resposta final do gerente. Use handoffs para encaminhar a conversa a um especialista cuja voz e instruções devem governar a continuação. O gerente pode combinar as duas técnicas. Avalie também contexto compartilhado, histórico passado ao especialista e guardrails do caminho.",
+      "example": "Um assistente de produção pode chamar `TextureReviewer.as_tool()` para receber uma lista de defeitos e incorporar os itens num plano único. Para um pedido de suporte que deve ser respondido diretamente por especialista de faturamento, o agente de triagem faz handoff para esse agente.",
+      "limits": "O padrão de orquestração não é política de segurança nem garante qualidade da delegação. Um especialista como tool pode receber input e contexto de execução conforme configuração; handoff pode manter histórico, salvo se um filtro ou configuração o alterar.",
+      "verify": "Registre agente ativo, itens gerados, respostas de especialistas e handoffs. Compare número de chamadas, contexto visível e autor da resposta final em uma avaliação para cada forma de delegação.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Agent orchestration", "url": "https://openai.github.io/openai-agents-python/multi_agent/", "why": "compara explicitamente controle do gerente em Agent-as-tool com transferência por handoff"},
+        {"label": "OpenAI Agents SDK — Tools", "url": "https://openai.github.io/openai-agents-python/tools/", "why": "documenta `Agent.as_tool()` e as categorias de tools do SDK"}
+      ],
+      "review": "A distinção de controle e autoria da resposta final foi conferida na tabela oficial de orquestração; não se atribui garantia de segurança ao padrão escolhido."
+    },
+    {
+      "slug": "agents-sdk-handoff-destino-fixo",
+      "title": "Agents SDK handoff: modelar destinos como roteamento explícito",
+      "one": "A função `handoff()` transfere sempre para o agente específico passado na configuração; não escolhe um destino diferente com base no texto gerado.",
+      "why": "Um fluxo de triagem com vários especialistas precisa expor ao modelo escolhas explícitas ou determinar o destino em código. Tratar um handoff como roteador dinâmico pode esconder caminhos possíveis e tornar pouco previsíveis os efeitos do callback de handoff.",
+      "how": "Registre um handoff separado para cada agente de destino e deixe o modelo selecionar entre eles quando o roteamento for parte do julgamento. Para lógica própria que precisa decidir o próximo agente durante a chamada, use a abstração customizada documentada. `input_type` descreve metadados produzidos pelo modelo para o handoff, mas não troca o agente de destino da função auxiliar.",
+      "example": "Um agente de triagem publica `transfer_to_billing` e `transfer_to_technical_support` como caminhos independentes, ambos com descrições curtas. Se a política interna exige que pedidos de reembolso acima de um limite usem um fluxo escolhido por código, a aplicação implementa um handoff customizado e valida esse limite antes de transferir.",
+      "limits": "Descrições e nomes de tools guiam a decisão do modelo, mas não garantem classificação correta. Uma escolha de destino em código continua sujeita a validação de entrada, autorização e tratamento de exceções.",
+      "verify": "Inspecione o conjunto de handoffs anunciado ao agente, force exemplos para cada rota e confirme o agente ativo depois da transferência. Teste argumentos ausentes, inválidos e casos fora das categorias previstas.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Handoffs", "url": "https://openai.github.io/openai-agents-python/handoffs/", "why": "define destino fixo e recomenda um handoff registrado por destino possível"},
+        {"label": "OpenAI Agents SDK — Agent orchestration", "url": "https://openai.github.io/openai-agents-python/multi_agent/", "why": "posiciona handoff como roteamento que torna o especialista o agente ativo"}
+      ],
+      "review": "A documentação esclarece que o helper transfere para o agente definido e recomenda múltiplas rotas ou implementação customizada para seleção dinâmica."
+    },
+    {
+      "slug": "agents-sdk-on-handoff-autorizacao-antes-de-efeitos",
+      "title": "Agents SDK: validar handoff input em on_handoff",
+      "one": "Quando autorização depende de campos gerados pelo modelo no handoff, valide o payload no início de `on_handoff`, antes de efeitos colaterais.",
+      "why": "`is_enabled` decide se a rota fica disponível antes que o modelo produza os argumentos e por isso não pode autorizar valores específicos desses argumentos. Além disso, tool input guardrails do SDK não abrangem handoffs, apesar de o handoff ser apresentado ao modelo como uma espécie de tool.",
+      "how": "Use `input_type` para descrever e validar localmente o JSON do handoff; o SDK converte-o para schema e passa o valor analisado ao callback. Em `on_handoff`, verifique identidade, limites e política de negócio antes de reservar recursos ou iniciar ações. Ao falhar, levante erro em vez de retornar normalmente, pois retorno bem-sucedido deixa o runtime continuar a transferência. Dados de dependência já conhecidos ficam em `RunContextWrapper.context`, não em argumentos que o modelo inventa.",
+      "example": "Um agente pede escalonamento com campos `reason` e `priority`. `on_handoff` confirma que o usuário pode encaminhar aquela categoria, grava um evento idempotente e só depois autoriza o agente receptor. Uma prioridade `critical` isolada não eleva privilégios apenas porque passou a validação de tipo.",
+      "limits": "Validação Pydantic ou JSON verifica estrutura, não autorização substantiva. A aplicação precisa considerar repetição, concorrência e falha parcial do callback. Outros caminhos para invocar a operação devem aplicar a mesma regra.",
+      "verify": "Teste enumerações inválidas, usuário sem permissão, callback que lança exceção e execução repetida. Confirme que nenhum serviço externo foi chamado antes da decisão e que `is_enabled` não é usado como única checagem de argumentos.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Handoff inputs", "url": "https://openai.github.io/openai-agents-python/handoffs/#handoff-inputs", "why": "explica schema, momento de `is_enabled` e validação no callback antes de side effects"},
+        {"label": "OpenAI Agents SDK — Context management", "url": "https://openai.github.io/openai-agents-python/context/", "why": "distingue dados locais de contexto de argumentos que o modelo fornece"}
+      ],
+      "review": "A limitação temporal de `is_enabled`, a exclusão de handoffs dos tool guardrails e o papel de `on_handoff` foram confirmados nas páginas oficiais."
+    },
+    {
+      "slug": "agents-sdk-guardrails-fronteiras-primeiro-e-ultimo-agente",
+      "title": "Agents SDK guardrails: mapear fronteiras de primeiro e último agente",
+      "one": "Input guardrails de agente rodam no primeiro agente da cadeia e output guardrails no agente que produz a saída final; tool guardrails cobrem chamadas de function tool guardadas.",
+      "why": "Numa orquestração multiagente, assumir que cada agente repete automaticamente a mesma checagem deixa lacunas. No modo paralelo padrão, a execução do agente pode começar enquanto input guardrail ainda avalia, permitindo consumo e efeitos antes de um tripwire.",
+      "how": "Desenhe verificações pelo limite que precisam proteger: bloqueio antes de qualquer trabalho pede `run_in_parallel=False`; validação por ferramenta usa input e output tool guardrails; revisão da resposta final usa output guardrail no agente final. Ferramentas locais MCP podem receber guardrails quando configuradas, mas handoffs não são cobertos por function-tool guardrails. Autorização do servidor MCP permanece no próprio servidor.",
+      "example": "Um pipeline de geração usa input guardrail bloqueante antes do primeiro modelo para rejeitar um projeto não autorizado, ferramenta de publicação com checagem por chamada, e output guardrail na resposta final. O triage agent não é considerado o agente final se transferir o controle para outro especialista.",
+      "limits": "Um output guardrail valida resultado depois que a ferramenta já executou; não desfaz o efeito externo. Guardrails não substituem permissões do sistema, e o comportamento de persistência em falhas de tripwire deve ser examinado no fluxo de sessão.",
+      "verify": "Teste primeira chamada, handoff, tool call, aprovação pendente e saída final; instrumente início da execução para confirmar que o guardrail bloqueante termina antes. Verifique que tools e handoffs aplicam autorização dentro dos respectivos callbacks.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Guardrails", "url": "https://openai.github.io/openai-agents-python/guardrails/", "why": "define fronteiras de input/output, execução paralela e tool guardrails"},
+        {"label": "OpenAI Agents SDK — Handoffs", "url": "https://openai.github.io/openai-agents-python/handoffs/", "why": "confirma que handoff arguments exigem validação própria e não recebem tool guardrails"}
+      ],
+      "review": "Fronteiras e corrida do modo paralelo foram confirmadas; a nota diferencia validação de output de controle preventivo de efeito externo."
+    },
+    {
+      "slug": "agents-sdk-streaming-drenar-ate-fim",
+      "title": "Agents SDK streaming: consumir eventos até o iterador terminar",
+      "one": "Um run iniciado por `Runner.run_streamed()` só está completo quando `stream_events()` termina, mesmo que o último token visível já tenha chegado.",
+      "why": "O SDK ainda pode concluir persistência de session, bookkeeping de aprovação ou compactação do histórico depois de emitir texto. Sair antecipadamente do iterador pode deixar o resultado sem `final_output`, interromper o trabalho ou fechar um transport compartilhado antes da resposta final.",
+      "how": "Consuma os eventos assíncronos até o iterator terminar e só então leia `is_complete`, `final_output`, interrupções ou estado. Escolha eventos brutos para deltas em tempo real e run-item events para marcos de alto nível, como ferramenta executada ou handoff. Se precisar interromper, use `cancel()` explicitamente e trate aprovação pendente como estado retomável, não como resposta concluída.",
+      "example": "Uma API WebSocket entrega deltas ao cliente enquanto acumula a resposta. Mesmo depois do evento de texto final, ela termina o loop, inspeciona `interruptions` e persiste `to_state()` quando necessário. O teste fecha o cliente antes da última atualização para garantir que o cancelamento seja registrado.",
+      "limits": "Deltas podem não corresponder um a um a mensagens finais e a ordem varia entre superfície bruta e projeções. Drenar o stream não garante que um efeito de ferramenta tenha sucesso, nem dispensa tratamento de cancelamento e erros.",
+      "verify": "Compare tempo do último delta com término do iterador, confirme `final_output` depois do término e verifique gravações de sessão e aprovação. Exercite cancelamento imediato, cancelamento após turno e exceção terminal do guardrail.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Streaming", "url": "https://openai.github.io/openai-agents-python/streaming/", "why": "explica que a execução não conclui até o iterador terminar e lista pós-processamento"},
+        {"label": "OpenAI Agents SDK — Results", "url": "https://openai.github.io/openai-agents-python/results/", "why": "define `final_output`, `is_complete` e resultados de runs interrompidos"}
+      ],
+      "review": "A conclusão do stream e o atraso de pós-processamento após o último token foram checados na documentação; `final_output` pode ficar None enquanto há interrupção."
+    },
+    {
+      "slug": "agents-sdk-session-versus-responses-continuation",
+      "title": "Agents SDK: escolher session local ou continuação server-side",
+      "one": "Uma Session gerencia histórico local do Agents SDK e não pode ser combinada no mesmo run com `conversation_id`, `previous_response_id` ou `auto_previous_response_id`.",
+      "why": "Empilhar dois mecanismos de conversa pode duplicar mensagens, produzir histórico divergente e dificultar a exclusão de dados. Uma sessão local e continuação no servidor mantêm estado em camadas e com regras de retenção diferentes.",
+      "how": "Escolha Session quando o SDK deve recuperar e salvar itens de conversa no backend configurado. Escolha uma das opções de continuação da Responses API quando o estado server-side for desejado; reenvie somente a nova entrada conforme esse mecanismo. Para runs pausados por aprovação, retome com a mesma instância ou um objeto configurado com o mesmo session ID e backend.",
+      "example": "Uma ferramenta desktop usa `SQLiteSession` no ambiente local durante múltiplos turnos e configura limites de histórico. Um serviço que usa `previous_response_id` na Responses API guarda esse ID e não passa Session ao mesmo run; sua política de dados cobre separadamente estado remoto e registros locais.",
+      "limits": "Session mantém itens e histórico segundo o backend e configuração escolhidos, mas não é por si só uma política de retenção ou autorização. A documentação descreve mecanismos incompatíveis no mesmo run; não deduza que duas execuções independentes não possam migrar entre mecanismos com transformação explícita.",
+      "verify": "Adicione um teste que tente misturar cada par de mecanismos e espere falha de configuração. Confirme retomada de aprovação com mesmo storage, limite de itens recuperados e comportamento após reinício do processo.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Sessions", "url": "https://openai.github.io/openai-agents-python/sessions/", "why": "declara incompatibilidade no mesmo run com continuation options server-side"},
+        {"label": "OpenAI Agents SDK — Running agents", "url": "https://openai.github.io/openai-agents-python/running_agents/", "why": "descreve opções de continuação e ciclo de execução do Runner"}
+      ],
+      "review": "A incompatibilidade de Session com os três mecanismos de continuação foi confirmada na documentação de Sessions; não se confunde backend local com Responses server-side."
+    },
+    {
+      "slug": "agents-sdk-output-type-e-handoffs",
+      "title": "Agents SDK: normalizar saída tipada entre handoffs",
+      "one": "`final_output` pode ser texto ou o objeto tipado do último agente e fica `None` quando o run termina sem saída final, por exemplo numa interrupção.",
+      "why": "Handoffs podem mudar qual agente conclui o run, então o chamador não pode inferir estaticamente uma única forma de resultado apenas a partir do agente inicial. Código que serializa `final_output` como se fosse sempre string pode quebrar justamente nos fluxos com especialista ou aprovação.",
+      "how": "Declare `output_type` por agente quando a aplicação depende de saída estruturada. No limite público, inspecione `last_agent`, `interruptions` e o estado de completude antes de converter o resultado. Se agentes finais usam schemas diferentes, normalize os resultados para um modelo de domínio comum no gerente ou camada de aplicação.",
+      "example": "Um especialista pode devolver `Diagnosis`, outro `AssetPlan`, mas a API de produto converte ambos a `JobOutcome` com campos de estado, resumo e artefatos. Quando há aprovação pendente, a API devolve estado `needs_review` em vez de tentar serializar `None` como resposta final.",
+      "limits": "`output_type` estrutura formato, não torna conteúdo factual nem garante que todo run termine com objeto. Um handoff pode levar a tipo que o agente inicial não declarou; a aplicação precisa testar versões e erros de validação.",
+      "verify": "Exercite saída normal, handoff para cada especialidade, tripwire de output, ferramenta terminal e aprovação pendente. Valide a conversão de Pydantic para JSON e o comportamento de schema desconhecido.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Agents", "url": "https://openai.github.io/openai-agents-python/agents/", "why": "documenta `output_type` e possibilidade de saída estruturada"},
+        {"label": "OpenAI Agents SDK — Results", "url": "https://openai.github.io/openai-agents-python/results/", "why": "define tipos possíveis de `final_output`, `last_agent` e resultado interrompido"}
+      ],
+      "review": "Forma de `final_output` depende do agente final e pode ser None em interrupção, conforme página de resultados; saída estruturada foi descrita como formato, não validação factual."
+    },
+    {
+      "slug": "agents-sdk-hosted-tool-search-deferred-loading",
+      "title": "Agents SDK: adiar tool schemas com hosted tool search",
+      "one": "Hosted tool search permite carregar sob demanda uma parte de um catálogo grande de tools em modelos OpenAI Responses compatíveis.",
+      "why": "Expor centenas de schemas em cada chamada aumenta tokens e pode diluir a seleção do modelo. Carregar namespaces quando necessários reduz o catálogo inicial, mas muda a forma como uma tool fica disponível e exige instrumentar os eventos de busca e retorno.",
+      "how": "Marque superfícies elegíveis como deferred loading e configure exatamente um `ToolSearchTool()` no agente. A documentação consultada indica suporte a OpenAI Responses models e dependência de `openai>=2.25.0` na integração Python. `tool_namespace()` agrupa funções relacionadas; client-executed tool search requer que a aplicação gerencie a busca e não é autoexecutada pelo `Runner` padrão.",
+      "example": "Um agente de produção agrupa funções `build`, `publish` e `rollback` sob namespace de deploy. Mantém busca e tools de leitura imediata expostas, enquanto ferramentas de deploy são carregadas somente quando o modelo identifica uma tarefa de publicação; os eventos `tool_search_called` ficam disponíveis para auditoria.",
+      "limits": "A disponibilidade e os requisitos de versão mudam com SDK e provider. Busca adiada não é controle de acesso: valide permissões na execução de cada função e evite expor segredos apenas porque um namespace foi carregado.",
+      "verify": "Fixe versões, confirme a presença de um único `ToolSearchTool`, verifique chamadas que precisam ou não de namespace e avalie tokens de schema. Teste modelo/provider não compatível e rejeição de uma tool por falta de permissão.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Tools", "url": "https://openai.github.io/openai-agents-python/tools/", "why": "documenta deferred loading, `ToolSearchTool`, limitações de provider e requisito de SDK"},
+        {"label": "OpenAI Agents SDK — Streaming", "url": "https://openai.github.io/openai-agents-python/streaming/", "why": "define eventos de busca de tools para observabilidade do fluxo"}
+      ],
+      "review": "A dependência OpenAI Responses e a versão mínima indicada foram conferidas na documentação atual de tools; a nota separa descoberta de autorização."
+    },
+    {
+      "slug": "agents-sdk-session-input-callback-historico",
+      "title": "Agents SDK Sessions: limitar histórico lido sem duplicar persistência",
+      "one": "`session_input_callback` pode selecionar ou reordenar histórico para a próxima chamada do modelo sem gravar novamente itens antigos como entrada nova.",
+      "why": "Históricos longos encarecem turnos e podem incluir material irrelevante, enquanto filtros manuais mal posicionados duplicam mensagens na persistência. A callback de input ajuda a adaptar contexto sem mudar o repositório de histórico subjacente.",
+      "how": "A callback recebe cópias de `history` e `new_input` e devolve os itens finais para aquele turno. A Session ainda persiste os itens que pertencem ao novo turno. Use `SessionSettings(limit=N)` para limitar recuperação por execução, ou a callback para poda, reordenação e inclusão seletiva antes da chamada do modelo.",
+      "example": "Um assistente de pipeline mantém histórico completo no SQLite, mas envia ao modelo os dez itens mais recentes mais uma nota de resumo validada. O teste consulta o storage após duas chamadas e confirma que a antiga pergunta não foi inserida outra vez apenas porque a callback a incluiu no prompt.",
+      "limits": "Filtrar o que o modelo vê não apaga o histórico armazenado nem constitui política de retenção. Uma callback pode remover dependências contextuais importantes; valide segurança, coerência de handoff e limite de tokens em cada tipo de sessão.",
+      "verify": "Use sessão com itens marcados, registre entrada final do modelo e leia o storage antes e depois. Teste limite por run, callback com lista mutável e retomada de run interrompido.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Sessions", "url": "https://openai.github.io/openai-agents-python/sessions/", "why": "detalha callback de merge, cópias e persistência só de itens do turno novo"},
+        {"label": "OpenAI Agents SDK — Running agents", "url": "https://openai.github.io/openai-agents-python/running_agents/", "why": "explica configuração de execução e filtros finais da entrada do modelo"}
+      ],
+      "review": "A separação entre input preparado e itens persistidos foi confirmada na página de Sessions; a nota explicita que filtro não equivale a exclusão."
+    },
+    {
+      "slug": "agents-sdk-tracing-flush-workers",
+      "title": "Agents SDK tracing: descarregar spans antes de encerrar um job",
+      "one": "O processador padrão de tracing exporta em background, então uma tarefa curta pode terminar antes de a trace aparecer no destino.",
+      "why": "Workers long-lived costumam manter a fila de spans aberta entre jobs, mas um consumidor pode interpretar atraso como perda. Encerrar o processo logo após a execução também torna importante verificar que a trace terminou e foi exportada depois do span externo.",
+      "how": "O SDK rastreia por padrão o run e spans de modelo, agentes, tools, guardrails e handoffs. Em tarefas de fundo que exigem garantia de entrega imediata, encerre o contexto `trace()` e então chame `flush_traces()` num bloco `finally`. O flush espera a exportação dos dados atualmente buffered; sem requisito de latência, exportação periódica padrão pode bastar.",
+      "example": "Um worker de build executa o agente dentro de uma trace nomeada, grava resultado e sai do contexto; no `finally`, descarrega spans mesmo se a etapa de build levantar uma exceção. Dashboards correlacionam o `group_id` de várias tentativas sem usar trace ID como autorização.",
+      "limits": "Tracing não está disponível para organizações sujeitas a política Zero Data Retention documentada. Um flush não recupera eventos nunca gravados nem remove dados já bufferizados quando tracing é desativado. Inspecione processors customizados e política de dados antes de enviar conteúdo sensível.",
+      "verify": "Teste execução normal e exceção em worker reiniciado logo após o job. Confirme que o flush ocorre depois do fechamento da trace, monitore falhas de exportação e verifique o comportamento sob tracing desabilitado e política ZDR.",
+      "sources": [
+        {"label": "OpenAI Agents SDK — Tracing", "url": "https://openai.github.io/openai-agents-python/tracing/", "why": "descreve exportação em background e uso de `flush_traces()` após o contexto"},
+        {"label": "OpenAI Agents SDK — Running agents", "url": "https://openai.github.io/openai-agents-python/running_agents/", "why": "explica ciclo de execução, erro e cancelamento que podem encerrar um job"}
+      ],
+      "review": "Exportação assíncrona, semântica de flush após fechar trace e indisponibilidade sob ZDR foram verificadas na documentação atual."
+    }
+  ]
+}

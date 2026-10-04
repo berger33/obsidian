@@ -1,0 +1,156 @@
+{
+  "group": "Playwright: relógio, WebSockets, service workers e artefatos de diagnóstico",
+  "check": "Revisão das páginas oficiais Playwright consultadas em 2026-10-04; recursos marcados com versão mínima ou comportamento específico de browser foram identificados como dependências.",
+  "notes": [
+    {
+      "slug": "playwright-clock-install-order",
+      "title": "Playwright Clock: instalar relógio antes de APIs temporais",
+      "one": "Se um teste chamar `page.clock.install()`, essa instalação precisa ocorrer antes de qualquer outra chamada relacionada ao relógio controlado.",
+      "why": "A instalação substitui APIs nativas como Date, timers e animation frames. Criar timer e instalar o relógio depois deixa um handle associado a uma implementação que foi sobrescrita e pode causar comportamento indefinido.",
+      "how": "Prefira `setFixedTime` quando só precisar controlar `Date.now()` e `new Date()` mantendo timers em fluxo natural. Use `install` com `pauseAt`, `fastForward`, `runFor` ou `resume` quando precisar dirigir relógio e timers juntos; invoque-o antes de código da aplicação ou chamadas de teste que configurem timers. Reserve `setSystemTime` para casos avançados.",
+      "example": "Para testar expiração de sessão, instale um horário inicial antes de navegar e avance cinco minutos com `fastForward`. Para uma interface que só exibe a data, `setFixedTime` pode ser suficiente e evita congelar timers que atualizam o DOM.",
+      "limits": "O relógio virtual substitui várias APIs do browser, mas não controla todos os relógios externos, como tempo do servidor, sistema operacional ou processos fora da página. Misturar relógio fixo com scheduler real requer confirmar quais APIs são controladas.",
+      "verify": "Execute o mesmo caso com temporizadores inicializados antes e depois da instalação, revise ordem de setup e avance o relógio em pequenos intervalos. Confirme que timeout de aplicação, requestAnimationFrame e Date retornam o comportamento esperado.",
+      "sources": [
+        {"label": "Playwright — Clock", "url": "https://playwright.dev/docs/clock", "why": "define diferença entre setFixedTime/install e avisa sobre ordem indefinida de instalação"},
+        {"label": "Playwright — Clock API", "url": "https://playwright.dev/docs/api/class-clock", "why": "lista APIs temporais controladas e métodos disponíveis no relógio"}
+      ],
+      "review": "A recomendação de setFixedTime e a precondição de install antes de APIs temporais foram confirmadas na documentação oficial atual."
+    },
+    {
+      "slug": "playwright-websocketroute-mock-ou-proxy",
+      "title": "Playwright WebSocketRoute: escolher mock completo ou interceptação",
+      "one": "WebSocket route não conecta ao servidor automaticamente; sem `connectToServer()` ela pode simular toda a conversação dentro do teste.",
+      "why": "Mocks completos isolam cliente de sistema remoto, enquanto interceptação preserva protocolo e modifica mensagens em trânsito. Selecionar o modo errado pode criar um teste que nunca exercita handshake ou estado real do serviço.",
+      "how": "Registre `page.routeWebSocket()` ou `browserContext.routeWebSocket()` antes de a aplicação abrir a conexão. Para mock, responda com `send()` e omita `connectToServer()`. Para interceptação, conecte ao servidor e transforme, bloqueie ou encaminhe mensagens. Depois de registrar `onMessage()` numa direção, a aplicação assume a responsabilidade pelo encaminhamento daquela direção.",
+      "example": "Um teste unitário simula mensagens `subscribe` e `update` sem rede. Um teste de integração chama `connectToServer()`, reescreve somente uma mensagem de pedido e deixa outras passarem, verificando no servidor de teste que a conexão foi realmente estabelecida.",
+      "limits": "O handler WebSocket pode afetar somente conexões abertas depois da rota ser registrada. O mock não valida rede, negociação de protocolo, autenticação ou reconexão real; handler de mensagens muda o encaminhamento default.",
+      "verify": "Teste mock sem servidor e proxy com servidor local, crie conexão antes e depois do registro da rota e conte mensagens em ambas direções. Confirme fechamento e códigos de close em caminhos de erro.",
+      "sources": [
+        {"label": "Playwright — WebSocketRoute", "url": "https://playwright.dev/docs/api/class-websocketroute", "why": "define mock default, `connectToServer` e encaminhamento de mensagens"},
+        {"label": "Playwright — BrowserContext API", "url": "https://playwright.dev/docs/api/class-browsercontext", "why": "documenta nível de contexto para instalar rotas e gerenciar conexões de páginas"}
+      ],
+      "review": "A diferença entre mock sem conexão e interceptação com conexão real foi checada na API WebSocketRoute; o registro é descrito antes da criação da conexão."
+    },
+    {
+      "slug": "playwright-route-fallback-versus-continue",
+      "title": "Playwright Route: preservar a cadeia com fallback",
+      "one": "`route.continue()` envia imediatamente ao network e encerra a cadeia de handlers; `route.fallback()` permite que outro handler correspondente decida depois.",
+      "why": "Camadas de roteamento frequentemente separam bloqueio de analytics, fixture específica e lógica compartilhada. Uma chamada prematura a continue impede que handlers seguintes substituam ou rejeitem a request, enquanto fallback preserva composição intencional.",
+      "how": "Quando várias rotas correspondem ao mesmo padrão, os handlers rodam na ordem oposta à de registro: a última registrada executa primeiro. Use fallback para passar controle ao próximo handler, opcionalmente com overrides; use continue apenas quando a request deve chegar à rede sem consultar handlers restantes. Route de página também tem precedência própria sobre route do browser context.",
+      "example": "Um handler específico modifica um endpoint de fixture e chama fallback para permitir que camada de auditoria valide método. Se a request não se aplica ao fixture, a camada pode continuar para rede somente quando chegar ao handler final.",
+      "limits": "Headers proibidos podem não ser substituídos por continue, e redirects carregam alguns overrides de modo diferente. Cadeia de rotas deve evitar loops e garantir que todo caminho termina em fulfill, abort, continue ou fallback.",
+      "verify": "Registre handlers com nomes e ordem, gere requests cobertas e não cobertas, e confirme sequência em logs. Teste redirect, override de header e uma rota que intencionalmente interrompe a cadeia.",
+      "sources": [
+        {"label": "Playwright — Route API", "url": "https://playwright.dev/docs/api/class-route", "why": "especifica continue imediato, fallback e ordem inversa de handlers"},
+        {"label": "Playwright — BrowserContext.route", "url": "https://playwright.dev/docs/api/class-browsercontext#browser-context-route", "why": "define precedência entre route de page/context e efeito de habilitar roteamento"}
+      ],
+      "review": "Ordem inversa, bypass de handlers por continue e passagem por fallback foram confirmados na API Route."
+    },
+    {
+      "slug": "playwright-service-worker-network-routing",
+      "title": "Playwright: service workers mudam visibilidade de network routing",
+      "one": "Requests controladas ou interceptadas por Service Workers não se comportam como requests comuns da página para routing e eventos.",
+      "why": "Bloquear Service Workers pode simplificar mocks, mas remove o componente que define comportamento offline e cache do produto. Em contrapartida, deixar workers ativos pode fazer um request escapar do handler esperado ou gerar eventos associados ao worker, não a uma frame.",
+      "how": "A documentação indica que `browserContext.route()` não intercepta requests interceptadas por Service Worker e recomenda `serviceWorkers: 'block'` quando a intenção é interceptação geral. Se o worker precisa ser testado, mantenha-o ativo, escute eventos de contexto, identifique `request.serviceWorker()` e considere que `request.frame()` pode lançar para esse request.",
+      "example": "Um teste de fallback offline habilita Service Worker, aguarda sua ativação e verifica resposta cacheada. Um teste independente de mock REST bloqueia workers para testar a página sem depender do código de cache, deixando explícito que o comportamento validado é diferente.",
+      "limits": "Documentação atual declara suporte de Service Workers apenas em browsers baseados em Chromium. Desativá-los melhora previsibilidade, mas muda o comportamento do app se o worker fizer parte do caminho de produção.",
+      "verify": "Execute a mesma request com worker permitido e bloqueado, compare eventos de page e context e confirme se `fromServiceWorker()` é verdadeiro. Teste fluxo offline e de atualização do cache no browser alvo.",
+      "sources": [
+        {"label": "Playwright — Service Workers", "url": "https://playwright.dev/docs/service-workers", "why": "documenta requests de worker, eventos de contexto, route e restrição de browser"},
+        {"label": "Playwright — BrowserContext API", "url": "https://playwright.dev/docs/api/class-browsercontext", "why": "explica limitação de route para requests interceptadas por Service Worker"}
+      ],
+      "review": "Limitação de routing, recomendação de block e requisito Chromium foram confirmados no guia de Service Workers e na API do contexto."
+    },
+    {
+      "slug": "playwright-trace-retencao-e-dados-de-debug",
+      "title": "Playwright Trace: coletar diagnóstico sem expor dados de teste",
+      "one": "Uma trace reúne ações, snapshots de DOM, screenshots e logs que ajudam a reconstruir a execução após o teste.",
+      "why": "Esse material explica falhas intermitentes melhor que uma mensagem final, mas pode incluir conteúdo exibido na página, URLs, rede e dados de usuário. Artefato útil para debug também é um pacote de dados que precisa de política de acesso e retenção.",
+      "how": "No CI, a documentação recomenda `trace: on-first-retry`; use `retain-on-failure` quando não houver retry e remova arquivos de testes bem-sucedidos. Abra com CLI `show-trace` ou viewer local; trace.playwright.dev carrega o arquivo no browser sem transmiti-lo externamente segundo a documentação. Limite quem baixa artefatos e evite anexar dados reais desnecessários.",
+      "example": "Um pipeline de staging registra trace apenas na primeira repetição. Após corrigir uma falha, o artefato expira conforme prazo interno; nomes de conta e requests de teste usam dados sintéticos, e acesso ao relatório é restrito à equipe responsável.",
+      "limits": "Registrar trace para todos os testes pode ser pesado e pode conservar dados de páginas sensíveis. O viewer local não elimina riscos de upload para armazenamento compartilhado ou de configuração inadequada de CORS ao abrir traces remotas.",
+      "verify": "Inspecione conteúdo de uma trace de teste e inventarie capturas, logs, URLs e dados de request. Verifique retenção, permissões, opção selecionada no retry e remoção do artefato após sucesso.",
+      "sources": [
+        {"label": "Playwright — Trace Viewer", "url": "https://playwright.dev/docs/trace-viewer", "why": "explica conteúdo do trace, estratégias de recording e opção de primeiro retry"},
+        {"label": "Playwright — Test options trace", "url": "https://playwright.dev/docs/api/class-testoptions#test-options-trace", "why": "define modos configuráveis de gravação e retained traces"}
+      ],
+      "review": "Conteúdo exibido e modos de coleta foram conferidos na documentação Trace Viewer; observações sobre privacidade são recomendações de tratamento dos próprios artefatos."
+    },
+    {
+      "slug": "playwright-video-context-close-artifact",
+      "title": "Playwright video: fechar browser context para salvar o arquivo",
+      "one": "Gravações de vídeo Playwright são finalizadas quando o BrowserContext fecha, não quando o último frame aparece na página.",
+      "why": "Ler caminho ou anexar o arquivo antes do fechamento pode encontrar vídeo ausente ou incompleto. Contextos manuais são comuns em testes de múltiplas páginas e a etapa de cleanup precisa aguardar explicitamente a operação de close.",
+      "how": "Configure `video` como `on`, `retain-on-failure` ou `on-first-retry` conforme custo e objetivo. Playwright Test salva artefatos no diretório de resultados; com `browser.newContext({ recordVideo })`, chame e aguarde `context.close()` antes de consultar `page.video().path()` ou publicar o arquivo. Configure tamanho de viewport de acordo com saída desejada.",
+      "example": "Um cenário multi-page registra vídeo somente na primeira retry. O cleanup fecha todas as pages e aguarda contexto, depois copia vídeo para o reporte apenas se a execução falhou; teste verifica existência e duração do arquivo após close.",
+      "limits": "Vídeo não é disponibilizado enquanto página ou contexto continua aberto. Gravação acrescenta armazenamento e pode capturar conteúdo sensível; tamanho e área capturada variam com viewport e configuração.",
+      "verify": "Confirme o arquivo somente após close, teste sucesso e falha para cada modo de retenção e compare dimensões do vídeo com viewport configurada. Verifique que browsers e páginas adicionais pertencem ao contexto esperado.",
+      "sources": [
+        {"label": "Playwright — Videos", "url": "https://playwright.dev/docs/videos", "why": "define modos de gravação e fechamento do contexto como momento de salvamento"},
+        {"label": "Playwright — BrowserContext API", "url": "https://playwright.dev/docs/api/class-browsercontext", "why": "documenta criação, isolamento e fechamento dos contextos que possuem o vídeo"}
+      ],
+      "review": "Momento de finalização no close e modos de retenção foram checados na documentação de vídeos; a nota inclui cleanup aguardado como requisito operacional."
+    },
+    {
+      "slug": "playwright-expect-poll-e-topass",
+      "title": "Playwright assertions: escolher expect.poll ou expect.toPass",
+      "one": "`expect.poll` repete uma leitura até um valor satisfazer matcher; `expect.toPass` repete um bloco que contém uma ou mais verificações.",
+      "why": "Um sleep fixo aguarda tempo mesmo quando a condição já ocorreu e falha cedo ou tarde conforme variação do ambiente. Polling de condição expressa diretamente o resultado esperado, enquanto o bloco retry permite uma sequência de verificações correlacionadas.",
+      "how": "Use auto-retrying locator assertions para estado de DOM, `expect.poll` para recuperar e comparar um valor assíncrono, e `expect.toPass` para repetir uma sequência. Defina `timeout` e `intervals` apropriados. Importante: `toPass` tem timeout 0 por padrão e não herda o timeout global de expect; configure-o explicitamente para evitar que comportamento ilimitado passe despercebido.",
+      "example": "Um endpoint eventual retorna status 202 antes de 200; `expect.poll` consulta status com intervalos crescentes e timeout delimitado. Para uma sequência onde criação e consulta de job precisam ser verificadas juntas, `toPass` envolve o bloco inteiro com tempo limite definido.",
+      "limits": "Retries podem repetir chamadas com efeitos colaterais se o callback não for idempotente. Um polling agressivo adiciona carga ao sistema; use intervalos e observabilidade que respeitam limites de API.",
+      "verify": "Teste condição imediata, eventual e impossível, verifique número de sondagens e saída no timeout. Faça a ação de escrita fora do callback de retry ou proteja-a com identificador idempotente.",
+      "sources": [
+        {"label": "Playwright — Assertions", "url": "https://playwright.dev/docs/test-assertions", "why": "documenta expect.poll, toPass, intervals e timeout padrão de toPass"},
+        {"label": "Playwright — Timeouts", "url": "https://playwright.dev/docs/test-timeouts", "why": "distingue timeout de assertion do timeout total do teste"}
+      ],
+      "review": "Semântica e defaults de polling foram conferidos na seção expect.poll/toPass; a nota destaca especificamente timeout zero de toPass."
+    },
+    {
+      "slug": "playwright-timeouts-escopos-separados",
+      "title": "Playwright Test: diagnosticar timeouts por escopo",
+      "one": "Timeout de teste, assertion, action, navigation, fixture e hooks são controles distintos, não uma única duração global.",
+      "why": "Aumentar timeout do teste não necessariamente permite que uma assertion aguarde mais; um actionTimeout sem limite também não protege a suíte contra um processo preso. Saber qual budget expirou direciona a correção ao lugar certo.",
+      "how": "O test timeout inclui corpo do teste, fixtures de setup e `beforeEach`; cleanup de fixtures e `afterEach` compartilha timeout separado do mesmo valor. `beforeAll` e `afterAll` têm orçamento próprio. Assertions retrying têm default de cinco segundos independente do teste; action e navigation timeouts podem ser configurados separadamente e globalTimeout limita toda a execução.",
+      "example": "Uma página carrega lentamente e a assertion expira em cinco segundos embora teste tenha 60 segundos. A equipe aumenta timeout da assertion específica ou corrige espera da aplicação, sem elevar todos os budgets nem ocultar um navigation timeout separado.",
+      "limits": "Defaults e configurações podem mudar entre versões e config scopes. Elevar vários limites sem localizar a operação bloqueada tende a mascarar lentidão, fila de rede ou deadlock.",
+      "verify": "Force timeout em corpo, assertion, fixture, `afterEach` e action separadamente. Confirme mensagem e budget consumido no call log e compare os valores da configuração com o cenário de CI.",
+      "sources": [
+        {"label": "Playwright — Timeouts", "url": "https://playwright.dev/docs/test-timeouts", "why": "lista timeouts e relações de compartilhamento entre testes, hooks e assertions"},
+        {"label": "Playwright — Test configuration", "url": "https://playwright.dev/docs/test-configuration", "why": "documenta configuração central de timeouts da suíte"}
+      ],
+      "review": "Escopos e defaults de timeout foram conferidos no guia oficial; a nota separa setup, teardown, assertion e execução global."
+    },
+    {
+      "slug": "playwright-add-init-script-determinismo",
+      "title": "Playwright addInitScript: preparar ambiente antes do código da página",
+      "one": "`addInitScript` executa depois da criação do document e antes dos scripts da aplicação em navegação ou novo frame.",
+      "why": "Recursos como relógio de seed aleatório precisam existir antes de a aplicação inicializar seu estado. Injetar mock depois de `goto` pode perder valores já calculados ou introduzir uma corrida dependente de velocidade do browser.",
+      "how": "Registre `browserContext.addInitScript()` para cobrir páginas e frames do contexto, ou `page.addInitScript()` para a página específica. Passe dados serializáveis por argumento em vez de montar código com concatenação insegura. A ordem relativa entre vários init scripts instalados em page e context não é definida, então combine o setup que precisa de ordem numa função controlada.",
+      "example": "Um teste semeia `Math.random` com valor calculado a partir do ID do caso no init script, antes da primeira navegação. A aplicação então gera entidades determinísticas e o teste consegue reproduzir a mesma fixture em retry.",
+      "limits": "Scripts também rodam em novos documents e child frames no escopo aplicável, o que pode interferir com páginas de terceiros. Não injete credenciais ou código que dependa de ordem não documentada; mudanças globais podem alterar comportamento sob teste.",
+      "verify": "Registre timestamp e marcador de inicialização antes de `goto`, verifique execução em navegação subsequente e iframe novo, e teste ausência de dependência entre múltiplos scripts init.",
+      "sources": [
+        {"label": "Playwright — BrowserContext addInitScript", "url": "https://playwright.dev/docs/api/class-browsercontext#browser-context-add-init-script", "why": "documenta escopo para páginas/frames, momento de execução e ordem não definida"},
+        {"label": "Playwright — Page addInitScript", "url": "https://playwright.dev/docs/api/class-page#page-add-init-script", "why": "mostra preloading antes de scripts da página e passagem de argumentos"}
+      ],
+      "review": "Momento de execução e ausência de ordem definida entre scripts foram confirmados nas duas APIs; o exemplo limita injeção a estado de teste."
+    },
+    {
+      "slug": "playwright-page-errors-observabilidade-cliente",
+      "title": "Playwright: coletar erros de runtime sem confundir com falha de teste",
+      "one": "`page.pageErrors()` consulta um conjunto limitado de erros JavaScript recentes, enquanto eventos de Page podem capturar erros conforme ocorrem.",
+      "why": "Uma assertion pode passar mesmo quando a aplicação registrou exception não tratada em outro componente. Coletar erros de cliente junto ao teste ajuda detectar falhas silenciosas e relacioná-las à navegação, frame ou ação que as provocou.",
+      "how": "Registre `page.on('pageerror')` antes da navegação para observar exceções futuras ou leia `page.pageErrors()` em Playwright atual após o cenário. A API de armazenamento retorna até 200 erros recentes; `clearPageErrors()` pode começar uma janela nova em versões compatíveis. Capture contexto suficiente sem imprimir conteúdo sensível de objetos.",
+      "example": "Um teste de renderização registra erros de page em array, navega, realiza ações e no final falha se a lista contiver exception inesperada. Para um cenário com bootstrap conhecido, limpa o conjunto após a etapa inicial e valida apenas erros emitidos pela interação investigada.",
+      "limits": "Erros de console, exceções de página, falhas de request e erros de teste são sinais diferentes. Uma lista limitada pode descartar os mais antigos, e handlers registrados depois da navegação não observam exceções passadas salvo se forem mantidas pela API de consulta.",
+      "verify": "Gere erro antes e depois de listener, valide limite e limpeza da lista e diferencie pageerror de console.error e requestfailed. Inclua frames e navegações múltiplas no teste de integração.",
+      "sources": [
+        {"label": "Playwright — Page API", "url": "https://playwright.dev/docs/api/class-page", "why": "documenta page events, `pageErrors()` e limpeza do buffer de erros"},
+        {"label": "Playwright — Trace Viewer", "url": "https://playwright.dev/docs/trace-viewer", "why": "mostra como console e logs de execução podem ser correlacionados com ações gravadas"}
+      ],
+      "review": "Existência e limite do buffer de page errors e eventos de Page foram confirmados na API consultada; erros são separados de logs e falhas de rede."
+    }
+  ]
+}

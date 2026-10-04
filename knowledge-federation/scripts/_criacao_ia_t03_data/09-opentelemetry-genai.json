@@ -1,0 +1,156 @@
+{
+  "group": "OpenTelemetry: semantic conventions para GenAI, agents, métricas e eventos",
+  "check": "Escopo restrito ao repositório oficial open-telemetry/semantic-conventions-genai e às versões consultadas em 2026-10-04; distinguir convenções Development de garantias estáveis.",
+  "notes": [
+    {
+      "slug": "otel-genai-provider-name-perspectiva",
+      "title": "OpenTelemetry GenAI: interpretar gen_ai.provider.name pela perspectiva da instrumentation",
+      "one": "`gen_ai.provider.name` identifica o provider reconhecido pela instrumentation, não necessariamente o fabricante do modelo que está por trás de um proxy.",
+      "why": "Agregações multi-provider dependem de um discriminador coerente entre traces, métricas e eventos. Se uma aplicação envia requests por uma camada compatível com API OpenAI, mas a instrumentation reconhece um serviço Bedrock, atribuir nomes por formato HTTP em vez de provider pode misturar convenções incompatíveis.",
+      "how": "A semconv recomenda escolher o valor com o melhor conhecimento disponível para a instrumentation; ele pode divergir do provider upstream real quando existe proxy ou hosting transparente. Trate o valor como discriminador da família de convenções específicas do provider e mantenha-o consistente com atributos específicos como `aws.bedrock.*`; não misture automaticamente atributos de providers distintos.",
+      "example": "Para uma integração instrumentada diretamente como AWS Bedrock, registre `gen_ai.provider.name=aws.bedrock` junto dos atributos Bedrock correspondentes. Se a aplicação só observa um proxy OpenAI-compatible e não sabe o backend, não invente o upstream: use o provider conhecido pela biblioteca e documente a fronteira de observação.",
+      "limits": "Esse atributo não prova a localização física do modelo nem identifica sozinho a rota real do tráfego. Valores customizados podem ser necessários e devem ser acordados entre instrumentações antes de dashboards dependerem deles.",
+      "verify": "Inspecione spans, métricas e eventos de cada provider; valide o mesmo discriminador nos sinais relacionados e procure combinações cruzadas indevidas como `aws.bedrock.*` sob `openai`.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Model spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-spans.md", "why": "define provider.name como discriminador e admite diferença em relação ao upstream por proxy"},
+        {"label": "OpenTelemetry GenAI — Inference token metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-token-metrics.md", "why": "reaplica provider.name nas métricas e descreve consistência entre atributos e sinais"}
+      ],
+      "review": "Conferi na semconv GenAI que provider.name reflete o melhor conhecimento da instrumentation, pode diferir do upstream via proxy e deve discriminar convenções específicas."
+    },
+    {
+      "slug": "otel-genai-operation-name-taxonomia",
+      "title": "OpenTelemetry GenAI: padronizar gen_ai.operation.name sem apagar a operação real",
+      "one": "`gen_ai.operation.name` usa uma taxonomia de ações GenAI, não necessariamente o nome literal do endpoint ou método do SDK.",
+      "why": "Duas bibliotecas podem chamar a mesma ação de nomes diferentes, dificultando comparar latência, erro e custo. A taxonomia publicada inclui operações de inferência, embeddings, retrieval, agentes, ferramentas, memória e workflows, refletindo que uma execução de IA é maior que uma única chamada ao modelo.",
+      "how": "Quando um valor conhecido corresponde à ação — por exemplo `chat`, `generate_content`, `embeddings`, `retrieval`, `invoke_agent` ou `execute_tool` — a semconv indica que esse valor deve ser usado. Se um sistema específico tiver uma operação diferente, documente-a nas convenções próprias do sistema; instrumentações devem preferir o valor conhecido aplicável quando o nome customizado não estiver documentado.",
+      "example": "Uma chamada multimodal do Gemini pode usar `generate_content`; uma chamada de chat corresponde a `chat`; o passo que executa uma ferramenta é `execute_tool`, não uma segunda inferência. Um wrapper interno chamado `run_model_v4` não deve substituir o valor semântico apenas porque esse é o nome da função local.",
+      "limits": "A lista e o status das convenções GenAI consultadas estão em desenvolvimento, e operações de SDK podem combinar várias ações sem equivalência um-para-um. Não converta automaticamente nomes customizados antigos sem verificar o que cada instrumentação mede.",
+      "verify": "Compare eventos de uma operação simples e de um fluxo com agente; valide que a mesma ação mantém o mesmo operation.name entre providers e que ações diferentes não colapsam em `chat`.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Model spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-spans.md", "why": "lista nomes conhecidos de operação e critérios para valores específicos de sistemas"},
+        {"label": "OpenTelemetry GenAI — Agent spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-agent-spans.md", "why": "distingue invoke_agent, invoke_workflow, plan e execute_tool no domínio de agentes"}
+      ],
+      "review": "Os exemplos e o requisito de preferir valores conhecidos quando aplicáveis foram revisados contra as listas de operações GenAI e de agent spans."
+    },
+    {
+      "slug": "otel-genai-modelo-solicitado-versus-resposta",
+      "title": "OpenTelemetry GenAI: separar modelo solicitado de modelo que respondeu",
+      "one": "`gen_ai.request.model` descreve o modelo pedido, enquanto `gen_ai.response.model` registra, quando conhecido, o modelo que efetivamente gerou a resposta.",
+      "why": "Aliases, roteamento de provider, deployments e modelos fine-tuned podem fazer o nome configurado divergir do modelo retornado. Sobrescrever o valor pedido com o valor observado elimina evidência útil para investigar routing, qualidade ou migrações graduais.",
+      "how": "Registre o nome exato enviado ao provider em `gen_ai.request.model` quando ele é disponibilizado; para modelo fine-tuned, a recomendação é usar um nome mais específico que o base model. Se a resposta informa um modelo efetivo, registre-o separadamente em `gen_ai.response.model`. Não fabrique o campo de resposta quando o provider não revela esse dado.",
+      "example": "O cliente solicita o alias `model-prod`, mas a resposta indica uma revisão concreta `model-2026-09-30`. Armazene o alias em request.model e a revisão informada em response.model, permitindo consultar mudanças de deployment sem reescrever o intent original.",
+      "limits": "Nem todo provider retorna a identidade final e alguns deployments não expõem alias estável. A semconv trata response.model como recomendado e request.model como condicional à disponibilidade, portanto ausência não é automaticamente evidência de erro.",
+      "verify": "Use uma resposta simulada com identidade efetiva diferente da solicitada e confira ambos atributos no span e nas métricas. Em agent span, não preencha request.model se o agente permite múltiplos modelos ou seleção dinâmica.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Model spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-spans.md", "why": "define campos separados para modelo pedido e modelo de resposta"},
+        {"label": "OpenTelemetry GenAI — OpenAI conventions, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/openai.md", "why": "aplica as convenções ao provider OpenAI e mostra campos de request e response"}
+      ],
+      "review": "A diferença entre identidade solicitada e resposta efetiva foi confirmada nos atributos gerais e na extensão de convenções OpenAI."
+    },
+    {
+      "slug": "otel-genai-span-logico-retries",
+      "title": "OpenTelemetry GenAI spans: medir a operação lógica incluindo retries",
+      "one": "O span GenAI de inference representa a duração da operação lógica do cliente até a resposta completa, incluindo retries automáticos realizados dentro dela.",
+      "why": "Um span encerrado no primeiro chunk ou no primeiro erro transitório subestima a experiência observada pela aplicação. Contar cada retry como se fosse uma nova operação de negócio também pode inflar volume e confundir custo, erro e latência por pedido.",
+      "how": "Inicie o span quando a operação é iniciada e encerre quando a resposta for totalmente recebida ou a operação terminar por erro ou cancelamento. Para issue transitório com retry transparente, o span lógico deve abranger todo o período dos retries; instrumentação HTTP pode registrar tentativas em spans filhos distintos, sem mudar a unidade de operação GenAI.",
+      "example": "Uma chamada de chat tenta o provider por duas vezes após um timeout transitório e obtém a resposta na terceira tentativa. O span `chat {model}` cobre o tempo total; spans HTTP filhos podem mostrar cada tentativa, enquanto a métrica de operação registra a experiência completa do cliente.",
+      "limits": "Uma semconv de client span não substitui visibilidade de tentativa, fila ou protocolo no servidor. O modelo local pode usar kind `INTERNAL`; uma chamada remota normalmente usa `CLIENT`, e a instrumentação do provider pode adicionar outros spans.",
+      "verify": "Force um retry, um cancelamento e uma resposta streamada. Confirme horário de início/fim, estado de erro, kind e que a duração do span lógico cobre a sequência completa, não somente a primeira tentativa.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Model spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-spans.md", "why": "define a duração do span de GenAI como operação lógica e inclui retries"},
+        {"label": "OpenTelemetry GenAI — Client metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-metrics.md", "why": "define histogram de duração da operação GenAI do cliente"}
+      ],
+      "review": "A fronteira temporal de inference, retries, cancelamento e resposta completa foi checada no documento de spans; duration foi conferida no documento de métricas."
+    },
+    {
+      "slug": "otel-genai-agent-spans-client-internal-tool",
+      "title": "OpenTelemetry GenAI agents: separar invocation remota, execução local e tool span",
+      "one": "As convenções GenAI distinguem invocation remota de agente (`CLIENT`), execução do agente no mesmo processo (`INTERNAL`) e execução de ferramenta (`execute_tool`).",
+      "why": "Sem essa separação, um trace não mostra se o atraso está no serviço de agente, no raciocínio local, numa inferência ou numa ferramenta externa. IDs transientes de instância também geram falsa identidade e atrapalham comparar execuções do mesmo agente hospedado.",
+      "how": "Para agente remoto, use operação `invoke_agent` e kind `CLIENT`; para agente implementado no próprio processo, a convenção descreve kind `INTERNAL` e associa o span à entidade `gen_ai.main_agent`. Ferramentas possuem operação própria `execute_tool`. Em agente hospedado, `gen_ai.agent.id` deve representar um identificador estável dado pelo provider; evitar IDs de objetos em memória que mudam a cada invocação.",
+      "example": "Uma chamada remota a um agente hospedado aparece como `invoke_agent` com seu identificador de recurso; dentro de um agente local, uma etapa invoca `execute_tool` para consultar um catálogo. A inferência subsequente, se instrumentada, continua representada como operação de inferência distinta.",
+      "limits": "Nem toda framework expõe uma identidade estável, e nem toda integração oferece os mesmos pontos de instrumentação. A documentação observada está em desenvolvimento; não inferir um vínculo causal ou tipo de span que a instrumentação não registra.",
+      "verify": "Monte um fluxo remoto e outro local; verifique kind, operation.name, entidade associada e parentage real no trace. Confirme que um agent instance novo não altera o id estável do agente hospedado.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Agent spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-agent-spans.md", "why": "especifica invoke_agent remoto/local, execute_tool e entidade gen_ai.main_agent"},
+        {"label": "OpenTelemetry GenAI — Agent metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-metrics.md", "why": "define métricas próprias para duração de agente, inference calls e tool calls"}
+      ],
+      "review": "Diferenças entre invocation remota, interna e ferramenta foram verificadas nas convenções; agent.id foi restrito ao identificador estável de hosted agent."
+    },
+    {
+      "slug": "otel-genai-token-counters-versus-histograms",
+      "title": "OpenTelemetry GenAI token metrics: contadores de uso não são histogramas por operação",
+      "one": "As convenções separam contadores monotônicos de consumo de tokens de histogramas que mostram a distribuição por operação.",
+      "why": "Somar percentis de operações como se fossem faturamento produz totais errados; por outro lado, contar dimensões detalhadas de cache como tokens adicionais duplica subconjuntos. Instrumentar os dois grupos com semânticas explícitas permite estimar gasto e observar outliers sem confundir as perguntas.",
+      "how": "As métricas `gen_ai.client.inference.usage.*` são os instrumentos primários para acompanhar uso ao longo do tempo e aproximação de custo; se o provider informa contagem faturada e consumida, a convenção pede reportar a faturada. `gen_ai.client.inference.operation.input_tokens` e `...output_tokens` são histogramas de distribuição, úteis para percentis e extremos, não para total ou custo. Cache e reasoning são subconjuntos dos totais; tokens de uso são divididos por `gen_ai.token.modality`, enquanto os histogramas por operação não devem ser particionados por modalidade para percentis sem sentido.",
+      "example": "Para uma request com 300 tokens de entrada, sendo 40 de cache e 200 de imagem, o contador total continua sendo 300; as métricas detalhadas podem explicar cache e modalidade sem adicioná-los novamente. Use p95 do histograma para observar requests grandes, mas não como total de tokens faturados.",
+      "limits": "Tokens podem não estar disponíveis, ser estimados ou usar unidades específicas de provider. Modality `unknown` é preferível a inventar uma separação quando provider e instrumentation não conseguem determiná-la de modo confiável.",
+      "verify": "Com uma fixture multimodal que inclui tokens de cache, confira a inclusão nos totais e subconjuntos. Compare o somatório de contadores com dados billed do provider e valide que consultas de percentil usam os histogramas sem quebrar modality.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Inference token metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-token-metrics.md", "why": "define counters de uso, histogramas por operação, subsets de cache/reasoning e cautela de modality"},
+        {"label": "OpenTelemetry GenAI — Client metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-metrics.md", "why": "separa token instruments das métricas de duração de operação"}
+      ],
+      "review": "A distinção entre counters e histograms, o exemplo de subconjuntos e a proibição prática de percentis por modalidade foram conferidos no documento de token metrics."
+    },
+    {
+      "slug": "otel-genai-streaming-latencias-por-chunk",
+      "title": "OpenTelemetry GenAI streaming: distinguir time to first chunk de cadência",
+      "one": "`time_to_first_chunk` mede a espera até o primeiro chunk; `time_per_output_chunk` mede intervalos entre chunks seguintes, não a duração completa.",
+      "why": "Uma resposta streamada pode começar rápido e depois produzir tokens lentamente, ou iniciar tarde e fluir bem após o primeiro fragmento. Um único número de latência não distingue essas experiências e pode direcionar incorretamente otimizações de servidor ou rede.",
+      "how": "Use `gen_ai.client.operation.time_to_first_chunk` para o intervalo entre emitir o request e receber o primeiro chunk. Registre `gen_ai.client.operation.time_per_output_chunk` para cada chunk depois do primeiro, medindo do fim do chunk anterior ao fim do atual. A semconv recomenda ambos para chamadas streamadas e não recomenda em chamadas sem streaming; compare com `gen_ai.client.operation.duration` para observar tempo total.",
+      "example": "Uma completion termina em 6,8 segundos, recebe seu primeiro chunk após 0,45 s e tem intervalos posteriores de 0,07–0,11 s. Os três sinais apontam para boa latência inicial, cadência relativamente estável e duração total, sem tratar time-to-first como tempo por token.",
+      "limits": "Proxies e buffers podem alterar quando o cliente observa chunks em comparação com quando o modelo os produziu. Os nomes dos sinais e buckets recomendados estão sob convenções em desenvolvimento, e resultados dependem de uma definição consistente de início e fim de chunk.",
+      "verify": "Teste stream que atrasa só o primeiro chunk, outro que pausa entre chunks e um request não streamado. Confirme que a primeira mudança altera apenas time-to-first, os intervalos seguintes são registrados individualmente e o modo não streamado não emite essas métricas.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Client metrics, revisão 8ffdf56", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/8ffdf568e1b4391a99adb081db16e8102e36918e/docs/gen-ai/gen-ai-metrics.md", "why": "define duration, time_to_first_chunk e time_per_output_chunk para client calls"},
+        {"label": "OpenTelemetry GenAI — Model spans, revisão b9ecbae", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/b9ecbaef4ac462cc2b6f7f7763b2cff1d15d5400/docs/gen-ai/gen-ai-spans.md", "why": "documenta o atributo de resposta time_to_first_chunk em streams"}
+      ],
+      "review": "Unidades e fronteiras temporais dos dois histogramas foram verificadas no documento de client metrics; o atributo de span foi conferido separadamente."
+    },
+    {
+      "slug": "otel-genai-conteudo-opt-in-minimizacao",
+      "title": "OpenTelemetry GenAI: minimizar conteúdo de prompt e resposta na telemetria",
+      "one": "A captura de mensagens, instruções e detalhes de operações GenAI é opt-in porque pode exportar conteúdo confidencial, não apenas metadados de observabilidade.",
+      "why": "Prompts podem conter dados pessoais, credenciais copiadas, informação de negócio ou conteúdo de ferramentas. Eventos e spans duráveis ampliam o número de sistemas que recebem esse material, e habilitar captura em todas as requisições pode criar risco de privacidade, custo e retenção sem benefício proporcional.",
+      "how": "As convenções marcam `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions` e o evento `gen_ai.client.inference.operation.details` como opt-in; instrumentações podem oferecer filtragem ou truncamento. Habilite somente campos necessários, prefira dados sintéticos em ambientes de teste e aplique minimização, acesso restrito e retenção aos exporters e Collector. Mensagens em eventos devem preservar estrutura conforme o schema definido pela convenção.",
+      "example": "Uma equipe coleta operation.name, provider, model e usage em produção, mas mantém conteúdo desativado. Em um ambiente isolado de depuração, ativa mensagens truncadas por tempo limitado, remove campos sensíveis no Collector e expira traces e eventos após a investigação.",
+      "limits": "Truncar não garante remoção de PII, e redaction posterior não desfaz a cópia inicial para exporter, buffer ou storage. A aplicação continua responsável por revisar conteúdo emitido por bibliotecas de instrumentação e cumprir consentimento e políticas legais aplicáveis.",
+      "verify": "Inspecione payloads antes e depois do Collector, teste prompt com identificadores-canário e confirme que nada aparece quando opt-in está desligado. Verifique permissões, logs auxiliares, retenção e configuração de captura em SDKs de cada linguagem.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Events, revisão 5ca9052", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/5ca9052bc796ef1e497200b1d558fd87a201f335/docs/gen-ai/gen-ai-events.md", "why": "define o evento opt-in de detalhes e atributos estruturados de mensagens"},
+        {"label": "OpenTelemetry — Handling sensitive data", "url": "https://opentelemetry.io/docs/security/handling-sensitive-data/", "why": "atribui ao implementador minimização, revisão e proteção de dados sensíveis coletados"}
+      ],
+      "review": "Status opt-in e possibilidade de mensagens com PII foram confirmados na semconv GenAI; minimização e responsabilidade foram conferidas no guia oficial de segurança."
+    },
+    {
+      "slug": "otel-genai-evaluation-result-correlacao",
+      "title": "OpenTelemetry GenAI evaluation.result: correlacionar resultado ao output avaliado",
+      "one": "O evento `gen_ai.evaluation.result` deve se ligar ao span da operação GenAI avaliada quando possível, ou usar response.id como correlação alternativa.",
+      "why": "Uma pontuação sem identidade da resposta pode ser associada à geração errada quando há retries, várias choices ou avaliações assíncronas. Modelar avaliação como evento separado conserva a distinção entre produzir uma resposta e julgar sua qualidade.",
+      "how": "Use o nome obrigatório `gen_ai.evaluation.result`; registre `gen_ai.evaluation.name` para indicar a métrica avaliada e score label/value quando aplicável. A convenção recomenda parentear o evento no span GenAI alvo; se o span id não estiver disponível, registre `gen_ai.response.id` quando possível. O label deve ter baixa cardinalidade e a lista de rótulos precisa ser documentada pelo evaluator.",
+      "example": "Um avaliador offline publica `gen_ai.evaluation.result` ligado ao trace da resposta que pontuou como relevante. Se avaliação ocorrer em outro job sem span original, inclui response.id e nome/versionamento da avaliação para relacioná-la ao registro de inference.",
+      "limits": "Eventos e suas semconv estão em desenvolvimento e podem não estar implementados em todas as linguagens. Explanation textual pode ser extensa ou conter dados sensíveis; score não substitui o output avaliado e a correlação por ID depende de disponibilidade e escopo de retenção.",
+      "verify": "Gere duas respostas e dois eventos de avaliação em ordem diferente; confirme parentage ou response.id correto, que labels pertencem a conjunto controlado e que métricas de pontuação não multiplicam spans de inference.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — Events, revisão 5ca9052", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/5ca9052bc796ef1e497200b1d558fd87a201f335/docs/gen-ai/gen-ai-events.md", "why": "define nome, atributos, parentage e response.id para gen_ai.evaluation.result"},
+        {"label": "OpenTelemetry — Logs Data Model", "url": "https://opentelemetry.io/docs/specs/otel/logs/data-model/", "why": "define eventos como LogRecords e os campos de contexto de trace/span"}
+      ],
+      "review": "Parentage, response.id e baixa cardinalidade dos labels foram checados no evento de avaliação; a representação como LogRecord foi conferida no modelo oficial."
+    },
+    {
+      "slug": "otel-genai-conventions-development-status",
+      "title": "OpenTelemetry GenAI semconv: interpretar o status Development antes de fixar integração",
+      "one": "O repositório atual declara as convenções GenAI consultadas como `Development`, por isso nomes e comportamentos não devem ser tratados como contratos estáveis sem revisão de versão.",
+      "why": "Instrumentações e exporters podem implementar subconjuntos diferentes enquanto o esquema evolui; misturar um dashboard novo com SDK antigo pode produzir campos ausentes ou semânticas divergentes. A página antiga de GenAI no site principal também informa que o conteúdo foi movido e não é mantido naquele repositório.",
+      "how": "Use `open-telemetry/semantic-conventions-genai` como fonte ativa, anote o commit ou release que orienta a integração e teste o sinal realmente emitido por cada SDK. Antes de atualizar, compare nomes de atributos, requirement levels e schemas de eventos; status é declarado por documento individual, não por toda a especificação nem por cada implementação.",
+      "example": "Uma atualização do dashboard adota `gen_ai.client.inference.usage.*` a partir de uma revisão registrada. O pipeline valida cardinalidade e payload de uma chamada real em staging; só depois migra queries e retenção, preservando alias temporário se SDKs em produção ainda emitem nomes anteriores.",
+      "limits": "Fixar um commit melhora reprodutibilidade, mas não garante que SDKs implementem aquela revisão ou todos os recursos. Maturidade `Development` na orientação OpenTelemetry significa que peças e opções podem mudar; não inferir estabilidade só porque o código do signal parece definitivo.",
+      "verify": "Inclua revisão esperada em documentação e fixtures de telemetry, compare SDKs e exportadores e revise mudanças upstream antes de atualizar. Confirme o status no arquivo específico e a disponibilidade na compliance matrix para a linguagem usada.",
+      "sources": [
+        {"label": "OpenTelemetry GenAI — índice de semantic conventions", "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md", "why": "identifica o repositório atual, sinais cobertos e status Development"},
+        {"label": "OpenTelemetry — Definitions of Document Statuses", "url": "https://opentelemetry.io/docs/specs/otel/document-status/", "why": "explica que o status se aplica ao documento individual, não à especificação inteira"}
+      ],
+      "review": "Status Development, repositório ativo e distinção entre status de documento e especificação foram checados nas páginas oficiais consultadas."
+    }
+  ]
+}
