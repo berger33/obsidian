@@ -1,0 +1,81 @@
+SOURCES: https://docs.cursor.com/context/rules-for-ai | https://docs.cursor.com/context/@-symbols/@-codebase
+
+===NOTE===
+121|cursor-padronizar-regras-com-cursorrules|Cursor: padronizar convenções no arquivo .cursorrules|O arquivo .cursorrules na raiz do projeto orienta a IA com instruções contextuais persistentes sobre a arquitetura do código.|Manter diretrizes arquiteturais claras no repositório evita que o modelo sugira padrões legados ou estruturas de pastas inadequadas.|Insira um arquivo `.cursorrules` contendo restrições de tipagem, preferências de bibliotecas e padrões de componentes. O editor carrega automaticamente essas instruções ao montar os prompts do chat e do inline edit.|```markdown
+# Regras do Projeto no .cursorrules
+- Preferir funcoes utilitarias puras a classes de servico anemicas.
+- Para manipulacao de datas, utilizar exclusivamente a biblioteca date-fns.
+- Toda nova rota de API deve conter validacao de payload com schemas Zod.
+```|Regras prolixas ou genéricas reduzem a eficácia do assistente e podem gerar comportamentos contraditórios com o código existente.|Abra o chat do Cursor, solicite a criação de um novo componente e avalie se as convenções declaradas no `.cursorrules` foram estritamente respeitadas.|continue-dev-padronizar-regras-de-projeto, claude-code-definir-instrucoes-claudemd, cursor-otimizar-indexacao-com-cursorignore
+
+===NOTE===
+122|cursor-otimizar-indexacao-com-cursorignore|Cursor: otimizar indexação vetorial com .cursorignore|O arquivo .cursorignore exclui arquivos binários, builds e dependências volumosas do índice de busca semântica do repositório.|Indexar diretórios de cache ou bibliotecas de terceiros satura o índice vetorial com código irrelevante e degrada a precisão do contexto.|Crie um arquivo `.cursorignore` listando pastas como `dist/`, `build/`, `node_modules/` e arquivos de dados pesados (`.sqlite`, `.csv`). O sistema de indexação do Cursor ignora esses caminhos ao gerar embeddings.|```gitignore
+# Arquivo .cursorignore para otimizacao do indice
+node_modules/
+dist/
+coverage/
+*.sqlite
+*.log
+```|Ignorar diretórios essenciais por engano impede que o assistente localize definições e tipos legítimos do projeto.|Verifique o status de indexação do repositório na tela de configurações do Cursor e confirme que apenas arquivos de código-fonte válidos foram processados.|continue-dev-indexar-codebase-com-embeddings-locais, cursor-priorizar-janela-de-contexto-essencial, cursor-usar-simbolos-de-contexto-docs-e-git
+
+===NOTE===
+123|cursor-usar-simbolos-de-contexto-docs-e-git|Cursor: usar símbolos de contexto @Docs e @Git|Os símbolos contextuais (@Docs, @Git, @Files) direcionam fontes de dados específicas para a janela de raciocínio da IA.|Apontar manualmente os arquivos e a documentação reduz o custo de tokens e elimina a necessidade de adivinhações por parte do modelo.|Digite `@` seguido do identificador do arquivo (`@src/auth.ts`), do histórico recente do Git (`@Git`) ou de uma documentação indexada (`@Docs`) no prompt do chat para vincular trechos exatos de informação.|```markdown
+@src/models/user.ts @src/controllers/auth.ts
+Atualize a rota de registro para salvar o hash da senha utilizando a nova interface do modelo.
+```|Vincular um número excessivo de arquivos longos em um mesmo prompt pode esgotar o orçamento de contexto e degradar o raciocínio.|Envie uma solicitação utilizando `@Files` apontando para dois módulos complementares e verifique se as edições propostas integram corretamente as dependências.|continue-dev-customizar-context-providers, cursor-composer-coordenar-edicoes-multi-arquivo, cursor-priorizar-janela-de-contexto-essencial
+
+===NOTE===
+124|cursor-composer-coordenar-edicoes-multi-arquivo|Cursor Composer: coordenar edições multi-arquivo com checkpoint|O Composer do Cursor aplica modificações coordenadas em múltiplos arquivos simultaneamente a partir de um único plano de ação.|Refatorações em grande escala, como alterações de assinaturas de métodos e migrações de esquemas, exigem consistência entre diferentes camadas do software.|Abra o painel Composer (Ctrl+I ou Cmd+I), descreva a alteração arquitetural e vincule os módulos afetados. O Composer gera diffs paralelos nos arquivos envolvidos, permitindo revisão individual antes da confirmação.|```markdown
+<!-- Prompt no Composer -->
+Refatore o servico de inventario em src/inventory/:
+1. Crie a interface IInventoryItem em types.ts
+2. Atualize o controller InventoryController.ts
+3. Ajuste os testes unitarios correspondentes em tests/inventory.test.ts
+```|Modificações simultâneas em muitos arquivos podem gerar inconsistências de tipagem se o modelo não mantiver a coesão das interfaces.|Revise os diffs apresentados em cada aba pelo Composer antes de clicar em `Accept All` e execute a suíte de testes do projeto.|claude-code-orquestrar-subagentes-especializados, cursor-revisar-diffs-inline-com-rejeicao-parcial, cursor-corrigir-erros-com-diagnosticos-do-compilador
+
+===NOTE===
+125|cursor-executar-scripts-no-terminal-integrado|Cursor: executar scripts no terminal integrado com supervisão|A execução supervisionada de comandos de terminal pelo assistente agiliza tarefas de compilação, instalação de pacotes e migrações.|Permitir que a IA execute verificações diretamente no terminal reduz o atrito de alternância de janelas e acelera ciclos de feedback.|Solicite no chat a execução de comandos como `npm test` ou `cargo check`. O assistente monta o comando e solicita confirmação visual no terminal antes de iniciar o processo, capturando a saída para depuração.|```bash
+# Comando sugerido pela IA aguardando clique de confirmacao
+npm run test:unit -- src/auth.test.ts
+[Accept and Run] [Cancel]
+```|Executar scripts sem inspecionar os argumentos pode introduzir comandos destrutivos ou instalações de dependências incorretas.|Solicite a execução de um script de teste e verifique se o assistente exibe a caixa de confirmação antes de rodar o processo no shell.|claude-code-gerenciar-permissoes-de-execucao-de-comandos, cursor-corrigir-erros-com-diagnosticos-do-compilador, qa-jogos-executar-playtests-headless-em-ci
+
+===NOTE===
+126|cursor-priorizar-janela-de-contexto-essencial|Cursor: priorizar arquivos essenciais na janela de contexto|A seleção cuidadosa dos arquivos incluídos no contexto evita estouro da janela de atenção e preserva a precisão das respostas.|Excesso de código irrelevante degrada a habilidade do modelo de focar em invariantes lógicos e regras de negócio específicas.|Mantenha abertos apenas os arquivos diretamente relacionados à tarefa e feche abas secundárias antes de acionar a geração de código assistida.|```markdown
+<!-- Exemplo de prompt enxuto e focado -->
+Apenas com base na interface exposta em src/contracts/IPayment.ts,
+escreva a implementacao de PixPaymentGateway tratando timeout de conexao.
+```|Restringir excessivamente o contexto pode ocultar tipos utilitários ou dependências cruzadas necessárias para a compilação.|Monitore o contador de tokens no rodapé da janela de chat e assegure que o prompt permaneça dentro dos limites eficientes do modelo.|anthropic-api-controlar-limites-com-max-tokens, cursor-otimizar-indexacao-com-cursorignore, responses-api-limitar-o-tamanho-da-saida
+
+===NOTE===
+127|cursor-revisar-diffs-inline-com-rejeicao-parcial|Cursor: revisar diffs inline com rejeição granular|A inspeção de diffs inline com capacidade de rejeição linha a linha permite aceitar apenas sugestões seguras e validadas.|Aceitar blocos inteiros de código gerado pode introduzir alterações não solicitadas ou deletar comentários e tratamentos de exceção.|Durante a edição inline (Ctrl+K ou Cmd+K), utilize os botões de aceitação e rejeição granular para filtrar mudanças desejadas e descartar trechos indesejados.|```diff
+- function parsePayload(data: unknown): UserData {
++ function parsePayload(data: unknown): UserData { // [Accept]
+-   return data as UserData;
++   if (!data || typeof data !== 'object') throw new Error('Invalid'); // [Accept]
++   // Removendo log de auditoria desnecessario (trecho rejeitado pelo dev) // [Reject]
+```|Revisões superficiais em diffs longos podem deixar passar alterações sutis em operadores de comparação ou tipagens fracas.|Analise minuciosamente cada linha alterada no editor antes de confirmar o salvamento do arquivo no workspace.|copilot-inspecionar-o-diff-antes-de-aceitar, cursor-composer-coordenar-edicoes-multi-arquivo, context-engineering-usar-testes-como-especificacao
+
+===NOTE===
+128|context-engineering-usar-testes-como-especificacao|Engenharia de Contexto: usar testes unitários como especificação|Fornecer testes unitários existentes como especificação orienta a IA a produzir implementações corretas por construção.|Descrições verbais podem conter ambiguidades, enquanto casos de teste com asserções definem formalmente as entradas, saídas e limites esperados.|Inclua o arquivo de teste correspondente ao solicitar a implementação de uma função, instruindo o modelo a garantir que todas as asserções sejam satisfeitas.|```markdown
+@src/utils/calculator.test.ts
+Implemente a funcao calculateTax() em src/utils/calculator.ts
+de modo que satisfaca integralmente todos os cenarios de teste anexados.
+```|Se os testes forem incompletos ou contiverem asserções falhas, o modelo produzirá uma implementação enviesada pelos erros do próprio teste.|Execute a suíte de testes após a geração do código e confirme a aprovação de 100% dos cenários especificados.|copilot-gerar-testes-a-partir-de-comportamento, claude-code-validar-testes-antes-do-commit, qa-jogos-isolar-cenarios-de-regressao-de-gameplay
+
+===NOTE===
+129|context-engineering-injetar-tipos-estaticos-e-interfaces|Engenharia de Contexto: injetar tipos estáticos para evitar alucinações|Apresentar definições de tipos estáticos e interfaces restringe o espaço de busca do modelo e previne o uso de APIs inexistentes.|Modelos generativos tendem a inventar métodos plausíveis quando não recebem contratos estritos das bibliotecas utilizadas.|Injete contratos de interface TypeScript, Rust traits ou classes abstratas C# no prompt para guiar a implementação dos métodos concretos.|```typescript
+// Interface contratual fornecida no prompt de contexto
+export interface IQuestReward {
+  experience: number;
+  items: Array<{ id: string; quantity: number }>;
+  grantBonus(multiplier: number): void;
+}
+```|Contratos desatualizados em relação à versão real da biblioteca geram erros de tipo no momento da compilação do projeto.|Compile o projeto após a geração para assegurar que nenhum método não declarado na interface foi utilizado.|saida-estruturada-usar-json-schema-estrito, function-calling-declarar-contrato-de-ferramenta, cursor-padronizar-regras-com-cursorrules
+
+===NOTE===
+130|cursor-corrigir-erros-com-diagnosticos-do-compilador|Cursor: corrigir erros alimentando diagnósticos do compilador|Alimentar o modelo diretamente com as mensagens de erro do compilador ou linter acelera a correção de falhas de sintaxe e tipos.|Descrever erros manualmente perde detalhes precisos como número de linha, código de erro e tipos esperados reportados pelo compilador.|Copie a mensagem de erro emitida pelo compilador ou utilize o botão `Fix with AI` na lista de problemas do editor para que a IA analise o erro e o código adjacente.|```bash
+# Diagnostico do TypeScript alimentado no chat
+src/auth.ts:42:15 - error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+> Corrija a condicao em src/auth.ts para tratar explicitamente o caso de valor nulo.
+```|Correções cegas de erros do linter podem mascarar bugs reais ao utilizar casts forçados (`as any`) em vez de checagens defensivas.|Aplique a correção sugerida, recompile o projeto e verifique se o erro desapareceu sem introduzir novos avisos de compilação.|cursor-revisar-diffs-inline-com-rejeicao-parcial, claude-code-validar-testes-antes-do-commit, documentacao-executar-exemplos-de-codigo

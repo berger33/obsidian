@@ -1,0 +1,111 @@
+SOURCES: https://elevenlabs.io/docs/api-reference/text-to-speech | https://fmod.com/docs/2.02/studio/welcome-to-fmod-studio.html
+
+===NOTE===
+171|audio-ia-sintetizar-falas-dinamicas-de-npcs|Áudio com IA: sintetizar falas dinâmicas de NPCs via chamadas assíncronas|A geração de áudio dinâmico por Text-to-Speech (TTS) permite que NPCs pronunciem falas personalizadas com base no contexto do jogador.|Gravações estáticas não conseguem narrar eventos gerados proceduralmente ou citar o nome customizado escolhido pelo jogador.|Dispare uma requisição HTTP assíncrona para a API de síntese de voz informando o texto da fala, o identificador da voz e o modelo neural, recebendo um stream de áudio em formato PCM ou MP3 para reprodução imediata.|```csharp
+// Exemplo de requisicao assincrona de TTS em Unity C#
+using UnityEngine.Networking;
+using System.Threading.Tasks;
+
+public async Task<AudioClip> FetchNPCSpeechAsync(string text, string voiceId)
+{
+    string url = $"https://api.elevenlabs.io/v1/text-to-speech/{voiceId}";
+    // Enviar POST com payload JSON e carregar bytes como AudioClip
+    return await DownloadAudioStreamAsync(url, text);
+}
+```|Chamadas de rede em tempo real introduzem latência de alguns segundos antes do início da reprodução da fala do NPC.|Inicie a requisição de geração antes do término do diálogo anterior para ocultar a latência de transferência de dados.|audio-ia-armazenar-linhas-de-voz-em-cache-local, audio-ia-prover-linhas-de-dialogo-de-fallback, fmod-rotear-vozes-de-ia-para-barramentos-de-dialogo
+
+===NOTE===
+172|audio-ia-armazenar-linhas-de-voz-em-cache-local|Áudio com IA: armazenar falas geradas em cache de disco local|O armazenamento em cache de arquivos de áudio evita chamadas redundantes à API para falas frequentes e reduz custos operacionais.|Falas comuns de saudação, avisos de combate e respostas padrão de NPCs são repetidas dezenas de vezes durante uma sessão de jogo.|Gere um hash SHA-256 a partir do texto e do ID da voz para servir como chave de busca. Se o arquivo `.wav` ou `.ogg` correspondente existir no diretório de cache local, carregue-o do disco sem usar a rede.|```csharp
+// Verificando cache local antes de disparar requisicao de audio
+string hashKey = GenerateSHA256(voiceId + "_" + text);
+string localPath = Path.Combine(Application.persistentDataPath, "AudioCache", hashKey + ".ogg");
+
+if (File.Exists(localPath))
+{
+    return LoadAudioFromDisk(localPath);
+}
+```|O acúmulo descontrolado de arquivos de voz em cache pode consumir espaço excessivo de armazenamento no dispositivo do jogador.|Inspecione o diretório de cache em disco após disparar falas repetidas e valide se o tempo de carregamento cai para poucos milissegundos.|audio-ia-sintetizar-falas-dinamicas-de-npcs, audio-ia-prover-linhas-de-dialogo-de-fallback, legendas-sincronizar-texto-com-timestamps-de-palavras
+
+===NOTE===
+173|audio-ia-extrair-visemas-para-lip-sync-com-rhubarb|Lip Sync com IA: extrair visemas fonéticos de áudio com Rhubarb|A extração automatizada de visemas e fonemas a partir de ondas sonoras viabiliza sincronia labial precisa em personagens 3D.|Animar manualmente a boca de personagens para milhares de linhas de diálogo procedural é inviável em projetos de grande escala.|Processe o arquivo de áudio com a ferramenta Rhubarb Lip Sync ou plugins de fonética, gerando uma trilha de dados contendo marcadores temporais com visemas padronizados (bocas em formato A, B, C, D, E, F, G, H, X).|```bash
+# Extraindo marcadores de sincronia labial para JSON com Rhubarb Lip Sync
+rhubarb -f json -r phonetic speech_npc_01.wav -o speech_npc_01_lipsync.json
+```|Arquivos de áudio com música de fundo pesada ou ruídos de vento podem gerar falsos visemas ou dessincronizar a fala.|Execute a extração de visemas exclusivamente sobre a trilha limpa de voz isolada antes da mixagem final.|audio-ia-mapear-visemas-a-blend-shapes-faciais, legendas-sincronizar-texto-com-timestamps-de-palavras, unity-animation-rigging-orientar-olhar-com-multi-aim
+
+===NOTE===
+174|audio-ia-mapear-visemas-a-blend-shapes-faciais|Animação Facial: mapear visemas fonéticos a blend shapes do modelo 3D|O mapeamento de dados fonéticos para blend shapes faciais interpola a abertura de lábios e movimentos de mandíbula em tempo real.|Visemas aplicados de forma binária e sem suavização causam estalos e deformações faciais robóticas durante a fala do personagem.|Crie uma tabela de equivalência associando cada letra de visema (ex.: Viseme A = `JawOpen`, Viseme B = `LipsTogether`) aos blend shapes da malha e interpole os pesos com suavização (*smooth damp*).|```csharp
+// Atualizando peso do Blend Shape facial conforme o visema ativo
+public void UpdateLipSync(SkinnedMeshRenderer faceMesh, string currentViseme, float weight)
+{
+    int blendIndex = faceMesh.sharedMesh.GetBlendShapeIndex("viseme_" + currentViseme);
+    if (blendIndex >= 0)
+    {
+        faceMesh.SetBlendShapeWeight(blendIndex, Mathf.Lerp(faceMesh.GetBlendShapeWeight(blendIndex), weight * 100f, Time.deltaTime * 20f));
+    }
+}
+```|Excesso de blend shapes ativados simultaneamente pode deformar a geometria ao redor das bochechas e nariz de forma estranha.|Execute o áudio sincronizado na cena e verifique se as transições de abertura de boca coincidem com as vogais e consoantes pronunciadas.|audio-ia-extrair-visemas-para-lip-sync-com-rhubarb, unity-playablegraph-mesclar-animacoes-procedurais, blender-preservar-acoes-com-nla
+
+===NOTE===
+175|fmod-rotear-vozes-de-ia-para-barramentos-de-dialogo|FMOD: rotear vozes sintéticas para barramentos de diálogo com efeitos|O roteamento de vozes para barramentos (*busses*) dedicados no FMOD garante que falas geradas por IA recebam tratamento acústico coerente.|Tocar vozes de IA diretamente sem reverb espacial e equalização faz o diálogo soar desconectado da arquitetura da sala do jogo.|Crie um barramento `Dialog/NPC_Voices` no FMOD Studio e injete as streams de áudio geradas nesse canal, aplicando efeitos de reverberação de ambiente, compressão dinâmica e filtros de oclusão.|```csharp
+// Roteando stream de audio para o barramento de dialogo do FMOD
+FMOD.Studio.Bus dialogBus;
+dialogBus = FMODUnity.RuntimeManager.GetBus("bus:/Master/Dialog");
+// Injetar o program sound ou canal na mixagem
+```|Efeitos de reverberação muito longos em barramentos de diálogo comprometem a clareza e a inteligibilidade do texto narrado.|Monitore os medidores de VU no FMOD Mixer durante a fala do NPC para assegurar que o sinal não atinja clipping digital.|audio-ia-configurar-espacializacao-3d-e-atenuacao, mixagem-aplicar-audio-ducking-durante-vozes-de-ia, audio-ia-sintetizar-falas-dinamicas-de-npcs
+
+===NOTE===
+176|audio-ia-configurar-espacializacao-3d-e-atenuacao|Áudio 3D: configurar atenuação logarítmica e posicionamento espacial|A espacialização tridimensional e o cálculo de atenuação por distância situam a origem da fala do NPC com precisão acústica no mundo virtual.|Vozes reproduzidas em estéreo simples impedem que o jogador localize visualmente qual personagem está falando em uma multidão.|Configure curvas de atenuação logarítmica com distâncias mínima e máxima bem delimitadas e ative processamento binaural (HRTF) na fonte de áudio do NPC.|```csharp
+// Configurando atenuacao logaritmica em uma fonte de audio 3D
+AudioSource source = GetComponent<AudioSource>();
+source.spatialBlend = 1.0f; // 100% 3D espacial
+source.rolloffMode = AudioRolloffMode.Logarithmic;
+source.minDistance = 2.0f;
+source.maxDistance = 25.0f;
+```|Distâncias mínimas muito curtas causam quedas bruscas de volume se o jogador der apenas dois passos para trás durante a conversa.|Caminhe em círculos ao redor do personagem falante com fones de ouvido e valide o balanço binaural nos canais esquerdo e direito.|fmod-rotear-vozes-de-ia-para-barramentos-de-dialogo, mixagem-aplicar-audio-ducking-durante-vozes-de-ia, godot-propagar-eventos-sonoros-para-audicao-de-npcs
+
+===NOTE===
+177|mixagem-aplicar-audio-ducking-durante-vozes-de-ia|Mixagem de Som: aplicar audio ducking automático durante falas de IA|O audio ducking reduz automaticamente o volume da trilha musical e dos efeitos sonoros durante a reprodução de diálogos importantes.|Música alta ou efeitos estridentes de combate mascaram a voz do NPC e prejudicam a compreensão da história pelo jogador.|Configure um compressor com entrada lateral (*sidechain ducking*) no barramento de música, disparado pelo nível de sinal presente no barramento de vozes sintéticas.|```text
+// Grafo de Sidechain Ducking no Mixer
+[Barramento de Vozes] ──► [Sidechain Send]
+                                │
+                                ▼
+[Barramento de Musica] ──► [Compressor (Recebe Sidechain: atenua -6dB)]
+```|Atenuações excessivas ou tempos de recuperação (*release*) muito rápidos causam efeito de bombeamento sonoro desconfortável na música.|Reproduza uma fala de IA sobreposta à trilha de ação e confirme se a música atenua suavemente em 6dB sem cortes bruscos.|fmod-rotear-vozes-de-ia-para-barramentos-de-dialogo, legendas-sincronizar-texto-com-timestamps-de-palavras, audio-ia-sintetizar-falas-dinamicas-de-npcs
+
+===NOTE===
+178|legendas-sincronizar-texto-com-timestamps-de-palavras|Legendas: sincronizar exibição de texto com timestamps por palavra|A sincronização precisa de legendas com timestamps de palavras melhora a acessibilidade e a retenção do diálogo.|Exibir blocos longos de texto antes do tempo correto revela spoilers prematuramente e quebra o ritmo dramático da cena.|Capture os metadados de alinhamento temporal (*word-level timestamps*) retornados pela API de TTS e atualize as palavras na tela em sincronia com o cursor de reprodução do áudio.|```json
+// Estrutura de timestamps por palavra retornada pela API
+{
+  "alignment": {
+    "characters": ["O", "l", "a", " ", "v", "i", "a", "j", "a", "n", "t", "e"],
+    "character_start_times_seconds": [0.0, 0.05, 0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+  }
+}
+```|Dessincronizações entre o clock de reprodução do motor e os timestamps da API geram legendas adiantadas ou atrasadas em relação ao som.|Valide a correspondência temporal reproduzindo o áudio com as legendas destacadas em tempo real na tela de teste de UI.|audio-ia-extrair-visemas-para-lip-sync-com-rhubarb, documentacao-tornar-resultado-e-verificacao-explicitos, audio-ia-modular-prosodia-e-estabilidade-por-emocao
+
+===NOTE===
+179|audio-ia-modular-prosodia-e-estabilidade-por-emocao|Áudio com IA: modular parâmetros de prosódia e estilo por emoção|A modulação dinâmica de parâmetros de estabilidade e estilo vocal reflete o estado emocional do NPC em situações de calma ou perigo.|Personagens que falam com o mesmo tom monótono durante uma batalha e em um momento de descanso quebram a imersão narrativa.|Ajuste os parâmetros `stability`, `similarity_boost` e `style` na requisição de síntese de acordo com a variável de estresse ou agressividade da máquina de estados do NPC.|```json
+{
+  "voice_settings": {
+    "stability": 0.35,
+    "similarity_boost": 0.80,
+    "style": 0.65,
+    "use_speaker_boost": true
+  }
+}
+```|Valores de estabilidade excessivamente baixos (`< 0.2`) podem gerar falhas de pronúncia, ruídos na voz ou risos involuntários do modelo de fala.|Realize testes comparativos de frases com diferentes níveis de estresse e assegure que a voz permaneça inteligível em todas as configurações.|audio-ia-sintetizar-falas-dinamicas-de-npcs, godot-estruturar-maquina-de-estados-hierarquica, audio-ia-prover-linhas-de-dialogo-de-fallback
+
+===NOTE===
+180|audio-ia-prover-linhas-de-dialogo-de-fallback|Resiliência de Áudio: prover falas pré-gravadas como fallback de rede|A disponibilização de falas pré-gravadas locais garante continuidade do jogo quando a conexão com a API de voz falhar ou expirar.|Erros de rede ou lentidão em APIs remotas nunca devem travar a progressão de missões ou deixar NPCs mudos durante a partida.|Implemente um mecanismo de fallback: se a requisição de TTS não retornar em até 1.5 segundos ou responder com erro HTTP, reproduza imediatamente um áudio pré-gravado padrão em disco.|```csharp
+// Mecanismo de timeout e fallback para falas de NPCs
+try
+{
+    var audio = await FetchSpeechWithTimeout(text, 1500);
+    PlayAudio(audio);
+}
+catch (System.Exception)
+{
+    // Reproduzir linha de voz generica previamente empacotada no jogo
+    PlayFallbackAudio("npc_generic_grunt_01");
+}
+```|Fallbacks com conteúdo excessivamente genérico podem descontextualizar o diálogo se a missão depender de instruções específicas.|Simule a interrupção da conexão de rede e verifique se o áudio de contingência toca imediatamente sem gerar exceções não tratadas.|audio-ia-sintetizar-falas-dinamicas-de-npcs, audio-ia-armazenar-linhas-de-voz-em-cache-local, responses-api-tratar-falhas-e-repeticao

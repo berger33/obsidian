@@ -1,0 +1,123 @@
+SOURCES: https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview | https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials
+
+===NOTE===
+101|claude-code-iniciar-sessao-interativa-cli|Claude Code: iniciar sessão interativa no terminal|O Claude Code opera como um assistente de engenharia executado diretamente no terminal para inspecionar e alterar repositórios locais.|Iniciar uma sessão no terminal permite que o agente analise a estrutura de arquivos, execute comandos de build e realize edições sem sair do fluxo de trabalho do desenvolvedor.|O comando `claude` no diretório raiz do projeto inicializa o ambiente de trabalho e carrega o contexto do repositório Git. Durante a sessão interativa, o agente pode ler arquivos de código, buscar referências por expressões regulares e sugerir alterações incrementais.|```bash
+# Iniciar a sessao interativa do Claude Code no diretorio do projeto
+cd /home/user/meu-projeto
+claude
+# Dentro do prompt interativo, solicitar analise da arquitetura do projeto
+> Analise a estrutura de modulos em src/ e resuma as principais interfaces.
+```|A ferramenta requer autenticação válida e conexão de rede ativa com a API. Executar tarefas excessivamente amplas em uma única instrução pode consumir muitos tokens e dispersar o plano de trabalho.|Inicie uma sessão interativa com o comando `claude`, execute uma consulta simples sobre o repositório e confirme que as respostas refletem com precisão a estrutura de diretórios existente.|copilot-escolher-ask-edit-ou-agent, claude-code-definir-instrucoes-claudemd, claude-code-gerenciar-permissoes-de-execucao-de-comandos
+
+===NOTE===
+102|claude-code-definir-instrucoes-claudemd|Claude Code: configurar instruções de projeto no arquivo CLAUDE.md|O arquivo CLAUDE.md padroniza comandos de build, testes e diretrizes de estilo para o assistente de linha de comando.|Centralizar regras estáveis do repositório em um arquivo dedicado evita a repetição manual de contexto em cada prompt e reduz alterações fora dos padrões da equipe.|Coloque um arquivo `CLAUDE.md` na raiz do repositório contendo comandos frequentes de compilação, execução de testes unitários e convenções de nomenclatura. O Claude Code lê este documento no início da sessão para alinhar suas ações às práticas do projeto.|```markdown
+# Diretrizes do Projeto para Claude Code
+
+## Comandos de Build e Testes
+- Build: `npm run build`
+- Testes: `npm test -- --watchAll=false`
+- Linter: `npm run lint`
+
+## Convencoes de Codigo
+- Utilizar TypeScript estrito e tipagem explicita em funcoes publicas.
+- Manter funcoes utilitarias puras e cobertas por testes unitarios em tests/.
+```|Instruções ambíguas ou desatualizadas no `CLAUDE.md` podem levar o assistente a executar suítes de teste obsoletas ou aplicar estilos conflitantes.|Crie o arquivo `CLAUDE.md` na raiz, inicie o `claude` e solicite a execução da suíte de testes padrão para confirmar que o comando configurado é adotado.|copilot-registrar-instrucoes-do-repositorio, claude-code-iniciar-sessao-interativa-cli, claude-code-validar-testes-antes-do-commit
+
+===NOTE===
+103|claude-code-gerenciar-permissoes-de-execucao-de-comandos|Claude Code: gerenciar permissões de execução de comandos|O controle de permissões no terminal impede a execução não supervisionada de comandos destrutivos ou alterações indevidas.|Ferramentas autônomas com acesso ao shell exigem confirmação explícita do desenvolvedor para mitigar riscos de perda de dados ou deleções acidentais.|O Claude Code solicita aprovação interativa antes de disparar comandos de terminal como criação de branches, modificações de arquivos ou chamadas ao gerenciador de pacotes. O desenvolvedor pode revisar a linha de comando exata antes de autorizar.|```bash
+# Exemplo de fluxo de aprovacao no terminal durante a execucao
+Claude solicita executar: git checkout -b feature/novo-parser
+Autorizar execucao deste comando? (y/n/always): y
+# Apos a confirmacao, o comando e executado e o resultado retorna ao contexto
+```|Modos sem confirmação aumentam a velocidade de automação, mas aumentam o risco de execuções perigosas em ambientes com dados não commitados.|Submeta uma instrução que demande execução de comando bash e verifique no terminal a exibição do prompt de autorização antes de qualquer efeito colateral.|ferramentas-pedir-confirmacao-antes-de-efeitos-externos, claude-code-iniciar-sessao-interativa-cli, claude-code-validar-testes-antes-do-commit
+
+===NOTE===
+104|claude-code-usar-prompt-caching-para-bases-extensas|Anthropic API: aplicar Prompt Caching em bases extensas|O Prompt Caching armazena prefixos de contexto repetidos para reduzir a latência de inferência e os custos em repositórios grandes.|Bases de código com centenas de arquivos consomem grande volume de tokens se retransmitidas a cada turno de conversa com o modelo de linguagem.|Ao estruturar chamadas à API da Anthropic, marque blocos estáticos de contexto como esquemas de sistema e resumos do repositório com o parâmetro `cache_control: {"type": "ephemeral"}`. As requisições subsequentes aproveitam o cache na memória da infraestrutura.|```json
+{
+  "model": "claude-3-7-sonnet-20250219",
+  "max_tokens": 1024,
+  "system": [
+    {
+      "type": "text",
+      "text": "Voce e o assistente de engenharia do projeto. Abaixo esta a arquitetura completa...",
+      "cache_control": {"type": "ephemeral"}
+    }
+  ],
+  "messages": [{"role": "user", "content": "Adicione validacao de email no modulo auth."}]
+}
+```|O cache possui tempo de vida efêmero (tipicamente 5 minutos) e requer que os blocos de prefixo sejam idênticos em ordem e conteúdo para produzir cache hits.|Inspecione os metadados de resposta da API (`usage.cache_creation_input_tokens` e `usage.cache_read_input_tokens`) para confirmar o reaproveitamento efetivo de tokens.|responses-api-separar-instrucoes-e-entrada, anthropic-api-controlar-limites-com-max-tokens, cursor-priorizar-janela-de-contexto-essencial
+
+===NOTE===
+105|mcp-conectar-servidores-para-contexto-externo|Model Context Protocol: conectar servidores MCP de contexto|O Model Context Protocol (MCP) padroniza a integração entre modelos de IA e fontes externas de dados e ferramentas.|Uma interface uniforme de protocolo evita a criação de conectores proprietários para cada banco de dados, issue tracker ou ambiente de desenvolvimento.|Configure servidores MCP em um arquivo de configuração JSON local. O assistente descobre dinamicamente recursos disponíveis, templates de prompt e ferramentas expostas pelo servidor MCP via protocolo JSON-RPC.|```json
+{
+  "mcpServers": {
+    "git-history": {
+      "command": "mcp-server-git",
+      "args": ["--repository", "/home/user/meu-projeto"]
+    },
+    "postgres-dev": {
+      "command": "mcp-server-postgres",
+      "args": ["postgresql://localhost:5432/game_dev"]
+    }
+  }
+}
+```|Servidores MCP executam localmente com privilégios do usuário; configurações incorretas podem expor dados sensíveis ou conexões não autorizadas.|Inicie o assistente apontando para o arquivo de configuração MCP e execute uma consulta exigindo listagem de ferramentas para verificar os endpoints disponíveis.|function-calling-declarar-contrato-de-ferramenta, claude-code-iniciar-sessao-interativa-cli, anthropic-api-estruturar-mensagens-tool-result
+
+===NOTE===
+106|anthropic-api-estruturar-mensagens-tool-result|Anthropic API: estruturar mensagens de retorno em tool_result|O bloco tool_result devolve os dados de execução de uma ferramenta para que o modelo continue o raciocínio na API Anthropic.|Retornos estruturados com identificação precisa permitem que o modelo interprete saídas de sucesso e mensagens de erro para corrigir seu plano de ação.|Quando o modelo emite um bloco `tool_use`, a aplicação executa a função localmente e responde com uma mensagem de papel `user` contendo um bloco de tipo `tool_result` com o respectivo `tool_use_id` e o conteúdo textual do resultado.|```json
+{
+  "role": "user",
+  "content": [
+    {
+      "type": "tool_result",
+      "tool_use_id": "toolu_01A098bcde",
+      "content": "Arquivo src/utils/math.ts atualizado com sucesso. 0 erros de compilacao."
+    }
+  ]
+}
+```|Omitir o campo `tool_use_id` correspondente ou enviar formatos de mensagem inválidos invalida a conversa e gera exceção de schema na API.|Capture uma chamada de ferramenta, execute a rotina e valide se o payload `tool_result` retornado fecha o turno sem erros de requisição.|function-calling-correlacionar-chamadas-pelo-identificador, function-calling-executar-no-aplicativo-nao-no-modelo, mcp-conectar-servidores-para-contexto-externo
+
+===NOTE===
+107|claude-code-orquestrar-subagentes-especializados|Claude Code: orquestrar subagentes especializados|Dividir a resolução de problemas entre subagentes de pesquisa, edição e validação organiza tarefas complexas de engenharia.|Agentes com escopo delimitado evitam poluição de contexto e reduzem o risco de edições em arquivos não relacionados durante refatorações grandes.|O agente principal planeja as etapas e despacha subagentes para ler documentações específicas ou buscar referências de código. Os resultados consolidados são repassados ao módulo de edição antes do teste final.|```bash
+# Instruir o assistente a delegar tarefas de investigacao antes da edicao
+> Subdivida a tarefa: primeiro use um agente de pesquisa para mapear todas as chamadas a calculateDamage() e depois proponha o refactoring.
+```|A delegação múltipla aumenta a latência total da operação e o consumo acumulado de requisições à API.|Monitore os logs de atividade do assistente e confirme se as etapas de leitura e análise precedem as ações de escrita no código.|copilot-dividir-mudancas-em-tarefas-pequenas, claude-code-iniciar-sessao-interativa-cli, cursor-composer-coordenar-edicoes-multi-arquivo
+
+===NOTE===
+108|anthropic-api-controlar-limites-com-max-tokens|Anthropic API: controlar limites com max_tokens e stop_sequences|O controle de max_tokens e stop_sequences define a extensão e os critérios de término das gerações de código na API.|Limitar a extensão de resposta evita loops de geração excessiva e previne truncamentos inesperados em blocos de lógica crítica.|Especifique o valor de `max_tokens` dimensionado para o tamanho esperado do trecho de código e utilize `stop_sequences` para interromper a resposta assim que marcadores como fechamento de classe forem emitidos.|```json
+{
+  "model": "claude-3-7-sonnet-20250219",
+  "max_tokens": 1500,
+  "stop_sequences": ["// END_OF_MODULE"],
+  "messages": [
+    {"role": "user", "content": "Gere a funcao de ordenacao rapida terminando com // END_OF_MODULE"}
+  ]
+}
+```|Valores de `max_tokens` excessivamente baixos provocam respostas incompletas com `stop_reason: "max_tokens"`, gerando sintaxe quebrada.|Examine o campo `stop_reason` na resposta da API para confirmar se a geração terminou pela sequência de parada esperada.|responses-api-limitar-o-tamanho-da-saida, claude-code-usar-prompt-caching-para-bases-extensas, anthropic-api-estruturar-mensagens-tool-result
+
+===NOTE===
+109|anthropic-api-depurar-layout-com-mensagens-de-visao|Anthropic API: depurar layouts com mensagens de visão|O envio de capturas de tela e mockups como blocos de imagem multimodal auxilia na correção de bugs visuais de interface.|Erros de renderização de UI e shaders nem sempre são evidentes apenas no código-fonte, exigindo análise de pixels e layout.|Inclua blocos de imagem em Base64 ou URL no array de conteúdo da mensagem do usuário, solicitando ao modelo a identificação de sobreposições, margens desalinhadas ou artefatos de renderização.|```json
+{
+  "role": "user",
+  "content": [
+    {
+      "type": "image",
+      "source": {
+        "type": "base64",
+        "media_type": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAA..."
+      }
+    },
+    {
+      "type": "text",
+      "text": "Identifique por que o botao de login esta sobrepondo o menu lateral nesta tela."
+    }
+  ]
+}
+```|Imagens com alta resolução geram custo elevado de tokens de visão e não substituem o teste visual automatizado em navegadores reais.|Submeta uma captura de interface com um elemento propositalmente deslocado e verifique se o modelo aponta a coordenada e classe CSS correspondente.|documentacao-usar-imagens-acessiveis-e-uteis, claude-code-iniciar-sessao-interativa-cli, cursor-composer-coordenar-edicoes-multi-arquivo
+
+===NOTE===
+110|claude-code-validar-testes-antes-do-commit|Claude Code: validar testes e diff antes do commit|A execução automatizada da suíte de testes antes da conclusão de uma tarefa assegura que regressões sejam barradas no terminal.|Aceitar sugestões de código sem validação determinística introduz quebras em funcionalidades existentes do projeto.|Configure o fluxo de trabalho para que o assistente execute o comando de teste configurado após aplicar edições em arquivos e verifique o código de saída do processo antes de finalizar a sessão.|```bash
+# Solicitar ao assistente a aplicacao da alteracao e validacao imediata
+> Aplique a correcao no parser de inventario e execute npm test. Nao conclua sem que todos os testes passem.
+```|Testes lentos ou com mocks ausentes podem travar a sessão interativa ou mascarar falhas de integração em ambientes reais.|Provoque uma falha intencional em um teste unitário e confira se o assistente identifica a quebra no terminal e propõe a retificação necessária.|copilot-inspecionar-o-diff-antes-de-aceitar, claude-code-definir-instrucoes-claudemd, qa-jogos-executar-playtests-headless-em-ci

@@ -14,9 +14,9 @@ Mapa de navegação para o lote [`software-criacao-ia-2000-0004`](../../exports/
 ## Estado do lote
 
 - Meta: **2.000 notas substantivas**; cadência planejada: **20 tranches × 100 notas**.
-- Progresso: **100 / 2.000 notas válidas (5,00%)** (`status: in_progress`).
+- Progresso: **200 / 2.000 notas válidas (10,00%)** (`status: in_progress`).
 - Gate: **100/100**; revisão factual humana: **0/100**; revisão factual por IA: **100/100**.
-- Notas materiais presentes e contadas: **100**, IDs 000001–000100. Para as próximas 1.900 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
+- Notas materiais presentes e contadas: **200**, IDs 000001–000200. Para as próximas 1.800 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
 - A tranche 1 foi selecionada com documentação primária e concluída em dez trilhas temáticas listadas abaixo; as 19 tranches futuras e seus títulos ainda não estão decididos.
 
 ## Conteúdo materializado — tranche 1 (100 notas; IDs 000001–000100)

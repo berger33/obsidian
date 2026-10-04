@@ -1,0 +1,104 @@
+SOURCES: https://dev.epicgames.com/documentation/en-us/unreal-engine/statetree-in-unreal-engine | https://dev.epicgames.com/documentation/en-us/unreal-engine/smart-objects-in-unreal-engine
+
+===NOTE===
+151|unreal-statetree-estruturar-hierarquia-de-estados|Unreal Engine: estruturar hierarquia de estados leves no StateTree|O StateTree é um sistema moderno de árvore de estados hierárquica de alta performance para tomada de decisão em agentes de gameplay.|O StateTree combina a clareza de máquinas de estados com a flexibilidade de árvores hierárquicas, exigindo menos memória que Behavior Trees tradicionais.|Crie um asset `StateTree` no Content Browser, defina estados raiz e filhos no editor visual, e vincule componentes `StateTreeComponent` em seus AI Controllers ou Pawns para executar a lógica.|```text
+// Hierarquia visual no editor de StateTree da Unreal Engine 5
+Root
+├── Idle (State)
+│    └── Task: PlayAnimation (Idle)
+├── Combat (State)
+│    ├── Engage (State) -> Task: MoveToTarget
+│    └── Attack (State) -> Task: TriggerAbility
+└── Flee (State)
+```|A lógica de StateTree avalia transições com base em eventos e ticks; estados excessivamente aninhados sem condições de saída claras podem gerar loops de transição.|Abra o painel de depuração do StateTree durante o modo PIE (*Play in Editor*) e verifique qual estado está ativo para cada entidade simulada no mundo.|unreal-statetree-extrair-contexto-com-evaluators, unreal-statetree-implementar-tasks-assincronas, godot-estruturar-maquina-de-estados-hierarquica
+
+===NOTE===
+152|unreal-statetree-extrair-contexto-com-evaluators|Unreal Engine: extrair contexto e dados de mundo com StateTree Evaluators|Os Evaluators do StateTree extraem e atualizam continuamente variáveis do mundo e da entidade no início de cada avaliação.|Centralizar a coleta de dados de sensores e estado da entidade em Evaluators evita leituras redundantes de propriedades dentro das tarefas individuais.|Crie uma classe C++ ou Blueprint herdando de `UStateTreeEvaluatorBase`, implemente o método `Tick()` para consultar distâncias e alvos e armazene os valores nos parâmetros de contexto da árvore.|```cpp
+// Exemplo de StateTree Evaluator em C++ na UE5
+USTRUCT()
+struct FStateTreeTargetEvaluator : public FStateTreeEvaluatorCommonBase
+{
+    GENERATED_BODY()
+
+    virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override
+    {
+        // Consultar posicao do jogador e atualizar variavel de contexto
+    }
+};
+```|Evaluators executam em cada ciclo de avaliação; rotinas pesadas de busca espacial dentro do `Tick` de um Evaluator degradam o frame rate da CPU.|Inspecione os tempos de processamento com o comando de console `stat StateTree` para checar se a coleta de dados não introduz gargalos.|unreal-statetree-estruturar-hierarquia-de-estados, unreal-eqs-gerar-candidatos-espaciais, unity-utility-ai-compor-fatores-de-saude-e-distancia
+
+===NOTE===
+153|unreal-statetree-implementar-tasks-assincronas|Unreal Engine: implementar tarefas atômicas com StateTree Tasks|As StateTree Tasks encapsulam ações executáveis específicas como movimentação, disparo de animações e uso de itens de gameplay.|Dividir o comportamento em tarefas atômicas e reutilizáveis simplifica a montagem de novos arquétipos de inimigos e NPCs no projeto.|Implemente `UStateTreeTaskBase` definindo `EnterState()`, `Tick()` e `ExitState()`. Retorne `EStateTreeRunStatus::Running` enquanto a ação estiver em progresso e `Succeeded` ou `Failed` ao término.|```cpp
+// Retornando status de execucao em uma StateTree Task
+EStateTreeRunStatus FStateTreeMoveToTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+    // Iniciar navegacao do AI Controller em direcao ao alvo
+    return EStateTreeRunStatus::Running;
+}
+```|Tarefas que esquecem de retornar `Succeeded` ou `Failed` mantêm o estado preso infinitamente no status `Running`, impedindo transições posteriores.|Simule a interrupção da tarefa por dano externo e certifique-se de que o método `ExitState()` limpa corretamente os timers e componentes alocados.|unreal-statetree-estruturar-hierarquia-de-estados, unreal-encapsular-acao-em-tasks, unreal-smart-objects-conectar-a-tarefas-do-statetree
+
+===NOTE===
+154|unreal-smart-objects-configurar-slots-de-interacao|Unreal Engine: configurar Smart Object Definitions e slots de animação|Os Smart Objects anexam comportamentos e dados de animação diretamente aos objetos do mundo, em vez de codificá-los na IA do NPC.|Permitir que o mundo informe aos NPCs como interagir com cadeiras, portas e máquinas torna a criação de comportamento altamente modular e extensível.|Crie um asset `SmartObjectDefinition`, configure posições relativas dos slots de interação, tags de restrição e vincule as Gameplay Behaviors ou animações que o NPC executará ao usar o slot.|```text
+// Definicao de Smart Object para uma Cadeira de Taberna
+SmartObjectDefinition: TavernChair
+├── Slot 0: [Offset: (0, -40, 0), Yaw: 180]
+│    └── Activity: SitAnimationBehavior
+└── RequiredTags: [Pawn.Humanoid]
+```|Slots mal posicionados em relação à malha estática causam sobreposição de malhas ou flutuação de personagens durante a animação.|Posicione o ator de Smart Object no cenário e inspecione as formas dos slots e eixos de orientação desenhados no viewport da Unreal Engine.|unreal-smart-objects-gerenciar-reservas-concorrentes, unreal-smart-objects-conectar-a-tarefas-do-statetree, unreal-motion-warping-alinhar-interacoes-fisicas
+
+===NOTE===
+155|unreal-smart-objects-gerenciar-reservas-concorrentes|Unreal Engine: gerenciar reservas concorrentes com Smart Object Subsystem|O Smart Object Subsystem gerencia a descoberta espacial e a reserva exclusiva de slots para evitar que múltiplos NPCs tentem usar o mesmo objeto.|Concorrência não tratada em pontos de interação provoca NPCs sobrepostos na mesma cadeira ou tentando abrir a mesma porta simultaneamente.|Utilize `USmartObjectSubsystem::FindSmartObjects()` para buscar slots disponíveis dentro de um raio e execute `Claim()` ou `MarkSlotAsOccupied()` para reservar o slot antes de iniciar a caminhada.|```cpp
+// Buscando e reservando slot no Smart Object Subsystem
+FSmartObjectRequestFilter Filter;
+Filter.ActivityRequirements = GameplayTagContainer;
+FSmartObjectClaimHandle ClaimHandle = SmartObjectSubsystem->Claim(RequestResult);
+```|Reservar um slot e nunca liberá-lo após uma morte ou interrupção do NPC bloqueia aquele ponto de interação permanentemente no jogo.|Gere múltiplos agentes simultâneos disputando uma única cadeira e valide visualmente se apenas o primeiro agente que realizou o claim ocupa o assento.|unreal-smart-objects-configurar-slots-de-interacao, unreal-smart-objects-conectar-a-tarefas-do-statetree, godot-usar-obstacles-para-geometria-e-fluxo
+
+===NOTE===
+156|unreal-smart-objects-conectar-a-tarefas-do-statetree|Unreal Engine: conectar navegação a Smart Objects via StateTree Tasks|Integrar o StateTree com Smart Objects permite que NPCs encontrem interações ambientais de forma orgânica durante rotinas de ócio e trabalho.|Vincular o subsistema de Smart Objects ao fluxo de decisão automatiza o ciclo completo de busca, navegação, reserva e interação.|Configure uma StateTree Task `FindSmartObject` que consulta o subsistema por tags (ex.: `WorkStation`), reserva o slot e direciona a task seguinte `MoveToSmartObjectSlot` até as coordenadas do slot.|```text
+// Fluxo de tarefas no StateTree para interagir com o ambiente
+State: UseWorkbench
+├── Task: FindSmartObject (Tag: Interact.Workbench)
+├── Task: MoveToSmartObjectSlot
+└── Task: ExecuteSmartObjectBehavior (Hammering)
+```|Se o caminho até o Smart Object estiver bloqueado, o NPC precisa abortar a reserva e buscar outro slot sem congelar a árvore de decisão.|Bloqueie deliberadamente o trajeto até o objeto e verifique se a tarefa falha graciosamente e transiciona para o estado de busca alternativa.|unreal-statetree-implementar-tasks-assincronas, unreal-smart-objects-gerenciar-reservas-concorrentes, unity-navmesh-reconstruir-superficie-em-runtime
+
+===NOTE===
+157|unreal-mass-ai-processar-agentes-com-massentity|Unreal Engine: simular multidões com arquitetura ECS MassEntity e Mass AI|O Mass AI utiliza uma arquitetura baseada em dados e entidades (ECS) para simular dezenas de milhares de agentes com altíssimo desempenho.|Tentar simular centenas de atores clássicos baseados em `AActor` e `Character` sobrecarrega a CPU devido ao overhead de hierarquia e componentes pesados.|Defina fragmentos de dados (`FMassFragment`) e processadores (`UMassProcessor`) que operam em arrays contínuos de memória na CPU, executando regras de locomoção e desvio de multidões de forma vetorizada.|```cpp
+// Exemplo de Fragmento de Dados leve para MassEntity
+USTRUCT()
+struct FMassCrowdAgentFragment : public FMassFragment
+{
+    GENERATED_BODY()
+    FVector DesiredVelocity;
+    float MaxSpeed;
+};
+```|Agentes MassEntity não possuem malhas esqueléticas e colisões completas por padrão, exigindo sistemas de representação visual híbridos (*Mass Visualization*).|Gere 5.000 agentes de teste na cena e monitore o frame time da CPU no painel `stat Mass` para verificar a estabilidade do processamento em lote.|unreal-statetree-estruturar-hierarquia-de-estados, qa-jogos-simular-carga-de-servidor-com-bots-leves, godot-aplicar-velocidade-de-avoidance
+
+===NOTE===
+158|unreal-gas-acionar-habilidades-pelo-ai-controller|Unreal Engine: acionar Gameplay Abilities a partir de decisões do AIController|O Gameplay Ability System (GAS) centraliza habilidades de combate, custos de atributos e cooldowns em uma arquitetura extensível.|Acoplar mecânicas de ataque diretamente no código de movimentação da IA dificulta o compartilhamento de magias e golpes entre jogadores e NPCs.|Faça o AI Controller emitir chamadas `TryActivateAbilityByClass()` ou disparar tags de evento de gameplay no `AbilitySystemComponent` do Pawn para acionar ataques e bloqueios.|```cpp
+// Acionando Gameplay Ability atraves do AbilitySystemComponent do NPC
+if (UAbilitySystemComponent* ASC = Pawn->FindComponentByClass<UAbilitySystemComponent>())
+{
+    ASC->TryActivateAbilityByClass(HeavyAttackAbilityClass);
+}
+```|Disparar habilidades sem checar se o NPC possui recursos (mana, estamina) suficientes ou se está sob efeito de atordoamento (*Stun*) gera falhas de execução silenciosas.|Consulte as Gameplay Tags ativas no personagem antes de solicitar a ativação da habilidade para validar se o agente está livre para agir.|unreal-statetree-implementar-tasks-assincronas, unreal-motion-warping-alinhar-interacoes-fisicas, unity-utility-ai-avaliar-decisoes-com-curvas
+
+===NOTE===
+159|unreal-motion-warping-alinhar-interacoes-fisicas|Unreal Engine: alinhar pontos de contato e saltos com Motion Warping|O Motion Warping distorce dinamicamente animações raiz (*Root Motion*) para garantir que mãos e pés alcancem posições exatas no mundo.|Animações com trajetórias fixas resultam em golpes no ar ou mãos atravessando beiradas quando o alvo está a uma distância ligeiramente diferente.|Adicione o componente `MotionWarpingComponent` no personagem e configure modificadores de salto ou ataque no Montage, informando a coordenada do alvo antes de iniciar a execução da animação.|```cpp
+// Configurando o ponto de impacto do Motion Warping no NPC
+MotionWarpingComp->AddOrUpdateWarpTargetFromLocation(
+    FName("VaultTarget"),
+    LedgeEdgeLocation
+);
+```|Distorções de escala exageradas provocam estiramento visual excessivo das pernas e braços do modelo durante a execução do warp.|Posicione o personagem a diferentes distâncias da mureta e confirme visualmente que a animação de pulo conecta exatamente com o topo do obstáculo.|unity-animation-rigging-ajustar-pes-com-two-bone-ik, unreal-smart-objects-configurar-slots-de-interacao, blender-separar-movimento-in-place-e-root-motion
+
+===NOTE===
+160|unreal-gameplay-debugger-inspecionar-ia-em-runtime|Unreal Engine: inspecionar transições de IA com o Gameplay Debugger|O Gameplay Debugger da Unreal Engine exibe na tela o estado ativo de árvores de decisão, slots de Smart Objects e variáveis do Blackboard.|Inspecionar os valores internos dos agentes diretamente no mundo tridimensional agiliza o diagnóstico de travamentos e transições erráticas.|Pressione a tecla apóstrofo (') ou configure o atalho do `GameplayDebugger` durante o jogo para inspecionar o Pawn sob a mira, visualizando o histórico de tarefas do StateTree e percepções ativas.|```text
+// Painel visual do Gameplay Debugger na Unreal Engine
+[Gameplay Debugger Category: AI]
+StateTree State: Combat / Engage
+Current Task: MoveToTarget (Running)
+Smart Object Slot: None
+Target Actor: BP_PlayerCharacter (Dist: 450cm)
+```|A renderização de muitas categorias do depurador pode poluir a visão da cena durante sessões de teste de combate intenso.|Acione o depurador com o atalho oficial durante o modo Play e verifique se as informações de StateTree e percepção são atualizadas a cada tick.|unreal-statetree-estruturar-hierarquia-de-estados, unity-ia-visualizar-decisoes-com-gizmos-de-cena, godot-depurar-vetores-de-ia-com-draw-line

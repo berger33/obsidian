@@ -1,0 +1,99 @@
+SOURCES: https://gymnasium.farama.org/tutorials/gymnasium_basics/environment_creation/ | https://docs.unity3d.com/Packages/com.unity.test-framework@1.4/manual/index.html
+
+===NOTE===
+181|qa-jogos-executar-playtests-headless-em-ci|QA de Jogos: executar playtests funcionais headless na pipeline de CI|A execução de sessões de jogo sem interface gráfica (*headless*) em pipelines de CI/CD detecta quebras e regressões a cada commit.|Testar jogos exclusivamente através de testes manuais consome centenas de horas e atrasa a validação de novas mecânicas.|Compile a engine com flag headless (`-batchmode -nographics` no Unity ou `--headless` no Godot) e execute suítes de teste automatizadas que instanciam cenários e avaliam condições de vitória.|```bash
+# Executando suite de testes de integracao headless no Godot 4 via CI
+godot --headless --path . --run-tests --quit-after 60
+```|Testes headless não avaliam artefatos de renderização gráfica, shaders ou bugs visuais dependentes da GPU.|Rode o comando de teste em modo headless no terminal e confira se o relatório XML de resultados de teste é gerado com sucesso.|claude-code-validar-testes-antes-do-commit, qa-jogos-isolar-cenarios-de-regressao-de-gameplay, qa-jogos-encapsular-loop-em-ambiente-gymnasium
+
+===NOTE===
+182|qa-jogos-encapsular-loop-em-ambiente-gymnasium|IA de Testes: encapsular loop de gameplay como ambiente Farama Gymnasium|O padrão Gymnasium padroniza a interface entre a simulação do jogo e algoritmos de aprendizado por reforço para testes autônomos.|Uma interface unificada permite plugar frameworks populares de IA para treinar agentes de teste capazes de explorar cenários de forma contínua.|Crie uma classe Python herdando de `gymnasium.Env`, implementando os métodos `reset()` e `step(action)` que transmitem comandos via socket para a instância do jogo e retornam o estado de observação.|```python
+# Encapsulando o loop do jogo como ambiente Farama Gymnasium
+import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
+
+class GamePlaytestEnv(gym.Env):
+    def __init__(self):
+        super().__init__()
+        self.action_space = spaces.Discrete(4) # Andar: Frente, Tras, Esquerda, Direita
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32)
+
+    def step(self, action):
+        # Enviar acao ao jogo e coletar nova observacao e recompensa
+        return obs, reward, terminated, truncated, info
+```|Ambientes mal sincronizados com a taxa de quadros da engine podem gerar estados inconsistentes por atraso de socket (*lag*).|Execute a rotina `check_env()` do Gymnasium para validar se os espaços de observação e ação estão em estrita conformidade com a especificação.|ml-agents-estruturar-um-agent, qa-jogos-descobrir-colisoes-com-agentes-exploradores, qa-jogos-validar-determinismo-de-fisica-em-fixed-ticks
+
+===NOTE===
+183|qa-jogos-descobrir-colisoes-com-agentes-exploradores|QA de Jogos: descobrir falhas de colisão com bots exploradores|Agentes de aprendizado orientados por novidade exploram todos os cantos do mapa para identificar fendas na geometria e colisores vazados.|Jogadores encontram atalhos ilegais e quedas fora do mapa (*out of bounds*) que passam despercebidos por testadores humanos.|Treine agentes utilizando recompensas baseadas em bônus de curiosidade (RND / ICM). Quando o agente atinge posições fora do volume delimitador válido do mapa, registre o evento como falha crítica de colisão.|```python
+# Registrando anomalia de colisao quando o agente sai dos limites do mapa
+if current_pos.y < -10.0 or not map_bounding_box.contains(current_pos):
+    log_bug_report("Out of bounds detectado", current_pos, agent_trajectory)
+```|Agentes exploradores podem despender tempo excessivo travados em áreas com portas trancadas se não receberem dicas de navegação.|Inicie uma campanha de 1.000 episódios de exploração e inspecione o arquivo de log para checar se algum ponto de saída inválida foi registrado.|qa-jogos-encapsular-loop-em-ambiente-gymnasium, telemetria-jogos-gerar-heatmaps-de-morte-e-posicao, godot-preparar-malha-de-navegacao
+
+===NOTE===
+184|telemetria-jogos-gerar-heatmaps-de-morte-e-posicao|Telemetria de Jogos: gerar heatmaps de mortes e coordenadas de jogadores|A coleta de coordenadas de posicionamento e eventos de morte consolida mapas de calor que revelam gargalos de design no level design.|Fases com picos abruptos de dificuldade ou trechos vazios frustram os jogadores sem que a equipe compreenda o motivo exato.|Grave pontos tridimensionais `(x, y, z)` de mortes de bots e jogadores em um banco de dados analítico e projete uma textura de densidade sobre a visão superior (*top-down*) da fase no editor.|```python
+# Agregando coordenadas de morte em matriz de densidade para mapa de calor
+import numpy as np
+
+def generate_death_heatmap(death_coords: list[tuple[float, float]], grid_size: int = 100):
+    heatmap, xedges, yedges = np.histogram2d(
+        [c[0] for c in death_coords],
+        [c[1] for c in death_coords],
+        bins=grid_size
+    )
+    return heatmap
+```|Mapas de calor mostram onde os jogadores morrem, mas não explicam a causa raiz (se por falha de pulo, armadilha oculta ou inimigo desbalanceado).|Gere a imagem de heatmap sobre a planta baixa da fase e confira visualmente a distribuição espacial dos pontos de concentração de mortes.|qa-jogos-detectar-desbalanceamento-por-metricas-de-partida, qa-jogos-descobrir-colisoes-com-agentes-exploradores, godot-depurar-vetores-de-ia-com-draw-line
+
+===NOTE===
+185|qa-jogos-simular-carga-de-servidor-com-bots-leves|QA Multiplayer: simular carga de servidor instanciando bots sintéticos|A instanciação de centenas de bots com IA simplificada avalia a robustez do netcode e a escalabilidade dos servidores dedicados.|Testar servidores multiplayer apenas com pequenos grupos não revela vazamentos de memória e gargalos de largura de banda que surgem sob alta concorrência.|Execute clientes de jogo simplificados em modo headless que conectam ao servidor via UDP/WebSocket, enviando pacotes periódicos de movimentação e ações de combate para simular carga real.|```bash
+# Disparando 200 bots de teste para estresse do servidor de jogo
+python3 scripts/load_tester_bots.py --server 127.0.0.1:7777 --count 200 --duration 300
+```|Bots puramente estocásticos não replicam com perfeição o tráfego de dados de jogadores humanos em situações de combate coordenado.|Monitore o uso de CPU e a taxa de perda de pacotes no servidor enquanto 200 bots se conectam simultaneamente ao loop de gameplay.|unreal-mass-ai-processar-agentes-com-massentity, qa-jogos-executar-playtests-headless-em-ci, qa-jogos-auditar-picos-de-frame-time-com-profiler-cli
+
+===NOTE===
+186|qa-jogos-detectar-desbalanceamento-por-metricas-de-partida|Análise de Jogos: detectar desbalanceamento de armas e classes em logs|O processamento estatístico de logs de partidas simuladas identifica armas, feitiços e arquétipos que dominam desproporcionalmente o meta.|Itens desbalanceados (*overpowered*) reduzem a variedade estratégica do jogo e prejudicam a experiência competitiva.|Colete métricas de taxa de vitória (*win rate*), dano por segundo médio (DPS) e frequência de escolha (*pick rate*) em milhares de partidas simuladas por bots, disparando alertas quando uma arma ultrapassar margens saudáveis.|```python
+# Verificando desbalanceamento estatistico de classes
+for class_name, stats in class_metrics.items():
+    win_rate = stats['wins'] / stats['total_matches']
+    if win_rate > 0.58 or win_rate < 0.42:
+        print(f"Alerta de desbalanceamento: Classe {class_name} com Win Rate de {win_rate:.2%}")
+```|Bots de teste podem usar táticas diferentes de jogadores humanos experientes, gerando dados enviesados para mecânicas que exigem reflexos rápidos.|Processe um lote de 500 logs de partidas e verifique se as taxas de vitória de cada classe se mantêm no intervalo de equilíbrio desejado.|telemetria-jogos-gerar-heatmaps-de-morte-e-posicao, unity-utility-ai-avaliar-decisoes-com-curvas, responses-api-avaliar-geracao-com-exemplos
+
+===NOTE===
+187|qa-jogos-validar-determinismo-de-fisica-em-fixed-ticks|QA de Física: validar determinismo em replays com passos de tempo fixos|A validação do determinismo da simulação garante que replays e previsões de netcode por rollback funcionem sem dessincronizações.|Variações infinitesimais em cálculos de ponto flutuante entre clientes provocam divergências cumulativas graves em jogos multiplayer com netcode determinístico.|Grave as entradas de controle de uma partida, execute o replay por 10.000 ticks com passo de tempo fixo (`FixedUpdate` / `_physics_process`) e valide se o checksum do estado final é idêntico em todas as execuções.|```csharp
+// Validando checksum de estado fisico para deteccao de desync
+ulong stateChecksum = CalculatePhysicsChecksum();
+Assert.AreEqual(expectedChecksum, stateChecksum, "Dessincronizacao de fisica detectada no tick 10000");
+```|Funções matemáticas que dependem de instruções específicas da CPU (ex.: FMA) podem gerar resultados ligeiramente diferentes em arquiteturas heterogêneas (x86 vs ARM).|Execute o replay de 10.000 ticks duas vezes em plataformas distintas e compare o hash de estado final gravado em log.|godot-sincronizar-consultas-com-o-mapa, qa-jogos-encapsular-loop-em-ambiente-gymnasium, qa-jogos-isolar-cenarios-de-regressao-de-gameplay
+
+===NOTE===
+188|qa-jogos-automatizar-fluxos-de-ui-e-inventario|QA de UI: automatizar navegação em telas de inventário e menus|Scripts automatizados de teste de interface navegam por todos os menus, inventários e árvores de habilidades para validar integridade de fluxo.|Bugs de interface como travamento ao arrastar itens ou textos truncados passam facilmente em revisões pontuais de código.|Crie testes automatizados que emulam cliques de mouse e toques na tela em sequências aleatórias de compra, venda, equipagem de itens e abertura de configurações, checando integridade dos dados de inventário.|```csharp
+// Emulando fluxo de compra no inventario com Unity Test Framework
+[UnityTest]
+public IEnumerator Test_PurchaseItem_DeductsGold_AndAddsToInventory()
+{
+    shopManager.BuyItem("sword_iron_01");
+    yield return null;
+    Assert.IsTrue(playerInventory.HasItem("sword_iron_01"));
+    Assert.AreEqual(900, playerWallet.Gold);
+}
+```|Testes baseados em coordenadas de tela quebram se a resolução ou o layout responsivo forem modificados.|Execute o teste de inventário no Unity Test Runner e valide se a asserção de saldo de moedas e adição de item passa em 100% dos ciclos.|documentacao-executar-exemplos-de-codigo, qa-jogos-executar-playtests-headless-em-ci, anthropic-api-depurar-layout-com-mensagens-de-visao
+
+===NOTE===
+189|qa-jogos-isolar-cenarios-de-regressao-de-gameplay|QA de Gameplay: criar microcenários isolados para regressão de mecânicas|Microcenários de teste isolam mecânicas específicas em salas limpas para reproduzir e evitar o retorno de bugs conhecidos.|Testar mecânicas complexas apenas dentro do jogo completo é demorado e sujeito a interferências de outros sistemas não relacionados.|Crie cenas de teste mínimas contendo apenas o jogador e o elemento testado (ex.: uma rampa com alavanca ou uma porta trancada) e execute asserções determinísticas sobre o evento esperado.|```csharp
+// Cenario minimo de teste de ativacao de armadilha
+[UnityTest]
+public IEnumerator Test_PressurePlate_TriggersTrapDoor()
+{
+    player.transform.position = pressurePlate.transform.position;
+    yield return new WaitForSeconds(0.2f);
+    Assert.IsTrue(trapDoor.IsOpen);
+}
+```|Microcenários simplificados podem não capturar falhas que ocorrem somente quando múltiplos sistemas concorrentes operam simultaneamente.|Rode a cena de teste isolada individualmente e assegure que o teste conclui em menos de 500 milissegundos.|context-engineering-usar-testes-como-especificacao, qa-jogos-executar-playtests-headless-em-ci, godot-validar-navegacao-em-movimento-real
+
+===NOTE===
+190|qa-jogos-auditar-picos-de-frame-time-com-profiler-cli|Performance de Jogos: auditar picos de frame time com profiler em linha de comando|A captura automatizada de métricas de tempo de quadro (*frame time*) e alocação de memória (GC) evita o lançamento de versões com quedas de performance.|Quedas bruscas de taxa de quadros (*spikes*) arruínam a fluidez de jogos de ação e podem causar enjoo visual em jogos de realidade virtual.|Execute uma rota de teste padronizada gravando as durações individuais de cada quadro em milissegundos e reprove o build no CI se mais de 1% dos quadros excederem 16.6ms (para 60 FPS estáveis).|```bash
+# Executando benchmark de performance com relatorio em CSV
+./MyGame.exe -benchmark -duration=120 -csvOutput=perf_results.csv
+```|Testes executados em máquinas virtuais de CI sem placas de vídeo dedicadas apresentam métricas de renderização incompatíveis com o hardware dos jogadores.|Analise a planilha CSV gerada após a execução do benchmark e confirme a porcentagem de quadros que respeitaram o teto de 16.6ms.|assets-ia-otimizar-compressao-bc7-e-astc-em-vram, unreal-manter-renders-rastreaveis, qa-jogos-executar-playtests-headless-em-ci

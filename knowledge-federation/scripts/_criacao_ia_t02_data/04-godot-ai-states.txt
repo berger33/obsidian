@@ -1,0 +1,99 @@
+SOURCES: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_advanced.html | https://docs.godotengine.org/en/stable/tutorials/math/vectors_advanced.html
+
+===NOTE===
+131|godot-estruturar-maquina-de-estados-hierarquica|Godot: estruturar máquina de estados hierárquica em GDScript|A máquina de estados hierárquica (HFSM) organiza comportamentos complexos de IA em árvores de nós especializados no Godot.|Agrupar sub-estados dentro de macro-estados (ex.: Patrulha, Combate, Fuga) evita a explosão combinatória de transições em NPCs sofisticados.|Crie uma estrutura de nós onde a raiz da HFSM delega o ciclo `_physics_process` para o nó de estado ativo. Cada estado estende uma classe base `State` implementando métodos virtuais `enter()`, `exit()` e `physics_update()`.|```gdscript
+# Exemplo de classe base de estado em GDScript no Godot 4
+class_name EnemyState
+extends Node
+
+signal transitioned(new_state_name: String)
+
+func enter() -> void:
+    pass
+
+func exit() -> void:
+    pass
+
+func physics_update(_delta: float) -> void:
+    pass
+```|Estruturas hierárquicas profundas demandam gerenciamento rigoroso de sinais para evitar vazamento de memória ou transições duplicadas.|Instancie a máquina de estados em um CharacterBody3D, simule gatilhos de transição e confirme nos logs a ordem correta de execução dos métodos de entrada e saída.|godot-desacoplar-transicoes-com-sinais, godot-sincronizar-ia-com-animationtree, unity-utility-ai-avaliar-decisoes-com-curvas
+
+===NOTE===
+132|godot-desacoplar-transicoes-com-sinais|Godot: desacoplar transições de estado de IA com sinais|O desacoplamento via sinais permite que estados emitam intenções de mudança sem referenciar diretamente as classes dos estados vizinhos.|Acoplar estados concretos entre si torna a IA rígida e dificulta a adição ou substituição de novos comportamentos no jogo.|Os nós de estado emitem o sinal `transitioned(self, "NovoEstado")` quando uma condição é satisfeita. O controlador central da máquina intercepta o sinal, chama `exit()` no estado atual e ativa o próximo.|```gdscript
+# Emitindo intencao de transicao quando a saude fica critica
+func physics_update(delta: float) -> void:
+    if actor.health < 20:
+        transitioned.emit(self, "FleeState")
+```|Sinais conectados incorretamente ou com nomes de estado tipados com erros de digitação causam falhas silenciosas em runtime.|Monitore as emissões de sinal no depurador do Godot e certifique-se de que a máquina troca o nó ativo de maneira imediata e sem travamentos.|godot-estruturar-maquina-de-estados-hierarquica, godot-selecionar-alvos-por-distancia-e-ameaca, unreal-statetree-estruturar-hierarquia-de-estados
+
+===NOTE===
+133|godot-implementar-steering-seek-e-flee|Godot: implementar comportamentos de direção Seek e Flee|Os comportamentos de steering Seek e Flee calculam vetores de aceleração contínuos para perseguição e evasão suave de alvos.|Mover entidades com teleporte ou interpolação linear simples resulta em movimentação mecânica e antinatural para inimigos e criaturas.|Calcule a velocidade desejada subtraindo a posição atual da posição do alvo para Seek (ou o inverso para Flee), multiplicando pela velocidade máxima e aplicando uma força de steering limitada.|```gdscript
+# Calculo de steering behavior Seek em GDScript
+func calculate_seek_force(target_pos: Vector3, current_vel: Vector3, max_speed: float, max_force: float) -> Vector3:
+    var desired = (target_pos - global_position).normalized() * max_speed
+    var steer = desired - current_vel
+    return steer.limit_length(max_force)
+```|Forças de steering excessivamente altas geram oscilações bruscas ao redor do alvo quando o agente chega muito próximo da coordenada de parada.|Aplique a força resultante na velocidade do `CharacterBody3D`, chame `move_and_slide()` e observe se a trajetória de aproximação faz curvas suaves.|godot-combinar-wander-e-pursuit-com-predicao, godot-desviar-de-obstaculos-com-raycast3d-multiplos, godot-aplicar-velocidade-de-avoidance
+
+===NOTE===
+134|godot-combinar-wander-e-pursuit-com-predicao|Godot: combinar navegação Wander e Pursuit com predição|A combinação de deslocamento aleatório suave (Wander) e perseguição preditiva (Pursuit) enriquece a movimentação de patrulha e caça.|Inimigos que perseguem apenas a posição atual do jogador parecem lentos e previsíveis em jogos de ação com movimentação rápida.|O algoritmo de Pursuit calcula onde o alvo estará no futuro projetando a velocidade do alvo multiplicada pelo tempo de interceptação estimado, guiando o agente para esse ponto futuro.|```gdscript
+# Calculo de Pursuit preditivo com base na velocidade do alvo
+func calculate_pursuit_target(target: CharacterBody3D, max_speed: float) -> Vector3:
+    var distance = global_position.distance_to(target.global_position)
+    var look_ahead = distance / max_speed
+    return target.global_position + (target.velocity * look_ahead)
+```|Estimativas de predição muito longas fazem o agente perseguir paredes ou curvas que o alvo nunca percorrerá se mudar de direção repentinamente.|Posicione um alvo móvel na cena e verifique se o agente corta a curva para interceptar o jogador em vez de segui-lo em linha reta atrasada.|godot-implementar-steering-seek-e-flee, godot-calcular-cone-de-visao-com-area3d-e-dot-product, godot-controlar-a-chegada-ao-waypoint
+
+===NOTE===
+135|godot-calcular-cone-de-visao-com-area3d-e-dot-product|Godot: calcular cone de visão com Area3D e produto escalar|A detecção por cone de visão combina um gatilho de proximidade Area3D com cálculo de produto escalar vetorial (dot product).|Verificar visibilidade apenas por distância permite que NPCs enxerguem alvos localizados completamente atrás de suas costas.|Utilize uma `Area3D` para filtrar alvos dentro do raio máximo e use `Vector3.dot()` entre o vetor frontal do NPC e a direção até o alvo para testar o ângulo de visão.|```gdscript
+# Checagem de angulo de visao com produto escalar no Godot 4
+func is_target_in_sight(target_pos: Vector3, view_angle_deg: float) -> bool:
+    var to_target = (target_pos - global_position).normalized()
+    var forward = -global_transform.basis.z.normalized()
+    var angle_cos = cos(deg_to_rad(view_angle_deg * 0.5))
+    return forward.dot(to_target) >= angle_cos
+```|O cálculo angular indica que o alvo está no campo de visão, mas não descarta a presença de paredes sólidas entre os dois personagens.|Dispare um `RayCast3D` em direção ao alvo após a confirmação angular para checar oclusões geométricas do cenário.|godot-desviar-de-obstaculos-com-raycast3d-multiplos, godot-selecionar-alvos-por-distancia-e-ameaca, unity-animation-rigging-orientar-olhar-com-multi-aim
+
+===NOTE===
+136|godot-desviar-de-obstaculos-com-raycast3d-multiplos|Godot: desviar de obstáculos com múltiplos sensores RayCast3D|Sensores RayCast3D múltiplos em leque permitem que agentes desviem de obstáculos dinâmicos em tempo real sem recalcular o mapa global.|O recálculo frequente de malha de navegação em runtime é custoso em cenários com muitas caixas, barris e portas móveis.|Configure um feixe central e sensores laterais angulados em 30 e 45 graus. Ao detectar colisão nos raios laterais, adicione uma força de repulsão perpendicular ao vetor de movimento.|```gdscript
+# Adicionando forca de repulsao lateral ao detectar obstaculo
+func get_avoidance_force() -> Vector3:
+    if left_ray.is_colliding():
+        return global_transform.basis.x * avoidance_strength
+    if right_ray.is_colliding():
+        return -global_transform.basis.x * avoidance_strength
+    return Vector3.ZERO
+```|Feixes de raio muito esparsos podem deixar passar quinas finas de malhas ou obstáculos menores que o diâmetro da cápsula do personagem.|Ajuste o comprimento e o espaçamento angular dos raios para garantir que o agente não fique preso em esquinas durante perseguições.|godot-implementar-steering-seek-e-flee, godot-distinguir-caminho-de-evasao-local, godot-depurar-vetores-de-ia-com-draw-line
+
+===NOTE===
+137|godot-selecionar-alvos-por-distancia-e-ameaca|Godot: selecionar alvos de combate por distância e ameaça|Um algoritmo de pontuação ponderada escolhe o alvo mais prioritário combinando distância, dano recebido e linha de visão.|Atacar sempre o primeiro jogador avistado resulta em comportamentos ingênuos quando um atacante de longo alcance causa dano crítico.|Mantenha uma lista de entidades percebidas e calcule um score para cada uma: `score = (peso_dist / dist) + (peso_dano * dano_recente)`. O NPC seleciona a entidade com maior pontuação acumulada.|```gdscript
+# Calculo de prioridade de alvo combinando distancia e ameaca
+func evaluate_target_priority(target_data: Dictionary) -> float:
+    var distance_score = 100.0 / max(global_position.distance_to(target_data.pos), 1.0)
+    var threat_score = target_data.accumulated_damage * 2.5
+    return distance_score + threat_score
+```|Pontuações muito voláteis podem fazer o NPC alternar de alvo a cada frame (efeito zigue-zague), sem completar ataques em nenhum deles.|Aplique uma penalidade de troca de alvo (*hysteresis*) para exigir que um novo alvo supere significativamente o atual antes de trocar de foco.|godot-calcular-cone-de-visao-com-area3d-e-dot-product, unity-utility-ai-compor-fatores-de-saude-e-distancia, unreal-statetree-extrair-contexto-com-evaluators
+
+===NOTE===
+138|godot-sincronizar-ia-com-animationtree|Godot: sincronizar máquina de estados com o nó AnimationTree|O nó AnimationTree permite realizar blend suave entre animações de locomoção e ações disparadas pela lógica de IA.|Alterar animações diretamente via `AnimationPlayer.play()` causa cortes bruscos de pose e quebra o realismo visual dos personagens.|Utilize uma `AnimationNodeStateMachine` dentro do `AnimationTree` e atualize os parâmetros de velocidade linear, direção e gatilhos de ataque através de código GDScript no estado correspondente.|```gdscript
+# Sincronizando velocidade e transicao de animacao no AnimationTree
+func update_animation_parameters(current_vel: Vector3) -> void:
+    var speed = current_vel.length()
+    anim_tree.set("parameters/locomotion/blend_position", speed)
+    if is_attacking:
+        anim_tree.set("parameters/conditions/attack", true)
+```|Parâmetros com caminhos de string incorretos no `set()` falham silenciosamente se o nó de animação for renomeado no editor.|Teste transições de marcha rápida para ataque e confira se a mesclagem de poses (cross-fade) ocorre suavemente durante a movimentação.|godot-estruturar-maquina-de-estados-hierarquica, unity-playablegraph-mesclar-animacoes-procedurais, blender-organizar-clips-como-actions
+
+===NOTE===
+139|godot-propagar-eventos-sonoros-para-audicao-de-npcs|Godot: propagar eventos sonoros para percepção auditiva de NPCs|A propagação de eventos de ruído permite que passos, tiros e explosões alertem NPCs mesmo fora de seu cone visual.|Jogos de ação e furtividade exigem que os inimigos investiguem a origem de barulhos emitidos por ações do jogador no ambiente.|Crie um singleton ou nó de gerenciamento de ruídos. Quando um disparo ocorre, o emissor notifica o sistema com a coordenada e intensidade do som, que alerta NPCs dentro do raio de audição.|```gdscript
+# Notificando o sistema de ruido ao disparar uma arma
+func fire_weapon() -> void:
+    NoiseManager.emit_noise(global_position, 25.0, "gunshot")
+```|Ruídos que atravessam paredes sólidas sem atenuação podem quebrar o realismo em cenários com múltiplas salas e portas fechadas.|Adicione checagem de oclusão por raycast para atenuar a intensidade do som caso haja barreiras espessas entre o emissor e o ouvinte.|godot-calcular-cone-de-visao-com-area3d-e-dot-product, audio-ia-configurar-espacializacao-3d-e-atenuacao, unreal-smart-objects-definir-pontos-de-interacao
+
+===NOTE===
+140|godot-depurar-vetores-de-ia-com-draw-line|Godot: depurar vetores e decisões de IA com funções _draw|Renderizar vetores de velocidade, linhas de visão e raios de steering no viewport facilita o ajuste fino do comportamento do agente.|Diagnosticar problemas de navegação e decisões de IA apenas por texto no console é ineficiente em ambientes tridimensionais complexos.|Implemente métodos de depuração visual utilizando nós `MeshInstance3D` imediatos ou renderizadores de linhas de depuração no editor para desenhar setas de velocidade e cones de visão.|```gdscript
+# Desenhando linha de forca de steering para depuracao visual
+func debug_draw_vector(origin: Vector3, force: Vector3, color: Color) -> void:
+    DebugDraw3D.draw_arrow(origin, origin + force, color, 0.2)
+```|Desenhar muitas linhas de depuração a cada frame degrada o desempenho da GPU e polui a cena durante os testes.|Encapsule as chamadas de depuração sob flags condicionais (`if OS.is_debug_build()`) para garantir que sejam desativadas no build final de produção.|godot-implementar-steering-seek-e-flee, unreal-gameplay-debugger-inspecionar-ia-em-runtime, unity-ia-visualizar-decisoes-com-gizmos-de-cena
