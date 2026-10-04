@@ -1,6 +1,6 @@
 # Auditoria Global Rápida
 
-Atualizado em: 2026-10-04T19:34:07
+Atualizado em: 2026-10-04T20:03:59
 
 > **Escopo:** o `registry/knowledge.sqlite` está sem registros físicos ou virtuais nesta execução. Esses zeros descrevem somente o banco local, não a presença de conteúdo nos arquivos; use a [auditoria de qualidade por arquivos](note-quality-audit.md) para a contagem editorial.
 
@@ -12,7 +12,7 @@ Atualizado em: 2026-10-04T19:34:07
 - Notas físicas prontas para revisão / revisadas / pendentes: 0 / 0 / 0
 - Registros virtuais catalog_only / prontos para revisão / revisados / pendentes: 0 / 0 / 0 / 0
 - Lotes por status: nenhum lote registrado no SQLite
-- Arquivos Markdown ativos em domains/: 6240
+- Arquivos Markdown ativos em domains/: 6340
 - Archives de domains existentes: 0
 - Slugs duplicados por vault: 0
 - Títulos duplicados por domínio/subdomínio: 0

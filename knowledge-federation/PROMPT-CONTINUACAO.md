@@ -29,12 +29,12 @@ Continue a execução do plano de 1.000.000 de notas válidas do repositório be
 
 CONTEXTO JÁ VERIFICADO (estado editorial atual em 2026-10-04):
 - Meta ativa: 500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas.
-- Estado: 6140 / 1.000.000 (0,6140%) válidas; 3/500 lotes completos; 6240 arquivos Markdown ativos (6140 válidas + 100 legadas com pendências, mantidas fora da contagem).
+- Estado: 6240 / 1.000.000 (0,6240%) válidas; 3/500 lotes completos; 6340 arquivos Markdown ativos (6240 válidas + 100 legadas com pendências, mantidas fora da contagem).
 - Lotes 1–3: `software-testes-2000-0001`, `software-devops-2000-0002` e `software-seguranca-2000-0003`, todos 2.000/2.000 (`complete`).
-- Lote 4 `software-criacao-ia-2000-0004`: 100/2.000 (5,00%), com tranche 1 concluída (100 notas, IDs 1–100), 100 aprovadas pelo gate e 100 com revisão factual por IA; nenhuma aprovação humana nova; 19 tranches planejadas.
+- Lote 4 `software-criacao-ia-2000-0004`: 200/2.000 (10,00%), com tranches 1 e 2 concluídas (200 notas, IDs 1–200), 200 aprovadas pelo gate e 200 com revisão factual por IA; nenhuma aprovação humana nova; 18 tranches planejadas.
 - Escopo do lote 4: engenharia/criação de programas, aplicativos e jogos com IA; IA de gameplay, produção de vídeo/animação e documentação/tutorial. Não abrir lote 5 automaticamente.
 - Contagem exige frontmatter rastreável, ≥100 palavras, seções de explicação/exemplo/limites/verificação, duas fontes HTTPS específicas, wikilinks resolvidos, sem marcadores de template, gate aprovado e revisão factual registrada. Revisão por IA nunca altera nem amplia as 49 aprovações humanas históricas.
-- Relatórios do lote 4 tranche 1: `exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md`, `exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md` e `exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md`.
+- Relatórios do lote 4 tranche 2: `exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md`, `exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md` e `exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md`.
 - Artefatos por tranche: manifesto, relatório factual IA, auditoria/gate, reconciliação, fila de revisão, MOC e resumos globais.
 
 TAREFA IMEDIATA:

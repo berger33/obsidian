@@ -1,0 +1,139 @@
+SOURCES: https://docs.unity3d.com/Packages/com.unity.animation.rigging@1.3/manual/index.html | https://docs.unity3d.com/Packages/com.unity.animation.rigging@1.3/manual/constraints/TwoBoneIKConstraint.html
+
+===NOTE===
+141|unity-animation-rigging-montar-rigbuilder|Unity: montar componente RigBuilder e camadas de restrição|O pacote Animation Rigging permite aplicar restrições procedurais dinâmicas sobre esqueletos durante a execução do jogo no Unity.|Ajustes procedurais corrigem poses capturadas para adaptar o personagem a irregularidades do cenário e empunhaduras de armas.|Adicione o componente `RigBuilder` na raiz do GameObject do personagem e crie GameObjects filhos contendo componentes `Rig` e restrições específicas (Two-Bone IK, Multi-Aim, Damp Transform).|```csharp
+// Exemplo de configuracao de RigBuilder em C# no Unity
+using UnityEngine;
+using UnityEngine.Animations.Rigging;
+
+public class CharacterRigSetup : MonoBehaviour
+{
+    [SerializeField] private RigBuilder rigBuilder;
+    [SerializeField] private Rig aimRig;
+
+    public void SetAimRigWeight(float weight)
+    {
+        aimRig.weight = Mathf.Clamp01(weight);
+    }
+}
+```|O cálculo de múltiplas camadas de rigging em muitos personagens simultâneos impacta o desempenho de CPU em plataformas mobile.|Ajuste os pesos (`weight`) das camadas de Rig dinamicamente para desativar restrições desnecessárias quando o personagem estiver inativo.|unity-animation-rigging-ajustar-pes-com-two-bone-ik, unity-animation-rigging-orientar-olhar-com-multi-aim, blender-validar-o-rig-antes-de-exportar
+
+===NOTE===
+142|unity-animation-rigging-ajustar-pes-com-two-bone-ik|Unity: ajustar pés em terrenos inclinados com Two-Bone IK|A restrição Two-Bone IK adapta dinamicamente a posição dos pés e quadris conforme a inclinação do terreno sob o personagem.|Pés que flutuam no ar ou afundam na geometria do solo em rampas e escadas degradam a qualidade visual da movimentação.|Configure restrições `TwoBoneIKConstraint` para cada perna, vinculando quadril, joelho e pé. Dispare raycasts para baixo a partir dos pés para encontrar a altura do solo e reposicionar o target do IK.|```csharp
+// Ajustando a posicao do target do pe com base no impacto do raycast
+RaycastHit hit;
+if (Physics.Raycast(footTransform.position + Vector3.up, Vector3.down, out hit, 2.0f, groundLayer))
+{
+    leftFootIKTarget.position = hit.point + Vector3.up * footOffset;
+    leftFootIKTarget.rotation = Quaternion.FromToRotation(Vector3.up, hit.normal) * footTransform.rotation;
+}
+```|Configurações inadequadas do nó polar (*pole target*) podem fazer os joelhos dobrarem para trás ou em ângulos anatômicos bizarros.|Teste a caminhada do personagem em rampas íngremes e escadarias no Scene View para validar o alinhamento das solas dos pés.|unity-animation-rigging-montar-rigbuilder, unity-playablegraph-mesclar-animacoes-procedurais, unreal-ia-sincronizar-animacoes-com-motion-warping
+
+===NOTE===
+143|unity-animation-rigging-orientar-olhar-com-multi-aim|Unity: orientar cabeça e olhar com Multi-Aim Constraint|A restrição Multi-Aim Constraint direciona a rotação da cabeça, pescoço e olhos do personagem para pontos de interesse no cenário.|Personagens que mantêm o olhar fixo no vazio parecem estáticos e desconectados dos eventos e companheiros ao seu redor.|Adicione uma `MultiAimConstraint` na cadeia de ossos da cabeça, defina o alvo como a posição do jogador e ajuste os limites de rotação angular para evitar torções excessivas no pescoço.|```csharp
+// Atribuindo o alvo do jogador ao componente MultiAimConstraint
+[SerializeField] private MultiAimConstraint headAimConstraint;
+
+public void LookAtTarget(Transform targetTransform)
+{
+    var data = headAimConstraint.data.sourceObjects;
+    data.Clear();
+    data.Add(new WeightedTransform(targetTransform, 1.0f));
+    headAimConstraint.data.sourceObjects = data;
+}
+```|Mudar o alvo abruptamente faz a cabeça do personagem girar instantaneamente em alta velocidade, quebrando a ilusão de peso orgânico.|Interpole a coordenada do target com `Vector3.SmoothDamp` para garantir movimentos oculares e de cabeça naturais.|unity-animation-rigging-montar-rigbuilder, godot-calcular-cone-de-visao-com-area3d-e-dot-product, audio-ia-mapear-visemas-a-blend-shapes-faciais
+
+===NOTE===
+144|unity-animation-rigging-suavizar-com-damp-transform|Unity: suavizar movimento de armas e acessórios com Damp Transform|A restrição Damp Transform aplica amortecimento inercial em objetos acoplados ao personagem durante movimentos rápidos.|Acessórios como capas, coldres e armas longas parecem blocos rígidos e sem vida se fixados diretamente a ossos sem inércia física.|Insira a restrição `DampTransform` no osso do acessório, configurando os fatores de amortecimento posicional e rotacional para criar um atraso de movimento convincente.|```csharp
+// Exemplo de ajuste de amortecimento inercial no componente DampTransform
+// Os parametros damping e rotDamping controlam a velocidade de recuperacao
+dampTransformConstraint.data.damping = 0.35f;
+```|Valores de amortecimento muito altos fazem o acessório se deslocar excessivamente do corpo durante corridas, atravessando a malha do personagem.|Verifique a animação em velocidades variadas de corrida e giros rápidos para garantir que o acessório reaja sem atravessar a geometria do corpo.|unity-animation-rigging-montar-rigbuilder, blender-separar-movimento-in-place-e-root-motion, assets-ia-otimizar-compressao-bc7-e-astc-em-vram
+
+===NOTE===
+145|unity-utility-ai-avaliar-decisoes-com-curvas|Unity: avaliar decisões de NPCs com curvas de resposta em Utility AI|A arquitetura Utility AI utiliza curvas matemáticas de resposta para atribuir valores de utilidade a cada ação possível do NPC.|Árvores de decisão tradicionais tornam-se difíceis de calibrar e manter quando múltiplos fatores contínuos precisam ser ponderados simultaneamente.|Mapeie variáveis de entrada (saúde normalizada, munição, distância) em valores de utilidade entre 0.0 e 1.0 utilizando objetos `AnimationCurve` editáveis diretamente no Inspector do Unity.|```csharp
+// Avaliando utilidade de curar-se com base na saude atual via AnimationCurve
+[SerializeField] private AnimationCurve healthUtilityCurve;
+
+public float EvaluateHealUtility(float currentHealth, float maxHealth)
+{
+    float healthPercent = Mathf.Clamp01(currentHealth / maxHealth);
+    return healthUtilityCurve.Evaluate(healthPercent);
+}
+```|Curvas mal calibradas podem gerar empates frequentes entre ações ou levar o NPC a hesitar entre comportamentos opostos a cada tick.|Selecione a ação com maior utilidade e confira se a curva produz comportamentos proporcionais ao perigo enfrentado pelo agente.|unity-utility-ai-compor-fatores-de-saude-e-distancia, unity-ia-visualizar-decisoes-com-gizmos-de-cena, unreal-statetree-estruturar-hierarquia-de-estados
+
+===NOTE===
+146|unity-utility-ai-compor-fatores-de-saude-e-distancia|Unity: compor fatores de saúde e distância em pontuações de ação|A composição de utilidades individuais através de multiplicação ou média ponderada gera decisões contextuais ricas e equilibradas.|Avaliar fatores de forma isolada pode induzir o NPC a escolher uma ação que pontua bem em um critério, mas é inviável em outro.|Combine pontuações parciais de utilidade utilizando operadores como a média geométrica ou produto compensado (`Score = U_saude * U_distancia * U_municao`) para garantir que utilidade zero em um fator crítico anule a ação.|```csharp
+// Calculando pontuacao composta de ataque a distancia
+public float CalculateAttackScore(float healthUtil, float distUtil, float ammoUtil)
+{
+    // Se a municao for zero, o produto anula a possibilidade de ataque
+    return healthUtil * distUtil * ammoUtil;
+}
+```|O produto direto de múltiplos fatores pequenos pode resultar em números excessivamente baixos que dificultam comparações numéricas estáveis.|Aplique normalização de raiz enésima quando combinar muitos fatores para manter as pontuações em uma escala intuitiva de 0 a 1.|unity-utility-ai-avaliar-decisoes-com-curvas, godot-selecionar-alvos-por-distancia-e-ameaca, unreal-statetree-extrair-contexto-com-evaluators
+
+===NOTE===
+147|unity-navmesh-reconstruir-superficie-em-runtime|Unity: reconstruir NavMeshSurface em tempo de execução|O componente NavMeshSurface permite gerar e atualizar malhas de navegação em runtime para suportar cenários modulares e destrutíveis.|Malhas de navegação estáticas impedem a movimentação correta de IA em jogos com mapas gerados proceduralmente ou obstáculos dinâmicos.|Invoque o método assíncrono `navMeshSurface.UpdateNavMesh(navMeshSurface.navMeshData)` após instanciar novas salas ou remover pontes e paredes no cenário do jogo.|```csharp
+// Reconstruindo a superficie de navegacao em runtime no Unity
+using Unity.AI.Navigation;
+using UnityEngine;
+
+public class DynamicDungeonNav : MonoBehaviour
+{
+    [SerializeField] private NavMeshSurface surface;
+
+    public void OnLevelGenerated()
+    {
+        surface.BuildNavMesh();
+    }
+}
+```|Reconstruir superfícies de navegação completas a cada frame congela a thread principal; utilize recálculos localizados por fatias (*bounds*).|Gere uma masmorra procedural e observe se os agentes calculam rotas válidas imediatamente após a conclusão do build do NavMesh.|unity-navmesh-atribuir-custos-por-area-de-terreno, godot-preparar-malha-de-navegacao, unreal-smart-objects-definir-pontos-de-interacao
+
+===NOTE===
+148|unity-navmesh-atribuir-custos-por-area-de-terreno|Unity: atribuir custos diferenciados por tipo de área no NavMesh|A atribuição de custos diferenciados por tipo de área orienta o pathfinding do NavMeshAgent a preferir caminhos mais seguros ou rápidos.|Agentes que ignoram o tipo de terreno atravessam fogo, lama e pântanos quando esses caminhos são geometricamente mais curtos.|Defina camadas de área como *Water*, *Mud* ou *Danger* nas configurações de navegação com custos elevados (ex.: 5.0 vs. 1.0 para chão plano) e aplique essas áreas em modificadores de volume.|```csharp
+// Ajustando a mascara de areas de navegacao permitidas para o agente
+NavMeshAgent agent = GetComponent<NavMeshAgent>();
+// Desativar a area de perigo (Danger) da mascara de travessia do agente
+int dangerAreaIndex = NavMesh.GetAreaFromName("Danger");
+agent.areaMask &= ~(1 << dangerAreaIndex);
+```|Custos de área afetam apenas o cálculo de rota do NavMeshAgent; não impedem que o agente seja empurrado para dentro da área perigosa por física.|Posicione uma poça tóxica com custo alto entre o NPC e o jogador e confirme se o agente dá a volta pelo caminho limpo.|unity-navmesh-reconstruir-superficie-em-runtime, godot-escolher-navigationlayers-por-uso, godot-aplicar-velocidade-de-avoidance
+
+===NOTE===
+149|unity-playablegraph-mesclar-animacoes-procedurais|Unity: mesclar animações procedurais usando a PlayableGraph API|A PlayableGraph API oferece controle de baixo nível sobre a árvore de avaliação de animações e áudio no Unity.|Criar nós customizados no grafo possibilita mesclar animações pré-gravadas com dados procedurais de física sem a rigidez do Animator Controller tradicional.|Instancie um `PlayableGraph`, conecte nós `AnimationClipPlayable` a um `AnimationMixerPlayable` e envie o resultado para o `AnimationPlayableOutput` associado ao componente Animator.|```csharp
+// Exemplo basico de montagem de PlayableGraph em C#
+using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
+
+public class SimplePlayableMixer : MonoBehaviour
+{
+    private PlayableGraph graph;
+    [SerializeField] private AnimationClip clipA;
+    [SerializeField] private AnimationClip clipB;
+
+    void Start()
+    {
+        graph = PlayableGraph.Create("CustomAnimationGraph");
+        var output = AnimationPlayableOutput.Create(graph, "AnimationOutput", GetComponent<Animator>());
+        var mixer = AnimationMixerPlayable.Create(graph, 2);
+        output.SetSourcePlayable(mixer);
+        // Conectar clips e iniciar grafo
+        graph.Play();
+    }
+}
+```|Grafos instanciados devem ser explicitamente destruídos com `graph.Destroy()` no evento `OnDestroy` para evitar vazamentos de memória na engine.|Altere os pesos das portas do mixer em tempo real e verifique se as poses dos dois clips se fundem suavemente sem jittering.|unity-animation-rigging-montar-rigbuilder, godot-sincronizar-ia-com-animationtree, unreal-sequencer-animar-com-tracks-e-keyframes
+
+===NOTE===
+150|unity-ia-visualizar-decisoes-com-gizmos-de-cena|Unity: visualizar sensores e scores de utilidade com Gizmos de cena|A renderização de Gizmos e Handles na Scene View permite inspecionar raios de percepção e pontuações de ações durante o jogo.|Diagnosticar por que uma IA tomou uma decisão inesperada torna-se muito mais rápido quando os dados internos são desenhados diretamente no mundo do jogo.|Implemente o método `OnDrawGizmosSelected()` desenhando esferas nos raios de visão, linhas até os alvos identificados e rótulos de texto com a utilidade calculada.|```csharp
+// Desenhando cone de visao e status de combate no Unity Editor
+void OnDrawGizmosSelected()
+{
+    Gizmos.color = Color.yellow;
+    Gizmos.DrawWireSphere(transform.position, detectionRadius);
+    if (currentTarget != null)
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, currentTarget.position);
+    }
+}
+```|O desenho excessivo de Gizmos complexos pode reduzir a taxa de quadros do editor durante a reprodução da cena no modo Play.|Utilize `OnDrawGizmosSelected` em vez de `OnDrawGizmos` para renderizar apenas os dados visuais do NPC selecionado no momento.|unity-utility-ai-avaliar-decisoes-com-curvas, godot-depurar-vetores-de-ia-com-draw-line, unreal-gameplay-debugger-inspecionar-ia-em-runtime

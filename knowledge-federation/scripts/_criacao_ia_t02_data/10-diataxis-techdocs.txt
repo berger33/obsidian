@@ -1,0 +1,122 @@
+SOURCES: https://diataxis.fr/explanation/ | https://diataxis.fr/how-to-guides/
+
+===NOTE===
+191|diataxis-aplicar-os-quatro-quadrantes-de-documentacao|Framework Diátaxis: estruturar documentação técnica em quatro quadrantes|O framework Diátaxis classifica a documentação técnica em quatro modos complementares: Tutoriais, Guias How-To, Referência e Explicação.|Misturar instrução inicial com detalhes exaustivos de API confunde iniciantes e frustra engenheiros experientes que buscam respostas rápidas.|Separe seus documentos conforme a intenção do leitor: Tutoriais para aprendizagem prática orientada a novatos; How-To para solução de problemas de trabalho; Referência para descrições técnicas de arquitetura; e Explicação para compreensão teórica e trade-offs.|```text
+// Os Quatro Quadrantes do Framework Diataxis
+         │ Pratica           │ Teoria
+─────────┼───────────────────┼────────────────────
+Estudo   │ 1. Tutoriais      │ 4. Explicacao
+Trabalho │ 2. Guias How-To   │ 3. Referencia
+```|Tentar cobrir múltiplos quadrantes em uma única página gera textos desorganizados e de difícil manutenção ao longo das versões do software.|Inspecione o índice da documentação e confirme que os artigos estão distribuídos coerentemente nas quatro pastas correspondentes.|diataxis-construir-tutoriais-focados-no-primeiro-sucesso, diataxis-redigir-guias-how-to-para-tarefas-de-producao, documentacao-escolher-entre-tutorial-e-referencia
+
+===NOTE===
+192|diataxis-construir-tutoriais-focados-no-primeiro-sucesso|Diátaxis Tutoriais: conduzir novos usuários ao primeiro resultado palpável|Tutoriais no modelo Diátaxis são lições práticas que guiam o aprendiz passo a passo até a conclusão bem-sucedida de um projeto inicial.|Tutoriais que se perdem em explicações teóricas densas desmotivam o desenvolvedor antes que ele consiga rodar o primeiro exemplo.|Conduza o leitor através de uma sequência linear e reproduzível de ações sem alternativas ou bifurcações, garantindo que ao final do tutorial ele tenha uma aplicação ou mecânica funcionando na tela.|```markdown
+# Tutorial: Criando seu Primeiro Inimigo com IA no Godot 4
+
+1. Crie uma nova cena com o no CharacterBody3D.
+2. Anexe o script basic_enemy.gd fornecido abaixo.
+3. Pressione F6 para rodar a cena e observe o inimigo seguir o cursor.
+```|Incluir opções alternativas ("você pode usar X ou se preferir Y") distrai o aprendiz e aumenta a probabilidade de erros durante o aprendizado.|Execute o tutorial do zero em um ambiente limpo para confirmar que nenhuma etapa ou dependência oculta foi omitida.|diataxis-aplicar-os-quatro-quadrantes-de-documentacao, tutorial-construir-exemplo-de-ponta-a-ponta, documentacao-declarar-leitor-e-resultado
+
+===NOTE===
+193|diataxis-redigir-guias-how-to-para-tarefas-de-producao|Diátaxis How-To: redigir passos objetivos para tarefas práticas de produção|Os guias How-To descrevem receitas práticas e diretas para resolver problemas concretos encontrados no trabalho diário.|Desenvolvedores que já dominam os conceitos básicos precisam de passos claros sem a introdução pedagógica de um tutorial de iniciantes.|Inicie o guia declarando claramente o objetivo prático (ex.: "Como exportar animações do Blender para Unreal com Root Motion"), liste os pré-requisitos e forneça os passos numerados necessários para atingir o resultado.|```markdown
+# How-to: Configurar Conexao Segura com Servidor de Modelos Locais
+
+## Pre-requisitos
+- Ollama instalado e executando na porta 11434.
+- Certificado SSL emitido para o dominio interno.
+
+## Passos
+1. Edite o arquivo /etc/nginx/sites-available/ollama.conf.
+2. Adicione a diretiva proxy_pass http://127.0.0.1:11434.
+3. Reinicie o servico com `sudo systemctl restart nginx`.
+```|Guias How-To não devem tentar ensinar fundamentos teóricos da ferramenta; restrinja o texto estritamente à execução da tarefa.|Siga as etapas descritas em uma máquina de teste e valide se o resultado operacional é atingido exatamente como prometido.|diataxis-aplicar-os-quatro-quadrantes-de-documentacao, how-to-organizar-passos-por-tarefa, documentacao-fixar-versoes-e-pre-requisitos
+
+===NOTE===
+194|diataxis-organizar-referencias-tecnicas-sem-narrativa|Diátaxis Referência: catalogar APIs e parâmetros com precisão e sem narrativa|Páginas de referência técnica catalogam assinaturas de métodos, tipos de dados, parâmetros e retornos de forma neutra e austera.|A referência técnica deve ser informativa e direta, funcionando como um mapa formal e confiável para consulta rápida durante a programação.|Organize as entradas alfabeticamente ou por módulo, descrevendo o tipo de cada parâmetro, valores padrão, possíveis códigos de erro e exceções lançadas, sem digressões narrativas.|```markdown
+# Referencia: StateTreeComponent.StartLogic()
+
+## Assinatura
+`bool StartLogic()`
+
+## Retorno
+- `true`: A arvore de estados foi inicializada e comecou a avaliacao.
+- `false`: Falha na inicializacao (asset StateTree nulo ou configuracao invalida).
+
+## Excecoes
+- Emite aviso no log de gameplay se chamado com o ator inativo.
+```|Incluir tutoriais ou discussões teóricas longas dentro da referência dificulta a localização rápida das propriedades desejadas.|Confira se todos os parâmetros aceitos pela função constam na tabela com seus tipos estáticos devidamente documentados.|diataxis-aplicar-os-quatro-quadrantes-de-documentacao, referencia-descrever-campos-com-precisao, documentacao-automatizar-validacao-de-links-e-snippets-em-ci
+
+===NOTE===
+195|diataxis-elaborar-artigos-de-explicacao-e-design|Diátaxis Explicação: aprofundar decisões arquiteturais e modelos conceituais|Artigos de explicação discutem o contexto histórico, decisões de arquitetura e alternativas técnicas de um sistema de software.|Entender por que uma tecnologia foi escolhida e quais seus limites fundamentais ajuda os engenheiros a projetarem sistemas mais robustos.|Aborde o tema sob uma perspectiva abrangente, comparando diferentes abordagens (ex.: ECS vs Programação Orientada a Objetos em IA de jogos) e justificando as razões que motivaram o design atual.|```markdown
+# Explicacao: Por que adotamos Utility AI em vez de Behavior Trees
+
+Behavior Trees sao excelentes para comportamentos com sequencias hierarquicas rigidas.
+No entanto, quando os NPCs precisam ponderar dezenas de fatores continuos (saude, distancia, municao),
+as arvores sofrem de explosao de ramos condicionais. O modelo Utility AI substitui esses ramos
+por curvas de resposta matematicas continuas...
+```|Artigos de explicação não devem conter listas de passos práticos de execução; foque exclusivamente na teoria, arquitetura e conceitos.|Revise se o texto apresenta uma visão equilibrada mencionando tanto os pontos fortes quanto os limites da abordagem escolhida.|diataxis-aplicar-os-quatro-quadrantes-de-documentacao, unity-utility-ai-avaliar-decisoes-com-curvas, unreal-statetree-estruturar-hierarquia-de-estados
+
+===NOTE===
+196|documentacao-incorporar-sandboxes-e-demos-interativos|Documentação Interativa: incorporar sandboxes de código executável em tutoriais|Sandboxes executáveis no navegador permitem que desenvolvedores testem trechos de código e shaders sem configurar ambientes locais complexos.|A fricção de instalar dependências e ferramentas pesadas reduz a taxa de conclusão de tutoriais técnicos por novos desenvolvedores.|Incorpore containers interativos WebAssembly (Wasm) ou iframes com editores como CodeSandbox, Godot Web Export ou StackBlitz diretamente nas páginas da documentação.|```html
+<!-- Exemplo de incorporacao de demo interativo via WebAssembly -->
+<iframe
+  src="https://meu-jogo.dev/demos/steering-sandbox.html"
+  width="100%"
+  height="450px"
+  title="Demonstracao Interativa de Steering Behaviors"
+></iframe>
+```|Demos em WebAssembly podem demorar para carregar em conexões lentas ou exigir navegadores modernos com suporte a SharedArrayBuffer.|Abra a página de documentação no navegador e teste a execução do código interativo no sandbox incorporado.|documentacao-executar-exemplos-de-codigo, diataxis-construir-tutoriais-focados-no-primeiro-sucesso, documentacao-usar-imagens-acessiveis-e-uteis
+
+===NOTE===
+197|documentacao-explicar-grafos-de-shaders-e-materiais|Documentação de Arte: detalhar entradas e nós matemáticos de shader graphs|Documentar grafos de shaders explicando nós matemáticos e entradas expostas facilita o reuso de materiais por artistas técnicos.|Grafos visuais densos sem documentação de nós e propriedades tornam-se caixas-pretas impossíveis de customizar com segurança.|Catalogue todas as propriedades expostas no material (ex.: `NormalStrength`, `RoughnessMultiplier`), detalhando a faixa válida de valores e exibindo capturas dos subgrafos matemáticos com descrições de função.|```markdown
+# Documentacao de Shader: PBR Dissolve Shader
+
+## Propriedades Expostas
+| Nome | Tipo | Faixa Padrao | Descricao |
+|---|---|---|---|
+| `_DissolveAmount` | Float | 0.0 - 1.0 | 0.0 = totalmente solido; 1.0 = desintegrado |
+| `_BurnEdgeColor` | Color | HDR Red | Cor da borda incandescente durante o dissolve |
+```|Capturas de tela de grafos em baixa resolução impedem a leitura dos rótulos de conexões e nomes de nós matemáticos.|Abra o shader no editor da engine e confirme se todos os nós e parâmetros descritos no documento correspondem à implementação real.|texturas-ia-derivar-mapas-de-normal-e-roughness, documentacao-usar-imagens-acessiveis-e-uteis, unity-playablegraph-mesclar-animacoes-procedurais
+
+===NOTE===
+198|documentacao-manter-guias-de-migracao-e-breaking-changes|Manutenção de Software: documentar breaking changes e guias de migração|Guias de migração claros reduzem o atrito de atualização para novas versões de frameworks, APIs e bibliotecas de jogos.|Atualizações de versão que alteram contratos sem documentação de migração travam equipes inteiras e provocam relutância em atualizar ferramentas.|Mantenha um documento `MIGRATION.md` registrando métodos removidos, novas assinaturas de métodos e exemplos de código comparando a abordagem antiga (*Before*) com a nova (*After*).|```markdown
+# Guia de Migracao da versao 1.x para 2.0
+
+## Remocao de `GetTargetPawn()`
+O metodo `GetTargetPawn()` foi descontinuado em favor da propriedade unificada `TargetActor`.
+
+### Antes (v1.x)
+```csharp
+Pawn target = aiController.GetTargetPawn();
+```
+
+### Depois (v2.0)
+```csharp
+Actor target = aiController.TargetActor;
+```
+```|Omitir mudanças sutis em valores padrão de propriedades pode introduzir bugs de comportamento silenciosos após a migração.|Execute os passos do guia de migração em um projeto de teste da versão anterior para certificar a precisão das instruções.|diataxis-redigir-guias-how-to-para-tarefas-de-producao, documentacao-fixar-versoes-e-pre-requisitos, claude-code-validar-testes-antes-do-commit
+
+===NOTE===
+199|documentacao-automatizar-validacao-de-links-e-snippets-em-ci|CI para Documentação: testar snippets de código e validar links quebrados|A validação automatizada de snippets e hiperlinks no CI impede que documentações com erros e links mortos cheguem aos usuários.|Exemplos de código desatualizados ou links quebrados geram frustração imediata e minam a confiança do desenvolvedor no projeto.|Configure um job no GitHub Actions ou pipeline equivalente utilizando linters de Markdown (ex.: `markdown-link-check` e compiladores de snippets) que executam testes sobre todos os blocos de código documentados.|```yaml
+# Pipeline de validacao de documentacao no GitHub Actions
+name: Docs Validation
+on: [push, pull_request]
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Broken Markdown Links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+```|Verificadores de links podem gerar falhas intermitentes no CI devido a limites de taxa (*rate limiting*) em sites externos.|Dispare a rotina de validação de documentação no repositório e confirme que todos os links e snippets de teste retornam código de saída zero.|documentacao-executar-exemplos-de-codigo, documentacao-tornar-resultado-e-verificacao-explicitos, claude-code-validar-testes-antes-do-commit
+
+===NOTE===
+200|documentacao-aplicar-checklist-em-tutoriais-gerados-por-ia|Governança Técnica: aplicar checklist de verificação em tutoriais gerados por IA|A aplicação de checklists de validação técnica assegura que materiais gerados com auxílio de IA sejam factualmente corretos e reproduzíveis.|Modelos de linguagem podem gerar tutoriais com passos plausíveis, mas contendo comandos obsoletos ou parâmetros inexistentes.|Submeta o texto gerado a um checklist estruturado: conferir versões dos pacotes, testar todos os comandos no terminal, verificar se todos os arquivos citados existem e validar que o resultado final foi atingido.|```markdown
+# Checklist de Validacao para Tutoriais Gerados por IA
+- [ ] O comando de instalacao utiliza a versao vigente da ferramenta?
+- [ ] Todos os snippets de codigo foram executados sem erros em ambiente limpo?
+- [ ] As URLs citadas sao links HTTPS especificos e validos?
+- [ ] Os limites tecnicos e condicoes de contorno estao claramente descritos?
+- [ ] A revisao factual tecnica foi executada e registrada com evidencia?
+```|Aprovar tutoriais gerados por IA sem execução prática propaga alucinações e erros de configuração que prejudicam a produtividade dos leitores.|Execute cada linha de instrução em um container limpo antes de aprovar a publicação final do documento na base de conhecimento.|documentacao-revisar-tutorial-gerado-por-ia, diataxis-construir-tutoriais-focados-no-primeiro-sucesso, copilot-tratar-sugestoes-como-rascunho

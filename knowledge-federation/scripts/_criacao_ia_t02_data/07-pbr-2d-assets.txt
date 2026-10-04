@@ -1,0 +1,96 @@
+SOURCES: https://docs.blender.org/manual/en/latest/render/shader_nodes/textures/index.html | https://docs.blender.org/manual/en/latest/sculpt_paint/painting/texture_paint/index.html
+
+===NOTE===
+161|texturas-ia-gerar-padroes-pbr-seamless-tileaveis|Texturas com IA: gerar padrões PBR contínuos e sem emendas|A geração de texturas contínuas (*seamless tileable*) sintetiza padrões de materiais que se repetem infinitamente sem costuras visíveis.|Texturas que exibem linhas de divisão nas bordas tornam superfícies de paredes, terrenos e pisos artificiais e desagradáveis no jogo.|Utilize técnicas de difusão com preenchimento circular (*tiling diffusion / offset wrapper*) para que os limites direito/esquerdo e superior/inferior da imagem se conectem com continuidade visual de pixels.|```python
+# Verificando a continuidade de bordas com deslocamento circular em Python
+import numpy as np
+from PIL import Image
+
+def test_tile_continuity(image_path: str) -> Image.Image:
+    img = Image.open(image_path)
+    arr = np.array(img)
+    # Deslocar a imagem pela metade da largura e altura
+    rolled = np.roll(np.roll(arr, arr.shape[0] // 2, axis=0), arr.shape[1] // 2, axis=1)
+    return Image.fromarray(rolled)
+```|Padrões com elementos focais únicos e muito contrastantes (ex.: uma rachadura gigante no meio) tornam a repetição do tiling óbvia e repetitiva.|Aplique a textura em um plano repetido 4x4 no viewport e observe se o material aparenta ser uma superfície contínua uniforme.|texturas-ia-derivar-mapas-de-normal-e-roughness, texturas-ia-remover-sombras-para-albedo-neutro, blender-checar-compatibilidade-de-animacao-gltf
+
+===NOTE===
+162|texturas-ia-derivar-mapas-de-normal-e-roughness|Texturas com IA: derivar mapas de normal e roughness de alturas|A conversão de mapas de altura gerados por IA em mapas de normais tangentes e rugosidade completa a criação de materiais PBR.|Superfícies que utilizam apenas o canal difuso sem dados de relevo e refletividade parecem plásticas e sem profundidade sob a iluminação do engine.|Alimente o mapa de altura (*heightmap*) em nós de filtro Sobel ou plugins de texturização para calcular os gradientes espaciais em RGB (espaço tangente) e inverta tons para derivar a rugosidade (*roughness*).|```text
+// Grafo de geracao de Normal Map no Shader Editor do Blender
+[Height / Bump Texture]
+        │
+        ▼
+   [Bump Node] ──► Normal Output ──► [Principled BSDF (Normal)]
+```|Mapas de normais derivados de fotos com sombras duras criam relevos invertidos e falsas elevações onde havia apenas escuridão visual.|Inspecione o material sob uma luz rotacional e confirme se as saliências e ranhuras reagem corretamente à direção dos raios de luz.|texturas-ia-gerar-padroes-pbr-seamless-tileaveis, texturas-ia-remover-sombras-para-albedo-neutro, assets-ia-otimizar-compressao-bc7-e-astc-em-vram
+
+===NOTE===
+163|controlnet-guiar-geracao-com-bordas-canny-e-depth|ControlNet: guiar geração de assets com mapas de borda Canny e profundidade|O ControlNet condiciona a síntese generativa a restrições estruturais de geometria através de detectores de borda e mapas de profundidade.|A geração pura baseada em texto livre altera a silhueta, escala e contornos fundamentais de modelos e concept arts a cada iteração.|Extraia as bordas de uma malha 3D com o filtro Canny ou renderize o buffer de profundidade (*Z-Depth*) da câmera para guiar a síntese de novos estilos sem perder a proporção original do objeto.|```text
+// Pipeline de composicao com ControlNet
+[Render 3D de Referencia] ──► [Preprocessador Canny] ──┐
+                                                      ▼
+[Prompt: "Textura de madeira envelhecida"] ──► [ControlNet + SD] ──► [Asset Texturizado]
+```|Pesos de ControlNet muito elevados (`weight > 1.2`) provocam saturação de cores e artefatos escuros ao redor das linhas de borda.|Renderize o asset gerado sobre a malha original no Blender e verifique se as linhas e cantos coincidem perfeitamente com a geometria.|controlnet-fixar-postura-de-sprites-com-openpose, concept-art-ia-refinar-detalhes-com-inpainting, blender-exportar-somente-o-conteudo-necessario
+
+===NOTE===
+164|controlnet-fixar-postura-de-sprites-com-openpose|ControlNet: fixar postura anatômica de sprites 2D com OpenPose|O modelo OpenPose extrai e fixa esqueletos anatômicos de personagens para orientar a geração de quadros de spritesheets 2D.|Gerar poses sequenciais para sprites 2D sem controle esquelético resulta em membros com comprimentos variáveis e proporções corporais inconsistentes.|Capture a pose desejada a partir de uma gravação real ou boneco 3D de referência, gere o esqueleto colorido OpenPose e envie-o como entrada de controle para sintetizar o personagem no estilo artístico pretendido.|```text
+// Pipeline de geracao de sprite com OpenPose
+[Esqueleto OpenPose (Keyframe de Corrida)] ──┐
+                                            ▼
+[Prompt: "Guerreiro medieval pixel art"] ──► [ControlNet OpenPose] ──► [Sprite do Quadro]
+```|O OpenPose pode falhar na detecção de dedos finos, armas longas ou sobreposições complexas de braços na frente do torso.|Confira a anatomia das juntas geradas e ajuste manualmente os pontos esqueléticos caso haja deslocamento nas mãos ou pés.|pixel-art-ia-alinhar-a-grade-e-limitar-paleta, spritesheet-ia-empacotar-e-fatiar-atlas-de-sprites, blender-validar-o-rig-antes-de-exportar
+
+===NOTE===
+165|pixel-art-ia-alinhar-a-grade-e-limitar-paleta|Pixel Art com IA: alinhar arte à grade de pixels e limitar contagem de cores|O alinhamento estrito à grade e a redução de cores indexadas garantem autenticidade e nitidez visual em assets de pixel art gerados por IA.|Modelos generativos produzem anti-aliasing borrado e gradientes com milhares de cores que quebram a estética retrô de jogos 2D.|Redimensione a imagem gerada utilizando interpolação por vizinho mais próximo (*Nearest Neighbor*) e aplique uma paleta indexada fixa (ex.: 16 ou 32 cores) para eliminar sub-pixels difusos.|```python
+# Quantizacao de paleta e reamostragem Nearest Neighbor em Python
+from PIL import Image
+
+def convert_to_clean_pixel_art(image_path: str, target_size: tuple[int, int], palette_img: Image.Image) -> Image.Image:
+    img = Image.open(image_path).convert("RGB")
+    downscaled = img.resize(target_size, resample=Image.Resampling.NEAREST)
+    quantized = downscaled.quantize(palette=palette_img, dither=Image.Dither.NONE)
+    return quantized
+```|Quantizações agressivas sem ajuste fino de contraste podem fundir detalhes escuros ou apagar linhas de contorno finas do personagem.|Exiba o sprite na resolução nativa do jogo no motor (Godot/Unity) e confirme a ausência de pixels soltos ou cores fora da paleta.|spritesheet-ia-empacotar-e-fatiar-atlas-de-sprites, controlnet-fixar-postura-de-sprites-com-openpose, texturas-ia-gerar-padroes-pbr-seamless-tileaveis
+
+===NOTE===
+166|spritesheet-ia-empacotar-e-fatiar-atlas-de-sprites|Sprite Sheets com IA: empacotar e fatiar atlas com margens uniformes|O empacotamento de quadros individuais em atlas com margens uniformes organiza sequências de animação para importação em engines 2D.|Quadros gerados com tamanhos ou pontos centrais desiguais causam trepidação (*jitter*) visual durante a reprodução da animação no jogo.|Combine os quadros gerados em uma folha de sprites (*sprite sheet*) mantendo caixas delimitadoras uniformes (ex.: 64x64 pixels) e alinhe os pés de todos os quadros na mesma linha base horizontal.|```python
+# Montagem automatica de grid de spritesheet em Python
+from PIL import Image
+
+def build_spritesheet(frames: list[Image.Image], frame_size: int = 64) -> Image.Image:
+    sheet = Image.new("RGBA", (frame_size * len(frames), frame_size), (0, 0, 0, 0))
+    for i, frame in enumerate(frames):
+        sheet.paste(frame, (i * frame_size, 0))
+    return sheet
+```|Espaçamento nulo entre quadros com cores extrapoladas pode causar sangramento de textura (*texture bleeding*) nas bordas durante a renderização com filtragem linear.|Fatie o atlas no Godot SpriteFrames ou Unity Sprite Editor e execute o loop de animação para checar a estabilidade posicional do personagem.|pixel-art-ia-alinhar-a-grade-e-limitar-paleta, controlnet-fixar-postura-de-sprites-com-openpose, pipeline-assets-validar-escala-metrica-e-pivots
+
+===NOTE===
+167|texturas-ia-remover-sombras-para-albedo-neutro|Texturas com IA: remover sombras embutidas para obter albedo neutro|A remoção de sombras duras e pontos de iluminação direcional (delighting) é fundamental para que o mapa de albedo responda realisticamente ao motor PBR.|Texturas que já possuem sombras desenhadas nos pixels criam conflitos visuais quando uma tocha ou o sol do jogo incidem sobre o objeto de outro ângulo.|Aplique filtros de normalização de luminosidade por alta frequência (*high-pass filter*) ou utilize redes neurais de delighting para equalizar a iluminação e extrair a cor base pura do material.|```text
+// Processo de delighting de textura
+[Foto/Textura com Sombra Direcional] ──► [High-Pass / Delight Filter] ──► [Mapa Albedo Neutro PBR]
+```|Remover excessivamente o contraste pode apagar variações legítimas de cor do material (ex.: manchas naturais da madeira ou mármore).|Carregue o mapa albedo em uma cena 3D e teste com iluminação dinâmica rotativa para validar a consistência visual em todos os ângulos.|texturas-ia-gerar-padroes-pbr-seamless-tileaveis, texturas-ia-derivar-mapas-de-normal-e-roughness, assets-ia-otimizar-compressao-bc7-e-astc-em-vram
+
+===NOTE===
+168|assets-ia-otimizar-compressao-bc7-e-astc-em-vram|Otimização de Texturas: comprimir mapas PBR em BC7 e ASTC para VRAM|A compressão em formatos de bloco de GPU (BC7 para desktop e ASTC para mobile) reduz o consumo de memória de vídeo sem perda perceptível de qualidade.|Texturas salvas em PNG ou JPG descompactam integralmente na VRAM, esgotando rapidamente os limites de hardware gráfico em cenas densas.|Configure o pipeline de importação da engine para converter mapas de cor para BC7/ASTC e mapas de normal para formatos com preservação de dois canais (BC5 / RGTC).|```bash
+# Inspecionar propriedades de compressao de textura no projeto
+# No Unity: TextureImporter.textureCompression = TextureImporterCompression.CompressedHQ
+# No Unreal Engine: Texture.CompressionSettings = TC_Default (BC7) / TC_Normalmap (BC5)
+```|A compressão por blocos pode introduzir pequenos artefatos em gradientes suaves ou textos finos incluídos em interfaces gráficas.|Verifique o uso de memória no profiler gráfico da engine para confirmar a redução do consumo de textura por cena.|texturas-ia-derivar-mapas-de-normal-e-roughness, pipeline-assets-validar-escala-metrica-e-pivots, blender-exportar-somente-o-conteudo-necessario
+
+===NOTE===
+169|concept-art-ia-refinar-detalhes-com-inpainting|Concept Art com IA: refinar detalhes localizados através de inpainting|O inpainting permite corrigir membros, rostos, armas e elementos específicos de uma ilustração sem alterar o restante da composição artística.|Regenerar a imagem inteira para consertar um detalhe perde variações e poses que já haviam sido aprovadas pela direção de arte.|Pinte uma máscara sobre a região que contém imperfeições (ex.: dedos extras ou empunhadura torta de espada), descreva a correção no prompt e execute a difusão localizada mantendo as áreas externas intocadas.|```text
+// Fluxo de refinamento por Inpainting
+[Concept Art Aprovada com Erro na Mao] ──┐
+[Mascara binaria cobrindo a regiao]   ──┼──► [Inpainting Model] ──► [Asset Final Perfeito]
+[Prompt: "Mao enluvada segurando arco"] ──┘
+```|Bordas de máscara mal suavizadas (*feathering*) podem criar descontinuidades visíveis de iluminação ou linhas de corte na imagem final.|Amplie a área corrigida com zoom de 100% no editor gráfico e confirme a perfeita fusão dos novos pixels com a arte adjacente.|controlnet-guiar-geracao-com-bordas-canny-e-depth, comfyui-ajustar-prompt-sem-quebrar-o-grafo, documentacao-usar-imagens-acessiveis-e-uteis
+
+===NOTE===
+170|pipeline-assets-validar-escala-metrica-e-pivots|Pipeline de Assets: validar escala métrica e pivôs antes do import|A padronização de unidades métricas e posicionamento de pontos pivô evita desalinhamentos e problemas de colisão em engines de jogos.|Modelos ou sprites importados com escalas díspares exigem correções manuais constantes em cada instância na cena do jogo.|Valide que 1 unidade do software de criação corresponde exatamente a 1 metro na engine (escala 1.0) e posicione o pivô na base do modelo para facilitar o encaixe no chão.|```python
+# Script de validacao de pivot e escala em objetos selecionados no Blender
+import bpy
+
+for obj in bpy.context.selected_objects:
+    if obj.type == 'MESH':
+        print(f"Objeto: {obj.name} | Escala: {obj.scale} | Dimensões: {obj.dimensions}")
+        assert obj.scale == (1.0, 1.0, 1.0), f"Escala nao aplicada no objeto {obj.name}"
+```|Pivôs deslocados em portas ou personagens quebram cálculos de animação, rotações procedurais e sistemas de navegação espacial.|Abra a malha na engine, aplique transformações e certifique-se de que o objeto assenta perfeitamente sobre o plano do chão sem afundamentos.|blender-validar-o-rig-antes-de-exportar, unreal-smart-objects-configurar-slots-de-interacao, spritesheet-ia-empacotar-e-fatiar-atlas-de-sprites

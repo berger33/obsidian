@@ -1,0 +1,94 @@
+SOURCES: https://docs.continue.dev/customize/config | https://github.com/ollama/ollama/blob/main/docs/api.md
+
+===NOTE===
+111|continue-dev-configurar-provedor-local|Continue.dev: configurar provedores locais no config.json|A extensão Continue permite acoplar modelos open-source executados localmente através do arquivo config.json da IDE.|Utilizar inferência local garante privacidade de código confidencial e elimina custos recorrentes de chamadas de API externas durante o desenvolvimento.|No arquivo de configuração `config.json` do Continue, declare uma entrada no array `models` com o provider `ollama` ou `openai` apontando para o endpoint local `http://localhost:11434/v1` com o identificador do modelo baixado.|```json
+{
+  "models": [
+    {
+      "title": "Qwen 2.5 Coder 7B",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "apiBase": "http://localhost:11434"
+    }
+  ]
+}
+```|Modelos locais de pequeno porte têm janelas de contexto limitadas e capacidade de raciocínio inferior a modelos de fronteira em refatorações extensas.|Abra a interface lateral do Continue no editor, selecione o modelo local recém-adicionado e envie uma pergunta sobre o arquivo aberto para verificar a resposta da GPU.|ia-local-garantir-isolamento-sem-conexao-externa, ollama-ajustar-num-ctx-e-quantizacao-gguf, continue-dev-separar-modelo-de-autocomplete-tab
+
+===NOTE===
+112|continue-dev-indexar-codebase-com-embeddings-locais|Continue.dev: indexar codebase com embeddings locais|A indexação vetorial local viabiliza a recuperação de trechos relevantes do repositório através do provedor @codebase.|Consultas baseadas em embeddings encontram definições de tipos, contratos e funções similares mesmo sem correspondência léxica exata nos nomes de variáveis.|Configure um modelo de embedding local como `nomic-embed-text` no bloco `embeddingsProvider` do `config.json`. O Continue varre os arquivos do workspace, gera vetores e salva o índice em uma base SQLite com LanceDB local.|```json
+{
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  }
+}
+```|O processo de indexação inicial consome recursos significativos de CPU e disco em repositórios muito volumosos sem arquivo de exclusão.|Digite `@codebase onde está implementada a rotina de login?` no chat do Continue e valide se os arquivos retornados nos chunks coincidem com os módulos de autenticação.|continue-dev-configurar-provedor-local, cursor-otimizar-indexacao-com-cursorignore, continue-dev-customizar-context-providers
+
+===NOTE===
+113|continue-dev-customizar-context-providers|Continue.dev: customizar context providers para documentação|Os context providers do Continue permitem injetar documentações externas, issues e arquivos específicos no prompt do assistente.|Fornecer referências precisas de frameworks reduz o risco de uso de métodos obsoletos ou sintaxe incorreta gerada pelo modelo.|Utilize identificadores de contexto como `@docs` apontando para URLs indexadas ou adicione providers customizados em TypeScript no diretório `.continue/rules` para carregar esquemas de banco de dados e diagramas.|```json
+{
+  "docs": [
+    {
+      "title": "Godot 4 Docs",
+      "startUrl": "https://docs.godotengine.org/en/stable/",
+      "rootUrl": "https://docs.godotengine.org/en/stable/"
+    }
+  ]
+}
+```|A indexação excessiva de páginas web de documentação pode poluir a base vetorial com seções de introdução e menus de navegação.|Acione `@docs Godot 4 Docs CharacterBody3D` no chat e examine se os trechos de texto recuperados correspondem à documentação oficial do nó.|continue-dev-indexar-codebase-com-embeddings-locais, cursor-usar-simbolos-de-contexto-docs-e-git, diataxis-organizar-referencias-tecnicas-sem-narrativa
+
+===NOTE===
+114|continue-dev-separar-modelo-de-autocomplete-tab|Continue.dev: separar modelo de autocomplete Tab do modelo de chat|A separação entre modelos de preenchimento inline e modelos de chat otimiza a latência e a qualidade da assistência na digitação.|O autocomplete por Tab requer respostas em menos de 100 milissegundos, enquanto diálogos e refatorações toleram modelos maiores e mais lentos.|No `config.json`, configure o campo `tabAutocompleteModel` com um modelo ultrarrápido otimizado para Fill-in-the-Middle (FIM) como `qwen2.5-coder:1.5b-base`, mantendo um modelo maior para o chat principal.|```json
+{
+  "tabAutocompleteModel": {
+    "title": "StarCoder2 3B",
+    "provider": "ollama",
+    "model": "starcoder2:3b"
+  }
+}
+```|Modelos de autocomplete não instrucionais geram repetições de código se os parâmetros de prefixo e sufixo FIM estiverem descalibrados.|Abra um arquivo de código, inicie a declaração de uma função comum e avalie se as sugestões inline em cinza surgem de maneira instantânea e coerente.|continue-dev-configurar-provedor-local, copilot-prompts-com-criterios-de-aceitacao, ollama-ajustar-num-ctx-e-quantizacao-gguf
+
+===NOTE===
+115|ollama-ajustar-num-ctx-e-quantizacao-gguf|Ollama: ajustar num_ctx e quantização GGUF para estabilidade de memória|Dimensionar a janela de contexto (`num_ctx`) e a quantização do modelo evita estouro de VRAM na GPU durante a geração.|Janelas de contexto padrão pequenas truncam arquivos longos, enquanto valores muito altos forçam o offloading para a RAM lenta do sistema.|Ajuste o parâmetro `num_ctx` no Modelfile ou na requisição da API do Ollama e selecione quantizações equilibradas como Q4_K_M ou Q5_K_M para maximizar camadas carregadas na memória de vídeo dedicada.|```dockerfile
+# Exemplo de Modelfile customizado para aumentar o contexto no Ollama
+FROM qwen2.5-coder:7b
+PARAMETER num_ctx 16384
+PARAMETER temperature 0.2
+```|Aumentar o `num_ctx` exige alocação proporcional de memória de atenção na GPU, reduzindo o espaço disponível para modelos auxiliares.|Execute `ollama run meu-modelo-16k` e verifique com `nvidia-smi` ou `ollama ps` a quantidade de camadas (*layers*) acomodadas na VRAM.|continue-dev-configurar-provedor-local, ollama-gerenciar-permanencia-com-keep-alive, cursor-priorizar-janela-de-contexto-essencial
+
+===NOTE===
+116|ollama-gerenciar-permanencia-com-keep-alive|Ollama: gerenciar permanência na VRAM com keep_alive|O controle do parâmetro keep_alive define quanto tempo um modelo de linguagem permanece carregado na memória GPU após uma requisição.|Descarregar o modelo a cada chamada causa travamentos frequentes na IDE pelo tempo de re-leitura do arquivo binário do disco para a memória.|Defina `keep_alive` como um intervalo temporal (ex.: `30m`) nas requisições da API ou configure a variável de ambiente `OLLAMA_KEEP_ALIVE` para reter o modelo na VRAM entre edições contínuas de código.|```bash
+# Executar chamada de inferencia com permanencia de 30 minutos na VRAM
+curl http://localhost:11434/api/generate -d '{
+  "model": "qwen2.5-coder:7b",
+  "prompt": "// Funcao de conversao de coordenadas",
+  "keep_alive": "30m"
+}'
+```|Manter múltiplos modelos em memória simultaneamente pode saturar a VRAM e causar falhas em aplicações gráficas e engines de jogos abertas paralelamente.|Execute `ollama ps` no terminal para verificar quais modelos estão alocados na GPU e o tempo restante antes do descarregamento automático.|ollama-ajustar-num-ctx-e-quantizacao-gguf, llamacpp-servir-endpoint-openai-compativel, continue-dev-configurar-provedor-local
+
+===NOTE===
+117|llamacpp-servir-endpoint-openai-compativel|llama.cpp: servir endpoint HTTP compatível com OpenAI|O binário llama-server expõe uma API REST de alta performance compatível com ferramentas que consomem o padrão da OpenAI.|O llama.cpp oferece suporte direto a aceleração por GPU (CUDA, Metal, Vulkan) e processamento contínuo em lote (*continuous batching*).|Inicie o `llama-server` informando o arquivo `.gguf`, a porta TCP de escuta e o número de camadas a descarregar na GPU (`-ngl`). Aponte o assistente de desenvolvimento para o endpoint `http://localhost:8080/v1`.|```bash
+# Iniciar o servidor HTTP do llama.cpp com aceleracao GPU
+./llama-server   -m models/qwen2.5-coder-7b-instruct-q5_k_m.gguf   -c 8192   -ngl 99   --port 8080   --host 127.0.0.1
+```|Parâmetros incorretos de threads de CPU ou camadas de GPU podem causar lentidão severa ou erros de alocação de memória na inicialização do servidor.|Faça uma requisição HTTP `POST /v1/chat/completions` com cURL e confirme a recepção do stream de tokens e a medição do tempo de primeiro token.|continue-dev-configurar-provedor-local, ollama-gerenciar-permanencia-com-keep-alive, ia-local-garantir-isolamento-sem-conexao-externa
+
+===NOTE===
+118|continue-dev-padronizar-regras-de-projeto|Continue.dev: padronizar regras de projeto e system prompts|A configuração de prompts de sistema padronizados no diretório do projeto alinha o comportamento do assistente às diretrizes da equipe.|Diferentes desenvolvedores em um mesmo time precisam receber sugestões com estilos consistentes de nomenclatura e tratamento de exceções.|Crie um arquivo `.continue/rules/padroes.md` ou configure o campo `systemMessage` no `config.json` do workspace detalhando a versão da linguagem, bibliotecas aprovadas e convenções de testes.|```markdown
+<!-- .continue/rules/padroes.md -->
+Sempre utilize funcoes assincronas com async/await em vez de callbacks.
+Trate erros explicitamente com blocos try/catch e logs estruturados em JSON.
+Nunca sugira alteracoes em bibliotecas legadas listadas no arquivo deprecations.md.
+```|Regras excessivamente extensas ou contraditórias degradam a aderência do modelo às instruções e consomem espaço da janela de contexto.|Solicite uma implementação simples ao modelo local e certifique-se de que a estrutura gerada obedece às regras estipuladas no arquivo de padrões.|cursor-padronizar-regras-com-cursorrules, copilot-registrar-instrucoes-do-repositorio, continue-dev-customizar-context-providers
+
+===NOTE===
+119|continue-dev-auditar-requisicoes-e-logs-locais|Continue.dev: auditar requisições e logs de execução local|A auditoria de logs locais permite inspecionar os prompts reais montados pela extensão e o tempo gasto em cada requisição.|Inspecionar o conteúdo enviado ajuda a identificar vazamentos de contexto desnecessário e a diagnosticar lentidões na inferência.|Acesse os arquivos de log no diretório `~/.continue/logs/core.log` ou ative a exibição de saída de depuração no terminal do desenvolvedor para examinar payloads de entrada, tokens gerados e mensagens de erro.|```bash
+# Inspecionar os ultimos prompts e respostas trafegados pelo Continue
+tail -f ~/.continue/logs/core.log
+```|Logs detalhados acumulam dados rapidamente e podem registrar trechos de código privado no disco da máquina local.|Abra o arquivo de log após executar uma edição com o assistente e verifique os timestamps de requisição e a latência de geração reportada.|continue-dev-configurar-provedor-local, claude-code-iniciar-sessao-interativa-cli, ia-local-garantir-isolamento-sem-conexao-externa
+
+===NOTE===
+120|ia-local-garantir-isolamento-sem-conexao-externa|IA Local: garantir isolamento de rede para código sensível|Configurar o ambiente de desenvolvimento assistido por IA sem conectividade externa assegura conformidade com requisitos de segurança e sigilo.|Empresas com políticas estritas de proteção de propriedade intelectual exigem que códigos confidenciais nunca saiam da rede interna.|Configure o firewall do sistema ou container para bloquear tráfego de saída das portas do assistente e dos servidores de modelo (Ollama / llama.cpp), limitando a escuta estritamente a `127.0.0.1`.|```bash
+# Bloquear trafego externo para portas de inferencia local no Linux
+sudo iptables -A OUTPUT -p tcp --dport 11434 -d 127.0.0.1 -j ACCEPT
+sudo iptables -A OUTPUT -p tcp --dport 11434 -j REJECT
+```|O isolamento de rede impede a consulta de documentações web dinâmicas e o download automático de novos pesos de modelos via CLI.|Desconecte a interface de rede externa e execute uma chamada de completude para confirmar que o modelo gera respostas exclusivamente a partir da GPU local.|continue-dev-configurar-provedor-local, llamacpp-servir-endpoint-openai-compativel, ollama-gerenciar-permanencia-com-keep-alive
