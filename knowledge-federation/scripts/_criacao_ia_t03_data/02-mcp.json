@@ -1,0 +1,156 @@
+{
+  "group": "MCP: especificação 2026-07-28, transportes e recursos especializados",
+  "check": "Revisão das páginas versionadas da especificação MCP 2026-07-28; as mudanças incompatíveis com 2025-11-25 foram confrontadas com o changelog oficial e não foram generalizadas para versões anteriores.",
+  "notes": [
+    {
+      "slug": "mcp-stdio-framing-e-stdout-limpo",
+      "title": "MCP stdio: framing por linha e stdout exclusivo do protocolo",
+      "one": "No transporte stdio do MCP, cada mensagem JSON-RPC ocupa uma linha e toda a saída padrão do servidor precisa ser uma mensagem MCP válida.",
+      "why": "Um banner de inicialização, log colorido ou traceback escrito em `stdout` corrompe o framing e pode fazer o cliente interpretar texto como uma resposta JSON-RPC. O defeito frequentemente parece falha de handshake, embora a causa esteja no processo servidor ou numa biblioteca que escreve diretamente na saída padrão.",
+      "how": "O cliente inicia o servidor como subprocesso; o servidor lê requests de `stdin` e escreve respostas e notificações em `stdout`. Cada mensagem termina por newline e não contém newline embutido. Use `stderr` para logs, inclusive informativos, e não suponha que qualquer conteúdo em `stderr` signifique erro. Em MCP 2026-07-28, as interações de servidor para cliente são representadas em resultados de input requerido; o servidor não emite requests JSON-RPC espontâneos em `stdout`.",
+      "example": "Ao iniciar um servidor Python, encaminhe logging para `stderr` e deixe `stdout` reservado ao writer do SDK. Um teste de integração captura a saída bruta do subprocesso, separa por linhas e tenta decodificar cada linha como objeto JSON-RPC, inclusive enquanto logs de diagnóstico são produzidos.",
+      "limits": "A regra descreve o framing do transporte, não a semântica completa de cada método. Bibliotecas de terceiros ainda podem escrever em stdout, e um cliente pode capturar ou ignorar stderr. Versões anteriores podem ainda usar handshake `initialize` e devem ser negociadas separadamente.",
+      "verify": "Execute o servidor com logging em níveis debug e error, gere requests simultâneos e valide todas as linhas de stdout contra o schema JSON-RPC. Confirme encerramento ao fechar stdin e verifique que nenhuma dependência imprime banner no canal do protocolo.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Transporte stdio", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio", "why": "define a delimitação por newline, canais stdin/stdout/stderr e regras de encerramento"},
+        {"label": "JSON-RPC 2.0", "url": "https://www.jsonrpc.org/specification", "why": "define a estrutura de requests, respostas e notificações que o framing carrega"}
+      ],
+      "review": "Framing de uma mensagem por linha e proibição de stdout não protocolar foram confirmados na binding stdio 2026-07-28; logs em stderr não implicam falha por si sós."
+    },
+    {
+      "slug": "mcp-streamable-http-versao-2026-stateless",
+      "title": "MCP Streamable HTTP 2026: requests POST sem sessão implícita",
+      "one": "Na binding Streamable HTTP 2026-07-28, cada mensagem cliente-servidor é enviada por POST ao endpoint MCP e uma resposta pode ser JSON ou SSE associado ao request.",
+      "why": "Clientes que mantêm `Mcp-Session-Id`, usam GET como canal permanente ou esperam replay de eventos estão implementando a geração anterior do transporte. A nova semântica elimina dependência de sessão por conexão, facilitando servidores sem estado e balanceamento sem afinidade, mas exige que clientes tratem a perda de uma resposta em voo explicitamente.",
+      "how": "Implemente um único endpoint MCP para POSTs e leia a versão, capacidades e identidade nos metadados do corpo JSON-RPC. A resposta do request pode ser um objeto JSON ou um stream SSE vinculado àquele request. A especificação remove GET, sessões de transporte e IDs de evento usados para redelivery; após quebra do stream, o cliente reenvia a operação como novo request com novo ID, avaliando antes se a operação é segura para repetição.",
+      "example": "Um cliente envia `tools/call` por POST e recebe uma resposta SSE de longa duração. Se a conexão cair antes da resposta final, ele cria um novo request ID e repete apenas quando o tool usa uma chave idempotente ou pode confirmar o resultado anterior por consulta. O servidor não depende de sticky sessions para recuperar estado oculto da conexão.",
+      "limits": "Este contrato é específico à revisão 2026-07-28 e quebra compatibilidade com bindings antigas que exigem GET ou `Mcp-Session-Id`. POST repetido pode executar uma ação duas vezes; o protocolo não transforma operações arbitrárias em idempotentes. Controles de `Origin`, TLS e autorização continuam necessários conforme implantação.",
+      "verify": "Compare a implementação com o changelog da versão, teste JSON e SSE, corte a conexão antes e depois do efeito externo e confirme o uso de novo ID na repetição. Interopere também com um servidor legado para exercitar a negociação de versão.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Transportes", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports", "why": "resume a binding HTTP atual como POST único com resposta JSON ou SSE por request"},
+        {"label": "MCP 2026-07-28 — Changelog", "url": "https://modelcontextprotocol.io/specification/2026-07-28/changelog", "why": "registra remoção de GET, sessão, `Mcp-Session-Id` e resumibilidade de SSE"}
+      ],
+      "review": "Remoção de sessões e GET, vínculo de SSE ao request e perda de requests em voo foram validados no changelog oficial da revisão 2026-07-28."
+    },
+    {
+      "slug": "mcp-meta-protocolo-capacidades-por-request",
+      "title": "MCP 2026: carregar versão e capacidades em _meta por request",
+      "one": "Na revisão MCP 2026-07-28, a versão de protocolo e as capacidades do cliente são metadados obrigatórios em cada request, em vez de estado negociado por handshake.",
+      "why": "A mudança permite processar requests sem uma sessão inicial compartilhada e evita que o servidor dependa de contexto de conexão ao escalar horizontalmente. Também significa que um método isolado só é interpretável com seus metadados: exemplos de documentação que os omitem por concisão não são mensagens completas para wire.",
+      "how": "Inclua no objeto `_meta` os campos `io.modelcontextprotocol/protocolVersion` e `io.modelcontextprotocol/clientCapabilities`; inclua a identidade do cliente quando aplicável. A página Streamable HTTP permite espelhar certos metadados em cabeçalhos para intermediários, mas o corpo continua sendo a fonte de verdade e diferenças precisam ser rejeitadas conforme binding. Servidores podem devolver identidade em `_meta` do resultado.",
+      "example": "Um adaptador que converte chamadas internas em MCP cria um envelope comum para `tools/list`, `prompts/get` e `resources/read`. Testes de contrato removem cada campo obrigatório por vez e esperam o erro de protocolo especificado, em vez de reutilizar silenciosamente capacidades guardadas num objeto de conexão.",
+      "limits": "A forma exata dos metadados é versionada e clientes legados usam `initialize`; não misture os dois modelos sem detecção de compatibilidade. Espelhar dados em cabeçalhos não os torna mais autoritativos que o corpo, e dados de identidade declarados não substituem autenticação.",
+      "verify": "Capture requests no limite HTTP e no decoder JSON-RPC, compare corpo e cabeçalhos e teste versão incompatível e ausência de capacidades. Faça uma chamada sem inicialização prévia para confirmar que cada request tem o contexto próprio.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Protocolo base e _meta", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/index", "why": "define campos de metadados por request e o modelo stateless"},
+        {"label": "MCP 2026-07-28 — Transportes", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports", "why": "explica metadados inline e espelhamento opcional na binding HTTP"}
+      ],
+      "review": "Campos obrigatórios em `_meta` e precedência do corpo foram conferidos na especificação; identidade de cliente não é tratada como prova de autenticação."
+    },
+    {
+      "slug": "mcp-mrtr-input-required-request-state",
+      "title": "MCP MRTR: retomar requests com inputResponses e requestState opaco",
+      "one": "Multi Round-Trip Requests permite que um servidor peça dados adicionais dentro de um resultado e o cliente reenvie a operação original com as respostas.",
+      "why": "O padrão substitui requests JSON-RPC espontâneos iniciados pelo servidor na revisão 2026-07-28 e não depende de sessão compartilhada entre instâncias. Aplicações podem pausar um tool ou leitura, solicitar consentimento e continuar a mesma intenção mesmo quando o balanceador direciona a repetição a outro processo.",
+      "how": "O servidor responde `resultType=input_required` com um mapa de `inputRequests` e, opcionalmente, `requestState`. O cliente reúne respostas sob as mesmas chaves e reenvia o método original com `inputResponses`; quando fornecido, repassa `requestState` sem examinar, interpretar ou modificar seu conteúdo. O novo JSON-RPC request usa ID diferente. O servidor então conclui ou devolve outro input requerido.",
+      "example": "Um tool de reserva solicita confirmação por elicitation, recebe `requestState` que codifica seu trabalho pendente e devolve input requerido. Depois do usuário aceitar, o cliente repete `tools/call` com a resposta e o estado opaco, usando novo ID; o servidor confere novamente os parâmetros e finaliza a reserva.",
+      "limits": "MRTR não é uma sessão de navegador nem autorização implícita. Só os métodos enumerados pela especificação podem devolver input requerido. O estado continua controlado pelo servidor; não reutilize uma resposta antiga para outro método ou outro conjunto de argumentos sem validação.",
+      "verify": "Teste respostas aceitas, recusadas e canceladas; altere deliberadamente uma chave, o `requestState` e o ID na repetição. Confirme que o servidor rejeita estado inválido e que duas instâncias podem processar as duas etapas sem afinidade de sessão.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Multi Round-Trip Requests", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr", "why": "define `InputRequiredResult`, mapas de input e caráter opaco de `requestState`"},
+        {"label": "MCP 2026-07-28 — Tools", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools", "why": "mostra a repetição concreta de `tools/call` com novo ID e inputResponses"}
+      ],
+      "review": "Fluxo de ida e volta, escopo permitido e opacidade de `requestState` foram conferidos; novo ID na repetição consta do exemplo oficial de tools."
+    },
+    {
+      "slug": "mcp-cache-ttl-scope-e-invalidacao",
+      "title": "MCP: combinar ttlMs, cacheScope e notificações de invalidação",
+      "one": "Resultados cacheáveis do MCP carregam um TTL de frescor e um escopo público ou privado, e uma notificação de mudança pode invalidar o cache antes do TTL.",
+      "why": "Cache sem escopo pode vazar dados de um usuário a outro, enquanto um TTL interpretado como garantia de imutabilidade pode deixar ferramentas obsoletas na interface. A combinação das dicas com notificações reduz tráfego sem converter frescor aproximado em verdade permanente.",
+      "how": "Use método e parâmetros relevantes na chave do cache, como URI ou cursor. `ttlMs` indica por quanto tempo o cliente pode considerar a resposta fresca; zero significa imediatamente obsoleta. `cacheScope=public` permite reutilização compartilhada; `private` restringe a reutilização ao mesmo contexto de autorização. Notificações de mudança invalidam a entrada. Respostas intermediárias `input_required` e requests repetidos com `inputResponses` ou `requestState` não devem ser cacheados.",
+      "example": "Um `tools/list` idêntico para todos os chamadores pode ser público e ter TTL de cinco minutos. Uma leitura de recurso personalizada para o token atual usa escopo privado; se chegar `resources/list_changed`, o cliente marca os dados como obsoletos e consulta de novo no próximo acesso, sem esperar o TTL.",
+      "limits": "TTL é dica de frescor, não garantia de que o servidor não alterará os dados. Páginas de lista são cacheadas independentemente e não têm garantia de snapshot consistente entre páginas. Não trate expiração como timer obrigatório de polling.",
+      "verify": "Automatize casos com TTL zero e positivo, mudança antes da expiração, tokens distintos, páginas paginadas e repetição MRTR. Verifique que caches compartilhados nunca cruzam contextos de autorização privados.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Caching", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching", "why": "define TTL, escopo, chaves, notificações, paginação e exclusões de cache"},
+        {"label": "MCP 2026-07-28 — Tools", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools", "why": "mostra `ttlMs` e `cacheScope` no resultado de tools/list"}
+      ],
+      "review": "Semântica de cache, invalidação por notificação e isolamento por contexto de autorização foram conferidos na especificação 2026-07-28."
+    },
+    {
+      "slug": "mcp-tools-list-schema-autorizacao",
+      "title": "MCP tools/list: catálogo determinístico e schema de entrada executável",
+      "one": "`tools/list` descreve ferramentas disponíveis ao request autenticado; `tools/call` executa uma delas e suas respostas seguem o contrato de resultado MCP.",
+      "why": "A descrição de uma ferramenta alimenta seleção do modelo e interface, mas não é uma barreira de permissão. A revisão 2026-07-28 tornou explícito que o catálogo pode variar conforme autorização apresentada em cada request, não por conexão ou efeito colateral de outras chamadas.",
+      "how": "Implemente paginação e `inputSchema` JSON Schema 2020-12 válido. Retorne a lista em ordem determinística quando o conjunto não mudar, para viabilizar cache e estabilidade de prompt. O servidor pode filtrar ferramentas segundo escopos autorizados no request; ao executar, valide novamente argumentos, permissões e estado do recurso. Trate anotações descritivas como não confiáveis, salvo origem confiável.",
+      "example": "Um servidor de assets oferece `preview_asset` a todo usuário e `publish_asset` apenas a um grupo autorizado. Duas chamadas `tools/list` usam credenciais distintas e produzem catálogos diferentes; chamadas diretas a `tools/call` sem permissão ainda são recusadas pelo servidor, mesmo se o cliente reteve uma definição antiga.",
+      "limits": "Schemas de entrada ajudam validação estrutural, mas não verificam autorização de negócio nem corrigem argumentos maliciosos. A lista pode mudar ao longo do tempo e a política de cache precisa respeitar `cacheScope` e autorização.",
+      "verify": "Valide schema, paginação, estabilidade de ordenação e resposta a `list_changed`. Teste chamadas diretas com usuário sem escopo e alterações na lista enquanto há cópia cacheada no cliente.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Tools", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools", "why": "define list/call, JSON Schema, variação por autorização e confiança em annotations"},
+        {"label": "MCP 2026-07-28 — Caching", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching", "why": "especifica cache de catálogos e isolamento de resultados privados"}
+      ],
+      "review": "O catálogo pode variar por autorização por request e annotations não são confiáveis por padrão; validação de permissão em tools/call foi descrita como responsabilidade do servidor."
+    },
+    {
+      "slug": "mcp-prompts-selecao-controlada-pelo-usuario",
+      "title": "MCP prompts: distinguir seleção do usuário e autoria do servidor",
+      "one": "MCP prompts são desenhados para seleção explícita pelo usuário, embora o conteúdo e a descrição do template sejam definidos pelo servidor.",
+      "why": "Uma aplicação pode expor templates como comandos de interface, mas não deve confundir a origem do texto com a decisão de executá-lo. A resposta de `prompts/get` pode conter mensagens, recursos incorporados e argumentos que entram no contexto do modelo, portanto precisa ser revisada como conteúdo de confiança limitada.",
+      "how": "Anuncie a capacidade `prompts` em `server/discover`, disponibilize uma lista paginável e retorne conteúdo por `prompts/get`. A interface deixa claro o nome do servidor e dá ao usuário uma ação de seleção compreensível. Se a resposta depender de credenciais, a disponibilidade pode variar por autorização no request; notificação `list_changed` e cache devem seguir o escopo correto.",
+      "example": "Uma ferramenta de edição oferece o prompt `review_material` numa paleta de comandos. O usuário escolhe o comando, confere argumento de projeto e recebe as mensagens preparadas pelo servidor; o cliente registra a origem e não executa prompts ocultos apenas porque um servidor os listou.",
+      "limits": "A especificação não impõe um desenho visual único nem garante que instruções recebidas sejam seguras. Conteúdo do servidor pode incluir instruções adversariais ou dados embutidos; seleção humana não substitui revisão de segurança do cliente e do modelo.",
+      "verify": "Teste seleção, cancelamento, permissões diferentes, mudança na lista e conteúdo que inclui recursos. Confirme que o método só é invocado após a ação definida pela aplicação e que uma resposta não pode ampliar permissões do servidor.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Prompts", "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/prompts", "why": "define prompts como user-controlled e os métodos list/get"},
+        {"label": "MCP 2026-07-28 — Security best practices", "url": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices", "why": "detalha revisão de consentimento e riscos em intermediação MCP"}
+      ],
+      "review": "A especificação esclarece que user-controlled significa quem escolhe usar, não quem escreve o conteúdo; o fluxo de interface permanece decisão do cliente."
+    },
+    {
+      "slug": "mcp-elicitation-form-url-segredos",
+      "title": "MCP elicitation: reservar URL mode para credenciais e segredos",
+      "one": "Elicitation form coleta campos estruturados dentro do cliente MCP; URL mode encaminha uma interação sensível para fora dele.",
+      "why": "Formulários são úteis para contexto e parâmetros comuns, mas expor credenciais em trânsito pelo cliente amplia a superfície de armazenamento e logging. O protocolo define uma separação obrigatória para segredos e requer que o usuário consiga entender quem pede os dados e para onde irá ao sair do cliente.",
+      "how": "Declare `form` e/ou `url` nas capacidades do cliente por request. Use `requestedSchema` restrito para dados estruturados não secretos e permita revisar, editar, recusar ou cancelar antes de enviar. Senhas, API keys, access tokens e credenciais de pagamento não podem ser solicitados por form mode; o servidor precisa usar URL mode, cujo domínio o cliente exibe e para cuja navegação obtém consentimento.",
+      "example": "Um servidor pode perguntar o nome de um workspace num formulário simples. Para conectar uma conta de nuvem, ele devolve uma URL de login do provedor; o cliente identifica o host e pede confirmação, e os campos secretos são digitados no fluxo externo em vez de retornarem como resposta do formulário MCP.",
+      "limits": "URL mode não autentica automaticamente o destino nem garante que a navegação externa seja legítima. Clientes devem validar exibição de domínio e aplicar defesas contra redirecionamentos enganosos. Campos pessoais comuns não são proibidos categoricamente, mas precisam de revisão e opção de recusa.",
+      "verify": "Teste schemas não suportados, capability ausente, recusa do usuário, host externo inesperado e tentativa de solicitar um token em form mode. Inspecione logs para garantir que conteúdo sensível não é registrado no caminho MCP.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Elicitation", "url": "https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation", "why": "define modos form/URL, segredos proibidos em form e consentimento de navegação"},
+        {"label": "MCP 2026-07-28 — Multi Round-Trip Requests", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr", "why": "descreve como elicitation é transportada em inputRequests e respondida pelo cliente"}
+      ],
+      "review": "Categorias de segredo e obrigações de UI foram verificadas na página de elicitation 2026-07-28; URL mode não é apresentado como garantia de legitimidade do site."
+    },
+    {
+      "slug": "mcp-oauth-discovery-e-client-registration",
+      "title": "MCP HTTP OAuth: descobrir recurso protegido e registrar cliente",
+      "one": "A autorização MCP aplica-se a transportes HTTP e usa metadados do recurso protegido para descobrir o servidor de autorização; stdio segue outra fronteira de credenciais.",
+      "why": "Cliente que inicia OAuth a partir de uma URL ad hoc ou reutiliza token emitido por outro issuer pode encaminhar credenciais ao destino incorreto. A revisão 2026-07-28 prioriza Client ID Metadata Documents ou pré-registro e mantém Dynamic Client Registration apenas para compatibilidade.",
+      "how": "O servidor HTTP publica OAuth Protected Resource Metadata com os authorization servers aceitos. O cliente consulta os metadados e a descoberta do servidor de autorização, aplica a seleção exigida e obtém seu client ID por Client ID Metadata Document, pré-registro ou o caminho DCR compatível. Associe credenciais ao issuer que as emitiu e nunca as reapresente a um issuer diferente.",
+      "example": "Um editor conecta um MCP remoto protegido: diante de `401`, lê `resource_metadata`, valida o issuer e inicia a autorização para aquele recurso. Após redirecionamento, verifica o issuer se presente e armazena o token sob a identidade do authorization server, não apenas sob o nome do host exibido na interface.",
+      "limits": "A especificação seleciona partes de OAuth e aponta para drafts e RFCs externos; ela não substitui revisão da configuração do provedor nem tratamento de consentimento de proxy. DCR continua opcional para compatibilidade, não é a primeira escolha declarada na revisão atual.",
+      "verify": "Teste descoberta por cabeçalho e well-known URI, issuer alternativo, token expirado, escopos mínimos e troca de provedor. Confirme que stdio não recebe indevidamente fluxo OAuth HTTP e que credenciais persistidas são indexadas por issuer.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Authorization", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization", "why": "define escopo HTTP, metadados de recurso, registro e prioridade entre métodos"},
+        {"label": "RFC 9728 — OAuth 2.0 Protected Resource Metadata", "url": "https://www.rfc-editor.org/rfc/rfc9728.html", "why": "define o documento de descoberta do recurso protegido utilizado pelo MCP"}
+      ],
+      "review": "Descoberta por RFC 9728, escopo HTTP e caráter depreciado de DCR na revisão atual foram checados; drafts OAuth são identificados como tais."
+    },
+    {
+      "slug": "mcp-migrar-para-especificacao-2026-07-28",
+      "title": "MCP 2026-07-28: preparar migração de handshake e notificações",
+      "one": "A revisão MCP 2026-07-28 troca o handshake inicial por descoberta e metadados por request e redesenha notificações de mudança como subscriptions explícitas.",
+      "why": "Um cliente que apenas atualiza o número de versão pode continuar emitindo métodos removidos, mantendo estado de conexão ou aguardando mensagens espontâneas do servidor. A versão é uma mudança estrutural e exige atualizar transporte, negociação, fluxo de entrada adicional e operação de subscriptions como um conjunto.",
+      "how": "Use `server/discover` para consultar versões e capacidades compatíveis quando necessário; cada request moderno carrega seu próprio `_meta`. Migre interações servidor-cliente para MRTR e substitua conexões GET ou notificações de sessão por `subscriptions/listen` opt-in. O changelog também move tasks para uma extensão e remove métodos de logging/ping, então consulte o registro versionado antes de manter compatibilidade.",
+      "example": "Um SDK com suporte a 2025 e 2026 envia `server/discover` antes de escolher a semântica. Para uma resposta moderna, ele não chama `initialize`, associa notificação de lista ao subscription ID e reconstrói subscriptions após reiniciar o processo stdio; para um peer antigo, segue o caminho legado documentado.",
+      "limits": "Não há equivalência automática entre sessões antigas, subscriptions novas e estados guardados em servidores. O changelog registra breaking changes que podem exigir atualização coordenada de cliente e servidor. Métodos listados aqui são específicos à revisão de 2026-07-28; confira uma revisão posterior antes de implementar.",
+      "verify": "Mantenha uma matriz de compatibilidade entre SDKs e revisões do protocolo. Teste discovery, request metadata, client antigo, servidor moderno, reconnect de subscription e métodos removidos usando fixtures versionadas.",
+      "sources": [
+        {"label": "MCP 2026-07-28 — Changelog", "url": "https://modelcontextprotocol.io/specification/2026-07-28/changelog", "why": "lista mudanças incompatíveis, remoções e alterações de transporte da revisão"},
+        {"label": "MCP 2026-07-28 — Versioning", "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning", "why": "descreve descoberta, compatibilidade e negociação entre eras do protocolo"}
+      ],
+      "review": "A lista de mudanças e a estratégia de compatibilidade foram conferidas nas páginas versionadas; a nota evita afirmar que uma atualização de número basta."
+    }
+  ]
+}

@@ -21,14 +21,14 @@ A cobertura poderá incluir prototipagem, ferramentas e engines de jogos, geraç
 - Domínio / subdomínio: `software` / `criacao-ia` (`knowledge-federation/domains/software-0010/software/criacao-ia/`)
 - Meta: **2.000 notas substantivas**
 - Cadência: **20 tranches planejadas × 100 notas**
-- Notas materiais redigidas: **200 / 2.000 (10,00%)**
-- Gate automatizado: **200/200 aprovadas**
-- Revisão factual humana: **0/200** (nenhuma aprovação humana solicitada ou registrada)
-- Revisão factual por IA: **200/200** (relatórios das tranches 1 e 2)
-- Notas válidas contabilizadas: **200/2.000 (10,00%)**
-- Estado: `in_progress` — tranches 1 e 2 concluídas e reconciliadas; 18 tranches planejadas permanecem sem IDs reservados.
+- Notas materiais redigidas: **300 / 2.000 (15,00%)**
+- Gate automatizado: **300/300 aprovadas**
+- Revisão factual humana: **0/300** (nenhuma aprovação humana solicitada ou registrada)
+- Revisão factual por IA: **300/300** (relatórios das tranches 1, 2 e 3)
+- Notas válidas contabilizadas: **300/2.000 (15,00%)**
+- Estado: `in_progress` — tranches 1, 2 e 3 concluídas e reconciliadas; 17 tranches planejadas permanecem sem IDs reservados.
 
-A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–200, com arquivos e conteúdo; para as 1.800 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
+A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–300, com arquivos e conteúdo; para as 1.700 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
 
 ## Eixos editoriais iniciais
 
@@ -311,6 +311,140 @@ IDs materiais: `software.criacao_ia.tranche02.000101`–`software.criacao_ia.tra
 199. [CI para Documentação: testar snippets de código e validar links quebrados](../../domains/software-0010/software/criacao-ia/documentacao-automatizar-validacao-de-links-e-snippets-em-ci.md) — `software.criacao_ia.tranche02.000199`
 200. [Governança Técnica: aplicar checklist de verificação em tutoriais gerados por IA](../../domains/software-0010/software/criacao-ia/documentacao-aplicar-checklist-em-tutoriais-gerados-por-ia.md) — `software.criacao_ia.tranche02.000200`
 
+## Tranche 3 — LangGraph, MCP, OpenAI Agents SDK, Unreal PCG, Blender Geometry Nodes, OpenUSD, FFmpeg, Playwright avançado, OpenTelemetry GenAI e OpenAPI 3.1.1 (100 notas)
+
+IDs materiais: `software.criacao_ia.tranche03.000201`–`software.criacao_ia.tranche03.000300`. Playwright foi selecionado em assuntos não cobertos pelo inventário existente; OpenTelemetry é específico às convenções GenAI; OpenAPI aborda semântica própria de OAS 3.1.1.
+
+### LangGraph: persistência, controle de execução e streaming
+
+201. [LangGraph: retomar interrupts sem duplicar efeitos colaterais](../../domains/software-0010/software/criacao-ia/langgraph-interrupt-retomar-sem-repetir-efeitos.md) — `software.criacao_ia.tranche03.000201`
+202. [LangGraph: distinguir thread_id de checkpoint_id](../../domains/software-0010/software/criacao-ia/langgraph-thread-id-e-checkpoint-id.md) — `software.criacao_ia.tranche03.000202`
+203. [LangGraph: escolher replay ou fork no time travel](../../domains/software-0010/software/criacao-ia/langgraph-time-travel-replay-ou-fork.md) — `software.criacao_ia.tranche03.000203`
+204. [LangGraph: separar checkpointer de store de longo prazo](../../domains/software-0010/software/criacao-ia/langgraph-checkpointer-versus-store.md) — `software.criacao_ia.tranche03.000204`
+205. [LangGraph: combinar atualizações paralelas com reducers](../../domains/software-0010/software/criacao-ia/langgraph-supersteps-e-reducers-paralelos.md) — `software.criacao_ia.tranche03.000205`
+206. [LangGraph Functional API: persistir resultados com @task](../../domains/software-0010/software/criacao-ia/langgraph-functional-api-task-result-checkpoint.md) — `software.criacao_ia.tranche03.000206`
+207. [LangGraph: usar partes tipadas no streaming v2](../../domains/software-0010/software/criacao-ia/langgraph-streaming-v2-partes-tipadas.md) — `software.criacao_ia.tranche03.000207`
+208. [LangGraph: consumir projeções do event streaming v3](../../domains/software-0010/software/criacao-ia/langgraph-event-streaming-projecoes-concorrentes.md) — `software.criacao_ia.tranche03.000208`
+209. [LangGraph: separar schemas de entrada, saída e estado interno](../../domains/software-0010/software/criacao-ia/langgraph-schemas-entrada-saida-e-estado-privado.md) — `software.criacao_ia.tranche03.000209`
+210. [LangGraph: planejar retenção e limpeza de checkpoints](../../domains/software-0010/software/criacao-ia/langgraph-politica-retencao-checkpoints.md) — `software.criacao_ia.tranche03.000210`
+
+### MCP: especificação 2026-07-28, transportes e recursos especializados
+
+211. [MCP stdio: framing por linha e stdout exclusivo do protocolo](../../domains/software-0010/software/criacao-ia/mcp-stdio-framing-e-stdout-limpo.md) — `software.criacao_ia.tranche03.000211`
+212. [MCP Streamable HTTP 2026: requests POST sem sessão implícita](../../domains/software-0010/software/criacao-ia/mcp-streamable-http-versao-2026-stateless.md) — `software.criacao_ia.tranche03.000212`
+213. [MCP 2026: carregar versão e capacidades em _meta por request](../../domains/software-0010/software/criacao-ia/mcp-meta-protocolo-capacidades-por-request.md) — `software.criacao_ia.tranche03.000213`
+214. [MCP MRTR: retomar requests com inputResponses e requestState opaco](../../domains/software-0010/software/criacao-ia/mcp-mrtr-input-required-request-state.md) — `software.criacao_ia.tranche03.000214`
+215. [MCP: combinar ttlMs, cacheScope e notificações de invalidação](../../domains/software-0010/software/criacao-ia/mcp-cache-ttl-scope-e-invalidacao.md) — `software.criacao_ia.tranche03.000215`
+216. [MCP tools/list: catálogo determinístico e schema de entrada executável](../../domains/software-0010/software/criacao-ia/mcp-tools-list-schema-autorizacao.md) — `software.criacao_ia.tranche03.000216`
+217. [MCP prompts: distinguir seleção do usuário e autoria do servidor](../../domains/software-0010/software/criacao-ia/mcp-prompts-selecao-controlada-pelo-usuario.md) — `software.criacao_ia.tranche03.000217`
+218. [MCP elicitation: reservar URL mode para credenciais e segredos](../../domains/software-0010/software/criacao-ia/mcp-elicitation-form-url-segredos.md) — `software.criacao_ia.tranche03.000218`
+219. [MCP HTTP OAuth: descobrir recurso protegido e registrar cliente](../../domains/software-0010/software/criacao-ia/mcp-oauth-discovery-e-client-registration.md) — `software.criacao_ia.tranche03.000219`
+220. [MCP 2026-07-28: preparar migração de handshake e notificações](../../domains/software-0010/software/criacao-ia/mcp-migrar-para-especificacao-2026-07-28.md) — `software.criacao_ia.tranche03.000220`
+
+### OpenAI Agents SDK: orquestração, guardrails, state e tracing
+
+221. [Agents SDK: escolher Agent.as_tool ou handoff](../../domains/software-0010/software/criacao-ia/agents-sdk-especialista-como-tool-ou-handoff.md) — `software.criacao_ia.tranche03.000221`
+222. [Agents SDK handoff: modelar destinos como roteamento explícito](../../domains/software-0010/software/criacao-ia/agents-sdk-handoff-destino-fixo.md) — `software.criacao_ia.tranche03.000222`
+223. [Agents SDK: validar handoff input em on_handoff](../../domains/software-0010/software/criacao-ia/agents-sdk-on-handoff-autorizacao-antes-de-efeitos.md) — `software.criacao_ia.tranche03.000223`
+224. [Agents SDK guardrails: mapear fronteiras de primeiro e último agente](../../domains/software-0010/software/criacao-ia/agents-sdk-guardrails-fronteiras-primeiro-e-ultimo-agente.md) — `software.criacao_ia.tranche03.000224`
+225. [Agents SDK streaming: consumir eventos até o iterador terminar](../../domains/software-0010/software/criacao-ia/agents-sdk-streaming-drenar-ate-fim.md) — `software.criacao_ia.tranche03.000225`
+226. [Agents SDK: escolher session local ou continuação server-side](../../domains/software-0010/software/criacao-ia/agents-sdk-session-versus-responses-continuation.md) — `software.criacao_ia.tranche03.000226`
+227. [Agents SDK: normalizar saída tipada entre handoffs](../../domains/software-0010/software/criacao-ia/agents-sdk-output-type-e-handoffs.md) — `software.criacao_ia.tranche03.000227`
+228. [Agents SDK: adiar tool schemas com hosted tool search](../../domains/software-0010/software/criacao-ia/agents-sdk-hosted-tool-search-deferred-loading.md) — `software.criacao_ia.tranche03.000228`
+229. [Agents SDK Sessions: limitar histórico lido sem duplicar persistência](../../domains/software-0010/software/criacao-ia/agents-sdk-session-input-callback-historico.md) — `software.criacao_ia.tranche03.000229`
+230. [Agents SDK tracing: descarregar spans antes de encerrar um job](../../domains/software-0010/software/criacao-ia/agents-sdk-tracing-flush-workers.md) — `software.criacao_ia.tranche03.000230`
+
+### Unreal Engine 5.8 PCG: geração hierárquica, runtime e GPU
+
+231. [Unreal PCG: partitioned generation divide domínio em células](../../domains/software-0010/software/criacao-ia/ue-pcg-partitioned-generation-grid-celulas.md) — `software.criacao_ia.tranche03.000231`
+232. [Unreal PCG: fluxo de dados entre HiGen grid sizes](../../domains/software-0010/software/criacao-ia/ue-pcg-higen-cascata-grid-size.md) — `software.criacao_ia.tranche03.000232`
+233. [Unreal PCG: propagar Data Layers e HLOD aos atores gerados](../../domains/software-0010/software/criacao-ia/ue-pcg-world-partition-data-layers-hlod.md) — `software.criacao_ia.tranche03.000233`
+234. [Unreal PCG runtime: fontes, raios de geração e limpeza](../../domains/software-0010/software/criacao-ia/ue-pcg-runtime-generation-sources-radii.md) — `software.criacao_ia.tranche03.000234`
+235. [Unreal PCG runtime: equilibrar scheduler e células concorrentes](../../domains/software-0010/software/criacao-ia/ue-pcg-scheduler-num-generating-components.md) — `software.criacao_ia.tranche03.000235`
+236. [Unreal PCG: interpretar overlay de geração em runtime](../../domains/software-0010/software/criacao-ia/ue-pcg-overlay-runtime-generation.md) — `software.criacao_ia.tranche03.000236`
+237. [Unreal PCG runtime: dimensionar pool de Partition Actors](../../domains/software-0010/software/criacao-ia/ue-pcg-runtime-partition-actor-pool.md) — `software.criacao_ia.tranche03.000237`
+238. [Unreal PCG: entender cache CPU e orçamento de memória](../../domains/software-0010/software/criacao-ia/ue-pcg-cache-runtime-editor-budget.md) — `software.criacao_ia.tranche03.000238`
+239. [Unreal PCG GPU: agrupar nós para reduzir transferências](../../domains/software-0010/software/criacao-ia/ue-pcg-gpu-compute-graph-transferencias.md) — `software.criacao_ia.tranche03.000239`
+240. [Unreal PCG GPU: tratar escopo Beta como dependência de engine](../../domains/software-0010/software/criacao-ia/ue-pcg-gpu-beta-nos-suportados.md) — `software.criacao_ia.tranche03.000240`
+
+### Blender 5.2 Geometry Nodes: fields, state, attributes e instancing
+
+241. [Blender Geometry Nodes: fields são avaliados no contexto do consumidor](../../domains/software-0010/software/criacao-ia/blender-geometry-nodes-field-contexto-avaliacao.md) — `software.criacao_ia.tranche03.000241`
+242. [Blender: capturar fields antes de uma conversão de geometria](../../domains/software-0010/software/criacao-ia/blender-capture-attribute-antes-de-conversao.md) — `software.criacao_ia.tranche03.000242`
+243. [Blender Geometry Nodes: escolher atributo anônimo ou nomeado](../../domains/software-0010/software/criacao-ia/blender-anonymous-versus-named-attributes.md) — `software.criacao_ia.tranche03.000243`
+244. [Blender Geometry Nodes: auditar domínio e conversão de atributos](../../domains/software-0010/software/criacao-ia/blender-attributes-domain-conversoes-implicitas.md) — `software.criacao_ia.tranche03.000244`
+245. [Blender Repeat Zone: distinguir feedback de entradas constantes](../../domains/software-0010/software/criacao-ia/blender-repeat-zone-iters-e-inputs-externos.md) — `software.criacao_ia.tranche03.000245`
+246. [Blender Geometry Nodes: escolher Repeat ou Simulation Zone](../../domains/software-0010/software/criacao-ia/blender-repeat-versus-simulation-zone.md) — `software.criacao_ia.tranche03.000246`
+247. [Blender Simulation Zone: declarar atributos anônimos no estado](../../domains/software-0010/software/criacao-ia/blender-simulation-anonymous-attributes-state.md) — `software.criacao_ia.tranche03.000247`
+248. [Blender Simulation Zone: gerenciar cache e bake para render](../../domains/software-0010/software/criacao-ia/blender-simulation-cache-bake-render.md) — `software.criacao_ia.tranche03.000248`
+249. [Blender Geometry Nodes: manter instâncias até precisar realizá-las](../../domains/software-0010/software/criacao-ia/blender-instancing-realize-atributos-custo.md) — `software.criacao_ia.tranche03.000249`
+250. [Blender Geometry Nodes: inspecionar fields com Viewer e domain explícito](../../domains/software-0010/software/criacao-ia/blender-viewer-domain-spreadsheet-debug.md) — `software.criacao_ia.tranche03.000250`
+
+### OpenUSD 26.08: composition, variants, time and asset resolution
+
+251. [OpenUSD: entender UsdStage como vista composta de layers](../../domains/software-0010/software/criacao-ia/openusd-stage-composed-view-layers.md) — `software.criacao_ia.tranche03.000251`
+252. [OpenUSD: tratar load rules como working set de payloads](../../domains/software-0010/software/criacao-ia/openusd-load-rules-payloads-working-set.md) — `software.criacao_ia.tranche03.000252`
+253. [OpenUSD: escolher reference ou payload para composição diferida](../../domains/software-0010/software/criacao-ia/openusd-reference-versus-payload.md) — `software.criacao_ia.tranche03.000253`
+254. [OpenUSD: resolver context e asset identifiers de pipeline](../../domains/software-0010/software/criacao-ia/openusd-asset-resolver-context-identifiers.md) — `software.criacao_ia.tranche03.000254`
+255. [OpenUSD: autorar opiniões no variant edit context correto](../../domains/software-0010/software/criacao-ia/openusd-variants-edit-context.md) — `software.criacao_ia.tranche03.000255`
+256. [OpenUSD: diagnosticar strength entre local opinions e variants](../../domains/software-0010/software/criacao-ia/openusd-opinion-strength-overrides.md) — `software.criacao_ia.tranche03.000256`
+257. [OpenUSD: separar default value de time samples em atributos](../../domains/software-0010/software/criacao-ia/openusd-attribute-default-e-time-samples.md) — `software.criacao_ia.tranche03.000257`
+258. [OpenUSD: retimar animação referenciada com layer offset](../../domains/software-0010/software/criacao-ia/openusd-layer-offset-retimar-animacao.md) — `software.criacao_ia.tranche03.000258`
+259. [OpenUSD: flattening exporta resultado composto, não estrutura editável](../../domains/software-0010/software/criacao-ia/openusd-flattening-stage-export.md) — `software.criacao_ia.tranche03.000259`
+260. [OpenUSD: harmonizar upAxis, metersPerUnit e timeCodesPerSecond](../../domains/software-0010/software/criacao-ia/openusd-stage-units-up-axis-metadata.md) — `software.criacao_ia.tranche03.000260`
+
+### FFmpeg: ordem de opções, timestamps, filtros e inspeção
+
+261. [FFmpeg: posicionar opções no input ou output correto](../../domains/software-0010/software/criacao-ia/ffmpeg-escopo-opcoes-por-arquivo.md) — `software.criacao_ia.tranche03.000261`
+262. [FFmpeg: mapear streams de entrada e saídas rotuladas](../../domains/software-0010/software/criacao-ia/ffmpeg-map-filtergraph-stream-labels.md) — `software.criacao_ia.tranche03.000262`
+263. [FFmpeg concat demuxer: conferir streams e durações de entrada](../../domains/software-0010/software/criacao-ia/ffmpeg-concat-demuxer-precondicoes.md) — `software.criacao_ia.tranche03.000263`
+264. [FFmpeg concat filter: alinhar cada segmento e normalizar streams](../../domains/software-0010/software/criacao-ia/ffmpeg-concat-filter-timestamps-zero.md) — `software.criacao_ia.tranche03.000264`
+265. [FFmpeg trim: separar seleção de frames e reinício de timestamps](../../domains/software-0010/software/criacao-ia/ffmpeg-trim-nao-redefine-pts.md) — `software.criacao_ia.tranche03.000265`
+266. [FFmpeg: interpretar PTS em conjunto com time base](../../domains/software-0010/software/criacao-ia/ffmpeg-setpts-timebase-e-relatorio.md) — `software.criacao_ia.tranche03.000266`
+267. [FFmpeg: distinguir filtro fps de opção de output -r](../../domains/software-0010/software/criacao-ia/ffmpeg-fps-filter-versus-output-r.md) — `software.criacao_ia.tranche03.000267`
+268. [FFmpeg filtergraph: separar escaping do filtro e da shell](../../domains/software-0010/software/criacao-ia/ffmpeg-filtergraph-escaping-niveis.md) — `software.criacao_ia.tranche03.000268`
+269. [FFmpeg framesync: definir comportamento ao terminar uma entrada](../../domains/software-0010/software/criacao-ia/ffmpeg-framesync-overlay-eof-policy.md) — `software.criacao_ia.tranche03.000269`
+270. [ffprobe: produzir inventário estruturado para validar um pipeline](../../domains/software-0010/software/criacao-ia/ffprobe-json-inspecao-pipeline.md) — `software.criacao_ia.tranche03.000270`
+
+### Playwright: relógio, WebSockets, service workers e artefatos de diagnóstico
+
+271. [Playwright Clock: instalar relógio antes de APIs temporais](../../domains/software-0010/software/criacao-ia/playwright-clock-install-order.md) — `software.criacao_ia.tranche03.000271`
+272. [Playwright WebSocketRoute: escolher mock completo ou interceptação](../../domains/software-0010/software/criacao-ia/playwright-websocketroute-mock-ou-proxy.md) — `software.criacao_ia.tranche03.000272`
+273. [Playwright Route: preservar a cadeia com fallback](../../domains/software-0010/software/criacao-ia/playwright-route-fallback-versus-continue.md) — `software.criacao_ia.tranche03.000273`
+274. [Playwright: service workers mudam visibilidade de network routing](../../domains/software-0010/software/criacao-ia/playwright-service-worker-network-routing.md) — `software.criacao_ia.tranche03.000274`
+275. [Playwright Trace: coletar diagnóstico sem expor dados de teste](../../domains/software-0010/software/criacao-ia/playwright-trace-retencao-e-dados-de-debug.md) — `software.criacao_ia.tranche03.000275`
+276. [Playwright video: fechar browser context para salvar o arquivo](../../domains/software-0010/software/criacao-ia/playwright-video-context-close-artifact.md) — `software.criacao_ia.tranche03.000276`
+277. [Playwright assertions: escolher expect.poll ou expect.toPass](../../domains/software-0010/software/criacao-ia/playwright-expect-poll-e-topass.md) — `software.criacao_ia.tranche03.000277`
+278. [Playwright Test: diagnosticar timeouts por escopo](../../domains/software-0010/software/criacao-ia/playwright-timeouts-escopos-separados.md) — `software.criacao_ia.tranche03.000278`
+279. [Playwright addInitScript: preparar ambiente antes do código da página](../../domains/software-0010/software/criacao-ia/playwright-add-init-script-determinismo.md) — `software.criacao_ia.tranche03.000279`
+280. [Playwright: coletar erros de runtime sem confundir com falha de teste](../../domains/software-0010/software/criacao-ia/playwright-page-errors-observabilidade-cliente.md) — `software.criacao_ia.tranche03.000280`
+
+### OpenTelemetry: semantic conventions para GenAI, agents, métricas e eventos
+
+281. [OpenTelemetry GenAI: interpretar gen_ai.provider.name pela perspectiva da instrumentation](../../domains/software-0010/software/criacao-ia/otel-genai-provider-name-perspectiva.md) — `software.criacao_ia.tranche03.000281`
+282. [OpenTelemetry GenAI: padronizar gen_ai.operation.name sem apagar a operação real](../../domains/software-0010/software/criacao-ia/otel-genai-operation-name-taxonomia.md) — `software.criacao_ia.tranche03.000282`
+283. [OpenTelemetry GenAI: separar modelo solicitado de modelo que respondeu](../../domains/software-0010/software/criacao-ia/otel-genai-modelo-solicitado-versus-resposta.md) — `software.criacao_ia.tranche03.000283`
+284. [OpenTelemetry GenAI spans: medir a operação lógica incluindo retries](../../domains/software-0010/software/criacao-ia/otel-genai-span-logico-retries.md) — `software.criacao_ia.tranche03.000284`
+285. [OpenTelemetry GenAI agents: separar invocation remota, execução local e tool span](../../domains/software-0010/software/criacao-ia/otel-genai-agent-spans-client-internal-tool.md) — `software.criacao_ia.tranche03.000285`
+286. [OpenTelemetry GenAI token metrics: contadores de uso não são histogramas por operação](../../domains/software-0010/software/criacao-ia/otel-genai-token-counters-versus-histograms.md) — `software.criacao_ia.tranche03.000286`
+287. [OpenTelemetry GenAI streaming: distinguir time to first chunk de cadência](../../domains/software-0010/software/criacao-ia/otel-genai-streaming-latencias-por-chunk.md) — `software.criacao_ia.tranche03.000287`
+288. [OpenTelemetry GenAI: minimizar conteúdo de prompt e resposta na telemetria](../../domains/software-0010/software/criacao-ia/otel-genai-conteudo-opt-in-minimizacao.md) — `software.criacao_ia.tranche03.000288`
+289. [OpenTelemetry GenAI evaluation.result: correlacionar resultado ao output avaliado](../../domains/software-0010/software/criacao-ia/otel-genai-evaluation-result-correlacao.md) — `software.criacao_ia.tranche03.000289`
+290. [OpenTelemetry GenAI semconv: interpretar o status Development antes de fixar integração](../../domains/software-0010/software/criacao-ia/otel-genai-conventions-development-status.md) — `software.criacao_ia.tranche03.000290`
+
+### OpenAPI 3.1.1: semântica do Schema Object, referências, conteúdo e callbacks
+
+291. [OAS 3.1.1: selecionar o dialect JSON Schema correto](../../domains/software-0010/software/criacao-ia/oas311-jsonschema-dialect-default-override.md) — `software.criacao_ia.tranche03.000291`
+292. [OAS 3.1.1: diferenciar Reference Object de `$ref` em Schema Object](../../domains/software-0010/software/criacao-ia/oas311-reference-object-vs-schema-ref.md) — `software.criacao_ia.tranche03.000292`
+293. [OAS 3.1.1: resolver `$ref` relativo usando `$id` e URI-base](../../domains/software-0010/software/criacao-ia/oas311-id-and-relative-ref-base-uri.md) — `software.criacao_ia.tranche03.000293`
+294. [OAS 3.1.1: `format` não é uma validação garantida](../../domains/software-0010/software/criacao-ia/oas311-format-annotation-nao-validacao.md) — `software.criacao_ia.tranche03.000294`
+295. [OAS 3.1.1: representar null e schemas booleanos com JSON Schema](../../domains/software-0010/software/criacao-ia/oas311-null-union-boolean-schemas.md) — `software.criacao_ia.tranche03.000295`
+296. [OAS 3.1.1 discriminator: pista de serialização, não regra de validação](../../domains/software-0010/software/criacao-ia/oas311-discriminator-nao-altera-validacao.md) — `software.criacao_ia.tranche03.000296`
+297. [OAS 3.1.1: modelar binário com contentEncoding e contentMediaType](../../domains/software-0010/software/criacao-ia/oas311-binary-contentencoding-vs-format.md) — `software.criacao_ia.tranche03.000297`
+298. [OAS 3.1.1: escolher entre webhook top-level e callback de operação](../../domains/software-0010/software/criacao-ia/oas311-webhooks-versus-callbacks.md) — `software.criacao_ia.tranche03.000298`
+299. [OAS 3.1.1 Path Item `$ref`: não sobrepor fields com o alvo](../../domains/software-0010/software/criacao-ia/oas311-path-item-ref-conflitos.md) — `software.criacao_ia.tranche03.000299`
+300. [OAS 3.1.1: validar readOnly e writeOnly conforme direção da mensagem](../../domains/software-0010/software/criacao-ia/oas311-readonly-writeonly-annotations.md) — `software.criacao_ia.tranche03.000300`
+
 ## Critério de entrada na contagem
 
 Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, explicação, exemplo, limites, verificação, duas fontes HTTPS específicas, wikilinks resolvidos e ausência de marcadores de template. A revisão factual por IA precisa usar `revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`; não cria nem altera aprovação humana. Gate e revisão factual serão executados e registrados por tranche antes de reconciliar as contagens.
@@ -326,4 +460,7 @@ Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, exp
 - Revisão factual IA da tranche 2: [`ai-review-software-criacao-ia-2000-0004-tranche-02.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md)
 - Gate da tranche 2: [`note-quality-software-criacao-ia-2000-0004-tranche-02.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md)
 - Reconciliação da tranche 2: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md)
+- Revisão factual IA da tranche 3: [`ai-review-software-criacao-ia-2000-0004-tranche-03.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md)
+- Gate da tranche 3: [`note-quality-software-criacao-ia-2000-0004-tranche-03.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md)
+- Reconciliação da tranche 3: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md)
 - Diretório das notas: [`domains/software-0010/software/criacao-ia/`](../../domains/software-0010/software/criacao-ia/)

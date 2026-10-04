@@ -1,0 +1,156 @@
+{
+  "group": "Unreal Engine 5.8 PCG: geração hierárquica, runtime e GPU",
+  "check": "Revisão das páginas oficiais do Unreal Engine 5.8 sobre generation modes, World Partition, processamento GPU, referência de nós e debug de runtime; status Beta e nomes de cvars foram mantidos vinculados a UE 5.8.",
+  "notes": [
+    {
+      "slug": "ue-pcg-partitioned-generation-grid-celulas",
+      "title": "Unreal PCG: partitioned generation divide domínio em células",
+      "one": "Partitioned Generation distribui os resultados do PCG por uma grade definida, em vez de manter todos os meshes no domínio de um único componente.",
+      "why": "Um componente enorme pode gerar grande volume de atores e dificultar streaming e atualização localizada. Dividir o resultado em células dá a outros sistemas como World Partition e Level Instancing unidades menores de organização, carregamento e debug.",
+      "how": "Ative `Is Partitioned` no asset e configure `Partition Grid Size` no `PCGWorldActor`; cada célula recebe componente local. Dimensione a grade considerando escala dos objetos e frequência de atualização, e regenere os assets depois de alterar a grade. Geração hierárquica também depende de componentes particionados.",
+      "example": "Um bioma com árvores espaçadas e vegetação rasteira pode particionar o volume para que conjuntos locais de pontos e atores sejam gerados por célula. O nível pode então carregar conteúdo próximo sem executar novamente a geração de toda a área do bioma.",
+      "limits": "Particionar não é automaticamente sinônimo de melhor desempenho: grades muito pequenas aumentam número de componentes, overhead e fronteiras; grades grandes reduzem granularidade. O resultado também depende do modo de geração e de como os atores gerados são consumidos pelo projeto.",
+      "verify": "Inspecione os atores e componentes criados no Outliner, carregue e descarregue células vizinhas e compare tempo e memória com modo não particionado. Depois de alterar o tamanho da grade, use Cleanup e gere novamente.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "define modos, componentes locais e configuração da grade particionada"},
+        {"label": "Unreal Engine 5.8 — PCG with World Partition", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-with-world-partition-in-unreal-engine?application_version=5.8", "why": "mostra integração dos resultados PCG com células, Data Layers e HLOD"}
+      ],
+      "review": "A divisão em grade, opção Is Partitioned e configuração no PCGWorldActor foram confirmadas em UE 5.8; streaming depende da integração adicional com World Partition."
+    },
+    {
+      "slug": "ue-pcg-higen-cascata-grid-size",
+      "title": "Unreal PCG: fluxo de dados entre HiGen grid sizes",
+      "one": "Na geração hierárquica, dados de uma grade maior podem ser reutilizados ao descer para grade menor, mas o fluxo não sobe de uma grade menor para uma maior.",
+      "why": "Uma graph que ignora a direção dessa cascata pode repetir operações pesadas em cada célula ou replicar os mesmos pontos em muitas células menores. A decisão de grid size é parte do plano de execução e afeta custo e duplicação, não apenas precisão visual.",
+      "how": "Ative Hierarchical Generation em graph com componente particionado. Insira `Grid Size` antes de sampler para controlar o nível de detalhe daquele ramo; nós sem esse ponto usam o default. Quando entradas vêm de vários grid sizes, a saída usa a menor grade. Uma operação compartilhada e cara pode usar nível maior ou Unbounded e então delegar detalhes às grades menores.",
+      "example": "Um ramo gera rochas grandes numa grade ampla e outro grama numa grade pequena. Se os pontos das rochas forem repassados a cada célula fina, use `Cull Points Outside Actor Bounds` para remover pontos fora dos limites locais ou ajuste a sequência para não duplicar o trabalho.",
+      "limits": "Subgraphs herdam grid size de seus dados de entrada ou graph pai e têm seu próprio controle de grid desabilitado. Escolhas impróprias podem aumentar custo ou alterar cobertura. O cache de dados não elimina duplicatas automaticamente.",
+      "verify": "Compare quantidade de pontos e chamadas de sampler por célula, examine grid size de cada nó no Debug Object Tree e teste entradas que chegam em níveis diferentes. Valide limites da célula para identificar dados repetidos.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "define a cascata de HiGen, menor grid size em múltiplas entradas e caso Unbounded"},
+        {"label": "Unreal Engine 5.8 — PCG node reference", "url": "https://dev.epicgames.com/documentation/unreal-engine/procedural-content-generation-framework-node-reference-in-unreal-engine?application_version=5.8", "why": "serve de referência para nós de sampler, culling e transformação de pontos"}
+      ],
+      "review": "Direção da cascata, regra de menor grade, herança de subgraph e risco de pontos duplicados foram verificados no guia de generation modes."
+    },
+    {
+      "slug": "ue-pcg-world-partition-data-layers-hlod",
+      "title": "Unreal PCG: propagar Data Layers e HLOD aos atores gerados",
+      "one": "Atores criados por graph PCG podem herdar Data Layers e HLOD do componente de origem, ou receber referências explícitas por configurações de nó.",
+      "why": "Um resultado procedural útil precisa obedecer ao mesmo particionamento, ciclo de vida e organização de streaming do restante do mundo. Sem propagação deliberada, objetos visualmente presentes podem acabar na layer ou HLOD errada e escapar dos controles de carregamento previstos.",
+      "how": "No `Spawn Actor` ou `Create Target Actor`, escolha `Data Layer Source Type` como `Self` para copiar as layers do componente de origem ou `Data Layer References` para usar atributo de referência de dados. Configure filtros incluídos/excluídos ou layers adicionais conforme o caso. Atribuições de HLOD seguem a configuração equivalente do graph e do nó.",
+      "example": "Volumes distintos geram rochas e árvores em Data Layers próprias. Com `Self`, árvores geradas acompanham a layer do volume de árvores; com dados por atributo, um graph que recebe pontos de atores diferentes pode agrupar cada saída pela referência de Data Layer antes de criar atores.",
+      "limits": "Herança não resolve conflitos de política nem escolhe a layer correta quando os dados agregam múltiplas origens. Atribuição para HLOD e comportamento de nodes podem depender da configuração do projeto, e a integração de streaming precisa ser testada no mapa real.",
+      "verify": "Selecione atores gerados na janela Data Layers e HLOD Outliner, valide layer e classe de origem, alterne layers em execução e confirme que dados incluídos/excluídos são os esperados. Teste pontos que referenciam mais de uma layer.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG with World Partition", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-with-world-partition-in-unreal-engine?application_version=5.8", "why": "detalha propagação de Data Layers, HLOD e settings de Spawn Actor/Create Target Actor"},
+        {"label": "Unreal Engine 5.8 — PCG node reference", "url": "https://dev.epicgames.com/documentation/unreal-engine/procedural-content-generation-framework-node-reference-in-unreal-engine?application_version=5.8", "why": "documenta nós de criação e spawn usados para materializar dados como atores"}
+      ],
+      "review": "Opções Self e Data Layer References e propagação a atores foram verificadas na documentação 5.8; a nota não presume resolução automática de conflitos."
+    },
+    {
+      "slug": "ue-pcg-runtime-generation-sources-radii",
+      "title": "Unreal PCG runtime: fontes, raios de geração e limpeza",
+      "one": "Runtime Generation agenda células perto de PCG Generation Sources e as limpa quando deixam de satisfazer o raio de cleanup.",
+      "why": "O que aparece ao jogador depende tanto da distância de geração como da política de remoção. Configurações de raios incoerentes entre níveis de detalhe podem criar pop-in, carregar detalhe fino longe demais ou remover ativos ainda visíveis.",
+      "how": "Uma source pode vir do viewport do editor, jogador, streaming source de World Partition ou componente dedicado. Defina `Generation Radii` por grid size no graph e, se necessário, override por componente. `Cleanup Radius Multiplier` escala a distância de remoção; a documentação recomenda raios que crescem de grades pequenas para maiores. Frustum culling e bounds modifiers podem adiantar geração e cleanup em relação à visão.",
+      "example": "Um jogo de exploração mantém detalhes amplos carregados a distância maior e ativa grama de alta densidade apenas perto do jogador. Em PIE, habilite o viewport como geração source para observar raios e cleanup antes de testar fontes de streaming reais.",
+      "limits": "Uma source não é necessariamente a câmera do jogador: outras sources também podem ativar células. Raios excessivos elevam memória e trabalho; raio de cleanup e frustum precisam considerar tamanho do objeto e latência do scheduler.",
+      "verify": "Desenhe as esferas de geração, mova cada tipo de source separadamente e registre o tempo entre entrada no raio, início e conclusão. Confira objetos visíveis na borda e repita com mudanças de frustum e multiplicador.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "define sources, radii, multiplier, scheduling e frustum culling"},
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "oferece overlay e visualização das células que estão sendo geradas"}
+      ],
+      "review": "Tipos de source, ativação por raio e regra do Cleanup Radius Multiplier foram verificados no guia UE 5.8; efeito depende também de scheduler e visibilidade."
+    },
+    {
+      "slug": "ue-pcg-scheduler-num-generating-components",
+      "title": "Unreal PCG runtime: equilibrar scheduler e células concorrentes",
+      "one": "A política de scheduling decide a ordem das células e `NumGeneratingComponents` limita quantos componentes PCG geram em paralelo.",
+      "why": "Priorizar distância e direção pode reduzir demora percebida, mas um limite muito baixo ainda mantém células relevantes na fila e muda a qualidade aparente da prioridade. O scheduler é parte do orçamento de frame e deve ser observado com workload representativo.",
+      "how": "O modo padrão prioriza por distância e direção da fonte. Ajuste a quantidade de componentes concorrentes para equilibrar uso de CPU e tempo até conteúdo aparecer; use `FramesBetweenGraphSchedules` principalmente para inspeção da ordem. Em execução e desenvolvimento, correlacione decisões do scheduler com `pcg.FrameTime`, overlays e tamanho de células.",
+      "example": "Para uma cena com densidade alta, compare dois limites de geração concorrente enquanto percorre a mesma rota. Se os componentes mais próximos continuam atrasados, examine tempo por graph e quantidade de dados antes de aumentar a concorrência, que pode competir com simulação e renderização.",
+      "limits": "Aumentar paralelismo não garante aumento proporcional de throughput: CPU, tarefas de geração e criação de atores têm gargalos distintos. Pesos de direção mudaram de importância relativa com HiGen Grid Size Exponential no UE 5.5, então configurações antigas devem ser reavaliadas.",
+      "verify": "Grave vídeo junto do overlay, habilite log detalhado temporariamente e compare ordem e duração de Generate Calls por rota. Faça profiling com contagens, hardware e graph idênticos, sem extrapolar resultados de Editor para Shipping.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "detalha scheduler por distância/direção e limite de componentes que geram em paralelo"},
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "documenta cvars, métricas de overlay e budgets de runtime"}
+      ],
+      "review": "Prioridade padrão, efeito do limite de componentes e diferença de direção após alterações de HiGen foram conferidos nas páginas de geração."
+    },
+    {
+      "slug": "ue-pcg-overlay-runtime-generation",
+      "title": "Unreal PCG: interpretar overlay de geração em runtime",
+      "one": "O overlay PCG registra custo de tick, chamadas de geração e cleanup, componentes ativos e uso do pool por frame.",
+      "why": "A geração acontece em rajadas quando células cruzam um raio, então médias de frame escondem atrasos e crescimento de pool. O overlay ajuda a relacionar stutter, componentes pendentes e distância de aparecimento do conteúdo.",
+      "how": "Habilite `pcg.RuntimeGeneration.EnableDebugOverlay 1` em Editor ou Development. Observe `Tick time`, `Generate Calls`, `Cleanup Calls`, `Num Generating Components` e `PA Pool`; grave vídeo e pause em frames relevantes para capturar comportamento transitório. Use `pcg.GraphExecution.DebugDrawGeneratedCells` para visualizar sources e células em geração.",
+      "example": "Durante um percurso de referência, a equipe registra overlay e câmera. Um pico de `Tick time` coincide com várias células recém-entradas; `PA Pool` dobrando no mesmo frame indica esgotamento da reserva, então o tamanho inicial é reavaliado e o teste é repetido.",
+      "limits": "Overlay não está habilitado por padrão em Test ou Shipping builds e seus valores são por frame, não uma série histórica agregada. Um perfil de Editor não reproduz necessariamente custo de runtime final ou uso do hardware do jogador.",
+      "verify": "Capture um trace no Unreal Insights e correlacione cvars e overlays com frame time e pop visual. Teste a mesma rota em Development e build alvo com instrumentação de produção adequada.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "lista métricas de overlay, cvars para cells e restrição de build"},
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "explica fontes, scheduler, raio de geração e cvars de runtime"}
+      ],
+      "review": "Campos e limitações do overlay foram conferidos em UE 5.8; recomendações de correlação são procedimentos de diagnóstico e não garantias da engine."
+    },
+    {
+      "slug": "ue-pcg-runtime-partition-actor-pool",
+      "title": "Unreal PCG runtime: dimensionar pool de Partition Actors",
+      "one": "O pool de Partition Actors reduz alocações repetidas, mas, quando se esgota, pode dobrar e realizar uma operação custosa durante jogo.",
+      "why": "A expansão inesperada do pool pode coincidir com frame hitch justamente quando novas células entram no raio. Pré-dimensionar a reserva com dados de percurso evita interpretar todo pico como custo inevitável do grafo.",
+      "how": "A geração runtime usa pooling de atores particionados; o overlay mostra `PA Pool`, e `pcg.RuntimeGeneration.BasePoolSize` define o tamanho inicial documentado. Meça pico de células e resultados ativos em rotas representativas antes de ajustar o valor. Compare memory footprint com custo de expansão e mantenha a cvar de debug separada da política de build.",
+      "example": "Um nível aberto registra uso máximo de 140 PAs numa corrida com múltiplos jogadores. A equipe repete a captura com pool inicial ampliado e confirma se o pico deixa de dobrar em gameplay, verificando também que a memória não ficou reservada em excesso para níveis menores.",
+      "limits": "O pool não elimina custo de gerar graph ou alocar todos os recursos de conteúdo. Valores muito altos desperdiçam memória e a demanda muda com densidade, quantidade de sources e número de células simultâneas.",
+      "verify": "Observe o campo `PA Pool` frame a frame e a cvar `BasePoolSize`; force entradas e saídas repetidas de raio e compare hitches, memória e contagem de atores. Repita na configuração de multiplayer esperada.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "descreve o pool, seu crescimento por dobra e a cvar BasePoolSize"},
+        {"label": "Unreal Engine 5.8 — PCG generation modes", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-generation-modes-in-unreal-engine?application_version=5.8", "why": "documenta pooling e limites de componentes no scheduler runtime"}
+      ],
+      "review": "A expansão ao esgotar o pool e o parâmetro de tamanho inicial constam da tabela oficial de overlay/cvars; dimensionamento é apresentado como medição de projeto."
+    },
+    {
+      "slug": "ue-pcg-cache-runtime-editor-budget",
+      "title": "Unreal PCG: entender cache CPU e orçamento de memória",
+      "one": "O cache de graph PCG retém resultados de nós CPU para evitar reexecução, com habilitação e budget independentes para worlds de jogo e editor.",
+      "why": "Cache pode reduzir trabalho repetido, mas seus benefícios dependem de reutilização real e podem vir acompanhados de pressão de memória. Projetos que assumem o mesmo estado padrão no editor e runtime podem medir resultados diferentes.",
+      "how": "Inspecione `pcg.Cache.Runtime.Enabled` e `pcg.Cache.Editor.Enabled` na configuração de UE 5.8: runtime está desabilitado por padrão e editor habilitado. Ajuste `pcg.Cache.Runtime.MemoryBudgetMB` ou a contraparte de editor; quando o budget é excedido, entradas antigas são descartadas. Flush ou Force Regen ajudam a distinguir cache hit de node que não executou durante debug.",
+      "example": "Uma graph cara amostra terreno compartilhado por células finas. A equipe mede cache hit em runtime e editor separadamente, sobe o budget apenas se a taxa de reutilização compensa a memória e repete profiling após descarte das entradas mais antigas.",
+      "limits": "Cache guarda dados de saída de nós CPU conforme condições de reutilização, não resultados arbitrários de side effects nem todos os trabalhos GPU. Um cache hit pode impedir um breakpoint de disparar, por isso debug precisa poder forçar regeneração.",
+      "verify": "Compare execução com cache habilitado/desabilitado usando mesmos inputs, meça memória e tempo, reduza budget e confirme eviction. Ative `Force Regen` antes de concluir que um breakpoint não funciona.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "define cvars de enable, budgets, eviction e interação de cache com breakpoint"},
+        {"label": "Unreal Engine 5.8 — PCG node reference", "url": "https://dev.epicgames.com/documentation/unreal-engine/procedural-content-generation-framework-node-reference-in-unreal-engine?application_version=5.8", "why": "contextualiza nós CPU e comportamento de execução no graph PCG"}
+      ],
+      "review": "Defaults de runtime/editor, eviction por budget e efeito do cache sobre breakpoint foram conferidos no guia de debug UE 5.8."
+    },
+    {
+      "slug": "ue-pcg-gpu-compute-graph-transferencias",
+      "title": "Unreal PCG GPU: agrupar nós para reduzir transferências",
+      "one": "Nós PCG compatíveis executam juntos em compute graph, mas transferências de dados CPU-GPU e preparação do graph também custam CPU.",
+      "why": "Mover só um nó simples para GPU pode ser mais lento que mantê-lo em CPU se cada entrada e saída atravessa a fronteira. A aceleração aparece quando volume de dados e sequência de nós justificam despacho e processamento em paralelo.",
+      "how": "Identifique nós marcados como GPU e agrupe operações compatíveis numa região conectada. Minimize uploads e downloads, que a interface sinaliza, e meça com número de pontos representativo. HiGen pode fatorar trabalho comum para níveis de grade amplos; use profiling CPU e GPU para separar custo de kernel, transferências e criação de atores.",
+      "example": "Uma cadeia de transformação de pontos mantém filtros GPU juntos antes de um `Static Mesh Spawner` compatível. Em vez de alternar nó CPU/GPU a cada operação, a equipe compara a cadeia agrupada à versão CPU e captura tempo de execução e volume transferido.",
+      "limits": "Nem todo nó tem execução GPU e desempenho varia com hardware, tamanho dos dados, shader e custo de preparar compute graph. Número pequeno de pontos pode não ocupar a GPU suficientemente para compensar overhead.",
+      "verify": "Use badges de upload/download, profiler do graph e captura GPU da plataforma. Faça medições repetidas com contagens pequenas e grandes, e confirme que saída e atributos mantêm semântica equivalente.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG GPU processing", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-with-gpu-processing-in-unreal-engine?application_version=5.8", "why": "explica compute graphs, custo de transferência e recomendação de agrupar nós GPU"},
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "documenta profiling de CPU/GPU e ferramentas de inspeção de kernels"}
+      ],
+      "review": "Custo de transferências e preparação, contiguidade dos nós GPU e dependência do volume de dados foram confirmados na página oficial 5.8."
+    },
+    {
+      "slug": "ue-pcg-gpu-beta-nos-suportados",
+      "title": "Unreal PCG GPU: tratar escopo Beta como dependência de engine",
+      "one": "Na documentação UE 5.8, PCG GPU Processing é feature Beta com cautela explícita para shipping e suporte restrito a um subconjunto de nós.",
+      "why": "Um graph que mistura CPU e GPU depende de cobertura específica por nó, distribuição de dados e estabilidade da engine. Marcar a feature como Beta evita apresentá-la como substituto universal de execução CPU e torna visíveis os riscos de release e migração.",
+      "how": "Confira a lista de nós GPU suportados na versão exata do projeto; a página 5.8 destaca Copy Points, Static Mesh Spawner e Custom HLSL, entre um conjunto limitado. Teste o graph numa versão de engine fixada, use inspeção e debug de dados GPU e mantenha alternativa CPU para caminhos que não têm cobertura aceitável.",
+      "example": "Um protótipo usa Custom HLSL para editar milhares de pontos e um spawner GPU, mas mantém um caminho de geração CPU para plataforma de validação sem suporte. Um teste de cook e runtime confirma os resultados em cada alvo antes da escolha de shipping.",
+      "limits": "Status Beta e lista de nós podem mudar entre versões do Unreal. HLSL customizado exige conhecimento de layouts e saída de dados; APIs, atributos e comportamento em alvo final não devem ser inferidos apenas pelo Editor.",
+      "verify": "Consulte a documentação correspondente à versão travada, compile todos os targets, inspecione dados em nós GPU e execute testes visuais, de determinismo e desempenho em hardware representativo. Registre fallback e risco Beta no gate de release.",
+      "sources": [
+        {"label": "Unreal Engine 5.8 — PCG GPU processing", "url": "https://dev.epicgames.com/documentation/unreal-engine/using-pcg-with-gpu-processing-in-unreal-engine?application_version=5.8", "why": "rotula a feature Beta, alerta sobre shipping e enumera suporte limitado a nodes"},
+        {"label": "Unreal Engine 5.8 — PCG runtime debugging", "url": "https://dev.epicgames.com/documentation/unreal-engine/pcg-runtime-generation-debugging-in-unreal-engine?application_version=5.8", "why": "detalha debug de GPU, inspeção de buffers e profiling de kernels"}
+      ],
+      "review": "Status Beta e cobertura limitada foram verificados na página de GPU 5.8; recomendações de release são apresentadas como validação de projeto."
+    }
+  ]
+}
