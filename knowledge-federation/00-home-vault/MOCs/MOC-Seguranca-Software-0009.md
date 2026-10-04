@@ -11,13 +11,13 @@ updated: 2026-10-03
 
 # MOC — Engenharia de Segurança de Software, AppSec, DevSecOps e IAM (`software-0009`)
 
-Mapa de conteúdo das **1300 notas substantivas (Tranches 1–13, IDs `1–1300`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
+Mapa de conteúdo das **1400 notas substantivas (Tranches 1–14, IDs `1–1400`)** do lote [`software-seguranca-2000-0003`](../../exports/batches/software-seguranca-2000-0003.md) em `knowledge-federation/domains/software-0009/software/seguranca/`.
 
 ## Estado do lote
 
-- Progresso atual: **1300 / 2.000 notas válidas (65,00%)** (`status: in_progress`)
-- Revisão factual humana: **0 / 1300**
-- Revisão factual por IA (`Arena.ai Agent Mode`): **1300 / 1300** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md))
+- Progresso atual: **1400 / 2.000 notas válidas (70,00%)** (`status: in_progress`)
+- Revisão factual humana: **0 / 1400**
+- Revisão factual por IA (`Arena.ai Agent Mode`): **1400 / 1400** ([Tranche 1](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-01.md), [Tranche 2](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-02.md), [Tranche 3](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-03.md), [Tranche 4](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-04.md), [Tranche 5](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-05.md), [Tranche 6](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-06.md), [Tranche 7](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-07.md), [Tranche 8](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-08.md), [Tranche 9](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-09.md), [Tranche 10](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-10.md), [Tranche 11](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-11.md), [Tranche 12](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-12.md), [Tranche 13](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-13.md), [Tranche 14](../../exports/reports/ai-review-software-seguranca-2000-0003-tranche-14.md))
 - Auditoria de qualidade do lote: [`note-quality-software-seguranca-2000-0003.md`](../../exports/reports/note-quality-software-seguranca-2000-0003.md)
 
 ## Tranche 1 (IDs 1–100)
@@ -1735,3 +1735,135 @@ Mapa de conteúdo das **1300 notas substantivas (Tranches 1–13, IDs `1–1300`
 - [[openssl-formatos-certificados-chaves-pem-der-pkcs12-conversao-segura]] — Conversão Segura entre Formatos de Certificados e Chaves (**`PEM`, `DER`, `PKCS#12 / .pfx`, `PKCS#7`**) no OpenSSL 3.x: Criptografia Forte no **`openssl pkcs12`**
 - [[openssl-politicas-seguranca-openssl-cnf-cipherstring-seclevel-minprotocol]] — Hardening Sistêmico via **`/etc/ssl/openssl.cnf`**: Impondo **`MinProtocol = TLSv1.2`** e **`CipherString = DEFAULT@SECLEVEL=2`** para Todas as Aplicações do Servidor!
 - [[openssl-benchmarking-criptografico-speed-evp-aes-ni-avx512-pqc-ml-kem]] — Benchmarking Criptográfico e Aceleração de Hardware com **`openssl speed -evp`**: Medindo **AES-NI / VAES**, **ChaCha20-Poly1305**, **Ed25519** e **ML-KEM / ML-DSA**
+
+## Tranche 14 (IDs 1301–1400)
+
+### authentik (goauthentik/authentik) — Plataforma Open-Source de Identidade e SSO (OIDC, SAML 2.0, Outposts Proxy/LDAP/RADIUS/RAC, Flows/Stages, Expression Policies Python, SCIM e Blueprints IaC)
+
+- [[authentik-arquitetura-idp-core-embedded-outpost-worker-postgresql]] — Arquitetura do **authentik (`goauthentik/authentik`)**: Core Server, **Embedded Outpost** em Go, **Worker** Assíncrono e **PostgreSQL**
+- [[authentik-motor-flows-stages-bindings-autenticacao-contextual]] — O Motor de **Flows, Stages e Stage Bindings** no authentik: Construindo Jornadas de Autenticação, MFA Adaptativo, Enrollment e Recovery sem Código Fixo
+- [[authentik-politicas-reputacao-ip-expressoes-python-rbac-abac]] — Motor de Políticas (**Policy Engine**) do authentik: **Expression Policies** em Python, **Reputation Policy** Anti-Brute-Force, GeoIP e HIBP
+- [[authentik-providers-oauth2-oidc-saml-scim-federacao-sso]] — Provedores **OAuth2 / OIDC**, **SAML 2.0** e **SCIM 2.0** no authentik: Assinatura de JWTs, Property Mappings (Scopes) e Provisionamento Automático de Ciclo de Vida
+- [[authentik-outposts-proxy-forwardauth-ldap-radius-arquitetura-distribuida]] — Arquitetura de **Outposts** no authentik: Protegendo Aplicações Sem SSO via **Proxy / ForwardAuth (Traefik, Nginx, Envoy)** e Gateways **LDAP / RADIUS**
+- [[authentik-blueprints-infraestrutura-como-codigo-gitops-automacao]] — Identidade como Código (**Identity-as-Code**) no authentik com **Blueprints YAML**: Versionando Fluxos, Políticas, Provedores e RBAC via GitOps
+- [[authentik-autenticacao-webauthn-passkeys-totp-duo-mfa-obrigatorio]] — Autenticação Resistente a Phishing no authentik: **WebAuthn / Passkeys (FIDO2)**, Restrição de **MDS Attestation (`AAUID`)**, TOTP e Códigos de Recuperação
+- [[authentik-diretorio-ldap-active-directory-sync-federacao-fontes]] — Sincronização de Diretório (**LDAP Source / Active Directory**) e Federação OAuth/SAML no authentik: Coexistência e Migração Gradual de Legados
+- [[authentik-auditoria-eventos-notificacoes-webhooks-siem-rbac]] — Auditoria de Eventos de Segurança, **Notification Rules / Webhooks** e **RBAC Granular por Objeto** no authentik: Monitorando o IdP no SIEM
+- [[authentik-hardening-producao-secret-key-reverse-proxy-tls-backups]] — Hardening de Produção do **authentik**: Proteção da **`AUTHENTIK_SECRET_KEY`**, Configuração de `trusted_proxies`, Isolamento de Outposts e Backups
+
+### Kanidm (kanidm/kanidm) — Gerenciamento de Identidade (IdM) Memory-Safe em Rust, Passkeys FIDO2 WebAuthn Attested, OAuth2/OIDC com PKCE, LDAPS Read-Only e Autenticação POSIX SSH/PAM (`kanidm-unixd`)
+
+- [[kanidm-arquitetura-idm-rust-banco-transacional-estrategia-zero-trust]] — Arquitetura do **Kanidm (`kanidm/kanidm`)**: Plataforma Completa de Gerenciamento de Identidade (IDM) em **Rust** com Banco Transacional Próprio e Padrões Estritos
+- [[kanidm-configuracao-server-toml-domain-origin-zfs-backups-online]] — Configuração Segura do **`server.toml`** no Kanidm: Consistência Estrita **`domain` / `origin` (WebAuthn)**, `http_client_address_info` (`proxy-v2`) e `[online_backup]`
+- [[kanidm-autenticacao-passkeys-webauthn-attested-passkeys-politicas]] — Autenticação Criptográfica no Kanidm: **Passkeys (WebAuthn)**, **Attested Passkeys (Verificação de Fabricante FIDO)** e Políticas de Credenciais por Grupo
+- [[kanidm-modelo-privilegios-separacao-admin-idm-admin-reauth-sudo]] — Modelo de Privilégio Mínimo e **Reautenticação (`re-auth` Estilo `sudo`)** no Kanidm: Por que `admin` e `idm_admin` São Estritamente Separados?
+- [[kanidm-provedor-oauth2-oidc-pkce-strict-scope-maps-claims-custom]] — Provedor **OAuth2 / OpenID Connect (OIDC)** no Kanidm: Obrigatoriedade de **PKCE (`S256`)**, **Scope Maps** Baseados em Grupos e **Claim Maps**
+- [[kanidm-integracao-linux-pam-nss-kanidm-unixd-ssh-keys-tpm]] — Autenticação Linux/Unix e Distribuição de Chaves SSH no Kanidm: Daemon **`kanidm_unixd`**, PAM/NSS, **Cache Offline Protegido por TPM 2.0** e **`kanidm_ssh_authorizedkeys`**
+- [[kanidm-gateway-ldaps-read-only-service-accounts-api-tokens]] — Gateway **LDAPS Somente-Leitura (`:636`)** e **Service Accounts** no Kanidm: Integrando Sistemas Legados sem Expor o Diretório a Escritas LDAP
+- [[kanidm-ciclo-vida-identidades-valid-from-expire-recycle-bin-tombstones]] — Governança de Ciclo de Vida de Contas no Kanidm: Janelas Temporais Automáticas (**`--valid-from` / `--expire`**), **Recycle Bin** e **Tombstones**
+- [[kanidm-replicacao-alta-disponibilidade-mtls-multi-node-consistencia]] — Alta Disponibilidade e **Replicação Multi-Nó (`[replication]`)** no Kanidm: Sincronização via **mTLS** e Resolução de Conflitos por **CSN (*Change Sequence Number*)**
+- [[kanidm-operacao-cli-kanidmd-certificados-backups-migracoes-json]] — Operação, Recuperação de Desastres e **Migrações Declarativas (`/etc/kanidm/migrations.d/`)** no Kanidm: `kanidmd database backup/restore` e `SIGHUP`
+
+### Vaultwarden (dani-garcia/vaultwarden) — Servidor Bitwarden Client API em Rust, Criptografia Zero-Knowledge Client-Side, Organizations & Collections, FIDO2 WebAuthn 2FA, Bitwarden Send e Event Logs
+
+- [[vaultwarden-arquitetura-bitwarden-rust-zero-knowledge-sqlite-postgres]] — Arquitetura do **Vaultwarden (`dani-garcia/vaultwarden`)**: Servidor Alternativo **Bitwarden** em **Rust**, Criptografia **Zero-Knowledge Client-Side** e Bancos SQLite/PostgreSQL
+- [[vaultwarden-blindagem-painel-admin-token-argon2-phc-signups-allowed]] — Hardening Crítico do **Vaultwarden**: Desabilitando Cadastros Abertos (**`SIGNUPS_ALLOWED=false`**), Convites e Protegendo o **`ADMIN_TOKEN` com Argon2id PHC**
+- [[vaultwarden-organizacoes-colecoes-rbac-grupos-politicas-corporativas]] — Compartilhamento Corporativo no Vaultwarden: **Organizations**, **Collections**, Papéis RBAC (`Owner`, `Admin`, `Manager`, `User`), **Groups** e **Organization Policies**
+- [[vaultwarden-autenticacao-2fa-webauthn-fido2-yubikey-totp-duo-email]] — Autenticação Multifator (**2FA**) e Derivação de Chave (**Argon2id Client-Side**) no Vaultwarden: **FIDO2 WebAuthn**, **YubiKey OTP**, **TOTP** e **Duo**
+- [[vaultwarden-compartilhamento-efemero-send-acesso-emergencia-anexos]] — Compartilhamento Efêmero (**Bitwarden Send**) e **Emergency Access** no Vaultwarden: Eliminando Senhas no Slack/E-mail com Expiração e Contagem de Visualizações
+- [[vaultwarden-proxy-reverso-https-websocket-ip-header-rate-limiting]] — Arquitetura de Proxy Reverso, **WebSockets** e **`IP_HEADER`** no Vaultwarden: Sincronização Instantânea, Prevenção de IP Spoofing e **Fail2ban / CrowdSec**
+- [[vaultwarden-auditoria-event-logs-retencao-monitoramento-siem-soc]] — Logs de Auditoria Organizacional (**Event Logs**) e Retenção (`EVENTS_DAYS_RETAIN`) no Vaultwarden: Rastreando Acessos, Exportações de Cofre e Mudanças de Permissão
+- [[vaultwarden-automacao-cli-bw-api-keys-ssh-agent-pipelines-devops]] — Automação com **Bitwarden CLI (`bw`)**, **Personal API Keys (`client_id` / `client_secret`)** e **SSH Agent** Conectados ao Vaultwarden
+- [[vaultwarden-backups-consistentes-sqlite3-online-backup-rsa-keys-anexos]] — Estratégia de **Backup e Disaster Recovery** do Vaultwarden: Backup Online Atômico do **SQLite (`sqlite3 .backup`)**, Chaves **`rsa_key*`**, `attachments` e Criptografia **`age` / `GPG`**
+- [[vaultwarden-sso-directory-connector-ldap-scim-emergencia-enterprise]] — Provisionamento Corporativo no Vaultwarden: **Bitwarden Directory Connector (LDAP / Active Directory / Entra ID / Okta)**, Notificações Push e Hardening de Container
+
+### Rustls (rustls/rustls) — Biblioteca Moderna de TLS 1.3 e TLS 1.2 Memory-Safe em Rust, Arquitetura CryptoProvider (`aws-lc-rs` / `ring`), Troca de Chaves Pós-Quântica (`X25519MLKEM768`), FIPS 140-3, mTLS e ECH
+
+- [[rustls-arquitetura-tls-memory-safe-rust-cryptoprovider-aws-lc-ring]] — Arquitetura do **Rustls (`rustls/rustls`)**: Biblioteca Moderna de **TLS 1.3 e TLS 1.2 Memory-Safe em Rust** e Modelo de **`CryptoProvider` (`aws-lc-rs` e `ring`)**
+- [[rustls-decisoes-seguranca-non-features-tls12-tls13-pfs-aead-obrigatorio]] — Filosofia **"Secure by Default" e Non-Features Deliberadas** no Rustls: Por que o Rustls Proíbe Cifras Sem PFS, Modos CBC (`MAC-then-Encrypt`), Renegociação e TLS < 1.2?
+- [[rustls-troca-chaves-pos-quantica-hibrida-x25519mlkem768-fips]] — Criptografia **Pós-Quântica Híbrida (`X25519MLKEM768`)** e Conformidade **FIPS 140-3** no Rustls com `aws-lc-rs`: Protegendo o Tráfego TLS Hoje
+- [[rustls-validacao-certificados-webpki-root-store-pinning-crl]] — Verificação Estrita de Certificados X.509 no Rustls com **` rustls-webpki`**: `RootCertStore`, `rustls-native-certs`, `webpki-roots` e Revogação **CRL / OCSP**
+- [[rustls-autenticacao-mutua-mtls-webpkiclientverifier-zero-trust]] — Autenticação Mútua (**mTLS Zero-Trust**) e Seleção Dinâmica de Certificados via **SNI (`ResolvesServerCert`)** em Servidores Rustls
+- [[rustls-privacidade-encrypted-client-hello-ech-rfc9849-sni-alpn]] — Privacidade no Handshake TLS 1.3 com **Encrypted Client Hello (`ECH` — `RFC 9849`)**, Compressão de Certificados (**`RFC 8879`**) e **Raw Public Keys (`RFC 7250`)** no Rustls
+- [[rustls-retomada-sessao-tickets-0rtt-anti-replay-seguranca]] — Retomada de Sessão (**Session Resumption**), Rotação de **Session Tickets** e Riscos de **Replay em Dados `0-RTT` (`EarlyData`)** no Rustls
+- [[rustls-otimizacao-performance-vectored-io-fragment-size-tokio-rustls]] — Performance de Alta Vazão no Rustls: **Vectored I/O (`write_vectored`)**, **`max_fragment_size`**, Zero-Copy Unbuffering e Integração **`tokio-rustls`**
+- [[rustls-depuracao-segura-sslkeylogfile-keylog-wireshark-auditoria]] — Depuração Controlada de Tráfego TLS 1.3 com **`KeyLogFile` (`SSLKEYLOGFILE`)** e **Session Exporters (`RFC 5705` / `RFC 8446`)** no Rustls
+- [[rustls-integracao-c-ffi-rustls-ffi-curl-apache-mod-tls-migracao]] — Levando Segurança de Memória para Aplicações em C/C++ com **`rustls-ffi` (`crustls`)**: Integrando o Rustls no **`curl`**, **Apache `mod_tls`** e Daemons Legados
+
+### Cisco Snort 3 (snort3/snort3 — Snort++) — Motor NIDS/NIPS Multithreaded em C++17, Configuração LuaJIT (`snort.lua`), Detecção Portless (`wizard` + `binder`), Sticky Buffers, OpenAppID, Hyperscan e Modo Inline `libdaq`
+
+- [[snort-arquitetura-snort3-multithreaded-cpp17-luajit-libdaq-hyperscan]] — Arquitetura do **Cisco Snort 3 (`snort3/snort3` — Snort++)**: Motor NIDS/NIPS **Multithreaded em C++17**, Configuração **LuaJIT (`snort.lua`)** e **Hyperscan**
+- [[snort-configuracao-snort-lua-home-net-wizard-binder-portless]] — Configuração de **`snort.lua`** e Detecção de Protocolos Independente de Porta (**Portless Inspection**): Como o **`wizard`** e o **`binder`** Derrotam Evasões de Porta!
+- [[snort-inspetores-http-inspect-js-norm-dce-smb-scada-ics]] — Inspetores Profundos de Protocolo (**Service Inspectors**) no Snort 3: **`http_inspect` / `http2_inspect`**, **`js_norm`**, **`dce_smb`** e Protocolos Industriais **OT/ICS (`modbus`, `dnp3`, `s7commplus`, `iec104`)**
+- [[snort-sintaxe-regras-snort3-sticky-buffers-http-inspect-file-data]] — A Nova Sintaxe de Regras do **Snort 3**: **Sticky Buffers (`http_uri`, `http_header`, `http_client_body`, `file_data`)**, Cabeçalhos de Serviço (`alert http`) e `snort2lua`
+- [[snort-appid-openappid-visibilidade-camada-7-shadow-it-rna]] — Descoberta de Aplicações Camada 7 (**OpenAppID / `appid`**) e Descoberta Passiva de Rede (**`rna` — *Real-time Network Awareness***) no Snort 3
+- [[snort-modos-operacao-libdaq-afpacket-nfq-inline-ips-drop-reject]] — Operação Inline (**IPS Ativo: `drop`, `sdrop`, `reject`**) vs. Passivo (**IDS / TAP**) no Snort 3 com **`libdaq` (`afpacket`, `nfq`, `pcap`, `dpdk`)**
+- [[snort-reputacao-ip-suppress-event-filter-rate-filter-anti-dos]] — Controle de Ruído, **IP Reputation (`reputation`)**, **`suppress`**, **`event_filter`** e **`rate_filter`** no Snort 3: Prevenindo Alert Fatigue e Floods
+- [[snort-saidas-logs-alert-json-unified2-integracao-siem-opensearch]] — Saídas Estruturadas de Eventos no Snort 3: Configurando **`alert_json`** para Ingestão Direta em **SIEM (Wazuh, OpenSearch, ELK, Splunk)** e Captura de Pacotes
+- [[snort-profiling-performance-profiler-latency-tuning-regras-lentas]] — Engenharia de Performance e Detecção de Gargalos no Snort 3: **`profiler` (CPU/Memória por Regra e Módulo)**, **`latency`** e **`perf_monitor`**
+- [[snort-gerenciamento-regras-pulledpork3-talos-policies-connectivity-security]] — Gerenciamento de Regras **Cisco Talos** e Políticas Baseadas em Metadados (**`connectivity`, `balanced`, `security`, `max-detect`**) no Snort 3 com **PulledPork 3**
+
+### Arkime (arkime/arkime, ex-Moloch) — Full Packet Capture (FPC) e Indexação de Metadados SPI em Escala Multi-Gigabit (`capture`, `viewer`, `wiseService`, `Parliament`, `Cont3xt` e Correlação `communityId`)
+
+- [[arkime-arquitetura-full-packet-capture-capture-viewer-opensearch-spi]] — Arquitetura do **Arkime (`arkime/arkime`, ex-Moloch)**: Sistema de **Full Packet Capture (FPC)** e Indexação de Metadados **SPI** em Escala Multi-Gigabit
+- [[arkime-configuracao-config-ini-tiered-pcapdir-freespaceg-rotacao]] — Configuração Hierárquica (**`/opt/arkime/etc/config.ini`**), Retenção Automática de Disco (**`freeSpaceG`**) e Timeouts de Fluxo no Arkime
+- [[arkime-otimizacao-captura-alta-velocidade-tpacketv3-snf-dpdk-threads]] — Captura Sem Perda de Pacotes em Links de **10 Gbps a 100 Gbps** no Arkime: `packetThreads`, **`tpacketv3` (`AF_PACKET`)**, **`pcapWriteMethod=simple-nodirect`** e **Criptografia de PCAP em Repouso**
+- [[arkime-linguagem-busca-expressoes-sessions-spiview-spigraph-hunting]] — Caça a Ameaças (**Threat Hunting**) no Arkime: Linguagem de Expressões de Busca, **Sessions**, **SPI View**, **SPI Graph** e **Connections Graph**
+- [[arkime-enriquecimento-wiseservice-threat-intel-regras-yara-tagger]] — Enriquecimento em Tempo Real com **`wiseService` (*With Intelligence See Everything*)**, **YARA** em Fluxo (`yara.ini`) e **`arkime.rules`**
+- [[arkime-ecossistema-parliament-cont3xt-esproxy-federacao-multi-cluster]] — O Ecossistema Completo do Arkime: **`Parliament`** (Multi-Cluster Dashboard), **`Cont3xt`** (Agregador de CTI/OSINT) e **`esProxy`**
+- [[arkime-seguranca-viewer-tls-reverse-proxy-headers-passwordsecret]] — Segurança e Autenticação do **Arkime Viewer**: `passwordSecret`, `serverSecret`, TLS Mútuo entre Sensores e Integração **SSO (`authMode=header-jwt` / OIDC)**
+- [[arkime-ingestao-pcap-offline-dfir-capture-r-analise-forense]] — Uso do Arkime em **Laboratórios de DFIR Offline (`capture -r`)**: Importando Diretórios de Arquivos `.pcap` de Incidentes para Investigação Visual e Grafo
+- [[arkime-automacao-api-rest-cron-queries-alertas-exportacao-pcap]] — Automação no Arkime: **Periodic Queries (*Cron Queries*)**, **Hunt Jobs (Busca de Bytes/Regex nos PCAPs Brutos)** e Extração de PCAP via **API REST**
+- [[arkime-integracao-zeek-suricata-snort-malcolm-correlacao-community-id]] — Tríade da Visibilidade de Rede (**NSM**): Correlacionando **Arkime (FPC) + Zeek (Logs de Transação) + Suricata / Snort 3 (Alertas IDS)** via **`communityId`**
+
+### RITA (activecm/rita — Real Intelligence Threat Analytics) — Caça a Ameaças em Logs Zeek para Detecção Matemática de C2 Beaconing (IP/SNI/Strobe), Long Connections, DNS Tunneling e Modificadores de Prevalência
+
+- [[rita-arquitetura-caca-ameacas-logs-zeek-beaconing-dns-tunneling]] — Arquitetura do **RITA (`activecm/rita` — *Real Intelligence Threat Analytics*)**: Caça a Ameaças (**Threat Hunting**) em Logs **Zeek** para Detecção de **C2 Beaconing**
+- [[rita-matematica-deteccao-beacons-intervalos-jitter-tamanho-score]] — A Matemática da Detecção de **Beaconing C2 (Com e Sem *Jitter*)** no RITA: Desvio de Intervalos (`Delta Times`), Simetria de Bytes, dispersão MADM e Score
+- [[rita-beaconing-sni-tls-domain-fronting-cdn-cloudflare-hunting]] — Detecção de **SNI / FQDN Beaconing** no RITA: Caçando Implants C2 que Rotacionam IPs atrás de **CDNs (Cloudflare, CloudFront, Fastly, Azure Front Door)**
+- [[rita-deteccao-long-connections-conexoes-persistentes-ssh-rdp-c2]] — Caça a **Long Connections** (Conexões Persistentes) no RITA: Detectando Shells Reversos Interativos, Túneis SSH/Ngrok e Exfiltração Contínua
+- [[rita-deteccao-dns-tunneling-subdominios-unicos-iodine-dnscat2]] — Detecção de **C2 e Exfiltração por DNS Tunneling (`iodine`, `dnscat2`, `sliver dns`, `cobalt strike dns`)** no RITA
+- [[rita-modificadores-score-prevalencia-raridade-first-seen-missing-host]] — Modificadores Inteligentes de Score (**`modifiers`**) no RITA: **Prevalência na Rede (`prevalence`)**, **`first_seen`** e **`missing_host_count` (Conexões Diretas a IP Sem DNS)**
+- [[rita-filtros-rede-interna-whitelist-safelist-config-hjson-tuning]] — Configuração de Sub-redes Internas (**`internal_subnets`**) e Listas de Exclusão (**`never_included_ips` / `never_included_domains`**) no `/etc/rita/config.hjson`
+- [[rita-threat-intel-feeds-customizados-online-ip-fqdn-correlacao]] — Integração de Feeds de **Threat Intelligence (`threat_intel`)** no RITA: Cruzando Conexões Zeek com Listas de IoCs (`online_feeds` e Feeds Customizados)
+- [[rita-operacao-continua-rolling-datasets-zeek-cron-automacao-soc]] — Operação Contínua no SOC com **Rolling Datasets (`--rolling` vs. `--rebuild`)**, Exportação CSV (`--stdout`) e Integração de Alertas RITA no SIEM
+- [[rita-fluxo-investigacao-caca-ameacas-rita-zeek-arkime-wireshark]] — Playbook Completo de **Threat Hunting de Rede**: Do Score de Beacon no **RITA** ao Pivotamento no **Zeek (`uid` / `community_id`)** e Captura Bruta no **Arkime**
+
+### Gravitational Teleport (gravitational/teleport) — Plataforma de Acesso Zero-Trust Baseada em Certificados Efêmeros para SSH (Gravação eBPF), Kubernetes, Databases, Web Apps, Windows RDP, Machine ID (`tbot`) e JIT Access Requests
+
+- [[teleport-arquitetura-zero-trust-auth-proxy-agents-certificados-curtos]] — Arquitetura do **Gravitational Teleport (`gravitational/teleport`)**: Acesso **Zero-Trust Baseado em Identidade** e **Certificados de Curta Duração** (Sem Chaves Estáticas!)
+- [[teleport-acesso-ssh-certificados-openssh-gravacao-sessao-ebpf]] — Acesso SSH com **Gravação Completa de Sessão Interativa** e **Auditoria Enriquecida por eBPF (`enhanced_recording`)** no Teleport
+- [[teleport-acesso-kubernetes-databases-mtls-impersonation-sem-senhas]] — Acesso Zero-Trust a **Clusters Kubernetes (`tsh kube login`)** e **Bancos de Dados (`tsh db connect` — PostgreSQL, MySQL, MongoDB, Redis)** sem Senhas Compartilhadas
+- [[teleport-acesso-web-apps-jwt-headers-windows-desktop-rdp-mcp]] — Acesso Seguro a **Aplicações Web Internas (`Application Service` + JWT)**, **Windows Desktops (`RDP` Sem Senha via Smartcard Virtual)** e **Servidores MCP (IA)** no Teleport
+- [[teleport-rbac-abac-labels-roles-per-session-mfa-fido2-webauthn]] — Controle de Acesso **RBAC + ABAC (`labels`)**, **Per-Session MFA (FIDO2 WebAuthn)** e Restrição de IP/Dispositivo em Roles do Teleport
+- [[teleport-fluxos-just-in-time-access-requests-chatops-slack-jira]] — Privilégio Zero Permanente (**Zero Standing Privilege — ZSP**) com **Just-In-Time (JIT) Access Requests** no Teleport: Aprovação via Slack, Mattermost, PagerDuty ou Jira
+- [[teleport-identidade-maquina-machine-id-tbot-cicd-renovacao-automatica]] — Identidade de Máquina e Automação CI/CD com **Teleport Machine ID (`tbot`)**: Aposentando Segredos de Longa Duração no GitHub Actions, GitLab CI e Ansible
+- [[teleport-ingresso-seguro-nos-join-tokens-cloud-iam-tpm-node-joining]] — Ingresso Seguro de Agentes (**Node Joining**) no Teleport: Eliminando Tokens Estáticos com **Cloud Auto-Joining (AWS IAM, GCP, Azure, Kubernetes)** e **TPM Joining**
+- [[teleport-auditoria-eventos-gravacao-s3-dynamodb-integracao-siem]] — Arquitetura de Alta Disponibilidade, **Armazenamento de Auditoria e Gravações (S3 / GCS / MinIO)** e Exportação de Eventos para **SIEM (`event-handler`)** no Teleport
+- [[teleport-federacao-trusted-clusters-leaf-root-isolamento-multi-tenant]] — Federação Multi-Cluster e Multi-Cloud com **Trusted Clusters (`Root Cluster` e `Leaf Clusters`)** no Teleport
+
+### FreeIPA (freeipa/freeipa — Red Hat IdM) — Identidade, Política e Auditoria Integrada para Frotas Linux (389-ds LDAP, MIT Kerberos KDC, Dogtag PKI + `certmonger`, BIND DNS, HBAC, Sudo Centralizado, 2FA/Passkeys e Cross-Forest AD Trust)
+
+- [[freeipa-arquitetura-identidade-linux-389ds-kerberos-dogtag-pki-dns]] — Arquitetura do **FreeIPA (`freeipa/freeipa` / Red Hat Identity Management)**: Identidade, Política e Auditoria Integrada para Linux (**389-ds LDAP, MIT Kerberos KDC, Dogtag PKI e BIND DNS**)
+- [[freeipa-controle-acesso-hbac-host-based-access-control-regras-pam]] — Controle de Acesso Baseado em Host (**HBAC — *Host-Based Access Control***) e **`hbactest`** no FreeIPA: Restringindo *Quem* Acessa *Qual Servidor* por *Qual Serviço PAM*
+- [[freeipa-governanca-sudo-centralizado-sudorule-sudocmd-auditoria]] — Governança Centralizada de **`sudo` (`sudorule`, `sudocmd`, `sudocmdgroup`)** no FreeIPA: Aposentando arquivos `/etc/sudoers` Locais Espalhados
+- [[freeipa-pki-dogtag-certmonger-auto-renovacao-mtls-subca]] — PKI Corporativa Integrada (**Dogtag CA & KRA**) e Renovação Automática de Certificados em Hosts Linux com **`certmonger` (`ipa-getcert`)** no FreeIPA
+- [[freeipa-autenticacao-2fa-otp-totp-hotp-passkeys-radius-pkinit]] — Autenticação Multifator (**2FA / MFA**) e **Passwordless** no FreeIPA: Tokens **TOTP/HOTP (`otptoken`)**, **Passkeys FIDO2**, **Smartcards (`PKINIT`)** e **RADIUS Proxy**
+- [[freeipa-ssh-chaves-publicas-ldap-hostkeys-known-hosts-sssd]] — Segurança de **SSH Centralizada** no FreeIPA: Chaves Públicas de Usuário no LDAP (`ipaSshPubKey`), Verificação Automática de **Host Keys (`known_hosts`)** e **Kerberos GSSAPI**
+- [[freeipa-automember-grupos-dinamicos-hosts-usuarios-escalabilidade]] — Automação Zero-Touch em Escala com **`automember` (Regras de Auto-Associação)** no FreeIPA: Classificando Servidores e Usuários Automaticamente no Ingresso
+- [[freeipa-trust-active-directory-cross-forest-idviews-kerberos-samba]] — Integração Corporativa **FreeIPA + Microsoft Active Directory (`Cross-Forest Kerberos Trust`)**: Identidade Unificada Windows e Linux sem Duplicar Contas!
+- [[freeipa-replicacao-multi-master-topologia-hidden-replicas-backups]] — Alta Disponibilidade (**Multi-Master Topology**), **`Hidden Replicas`** e Backup/Restore (`ipa-backup` / `ipa-restore`) no FreeIPA
+- [[freeipa-rbac-delegacao-privilegios-selinux-usermap-subids-containers]] — Delegação Administrativa (**RBAC: `role`, `privilege`, `permission`**), **SELinux User Mapping (`selinuxusermap`)** e **Subordinate IDs (`subid`)** no FreeIPA
+
+### TPM 2.0 Software Stack & Tools (`tpm2-software/tpm2-tss` & `tpm2-tools`) — Raiz de Confiança em Hardware, Registradores PCR e Measured Boot, Selagem LUKS2 (`tpm2_unseal`), Enhanced Authorization, Atestação Remota (`tpm2_quote`), `tpm2-pkcs11` e `swtpm`
+
+- [[tpm2-arquitetura-trusted-platform-module-tss-hierarquias-pcrs]] — Arquitetura do **TPM 2.0 (`tpm2-tss` & `tpm2-tools`)**: Raiz de Confiança em Hardware, Camadas da Stack TCG (`FAPI`, `ESYS`, `TCTI`) e **As 4 Hierarquias (`Owner`, `Endorsement`, `Platform`, `Null`)**
+- [[tpm2-registradores-pcr-measured-boot-extend-sha256-uefi-eventlog]] — Funcionamento dos **PCRs (*Platform Configuration Registers*)** e **Measured Boot** no TPM 2.0: A Operação Unidirecional **`PCR_Extend`** e os Bancos **`sha256`**
+- [[tpm2-hierarquia-chaves-createprimary-create-load-persist-evictcontrol]] — Gerenciamento de Chaves no TPM 2.0: **`tpm2_createprimary`**, **`tpm2_create`**, **`tpm2_load`** e Persistência em NVRAM com **`tpm2_evictcontrol`**
+- [[tpm2-selagem-segredos-sealing-unsealing-pcr-policy-luks-systemd-cryptenroll]] — Selagem de Segredos (**Sealing / Unsealing** Vinculado a **PCRs**) com `tpm2_createpolicy`, `tpm2_unseal` e Desbloqueio **LUKS2 (`systemd-cryptenroll`)**
+- [[tpm2-politicas-avancadas-ea-policyauthorize-policysigned-policyor-pin]] — Políticas Avançadas de Autorização (**Enhanced Authorization — EA**) no TPM 2.0: **`tpm2_policyauthorize` (Políticas Assinadas)**, **`tpm2_policyor`** e **`tpm2_policysecret`**
+- [[tpm2-atestacao-remota-ak-ek-tpm2-quote-checkquote-verificacao]] — Atestação Remota de Hardware e Boot (**Remote Attestation**) no TPM 2.0: **Endorsement Key (`EK`)**, **Attestation Key (`AK`)**, **`tpm2_quote`** e **`tpm2_checkquote`**
+- [[tpm2-pkcs11-ssh-tls-nginx-openvpn-chaves-hardware-nao-exportaveis]] — Uso de Chaves TPM 2.0 Não-Exportáveis em **OpenSSH, Nginx, OpenVPN, StrongSwan e Rust/Go** com **`tpm2-pkcs11`** e **`tpm2-openssl` Provider**
+- [[tpm2-nvram-armazenamento-seguro-contadores-monotonicos-anti-rollback]] — Memória Não-Volátil (**NVRAM**: `tpm2_nvdefine`, `tpm2_nvwrite`, `tpm2_nvread`) e **Contadores Monotônicos Anti-Rollback (`tpm2_nvincrement`)** no TPM 2.0
+- [[tpm2-protecao-forca-bruta-dictionary-attack-lockout-clear-seguranca]] — Proteção Contra Força Bruta em Hardware (**Dictionary Attack Lockout**: `tpm2_dictionarylockout`), Senhas de Hierarquia (`tpm2_changeauth`) e **TRNG (`tpm2_getrandom`)**
+- [[tpm2-simulacao-testes-ci-cd-swtpm-tcti-qemu-vtpm-containers]] — Testes Automatizados em CI/CD e Virtualização (**`vTPM`**) com **`swtpm` (`libtpms`)** e Seleção de **`TCTI` (`TPM2TOOLS_TCTI`)** no `tpm2-tss`
