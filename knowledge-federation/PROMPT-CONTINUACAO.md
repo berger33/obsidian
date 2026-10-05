@@ -29,29 +29,26 @@ Continue a execução do plano de 1.000.000 de notas válidas do repositório be
 
 CONTEXTO JÁ VERIFICADO (estado editorial atual em 2026-10-04):
 - Meta ativa: 500 lotes × 2.000 notas substantivas = 1.000.000 de notas válidas.
-- Estado: 6440 / 1.000.000 (0,6440%) válidas; 3/500 lotes completos; 6540 arquivos Markdown ativos (6440 válidas + 100 legadas com pendências, mantidas fora da contagem).
+- Estado: 6540 / 1.000.000 (0,6540%) válidas; 3/500 lotes completos; 6640 arquivos Markdown ativos (6540 válidas + 100 legadas com pendências, mantidas fora da contagem).
 - Lotes 1–3: `software-testes-2000-0001`, `software-devops-2000-0002` e `software-seguranca-2000-0003`, todos 2.000/2.000 (`complete`).
-- Lote 4 `software-criacao-ia-2000-0004`: 400/2.000 (20,00%), com as tranches 1–4 concluídas (400 notas, IDs 1–400), 400 aprovadas pelo gate e 400 com revisão factual por IA; nenhuma aprovação humana nova; 16 tranches planejadas.
+- Lote 4 `software-criacao-ia-2000-0004`: 500/2.000 (25,00%), com as tranches 1–5 concluídas (500 notas, IDs 1–500), 500 aprovadas pelo gate e 500 com revisão factual por IA; nenhuma aprovação humana nova; 15 tranches planejadas.
 - Escopo do lote 4: engenharia/criação de programas, aplicativos e jogos com IA; IA de gameplay, produção de vídeo/animação e documentação/tutorial. Não abrir lote 5 automaticamente.
 - Contagem exige frontmatter rastreável, ≥100 palavras, seções de explicação/exemplo/limites/verificação, duas fontes HTTPS específicas, wikilinks resolvidos, sem marcadores de template, gate aprovado e revisão factual registrada. Revisão por IA nunca altera nem amplia as 49 aprovações humanas históricas.
-- Relatórios do lote 4 tranche 4: `exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md`, `exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md` e `exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md`.
+- Relatórios do lote 4 tranche 5: `exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-05.md`, `exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-05.md`, `exports/reports/source-link-audit-software-criacao-ia-2000-0004-tranche-05.md` e `exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-05.md`.
 - Artefatos por tranche: manifesto, relatório factual IA, auditoria/gate, reconciliação, fila de revisão, MOC e resumos globais.
-- A tranche 4 foi integrada à `main` pelo PR #9; a tranche 5 recomeça do próximo ID livre (401), sem nenhuma reserva prévia.
+- IDs 401–500 pertencem à tranche 5 concluída neste fluxo; nenhum ID posterior foi reservado e o lote 5 permanece fechado.
 
-HANDOFF OPERACIONAL DA TRANCHE 5 (padrão estabelecido nas tranches 2–4):
-- Clone de `knowledge-federation/scripts/_build_criacao_ia_t04.py`, `_finalize_criacao_ia_t04.py` e `_reconcile_criacao_ia_t04.py`, mais a data dir `_criacao_ia_t04_data/` (10 JSONs; chaves `group`/`check`/`notes`; nota: `slug,title,one,why,how,example,limits,verify,sources×2{label,url,why},review`). No builder: TRANCHE=`tranche05`, START=401, DATA_DIR=`_criacao_ia_t05_data`, AI_REVIEW_REPORT=`ai-review-software-criacao-ia-2000-0004-tranche-05.md`. O builder exige exatamente 10 grupos × 10 notas, valida cada nota no gate antes de gravar e recusa frase de 8+ palavras repetida entre notas.
-- Ordem dos grupos no data dir define os IDs (401–410 para o primeiro grupo, …, 491–500 para o décimo).
-- Antes de qualquer contagem: gate por arquivo com os 100 `--path` (`note-quality-software-criacao-ia-2000-0004-tranche-05.md`), relatório de revisão IA com 100 linhas (401–500) e patch de frontmatter (`revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia`, `relatorio_revisao_ia`) via `_finalize_…t05.py`.
-- Reconciliação na ordem do `_reconcile_…t04.py` (asserts de 1 ocorrência por substituição): fila (linhas 6441–6540; o cabeçalho da fila já está correto até 6391/6440), MOC (seção antes de `## Mapa de escopo`, links de relatório em `## Fontes, revisão e cadência`), manifesto (seção antes de `## Critério de entrada na contagem`, artefatos), `batch-reconciliation-…-tranche-05.md`, STATUS, PLANO, README-1M, README KF, README raiz, RECOVERY-AND-SCALE-NOTE, Home, Indice-Global, PROMPT-CONTINUACAO.
-- Estado esperado após a tranche 5: 6.640 arquivos, 6.540 válidas (49 humanas + 6.491 IA), lote 4 em 500/2.000 (25,00%), 15 tranches planejadas, faltam 993.460 notas.
-- Anti-duplicação: gere inventário de `git ls-files knowledge-federation/domains/software-0010/software/criacao-ia/` (slug|título) e busque no vault inteiro antes de fixar temas; fontes primárias específicas conferidas por leitura na data — claim não confirmado não entra (na tranche 4 foram omitidos, p. ex., Bevy states/assets/events e o compositor do Blender por falta de fonte lida).
-- NÃO tocar: relatórios e reconciliações das tranches 1–4 (histórico), `LOTS-201-300.md`, `MOC-Seguranca-Software-0009.md`, `archives/LATEST-LEDGER.txt`, dump `.xz` do ledger. `LOT-SEQUENCE` e `_meta/plano-execucao` não mudam por tranche.
-- Verificações: `python3 -m unittest discover -s knowledge-federation/tests -v` (13 testes) e a auditoria global com `--path knowledge-federation/domains --archive knowledge-federation/archives/ledger-v1000000-mat8000.sqlite.xz` (esperado 6640/6540 pós-tranche 5); commit+push só na branch da sessão e PR para `main`.
+RESULTADO DA TRANCHE 5 — NÃO AVANÇAR AUTOMATICAMENTE
+- Tranche 5 materializada: 100 notas, IDs 401–500, em `domains/software-0010/software/criacao-ia/`; 100/100 passaram o gate e receberam revisão factual por IA. Revisão humana nova: 0; as 49 aprovações históricas não mudam.
+- Artefatos: manifesto do lote, gate final, revisão factual, auditoria de links e reconciliação da tranche 5; fila humana numerada nas linhas 6441–6540.
+- Estado esperado: 6.640 arquivos Markdown em `domains/`, 6.540 válidas (49 humanas + 6.491 IA), 100 legadas fora da contagem; lote 4 em 500/2.000 (25,00%), 15 tranches planejadas; faltam 993.460 notas.
+- Não reservar IDs além de 500, não abrir o lote 5 nem produzir outra tranche sem solicitação explícita do usuário. Se solicitado, atualizar inventário e busca em todo o vault, selecionar temas não duplicados e conferir fontes primárias específicas antes de atribuir IDs apenas à tranche solicitada.
+- Não tocar nos relatórios/reconciliações das tranches 1–4, `LOTS-201-300.md`, `MOC-Seguranca-Software-0009.md`, `archives/LATEST-LEDGER.txt` ou no dump `.xz`; `LOT-SEQUENCE` e `_meta/plano-execucao` não mudam por tranche.
 
 TAREFA IMEDIATA:
-1. Se o usuário pedir para avançar novamente, produzir a tranche 5 (de 16 planejadas restantes) com 100 notas do lote 4 em `knowledge-federation/domains/software-0010/software/criacao-ia/`, depois de selecionar tópicos e fontes primárias específicas.
-2. Antes de atualizar contagens, rodar gate, revisão factual, auditoria de links e reconciliação; só contar notas substantivas aprovadas.
-3. Não atribuir IDs às notas futuras, não abrir lote 5 automaticamente e publicar a tranche concluída na branch da sessão.
+1. A tranche 5 foi reconciliada; não iniciar tranche 6 nem lote 5 automaticamente.
+2. Antes de qualquer push, executar os testes unitários e a auditoria global listados abaixo.
+3. Publicar somente na branch da sessão e abrir PR para `main`, sem atribuir IDs futuros.
 
 VERIFICAÇÃO OBRIGATÓRIA ANTES DE CADA PUSH:
 python3 -m unittest discover -s knowledge-federation/tests -v

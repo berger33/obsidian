@@ -1,0 +1,155 @@
+{
+  "group": "Unity Sentis 2.5: preparar tensores, escolher backend e integrar inferência ao frame loop",
+  "notes": [
+    {
+      "slug": "unity-sentis-modelasset-runtime-model-worker",
+      "title": "Unity Sentis 2.5: separar ModelAsset, runtime Model e Worker de execução",
+      "one": "O fluxo documentado carrega um `ModelAsset` para um modelo de runtime e cria um `Worker` que executa esse modelo usando um backend escolhido.",
+      "why": "Distinguir o asset armazenado do objeto de execução torna o ciclo de inicialização e a propriedade dos recursos mais claros em componentes Unity.",
+      "how": "Importe o modelo por uma fonte compatível, carregue-o com `ModelLoader.Load` e construa `Worker(runtimeModel, backendType)`. Guarde o worker para as inferências seguintes e libere-o quando o componente encerrar seu uso.",
+      "example": "Um componente serializa uma referência `ModelAsset`, carrega o modelo em `OnEnable`, cria um worker e, em `OnDisable`, descarta o worker e os tensores que alocou.",
+      "limits": "Sentis suporta vários formatos e a compatibilidade depende de operadores e plataforma; carregar o asset não garante que o grafo poderá executar no backend selecionado.",
+      "verify": "Use um modelo de amostra do pacote, confirme carregamento e execução em uma cena de teste e faça a cena ser ativada e desativada repetidamente para detectar vazamentos.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Import a model file", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/import-a-model-file.html", "why": "Explica importação de arquivo e criação do modelo de runtime a partir de um asset."},
+        {"label": "Unity Sentis 2.5 — Create an engine", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/create-an-engine.html", "why": "Demonstra `ModelLoader.Load` e criação de um Worker com backend explícito."}
+      ],
+      "review": "A documentação apresenta ModelAsset, runtime Model e Worker em etapas diferentes; o ciclo de Dispose é sustentado pelo guia de memória do pacote."
+    },
+    {
+      "slug": "unity-sentis-escolher-backend-por-modelo",
+      "title": "Unity Sentis 2.5: escolher backend após medir modelo, dados e plataforma",
+      "one": "`BackendType` altera onde as operações do worker são executadas, e a opção mais rápida depende de modelo, hardware, plataforma e local dos dados.",
+      "why": "Mover tensores entre CPU e GPU pode custar mais que a inferência em si, enquanto alguns operadores ou plataformas não suportam todos os backends.",
+      "how": "Considere CPU para modelos pequenos ou dados que já estão na CPU, GPUCompute para muitos modelos quando suportado e GPUPixel em plataformas sem compute shaders; meça o cenário alvo com o profiler.",
+      "example": "Uma classificação pequena que recebe valores da CPU é comparada em CPU e GPUCompute; uma rede de imagem mantém os dados na GPU e é medida no dispositivo de destino.",
+      "limits": "A documentação descreve tendências, não uma regra universal; se o backend não suportar uma camada, o worker pode afirmar erro. Verifique plataforma e formatos reais.",
+      "verify": "Execute o mesmo conjunto de entradas nos backends compatíveis, compare correção e latência em hardware alvo e confira o uso de memória e transferências no profiler.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Create an engine", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/create-an-engine.html", "why": "Compara CPU, GPUCompute e GPUPixel e alerta sobre camadas não suportadas."},
+        {"label": "Unity Sentis 2.5 — Profile a model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/profile-a-model.html", "why": "Documenta perfilamento para medir desempenho do modelo com ferramentas Unity."}
+      ],
+      "review": "A tabela oficial compara backend e casos de uso, mas ressalva dependência de plataforma e modelo; a nota recomenda perfilamento, não escolha absoluta."
+    },
+    {
+      "slug": "unity-sentis-inspecionar-shape-e-dtype-da-entrada",
+      "title": "Unity Sentis 2.5: construir input tensor conforme shape e tipo esperados pelo modelo",
+      "one": "O tensor de entrada precisa ter formato e tipo de dados compatíveis com o input declarado no modelo, e sua forma deve respeitar `DynamicTensorShape`.",
+      "why": "Um tensor com número correto de valores mas eixos invertidos ou tipo divergente pode falhar ou produzir inferência semanticamente incorreta.",
+      "how": "Inspecione os inputs do modelo antes de alocar `TensorShape`, escolha o tipo `Tensor<T>` apropriado e forneça dados na ordem de eixos esperada. Para múltiplas entradas, associe cada tensor ao nome correspondente.",
+      "example": "Antes de agendar uma rede de classificação, a aplicação confirma o shape esperado, prepara um tensor float compatível e passa o valor pelo input nomeado documentado pelo grafo.",
+      "limits": "A forma não define sozinha a normalização ou a semântica dos valores; esses requisitos vêm do modelo exportado e não podem ser deduzidos apenas da classe Tensor.",
+      "verify": "Teste shape mínimo, dimensão variável permitida e tipo de dados do modelo; confirme rejeição controlada para dimensões incompatíveis e compare saída com fixture de referência.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Create input for a model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/create-an-input-tensor.html", "why": "Exige inspecionar shapes e tipos e relaciona TensorShape a DynamicTensorShape."},
+        {"label": "Unity Sentis 2.5 — Model inputs", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/models-concept.html#model-inputs", "why": "Descreve metadados de entrada do modelo usados para criar tensores compatíveis."}
+      ],
+      "review": "A referência determina shape e tipo compatíveis e pede inspeção do input; normalização e significado dos valores ficam deliberadamente fora do contrato genérico."
+    },
+    {
+      "slug": "unity-sentis-shapes-dinamicos-compatibilidade",
+      "title": "Unity Sentis 2.5: tratar dimensões dinâmicas como contrato explícito de entrada",
+      "one": "Uma forma variável só é válida quando corresponde às dimensões dinâmicas declaradas pelo modelo; `TensorShape` não substitui a definição de `DynamicTensorShape`.",
+      "why": "Assumir que qualquer largura, lote ou sequência é permitida pode deixar a aplicação gerar tensores aceitos pelo código C#, mas incompatíveis com o grafo carregado.",
+      "how": "Leia a definição do input e construa shapes concretos compatíveis com ela. Mantenha valores variáveis dentro dos eixos definidos pelo modelo, e trate dimensão fixa como requisito, não como sugestão de runtime.",
+      "example": "Um pipeline de texto permite variar o comprimento apenas no eixo marcado como dinâmico e recusa uma sequência que exceda a política do modelo antes de chamar `Schedule`.",
+      "limits": "Os detalhes de quais eixos podem variar dependem do modelo e da importação; a documentação de Sentis não autoriza tornar dinâmico um eixo que o grafo declarou fixo.",
+      "verify": "Monte testes para cada shape mínimo, típico e máximo documentado pelo modelo, mais um caso incompatível; confira que a aplicação valida antes de agendar inferência.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Create input for a model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/create-an-input-tensor.html", "why": "Explica que TensorShape criado deve ser compatível com DynamicTensorShape do input."},
+        {"label": "Unity Sentis 2.5 — Sentis models", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/models-concept.html", "why": "Apresenta o modelo e seus inputs como contrato para a execução em runtime."}
+      ],
+      "review": "As fontes tratam DynamicTensorShape como definição compatível exigida; a nota evita inventar uma política de tamanho aplicável a todo modelo."
+    },
+    {
+      "slug": "unity-sentis-texture-nchw-preprocessamento",
+      "title": "Unity Sentis 2.5: conferir layout NCHW e escala ao converter Texture para Tensor",
+      "one": "`TextureConverter.ToTensor` converte texturas para tensores float e assume por padrão o layout batch, channels, height, width, que deve corresponder ao modelo.",
+      "why": "Canal trocado, origem invertida ou escala errada altera os pixels entregues à rede mesmo quando a dimensão total do tensor parece correta.",
+      "how": "Crie tensor com shape compatível, use `TextureConverter.ToTensor`, e aplique `TextureTransform` se precisar mudar channel swizzle, origem ou layout. Confira também o intervalo de valor exigido pelo modelo.",
+      "example": "Um classificador RGB usa shape `(1, 3, height, width)`, transforma a textura de webcam com um tensor pré-alocado e normaliza a faixa somente se o modelo exigir.",
+      "limits": "A conversão padrão não decide a normalização específica da rede; o Unity também pode redimensionar linearmente quando as dimensões da textura e do tensor diferem.",
+      "verify": "Passe uma imagem de teste com cores distintas por canal, inspecione shape e valores de amostra e compare a inferência com a mesma entrada pré-processada fora do jogo.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Convert a texture to a tensor", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/convert-texture-to-tensor.html", "why": "Define conversão, layout NCHW padrão, transforms e reamostragem."},
+        {"label": "Unity Sentis 2.5 — Tensor fundamentals", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/tensor-fundamentals.html", "why": "Explica formatos, dimensões e localização de dados de tensores."}
+      ],
+      "review": "A página de TextureConverter especifica NCHW, tipo float e redimensionamento linear; a escala da rede é tratada como requisito externo do modelo."
+    },
+    {
+      "slug": "unity-sentis-compatibilidade-operadores-backend",
+      "title": "Unity Sentis 2.5: validar operadores e tipos antes de fixar backend",
+      "one": "A matriz de operadores registra compatibilidade por backend e tipo de dados; não basta que um modelo importe para garantir execução em toda combinação.",
+      "why": "Uma camada suportada em CPU pode ter restrições no backend escolhido, e a referência alerta que uma camada não suportada pode provocar assertion no worker.",
+      "how": "Inspecione a lista de operadores e tipos para o formato importado, teste o backend alvo durante build de validação e preserve uma configuração compatível conhecida em vez de assumir fallback automático.",
+      "example": "Uma equipe compara os operadores do ONNX exportado com a tabela GPUCompute para a versão do pacote e adiciona uma execução smoke test no dispositivo que será publicado.",
+      "limits": "A tabela é específica da versão do pacote, formato, operador e tipo; não substitui teste na plataforma, driver e dispositivo reais.",
+      "verify": "Carregue o mesmo modelo no backend selecionado em cada plataforma-alvo, percorra as saídas esperadas e trate assertion ou operador não suportado como incompatibilidade, não como resposta válida.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Supported ONNX operators", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/supported-operators.html", "why": "Lista operadores e tipos por backend CPU, GPUCompute e GPUPixel."},
+        {"label": "Unity Sentis 2.5 — Create an engine", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/create-an-engine.html", "why": "Afirma que backend sem suporte para uma layer pode gerar assertion no worker."}
+      ],
+      "review": "A matriz segmenta suporte por backend e tipo, e a página de engine descreve assertion para camada não suportada; a nota evita prometer fallback."
+    },
+    {
+      "slug": "unity-sentis-peekoutput-copyoutput-propriedade",
+      "title": "Unity Sentis 2.5: escolher entre PeekOutput emprestado e CopyOutput próprio",
+      "one": "`PeekOutput` devolve uma referência cujo armazenamento pertence ao worker, enquanto `CopyOutput` cria ou preenche um tensor cuja vida útil a aplicação administra.",
+      "why": "Usar a referência emprestada depois de outra inferência pode expor conteúdo sobrescrito; não descartar uma cópia própria pode manter memória ocupada.",
+      "how": "Leia `PeekOutput` antes de agendar novamente se só precisa do resultado corrente. Use `CopyOutput` quando precisa de uma cópia independente, respeite sua capacidade e chame `Dispose` no tensor gerenciado pela aplicação.",
+      "example": "A UI copia uma classificação que precisa permanecer disponível após o próximo `Schedule`; um consumidor transitório lê `PeekOutput` e termina antes de o worker reutilizar a memória.",
+      "limits": "A referência de `PeekOutput` não deve ser descartada pela aplicação e será liberada com o worker; a cópia não é atualizada automaticamente ao executar o worker de novo.",
+      "verify": "Agende duas entradas diferentes, compare a referência emprestada e a cópia após cada execução, e valide que o tensor de cópia é descartado no encerramento do componente.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Get output from a model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/get-the-output.html", "why": "Define propriedade, reutilização e atualização de PeekOutput versus CopyOutput."},
+        {"label": "Unity Sentis 2.5 — Manage memory", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/manage-memory.html", "why": "Exige Dispose em workers e tensores instanciados pela aplicação."}
+      ],
+      "review": "A documentação explicita alocador dono de PeekOutput e responsabilidade por CopyOutput; o exemplo testa reuso sem atribuir posse errada."
+    },
+    {
+      "slug": "unity-sentis-evitar-readback-sincrono-na-main-thread",
+      "title": "Unity Sentis 2.5: evitar leitura síncrona que bloqueia a main thread",
+      "one": "Ler dados de saída que ainda estão sendo calculados ou residem na GPU pode bloquear a thread principal enquanto ocorre sincronização ou readback.",
+      "why": "A pausa aparece como hitch de frame, mesmo quando o agendamento da rede foi encaminhado de forma assíncrona pelo backend.",
+      "how": "Mantenha saída na GPU quando possível e use `ReadbackAndCloneAsync` ou solicitação de readback com polling ao transferir dados para CPU; descarte o tensor clonado depois do uso.",
+      "example": "Um HUD solicita cópia assíncrona do tensor após inferência, atualiza o placar ao completar e mantém o frame loop livre enquanto o readback está pendente.",
+      "limits": "O readback assíncrono não torna instantânea a inferência nem elimina custo de cópia; sequências de agendamento e leitura precisam respeitar a vida útil do tensor.",
+      "verify": "Meça frame time com saída lida sincronamente e com readback assíncrono em dispositivo real; confira que a resposta chega antes de ser exibida e que clones são descartados.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Read output asynchronously", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/read-output-async.html", "why": "Explica as causas do bloqueio e mostra métodos de readback assíncrono."},
+        {"label": "Unity Sentis 2.5 — Get output from a model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/get-the-output.html", "why": "Alerta para espera bloqueante ao transferir saída do backend para CPU."}
+      ],
+      "review": "As páginas afirmam que operações pendentes ou saída em GPU podem bloquear na leitura; a nota não promete remoção de custo ou latência."
+    },
+    {
+      "slug": "unity-sentis-readback-and-clone-async-lifecycle",
+      "title": "Unity Sentis 2.5: usar ReadbackAndCloneAsync com sincronização e descarte explícitos",
+      "one": "`ReadbackAndCloneAsync` fornece uma cópia de CPU sem bloquear a chamada enquanto o readback termina, e a cópia retornada deve ser descartada.",
+      "why": "A interface consegue processar resultado apenas quando disponível sem transformar uma consulta ao tensor GPU em espera síncrona no frame atual.",
+      "how": "Agende o modelo, obtenha a saída com `PeekOutput`, aguarde `ReadbackAndCloneAsync` e só leia os valores da cópia quando a operação completar. Gerencie cancelamento e ciclo de vida do componente ao redor da tarefa.",
+      "example": "Um detector executa o worker, aguarda o clone assíncrono em um método de Unity e chama `Dispose` na cópia após mapear índices para rótulos.",
+      "limits": "O tensor retornado é uma cópia de CPU e usa memória própria; reagendar o worker enquanto ainda se depende da saída emprestada exige controlar a ordem das operações.",
+      "verify": "Simule componente desativado durante a espera, teste uma saída normal e confirme que o clone só é lido após a conclusão e sempre é liberado.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Read output asynchronously", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/read-output-async.html", "why": "Apresenta `ReadbackAndCloneAsync` como caminho awaitable não bloqueante e descarta o clone."},
+        {"label": "Unity Sentis 2.5 — Manage memory", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/manage-memory.html", "why": "Requer liberar o tensor clonado de readback para soltar recursos."}
+      ],
+      "review": "O exemplo oficial aguarda a cópia e chama Dispose; a nota diferencia cópia CPU de tensor emprestado e evita alegar custo zero."
+    },
+    {
+      "slug": "unity-sentis-schedule-iterable-frames",
+      "title": "Unity Sentis 2.5: distribuir camadas de inferência entre frames com ScheduleIterable",
+      "one": "`ScheduleIterable` permite percorrer o trabalho de um worker em partes, útil quando uma inferência concentrada em um frame causa stutter.",
+      "why": "Em jogo interativo, uma carga de inferência longa pode disputar o orçamento de frame com lógica, física e renderização.",
+      "how": "Guarde o enumerador retornado por `ScheduleIterable`, avance um número limitado de camadas por frame e só consuma a saída quando o enumerador terminar.",
+      "example": "Uma experiência de NPC distribui a execução em iterações durante `Update`, ajusta camadas por frame conforme o dispositivo e apresenta a ação quando a inferência finaliza.",
+      "limits": "A distribuição troca latência total por menor trabalho concentrado; o número de camadas adequado depende do hardware e a API não garante duração fixa por iteração.",
+      "verify": "Compare frame time e tempo até resultado com inferência em um frame e em vários, em dispositivos alvo; confirme que nenhum consumidor lê output antes de terminar o enumerador.",
+      "sources": [
+        {"label": "Unity Sentis 2.5 — Split inference over multiple frames", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/split-inference-over-multiple-frames.html", "why": "Documenta `ScheduleIterable`, a iteração por camada e o padrão de retornar entre frames."},
+        {"label": "Unity Sentis 2.5 — Run an imported model", "url": "https://docs.unity3d.com/Packages/com.unity.ai.inference@2.5/manual/run-an-imported-model.html", "why": "Situa agendamento, execução e leitura de saída no ciclo de inferência."}
+      ],
+      "review": "A página oficial demonstra ScheduleIterable e interromper o loop por frame; o ganho de fluidez é apresentado como trade-off medido, não garantia."
+    }
+  ]
+}

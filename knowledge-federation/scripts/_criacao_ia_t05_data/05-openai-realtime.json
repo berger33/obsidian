@@ -1,0 +1,235 @@
+{
+  "group": "OpenAI Realtime API: áudio em tempo real, turnos, eventos e chamadas de ferramenta",
+  "notes": [
+    {
+      "slug": "openai-realtime-vad-configurar-turn-detection",
+      "title": "OpenAI Realtime: configurar server_vad ou semantic_vad como política de turnos",
+      "one": "`turn_detection` configura como a API identifica o fim do áudio do usuário; sessões compatíveis usam `server_vad` por padrão e também oferecem `semantic_vad`.",
+      "why": "A decisão de turno afeta latência, cortes de fala e o momento em que uma resposta automática começa, então o default precisa ser uma escolha deliberada do produto.",
+      "how": "Use `session.update` em `session.audio.input.turn_detection`; `server_vad` divide por silêncio e aceita parâmetros de limiar e duração, enquanto `semantic_vad` estima se a pessoa concluiu a frase. `create_response` e `interrupt_response` só se aplicam a conversas speech-to-speech.",
+      "example": "Um assistente em ambiente ruidoso mede falsos inícios com `server_vad` e compara `semantic_vad` em frases que têm pausas naturais antes de escolher uma política para produção.",
+      "limits": "Disponibilidade e default dependem do tipo de sessão e modelo; algumas sessões de transcrição exigem `turn_detection` omitido ou nulo e não aceitam os modos de VAD.",
+      "verify": "Teste ruído, pausas, interrupções e transcrição em cada modelo usado; registre `speech_started` e `speech_stopped` e valide que a resposta não é criada em sessões de transcrição incompatíveis.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Voice activity detection",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-vad",
+          "why": "Descreve modos server_vad e semantic_vad, default por sessão e campos conversation-only."
+        },
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Explica o estado da sessão e a configuração de eventos do fluxo conversacional."
+        }
+      ],
+      "review": "A documentação limita o default aos modelos/sessões com suporte e diferencia campos de conversa dos controles de chunking em transcrição."
+    },
+    {
+      "slug": "openai-realtime-push-to-talk-sem-vad",
+      "title": "OpenAI Realtime: implementar push-to-talk com buffer, commit e response.create",
+      "one": "Com `turn_detection: null`, o cliente assume responsabilidade por delimitar o turno, confirmar o buffer e pedir explicitamente a resposta.",
+      "why": "Push-to-talk oferece controle direto ao usuário e permite validar entrada antes de gerar resposta, mas exige mais eventos do que deixar VAD administrar os turnos.",
+      "how": "Desative VAD por `session.update`; siga o fluxo do transporte escolhido. Em WebSocket, grave a entrada com `input_audio_buffer.append`, conclua com `input_audio_buffer.commit` e emita `response.create`; em WebRTC/SIP, limpe `input_audio_buffer` ao iniciar novo turno, confirme o buffer e crie a resposta. O guia trata o evento de limpeza como necessário para o fluxo WebRTC/SIP.",
+      "example": "Num cliente WebRTC push-to-talk, o pressionar limpa o buffer e começa a captura; ao soltar, o cliente confirma o turno com commit e solicita `response.create`. Em WebSocket, a sequência documentada usa os chunks append antes do commit.",
+      "limits": "`commit` adiciona item do usuário, mas por si só não dispara uma resposta; os passos de limpeza diferem entre os exemplos WebSocket e WebRTC/SIP, então não copie a sequência de um transporte para o outro sem conferir o guia.",
+      "verify": "Teste WebSocket e WebRTC separadamente: pressionar/soltar sem áudio, turnos consecutivos, cancelamento antes da resposta e reset do buffer; confirme que cada transporte segue sua sequência documentada e não mistura áudio entre turnos.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Lista a sequência manual de clear, append, commit e response.create para VAD desativado."
+        },
+        {
+          "label": "OpenAI Realtime — Client events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/client-events",
+          "why": "Define eventos cliente para atualização de sessão e controle de buffer e resposta."
+        }
+      ],
+      "review": "O guia separa commit do buffer de criação da resposta e enumera os eventos necessários no fluxo push-to-talk; a nota mantém essa ordem."
+    },
+    {
+      "slug": "openai-realtime-append-audio-chunks-base64",
+      "title": "OpenAI Realtime: transmitir input_audio_buffer.append em chunks Base64 limitados",
+      "one": "A entrada de áudio por WebSocket pode ser enviada com `input_audio_buffer.append`, cujo campo de áudio contém bytes codificados em Base64 e tem limite por chunk.",
+      "why": "Codificação e tamanho do payload são parte do protocolo; buffers grandes sem divisão elevam memória, latência e risco de rejeição da mensagem.",
+      "how": "Converta áudio para o formato configurado na sessão, codifique cada trecho em Base64 e envie eventos append sucessivos; a documentação limita cada chunk a 15 MB. Faça commit no fim quando a política de turno exigir.",
+      "example": "Um relé de microfone lê blocos PCM16, codifica cada bloco separadamente e só envia o evento de commit quando a captura do usuário termina.",
+      "limits": "Base64 aumenta o volume transportado e o guia trata append como gravação em buffer temporário; não interprete o envio de um chunk como confirmação de transcrição ou de resposta.",
+      "verify": "Teste áudio curto e longo, confirme formato e taxa de amostragem configurados, mantenha cada evento abaixo do limite e valide o resultado após commit.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Descreve chunks Base64, limite de tamanho e fluxo de append por WebSocket."
+        },
+        {
+          "label": "OpenAI Realtime — Client events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/client-events",
+          "why": "Especifica os eventos cliente usados para escrever e confirmar o buffer de áudio."
+        }
+      ],
+      "review": "O guia fornece Base64 e limite de 15 MB por chunk; a nota não atribui confirmação de processamento a uma chamada append."
+    },
+    {
+      "slug": "openai-realtime-transcricao-item-id",
+      "title": "OpenAI Realtime transcription: correlacionar deltas e transcrições finais por item_id",
+      "one": "Eventos de transcrição incremental e final devem ser associados ao item de áudio por `item_id`, pois conclusões de turnos diferentes podem chegar fora de ordem.",
+      "why": "Uma interface com vários turnos ou buffers simultâneos pode exibir texto final na linha errada se usar somente a ordem de chegada.",
+      "how": "Consuma eventos `.delta` para atualização temporária e `.completed` para o texto final; guarde `item_id` junto ao buffer de cada mensagem e não presuma ordenação global entre turnos.",
+      "example": "Um painel cria uma linha provisória para cada item de áudio, anexa deltas pela chave `item_id` e substitui o rascunho pelo campo `transcript` na conclusão.",
+      "limits": "Os eventos de transcrição pertencem ao fluxo e modelo de transcrição configurados; eles não oferecem necessariamente timestamps por palavra, rótulos de falante ou scores de confiança.",
+      "verify": "Envie dois turnos com finalizações próximas, embaralhe a ordem de evento no teste do consumidor e confirme que cada texto fica associado ao item correto.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Realtime transcription",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-transcription",
+          "why": "Define delta, completed, item_id e ressalva que conclusões entre turnos podem não ser ordenadas."
+        },
+        {
+          "label": "OpenAI Realtime — Server events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/server-events",
+          "why": "Descreve campos de eventos de áudio e identificadores dos itens da conversa."
+        }
+      ],
+      "review": "A referência de transcrição recomenda item_id porque eventos de turnos diferentes não têm ordenação garantida; a nota não promete timestamps ou diarização."
+    },
+    {
+      "slug": "openai-realtime-audio-output-delta-vs-done",
+      "title": "OpenAI Realtime: obter bytes de áudio em output_audio.delta, não em response.done",
+      "one": "Em WebSocket, os bytes de áudio são enviados em `response.output_audio.delta`; eventos `response.output_audio.done` e `response.done` não carregam esses bytes.",
+      "why": "Um cliente que espera encontrar áudio apenas no evento terminal consegue detectar conclusão, mas não tem material para tocar ou persistir.",
+      "how": "Decodifique cada delta Base64 e encaminhe os bytes para reprodução ou armazenamento; use eventos done para ciclo de vida e texto associado, não como pacote contendo toda a forma de onda.",
+      "example": "Um serviço de voz agrega deltas em ordem para criar o áudio de uma resposta e marca o arquivo completo somente depois do evento terminal correspondente.",
+      "limits": "A documentação recomenda WebRTC para áudio de saída em clientes como browser; via WebSocket, a aplicação assume responsabilidade por buffer, ordem e reprodução.",
+      "verify": "Capture uma resposta curta, confirme chegada de um ou mais deltas e confira que o handler dos eventos done não tenta decodificar bytes inexistentes.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Especifica deltas Base64 e esclarece que eventos done não contêm os bytes de áudio."
+        },
+        {
+          "label": "OpenAI Realtime — Server events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/server-events",
+          "why": "Define os campos dos eventos de saída de áudio, inclusive delta e identificadores."
+        }
+      ],
+      "review": "O guia diferencia payload de áudio incremental e sinais de conclusão; a nota preserva a recomendação de WebRTC para reprodução em browser."
+    },
+    {
+      "slug": "openai-realtime-interromper-audio-e-truncate",
+      "title": "OpenAI Realtime: sincronizar áudio interrompido com conversation.item.truncate",
+      "one": "Quando o usuário interrompe a fala gerada em WebSocket, o cliente para a reprodução e envia truncamento para remover da conversa o áudio que não foi ouvido.",
+      "why": "Sem sincronizar o playback local com o estado do servidor, o histórico pode conter palavras que o usuário nunca escutou e contaminar o turno seguinte.",
+      "how": "Ao detectar início da fala, interrompa o áudio em reprodução, meça quanto do item foi tocado e envie `conversation.item.truncate` com `item_id`, índice de conteúdo e `audio_end_ms`. WebRTC gerencia seu próprio buffer de saída.",
+      "example": "Um player WebSocket observa `speech_started`, pausa imediatamente, calcula o milissegundo já ouvido e trunca o item de saída para esse ponto antes de continuar o diálogo.",
+      "limits": "A documentação ressalta que o texto de transcrição não pode ser alinhado perfeitamente ao áudio truncado; não mostre um transcript que afirma ser uma transcrição exata do trecho ouvido.",
+      "verify": "Interrompa uma fala longa em pontos diferentes, compare playback e histórico do servidor e confirme que WebRTC e WebSocket usam tratamento compatível com seus buffers.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Descreve cancelamento, interrupção e truncamento distinto para WebRTC/SIP e WebSocket."
+        },
+        {
+          "label": "OpenAI Realtime — Client events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/client-events",
+          "why": "Define o evento cliente usado para truncar áudio de um item da conversa."
+        }
+      ],
+      "review": "A documentação atribui ao servidor o buffer em WebRTC/SIP e ao cliente WebSocket o cálculo de áudio já tocado; a nota também ressalva o transcript."
+    },
+    {
+      "slug": "openai-realtime-function-call-execucao-aplicacao",
+      "title": "OpenAI Realtime: executar function calls no aplicativo e devolver function_call_output",
+      "one": "Uma ferramenta function descreve uma chamada que o modelo pode solicitar, mas a lógica de negócio roda na aplicação e seu resultado retorna como `function_call_output`.",
+      "why": "A separação deixa verificações de autorização, validação de argumentos e efeitos externos sob controle do serviço responsável, não do texto gerado.",
+      "how": "Declare esquema e política de seleção no nível de sessão ou resposta; detecte o item de chamada, valide argumentos, execute a função e envie `conversation.item.create` com o call_id e o resultado antes de solicitar continuação.",
+      "example": "O modelo solicita consulta de pedido; o servidor valida o usuário e o número, consulta o banco, envia estado limitado como saída da função e então pede uma resposta em linguagem natural.",
+      "limits": "O esquema ajuda a formar argumentos, mas não autoriza acesso nem torna uma operação segura ou idempotente. MCP remoto é outra modalidade e pode ser executado pela API.",
+      "verify": "Teste argumentos malformados, usuário sem permissão, erro de dependência e resultado bem-sucedido; confirme que nenhuma ação externa ocorre antes das checagens do servidor.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Realtime with tools",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-mcp",
+          "why": "Distingue execução local de function tools de ferramentas MCP executadas remotamente pela API."
+        },
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Demonstra o ciclo de chamada, criação de function_call_output e resposta subsequente."
+        }
+      ],
+      "review": "As fontes oficiais atribuem function execution à aplicação e descrevem retorno via item function_call_output; a nota não equipara schema a autorização."
+    },
+    {
+      "slug": "openai-realtime-out-of-band-conversation-none",
+      "title": "OpenAI Realtime: isolar respostas auxiliares com conversation none e metadata",
+      "one": "Definir `response.conversation` como `none` cria uma resposta fora do estado default, e metadata pode identificá-la quando seus eventos chegam.",
+      "why": "Classificações, extrações ou análises auxiliares nem sempre devem virar turnos visíveis ou influenciar o contexto principal da conversa.",
+      "how": "Envie `response.create` com `conversation: \"none\"`, um campo de `metadata` específico e apenas o contexto que a tarefa auxiliar precisa. Correlacione `response.done` pela metadata antes de tratar o resultado.",
+      "example": "Um serviço classifica a conversa como suporte ou venda em uma resposta de texto fora de banda, rotulada `topic: classification`, sem adicionar a classificação ao turno falado.",
+      "limits": "Out-of-band controla inserção no default conversation, não isolamento de dados ou autorização; a aplicação ainda precisa escolher explicitamente os itens permitidos no input.",
+      "verify": "Crie uma resposta auxiliar e uma resposta de conversa próximas, valide metadata e confira que somente a resposta da conversa foi adicionada ao histórico esperado.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Documenta `conversation: none`, metadata e identificação de resposta fora de banda."
+        },
+        {
+          "label": "OpenAI Realtime — Client events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/client-events",
+          "why": "Define o evento response.create e os campos de configuração de uma resposta."
+        }
+      ],
+      "review": "O guia afirma que conversation none evita inserção no histórico default e mostra metadata para identificar a resposta; a nota não trata isso como controle de acesso."
+    },
+    {
+      "slug": "openai-realtime-session-update-estado-efetivo",
+      "title": "OpenAI Realtime: tratar session.updated como confirmação do estado efetivo",
+      "one": "`session.update` altera os campos enviados, e o servidor responde com `session.updated` contendo a configuração efetiva da sessão.",
+      "why": "Uma interface local que assume que todo campo foi aceito pode mostrar configurações divergentes do servidor ou tentar atualizar propriedades que têm restrições de mutabilidade.",
+      "how": "Envie somente campos a alterar, aguarde a resposta correspondente e atualize o estado visível com a configuração efetiva. Para limpar certos campos, a referência usa valores explícitos como string vazia, array vazio ou `null`, conforme o tipo.",
+      "example": "Ao desabilitar VAD, o cliente envia `turn_detection: null`, espera `session.updated` e só então habilita o controle manual de commit.",
+      "limits": "A referência exclui `model` e restringe `voice` depois que já houve saída de áudio; atualizações posteriores não devem ser consideradas substituição total de sessão.",
+      "verify": "Altere um campo, limpe um campo opcional e tente atualizar propriedade restrita em ambiente de teste; compare UI local com o objeto devolvido pelo servidor.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Client events",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/client-events",
+          "why": "Define campos mutáveis, valores para limpar configuração e resposta session.updated."
+        },
+        {
+          "label": "OpenAI Realtime — Managing conversations",
+          "url": "https://developers.openai.com/api/docs/guides/realtime-conversations",
+          "why": "Explica o ciclo de sessão e as restrições de alterações depois da resposta de áudio."
+        }
+      ],
+      "review": "A referência de evento esclarece que só campos presentes são atualizados e diferencia model, voice e valores de limpeza; o exemplo usa null para VAD."
+    },
+    {
+      "slug": "openai-realtime-client-secret-browser",
+      "title": "OpenAI Realtime: usar client secret temporário no browser em vez da API key principal",
+      "one": "Um client secret de curta duração permite iniciar sessão Realtime em cliente web ou móvel sem expor a chave de projeto permanente.",
+      "why": "Código distribuído ao browser pode ser inspecionado pelo usuário; incluir nele a credencial principal permite reutilização fora do escopo e controle do serviço.",
+      "how": "O servidor confiável cria o client secret e associa configuração de sessão; entrega somente esse token limitado ao cliente e mantém a API key principal no backend. Escolha TTL apropriado e não grave o segredo em logs públicos.",
+      "example": "O backend autentica a pessoa, chama a criação de client secret com o modelo e áudio permitidos e devolve o token efêmero para o navegador abrir sua conexão Realtime.",
+      "limits": "A validade do secret controla criação de sessões; a documentação observa que uma sessão já iniciada pode continuar após expiração. Proteja também endpoint de emissão e limite sessões por usuário.",
+      "verify": "Inspecione bundle e tráfego do browser para garantir que a chave principal nunca aparece; teste expiração do token, sessão existente e recusa de usuário não autenticado.",
+      "sources": [
+        {
+          "label": "OpenAI Realtime — Create client secret",
+          "url": "https://developers.openai.com/api/reference/resources/realtime/subresources/client_secrets/methods/create",
+          "why": "Define tokens curtos para clientes e sua finalidade de não expor a chave principal."
+        },
+        {
+          "label": "OpenAI Realtime — Getting started",
+          "url": "https://developers.openai.com/api/docs/guides/realtime",
+          "why": "Mostra o servidor criando credencial efêmera antes da conexão do frontend."
+        }
+      ],
+      "review": "A referência declara que client secrets são curtos e evitam vazar a API key principal, e distingue expiração de credencial da duração de sessão iniciada."
+    }
+  ]
+}

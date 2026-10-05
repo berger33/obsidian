@@ -16,11 +16,11 @@ Bem-vindo ao **Home Vault Mestre** da Federação. O checkpoint histórico cont�
 - [[MOC-Testes-Software-0007]] — 2000 notas do primeiro lote de escala (meta de 2.000 concluída); nove têm aprovação humana histórica e 1991 revisões factuais por IA.
 - [[MOC-DevOps-Software-0008]] — 2000 notas do segundo lote de escala `software-devops-2000-0002` (meta de 2.000 concluída, `complete`); 2000 revisões factuais por IA.
 - [[MOC-Seguranca-Software-0009]] — 2000 notas do terceiro lote de escala `software-seguranca-2000-0003` (meta: 2.000, status `complete`); 2000 revisões factuais por IA.
-- [[MOC-Criacao-IA-Software-0010]] — lote 4 `software-criacao-ia-2000-0004` com 400/2.000 após a tranche 4; 16 tranches planejadas, sem IDs reservados.
-- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 6391 revisões factuais por IA, identificadas separadamente.
+- [[MOC-Criacao-IA-Software-0010]] — lote 4 `software-criacao-ia-2000-0004` com 500/2.000 após a tranche 5; 15 tranches planejadas, sem IDs reservados.
+- [[human-review-queue|Registro de revisões factuais]] — 49 aprovações humanas e 6491 revisões factuais por IA, identificadas separadamente.
 - [[legacy-remediation-queue|Fila de remediação legada]] — inventário dos problemas nas 100 notas antigas.
 - [[PLANO-CONTINUO-1M|Plano contínuo para a meta de 1 milhão]] — execução, estados e bloqueios.
-- [[note-quality-audit|Auditoria de qualidade]] — 6440 notas válidas pelo protocolo atual (49 humanas + 6391 IA) e 100 notas legadas com falhas.
+- [[note-quality-audit|Auditoria de qualidade]] — 6540 notas válidas pelo protocolo atual (49 humanas + 6491 IA) e 100 notas legadas com falhas.
 
 ## Mapas Globais
 

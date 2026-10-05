@@ -21,14 +21,14 @@ A cobertura poderá incluir prototipagem, ferramentas e engines de jogos, geraç
 - Domínio / subdomínio: `software` / `criacao-ia` (`knowledge-federation/domains/software-0010/software/criacao-ia/`)
 - Meta: **2.000 notas substantivas**
 - Cadência: **20 tranches planejadas × 100 notas**
-- Notas materiais redigidas: **400 / 2.000 (20,00%)**
-- Gate automatizado: **400/400 aprovadas**
-- Revisão factual humana: **0/400** (nenhuma aprovação humana solicitada ou registrada)
-- Revisão factual por IA: **400/400** (relatórios das tranches 1, 2, 3 e 4)
-- Notas válidas contabilizadas: **400/2.000 (20,00%)**
-- Estado: `in_progress` — tranches 1, 2, 3 e 4 concluídas e reconciliadas; 16 tranches planejadas permanecem sem IDs reservados.
+- Notas materiais redigidas: **500 / 2.000 (25,00%)**
+- Gate automatizado: **500/500 aprovadas**
+- Revisão factual humana: **0/500** (nenhuma aprovação humana solicitada ou registrada)
+- Revisão factual por IA: **500/500** (relatórios das tranches 1, 2, 3, 4 e 5)
+- Notas válidas contabilizadas: **500/2.000 (25,00%)**
+- Estado: `in_progress` — tranches 1, 2, 3, 4 e 5 concluídas e reconciliadas; 15 tranches planejadas permanecem sem IDs reservados.
 
-A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–400, com arquivos e conteúdo; para as 1.600 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
+A cadência descreve capacidade planejada, não reserva IDs. As notas materiais existentes são somente os IDs 1–500, com arquivos e conteúdo; para as 1.500 notas ainda não produzidas não há IDs reservados, placeholders ou progresso virtual. MOC, manifesto e relatórios administrativos não são notas do lote e não contam como progresso.
 
 ## Eixos editoriais iniciais
 
@@ -578,6 +578,139 @@ IDs materiais: `software.criacao_ia.tranche04.000301`–`software.criacao_ia.tra
 398. [Transformers: cache_implementation escolhe o destino da KV — dynamic, static, offload ou quantizada](../../domains/software-0010/software/criacao-ia/hf-cache-implementation-quatro-modos.md) — `software.criacao_ia.tranche04.000398`
 399. [Transformers: decodificação assistida — draft por modelo, n-gram, medusa ou ensemble](../../domains/software-0010/software/criacao-ia/hf-assisted-decoding-especifico.md) — `software.criacao_ia.tranche04.000399`
 400. [Transformers: past_key_values no retorno e generate custom por repositório](../../domains/software-0010/software/criacao-ia/hf-retornos-e-custom-generate.md) — `software.criacao_ia.tranche04.000400`
+## Tranche 5 — APIs e runtimes para criação assistida de software, jogos e documentação (100 notas)
+
+IDs materiais: `software.criacao_ia.tranche05.000401`–`software.criacao_ia.tranche05.000500`. Os tópicos foram comparados ao inventário de 400 notas deste subdomínio e pesquisados no vault inteiro; cada nota cita duas fontes primárias específicas.
+
+### Ollama REST API: endereçamento, payloads, catálogo e ciclo dos modelos
+
+401. [Ollama API: diferenciar base URLs local e cloud antes de configurar o cliente](../../domains/software-0010/software/criacao-ia/ollama-api-separar-base-url-local-cloud.md) — `software.criacao_ia.tranche05.000401`
+402. [Ollama API: tratar stream de generate até o marcador done](../../domains/software-0010/software/criacao-ia/ollama-api-generate-stream-e-done.md) — `software.criacao_ia.tranche05.000402`
+403. [Ollama API: representar a conversa em messages no endpoint chat](../../domains/software-0010/software/criacao-ia/ollama-api-chat-array-de-messages.md) — `software.criacao_ia.tranche05.000403`
+404. [Ollama API: validar saídas estruturadas com format JSON Schema](../../domains/software-0010/software/criacao-ia/ollama-api-json-schema-structured-output.md) — `software.criacao_ia.tranche05.000404`
+405. [Ollama API: gerar embeddings em lote e escolher a política de truncamento](../../domains/software-0010/software/criacao-ia/ollama-api-embeddings-lote-e-truncamento.md) — `software.criacao_ia.tranche05.000405`
+406. [Ollama API: acompanhar o progresso do pull sem fixar mensagens de status](../../domains/software-0010/software/criacao-ia/ollama-api-pull-acompanhar-progresso.md) — `software.criacao_ia.tranche05.000406`
+407. [Ollama API: usar tags para inventário e show para metadados de um modelo](../../domains/software-0010/software/criacao-ia/ollama-api-tags-vs-show-model-metadata.md) — `software.criacao_ia.tranche05.000407`
+408. [Ollama API: criar um modelo derivado com parâmetros e instruções explícitas](../../domains/software-0010/software/criacao-ia/ollama-api-create-configurar-modelo-derivado.md) — `software.criacao_ia.tranche05.000408`
+409. [Ollama API: copiar um modelo para um nome isolado antes de alterar a configuração](../../domains/software-0010/software/criacao-ia/ollama-api-copy-modelo-com-nome-separado.md) — `software.criacao_ia.tranche05.000409`
+410. [Ollama API: proteger a remoção de modelos com confirmação do nome exato](../../domains/software-0010/software/criacao-ia/ollama-api-delete-model-protegido.md) — `software.criacao_ia.tranche05.000410`
+
+### ComfyUI Server API: exportar workflows, enfileirar execuções e recuperar resultados
+
+411. [ComfyUI: exportar o grafo no formato API em vez de reutilizar o arquivo visual](../../domains/software-0010/software/criacao-ia/comfyui-api-exportar-workflow-formato-api.md) — `software.criacao_ia.tranche05.000411`
+412. [ComfyUI: interpretar POST prompt como validação e enfileiramento, não como resultado](../../domains/software-0010/software/criacao-ia/comfyui-api-prompt-validacao-e-fila.md) — `software.criacao_ia.tranche05.000412`
+413. [ComfyUI: abrir o WebSocket com client_id e correlacionar por prompt_id](../../domains/software-0010/software/criacao-ia/comfyui-api-websocket-client-id-correlacao.md) — `software.criacao_ia.tranche05.000413`
+414. [ComfyUI: distinguir atualização `executed` do fim e do sucesso da execução](../../domains/software-0010/software/criacao-ia/comfyui-api-evento-final-e-executed.md) — `software.criacao_ia.tranche05.000414`
+415. [ComfyUI: recuperar o histórico da execução usando o prompt_id](../../domains/software-0010/software/criacao-ia/comfyui-api-history-resultado-por-prompt-id.md) — `software.criacao_ia.tranche05.000415`
+416. [ComfyUI: recuperar arquivos de saída pela rota view e seus parâmetros](../../domains/software-0010/software/criacao-ia/comfyui-api-view-parametros-de-arquivo.md) — `software.criacao_ia.tranche05.000416`
+417. [ComfyUI: consultar object_info para descobrir o esquema dos nós disponíveis](../../domains/software-0010/software/criacao-ia/comfyui-api-object-info-nos-instalados.md) — `software.criacao_ia.tranche05.000417`
+418. [ComfyUI: separar controle da fila de interrupção da execução ativa](../../domains/software-0010/software/criacao-ia/comfyui-api-distinguir-fila-de-interrupt.md) — `software.criacao_ia.tranche05.000418`
+419. [ComfyUI: usar a referência devolvida por upload/image em vez de caminho local](../../domains/software-0010/software/criacao-ia/comfyui-api-upload-image-referencia.md) — `software.criacao_ia.tranche05.000419`
+420. [ComfyUI: separar a Server API da superfície versionada Comfy API v2](../../domains/software-0010/software/criacao-ia/comfyui-separar-server-api-e-comfy-api-v2.md) — `software.criacao_ia.tranche05.000420`
+
+### Godot EditorImportPlugin: registrar importadores, definir contratos e salvar recursos
+
+421. [Godot EditorImportPlugin: registrar e remover a instância pelo EditorPlugin](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-registro-no-editorplugin.md) — `software.criacao_ia.tranche05.000421`
+422. [Godot EditorImportPlugin: manter importer_name estável e separar o rótulo visível](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-identidade-e-nome-visivel.md) — `software.criacao_ia.tranche05.000422`
+423. [Godot EditorImportPlugin: limitar extensões aceitas e declarar prioridade consciente](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-extensoes-prioridade.md) — `software.criacao_ia.tranche05.000423`
+424. [Godot EditorImportPlugin: alinhar resource_type ao save_extension declarado](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-tipo-e-extensao-de-saida.md) — `software.criacao_ia.tranche05.000424`
+425. [Godot EditorImportPlugin: descrever opções de importação com defaults e presets](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-opcoes-e-presets.md) — `software.criacao_ia.tranche05.000425`
+426. [Godot EditorImportPlugin: ocultar opções dependentes sem perder seu contrato](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-visibilidade-de-opcoes.md) — `software.criacao_ia.tranche05.000426`
+427. [Godot EditorImportPlugin: validar source_file e propagar Error do import](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-validar-source-file-e-error.md) — `software.criacao_ia.tranche05.000427`
+428. [Godot EditorImportPlugin: gravar em save_path e declarar arquivos gerados](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-save-path-gen-files-variants.md) — `software.criacao_ia.tranche05.000428`
+429. [Godot EditorImportPlugin: habilitar importação paralela só após provar thread safety](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-threaded-import-safety.md) — `software.criacao_ia.tranche05.000429`
+430. [Godot EditorImportPlugin: incrementar format_version ao incompatibilizar recursos importados](../../domains/software-0010/software/criacao-ia/godot-editorimportplugin-format-version-invalidacao.md) — `software.criacao_ia.tranche05.000430`
+
+### Unity Sentis 2.5: preparar tensores, escolher backend e integrar inferência ao frame loop
+
+431. [Unity Sentis 2.5: separar ModelAsset, runtime Model e Worker de execução](../../domains/software-0010/software/criacao-ia/unity-sentis-modelasset-runtime-model-worker.md) — `software.criacao_ia.tranche05.000431`
+432. [Unity Sentis 2.5: escolher backend após medir modelo, dados e plataforma](../../domains/software-0010/software/criacao-ia/unity-sentis-escolher-backend-por-modelo.md) — `software.criacao_ia.tranche05.000432`
+433. [Unity Sentis 2.5: construir input tensor conforme shape e tipo esperados pelo modelo](../../domains/software-0010/software/criacao-ia/unity-sentis-inspecionar-shape-e-dtype-da-entrada.md) — `software.criacao_ia.tranche05.000433`
+434. [Unity Sentis 2.5: tratar dimensões dinâmicas como contrato explícito de entrada](../../domains/software-0010/software/criacao-ia/unity-sentis-shapes-dinamicos-compatibilidade.md) — `software.criacao_ia.tranche05.000434`
+435. [Unity Sentis 2.5: conferir layout NCHW e escala ao converter Texture para Tensor](../../domains/software-0010/software/criacao-ia/unity-sentis-texture-nchw-preprocessamento.md) — `software.criacao_ia.tranche05.000435`
+436. [Unity Sentis 2.5: validar operadores e tipos antes de fixar backend](../../domains/software-0010/software/criacao-ia/unity-sentis-compatibilidade-operadores-backend.md) — `software.criacao_ia.tranche05.000436`
+437. [Unity Sentis 2.5: escolher entre PeekOutput emprestado e CopyOutput próprio](../../domains/software-0010/software/criacao-ia/unity-sentis-peekoutput-copyoutput-propriedade.md) — `software.criacao_ia.tranche05.000437`
+438. [Unity Sentis 2.5: evitar leitura síncrona que bloqueia a main thread](../../domains/software-0010/software/criacao-ia/unity-sentis-evitar-readback-sincrono-na-main-thread.md) — `software.criacao_ia.tranche05.000438`
+439. [Unity Sentis 2.5: usar ReadbackAndCloneAsync com sincronização e descarte explícitos](../../domains/software-0010/software/criacao-ia/unity-sentis-readback-and-clone-async-lifecycle.md) — `software.criacao_ia.tranche05.000439`
+440. [Unity Sentis 2.5: distribuir camadas de inferência entre frames com ScheduleIterable](../../domains/software-0010/software/criacao-ia/unity-sentis-schedule-iterable-frames.md) — `software.criacao_ia.tranche05.000440`
+
+### OpenAI Realtime API: áudio em tempo real, turnos, eventos e chamadas de ferramenta
+
+441. [OpenAI Realtime: configurar server_vad ou semantic_vad como política de turnos](../../domains/software-0010/software/criacao-ia/openai-realtime-vad-configurar-turn-detection.md) — `software.criacao_ia.tranche05.000441`
+442. [OpenAI Realtime: implementar push-to-talk com buffer, commit e response.create](../../domains/software-0010/software/criacao-ia/openai-realtime-push-to-talk-sem-vad.md) — `software.criacao_ia.tranche05.000442`
+443. [OpenAI Realtime: transmitir input_audio_buffer.append em chunks Base64 limitados](../../domains/software-0010/software/criacao-ia/openai-realtime-append-audio-chunks-base64.md) — `software.criacao_ia.tranche05.000443`
+444. [OpenAI Realtime transcription: correlacionar deltas e transcrições finais por item_id](../../domains/software-0010/software/criacao-ia/openai-realtime-transcricao-item-id.md) — `software.criacao_ia.tranche05.000444`
+445. [OpenAI Realtime: obter bytes de áudio em output_audio.delta, não em response.done](../../domains/software-0010/software/criacao-ia/openai-realtime-audio-output-delta-vs-done.md) — `software.criacao_ia.tranche05.000445`
+446. [OpenAI Realtime: sincronizar áudio interrompido com conversation.item.truncate](../../domains/software-0010/software/criacao-ia/openai-realtime-interromper-audio-e-truncate.md) — `software.criacao_ia.tranche05.000446`
+447. [OpenAI Realtime: executar function calls no aplicativo e devolver function_call_output](../../domains/software-0010/software/criacao-ia/openai-realtime-function-call-execucao-aplicacao.md) — `software.criacao_ia.tranche05.000447`
+448. [OpenAI Realtime: isolar respostas auxiliares com conversation none e metadata](../../domains/software-0010/software/criacao-ia/openai-realtime-out-of-band-conversation-none.md) — `software.criacao_ia.tranche05.000448`
+449. [OpenAI Realtime: tratar session.updated como confirmação do estado efetivo](../../domains/software-0010/software/criacao-ia/openai-realtime-session-update-estado-efetivo.md) — `software.criacao_ia.tranche05.000449`
+450. [OpenAI Realtime: usar client secret temporário no browser em vez da API key principal](../../domains/software-0010/software/criacao-ia/openai-realtime-client-secret-browser.md) — `software.criacao_ia.tranche05.000450`
+
+### Vercel AI SDK UI: estado de chat, persistência, ferramentas e protocolos de stream
+
+451. [AI SDK UI: manter o estado do campo de entrada fora de useChat no AI SDK 5](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-input-state-fora-do-usechat.md) — `software.criacao_ia.tranche05.000451`
+452. [AI SDK UI: renderizar UIMessage.parts por tipo em vez de presumir texto único](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-renderizar-uimessage-parts.md) — `software.criacao_ia.tranche05.000452`
+453. [AI SDK UI: configurar endpoint e cabeçalhos no DefaultChatTransport](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-configurar-chat-transport.md) — `software.criacao_ia.tranche05.000453`
+454. [AI SDK UI: persistir UIMessage e validar tools e metadata antes de converter](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-persistir-e-validar-uimessages.md) — `software.criacao_ia.tranche05.000454`
+455. [AI SDK UI: separar execução de tools server-side e client-side com addToolOutput](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-tools-execution-and-output.md) — `software.criacao_ia.tranche05.000455`
+456. [AI SDK UI: implementar retomada de stream com persistência e endpoint GET](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-retomar-streams-com-storage.md) — `software.criacao_ia.tranche05.000456`
+457. [AI SDK UI: em streams retomáveis, distinguir stop local de cancelamento server-side](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-stop-nao-cancela-geracao-retomavel.md) — `software.criacao_ia.tranche05.000457`
+458. [AI SDK UI: separar data parts persistentes de eventos transient de interface](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-data-parts-persistentes-transient.md) — `software.criacao_ia.tranche05.000458`
+459. [AI SDK UI: escolher text stream ou data stream conforme a forma do evento](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-escolher-text-stream-ou-data-stream.md) — `software.criacao_ia.tranche05.000459`
+460. [AI SDK UI: conduzir controles por status e mostrar erro genérico ao usuário](../../domains/software-0010/software/criacao-ia/ai-sdk-ui-status-erro-e-mensagem-publica.md) — `software.criacao_ia.tranche05.000460`
+
+### Storybook: produzir histórias tipadas, mocks de UI e verificações automatizadas
+
+461. [Storybook: organizar CSF com meta default e histórias como exports nomeados](../../domains/software-0010/software/criacao-ia/storybook-csf-default-meta-named-stories.md) — `software.criacao_ia.tranche05.000461`
+462. [Storybook: distribuir args por story e componente sem guardar estado global em props](../../domains/software-0010/software/criacao-ia/storybook-args-niveis-serializaveis.md) — `software.criacao_ia.tranche05.000462`
+463. [Storybook TypeScript: ligar Meta e StoryObj com satisfies para checar args](../../domains/software-0010/software/criacao-ia/storybook-typescript-meta-storyobj-satisfies.md) — `software.criacao_ia.tranche05.000463`
+464. [Storybook: usar globals e toolbar para variar contexto compartilhado como tema](../../domains/software-0010/software/criacao-ia/storybook-globals-toolbar-decorator-theme.md) — `software.criacao_ia.tranche05.000464`
+465. [Storybook: usar loaders assíncronos como escape hatch para dados externos](../../domains/software-0010/software/criacao-ia/storybook-loaders-before-render-loaded-context.md) — `software.criacao_ia.tranche05.000465`
+466. [Storybook: escrever testes de interação como play com canvas e userEvent awaited](../../domains/software-0010/software/criacao-ia/storybook-play-interaction-canvas-userevent.md) — `software.criacao_ia.tranche05.000466`
+467. [Storybook: executar stories como component tests com addon Vitest](../../domains/software-0010/software/criacao-ia/storybook-vitest-addon-stories-como-component-tests.md) — `software.criacao_ia.tranche05.000467`
+468. [Storybook: detectar regressões de pixels com visual tests e baselines revisados](../../domains/software-0010/software/criacao-ia/storybook-visual-tests-baselines-chromatic.md) — `software.criacao_ia.tranche05.000468`
+469. [Storybook: habilitar Autodocs por tag e estender a documentação com MDX](../../domains/software-0010/software/criacao-ia/storybook-autodocs-tags-living-documentation.md) — `software.criacao_ia.tranche05.000469`
+470. [Storybook a11y: combinar varredura axe com verificação manual de acessibilidade](../../domains/software-0010/software/criacao-ia/storybook-a11y-axe-auditoria-manual.md) — `software.criacao_ia.tranche05.000470`
+
+### Docusaurus 3.10: estruturar, versionar e localizar sites de documentação
+
+471. [Docusaurus: separar identidade do documento de sua URL pública com slug explícito](../../domains/software-0010/software/criacao-ia/docusaurus-doc-id-e-slug-permalink.md) — `software.criacao_ia.tranche05.000471`
+472. [Docusaurus: construir sidebar autogenerated a partir de diretórios de docs](../../domains/software-0010/software/criacao-ia/docusaurus-autogenerated-sidebar-filesystem.md) — `software.criacao_ia.tranche05.000472`
+473. [Docusaurus: controlar ordem de sidebar automática com sidebar_position](../../domains/software-0010/software/criacao-ia/docusaurus-sidebar-position-frontmatter.md) — `software.criacao_ia.tranche05.000473`
+474. [Docusaurus: fixar associação de múltiplas sidebars com displayed_sidebar](../../domains/software-0010/software/criacao-ia/docusaurus-sidebar-association-pagination.md) — `software.criacao_ia.tranche05.000474`
+475. [Docusaurus: criar versões de documentação como snapshots deliberados](../../domains/software-0010/software/criacao-ia/docusaurus-versioning-freeze-current-docs.md) — `software.criacao_ia.tranche05.000475`
+476. [Docusaurus: distinguir versão current da versão latest usada no navbar](../../domains/software-0010/software/criacao-ia/docusaurus-current-vs-latest-version.md) — `software.criacao_ia.tranche05.000476`
+477. [Docusaurus: manter links e imports válidos quando docs são versionados](../../domains/software-0010/software/criacao-ia/docusaurus-version-safe-links-and-imports.md) — `software.criacao_ia.tranche05.000477`
+478. [Docusaurus: configurar instâncias do plugin docs para catálogos independentes](../../domains/software-0010/software/criacao-ia/docusaurus-docs-multi-instance-unique-id.md) — `software.criacao_ia.tranche05.000478`
+479. [Docusaurus: escolher formato MDX ou CommonMark conforme a sintaxe dos docs](../../domains/software-0010/software/criacao-ia/docusaurus-mdx-vs-commonmark-format.md) — `software.criacao_ia.tranche05.000479`
+480. [Docusaurus i18n: localizar conteúdo por locale sem supor detecção automática](../../domains/software-0010/software/criacao-ia/docusaurus-i18n-localized-content-layout.md) — `software.criacao_ia.tranche05.000480`
+
+### Ink: integrar narrativa interativa compilada com o runtime do jogo
+
+481. [Ink: compilar arquivos .ink para JSON e carregar uma instância Story](../../domains/software-0010/software/criacao-ia/ink-compile-json-story-runtime.md) — `software.criacao_ia.tranche05.000481`
+482. [Ink runtime: escolher Continue ou ContinueMaximally pela granularidade da interface](../../domains/software-0010/software/criacao-ia/ink-continue-output-granularity.md) — `software.criacao_ia.tranche05.000482`
+483. [Ink runtime: apresentar currentChoices e retomar com ChooseChoiceIndex](../../domains/software-0010/software/criacao-ia/ink-current-choices-and-choice-index.md) — `software.criacao_ia.tranche05.000483`
+484. [Ink runtime: salvar o estado narrativo completo com state.ToJson](../../domains/software-0010/software/criacao-ia/ink-save-complete-story-state-json.md) — `software.criacao_ia.tranche05.000484`
+485. [Ink runtime: sincronizar variáveis globais e UI sem polling por frame](../../domains/software-0010/software/criacao-ia/ink-variables-state-and-observers.md) — `software.criacao_ia.tranche05.000485`
+486. [Ink runtime: transportar tags de linha, knot e escolha como metadados invisíveis](../../domains/software-0010/software/criacao-ia/ink-tags-como-metadados-de-conteudo.md) — `software.criacao_ia.tranche05.000486`
+487. [Ink: classificar funções externas como ações ou operações lookahead-safe](../../domains/software-0010/software/criacao-ia/ink-external-functions-lookahead-safe.md) — `software.criacao_ia.tranche05.000487`
+488. [Ink runtime: chamar função do roteiro com EvaluationFunction sem consumir diálogo](../../domains/software-0010/software/criacao-ia/ink-evaluationfunction-call-from-game.md) — `software.criacao_ia.tranche05.000488`
+489. [Ink: preferir compilação prévia e configurar includes no fluxo de compilação C#](../../domains/software-0010/software/criacao-ia/ink-precompile-include-filehandler.md) — `software.criacao_ia.tranche05.000489`
+490. [Ink runtime: registrar onError para erros que só aparecem durante a narrativa](../../domains/software-0010/software/criacao-ia/ink-runtime-error-handler.md) — `software.criacao_ia.tranche05.000490`
+
+### Unity Addressables 2.7: carregar, baixar, versionar e liberar conteúdo remoto
+
+491. [Addressables: escolher LoadAssetAsync ou LoadAssetsAsync conforme o número de resultados](../../domains/software-0010/software/criacao-ia/addressables-load-single-vs-multiple-keys.md) — `software.criacao_ia.tranche05.000491`
+492. [Addressables: tratar AssetReference como referência serializada, não como carregamento automático](../../domains/software-0010/software/criacao-ia/addressables-assetreference-explicit-load-release.md) — `software.criacao_ia.tranche05.000492`
+493. [Addressables: aguardar operações assíncronas pelo handle sem bloquear a thread](../../domains/software-0010/software/criacao-ia/addressables-async-operation-handles.md) — `software.criacao_ia.tranche05.000493`
+494. [Addressables: equilibrar cada load com release e entender contagem de referências](../../domains/software-0010/software/criacao-ia/addressables-release-reference-count-memory.md) — `software.criacao_ia.tranche05.000494`
+495. [Addressables: exibir progresso por bytes com GetDownloadStatus](../../domains/software-0010/software/criacao-ia/addressables-download-progress-bytes.md) — `software.criacao_ia.tranche05.000495`
+496. [Addressables: medir e pré-baixar dependências antes de entrar no fluxo de jogo](../../domains/software-0010/software/criacao-ia/addressables-predownload-dependencies-consent.md) — `software.criacao_ia.tranche05.000496`
+497. [Addressables: usar Profiles para alternar caminhos de build e load por ambiente](../../domains/software-0010/software/criacao-ia/addressables-profiles-build-load-paths.md) — `software.criacao_ia.tranche05.000497`
+498. [Addressables: diferenciar cache remoto em disco de memória e limpar bundles órfãos](../../domains/software-0010/software/criacao-ia/addressables-assetbundle-cache-cleanup.md) — `software.criacao_ia.tranche05.000498`
+499. [Addressables: publicar conteúdo alterado com content update build e estado do release](../../domains/software-0010/software/criacao-ia/addressables-content-only-update-build-state.md) — `software.criacao_ia.tranche05.000499`
+500. [Addressables: detectar atualizações e trocar catálogos no momento apropriado](../../domains/software-0010/software/criacao-ia/addressables-check-and-update-catalogs-runtime.md) — `software.criacao_ia.tranche05.000500`
 ## Critério de entrada na contagem
 
 Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, explicação, exemplo, limites, verificação, duas fontes HTTPS específicas, wikilinks resolvidos e ausência de marcadores de template. A revisão factual por IA precisa usar `revisao_ia: aprovada`, `revisor_ia`, `data_revisao_ia` e `relatorio_revisao_ia`; não cria nem altera aprovação humana. Gate e revisão factual serão executados e registrados por tranche antes de reconciliar as contagens.
@@ -599,4 +732,9 @@ Cada nota futura precisa ter frontmatter rastreável, ao menos 100 palavras, exp
 - Revisão factual IA da tranche 4: [`ai-review-software-criacao-ia-2000-0004-tranche-04.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md)
 - Gate da tranche 4: [`note-quality-software-criacao-ia-2000-0004-tranche-04.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md)
 - Reconciliação da tranche 4: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md)
+- Revisão factual IA da tranche 5: [`ai-review-software-criacao-ia-2000-0004-tranche-05.md`](../reports/ai-review-software-criacao-ia-2000-0004-tranche-05.md)
+- Gate da tranche 5: [`note-quality-software-criacao-ia-2000-0004-tranche-05.md`](../reports/note-quality-software-criacao-ia-2000-0004-tranche-05.md)
+- Auditoria de links da tranche 5: [`source-link-audit-software-criacao-ia-2000-0004-tranche-05.md`](../reports/source-link-audit-software-criacao-ia-2000-0004-tranche-05.md)
+- Reconciliação da tranche 5: [`batch-reconciliation-software-criacao-ia-2000-0004-tranche-05.md`](../reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-05.md)
+
 - Diretório das notas: [`domains/software-0010/software/criacao-ia/`](../../domains/software-0010/software/criacao-ia/)

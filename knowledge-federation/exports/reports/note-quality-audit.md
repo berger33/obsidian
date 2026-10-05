@@ -1,6 +1,6 @@
 # Auditoria de qualidade das notas
 
-Executada em: `2026-10-04T21:29:13+00:00`
+Executada em: `2026-10-05T00:02:20+00:00`
 
 > O gate automatizado verifica estrutura, conteúdo mínimo, fontes específicas e wikilinks, mas não comprova a veracidade. A revisão factual por IA é registrada separadamente da revisão humana; ela não deve ser apresentada como aprovação humana e pode deixar erros sem detectar.
 
@@ -9,11 +9,11 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - Escopo de notas: `knowledge-federation/domains`
 - Escopo de resolução de links: `knowledge-federation`, `knowledge-federation/domains`
 - MOCs: fora do gate de qualidade; servem apenas como navegação.
-- Arquivos avaliados: **6,540**
-- Candidatas aprovadas no gate e prontas para revisão factual: **6,440**
+- Arquivos avaliados: **6,640**
+- Candidatas aprovadas no gate e prontas para revisão factual: **6,540**
 - Com revisão factual humana aprovada: **49**
-- Com revisão factual por IA aprovada e identificada: **6,391**
-- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **6,440**
+- Com revisão factual por IA aprovada e identificada: **6,491**
+- Notas válidas pelo protocolo atual (gate + aprovação humana ou IA): **6,540**
 - Com pendências de qualidade: **100**
 - Critério aplicado: mínimo de 100 palavras, seções de conteúdo, 2 fontes HTTPS específicas, links wiki resolvidos e sem frases de placeholder conhecidas.
 
@@ -6065,6 +6065,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0009/software/seguranca/zmap-modulos-sondagem-probe-modules-tcp-synscan-icmp-udp-dns.md` — 342 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zmap-pipeline-dois-estagios-zmap-l4-zgrab2-l7-handshakes.md` — 375 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0009/software/seguranca/zmap-zgrab2-configuracao-multiplos-modulos-multiple-ini-triggers.md` — 363 palavras; 3 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-assetbundle-cache-cleanup.md` — 254 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-assetreference-explicit-load-release.md` — 247 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-async-operation-handles.md` — 230 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-check-and-update-catalogs-runtime.md` — 236 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-content-only-update-build-state.md` — 267 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-download-progress-bytes.md` — 237 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-load-single-vs-multiple-keys.md` — 237 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-predownload-dependencies-consent.md` — 242 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-profiles-build-load-paths.md` — 263 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/addressables-release-reference-count-memory.md` — 254 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-especialista-como-tool-ou-handoff.md` — 304 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-guardrails-fronteiras-primeiro-e-ultimo-agente.md` — 330 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-handoff-destino-fixo.md` — 313 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6075,6 +6085,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-session-versus-responses-continuation.md` — 317 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-streaming-drenar-ate-fim.md` — 310 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/agents-sdk-tracing-flush-workers.md` — 316 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-configurar-chat-transport.md` — 226 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-data-parts-persistentes-transient.md` — 238 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-escolher-text-stream-ou-data-stream.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-input-state-fora-do-usechat.md` — 238 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-persistir-e-validar-uimessages.md` — 251 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-renderizar-uimessage-parts.md` — 235 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-retomar-streams-com-storage.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-status-erro-e-mensagem-publica.md` — 231 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-stop-nao-cancela-geracao-retomavel.md` — 252 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ai-sdk-ui-tools-execution-and-output.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/anthropic-api-controlar-limites-com-max-tokens.md` — 216 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/anthropic-api-depurar-layout-com-mensagens-de-visao.md` — 237 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/anthropic-api-estruturar-mensagens-tool-result.md` — 232 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6133,6 +6153,15 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/claude-code-usar-prompt-caching-para-bases-extensas.md` — 242 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/claude-code-validar-testes-antes-do-commit.md` — 222 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-ajustar-prompt-sem-quebrar-o-grafo.md` — 197 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-distinguir-fila-de-interrupt.md` — 268 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-evento-final-e-executed.md` — 262 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-exportar-workflow-formato-api.md` — 265 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-history-resultado-por-prompt-id.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-object-info-nos-instalados.md` — 260 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-prompt-validacao-e-fila.md` — 240 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-upload-image-referencia.md` — 287 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-view-parametros-de-arquivo.md` — 261 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-api-websocket-client-id-correlacao.md` — 248 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-aprovar-asset-gerado-para-producao.md` — 204 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-controlar-duracao-e-numero-de-frames.md` — 192 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-escolher-template-antes-de-montar-do-zero.md` — 189 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6141,6 +6170,7 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-instalar-modelos-nos-caminhos-esperados.md` — 198 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-ler-um-workflow-como-grafo.md` — 192 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-salvar-e-versionar-o-workflow.md` — 202 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-separar-server-api-e-comfy-api-v2.md` — 294 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/comfyui-usar-frames-de-referencia-com-cautela.md` — 200 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/concept-art-ia-refinar-detalhes-com-inpainting.md` — 251 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/context-engineering-injetar-tipos-estaticos-e-interfaces.md` — 208 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6188,6 +6218,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/documentacao-revisar-tutorial-gerado-por-ia.md` — 181 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/documentacao-tornar-resultado-e-verificacao-explicitos.md` — 184 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/documentacao-usar-imagens-acessiveis-e-uteis.md` — 195 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-autogenerated-sidebar-filesystem.md` — 224 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-current-vs-latest-version.md` — 210 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-doc-id-e-slug-permalink.md` — 210 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-docs-multi-instance-unique-id.md` — 219 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-i18n-localized-content-layout.md` — 218 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-mdx-vs-commonmark-format.md` — 215 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-sidebar-association-pagination.md` — 215 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-sidebar-position-frontmatter.md` — 209 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-version-safe-links-and-imports.md` — 221 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/docusaurus-versioning-freeze-current-docs.md` — 218 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ferramentas-pedir-confirmacao-antes-de-efeitos-externos.md` — 193 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ferramentas-restringir-acoes-de-gameplay.md` — 198 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ferramentas-testar-excecoes-e-falhas-de-execucao.md` — 202 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6232,6 +6272,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-desacoplar-transicoes-com-sinais.md` — 235 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-desviar-de-obstaculos-com-raycast3d-multiplos.md` — 245 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-distinguir-caminho-de-evasao-local.md` — 201 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-extensoes-prioridade.md` — 234 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-format-version-invalidacao.md` — 234 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-identidade-e-nome-visivel.md` — 232 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-opcoes-e-presets.md` — 238 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-registro-no-editorplugin.md` — 221 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-save-path-gen-files-variants.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-threaded-import-safety.md` — 247 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-tipo-e-extensao-de-saida.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-validar-source-file-e-error.md` — 257 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/godot-editorimportplugin-visibilidade-de-opcoes.md` — 217 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-escolher-navigationlayers-por-uso.md` — 197 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-estruturar-maquina-de-estados-hierarquica.md` — 222 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/godot-implementar-steering-seek-e-flee.md` — 232 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6262,6 +6312,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/hf-temperature-topk-topp-defaults.md` — 454 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/how-to-organizar-passos-por-tarefa.md` — 178 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ia-local-garantir-isolamento-sem-conexao-externa.md` — 222 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-compile-json-story-runtime.md` — 231 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-continue-output-granularity.md` — 246 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-current-choices-and-choice-index.md` — 228 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-evaluationfunction-call-from-game.md` — 236 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-external-functions-lookahead-safe.md` — 258 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-precompile-include-filehandler.md` — 250 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-runtime-error-handler.md` — 247 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-save-complete-story-state-json.md` — 248 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-tags-como-metadados-de-conteudo.md` — 238 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ink-variables-state-and-observers.md` — 235 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/langgraph-checkpointer-versus-store.md` — 354 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/langgraph-event-streaming-projecoes-concorrentes.md` — 300 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/langgraph-functional-api-task-result-checkpoint.md` — 338 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6314,7 +6374,27 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/oas311-reference-object-vs-schema-ref.md` — 316 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/oas311-webhooks-versus-callbacks.md` — 349 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-ajustar-num-ctx-e-quantizacao-gguf.md` — 216 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-chat-array-de-messages.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-copy-modelo-com-nome-separado.md` — 263 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-create-configurar-modelo-derivado.md` — 250 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-delete-model-protegido.md` — 240 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-embeddings-lote-e-truncamento.md` — 246 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-generate-stream-e-done.md` — 269 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-json-schema-structured-output.md` — 258 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-pull-acompanhar-progresso.md` — 265 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-separar-base-url-local-cloud.md` — 255 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-api-tags-vs-show-model-metadata.md` — 259 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/ollama-gerenciar-permanencia-com-keep-alive.md` — 218 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-append-audio-chunks-base64.md` — 260 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-audio-output-delta-vs-done.md` — 246 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-client-secret-browser.md` — 267 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-function-call-execucao-aplicacao.md` — 262 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-interromper-audio-e-truncate.md` — 264 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-out-of-band-conversation-none.md` — 230 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-push-to-talk-sem-vad.md` — 301 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-session-update-estado-efetivo.md` — 246 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-transcricao-item-id.md` — 249 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/openai-realtime-vad-configurar-turn-detection.md` — 238 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/openusd-asset-resolver-context-identifiers.md` — 306 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/openusd-attribute-default-e-time-samples.md` — 300 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/openusd-flattening-stage-export.md` — 301 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6369,6 +6449,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/responses-api-tratar-falhas-e-repeticao.md` — 197 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/saida-estruturada-usar-json-schema-estrito.md` — 195 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/spritesheet-ia-empacotar-e-fatiar-atlas-de-sprites.md` — 247 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-a11y-axe-auditoria-manual.md` — 220 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-args-niveis-serializaveis.md` — 234 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-autodocs-tags-living-documentation.md` — 226 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-csf-default-meta-named-stories.md` — 210 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-globals-toolbar-decorator-theme.md` — 226 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-loaders-before-render-loaded-context.md` — 253 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-play-interaction-canvas-userevent.md` — 229 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-typescript-meta-storyobj-satisfies.md` — 215 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-visual-tests-baselines-chromatic.md` — 224 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/storybook-vitest-addon-stories-como-component-tests.md` — 228 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/telemetria-jogos-gerar-heatmaps-de-morte-e-posicao.md` — 244 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/texturas-ia-derivar-mapas-de-normal-e-roughness.md` — 249 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/texturas-ia-gerar-padroes-pbr-seamless-tileaveis.md` — 225 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
@@ -6402,6 +6492,16 @@ Executada em: `2026-10-04T21:29:13+00:00`
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unity-playablegraph-mesclar-animacoes-procedurais.md` — 230 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unity-refrw-invalidacao-apos-estrutural.md` — 448 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unity-safety-system-corrida-exception.md` — 482 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-compatibilidade-operadores-backend.md` — 280 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-escolher-backend-por-modelo.md` — 282 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-evitar-readback-sincrono-na-main-thread.md` — 269 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-inspecionar-shape-e-dtype-da-entrada.md` — 277 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-modelasset-runtime-model-worker.md` — 257 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-peekoutput-copyoutput-propriedade.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-readback-and-clone-async-lifecycle.md` — 266 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-schedule-iterable-frames.md` — 252 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-shapes-dinamicos-compatibilidade.md` — 285 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
+- `knowledge-federation/domains/software-0010/software/criacao-ia/unity-sentis-texture-nchw-preprocessamento.md` — 264 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unity-utility-ai-avaliar-decisoes-com-curvas.md` — 237 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unity-utility-ai-compor-fatores-de-saude-e-distancia.md` — 236 palavras; 2 fontes específicas; revisão factual: por IA aprovada.
 - `knowledge-federation/domains/software-0010/software/criacao-ia/unreal-acionar-sequencer-durante-gameplay.md` — 190 palavras; 2 fontes específicas; revisão factual: por IA aprovada.

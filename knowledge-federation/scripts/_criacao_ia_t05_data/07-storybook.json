@@ -1,0 +1,235 @@
+{
+  "group": "Storybook: produzir histórias tipadas, mocks de UI e verificações automatizadas",
+  "notes": [
+    {
+      "slug": "storybook-csf-default-meta-named-stories",
+      "title": "Storybook: organizar CSF com meta default e histórias como exports nomeados",
+      "one": "Component Story Format representa a configuração do componente no export default e cada estado exibível como um export nomeado do módulo.",
+      "why": "A estrutura baseada em módulos é portátil entre ferramentas, fácil de revisar e oferece entradas consistentes para addons, documentação e testes.",
+      "how": "Crie um arquivo `.stories` próximo ao componente, exporte `meta` por default e descreva estados como `Primary`, `Loading` ou `Empty` em exports nomeados; derive título de `component` ou mantenha título legível estaticamente.",
+      "example": "`Button.stories.ts` exporta `meta` com `component: Button` e estados `Primary` e `Disabled`, cada um com seus próprios args.",
+      "limits": "Arquivos de história são desenvolvimento-only segundo o guia; exports e metadados precisam respeitar regras de análise estática do builder.",
+      "verify": "Inicie Storybook, confirme agrupamento e nomes no sidebar e verifique que cada export aparece no catálogo sem ser incluído no bundle de produção.",
+      "sources": [
+        {
+          "label": "Storybook — How to write stories",
+          "url": "https://storybook.js.org/docs/writing-stories",
+          "why": "Define CSF, metadados default, exports nomeados e localização dos arquivos de história."
+        },
+        {
+          "label": "Storybook — Component Story Format",
+          "url": "https://storybook.js.org/docs/api/csf",
+          "why": "Apresenta a especificação modular que padroniza meta e definições de story."
+        }
+      ],
+      "review": "O guia confirma default export para metadata, named exports para estados e histórias como arquivos de desenvolvimento; o exemplo usa esse contrato."
+    },
+    {
+      "slug": "storybook-args-niveis-serializaveis",
+      "title": "Storybook: distribuir args por story e componente sem guardar estado global em props",
+      "one": "Args são valores serializáveis que configuram a renderização; podem ser definidos por história, componente ou global e alterações atualizam o componente.",
+      "why": "Uma hierarquia explícita reduz duplicação e deixa controles do Storybook editar props sem modificar o componente de produção.",
+      "how": "Coloque valores exclusivos no `args` da história, defaults compartilhados no meta do componente e configurações globais adequadas no preview; prefira `globals` com toolbar para opções realmente globais como tema.",
+      "example": "Stories `Primary` e `Disabled` compartilham label no meta, variam `primary` individualmente e usam um global de tema para trocar contexto visual da biblioteca.",
+      "limits": "O objeto args precisa ser JSON-serializável; callbacks e valores complexos de framework podem exigir mapeamento ou outra solução em vez de controle direto.",
+      "verify": "Altere um controle no painel, confirme rerender e valide precedência entre nível global, meta e story; teste que URL e addons continuam serializando os valores necessários.",
+      "sources": [
+        {
+          "label": "Storybook — Args",
+          "url": "https://storybook.js.org/docs/writing-stories/args",
+          "why": "Define níveis de args, serialização JSON e rerenderização quando seus valores mudam."
+        },
+        {
+          "label": "Storybook — Toolbars & globals",
+          "url": "https://storybook.js.org/docs/essentials/toolbars-and-globals",
+          "why": "Distingue globals de args e mostra controle por toolbar e decorators."
+        }
+      ],
+      "review": "A documentação descreve args como JSON serializáveis em três níveis e recomenda globals para valores globais interativos, como tema."
+    },
+    {
+      "slug": "storybook-typescript-meta-storyobj-satisfies",
+      "title": "Storybook TypeScript: ligar Meta e StoryObj com satisfies para checar args",
+      "one": "Os tipos `Meta` e `StoryObj` conectam propriedades do componente às stories, e `satisfies` preserva inferência enquanto verifica compatibilidade.",
+      "why": "Erros de propriedades ausentes ou inválidas aparecem no editor e no build em vez de só surgir quando a story é aberta.",
+      "how": "Tipifique metadata como `satisfies Meta<typeof Component>`, derive `StoryObj<typeof meta>` e aplique `satisfies Story` aos exports de story; use tipo de interseção quando houver args customizados.",
+      "example": "Uma story `Button` deriva o tipo de `meta`, e `Primary` recebe `args` com `primary` e `label` validados contra as props do componente.",
+      "limits": "O recurso de inferência via `satisfies` requer TypeScript 4.9 ou superior; CSF Next está indicado como preview nas docs consultadas, não como API estável universal.",
+      "verify": "Rode typecheck com prop obrigatória omitida, valor inválido e arg customizado; confirme que a conexão entre Meta e StoryObj sinaliza os três casos.",
+      "sources": [
+        {
+          "label": "Storybook — Writing stories in TypeScript",
+          "url": "https://storybook.js.org/docs/writing-stories/typescript",
+          "why": "Documenta `Meta`, `StoryObj`, `satisfies` e inferência de args."
+        },
+        {
+          "label": "Storybook — How to write stories",
+          "url": "https://storybook.js.org/docs/writing-stories",
+          "why": "Mostra padrão de meta tipado e story com args em CSF."
+        }
+      ],
+      "review": "A página TypeScript descreve verificação de args e requisito de TS 4.9 para satisfies; a ressalva de preview evita classificar CSF Next como estável."
+    },
+    {
+      "slug": "storybook-globals-toolbar-decorator-theme",
+      "title": "Storybook: usar globals e toolbar para variar contexto compartilhado como tema",
+      "one": "Globals representam entradas de renderização não específicas de uma story e costumam ser consumidos por decorators, separados do objeto args.",
+      "why": "Tema, locale ou viewport podem mudar o contexto de várias histórias; armazenar isso em props individuais mistura estado ambiental com API do componente.",
+      "how": "Declare `globalTypes` e `initialGlobals` no preview, exponha as opções por toolbar e leia `context.globals` no decorator para envolver stories em providers apropriados.",
+      "example": "Uma toolbar alterna `light` e `dark`; um decorator lê o global `theme` e fornece o tema correspondente sem adicionar prop artificial a cada componente.",
+      "limits": "Um `globals` definido em story ou meta fixa o valor e desativa aquele controle da toolbar para a story; use override apenas quando o cenário exige valor constante.",
+      "verify": "Alterne a toolbar em várias stories, confirme rerender e verifique que valores definidos por story ficam travados como previsto.",
+      "sources": [
+        {
+          "label": "Storybook — Toolbars & globals",
+          "url": "https://storybook.js.org/docs/essentials/toolbars-and-globals",
+          "why": "Define globals, configuração de toolbar, acesso por context e uso em decorator."
+        },
+        {
+          "label": "Storybook — Args",
+          "url": "https://storybook.js.org/docs/writing-stories/args",
+          "why": "Explica por que globals são preferíveis a args para algumas configurações compartilhadas."
+        }
+      ],
+      "review": "A referência coloca `globalTypes` no preview, expõe valores por `context.globals` e documenta que override na story desativa a toolbar."
+    },
+    {
+      "slug": "storybook-loaders-before-render-loaded-context",
+      "title": "Storybook: usar loaders assíncronos como escape hatch para dados externos",
+      "one": "Loaders são funções assíncronas executadas antes da renderização e seus resultados ficam disponíveis no contexto da story em `loaded`.",
+      "why": "Uma story que depende de dados externos pode precisar aguardar resposta antes de montar o componente, sem incorporar estado de rede à própria API de produção.",
+      "how": "Prefira args para dados estáticos de story. Quando há necessidade real de carga assíncrona, defina loaders no nível global, componente ou story e leia `loaded` no contexto de render ou decorator.",
+      "example": "Um loader de preview disponibiliza `currentUser` a todas as stories; um loader local busca um todo item e o render da story combina os dados carregados com args explícitos.",
+      "limits": "A documentação classifica loaders como recurso avançado e recomenda args na maioria dos casos. Os loaders aplicáveis executam em paralelo e valores duplicados seguem precedência de global para componente e story.",
+      "verify": "Teste ausência e sucesso de rede, confirme que o render aguarda conclusão, verifique chaves no contexto `loaded` e crie colisão controlada para validar precedência.",
+      "sources": [
+        {
+          "label": "Storybook — Loaders",
+          "url": "https://storybook.js.org/docs/writing-stories/loaders",
+          "why": "Define timing antes do render, contexto `loaded`, escopos, concorrência e precedência de loaders."
+        },
+        {
+          "label": "Storybook — Args",
+          "url": "https://storybook.js.org/docs/writing-stories/args",
+          "why": "Descreve args como forma recomendada de controlar dados de stories e renderização."
+        }
+      ],
+      "review": "A documentação chama loaders de escape hatch, recomenda args para dados e especifica loaders globais, de componente e story executados antes do render."
+    },
+    {
+      "slug": "storybook-play-interaction-canvas-userevent",
+      "title": "Storybook: escrever testes de interação como play com canvas e userEvent awaited",
+      "one": "Uma função `play` executa depois da renderização e pode simular ações do usuário e verificar o estado resultante da story.",
+      "why": "Um estado estático comprova renderização, mas não garante que digitar, clicar, enviar formulário ou abrir diálogo funcione como esperado.",
+      "how": "Receba `canvas` e `userEvent` em `play`, consulte elementos com queries acessíveis e aguarde cada interação assíncrona. Use `screen` para elementos renderizados fora da raiz da story.",
+      "example": "A história preenche campos por label, clica em botão por role e verifica a confirmação visível sem depender da ordem de nós na árvore DOM.",
+      "limits": "A execução automatizada não substitui a decisão sobre quais fluxos são importantes; `data-testid` deve ser último recurso depois de queries que representam a experiência real.",
+      "verify": "Rode a story no painel Interactions e no ambiente de teste, confirme que cada `userEvent` foi awaited e que as asserções falham quando o resultado esperado é removido.",
+      "sources": [
+        {
+          "label": "Storybook — Interaction tests",
+          "url": "https://storybook.js.org/docs/writing-tests/interaction-testing",
+          "why": "Documenta play, canvas, userEvent, asserções e preferência por queries acessíveis."
+        },
+        {
+          "label": "Storybook — Play function",
+          "url": "https://storybook.js.org/docs/writing-stories/play-function",
+          "why": "Explica execução pós-render, canvas e uso de `screen` para elementos externos."
+        }
+      ],
+      "review": "As páginas definem play pós-render e exigem await em userEvent; a nota segue a prioridade de queries acessíveis sobre test IDs."
+    },
+    {
+      "slug": "storybook-vitest-addon-stories-como-component-tests",
+      "title": "Storybook: executar stories como component tests com addon Vitest",
+      "one": "O addon Vitest transforma stories em testes de componente executados em browser e pode combiná-los com cobertura e outros addons de teste.",
+      "why": "Os mesmos estados que documentam o componente também podem ser exercitados em terminal ou CI, reduzindo divergência entre showcase e suíte de teste.",
+      "how": "Instale e configure `@storybook/addon-vitest`, verifique suporte do framework Vite e da versão Vitest exigida e habilite browser mode conforme setup oficial.",
+      "example": "Um projeto React Vite executa stories com Playwright Chromium em modo headless, usando seu `play` e verificações no pipeline de integração contínua.",
+      "limits": "A documentação exige framework Storybook baseado em Vite e Vitest compatível; setup para Next.js requer o framework `@storybook/nextjs-vite` nas condições indicadas.",
+      "verify": "Rode addon no terminal, confirme que cada story esperada aparece como teste, execute uma falha intencional e valide saída no CI.",
+      "sources": [
+        {
+          "label": "Storybook — Vitest addon",
+          "url": "https://storybook.js.org/docs/writing-tests/integrations/vitest-addon",
+          "why": "Descreve stories como component tests, browser mode e pré-requisitos do addon."
+        },
+        {
+          "label": "Storybook — Interaction tests",
+          "url": "https://storybook.js.org/docs/writing-tests/interaction-testing",
+          "why": "Explica as funções play que o Vitest addon pode executar como parte do teste."
+        }
+      ],
+      "review": "A referência lista framework Vite e versão mínima de Vitest e descreve execução em browser; o exemplo de Chromium segue o setup documentado."
+    },
+    {
+      "slug": "storybook-visual-tests-baselines-chromatic",
+      "title": "Storybook: detectar regressões de pixels com visual tests e baselines revisados",
+      "one": "Testes visuais comparam snapshots renderizados de histórias contra baselines e destacam diferenças de pixels para revisão.",
+      "why": "Mudanças de CSS, tipografia ou layout podem quebrar a aparência sem alterar texto ou comportamento funcional que um teste unitário verifica.",
+      "how": "Configure o addon oficial de visual testing conectado ao Chromatic, crie baseline inicial e execute a comparação após mudanças; aceite atualizações somente quando o diff for intencional.",
+      "example": "Uma alteração na largura do botão gera diff para stories afetadas; o revisor compara pixels no painel, corrige regressão ou aprova baseline de mudança deliberada.",
+      "limits": "O fluxo descrito envia stories ao serviço cloud Chromatic; screenshots não provam acessibilidade, lógica interna ou correção em toda combinação de dispositivo.",
+      "verify": "Faça uma mudança cosmética controlada, confirme que o diff é detectado, depois restaure ou aceite baseline e valide repetibilidade no CI.",
+      "sources": [
+        {
+          "label": "Storybook — Visual tests",
+          "url": "https://storybook.js.org/docs/writing-tests/visual-testing",
+          "why": "Descreve snapshots, baselines, comparação de pixels e integração Chromatic."
+        },
+        {
+          "label": "Chromatic visual testing",
+          "url": "https://www.chromatic.com/docs/visual-tests/",
+          "why": "Especifica revisão de mudanças visuais e configuração de testes visuais hospedados."
+        }
+      ],
+      "review": "A documentação descreve comparação de pixels com baseline e revisão humana de mudanças; a nota não trata screenshot como teste funcional ou a11y."
+    },
+    {
+      "slug": "storybook-autodocs-tags-living-documentation",
+      "title": "Storybook: habilitar Autodocs por tag e estender a documentação com MDX",
+      "one": "Autodocs usa metadados de histórias para gerar documentação de componentes quando um arquivo CSF inclui a tag `autodocs`.",
+      "why": "Ligar docs a stories mantém exemplos renderizáveis perto das props e reduz o custo de reconstruir tabela de controles manualmente.",
+      "how": "Adicione `tags: ['autodocs']` globalmente no preview ou no meta do componente; complemente a página gerada com MDX e Doc Blocks quando precisar explicar contexto não inferível.",
+      "example": "Uma biblioteca ativa autodocs no preview e adiciona MDX com decisões de uso, mantendo stories reais como exemplos interativos e controles como referência de args.",
+      "limits": "Autodocs infere metadata conhecida, mas não substitui orientação de uso, acessibilidade ou trade-offs de produto que não estão nas stories.",
+      "verify": "Confirme uma página gerada por componente marcado, remova a tag de uma story que não deve aparecer e revise que conteúdo inferido corresponde à API pública.",
+      "sources": [
+        {
+          "label": "Storybook — Autodocs",
+          "url": "https://storybook.js.org/docs/writing-docs/autodocs",
+          "why": "Define a tag `autodocs`, geração automática e extensão da página com MDX."
+        },
+        {
+          "label": "Storybook — Args",
+          "url": "https://storybook.js.org/docs/writing-stories/args",
+          "why": "Explica metadados de args usados para controles e documentação de componente."
+        }
+      ],
+      "review": "O guia condiciona geração à tag autodocs e recomenda MDX/Doc Blocks para complementar; a nota não trata inferência como documentação completa."
+    },
+    {
+      "slug": "storybook-a11y-axe-auditoria-manual",
+      "title": "Storybook a11y: combinar varredura axe com verificação manual de acessibilidade",
+      "one": "O addon a11y verifica DOM com regras axe-core e identifica violações conhecidas, mas também lista situações que precisam de confirmação manual.",
+      "why": "Automação encontra problemas comuns de atributos e contraste, porém não demonstra por si só que teclado, leitor de tela e fluxo de uso funcionam para pessoas.",
+      "how": "Instale `@storybook/addon-a11y`, execute o painel por story e revise abas de violações, passes e incomplete; rode checks com Vitest addon se fizer sentido no CI.",
+      "example": "Uma story de menu passa axe, mas o time ainda percorre foco por teclado e confirma que leitor de tela anuncia abertura, seleção e retorno ao gatilho.",
+      "limits": "A documentação descreve heurísticas e verificações automáticas, não certificação WCAG; achados incomplete e semântica contextual exigem avaliação humana.",
+      "verify": "Use histórias com estados vazio, foco, erro e conteúdo dinâmico, examine incomplete e complete revisão manual de teclado, contraste e anúncio com tecnologia assistiva.",
+      "sources": [
+        {
+          "label": "Storybook — Accessibility tests",
+          "url": "https://storybook.js.org/docs/writing-tests/accessibility-testing",
+          "why": "Descreve addon axe-core, violações, passes e itens incomplete para confirmar manualmente."
+        },
+        {
+          "label": "Deque axe-core",
+          "url": "https://github.com/dequelabs/axe-core",
+          "why": "Documenta a biblioteca de regras automatizadas usada pelo addon Storybook."
+        }
+      ],
+      "review": "A documentação informa que axe examina heurísticas e marca casos incompletos; a nota exige avaliação manual além do painel."
+    }
+  ]
+}
