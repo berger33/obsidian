@@ -11,11 +11,11 @@ Atualizado em: 2026-10-04
 
 ## Estado editorial do diretório ativo
 
-- Arquivos Markdown em `domains/`: **6540** (100 sementes legadas + 6440 notas autorais substantivas).
-- Candidatas aprovadas no gate automatizado: **6440**; revisões humanas registradas: **49**; revisões factuais por IA: **6391**; 100 sementes legadas mantêm pendências.
-- Os lotes atuais totalizam 6440 notas válidas pelo protocolo; os três primeiros lotes estão completos e o quarto lote `software-criacao-ia-2000-0004` avançou para 400/2.000 após a tranche 4, com revisão factual, gate e reconciliação próprios.
+- Arquivos Markdown em `domains/`: **6640** (100 sementes legadas + 6540 notas autorais substantivas).
+- Candidatas aprovadas no gate automatizado: **6540**; revisões humanas registradas: **49**; revisões factuais por IA: **6491**; 100 sementes legadas mantêm pendências.
+- Os lotes atuais totalizam 6540 notas válidas pelo protocolo; os três primeiros lotes estão completos e o quarto lote `software-criacao-ia-2000-0004` avançou para 500/2.000 após a tranche 5, com revisão factual, gate e reconciliação próprios.
 
-- Quarto lote em andamento: [`software-criacao-ia-2000-0004`](../exports/batches/software-criacao-ia-2000-0004.md), 400/2.000 após tranche 4; consulte a [revisão factual](../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md), o [gate](../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md), a [reconciliação](../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md) e [[MOC-Criacao-IA-Software-0010]].
+- Quarto lote em andamento: [`software-criacao-ia-2000-0004`](../exports/batches/software-criacao-ia-2000-0004.md), 500/2.000 após tranche 5; consulte a [revisão factual](../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-05.md), o [gate](../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-05.md), a [reconciliação](../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-05.md) e [[MOC-Criacao-IA-Software-0010]].
 
 ## Resumo Executivo
 

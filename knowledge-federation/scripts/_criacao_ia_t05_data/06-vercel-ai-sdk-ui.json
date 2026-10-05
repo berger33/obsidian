@@ -1,0 +1,155 @@
+{
+  "group": "Vercel AI SDK UI: estado de chat, persistência, ferramentas e protocolos de stream",
+  "notes": [
+    {
+      "slug": "ai-sdk-ui-input-state-fora-do-usechat",
+      "title": "AI SDK UI: manter o estado do campo de entrada fora de useChat no AI SDK 5",
+      "one": "A partir do AI SDK 5, `useChat` usa arquitetura baseada em transportes e não mantém internamente o estado do campo de entrada.",
+      "why": "Separar texto digitado do estado do histórico dá ao formulário liberdade de interação e evita depender de uma API de input removida na mudança arquitetural.",
+      "how": "Armazene o valor do input no componente e use `sendMessage({ text })` no submit; deixe `useChat` administrar mensagens, estado da requisição e streaming através do transport configurado.",
+      "example": "Um componente React usa `useState('')`, envia o texto por `sendMessage`, limpa o campo após a chamada e desabilita submit enquanto `status` não está `ready`.",
+      "limits": "A referência destaca que essa mudança ocorreu no AI SDK 5.0; exemplos de versões anteriores podem expor `input` e `handleSubmit` que não correspondem à API atual.",
+      "verify": "Confira a versão instalada do pacote, compile o formulário com os tipos atuais e teste input vazio, envio em andamento e resposta concluída.",
+      "sources": [
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Registra a mudança de AI SDK 5 para transportes e remoção do estado interno de input."},
+        {"label": "AI SDK UI — Chatbot", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot", "why": "Mostra input local e chamada de `sendMessage` no exemplo atual de chat."}
+      ],
+      "review": "A documentação da API identifica a mudança do AI SDK 5.0 e o exemplo atual administra input pelo componente."
+    },
+    {
+      "slug": "ai-sdk-ui-renderizar-uimessage-parts",
+      "title": "AI SDK UI: renderizar UIMessage.parts por tipo em vez de presumir texto único",
+      "one": "`UIMessage.parts` pode conter texto, ferramentas, resultados e outros dados, então a interface deve renderizar cada parte por seu tipo.",
+      "why": "Reduzir toda mensagem a uma string perde estados de ferramentas e conteúdo que não é texto, além de limitar extensões futuras da conversa.",
+      "how": "Percorra `message.parts`, faça branch por `part.type` e desenhe componentes apropriados para texto, tool invocation e outros tipos aceitos. Use `message.role` e `message.id` para organizar a apresentação.",
+      "example": "Uma mensagem assistant renderiza parágrafos para `text`, um card de confirmação para `tool-askForConfirmation` e um resultado estruturado para uma parte de ferramenta concluída.",
+      "limits": "Tipos e estados disponíveis dependem das ferramentas e schemas habilitados; mensagens persistidas antigas podem exigir validação ou migração antes do render.",
+      "verify": "Crie fixtures com texto simples, chamada de ferramenta, resultado e erro; confirme que cada tipo é exibido sem descartar partes desconhecidas silenciosamente.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot", "why": "Recomenda `parts` no lugar de `content` e enumera texto e chamadas/resultados de ferramentas."},
+        {"label": "AI SDK Core — UIMessage", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message", "why": "Descreve a estrutura e os tipos de partes de mensagens exibidas na interface."}
+      ],
+      "review": "O guia recomenda parts por suportar texto, invocação e resultado; o exemplo trata estados de ferramenta como componentes separados."
+    },
+    {
+      "slug": "ai-sdk-ui-configurar-chat-transport",
+      "title": "AI SDK UI: configurar endpoint e cabeçalhos no DefaultChatTransport",
+      "one": "O `DefaultChatTransport` centraliza endpoint, credenciais, cabeçalhos e preparação de requisição, em vez de embutir detalhes de rede no formulário.",
+      "why": "Uma fronteira de transporte clara facilita alternar ambiente, autenticação e payload sem espalhar configuração por cada botão ou componente.",
+      "how": "Passe `transport` a `useChat` e configure `api`, `credentials`, `headers`, `body` ou `fetch`; use `prepareSendMessagesRequest` quando o backend espera estrutura específica para mensagem e ID do chat.",
+      "example": "Um cliente escolhe `/api/chat`, envia cookie com `credentials: 'include'` e adiciona um `chatId` ao corpo na função de preparação da requisição.",
+      "limits": "Valores definidos por request podem combinar com configuração de transporte; valide no servidor corpo, usuário e identificador em vez de confiar no que o browser envia.",
+      "verify": "Inspecione uma requisição no teste de integração, confira URL, método, credenciais e shape do JSON, e valide que headers não são enviados a um host não confiável.",
+      "sources": [
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Lista opções de DefaultChatTransport e callbacks de preparação da requisição."},
+        {"label": "AI SDK UI — Chatbot", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot", "why": "Apresenta a configuração do endpoint via transport no fluxo atual de `useChat`."}
+      ],
+      "review": "A referência enumera endpoint, credenciais, headers, body e preparação customizada; a recomendação de validação server-side é apresentada como segurança de aplicação."
+    },
+    {
+      "slug": "ai-sdk-ui-persistir-e-validar-uimessages",
+      "title": "AI SDK UI: persistir UIMessage e validar tools e metadata antes de converter",
+      "one": "Para persistência, armazene mensagens no formato `UIMessage` e valide mensagens recuperadas antes de convertê-las para a forma enviada ao modelo.",
+      "why": "A estrutura da interface inclui IDs, partes, metadados e estados de ferramenta; aceitar conteúdo salvo sem validar pode quebrar conversão ou reintroduzir payloads incompatíveis.",
+      "how": "Guarde o array completo de `UIMessage`, incluindo IDs estáveis para restauração. Antes de chamar `convertToModelMessages`, use `validateUIMessages` com schemas atuais de ferramentas, partes de dados e metadata.",
+      "example": "Uma rota carrega histórico por chat ID, valida tool calls contra o catálogo de ferramentas vigente, converte mensagens aprovadas e persiste a resposta final recebida pelo callback de stream.",
+      "limits": "O tutorial de persistência declara que o exemplo simples não cobre autorização ou tratamento completo de erros; validação estrutural não prova que usuário possa acessar aquele chat.",
+      "verify": "Teste mensagens antigas, ferramenta removida, metadata inválida e chat ID não autorizado; confirme que o backend falha de forma controlada sem encaminhar conteúdo inválido ao modelo.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot Message Persistence", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence", "why": "Recomenda formato UIMessage e validação via `validateUIMessages` para tools, metadata e data parts."},
+        {"label": "AI SDK Core — UIMessage", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message", "why": "Documenta tipo de mensagem e campos preservados pela interface e persistência."}
+      ],
+      "review": "O guia diferencia UIMessage de ModelMessage e requer validação de conteúdo persistido com schemas atuais; autorização segue responsabilidade da aplicação."
+    },
+    {
+      "slug": "ai-sdk-ui-tools-execution-and-output",
+      "title": "AI SDK UI: separar execução de tools server-side e client-side com addToolOutput",
+      "one": "As ferramentas podem executar no servidor, no cliente ou exigir confirmação, e resultados do cliente retornam ao chat por `addToolOutput`.",
+      "why": "O lugar da execução define permissões, interação humana e quem pode acessar dados; apresentar todos os tool calls como se fossem apenas texto esconde esse fluxo.",
+      "how": "Implemente ferramentas server-side com `execute`, trate ferramentas client-side em `onToolCall`, mostre aprovação quando necessário e envie o resultado com `addToolOutput`. Configure `sendAutomaticallyWhen` se outra rodada deve começar após todos os resultados.",
+      "example": "Uma busca privada roda no backend, uma ferramenta de confirmação aparece como card no browser e uma geolocalização client-side retorna resultado só após consentimento explícito.",
+      "limits": "Uma chamada de ferramenta do modelo não é autorização para executar uma ação. Faça checagem de usuário e entradas no limite que efetivamente realiza a operação.",
+      "verify": "Teste ferramenta automática, ferramenta que exige aprovação, erro e saída; confirme que cada saída usa o `toolCallId` certo e que a submissão automática ocorre apenas quando desejado.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot Tool Usage", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-tool-usage", "why": "Explica os três padrões de execução, `addToolOutput` e ressubmissão automática."},
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Define callbacks `onToolCall`, `addToolOutput` e `sendAutomaticallyWhen`."}
+      ],
+      "review": "A documentação distingue ferramentas executadas no servidor, cliente e com interação e descreve o retorno por toolCallId; autorização permanece externa."
+    },
+    {
+      "slug": "ai-sdk-ui-retomar-streams-com-storage",
+      "title": "AI SDK UI: implementar retomada de stream com persistência e endpoint GET",
+      "one": "Retomar uma geração após desconexão exige estado persistido para mensagens e stream ativo, além de rotas POST e GET coordenadas pelo chat ID.",
+      "why": "`resume` no hook não armazena por si só o stream em execução; sem referência recuperável, uma página recarregada não sabe a qual saída se reconectar.",
+      "how": "Guarde no backend a relação chat–activeStreamId e dados de stream, crie POST que persiste/produz e GET que retoma ou retorna 204 quando não há stream ativo. Ative `resume` no cliente com ID estável.",
+      "example": "Um serviço armazena eventos em Redis, persiste `activeStreamId` no registro do chat e permite que `useChat` reabra GET após refresh para continuar recebendo a resposta.",
+      "limits": "O SDK oferece opções e callbacks, mas não provisiona Redis, persistência ou política de retenção automaticamente; o chat ID ainda precisa ser validado no servidor.",
+      "verify": "Comece geração longa, recarregue a página, confira reconexão e depois teste ausência de stream, stream concluído e chat pertencente a outro usuário.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot Resume Streams", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-resume-streams", "why": "Especifica storage, activeStreamId e os endpoints de criação e retomada."},
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Documenta opção `resume` e configuração do endpoint de reconexão no transport."}
+      ],
+      "review": "A documentação atribui storage e endpoints à aplicação e descreve resume como reconexão automática; o exemplo não sugere persistência fornecida pelo hook."
+    },
+    {
+      "slug": "ai-sdk-ui-stop-nao-cancela-geracao-retomavel",
+      "title": "AI SDK UI: em streams retomáveis, distinguir stop local de cancelamento server-side",
+      "one": "Em uma configuração retomável, `stop()` fecha a conexão do cliente e não cancela automaticamente o trabalho de geração no servidor.",
+      "why": "Reutilizar o botão local como se fosse cancelamento pode deixar modelo, job ou writer consumindo recursos e ainda permitir reconexão ao stream ativo.",
+      "how": "Implemente endpoint explícito de stop que persiste resposta parcial, cancela o produtor e remove o registro de stream ativo com proteção contra corrida; depois chame `chat.stop()` para parar a leitura local.",
+      "example": "Ao pressionar Stop, o cliente envia o chat e activeStreamId ao endpoint de cancelamento, recebe confirmação do servidor e encerra também a conexão local.",
+      "limits": "Navegar, fechar aba e refresh são desconexões, não intenção de cancelamento. O servidor precisa evitar que requisição de stop antiga encerre uma geração mais nova.",
+      "verify": "Teste separadamente refresh e botão stop; depois da desconexão, confirme que o stream pode ser retomado, e depois da ação explícita confirme que o produtor parou.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot Resume Streams", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-resume-streams", "why": "Afirma que stop em configuração retomável é desconexão e propõe endpoint dedicado de cancelamento."},
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Define `stop` como interrupção da requisição de streaming no cliente."}
+      ],
+      "review": "O guia de retomada diferencia explicitamente desconexão e cancelamento e especifica persistência parcial e proteção por activeStreamId."
+    },
+    {
+      "slug": "ai-sdk-ui-data-parts-persistentes-transient",
+      "title": "AI SDK UI: separar data parts persistentes de eventos transient de interface",
+      "one": "Uma parte `data-*` normal aparece em `message.parts` e pode ser persistida, enquanto uma parte marcada `transient` só é exposta durante o stream via `onData`.",
+      "why": "Status temporário, como “processando”, não deve reaparecer como conteúdo permanente se a aplicação pretende armazenar apenas fatos ligados à mensagem.",
+      "how": "Defina schemas de dados de UI, escreva data parts estáveis com ID para reconciliação e marque notificações efêmeras como transient; processe estas últimas no callback `onData` do hook.",
+      "example": "O servidor mantém `weather-1` em `message.parts`, atualiza o mesmo ID de loading para success e envia toast de conclusão como notification transient.",
+      "limits": "A parte transient não existe no histórico `parts`; se for necessária para recuperação ou auditoria, persista-a por um canal de domínio separado.",
+      "verify": "Inspecione o array de mensagens após stream, confirme reconciliação pelo mesmo ID e verifique que notificação transient chega em `onData`, mas não ao salvar UIMessage.",
+      "sources": [
+        {"label": "AI SDK UI — Streaming Custom Data", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/streaming-data", "why": "Define partes persistentes, transient, callback onData e reconciliação por ID."},
+        {"label": "AI SDK UI — Chatbot Message Persistence", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence", "why": "Recomenda validar data parts e metadata quando mensagens são carregadas do armazenamento."}
+      ],
+      "review": "A página de dados diz que transient não entra no histórico e só aparece em onData; IDs repetidos atualizam a parte persistente."
+    },
+    {
+      "slug": "ai-sdk-ui-escolher-text-stream-ou-data-stream",
+      "title": "AI SDK UI: escolher text stream ou data stream conforme a forma do evento",
+      "one": "Text streams juntam chunks de texto simples, enquanto data streams usam protocolo SSE de UI para transmitir partes tipadas além do texto.",
+      "why": "Escolher protocolo incompatível faz o cliente descartar ferramentas, metadados ou dados estruturados, ou interpretar eventos JSON como texto visível.",
+      "how": "Use `TextStreamChatTransport` apenas quando precisa de texto básico; use o protocolo de data stream para tool calls, fontes e partes customizadas. Um backend customizado deve enviar o header `x-vercel-ai-ui-message-stream: v1`.",
+      "example": "Um resumo de texto simples retorna chunks plain text; um assistente com tool parts e fontes usa stream de mensagens e envia eventos SSE tipados com o header exigido.",
+      "limits": "Text streams são suportados por hooks específicos, mas não carregam os mesmos tipos de dados de UI; confirme compatibilidade do backend e do transport.",
+      "verify": "Execute teste com resposta de texto e outro com parte customizada/tool call; valide parsing, cabeçalho e estado final no cliente escolhido.",
+      "sources": [
+        {"label": "AI SDK UI — Stream Protocols", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/stream-protocol", "why": "Compara protocolos de texto e dados e exige header v1 para backend customizado."},
+        {"label": "AI SDK UI — Streaming Custom Data", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/streaming-data", "why": "Mostra entrega de data parts por SSE e uso no array de mensagens."}
+      ],
+      "review": "A especificação distingue texto plain de SSE com partes tipadas e define o header v1; a nota orienta selecionar protocolo por capacidade necessária."
+    },
+    {
+      "slug": "ai-sdk-ui-status-erro-e-mensagem-publica",
+      "title": "AI SDK UI: conduzir controles por status e mostrar erro genérico ao usuário",
+      "one": "O `status` separa envio, streaming, pronto e erro, enquanto a interface pública deve evitar revelar detalhes internos da falha do servidor.",
+      "why": "Estados distintos ajudam a bloquear duplicidade e oferecer retry, e mensagens de erro genéricas reduzem vazamento de informação operacional.",
+      "how": "Use `submitted` e `streaming` para spinner ou botão de parada, `ready` para aceitar novo envio e `error` para estado recuperável; mantenha detalhes técnicos em logs protegidos e permita `regenerate` quando apropriado.",
+      "example": "Uma tela mostra spinner antes do primeiro chunk, desabilita enviar durante streaming, oferece tentar novamente após falha e apresenta “Algo deu errado” ao usuário.",
+      "limits": "A mensagem genérica não substitui telemetria nem tratamento de causas específicas; diferencie abort, disconnect e erro de execução no servidor quando a aplicação precisar persistir estado.",
+      "verify": "Simule resposta lenta, sucesso, falha HTTP e erro durante stream; confirme estados visuais, retry e ausência de stack trace ou segredo no texto exibido.",
+      "sources": [
+        {"label": "AI SDK UI — Chatbot", "url": "https://ai-sdk.dev/docs/ai-sdk-ui/chatbot", "why": "Define estados submetido, streaming, ready e error, com controles e erro genérico."},
+        {"label": "AI SDK UI — useChat reference", "url": "https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat", "why": "Lista status, error, regenerate e metadados de conclusão e desconexão."}
+      ],
+      "review": "A documentação associa os quatro valores de status a fases distintas e recomenda erro genérico na UI para evitar expor informação do servidor."
+    }
+  ]
+}

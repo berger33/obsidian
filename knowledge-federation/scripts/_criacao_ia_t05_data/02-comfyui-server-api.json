@@ -1,0 +1,235 @@
+{
+  "group": "ComfyUI Server API: exportar workflows, enfileirar execuções e recuperar resultados",
+  "notes": [
+    {
+      "slug": "comfyui-api-exportar-workflow-formato-api",
+      "title": "ComfyUI: exportar o grafo no formato API em vez de reutilizar o arquivo visual",
+      "one": "O JSON de execução da API não é o mesmo documento salvo pela interface visual; exporte a forma destinada à API antes de enviar um workflow.",
+      "why": "Misturar os dois formatos pode entregar metadados de layout onde o servidor espera nós executáveis, ou perder valores de widgets necessários à geração.",
+      "how": "A documentação recomenda `File → Export Workflow (API)` para obter o formato de API, que usa identificadores numéricos de nó, mantém valores de widget e omite dados puramente visuais. Guarde essa exportação como artefato de integração.",
+      "example": "Uma ferramenta de renderização exporta um workflow mínimo pelo menu API, substitui apenas o valor de prompt identificado e envia esse JSON para `/prompt`, sem serializar novamente o arquivo do canvas.",
+      "limits": "A exportação registra uma forma de workflow, não garante que os nós personalizados estejam instalados em outro servidor nem que valores de entrada continuem válidos após mudanças de versão.",
+      "verify": "Compare o JSON de API exportado com o payload esperado e execute uma submissão pequena; se houver erro de validação, leia `node_errors` em vez de corrigir o JSON visual por tentativa.",
+      "sources": [
+        {
+          "label": "ComfyUI — Workflow API Format",
+          "url": "https://docs.comfy.org/development/api-development/workflow-api-format.md",
+          "why": "Distingue o formato API do formato visual e descreve exportação e IDs de nós."
+        },
+        {
+          "label": "ComfyUI Server — API Examples",
+          "url": "https://docs.comfy.org/development/comfyui-server/api-examples.md",
+          "why": "Demonstra o uso de workflows exportados em chamadas da API do servidor."
+        }
+      ],
+      "review": "O guia diferencia expressamente os formatos de salvamento visual e de API, incluindo valores de widgets e omissão de metadados visuais."
+    },
+    {
+      "slug": "comfyui-api-prompt-validacao-e-fila",
+      "title": "ComfyUI: interpretar POST prompt como validação e enfileiramento, não como resultado",
+      "one": "`POST /prompt` valida e enfileira um workflow; sua resposta informa o identificador da execução ou os erros de validação, não a imagem final.",
+      "why": "Uma integração que trata aceitação do payload como conclusão pode exibir sucesso antes de qualquer nó terminar ou esconder erros de dependência.",
+      "how": "Envie o prompt no formato API e leia `prompt_id` e `number` quando aceito; em falha, examine `error` e `node_errors`. Guarde o identificador para correlacionar as notificações e recuperar o histórico.",
+      "example": "Um serviço cria uma tarefa interna apenas depois de receber `prompt_id`, expõe estado `queued` e passa o mesmo identificador aos leitores de WebSocket e history.",
+      "limits": "A validação de entrada não garante que a execução termine; erros de runtime, interrupções e disponibilidade de modelos precisam de estados separados na aplicação.",
+      "verify": "Teste um workflow válido e um payload com nó inválido; confirme as chaves de retorno de cada caso e que nenhum resultado é marcado como pronto somente por receber `prompt_id`.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Especifica `POST /prompt`, validação, enfileiramento e respostas de sucesso ou erro."
+        },
+        {
+          "label": "ComfyUI Server — Messages",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_messages.md",
+          "why": "Descreve eventos de execução associados ao `prompt_id` enfileirado."
+        }
+      ],
+      "review": "A rota /prompt separa aceitação da execução concluída e enumera `prompt_id`/`number` ou `error`/`node_errors`; o exemplo preserva essa distinção."
+    },
+    {
+      "slug": "comfyui-api-websocket-client-id-correlacao",
+      "title": "ComfyUI: abrir o WebSocket com client_id e correlacionar por prompt_id",
+      "one": "O cliente WebSocket deve fornecer ou controlar seu `client_id` e associar eventos ao `prompt_id` da submissão correspondente.",
+      "why": "Um socket pode receber notificações de execução que não pertencem à tarefa visualizada; correlação evita misturar progresso de usuários ou trabalhos concorrentes.",
+      "how": "Conecte-se à rota WebSocket com um identificador de cliente, mantenha o prompt_id retornado pela fila e filtre notificações segundo o protocolo documentado. Registre os listeners antes da submissão quando a sequência da aplicação exigir captura desde o início.",
+      "example": "Uma aba cria um UUID para `client_id`, abre `/ws?clientId=...`, envia o workflow e só atualiza a barra de progresso quando a mensagem contém o `prompt_id` ativo.",
+      "limits": "`client_id` é identificador de sessão de eventos, não mecanismo de autenticação. Não exponha o servidor local a origens não confiáveis apenas por tornar o identificador imprevisível.",
+      "verify": "Execute dois prompts próximos em clientes distintos e confira que os consumidores ignoram eventos alheios; teste reconexão sem atribuir eventos antigos à nova tarefa.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Communication Overview",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_overview.md",
+          "why": "Descreve a conexão WebSocket e os identificadores de cliente para comunicação do servidor."
+        },
+        {
+          "label": "ComfyUI Server — API Examples",
+          "url": "https://docs.comfy.org/development/comfyui-server/api-examples.md",
+          "why": "Mostra a sequência de submissão e acompanhamento de execuções por identificador."
+        }
+      ],
+      "review": "Os exemplos e o protocolo usam identificador de cliente na conexão e prompt_id para vincular eventos à execução; client_id não é descrito como autenticação."
+    },
+    {
+      "slug": "comfyui-api-evento-final-e-executed",
+      "title": "ComfyUI: distinguir atualização `executed` do fim e do sucesso da execução",
+      "one": "`executed` só é enviado quando um nó retorna atualização de UI; `executing` com `node: null` marca o fim do acompanhamento, enquanto `execution_success` identifica sucesso explícito.",
+      "why": "Uma integração que trata cada atualização de UI como conclusão pode encerrar cedo, e outra que interpreta o marcador de fim como sucesso pode ocultar erro ou interrupção.",
+      "how": "Associe eventos ao `prompt_id`. Use `executing` com `node: null` como marcador de fim no padrão de acompanhamento documentado, mas só marque sucesso ao receber `execution_success`; trate `execution_error` e `execution_interrupted` separadamente. Processe `executed` como atualização opcional de saída do nó.",
+      "example": "O monitor atualiza previews quando chegam mensagens `executed`, deixa de esperar ao receber `executing` com `node: null` para o prompt ativo e só mostra estado de sucesso após `execution_success`.",
+      "limits": "`executed` não é emitido por todo nó, pois depende de retorno de UI. O cliente deve lidar também com erros, interrupções e reconexões; o marcador de fim, isoladamente, não comprova saída bem-sucedida.",
+      "verify": "Use workflows com nó que retorna UI e nó sem UI, além de execução com erro e interrupção; confira que o acompanhamento termina, que só o evento de sucesso marca sucesso e que eventos de outro prompt são ignorados.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Messages",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_messages.md",
+          "why": "Define `executed`, `executing` com nó nulo, `execution_success`, `execution_error` e `execution_interrupted`."
+        },
+        {
+          "label": "ComfyUI Server — API Examples",
+          "url": "https://docs.comfy.org/development/comfyui-server/api-examples.md",
+          "why": "Demonstra o marcador `executing` com `node is None` para encerrar a espera e consultar `/history`."
+        }
+      ],
+      "review": "A tabela de mensagens separa atualização de UI (`executed`), marcador de fim e sucesso explícito; o exemplo oficial usa `executing` com nó nulo para parar de esperar, não para substituir tratamento de erros."
+    },
+    {
+      "slug": "comfyui-api-history-resultado-por-prompt-id",
+      "title": "ComfyUI: recuperar o histórico da execução usando o prompt_id",
+      "one": "Depois do acompanhamento em tempo real, `/history` permite consultar resultados persistidos para o `prompt_id` e recuperar metadados de saída.",
+      "why": "WebSocket é útil para progresso ao vivo, mas uma interface também precisa recuperar o resultado após reconexão, navegação ou atraso de processamento.",
+      "how": "Use a rota de histórico documentada com o identificador da tarefa; extraia as referências de output do registro correspondente e mantenha o status da chamada de API separado do ciclo de execução.",
+      "example": "Após o sinal terminal, um worker consulta `/history/{prompt_id}`, lê as imagens registradas na saída e persiste referências com o ID de execução para permitir reabrir o resultado.",
+      "limits": "O histórico é uma consulta do servidor e não substitui autorização da aplicação. Não suponha que todo nó produza imagem ou que a resposta tenha o mesmo shape para cada workflow.",
+      "verify": "Conclua um workflow com imagem e outro sem imagem; consulte o histórico de ambos, valide o prompt_id selecionado e trate registro ausente ou saída vazia de forma explícita.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Lista `/history` e sua função na consulta dos resultados de uma execução."
+        },
+        {
+          "label": "ComfyUI Server — API Examples",
+          "url": "https://docs.comfy.org/development/comfyui-server/api-examples.md",
+          "why": "Demonstra busca posterior do histórico após o acompanhamento de uma execução."
+        }
+      ],
+      "review": "A rota e o exemplo oficial usam o histórico para buscar resultados por prompt_id; a nota não presume que todo workflow retorna imagens."
+    },
+    {
+      "slug": "comfyui-api-view-parametros-de-arquivo",
+      "title": "ComfyUI: recuperar arquivos de saída pela rota view e seus parâmetros",
+      "one": "A rota `/view` serve um arquivo identificado por nome, subpasta e tipo, dados que devem vir da saída conhecida do workflow.",
+      "why": "Construir uma URL de saída a partir de um caminho local arbitrário confunde a referência do servidor com a localização do cliente e amplia risco de acesso indevido.",
+      "how": "Leia do registro de saída os campos `filename`, `subfolder` e `type`, codifique-os como parâmetros de consulta e envie uma requisição à rota `/view`. Trate a resposta como bytes, não como caminho local da máquina do servidor.",
+      "example": "Uma miniatura usa a referência que o workflow retornou, escapa os parâmetros para URL e exibe o conteúdo servido pelo endpoint, sem concatenar `C:\\` ou `/tmp` no browser.",
+      "limits": "O retorno depende do arquivo e do tipo informado; a rota não converte automaticamente conteúdo nem fornece uma política de autorização para um servidor exposto publicamente.",
+      "verify": "Teste arquivo em pasta principal e subpasta, confira o parâmetro de tipo e valide que erros HTTP ou ausência do arquivo não viram uma miniatura de sucesso em cache.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Documenta a rota `/view` e os parâmetros de consulta usados para visualizar arquivo."
+        },
+        {
+          "label": "ComfyUI Server — API Examples",
+          "url": "https://docs.comfy.org/development/comfyui-server/api-examples.md",
+          "why": "Mostra como os dados de arquivo da execução conduzem à recuperação da saída."
+        }
+      ],
+      "review": "A documentação separa os metadados do arquivo dos bytes servidos por /view; a nota exige URL segura e não presume um caminho local no cliente."
+    },
+    {
+      "slug": "comfyui-api-object-info-nos-instalados",
+      "title": "ComfyUI: consultar object_info para descobrir o esquema dos nós disponíveis",
+      "one": "`/object_info` permite consultar informações dos tipos de nós reconhecidos pelo servidor atual em vez de tratar o catálogo de nós como universal.",
+      "why": "Workflows dependem de nós padrão e personalizados; comparar o esquema disponível ajuda a diagnosticar incompatibilidade antes de enviar uma fila que não pode ser validada.",
+      "how": "Consulte a rota de informações de nós, globalmente ou para uma classe nomeada conforme a API documentada. Use os dados recebidos para conferir nomes de classes e entradas disponíveis na instalação que executará o workflow.",
+      "example": "Um editor de workflows carrega metadados do servidor de destino, sinaliza uma classe ausente antes do envio e deixa claro quando um nó customizado precisa ser instalado.",
+      "limits": "Metadados de nó descrevem a instalação consultada naquele momento; não garantem comportamento idêntico de extensões de terceiros nem tornam compatíveis todos os pesos, versões e valores.",
+      "verify": "Compare a resposta de `/object_info` para um nó padrão e um nó customizado, depois valide o workflow com `/prompt` para cobrir o contrato real de execução.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Lista rotas object_info para consultar tipos de nós e metadados expostos pelo servidor."
+        },
+        {
+          "label": "ComfyUI Server — Communication Overview",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_overview.md",
+          "why": "Situa as rotas HTTP como parte da interface de comunicação do servidor ComfyUI."
+        }
+      ],
+      "review": "A rota object_info fornece metadados dos nós oferecidos pelo servidor; a nota não os interpreta como garantia de execução ou compatibilidade externa."
+    },
+    {
+      "slug": "comfyui-api-distinguir-fila-de-interrupt",
+      "title": "ComfyUI: separar controle da fila de interrupção da execução ativa",
+      "one": "A API oferece operações distintas para consultar ou alterar a fila e para interromper a execução corrente; a interface deve escolher a ação conforme o estado.",
+      "why": "Remover trabalhos pendentes e interromper um workflow já em andamento têm efeitos diferentes sobre o usuário e não devem compartilhar um botão ambíguo.",
+      "how": "Consulte `/queue` para observar o estado da fila e use a rota de interrupção documentada para sinalizar o cancelamento da tarefa em execução. Mantenha o prompt_id ativo no cliente para reconciliar a resposta com a notificação final.",
+      "example": "O painel oferece “Remover pendentes” para limpar tarefas ainda enfileiradas e um botão “Interromper execução atual” separado, com confirmação quando há trabalho ativo.",
+      "limits": "Uma interrupção não equivale a desfazer efeitos já persistidos nem a garantir que todo recurso de um nó customizado foi revertido; estados terminais devem ser conferidos após a ação.",
+      "verify": "Crie uma fila com duas tarefas, remova apenas pendentes e depois interrompa uma execução de teste; verifique qual prompt deixou a fila e qual evento final foi emitido.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Separa endpoints de estado/controle da fila e o endpoint de interrupção de execução."
+        },
+        {
+          "label": "ComfyUI Server — Messages",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_messages.md",
+          "why": "Documenta eventos de execução que ajudam a atualizar o estado após interrupção."
+        }
+      ],
+      "review": "A referência trata fila e interrupção em rotas separadas; a nota não promete rollback de efeitos de nós já executados."
+    },
+    {
+      "slug": "comfyui-api-upload-image-referencia",
+      "title": "ComfyUI: usar a referência devolvida por upload/image em vez de caminho local",
+      "one": "`POST /upload/image` recebe um arquivo e devolve `name`, `subfolder` e `type`, valores que o cliente pode encaminhar ao nó de entrada apropriado.",
+      "why": "Um caminho como `~/Pictures/input.png` existe apenas no ambiente que o digitou e não é acessível de forma confiável pelo processo remoto ou container ComfyUI.",
+      "how": "Envie o arquivo como multipart para `/upload/image`, examine a resposta JSON e use os campos retornados ao preencher a entrada do workflow. Preserve o `type` e a subpasta reportados em vez de construir um caminho do computador do usuário.",
+      "example": "Um cliente web envia a imagem de referência, guarda o `name`, `subfolder` e `type` devolvidos e preenche a entrada `LoadImage` antes de enviar o grafo para `/prompt`.",
+      "limits": "O endpoint não valida se a imagem tem dimensão, modo de cor ou conteúdo aceito pelo nó; aplique limites de tamanho e formato. `/upload/mask` é um fluxo especializado que recebe `original_ref` e altera o alpha de uma imagem existente, não um upload genérico de máscara.",
+      "verify": "Teste imagem com e sem subpasta, colisão de nome e arquivo inválido; confira a resposta e confirme que o workflow lê a referência devolvida. Teste `/upload/mask` separadamente apenas quando houver uma referência original válida.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Lista separadamente os endpoints de upload de imagem, upload de máscara e a rota de submissão."
+        },
+        {
+          "label": "ComfyUI Server — server.py upload implementation",
+          "url": "https://raw.githubusercontent.com/Comfy-Org/ComfyUI/master/server.py",
+          "why": "Implementa a resposta JSON com `name`, `subfolder` e `type`, além do tratamento específico de `original_ref` em upload/mask."
+        }
+      ],
+      "review": "A rota de imagem retorna os campos usados para localizar o arquivo; o código do servidor mostra que upload/mask usa uma referência original para compor o alpha, portanto a nota não o descreve como upload arbitrário."
+    },
+    {
+      "slug": "comfyui-separar-server-api-e-comfy-api-v2",
+      "title": "ComfyUI: separar a Server API da superfície versionada Comfy API v2",
+      "one": "As rotas HTTP/WebSocket do ComfyUI Server e a Comfy API v2 são contratos distintos; a v2 também pode acessar instalações open-source por meio do API Proxy.",
+      "why": "Misturar interfaces pode levar a base URL, autenticação e payloads errados, mesmo quando ambas iniciam workflows no ecossistema ComfyUI.",
+      "how": "Use a documentação de Server Routes para chamadas diretas ao processo, como `/prompt` e `/ws`. A visão geral oficial descreve Comfy API v2 como API versionada para open-source via API Proxy, Comfy Cloud e deployments; a antiga Cloud API v1 está depreciada. Escolha host, credenciais e formato a partir da superfície efetivamente configurada.",
+      "example": "Um aplicativo conectado ao servidor instalado usa as rotas diretas documentadas; uma integração que adota Comfy API v2 segue o contrato e a autenticação dessa versão, mesmo quando o alvo open-source é alcançado por proxy.",
+      "limits": "A depreciação citada pela documentação é da antiga Cloud API v1; ela não declara obsoletas as rotas diretas do Server API. Tampouco significa que a API v2 seja apenas um produto cloud.",
+      "verify": "Registre em configuração qual interface está ativa e teste host, autenticação e payload com um workflow pequeno; mantenha testes separados para rotas diretas e Comfy API v2 se ambos forem suportados.",
+      "sources": [
+        {
+          "label": "ComfyUI Server — Routes",
+          "url": "https://docs.comfy.org/development/comfyui-server/comms_routes.md",
+          "why": "Define as rotas HTTP e WebSocket embutidas no servidor, incluindo prompt, fila e histórico."
+        },
+        {
+          "label": "Comfy API — Overview",
+          "url": "https://docs.comfy.org/development/comfy-api/overview.md",
+          "why": "Descreve a superfície versionada v2, onde ela está disponível e que a antiga Cloud API v1 está depreciada."
+        }
+      ],
+      "review": "As fontes distinguem rotas diretas do servidor e Comfy API; a página de overview inclui v2 via API Proxy para open-source e restringe a depreciação à Cloud API v1."
+    }
+  ]
+}

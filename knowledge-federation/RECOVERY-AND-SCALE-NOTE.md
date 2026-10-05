@@ -4,7 +4,7 @@ Atualizado em 2026-10-04. A meta ativa é **500 lotes × 2.000 notas substantiva
 
 ## Estado editorial atual
 
-O checkpoint legado e os arquivos antigos seguem como histórico e não contam como progresso. No diretório ativo `knowledge-federation/domains/` há **6540 arquivos**: 100 legados com pendências e **6440 notas válidas** pelo protocolo (49 aprovações humanas históricas + 6391 revisões factuais por IA). Os lotes 1–3 estão completos; o quarto lote `software-criacao-ia-2000-0004` tem 400/2.000 notas válidas após a tranche 4, com relatório factual, gate e reconciliação próprios.
+O checkpoint legado e os arquivos antigos seguem como histórico e não contam como progresso. No diretório ativo `knowledge-federation/domains/` há **6640 arquivos**: 100 legados com pendências e **6540 notas válidas** pelo protocolo (49 aprovações humanas históricas + 6491 revisões factuais por IA). Os lotes 1–3 estão completos; o quarto lote `software-criacao-ia-2000-0004` tem 500/2.000 notas válidas após a tranche 5, com relatório factual, gate e reconciliação próprios.
 
 ## Decisão técnica e estados
 

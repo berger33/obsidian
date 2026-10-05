@@ -1,0 +1,155 @@
+{
+  "group": "Godot EditorImportPlugin: registrar importadores, definir contratos e salvar recursos",
+  "notes": [
+    {
+      "slug": "godot-editorimportplugin-registro-no-editorplugin",
+      "title": "Godot EditorImportPlugin: registrar e remover a instância pelo EditorPlugin",
+      "one": "Um importador personalizado passa a integrar o editor quando uma extensão chama `add_import_plugin` e deve ser removido ao desativar essa extensão.",
+      "why": "O ciclo explícito de registro evita importadores órfãos, duplicados ou ainda ativos depois de o plugin de editor ser desabilitado.",
+      "how": "No ciclo de vida do `EditorPlugin`, crie e guarde uma instância de `EditorImportPlugin` ao entrar na árvore, registre-a e chame `remove_import_plugin` na saída antes de limpar a referência.",
+      "example": "Um plugin materializa `MaterialImport.new()` em `_enter_tree()`, chama `add_import_plugin(importer)` e usa a mesma instância em `_exit_tree()` para removê-la.",
+      "limits": "A classe é uma ferramenta de editor, não um importador de runtime; o recurso importado salvo é que será usado pelo projeto. Não crie outra instância na remoção.",
+      "verify": "Ative e desative o plugin no editor, observe o importador disponível no dock e confirme que reativar não duplica a entrada nem gera erro de ciclo de vida.",
+      "sources": [
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Mostra `add_import_plugin` em `_enter_tree` e remoção com a mesma referência em `_exit_tree`."},
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define a classe como extensão da função de importação de recursos do editor."}
+      ],
+      "review": "O tutorial oficial registra e remove a instância pelo EditorPlugin; a nota limita esse ciclo ao ambiente do editor."
+    },
+    {
+      "slug": "godot-editorimportplugin-identidade-e-nome-visivel",
+      "title": "Godot EditorImportPlugin: manter importer_name estável e separar o rótulo visível",
+      "one": "`_get_importer_name()` identifica o importador de forma única, enquanto `_get_visible_name()` fornece o texto exibido ao usuário no dock de importação.",
+      "why": "Mudar um identificador interno por causa de uma revisão de texto pode confundir reimportações; manter os papéis separados deixa a interface evoluir sem alterar a identidade do plugin.",
+      "how": "Escolha um nome único e estável para `_get_importer_name()` e um rótulo descritivo para `_get_visible_name()`. A documentação recomenda que o rótulo complete a expressão “Import as”, como “Special Mesh”.",
+      "example": "O código mantém `com.example.mesh_importer` como importer name persistente e mostra `Special Mesh` como opção amigável no painel do editor.",
+      "limits": "A documentação exige unicidade do identificador, mas não define uma estratégia universal de migração para nomes já gravados em metadados antigos.",
+      "verify": "Reimporte um arquivo com o mesmo importador, inspecione o rótulo no dock e teste a configuração em outro clone do projeto para detectar colisão de identificadores.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define o nome único do importador e o rótulo visível na interface."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Explica como o identificador permite selecionar o importador correto ao reimportar."}
+      ],
+      "review": "A classe e o tutorial distinguem importer_name único de visible_name apresentado no dock; a nota não inventa política de migração."
+    },
+    {
+      "slug": "godot-editorimportplugin-extensoes-prioridade",
+      "title": "Godot EditorImportPlugin: limitar extensões aceitas e declarar prioridade consciente",
+      "one": "`_get_recognized_extensions()` associa formatos de arquivo ao importador, e `_get_priority()` influencia qual plugin é preferido quando mais de um reconhece a extensão.",
+      "why": "Extensões genéricas como `.json` ou `.txt` podem pertencer a dados comuns do jogo ou a vários importadores, tornando a seleção indiscriminada arriscada.",
+      "how": "Retorne apenas extensões realmente aceitas, valide o conteúdo do arquivo no importador e defina prioridade maior somente quando a preferência sobre outro plugin for intencional; o padrão documentado é `1.0`.",
+      "example": "Um conversor proprietário registra `.meshsrc` em vez de reivindicar todo `.json` e aumenta a prioridade apenas para o formato legado que deve substituir um importador alternativo.",
+      "limits": "Prioridade não corrige dados inválidos nem elimina a possibilidade de seleção entre importadores. Extensões são associadas sem diferenciar maiúsculas e minúsculas na referência da classe.",
+      "verify": "Importe exemplos válidos e malformados da extensão, teste um arquivo que dois plugins reconhecem e confirme qual opção aparece ou é preferida no editor.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Documenta extensões reconhecidas, comparação case-insensitive e prioridade padrão."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Alerta para extensões comuns compartilhadas e arquivos que podem não ser importáveis."}
+      ],
+      "review": "A documentação confirma associação por extensão, preferência por prioridade e risco de colisão em extensões genéricas; a verificação cobre arquivo malformado."
+    },
+    {
+      "slug": "godot-editorimportplugin-tipo-e-extensao-de-saida",
+      "title": "Godot EditorImportPlugin: alinhar resource_type ao save_extension declarado",
+      "one": "O importador declara o tipo do recurso com `_get_resource_type()` e a extensão de salvamento com `_get_save_extension()` para que o editor trate o resultado adequadamente.",
+      "why": "O tipo permite inserir o recurso em slots compatíveis, enquanto a extensão declara como o artefato será armazenado na área importada do projeto.",
+      "how": "Escolha o nome de classe do recurso que realmente será criado e a extensão de saída coerente com esse recurso; o guia usa `StandardMaterial3D` e `material` como exemplo de material.",
+      "example": "Um importador de texto para material retorna `StandardMaterial3D`, salva o objeto com extensão `material` e permite arrastá-lo do FileSystem para uma propriedade de material.",
+      "limits": "O tutorial observa que a extensão não é rigidamente imposta pelo mecanismo e que uma extensão fonte pode ter vários tipos de saída, caso em que se criam importadores separados.",
+      "verify": "Reimporte o arquivo de teste, confirme a classe do recurso no editor e tente atribuí-lo ao slot esperado; confira também a extensão gerada na área de importação.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define tipo do recurso, extensão usada no diretório importado e caminho esperado de saída."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Explica o papel do tipo de recurso e exemplifica material e extensão de saída."}
+      ],
+      "review": "As duas páginas descrevem tipo e extensão como partes distintas do contrato; a nota mantém a ressalva de que extensão não é validada rigidamente."
+    },
+    {
+      "slug": "godot-editorimportplugin-opcoes-e-presets",
+      "title": "Godot EditorImportPlugin: descrever opções de importação com defaults e presets",
+      "one": "`_get_import_options(path, preset_index)` fornece opções e valores padrão, enquanto os métodos de preset nomeiam conjuntos iniciais de configuração.",
+      "why": "Opções explícitas tornam a importação reprodutível e dão ao editor informação suficiente para exibir configurações que afetam a produção do recurso.",
+      "how": "Retorne um array de dicionários que inclua `name` e `default_value`; propriedades opcionais podem indicar hints, texto de hint e uso. Informe a quantidade de presets e associe cada índice a um nome.",
+      "example": "Um importador de textura oferece preset `Balanced` com opção `generate_mips` e preset `Preview` com valor padrão diferente para acelerar iterações locais.",
+      "limits": "Os defaults não substituem a validação do conteúdo nem garantem que toda opção seja suportada pela plataforma de saída; mantenha o mesmo contrato entre índice, nome e valores.",
+      "verify": "Abra o dock de importação em cada preset, confira valores iniciais e salve/importa de novo após alterar uma opção para confirmar que o importador recebe o valor esperado.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Lista as chaves requeridas e opcionais dos dicionários de opções e os métodos de preset."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Apresenta opções e presets como configuração controlável pelo usuário."}
+      ],
+      "review": "A referência define `name` e `default_value` e liga índices a presets; o exemplo de valores diferentes é proposto como padrão de implementação, não como default do motor."
+    },
+    {
+      "slug": "godot-editorimportplugin-visibilidade-de-opcoes",
+      "title": "Godot EditorImportPlugin: ocultar opções dependentes sem perder seu contrato",
+      "one": "`_get_option_visibility()` decide se uma opção aparece no dock e pode esconder um campo dependente do valor de outro campo.",
+      "why": "Exibir configurações irrelevantes para o modo selecionado confunde usuários e incentiva combinações que o importador não deveria aplicar.",
+      "how": "Inspecione `option_name` e o dicionário `options`, devolvendo falso apenas quando a opção não se aplica; a implementação padrão documentada deixa todas visíveis.",
+      "example": "Um importador mostra `lossy_quality` somente quando `compress/mode` seleciona Lossy e mantém o campo visível nos demais casos se o valor puder ser reutilizado.",
+      "limits": "Visibilidade é uma regra de apresentação, não validação de entrada; rejeite ou normalize valores incompatíveis também no callback de importação.",
+      "verify": "Alterne a opção controladora no dock, confira que o campo dependente muda de visibilidade e teste a importação direta com combinações incompatíveis para confirmar a validação.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define `_get_option_visibility`, o comportamento padrão e um exemplo de opção dependente."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Contextualiza opções de importação expostas no dock do editor."}
+      ],
+      "review": "A classe confirma visibilidade de interface e default verdadeiro; a nota deixa claro que essa função não substitui validação do callback."
+    },
+    {
+      "slug": "godot-editorimportplugin-validar-source-file-e-error",
+      "title": "Godot EditorImportPlugin: validar source_file e propagar Error do import",
+      "one": "`_import()` recebe caminho fonte, opções e informações de variantes, e deve retornar um código `Error` apropriado ao resultado do trabalho.",
+      "why": "Importação é uma fronteira de dados: arquivos podem estar ausentes ou malformados, e falhar sem retorno claro deixa a interface sem diagnóstico confiável.",
+      "how": "Abra e valide o arquivo antes de construir o recurso, consulte as opções recebidas e retorne `OK` apenas quando a importação for bem-sucedida; em erro, devolva um código de falha em vez de salvar um recurso parcial como sucesso.",
+      "example": "Um importador CSV verifica que a abertura não retornou handle nulo, valida o número de colunas e só então cria o recurso; entrada inválida produz erro observável no editor.",
+      "limits": "A API não interpreta automaticamente o formato privado do arquivo; o plugin é responsável por validação e mensagens úteis, sem supor que extensão prova conteúdo correto.",
+      "verify": "Teste arquivo válido, inexistente, vazio e com estrutura corrompida; confirme retorno de erro e ausência de recurso parcial tratado como importação aprovada.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define os argumentos de `_import`, o retorno `Error` e o exemplo de falha de abertura."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Recomenda validar dados e não presumir que arquivos de extensões genéricas estejam bem formados."}
+      ],
+      "review": "A classe define o retorno de erro do callback e o tutorial alerta para conteúdo malformado; exemplos de validação CSV são cenários propostos, não fatos da API."
+    },
+    {
+      "slug": "godot-editorimportplugin-save-path-gen-files-variants",
+      "title": "Godot EditorImportPlugin: gravar em save_path e declarar arquivos gerados",
+      "one": "O recurso principal deve ser gravado em `save_path` com a extensão declarada, e arquivos adicionais gerados em `res://` devem ser listados em `gen_files`.",
+      "why": "O editor usa o caminho de destino e a lista de arquivos dependentes para manter a importação e o rastreamento de dependências coerentes.",
+      "how": "Construa o destino como `save_path + \".\" + _get_save_extension()`, salve por `ResourceSaver` e inclua em `gen_files` o caminho completo de cada recurso adicional criado no filesystem do projeto. Para variante de feature tag, siga o formato e a lista `platform_variants` documentados.",
+      "example": "Um conversor grava o material em `save_path.material`, gera uma textura derivada em `res://generated/`, acrescenta esse caminho a `gen_files` e anota a tag da variante quando a saída é específica.",
+      "limits": "`save_path` não deve ser substituído por um caminho arbitrário da máquina; não declare arquivo em `gen_files` se ele não foi realmente gerado.",
+      "verify": "Reimporte a fonte, confira o recurso principal, confirme que dependências geradas aparecem no projeto e teste uma feature tag em exportação compatível.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Especifica caminho esperado do recurso, feature variants e registro de arquivos gerados."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Mostra salvamento do recurso importado e a relação entre arquivo fonte e artefato."}
+      ],
+      "review": "A referência associa `save_path`, extensão, `platform_variants` e `gen_files`; o exemplo explicita que apenas arquivos realmente criados são declarados."
+    },
+    {
+      "slug": "godot-editorimportplugin-threaded-import-safety",
+      "title": "Godot EditorImportPlugin: habilitar importação paralela só após provar thread safety",
+      "one": "`_can_import_threaded()` informa se o importador pode rodar em paralelo; o padrão é falso e só deve ser alterado por uma implementação segura para threads.",
+      "why": "Importação concorrente pode reduzir espera no editor, mas compartilhamento de estado mutável ou API não thread-safe pode introduzir falhas intermitentes difíceis de reproduzir.",
+      "how": "Mantenha o comportamento padrão enquanto o importador depender de estado global, UI ou recursos não seguros. Sobrescreva retornando verdadeiro apenas após isolar estado por arquivo e confirmar segurança da leitura, conversão e gravação paralelas.",
+      "example": "Uma conversão pura de arquivos independentes passa a declarar capacidade threaded após testes concorrentes; um plugin que atualiza uma tabela compartilhada continua serial.",
+      "limits": "O retorno autoriza paralelismo do importador, não garante ganho em toda máquina nem torna automaticamente thread-safe uma biblioteca externa chamada pelo plugin.",
+      "verify": "Execute reimportação em lote repetidas vezes com arquivos diferentes e simultâneos, compare hashes de saída e monitore erros e corrupção antes de habilitar a opção.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define o significado, o padrão falso e o requisito de implementação thread-safe."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Demonstra o ciclo de importação executado pelo editor para recursos personalizados."}
+      ],
+      "review": "A classe afirma que o default é falso e exige implementação thread-safe para marcar verdadeiro; a recomendação de teste concorrente é operacional."
+    },
+    {
+      "slug": "godot-editorimportplugin-format-version-invalidacao",
+      "title": "Godot EditorImportPlugin: incrementar format_version ao incompatibilizar recursos importados",
+      "one": "`_get_format_version()` permite indicar a versão do formato produzido pelo importador; incremente-a quando mudanças forem incompatíveis com recursos já gerados.",
+      "why": "Sem um sinal de versão, uma alteração de serialização ou conversão pode deixar recursos antigos aceitos como se tivessem sido produzidos pelo contrato atual.",
+      "how": "Mantenha uma versão numérica vinculada ao formato de saída e atualize esse valor ao quebrar compatibilidade. A referência informa que o default é zero quando o método não é sobrescrito.",
+      "example": "Uma nova versão do importador altera a estrutura binária do recurso, incrementa o valor de formato e reimporta amostras antigas para confirmar que o pipeline produz o layout esperado.",
+      "limits": "A versão não substitui migração nem verificação semântica do arquivo fonte; não a incremente por toda mudança cosmética que mantém o mesmo formato.",
+      "verify": "Mantenha fixture de saída anterior, altere a versão em uma mudança incompatível e execute reimportação limpa para conferir que o editor regenera os recursos necessários.",
+      "sources": [
+        {"label": "Godot — EditorImportPlugin", "url": "https://docs.godotengine.org/en/stable/classes/class_editorimportplugin.html", "why": "Define a finalidade de `_get_format_version()` e o valor padrão quando não sobrescrito."},
+        {"label": "Godot — Import plugins", "url": "https://docs.godotengine.org/en/stable/tutorials/plugins/editor/import_plugins.html", "why": "Descreve o ciclo de criação e reimportação dos recursos personalizados."}
+      ],
+      "review": "A referência determina incremento quando houver mudança incompatível e informa default zero; o exemplo de fixture é recomendação de validação."
+    }
+  ]
+}

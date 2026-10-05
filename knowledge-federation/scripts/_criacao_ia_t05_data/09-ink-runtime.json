@@ -1,0 +1,155 @@
+{
+  "group": "Ink: integrar narrativa interativa compilada com o runtime do jogo",
+  "notes": [
+    {
+      "slug": "ink-compile-json-story-runtime",
+      "title": "Ink: compilar arquivos .ink para JSON e carregar uma instância Story",
+      "one": "Ink transforma fontes `.ink` em um JSON de runtime que o engine C# carrega em uma instância `Ink.Runtime.Story`.",
+      "why": "Separar autoria da narrativa da aplicação permite editar o fluxo sem transformar Ink em um engine completo de UI ou gameplay.",
+      "how": "Compile por integração Unity, Inky, inklecate ou compilador C# e passe o JSON à classe `Story`; mantenha um wrapper próprio responsável por UI, input e integração ao jogo.",
+      "example": "Unity carrega o arquivo compilado como `TextAsset`, cria `new Story(inkAsset.text)` no início do controlador e encaminha conteúdo e escolhas ao diálogo visual.",
+      "limits": "A documentação descreve Unity no exemplo, mas observa que runtime pode ser usado fora de Unity em C#; versões de engine e formatos de story devem ser compatíveis.",
+      "verify": "Compile um arquivo mínimo, instancie o runtime com JSON produzido e confirme que primeira linha e primeira escolha correspondem ao arquivo `.ink`.",
+      "sources": [
+        {"label": "Ink — Running your ink: runtime API", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#getting-started-with-the-runtime-api", "why": "Mostra JSON compilado, instanciação de Story e TextAsset como entrada de Unity."},
+        {"label": "Ink — README: integrating into your game", "url": "https://github.com/inkle/ink/blob/master/README.md#integrating-into-your-game", "why": "Resume export JSON, integração Unity e papel do runtime C# na aplicação."}
+      ],
+      "review": "A documentação separa fonte Ink, JSON de runtime e wrapper da aplicação; o exemplo usa o construtor documentado para Story."
+    },
+    {
+      "slug": "ink-continue-output-granularity",
+      "title": "Ink runtime: escolher Continue ou ContinueMaximally pela granularidade da interface",
+      "one": "`Continue()` devolve uma unidade de texto por passo, enquanto `ContinueMaximally()` consome conteúdo disponível em uma única chamada.",
+      "why": "Um diálogo que anima uma linha ou aplica efeitos de UI entre linhas não deve avançar a história além do ponto em que a interface consegue apresentar estado.",
+      "how": "Repita `Continue()` enquanto `canContinue` para exibir e processar linha a linha; use `ContinueMaximally()` quando a aplicação realmente quiser concatenar todo o conteúdo antes de apresentar escolhas.",
+      "example": "Uma visual novel chama `Continue()` uma vez por clique, lê `currentText` e `currentTags`, e pede nova interação antes de continuar; uma ferramenta de transcript pode usar ContinueMaximally.",
+      "limits": "A sequência de interação do jogo pode não coincidir com os passos internos do Ink; variáveis ou tags intermediárias podem precisar ser aplicadas no momento correto.",
+      "verify": "Crie uma cena com várias linhas e efeitos entre elas, confirme que a UI não consome conteúdo cedo demais e compare com modo de transcrição completa.",
+      "sources": [
+        {"label": "Ink — Running your ink: runtime API", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#getting-started-with-the-runtime-api", "why": "Descreve loop `canContinue`, ContinueMaximally e escolha de pausar por linha."},
+        {"label": "Ink — Story runtime source", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/Story.cs", "why": "Define estado atual de texto e escolhas gerados durante a execução de Continue."}
+      ],
+      "review": "O guia diferencia consumir uma linha e conteúdo maximamente e recomenda pausa quando efeitos e interface dependem de cada etapa."
+    },
+    {
+      "slug": "ink-current-choices-and-choice-index",
+      "title": "Ink runtime: apresentar currentChoices e retomar com ChooseChoiceIndex",
+      "one": "Depois que `canContinue` fica falso, `currentChoices` contém as opções apresentáveis e `ChooseChoiceIndex` seleciona a opção pela posição na lista atual.",
+      "why": "Separar geração de texto e entrada do jogador evita exibir escolhas antigas ou selecionar uma alternativa antes do runtime concluir o trecho.",
+      "how": "Avance a narrativa até `canContinue` ser false, renderize cada `Choice.text` com o índice atual e passe o índice escolhido a `ChooseChoiceIndex`; retome o ciclo de Continue.",
+      "example": "Um painel cria um botão por item de `currentChoices` e seu callback guarda o índice daquele ciclo para chamar `ChooseChoiceIndex(index)` após clique.",
+      "limits": "Choices são geradas durante Continue e algumas escolhas invisíveis não aparecem na lista externa; não persista somente o índice sem identificar estado narrativo associado.",
+      "verify": "Teste nenhuma escolha, uma escolha, várias escolhas condicionais e escolha invisível; confirme que índice exibido corresponde ao índice passado ao runtime.",
+      "sources": [
+        {"label": "Ink — Running your ink: runtime API", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#getting-started-with-the-runtime-api", "why": "Explica obter `currentChoices`, apresentar opções e chamar ChooseChoiceIndex."},
+        {"label": "Ink — Story currentChoices API", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/Story.cs", "why": "Documenta quando a lista é preenchida e o tratamento de escolhas default invisíveis."}
+      ],
+      "review": "A referência de Story diz que escolhas são populadas ao avançar até canContinue false e filtra invisible defaults da lista externa."
+    },
+    {
+      "slug": "ink-save-complete-story-state-json",
+      "title": "Ink runtime: salvar o estado narrativo completo com state.ToJson",
+      "one": "`Story.state.ToJson()` serializa estado narrativo além das variáveis globais, incluindo ponto de execução, contagens e estruturas de chamada.",
+      "why": "Salvar só flags de gameplay não restaura em qual trecho o leitor estava, que escolhas foram vistas nem os contadores usados por lógica da narrativa.",
+      "how": "Armazene o JSON produzido por `story.state.ToJson()` e recarregue na instância apropriada com `story.state.LoadJson(savedJson)`; mantenha junto a identificação do jogo e da versão do conteúdo.",
+      "example": "Ao salvar partida, a aplicação grava estado Ink em um campo separado do inventário e ao carregar constrói Story com o JSON do conteúdo antes de restaurar o estado salvo.",
+      "limits": "Formato de save é versionado internamente e evolui; a documentação não define política de migração do arquivo de save da aplicação ou compatibilidade com alterações semânticas do roteiro.",
+      "verify": "Salve após uma escolha e variável, recrie Story, carregue JSON e confirme a próxima linha, escolhas, globals e visit counts esperados.",
+      "sources": [
+        {"label": "Ink — Running your ink: saving and loading", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#saving-and-loading", "why": "Dá as chamadas públicas ToJson e LoadJson para salvar e restaurar estado."},
+        {"label": "Ink — StoryState source", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/StoryState.cs", "why": "Descreve o estado completo serializado e mantém versão interna do formato JSON."}
+      ],
+      "review": "O guia publica a API de salvar/carregar e a classe StoryState descreve mais do que globals; a nota evita prometer migração automática de conteúdo."
+    },
+    {
+      "slug": "ink-variables-state-and-observers",
+      "title": "Ink runtime: sincronizar variáveis globais e UI sem polling por frame",
+      "one": "`variablesState` permite ler e definir globals declaradas em Ink, e observadores podem notificar o jogo quando um valor muda.",
+      "why": "Atualizar HUD reativamente reduz consultas repetidas e mantém valores usados por narrativa e gameplay conectados a um estado autoritativo.",
+      "how": "Acesse `story.variablesState[name]` para getter/setter compatível e registre `ObserveVariable` uma vez no ciclo de configuração; atualize a UI a partir do callback.",
+      "example": "O wrapper observa `health` na criação de Story e modifica o contador visual quando Ink atribui uma nova vida após uma escolha.",
+      "limits": "Atribuição só é aceita para variável global declarada no story; tipos seguem tipos Ink e casts para C# precisam corresponder ao valor recebido.",
+      "verify": "Teste variável declarada, valor inicial, alteração por Ink e escrita pelo jogo; confirme que callback acontece na mudança e que o UI não registra observador a cada frame.",
+      "sources": [
+        {"label": "Ink — Running your ink: variables and observers", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#settinggetting-ink-variables", "why": "Documenta acesso de leitura e escrita por `variablesState`."},
+        {"label": "Ink — VariablesState runtime source", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/VariablesState.cs", "why": "Define indexador de globais e evento de mudança em estado de variáveis."}
+      ],
+      "review": "A documentação apresenta observer para atualização de UI e o runtime verifica que variável exista antes de aceitar atribuição."
+    },
+    {
+      "slug": "ink-tags-como-metadados-de-conteudo",
+      "title": "Ink runtime: transportar tags de linha, knot e escolha como metadados invisíveis",
+      "one": "Tags adicionam metadados não destinados ao texto do jogador e podem ser lidas em linhas, knots, escolhas ou no nível global.",
+      "why": "Um roteiro pode referenciar locução, expressão de personagem, local ou diretiva sem codificar esse metadado em texto visível ao jogador.",
+      "how": "Leia `currentTags` depois de `Continue()` para metadados daquela linha, `globalTags` para dados do story e `TagsForContentAtPath` para obter tags de knot antes de entrar nele; tags de escolha ficam no objeto Choice.",
+      "example": "Uma linha `Passepartout: Really, Monsieur. # surly` chega como fala enquanto a UI usa `currentTags` para selecionar retrato surly.",
+      "limits": "Conteúdo de tag também pode ser dinâmico; estabeleça schema e validação no consumidor do jogo em vez de assumir que toda tag é uma string fixa conhecida.",
+      "verify": "Adicione tag de linha, escolha, knot e global ao fixture, inspecione cada API no momento apropriado e confirme que tags não são mostradas como fala.",
+      "sources": [
+        {"label": "Ink — Running your ink: tags", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#marking-up-your-ink-content-with-tags", "why": "Descreve tags por escopo e APIs `currentTags`, `globalTags` e TagsForContentAtPath."},
+        {"label": "Ink — Story currentTags API", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/Story.cs", "why": "Define currentTags como tags vistas durante a chamada mais recente de Continue."}
+      ],
+      "review": "A referência explica scopes diferentes e momento de leitura; a nota não confunde metadata com conteúdo visível."
+    },
+    {
+      "slug": "ink-external-functions-lookahead-safe",
+      "title": "Ink: classificar funções externas como ações ou operações lookahead-safe",
+      "one": "Funções externas C# podem provocar efeitos colaterais, e a opção `lookaheadSafe` diferencia essas ações de funções puras durante lookahead do runtime.",
+      "why": "O runtime pode avaliar adiante para juntar conteúdo; reproduzir áudio ou alterar mundo durante essa avaliação antecipada pode executar antes da fala ser apresentada.",
+      "how": "Declare `EXTERNAL` no Ink e faça bind em C#; mantenha `lookaheadSafe` false para ações e use true só se a função for idempotente e não alterar estado de jogo.",
+      "example": "`playSound` continua ação insegura para lookahead, enquanto `distance(a,b)` pode ser pura e segura para avaliação antecipada se apenas calcular e retornar valor.",
+      "limits": "Uma função chamada pura não deve ter efeitos colaterais nem ser problemática se executada mais de uma vez; fallback Ink com mesma assinatura pode habilitar preview sem binding do jogo.",
+      "verify": "Teste texto colado por glue, confirme que ação só ocorre no momento de apresentação e que função pura mantém resultado estável mesmo quando chamada durante lookahead.",
+      "sources": [
+        {"label": "Ink — Running your ink: external functions", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#external-functions", "why": "Define binding, tipos e distinção entre ações e funções puras com `lookaheadSafe`."},
+        {"label": "Ink — Writing with Ink: game-side logic", "url": "https://github.com/inkle/ink/blob/master/Documentation/WritingWithInk.md#7-advanced-game-side-logic", "why": "Apresenta alternativas de integração de lógica entre roteiro e código do jogo."}
+      ],
+      "review": "A referência recomenda false para ações e true apenas para funções puras seguras para lookahead, descrevendo comportamento de glue."
+    },
+    {
+      "slug": "ink-evaluationfunction-call-from-game",
+      "title": "Ink runtime: chamar função do roteiro com EvaluationFunction sem consumir diálogo",
+      "one": "`EvaluationFunction` executa diretamente uma função Ink chamada pelo jogo e retorna valor sem exigir `Continue()` para percorrer linhas da função.",
+      "why": "Cálculos de regras narrativas podem permanecer no roteiro enquanto o jogo solicita um resultado pontual sem alterar a sequência de diálogo exibida.",
+      "how": "Chame `EvaluationFunction` com nome e argumentos e capture `textOutput` se a função produzir conteúdo; defina funções no Ink com responsabilidade clara de retorno.",
+      "example": "Um sistema pergunta `calculateEndingScore` ao completar capítulo e usa retorno numérico para determinar rank sem inserir texto auxiliar no diálogo.",
+      "limits": "Texto emitido durante a execução é devolvido em `textOutput` em vez de passar pela interface normal; não trate essa chamada como avanço de conteúdo para o jogador.",
+      "verify": "Crie função com argumentos, retorno e linha de texto, chame pela API e confira valor retornado, textOutput e que a próxima linha pública permaneça correta.",
+      "sources": [
+        {"label": "Ink — Running your ink: running functions", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#running-functions", "why": "Documenta EvaluationFunction, argumentos, retorno e output de texto."},
+        {"label": "Ink — Story runtime source", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/Story.cs", "why": "Implementa API de Story para avaliação de funções e estado de execução."}
+      ],
+      "review": "O guia diz que a API executa até o fim sem chamar Continue para linhas e envia qualquer texto a textOutput."
+    },
+    {
+      "slug": "ink-precompile-include-filehandler",
+      "title": "Ink: preferir compilação prévia e configurar includes no fluxo de compilação C#",
+      "one": "Compilar previamente o roteiro costuma ser mais eficiente que carregar fontes `.ink` em runtime, mas compilação C# em execução pode atender ferramentas ou fluxos especiais.",
+      "why": "A aplicação de jogo pode carregar um asset JSON já compilado, enquanto ferramentas de editor precisam compilar texto de autoria e composições com múltiplos arquivos.",
+      "how": "Use inklecate para gerar JSON em build ou compile Ink fonte por `Ink.Compiler`; se usar `INCLUDE` em múltiplos arquivos, configure `fileHandler` com diretório base adequado.",
+      "example": "Pipeline de build executa inklecate sobre fonte principal para produzir JSON; ferramenta de preview usa Compiler com UnityInkFileHandler para resolver includes em pasta de trabalho.",
+      "limits": "A documentação chama precompilation mais eficiente e mostra `fileHandler` para includes; caminhos de arquivo e suporte variam por ambiente e integração.",
+      "verify": "Compile a narrativa por pipeline de produção e runtime editor, teste includes aninhados e compare runtime com saída esperada antes de empacotar.",
+      "sources": [
+        {"label": "Ink — Running your ink: using the compiler", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#using-the-compiler", "why": "Compara precompilação e compilação C# e mostra opções de fileHandler para INCLUDE."},
+        {"label": "Ink — README: inklecate command line", "url": "https://github.com/inkle/ink/blob/master/README.md#advanced-using-inklecate-on-the-command-line", "why": "Mostra geração de JSON e uso do compilador CLI oficial."}
+      ],
+      "review": "A documentação do runtime prefere compilar previamente por eficiência e especifica configuração adicional do fileHandler para múltiplos arquivos INCLUDE."
+    },
+    {
+      "slug": "ink-runtime-error-handler",
+      "title": "Ink runtime: registrar onError para erros que só aparecem durante a narrativa",
+      "one": "Alguns erros do roteiro só surgem quando conteúdo é executado, então o runtime recomenda registrar `Story.onError` ao criar cada Story.",
+      "why": "Sem handler, um problema de script pode virar exceção inesperada no loop de diálogo em vez de log ou estado controlado pela aplicação.",
+      "how": "Assine `onError` logo após instanciar Story e encaminhe warning e error a canais distintos; use logs com story ID, versão e posição do jogador para investigação.",
+      "example": "Um wrapper registra warning em log amarelo e erros de runtime como erro de build de narrativa, bloqueando envio de escolhas inválidas ao jogador.",
+      "limits": "O handler captura problemas do Ink detectados durante execução, não substitui erros de compilação ou validação da aplicação; comportamento de recuperação depende do runtime e da versão.",
+      "verify": "Crie um erro de script que compilador não detecta, confirme callback e categorização Warning/Error e valide que o jogo não expõe stack trace interno à UI.",
+      "sources": [
+        {"label": "Ink — Running your ink: error handling", "url": "https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md#error-handling", "why": "Recomenda onError para erros detectados somente ao executar o Story e mostra warnings/errors."},
+        {"label": "Ink — Story runtime source", "url": "https://github.com/inkle/ink/blob/master/ink-engine-runtime/Story.cs", "why": "Define handler de erros e coleções de erros e warnings de runtime."}
+      ],
+      "review": "O guia recomenda registrar onError para erros de execução que compilador não captura; a nota mantém validação de build como etapa separada."
+    }
+  ]
+}

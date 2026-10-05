@@ -1,0 +1,155 @@
+{
+  "group": "Unity Addressables 2.7: carregar, baixar, versionar e liberar conteúdo remoto",
+  "notes": [
+    {
+      "slug": "addressables-load-single-vs-multiple-keys",
+      "title": "Addressables: escolher LoadAssetAsync ou LoadAssetsAsync conforme o número de resultados",
+      "one": "`LoadAssetAsync` retorna um único asset mesmo quando uma chave corresponde a vários, enquanto `LoadAssetsAsync` carrega um conjunto com regras de combinação explícitas.",
+      "why": "Usar um label coletivo com API singular pode selecionar apenas um resultado, e combinar labels sem definir união ou interseção pode carregar coleção errada.",
+      "how": "Use `LoadAssetAsync<T>` para uma chave que identifica um asset, `LoadAssetsAsync<T>` para conjunto, e configure `MergeMode.Union`, `Intersection` ou `UseFirst` quando passar múltiplas chaves.",
+      "example": "Uma tela carrega prefab único pelo address; uma cena carrega personagens e animais por labels com `Union` e trata falhas do grupo conforme a operação.",
+      "limits": "O resultado individual de uma chave não promete qual asset de múltiplos correspondentes será o primeiro; dependências ainda são resolvidas pelo sistema Addressables.",
+      "verify": "Crie duas entradas com o mesmo label, teste API singular e plural, e valide coleção e comportamento para cada modo de merge.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Load assets", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-assets.html", "why": "Distingue carregamento singular e em lote, limita chave múltipla e lista merge modes."},
+        {"label": "Unity Addressables 2.7.6 — Load assets by location", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-assets-location.html", "why": "Explica resolução de endereços, labels e resource locations antes do carregamento."}
+      ],
+      "review": "A documentação afirma que LoadAssetAsync carrega apenas o primeiro resultado de chave múltipla e descreve a semântica de LoadAssetsAsync."
+    },
+    {
+      "slug": "addressables-assetreference-explicit-load-release",
+      "title": "Addressables: tratar AssetReference como referência serializada, não como carregamento automático",
+      "one": "Um campo `AssetReference` identifica asset Addressable, mas Unity não carrega nem libera o recurso automaticamente por guardar essa referência.",
+      "why": "Confundir referência no Inspector com asset já carregado pode gerar acesso prematuro, dependências sem lifecycle e recursos retidos após destruir o objeto.",
+      "how": "Declare AssetReference em MonoBehaviour ou ScriptableObject, inicie load via Addressables API no momento necessário e libere asset ou handle quando o consumidor encerrar seu uso.",
+      "example": "Um painel carrega prefab via `reference.LoadAssetAsync<GameObject>()`, instancia no callback de sucesso e executa `reference.ReleaseAsset()` quando a tela é destruída.",
+      "limits": "Atribuir um asset não Addressable ao campo pode torná-lo Addressable e adicioná-lo ao grupo default; considere esse efeito ao editar o catálogo.",
+      "verify": "Teste asset ausente e sucesso, acompanhe o handle no Addressables Profiler e confirme que release ocorre também ao cancelar ou encerrar o consumidor.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Load assets", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-assets.html#use-assetreferences", "why": "Mostra campo AssetReference, chamada explícita de load e release no ciclo de vida."},
+        {"label": "Unity Addressables 2.7.6 — Asset references", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/AssetReferences.html", "why": "Define usos da referência para restringir campos e acessar assets por referência ou labels."}
+      ],
+      "review": "O guia diz explicitamente que Unity não carrega nem libera AssetReference de forma automática e apresenta lifecycle explícito."
+    },
+    {
+      "slug": "addressables-async-operation-handles",
+      "title": "Addressables: aguardar operações assíncronas pelo handle sem bloquear a thread",
+      "one": "Operações Addressables retornam `AsyncOperationHandle` antes de o resultado estar disponível e podem ser aguardadas por coroutine, evento ou async/await.",
+      "why": "Downloads e loads podem levar tempo; bloquear a thread enquanto esperam causa pausas de frame e experiência inconsistente.",
+      "how": "Guarde o handle, aguarde `Completed`, coroutine ou Task conforme arquitetura e confira `Status` antes de usar `Result`; reserve `WaitForCompletion` para casos conscientes do custo.",
+      "example": "Uma coroutine inicia `LoadAssetAsync`, cede execução com `yield return handle` e instancia resultado apenas após status Succeeded.",
+      "limits": "`PercentComplete` e `Status` têm semânticas distintas, e `Result` não está disponível necessariamente quando a chamada inicial retorna; releases invalidam o handle.",
+      "verify": "Simule rede lenta e falha, verifique que frame continua responsivo, que Result só é usado após sucesso e que cancelamento/destruição não deixa callback sem dono.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Wait for asynchronous loads", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/AddressableAssetsAsyncOperationHandle.html", "why": "Descreve handle, resultado tardio, alternativas async e riscos de bloqueio."},
+        {"label": "Unity Addressables 2.7.6 — Manage asynchronous loading", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-manage-asynchronous-loads.html", "why": "Resume coroutines, eventos, async/await e operação síncrona para carregamento."}
+      ],
+      "review": "A referência documenta os padrões assíncronos e alerta que bloquear a thread pode gerar hitch; handle só disponibiliza resultado ao concluir."
+    },
+    {
+      "slug": "addressables-release-reference-count-memory",
+      "title": "Addressables: equilibrar cada load com release e entender contagem de referências",
+      "one": "Addressables mantém contagem de referências para assets e AssetBundles, então cada carregamento explícito precisa de release quando o consumidor termina.",
+      "why": "Uma referência esquecida mantém assets e dependências elegíveis para uso e pode parecer vazamento de memória mesmo quando objetos já saíram da cena.",
+      "how": "Associe handle ao dono do load, solte handle ou asset ao encerrar escopo e use profiler para verificar dependências e AssetBundle que ainda têm contagem positiva.",
+      "example": "A cena retém handles de modelos durante gameplay e os libera na saída; uma dependência compartilhada fica carregada até a última referência ser liberada.",
+      "limits": "Release não significa que bytes desaparecem imediatamente: bundle compartilhado não pode descarregar apenas parte dos assets e pode continuar em memória até zerar sua referência.",
+      "verify": "Carregue dois assets do mesmo bundle, libere um e depois o outro e observe no Addressables Profiler quando asset e bundle ficam descarregados.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Memory management", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/memory-assets.html", "why": "Explica refcounts, pares load/release, bundles compartilhados e asset churn."},
+        {"label": "Unity Addressables 2.7.6 — AsyncOperationHandle release", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/AddressableAssetsAsyncOperationHandle.html", "why": "Define duração necessária do handle e efeito de release sobre assets e operação."}
+      ],
+      "review": "A página de memória diferencia release lógico de descarga imediata de bundle; a nota trata referências no asset e dependências."
+    },
+    {
+      "slug": "addressables-download-progress-bytes",
+      "title": "Addressables: exibir progresso por bytes com GetDownloadStatus",
+      "one": "`PercentComplete` acompanha a conclusão de suboperações, enquanto `GetDownloadStatus` estima progresso em relação ao tamanho total dos downloads.",
+      "why": "Uma operação composta pode ter poucas suboperações de tamanhos muito diferentes, tornando percentuais por quantidade enganadores para uma barra de download.",
+      "how": "Durante predownload, consulte `GetDownloadStatus().Percent` para mostrar bytes baixados em relação ao total; use `PercentComplete` somente se desejar refletir suboperações concluídas.",
+      "example": "Uma label cobre bundle grande e vários pequenos; UI calcula progresso com GetDownloadStatus e publica eventos em incrementos para evitar redesenhar a cada frame.",
+      "limits": "Progresso de download não representa necessariamente todo trabalho de pós-processamento; no WebGL, estimativa de tamanho tem ressalva quando bundle já está em cache.",
+      "verify": "Teste operação com um bundle grande e vários pequenos, compare os dois indicadores e confira comportamento em cache e WebGL quando aplicável.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Pre-download remote content", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/remote-content-predownload.html#monitor-download-progress", "why": "Compara PercentComplete e GetDownloadStatus e mostra eventos de progresso."},
+        {"label": "Unity Addressables 2.7.6 — Async load monitoring", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-monitor-wait-operations.html", "why": "Documenta métodos de monitoramento de progresso de operações e downloads."}
+      ],
+      "review": "A documentação diferencia progresso por número de suboperações e progresso por bytes, e menciona comportamento específico de WebGL."
+    },
+    {
+      "slug": "addressables-predownload-dependencies-consent",
+      "title": "Addressables: medir e pré-baixar dependências antes de entrar no fluxo de jogo",
+      "one": "`GetDownloadSizeAsync` informa quantos bytes ainda precisam ser obtidos e `DownloadDependenciesAsync` baixa bundles de um endereço ou label antecipadamente.",
+      "why": "Pré-baixar um capítulo ou conjunto de assets em menu ou onboarding evita interromper gameplay para esperar rede e permite pedir consentimento informado.",
+      "how": "Consulte tamanho, apresente estimativa ao usuário se apropriado, baixe dependências com handle, acompanhe status e libere o handle de download ao concluir.",
+      "example": "Antes de carregar nível, o jogo calcula tamanho da label `chapter-2`, pede confirmação em rede móvel e baixa dependências para cache se o jogador aceitar.",
+      "limits": "Tamanho zero normalmente indica conteúdo necessário já em cache; download prévio não substitui load do asset quando a aplicação realmente precisa instanciá-lo.",
+      "verify": "Teste primeira instalação, cache existente, rede interrompida e recusa do consentimento; confira que o nível não começa até dependências exigidas estarem prontas.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Pre-download remote content", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/remote-content-predownload.html", "why": "Mostra GetDownloadSizeAsync, DownloadDependenciesAsync, handles e fluxo de consentimento."},
+        {"label": "Unity Addressables 2.7.6 — Load assets", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/load-assets.html", "why": "Distingue operação de load do uso do asset e descreve carga assíncrona."}
+      ],
+      "review": "A referência propõe consultar bytes e depois baixar dependências em background; nota distingue esse pré-download do load efetivo."
+    },
+    {
+      "slug": "addressables-profiles-build-load-paths",
+      "title": "Addressables: usar Profiles para alternar caminhos de build e load por ambiente",
+      "one": "Profiles definem variáveis utilizadas pelos grupos Addressables para escolher onde conteúdo é construído e de onde é carregado.",
+      "why": "Construções locais, staging e CDN de produção precisam apontar para destinos diferentes sem editar manualmente cada grupo antes de cada build.",
+      "how": "Defina variáveis de caminho no profile, associe cada grupo a pares Build and Load Paths e selecione profile de ambiente antes de gerar o conteúdo.",
+      "example": "O profile de teste usa Built-In para conteúdo remoto em desenvolvimento; o profile staging usa URL de host de equipe e produção usa variável do CDN.",
+      "limits": "O path preview é calculado pelo profile ativo; URLs complexas ou dinâmicas podem exigir variáveis estáticas ou transformação de InternalId em vez de texto fixo.",
+      "verify": "Construa com cada profile e confira catalog, path preview, URL resultante e acesso pelo player correspondente antes de publicar bundles.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Remote content profiles", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/remote-content-profiles.html", "why": "Descreve variáveis de profiles para caminhos local/remoto e cenários de CDN."},
+        {"label": "Unity Addressables 2.7.6 — Set a build and load path", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/profiles-build-load-paths.html", "why": "Explica associar variável de profile às configurações de build e load de grupo."}
+      ],
+      "review": "As duas páginas definem profiles e caminhos por grupo e sugerem separar perfis para teste, host local e CDN."
+    },
+    {
+      "slug": "addressables-assetbundle-cache-cleanup",
+      "title": "Addressables: diferenciar cache remoto em disco de memória e limpar bundles órfãos",
+      "one": "AssetBundles remotos são armazenados em cache por padrão depois do download, e bundles sem referência no catálogo atualizado podem ocupar espaço local.",
+      "why": "Memória de assets carregados e cache persistente de bundles são problemas diferentes; limpar um não equivale a liberar handles do runtime.",
+      "how": "Use `Addressables.CleanBundleCache` para remover entradas que nenhum catálogo atual referencia, ou `Caching.ClearCache` apenas quando a política exigir limpar o cache inteiro.",
+      "example": "Após atualizar catálogo, o jogo limpa bundles órfãos antigos por política de armazenamento enquanto mantém bundles ainda referenciados para evitar novo download.",
+      "limits": "Sem cache habilitado, bundles remotos ficam em memória até unload ou encerramento e podem ser baixados de novo no próximo load; WebGL tem particularidades de cache.",
+      "verify": "Atualize catálogo com bundle removido, observe tamanho/cache antes e depois da limpeza e confirme que conteúdo referenciado ainda carrega sem download redundante.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Remote AssetBundle caching", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/remote-content-assetbundle-cache.html", "why": "Documenta cache padrão, Caching.ClearCache, CleanBundleCache e opção por grupo."},
+        {"label": "Unity Addressables 2.7.6 — Memory management", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/memory-assets.html", "why": "Separa referências de assets/bundles em memória de outros aspectos de lifecycle."}
+      ],
+      "review": "A referência trata cache de download e memória como mecanismos distintos e limita CleanBundleCache a entradas sem referência."
+    },
+    {
+      "slug": "addressables-content-only-update-build-state",
+      "title": "Addressables: publicar conteúdo alterado com content update build e estado do release",
+      "one": "Um content update build pode distribuir conteúdo Addressable alterado sem reconstruir todo o Player, desde que use estado da publicação original.",
+      "why": "Reenviar todos os bundles remotos após uma pequena mudança pode consumir tempo e banda, além de forçar atualização do app quando somente assets mudaram.",
+      "how": "Guarde `addressables_content_state.bin` produzido para cada release e plataforma, execute Check Content Update Restrictions e gere atualização a partir do estado da build originalmente publicada.",
+      "example": "Uma equipe corrige textura num capítulo, constrói bundles de atualização usando o arquivo de estado do release e publica catálogo e bundles alterados no CDN.",
+      "limits": "Bundles não carregam alterações de código, e nem toda plataforma suporta distribuição remota; a Unity alerta para não alterar build scripts entre build completa e atualização.",
+      "verify": "Em player instalado, aplique update catalog, confira asset novo e conteúdo não alterado, compare bytes baixados e valide que arquivo de estado pertence ao mesmo release/plataforma.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Introduction to update builds", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/content-update-builds-overview.html", "why": "Define content-only workflow, estado de build obrigatório e limitações a assets."},
+        {"label": "Unity Addressables 2.7.6 — Create an update build", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/builds-update-build.html", "why": "Detalha ferramenta e restrições para construir atualização baseada em release anterior."}
+      ],
+      "review": "A documentação exige preservar estado para cada build publicada, limitar atualização a conteúdo e considerar suporte da plataforma."
+    },
+    {
+      "slug": "addressables-check-and-update-catalogs-runtime",
+      "title": "Addressables: detectar atualizações e trocar catálogos no momento apropriado",
+      "one": "`CheckForCatalogUpdates` identifica locators modificados e `UpdateCatalogs` aplica catálogos escolhidos ou todos os catálogos que precisam de atualização.",
+      "why": "Consultar catalog separado do boot permite informar tamanho/consentimento, coordenar atualização no menu e não interromper uma cena durante loads ativos.",
+      "how": "Inicialize Addressables, aguarde check, apresente resultado ao usuário ou atualize automaticamente e libere handles após ler status e locators; decida se deseja limpar cache antigo.",
+      "example": "No menu inicial, app checa atualizações, mostra aviso de conteúdo disponível, executa `UpdateCatalogs` com IDs selecionados e segue ao nível após conclusão.",
+      "limits": "O retorno de check pode conter IDs de catálogo alterados; lista nula em `UpdateCatalogs` significa atualizar todos os catálogos pendentes. Defina política de falha e conectividade.",
+      "verify": "Teste sem atualização, um catálogo e vários catálogos, falha de rede e update durante atividade; confira handle, cache opcional e consistência do load seguinte.",
+      "sources": [
+        {"label": "Unity Addressables 2.7.6 — Check for content updates", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/content-update-builds-check.html", "why": "Mostra CheckForCatalogUpdates, lista de locators e chamada UpdateCatalogs."},
+        {"label": "Unity Addressables 2.7.6 — Update builds workflow", "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/ContentUpdateWorkflow.html", "why": "Relaciona catálogos runtime ao fluxo de publicação remota e ferramentas de update."}
+      ],
+      "review": "A referência define IDs retornados, atualização de subconjunto ou todos os catálogos e opção de limpeza de cache; timing é decisão arquitetural."
+    }
+  ]
+}

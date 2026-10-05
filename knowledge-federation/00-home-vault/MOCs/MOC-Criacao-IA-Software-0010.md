@@ -14,10 +14,10 @@ Mapa de navegação para o lote [`software-criacao-ia-2000-0004`](../../exports/
 ## Estado do lote
 
 - Meta: **2.000 notas substantivas**; cadência planejada: **20 tranches × 100 notas**.
-- Progresso: **400 / 2.000 notas válidas (20,00%)** (`status: in_progress`).
-- Gate: **400/400**; revisão factual humana: **0/400**; revisão factual por IA: **400/400**.
-- Notas materiais presentes e contadas: **400**, IDs 000001–000400. Para as próximas 1.600 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
-- As tranches 1–4 foram selecionadas com documentação primária e concluídas em dez trilhas temáticas cada; as 16 tranches futuras e seus títulos ainda não estão decididos.
+- Progresso: **500 / 2.000 notas válidas (25,00%)** (`status: in_progress`).
+- Gate: **500/500**; revisão factual humana: **0/500**; revisão factual por IA: **500/500**.
+- Notas materiais presentes e contadas: **500**, IDs 000001–000500. Para as próximas 1.500 notas, nenhum ID, placeholder ou progresso virtual está reservado ou contado.
+- As tranches 1–5 foram selecionadas com documentação primária e concluídas em dez trilhas temáticas cada; as 15 tranches futuras e seus títulos ainda não estão decididos.
 
 ## Conteúdo materializado — tranche 1 (100 notas; IDs 000001–000100)
 
@@ -548,6 +548,137 @@ A seleção cobre programação assistida, integração de modelos em apps, ferr
 - [[hf-cache-implementation-quatro-modos]] — Transformers: cache_implementation escolhe o destino da KV — dynamic, static, offload ou quantizada.
 - [[hf-assisted-decoding-especifico]] — Transformers: decodificação assistida — draft por modelo, n-gram, medusa ou ensemble.
 - [[hf-retornos-e-custom-generate]] — Transformers: past_key_values no retorno e generate custom por repositório.
+## Conteúdo materializado — tranche 5 (100 notas; IDs 000401–000500)
+
+### Ollama REST API: endereçamento, payloads, catálogo e ciclo dos modelos
+
+- [[ollama-api-separar-base-url-local-cloud]] — Ollama API: diferenciar base URLs local e cloud antes de configurar o cliente.
+- [[ollama-api-generate-stream-e-done]] — Ollama API: tratar stream de generate até o marcador done.
+- [[ollama-api-chat-array-de-messages]] — Ollama API: representar a conversa em messages no endpoint chat.
+- [[ollama-api-json-schema-structured-output]] — Ollama API: validar saídas estruturadas com format JSON Schema.
+- [[ollama-api-embeddings-lote-e-truncamento]] — Ollama API: gerar embeddings em lote e escolher a política de truncamento.
+- [[ollama-api-pull-acompanhar-progresso]] — Ollama API: acompanhar o progresso do pull sem fixar mensagens de status.
+- [[ollama-api-tags-vs-show-model-metadata]] — Ollama API: usar tags para inventário e show para metadados de um modelo.
+- [[ollama-api-create-configurar-modelo-derivado]] — Ollama API: criar um modelo derivado com parâmetros e instruções explícitas.
+- [[ollama-api-copy-modelo-com-nome-separado]] — Ollama API: copiar um modelo para um nome isolado antes de alterar a configuração.
+- [[ollama-api-delete-model-protegido]] — Ollama API: proteger a remoção de modelos com confirmação do nome exato.
+
+### ComfyUI Server API: exportar workflows, enfileirar execuções e recuperar resultados
+
+- [[comfyui-api-exportar-workflow-formato-api]] — ComfyUI: exportar o grafo no formato API em vez de reutilizar o arquivo visual.
+- [[comfyui-api-prompt-validacao-e-fila]] — ComfyUI: interpretar POST prompt como validação e enfileiramento, não como resultado.
+- [[comfyui-api-websocket-client-id-correlacao]] — ComfyUI: abrir o WebSocket com client_id e correlacionar por prompt_id.
+- [[comfyui-api-evento-final-e-executed]] — ComfyUI: distinguir atualização `executed` do fim e do sucesso da execução.
+- [[comfyui-api-history-resultado-por-prompt-id]] — ComfyUI: recuperar o histórico da execução usando o prompt_id.
+- [[comfyui-api-view-parametros-de-arquivo]] — ComfyUI: recuperar arquivos de saída pela rota view e seus parâmetros.
+- [[comfyui-api-object-info-nos-instalados]] — ComfyUI: consultar object_info para descobrir o esquema dos nós disponíveis.
+- [[comfyui-api-distinguir-fila-de-interrupt]] — ComfyUI: separar controle da fila de interrupção da execução ativa.
+- [[comfyui-api-upload-image-referencia]] — ComfyUI: usar a referência devolvida por upload/image em vez de caminho local.
+- [[comfyui-separar-server-api-e-comfy-api-v2]] — ComfyUI: separar a Server API da superfície versionada Comfy API v2.
+
+### Godot EditorImportPlugin: registrar importadores, definir contratos e salvar recursos
+
+- [[godot-editorimportplugin-registro-no-editorplugin]] — Godot EditorImportPlugin: registrar e remover a instância pelo EditorPlugin.
+- [[godot-editorimportplugin-identidade-e-nome-visivel]] — Godot EditorImportPlugin: manter importer_name estável e separar o rótulo visível.
+- [[godot-editorimportplugin-extensoes-prioridade]] — Godot EditorImportPlugin: limitar extensões aceitas e declarar prioridade consciente.
+- [[godot-editorimportplugin-tipo-e-extensao-de-saida]] — Godot EditorImportPlugin: alinhar resource_type ao save_extension declarado.
+- [[godot-editorimportplugin-opcoes-e-presets]] — Godot EditorImportPlugin: descrever opções de importação com defaults e presets.
+- [[godot-editorimportplugin-visibilidade-de-opcoes]] — Godot EditorImportPlugin: ocultar opções dependentes sem perder seu contrato.
+- [[godot-editorimportplugin-validar-source-file-e-error]] — Godot EditorImportPlugin: validar source_file e propagar Error do import.
+- [[godot-editorimportplugin-save-path-gen-files-variants]] — Godot EditorImportPlugin: gravar em save_path e declarar arquivos gerados.
+- [[godot-editorimportplugin-threaded-import-safety]] — Godot EditorImportPlugin: habilitar importação paralela só após provar thread safety.
+- [[godot-editorimportplugin-format-version-invalidacao]] — Godot EditorImportPlugin: incrementar format_version ao incompatibilizar recursos importados.
+
+### Unity Sentis 2.5: preparar tensores, escolher backend e integrar inferência ao frame loop
+
+- [[unity-sentis-modelasset-runtime-model-worker]] — Unity Sentis 2.5: separar ModelAsset, runtime Model e Worker de execução.
+- [[unity-sentis-escolher-backend-por-modelo]] — Unity Sentis 2.5: escolher backend após medir modelo, dados e plataforma.
+- [[unity-sentis-inspecionar-shape-e-dtype-da-entrada]] — Unity Sentis 2.5: construir input tensor conforme shape e tipo esperados pelo modelo.
+- [[unity-sentis-shapes-dinamicos-compatibilidade]] — Unity Sentis 2.5: tratar dimensões dinâmicas como contrato explícito de entrada.
+- [[unity-sentis-texture-nchw-preprocessamento]] — Unity Sentis 2.5: conferir layout NCHW e escala ao converter Texture para Tensor.
+- [[unity-sentis-compatibilidade-operadores-backend]] — Unity Sentis 2.5: validar operadores e tipos antes de fixar backend.
+- [[unity-sentis-peekoutput-copyoutput-propriedade]] — Unity Sentis 2.5: escolher entre PeekOutput emprestado e CopyOutput próprio.
+- [[unity-sentis-evitar-readback-sincrono-na-main-thread]] — Unity Sentis 2.5: evitar leitura síncrona que bloqueia a main thread.
+- [[unity-sentis-readback-and-clone-async-lifecycle]] — Unity Sentis 2.5: usar ReadbackAndCloneAsync com sincronização e descarte explícitos.
+- [[unity-sentis-schedule-iterable-frames]] — Unity Sentis 2.5: distribuir camadas de inferência entre frames com ScheduleIterable.
+
+### OpenAI Realtime API: áudio em tempo real, turnos, eventos e chamadas de ferramenta
+
+- [[openai-realtime-vad-configurar-turn-detection]] — OpenAI Realtime: configurar server_vad ou semantic_vad como política de turnos.
+- [[openai-realtime-push-to-talk-sem-vad]] — OpenAI Realtime: implementar push-to-talk com buffer, commit e response.create.
+- [[openai-realtime-append-audio-chunks-base64]] — OpenAI Realtime: transmitir input_audio_buffer.append em chunks Base64 limitados.
+- [[openai-realtime-transcricao-item-id]] — OpenAI Realtime transcription: correlacionar deltas e transcrições finais por item_id.
+- [[openai-realtime-audio-output-delta-vs-done]] — OpenAI Realtime: obter bytes de áudio em output_audio.delta, não em response.done.
+- [[openai-realtime-interromper-audio-e-truncate]] — OpenAI Realtime: sincronizar áudio interrompido com conversation.item.truncate.
+- [[openai-realtime-function-call-execucao-aplicacao]] — OpenAI Realtime: executar function calls no aplicativo e devolver function_call_output.
+- [[openai-realtime-out-of-band-conversation-none]] — OpenAI Realtime: isolar respostas auxiliares com conversation none e metadata.
+- [[openai-realtime-session-update-estado-efetivo]] — OpenAI Realtime: tratar session.updated como confirmação do estado efetivo.
+- [[openai-realtime-client-secret-browser]] — OpenAI Realtime: usar client secret temporário no browser em vez da API key principal.
+
+### Vercel AI SDK UI: estado de chat, persistência, ferramentas e protocolos de stream
+
+- [[ai-sdk-ui-input-state-fora-do-usechat]] — AI SDK UI: manter o estado do campo de entrada fora de useChat no AI SDK 5.
+- [[ai-sdk-ui-renderizar-uimessage-parts]] — AI SDK UI: renderizar UIMessage.parts por tipo em vez de presumir texto único.
+- [[ai-sdk-ui-configurar-chat-transport]] — AI SDK UI: configurar endpoint e cabeçalhos no DefaultChatTransport.
+- [[ai-sdk-ui-persistir-e-validar-uimessages]] — AI SDK UI: persistir UIMessage e validar tools e metadata antes de converter.
+- [[ai-sdk-ui-tools-execution-and-output]] — AI SDK UI: separar execução de tools server-side e client-side com addToolOutput.
+- [[ai-sdk-ui-retomar-streams-com-storage]] — AI SDK UI: implementar retomada de stream com persistência e endpoint GET.
+- [[ai-sdk-ui-stop-nao-cancela-geracao-retomavel]] — AI SDK UI: em streams retomáveis, distinguir stop local de cancelamento server-side.
+- [[ai-sdk-ui-data-parts-persistentes-transient]] — AI SDK UI: separar data parts persistentes de eventos transient de interface.
+- [[ai-sdk-ui-escolher-text-stream-ou-data-stream]] — AI SDK UI: escolher text stream ou data stream conforme a forma do evento.
+- [[ai-sdk-ui-status-erro-e-mensagem-publica]] — AI SDK UI: conduzir controles por status e mostrar erro genérico ao usuário.
+
+### Storybook: produzir histórias tipadas, mocks de UI e verificações automatizadas
+
+- [[storybook-csf-default-meta-named-stories]] — Storybook: organizar CSF com meta default e histórias como exports nomeados.
+- [[storybook-args-niveis-serializaveis]] — Storybook: distribuir args por story e componente sem guardar estado global em props.
+- [[storybook-typescript-meta-storyobj-satisfies]] — Storybook TypeScript: ligar Meta e StoryObj com satisfies para checar args.
+- [[storybook-globals-toolbar-decorator-theme]] — Storybook: usar globals e toolbar para variar contexto compartilhado como tema.
+- [[storybook-loaders-before-render-loaded-context]] — Storybook: usar loaders assíncronos como escape hatch para dados externos.
+- [[storybook-play-interaction-canvas-userevent]] — Storybook: escrever testes de interação como play com canvas e userEvent awaited.
+- [[storybook-vitest-addon-stories-como-component-tests]] — Storybook: executar stories como component tests com addon Vitest.
+- [[storybook-visual-tests-baselines-chromatic]] — Storybook: detectar regressões de pixels com visual tests e baselines revisados.
+- [[storybook-autodocs-tags-living-documentation]] — Storybook: habilitar Autodocs por tag e estender a documentação com MDX.
+- [[storybook-a11y-axe-auditoria-manual]] — Storybook a11y: combinar varredura axe com verificação manual de acessibilidade.
+
+### Docusaurus 3.10: estruturar, versionar e localizar sites de documentação
+
+- [[docusaurus-doc-id-e-slug-permalink]] — Docusaurus: separar identidade do documento de sua URL pública com slug explícito.
+- [[docusaurus-autogenerated-sidebar-filesystem]] — Docusaurus: construir sidebar autogenerated a partir de diretórios de docs.
+- [[docusaurus-sidebar-position-frontmatter]] — Docusaurus: controlar ordem de sidebar automática com sidebar_position.
+- [[docusaurus-sidebar-association-pagination]] — Docusaurus: fixar associação de múltiplas sidebars com displayed_sidebar.
+- [[docusaurus-versioning-freeze-current-docs]] — Docusaurus: criar versões de documentação como snapshots deliberados.
+- [[docusaurus-current-vs-latest-version]] — Docusaurus: distinguir versão current da versão latest usada no navbar.
+- [[docusaurus-version-safe-links-and-imports]] — Docusaurus: manter links e imports válidos quando docs são versionados.
+- [[docusaurus-docs-multi-instance-unique-id]] — Docusaurus: configurar instâncias do plugin docs para catálogos independentes.
+- [[docusaurus-mdx-vs-commonmark-format]] — Docusaurus: escolher formato MDX ou CommonMark conforme a sintaxe dos docs.
+- [[docusaurus-i18n-localized-content-layout]] — Docusaurus i18n: localizar conteúdo por locale sem supor detecção automática.
+
+### Ink: integrar narrativa interativa compilada com o runtime do jogo
+
+- [[ink-compile-json-story-runtime]] — Ink: compilar arquivos .ink para JSON e carregar uma instância Story.
+- [[ink-continue-output-granularity]] — Ink runtime: escolher Continue ou ContinueMaximally pela granularidade da interface.
+- [[ink-current-choices-and-choice-index]] — Ink runtime: apresentar currentChoices e retomar com ChooseChoiceIndex.
+- [[ink-save-complete-story-state-json]] — Ink runtime: salvar o estado narrativo completo com state.ToJson.
+- [[ink-variables-state-and-observers]] — Ink runtime: sincronizar variáveis globais e UI sem polling por frame.
+- [[ink-tags-como-metadados-de-conteudo]] — Ink runtime: transportar tags de linha, knot e escolha como metadados invisíveis.
+- [[ink-external-functions-lookahead-safe]] — Ink: classificar funções externas como ações ou operações lookahead-safe.
+- [[ink-evaluationfunction-call-from-game]] — Ink runtime: chamar função do roteiro com EvaluationFunction sem consumir diálogo.
+- [[ink-precompile-include-filehandler]] — Ink: preferir compilação prévia e configurar includes no fluxo de compilação C#.
+- [[ink-runtime-error-handler]] — Ink runtime: registrar onError para erros que só aparecem durante a narrativa.
+
+### Unity Addressables 2.7: carregar, baixar, versionar e liberar conteúdo remoto
+
+- [[addressables-load-single-vs-multiple-keys]] — Addressables: escolher LoadAssetAsync ou LoadAssetsAsync conforme o número de resultados.
+- [[addressables-assetreference-explicit-load-release]] — Addressables: tratar AssetReference como referência serializada, não como carregamento automático.
+- [[addressables-async-operation-handles]] — Addressables: aguardar operações assíncronas pelo handle sem bloquear a thread.
+- [[addressables-release-reference-count-memory]] — Addressables: equilibrar cada load com release e entender contagem de referências.
+- [[addressables-download-progress-bytes]] — Addressables: exibir progresso por bytes com GetDownloadStatus.
+- [[addressables-predownload-dependencies-consent]] — Addressables: medir e pré-baixar dependências antes de entrar no fluxo de jogo.
+- [[addressables-profiles-build-load-paths]] — Addressables: usar Profiles para alternar caminhos de build e load por ambiente.
+- [[addressables-assetbundle-cache-cleanup]] — Addressables: diferenciar cache remoto em disco de memória e limpar bundles órfãos.
+- [[addressables-content-only-update-build-state]] — Addressables: publicar conteúdo alterado com content update build e estado do release.
+- [[addressables-check-and-update-catalogs-runtime]] — Addressables: detectar atualizações e trocar catálogos no momento apropriado.
 ## Mapa de escopo
 
 Estes eixos são áreas de pesquisa, não notas ou placeholders:
@@ -576,4 +707,4 @@ Tutoriais reprodutíveis para programas, apps e jogos; documentação técnica; 
 
 Cada nota futura terá fontes específicas para a ferramenta, engine, API ou técnica que descreve. Conteúdo gerado por IA será tratado como rascunho sujeito a execução, revisão e testes; não como resultado automaticamente correto. O gate, a revisão factual e a reconciliação do manifesto serão concluídos antes de atualizar qualquer contagem.
 
-A abertura e as regras de contagem estão no [relatório de escopo](../../exports/reports/batch-opening-software-criacao-ia-2000-0004.md) e na [reconciliação inicial](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-initial.md). Tranche 1: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md). Tranche 2: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md). Tranche 3: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md). Tranche 4: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md). Lotes adicionais nesse eixo são uma possibilidade a reavaliar, não uma reserva de progresso; não há lote 5 aberto.
+A abertura e as regras de contagem estão no [relatório de escopo](../../exports/reports/batch-opening-software-criacao-ia-2000-0004.md) e na [reconciliação inicial](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-initial.md). Tranche 1: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-01.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-01.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-01.md). Tranche 2: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-02.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-02.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-02.md). Tranche 3: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-03.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-03.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-03.md). Tranche 4: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-04.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-04.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-04.md). Tranche 5: [revisão factual IA](../../exports/reports/ai-review-software-criacao-ia-2000-0004-tranche-05.md), [gate](../../exports/reports/note-quality-software-criacao-ia-2000-0004-tranche-05.md), [auditoria de links](../../exports/reports/source-link-audit-software-criacao-ia-2000-0004-tranche-05.md) e [reconciliação](../../exports/reports/batch-reconciliation-software-criacao-ia-2000-0004-tranche-05.md). Lotes adicionais nesse eixo são uma possibilidade a reavaliar, não uma reserva de progresso; não há lote 5 aberto.

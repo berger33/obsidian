@@ -1,0 +1,155 @@
+{
+  "group": "Ollama REST API: endereçamento, payloads, catálogo e ciclo dos modelos",
+  "notes": [
+    {
+      "slug": "ollama-api-separar-base-url-local-cloud",
+      "title": "Ollama API: diferenciar base URLs local e cloud antes de configurar o cliente",
+      "one": "O cliente deve selecionar a base URL correspondente ao destino, porque o servidor local e o acesso cloud usam hosts, autenticação e capacidades diferentes.",
+      "why": "Uma aplicação que troca de local para cloud sem mudar a configuração pode enviar credenciais desnecessárias, apontar para o endpoint errado ou supor que operações locais existem na nuvem.",
+      "how": "A documentação lista `http://localhost:11434/api` para a API local e `https://ollama.com/api` para cloud direto; a compatibilidade OpenAI usa `/v1` em ambos os hosts. Cloud direto exige API key, enquanto chamadas locais não exigem essa chave.",
+      "example": "Mantenha `OLLAMA_BASE_URL` configurável por ambiente: desenvolvimento usa `http://localhost:11434/api`, e o serviço cloud usa `https://ollama.com/api` acompanhado do segredo configurado no servidor.",
+      "limits": "A documentação ressalta que criação e remoção de modelos exigem servidor local. Não conclua que todos os endpoints locais estão disponíveis no acesso cloud apenas porque a API de geração tem um host cloud.",
+      "verify": "Inspecione host, prefixo de endpoint e política de autenticação da configuração efetiva; faça um teste controlado com o modelo destinado a cada ambiente, sem registrar a chave em logs.",
+      "sources": [
+        {"label": "Ollama API — Introduction", "url": "https://docs.ollama.com/api/introduction", "why": "Tabela oficial de base URLs, autenticação local/cloud e ressalva sobre operações de gerenciamento locais."},
+        {"label": "Ollama API — Generate a response", "url": "https://docs.ollama.com/api/generate", "why": "Exemplo oficial de endpoint local e corpo de uma operação de geração."}
+      ],
+      "review": "A página de introdução separa explicitamente URL local, acesso cloud e compatibilidade OpenAI; a nota limita a conclusão sobre gerenciamento de modelos ao servidor local."
+    },
+    {
+      "slug": "ollama-api-generate-stream-e-done",
+      "title": "Ollama API: tratar stream de generate até o marcador done",
+      "one": "`POST /api/generate` pode responder com fragmentos quando `stream` está ativo, e o consumidor deve reconhecer o evento final em vez de presumir que a primeira resposta é completa.",
+      "why": "A interface pode exibir texto progressivamente, mas precisa distinguir uma geração em andamento de uma geração concluída para liberar controles, persistir o resultado e relatar falhas com precisão.",
+      "how": "O endpoint documenta `stream` como booleano com padrão `true`, respostas parciais e o campo `done` que indica o fim. Defina `stream: false` quando a integração precisa de uma resposta única, ou processe cada registro do stream e finalize ao receber `done: true`.",
+      "example": "Um cliente de terminal acrescenta cada `response` à saída visível, mas só grava a resposta como concluída quando o registro final contém `done: true`; um teste também cobre `stream: false`.",
+      "limits": "O tamanho e o número de fragmentos dependem do modelo e da entrada; não codifique uma quantidade fixa de eventos nem use a chegada de um fragmento de texto como sinal de término.",
+      "verify": "Teste uma geração curta em modo streaming e outra com `stream: false`; confirme que o cliente não duplica texto, termina no indicador documentado e fecha corretamente a conexão.",
+      "sources": [
+        {"label": "Ollama API — Generate a response", "url": "https://docs.ollama.com/api/generate", "why": "Define o padrão de `stream`, respostas parciais e o campo final `done`."},
+        {"label": "Ollama API — Introduction", "url": "https://docs.ollama.com/api/introduction", "why": "Confirma a rota REST local usada no exemplo da chamada de geração."}
+      ],
+      "review": "A referência de generate documenta `stream: true` como padrão, fragmentos de resposta e `done` como indicador de conclusão; não atribuí formato ou quantidade fixa aos fragmentos."
+    },
+    {
+      "slug": "ollama-api-chat-array-de-messages",
+      "title": "Ollama API: representar a conversa em messages no endpoint chat",
+      "one": "`POST /api/chat` recebe histórico como uma lista de mensagens com papel e conteúdo, ao contrário de `generate`, que recebe um campo de prompt.",
+      "why": "Manter turnos explícitos evita reconstruir a conversa em texto ad hoc e permite que o cliente decida qual histórico entregar em cada chamada.",
+      "how": "O corpo documentado exige `model` e `messages`; cada item representa uma mensagem e traz `role` e `content`. A resposta apresenta uma mensagem de assistant. O aplicativo mantém a política de retenção e escolhe quais turnos reenviar.",
+      "example": "Uma chamada envia uma única mensagem `{\"role\":\"user\",\"content\":\"Resuma este log\"}`; na próxima interação, o cliente inclui os turnos anteriores que decidiu conservar.",
+      "limits": "A existência do array não significa que o servidor guarde automaticamente o histórico de produto entre requisições. Não envie segredos ou conversas de outro usuário ao reutilizar uma lista persistida.",
+      "verify": "Valide que o serializador preserva a ordem dos turnos, os papéis esperados e o conteúdo da resposta `message`; teste requisições sem histórico e com mais de um turno.",
+      "sources": [
+        {"label": "Ollama API — Generate a chat message", "url": "https://docs.ollama.com/api/chat", "why": "Especifica `messages` como histórico em array e mostra a mensagem de resposta."},
+        {"label": "Ollama API — Generate a response", "url": "https://docs.ollama.com/api/generate", "why": "Distingue o formato `prompt` usado pelo endpoint de geração individual."}
+      ],
+      "review": "A documentação descreve `messages` como histórico de chat em array e mostra `message` na resposta; a nota não presume persistência server-side entre chamadas."
+    },
+    {
+      "slug": "ollama-api-json-schema-structured-output",
+      "title": "Ollama API: validar saídas estruturadas com format JSON Schema",
+      "one": "Os endpoints `generate` e `chat` aceitam `format` com `json` ou um objeto de JSON Schema, mas o consumidor ainda precisa validar o resultado no limite da aplicação.",
+      "why": "Respostas livres são frágeis para automação; declarar a forma esperada torna erros de parsing observáveis e reduz a necessidade de extrair campos por heurística textual.",
+      "how": "Envie o valor `json` ou o objeto de schema no campo `format` do endpoint escolhido. Use instruções coerentes com o esquema, faça parse do texto recebido e trate conteúdo incompleto, campos ausentes e resposta não válida como falhas do contrato.",
+      "example": "Um extrator de tarefas envia um schema com `title` e `priority`, parseia `response` ou `message.content` e rejeita o resultado se a validação local apontar propriedade ausente.",
+      "limits": "O schema limita a forma pretendida da saída, não prova que os valores sejam verdadeiros nem elimina diferenças entre modelos. Não execute uma ação de negócio sem validar tipo, enumerações e permissões.",
+      "verify": "Crie testes com resposta válida, propriedade ausente, enumeração desconhecida e JSON malformado; registre a falha de validação sem substituir silenciosamente por valores padrão.",
+      "sources": [
+        {"label": "Ollama API — Generate a response", "url": "https://docs.ollama.com/api/generate", "why": "Documenta `format` como `json` ou objeto JSON Schema para geração."},
+        {"label": "Ollama API — Generate a chat message", "url": "https://docs.ollama.com/api/chat", "why": "Confirma o mesmo campo de formato estruturado no endpoint de chat."}
+      ],
+      "review": "As duas referências permitem `json` ou schema em `format`; a validação de dados e a autorização de ações são apresentadas como responsabilidades da aplicação."
+    },
+    {
+      "slug": "ollama-api-embeddings-lote-e-truncamento",
+      "title": "Ollama API: gerar embeddings em lote e escolher a política de truncamento",
+      "one": "`POST /api/embed` aceita uma string ou uma lista de textos, e o campo `truncate` define se entradas além da janela são cortadas ou resultam em erro.",
+      "why": "O lote pode reduzir chamadas em pipelines de indexação, mas truncamento silencioso pode produzir vetores que representam apenas uma parte do documento.",
+      "how": "Envie `model` e `input`; quando `input` é uma lista, a resposta contém um vetor por entrada. O padrão documentado de `truncate` é verdadeiro; configure falso quando a aplicação precisa detectar entradas acima do contexto e dividi-las explicitamente.",
+      "example": "Um indexador manda uma lista com três trechos, verifica que retornaram três embeddings e, em modo de auditoria, usa `truncate: false` para encaminhar trechos grandes à etapa de chunking.",
+      "limits": "O endpoint não define sua estratégia de segmentação semântica nem garante dimensões iguais entre modelos. Confirme as dimensões esperadas antes de gravar os vetores no índice escolhido.",
+      "verify": "Teste string e array, confira a cardinalidade do campo `embeddings` e compare o comportamento documentado com `truncate: true` e `false` em uma entrada propositalmente longa.",
+      "sources": [
+        {"label": "Ollama API — Generate embeddings", "url": "https://docs.ollama.com/api/embed", "why": "Especifica entrada string/array, truncamento e resposta com embeddings."},
+        {"label": "Ollama API — Introduction", "url": "https://docs.ollama.com/api/introduction", "why": "Fornece a base URL oficial a usar no exemplo local."}
+      ],
+      "review": "A referência de embeddings confirma string ou array, `truncate` verdadeiro por padrão e erro quando falso; não presumi dimensionalidade universal."
+    },
+    {
+      "slug": "ollama-api-pull-acompanhar-progresso",
+      "title": "Ollama API: acompanhar o progresso do pull sem fixar mensagens de status",
+      "one": "`POST /api/pull` pode transmitir atualizações de progresso, então um cliente de instalação precisa separar estados intermediários do resultado final.",
+      "why": "Downloads podem levar tempo e a interface deve manter o usuário informado sem marcar um modelo como disponível antes da conclusão reportada pelo servidor.",
+      "how": "A referência de pull documenta `stream` como verdadeiro por padrão e descreve respostas de status de progresso; para uma resposta única, envie `stream: false`. Trate o campo de status como mensagem atual, sem assumir uma enumeração imutável de textos.",
+      "example": "Um painel mostra cada atualização recebida para o modelo escolhido, desabilita o botão enquanto a operação está ativa e confirma a disponibilidade com uma consulta subsequente ao catálogo.",
+      "limits": "As mensagens de progresso são dependentes da operação e não devem funcionar como identificadores persistentes nem como prova de que um nome específico de modelo foi carregado corretamente.",
+      "verify": "Em um servidor de teste, observe pull com stream ligado e desligado, assegure que o cliente não confunde uma atualização com sucesso final e confirme o modelo no catálogo após completar.",
+      "sources": [
+        {"label": "Ollama API — Pull a model", "url": "https://docs.ollama.com/api/pull", "why": "Define o endpoint, o padrão de streaming e as respostas de status."},
+        {"label": "Ollama API — List models", "url": "https://docs.ollama.com/api/tags", "why": "Permite confirmar separadamente quais modelos aparecem no catálogo local."}
+      ],
+      "review": "A documentação do pull só promete atualizações de status; por isso a nota evita codificar frases de status específicas e recomenda confirmação separada no catálogo."
+    },
+    {
+      "slug": "ollama-api-tags-vs-show-model-metadata",
+      "title": "Ollama API: usar tags para inventário e show para metadados de um modelo",
+      "one": "`GET /api/tags` enumera modelos disponíveis, enquanto `POST /api/show` consulta detalhes de um modelo nomeado; são leituras com propósitos diferentes.",
+      "why": "Um seletor de modelos precisa de inventário para preencher opções e de metadados específicos para exibir capacidades ou conferir parâmetros sem inferi-los pelo nome.",
+      "how": "Use o array `models` de `/api/tags` para descobrir nomes e detalhes resumidos; em seguida, envie o nome escolhido a `/api/show`. A resposta de show pode incluir capacidades, parâmetros e informações adicionais do modelo.",
+      "example": "Uma tela carrega a lista de modelos, deixa o usuário escolher um deles e chama show apenas para a seleção atual, exibindo capacidades reportadas em vez de assumir que todo modelo aceita imagem ou thinking.",
+      "limits": "Os detalhes dependem do modelo e alguns campos podem estar ausentes; uma listagem não substitui autorização nem prova que o modelo seguirá uma capacidade com qualidade adequada.",
+      "verify": "Compare os nomes retornados pelo inventário com a seleção e trate um modelo removido entre as duas chamadas; teste campos opcionais ausentes e a opção `verbose` de show quando necessária.",
+      "sources": [
+        {"label": "Ollama API — List models", "url": "https://docs.ollama.com/api/tags", "why": "Mostra o endpoint de inventário e os campos resumidos de cada modelo."},
+        {"label": "Ollama API — Show model details", "url": "https://docs.ollama.com/api-reference/show-model-details", "why": "Documenta `/api/show`, campos de capacidades e resposta de metadados."}
+      ],
+      "review": "As páginas separam listagem de modelos e consulta de detalhes por nome; a nota descreve campos de capacidade como metadados, não garantias de qualidade."
+    },
+    {
+      "slug": "ollama-api-create-configurar-modelo-derivado",
+      "title": "Ollama API: criar um modelo derivado com parâmetros e instruções explícitas",
+      "one": "`POST /api/create` cria um nome de modelo a partir de um modelo existente e aceita configuração como template, system, parâmetros e mensagens.",
+      "why": "Empacotar uma configuração reutilizável pode facilitar distribuição dentro de um ambiente, mas torna necessário registrar de quais valores e modelos a derivação depende.",
+      "how": "Informe o nome de destino em `model` e, quando aplicável, `from`, `system`, `template`, `parameters`, `messages` ou arquivos digestados. A resposta pode transmitir atualizações de status, pois `stream` também é verdadeiro por padrão.",
+      "example": "Uma equipe cria `assistant-review` a partir de um modelo aprovado, incorpora instruções revisadas e parâmetros versionados, acompanha os estados do create e verifica o nome resultante com `/api/tags`.",
+      "limits": "A criação e a remoção de modelos requerem um servidor Ollama local segundo a introdução da API; o endpoint não substitui revisão de licença nem análise de proveniência dos pesos.",
+      "verify": "Teste em uma instalação descartável, confirme o destino no inventário e use `/api/show` para conferir os metadados relevantes; não trate uma mensagem intermediária como confirmação definitiva.",
+      "sources": [
+        {"label": "Ollama API — Create a model", "url": "https://docs.ollama.com/api/create", "why": "Lista campos aceitos para criação e resposta com atualizações de status."},
+        {"label": "Ollama API — Introduction", "url": "https://docs.ollama.com/api/introduction", "why": "Ressalva que criação e remoção de modelos exigem servidor local."}
+      ],
+      "review": "A referência de create lista campos de configuração e streaming de status; a introdução restringe operações de criação à instalação local."
+    },
+    {
+      "slug": "ollama-api-copy-modelo-com-nome-separado",
+      "title": "Ollama API: copiar um modelo para um nome isolado antes de alterar a configuração",
+      "one": "`POST /api/copy` recebe nomes `source` e `destination`, permitindo criar uma cópia registrada sob outro nome sem confundir seleção e origem.",
+      "why": "Separar o nome de trabalho do nome de referência torna mais claro qual variante uma aplicação consome e qual configuração está sendo mantida para comparação.",
+      "how": "Confirme que a origem é a esperada, defina explicitamente um nome de destino e trate a resposta de sucesso como conclusão da cópia. Depois consulte `/api/tags` para verificar o novo nome antes de referenciá-lo em configurações.",
+      "example": "Um script de manutenção copia `coder-base` para `coder-experiment-a`, registra origem e destino em um manifesto local e só então atualiza o ambiente de teste para usar o nome novo.",
+      "limits": "A documentação descreve a operação como cópia com nomes distintos; não infira que modelos sob nomes diferentes sejam versões independentes de pesos nem use cópia como mecanismo de backup externo.",
+      "verify": "Teste com nomes controlados em uma instalação local, valide a resposta, liste os modelos depois e assegure que o cliente não troca a origem pelo destino por erro de variável.",
+      "sources": [
+        {"label": "Ollama API — Copy a model", "url": "https://docs.ollama.com/api/copy", "why": "Define os campos obrigatórios `source` e `destination` e a resposta de sucesso."},
+        {"label": "Ollama API — List models", "url": "https://docs.ollama.com/api/tags", "why": "Fornece uma verificação posterior do nome de destino no catálogo."}
+      ],
+      "review": "A página de copy define a origem existente e o nome de destino; a nota não alega cópia independente de pesos nem equivalência a backup."
+    },
+    {
+      "slug": "ollama-api-delete-model-protegido",
+      "title": "Ollama API: proteger a remoção de modelos com confirmação do nome exato",
+      "one": "`DELETE /api/delete` remove o modelo nomeado no corpo da requisição, por isso uma interface administrativa deve exigir um alvo explícito e confirmar o efeito.",
+      "why": "Uma remoção disparada por seleção desatualizada ou nome resolvido parcialmente pode interromper ferramentas locais que ainda dependem daquele modelo.",
+      "how": "Envie `model` com o nome exato e use o método HTTP DELETE documentado. Restrinja a ação a operadores autorizados, mostre o alvo antes de confirmar e atualize o inventário depois da resposta.",
+      "example": "O painel abre uma confirmação com `local-code-review`, envia a remoção somente após ação deliberada do operador e verifica que o nome deixou de aparecer em `/api/tags`.",
+      "limits": "A referência informa sucesso da operação, mas não descreve uma lixeira ou recuperação. A introdução da API também informa que criar e remover modelos requer servidor local; trate o comando como potencialmente destrutivo.",
+      "verify": "Em um ambiente descartável, valide autorização, método e nome serializado, confirme que cancelamento não envia requisição e confira o resultado por nova listagem.",
+      "sources": [
+        {"label": "Ollama API — Delete a model", "url": "https://docs.ollama.com/api/delete", "why": "Define método DELETE, corpo com nome do modelo e resposta de sucesso."},
+        {"label": "Ollama API — Introduction", "url": "https://docs.ollama.com/api/introduction", "why": "Esclarece que a operação de remoção requer servidor local."}
+      ],
+      "review": "A referência documenta remoção pelo nome enviado e não menciona recuperação; o aviso sobre operação local vem da introdução da API."
+    }
+  ]
+}
