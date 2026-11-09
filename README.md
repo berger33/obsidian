@@ -5,7 +5,7 @@ Repositório de vaults em português brasileiro, com taxonomia para Engenharia d
 ## Meta editorial ativa: 1.000.000 de notas válidas
 
 A meta atual é **500 lotes de 2.000 notas substantivas** (1.000.000 no total). Cada nota só conta depois de passar pelo gate automatizado e receber revisão factual registrada por uma pessoa ou por IA; os dois tipos de revisão permanecem separados. A aprovação por IA não é aprovação humana. O relatório final será publicado ao término do escopo, não como resultado parcial.
-
+... 
 | Métrica auditada | Total | O que representa |
 |---|---:|---|
 | Meta | 1.000.000 | 500 lotes completos × 2.000 notas qualificadas |
